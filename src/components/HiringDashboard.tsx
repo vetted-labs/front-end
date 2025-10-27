@@ -18,6 +18,8 @@ import {
   DollarSign,
   Building2,
   Loader2,
+  LogOut,
+  User,
 } from "lucide-react";
 
 interface JobPosting {
@@ -54,6 +56,19 @@ export function HiringDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [companyEmail, setCompanyEmail] = useState<string>("");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem("companyAuthToken");
+    if (!token) {
+      router.push("/company/login?redirect=/dashboard");
+      return;
+    }
+    const email = localStorage.getItem("companyEmail");
+    if (email) setCompanyEmail(email);
+  }, [router]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -63,14 +78,36 @@ export function HiringDashboard() {
     setIsLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("companyAuthToken");
+      if (!token) {
+        router.push("/company/login?redirect=/dashboard");
+        return;
+      }
+
       const [jobsResponse, statsResponse] = await Promise.all([
         fetch(
           `http://localhost:4000/api/jobs?status=${filterStatus}&search=${encodeURIComponent(
             searchQuery,
           )}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         ),
-        fetch("http://localhost:4000/api/dashboard/stats"),
+        fetch("http://localhost:4000/api/dashboard/stats", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
       ]);
+
+      if (jobsResponse.status === 401 || statsResponse.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("companyAuthToken");
+        router.push("/company/login?redirect=/dashboard");
+        return;
+      }
 
       if (!jobsResponse.ok) {
         throw new Error(
@@ -105,9 +142,18 @@ export function HiringDashboard() {
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm("Are you sure you want to delete this job posting?")) return;
     try {
+      const token = localStorage.getItem("companyAuthToken");
       const response = await fetch(`http://localhost:4000/api/jobs/${jobId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+      if (response.status === 401) {
+        localStorage.removeItem("companyAuthToken");
+        router.push("/company/login?redirect=/dashboard");
+        return;
+      }
       if (!response.ok) {
         throw new Error(
           `Failed to delete job: ${response.status} - ${response.statusText}`,
@@ -117,6 +163,14 @@ export function HiringDashboard() {
     } catch (error) {
       setError(`Failed to delete job. Details: ${(error as Error).message}`);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("companyAuthToken");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("companyEmail");
+    localStorage.removeItem("companyWallet");
+    router.push("/company/login");
   };
 
   const getStatusColor = (status: string) => {
@@ -158,6 +212,39 @@ export function HiringDashboard() {
                   Settings
                 </a>
               </nav>
+            </div>
+
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="p-2 bg-violet-100 rounded-lg">
+                  <User className="w-4 h-4 text-violet-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-900 hidden sm:block">
+                  {companyEmail || "Company"}
+                </span>
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-200">
+                    <p className="text-sm font-medium text-gray-900">
+                      {companyEmail}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">Company Account</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
