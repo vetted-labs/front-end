@@ -65,7 +65,7 @@ export default function BrowseJobsPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/candidate/login");
+    router.push("/auth/login?type=candidate");
   };
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function BrowseJobsPage() {
         if (jobsResponse.ok) {
           const jobs = await jobsResponse.json();
           // Ensure all jobs have required fields with defaults
-          const normalizedJobs = jobs.map((job: any) => ({
+          const normalizedJobs = jobs.map((job: Record<string, unknown>) => ({
             ...job,
             title: job.title || 'Untitled Position',
             description: job.description || '',
@@ -172,13 +172,13 @@ export default function BrowseJobsPage() {
               ) : (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => router.push("/candidate/login")}
+                    onClick={() => router.push("/auth/login?type=candidate")}
                     className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                   >
                     Sign In
                   </button>
                   <button
-                    onClick={() => router.push("/candidate/signup")}
+                    onClick={() => router.push("/auth/signup?type=candidate")}
                     className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all text-sm font-medium"
                   >
                     Register

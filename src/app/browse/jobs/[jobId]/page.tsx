@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Loader2,
   Briefcase,
   MapPin,
   DollarSign,
@@ -19,7 +18,14 @@ import {
   ExternalLink,
   User,
   LogOut,
+  Upload,
+  CheckCircle2,
+  Search,
+  ClipboardList,
+  Clock,
+  Star,
 } from "lucide-react";
+import { Modal, Button, Alert, LoadingState, Textarea, StatusBadge } from "@/components/ui";
 
 interface JobDetails {
   id: string;
@@ -45,6 +51,35 @@ interface JobDetails {
   publishedAt: string | null;
   companyId: string;
   companyName?: string;
+  companyLogo?: string;
+  featured?: boolean;
+}
+
+interface UserProfile {
+  resumeUrl?: string;
+  resumeFileName?: string;
+}
+
+interface Application {
+  id: string;
+  jobId: string; // Backend returns this in camelCase
+  candidateId?: string;
+  status: "pending" | "interviewing" | "offered" | "rejected" | "accepted";
+  appliedAt: string;
+  coverLetter?: string;
+  resumeUrl?: string;
+  job?: {
+    id: string;
+    title: string;
+    companyName: string;
+    location: string;
+    type: string;
+    salary: {
+      min: number | null;
+      max: number | null;
+      currency: string;
+    };
+  };
 }
 
 export default function PublicJobDetailsPage() {
@@ -55,24 +90,110 @@ export default function PublicJobDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [candidateEmail, setCandidateEmail] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [useProfileResume, setUseProfileResume] = useState(true);
+  const [profileResume, setProfileResume] = useState<UserProfile | null>(null);
   const [screeningAnswers, setScreeningAnswers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationError, setApplicationError] = useState("");
+  const [existingApplication, setExistingApplication] = useState<Application | null>(null);
+  const [checkingApplication, setCheckingApplication] = useState(false);
 
-  // Check if user is authenticated
+  // Check if user is authenticated and fetch profile + check for existing application
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
       setIsAuthenticated(true);
       const email = localStorage.getItem("candidateEmail");
       if (email) setCandidateEmail(email);
+
+      // Fetch user profile to get existing resume
+      const fetchProfile = async () => {
+        try {
+          const candidateId = localStorage.getItem("candidateId");
+          const response = await fetch(`http://localhost:4000/api/candidates/${candidateId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setProfileResume({
+              resumeUrl: data.resumeUrl,
+              resumeFileName: data.resumeFileName || "Your Profile Resume",
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+        }
+      };
+      fetchProfile();
     }
   }, []);
+
+  // Check if user has already applied to this job
+  useEffect(() => {
+    if (!isAuthenticated || !jobId) return;
+
+    const checkExistingApplication = async () => {
+      setCheckingApplication(true);
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch("http://localhost:4000/api/candidates/me/applications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Applications response:", data); // Debug log
+          console.log("Current jobId:", jobId); // Debug current job
+
+          // Handle paginated response from backend: { applications: [...], pagination: {...} }
+          const applications: Application[] = Array.isArray(data)
+            ? data
+            : (data?.applications || data?.data || []);
+
+          // Check if user has already applied to this job
+          if (Array.isArray(applications) && applications.length > 0) {
+            console.log("Applications found:", applications.length);
+
+            const existingApp = applications.find(app => {
+              const appJobId = String(app.jobId);
+              const currentJobId = String(jobId);
+              console.log("Comparing app:", appJobId, "with current job:", currentJobId, "→", appJobId === currentJobId);
+              return appJobId === currentJobId;
+            });
+
+            if (existingApp) {
+              console.log("✅ Found existing application for this job:", existingApp);
+              setExistingApplication(existingApp);
+            } else {
+              console.log("❌ No application found for this job ID:", jobId);
+            }
+          } else {
+            console.log("No applications found for candidate");
+          }
+        } else {
+          // Log error response for debugging
+          const errorData = await response.json().catch(() => null);
+          console.error("Applications API error:", response.status, errorData);
+        }
+      } catch (err) {
+        console.error("Failed to check applications:", err);
+      } finally {
+        setCheckingApplication(false);
+      }
+    };
+
+    checkExistingApplication();
+  }, [isAuthenticated, jobId]);
 
   useEffect(() => {
     if (!jobId) {
@@ -85,7 +206,21 @@ export default function PublicJobDetailsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:4000/api/jobs/${jobId}`);
+        // Check if this job was already viewed in this session
+        const viewedJobsKey = 'viewedJobs';
+        const viewedJobsStr = sessionStorage.getItem(viewedJobsKey) || '[]';
+        const viewedJobs = JSON.parse(viewedJobsStr) as string[];
+        const alreadyViewed = viewedJobs.includes(jobId);
+
+        // Only increment view if not already viewed in this session
+        const shouldIncrementView = !alreadyViewed;
+
+        console.log('Job ID:', jobId);
+        console.log('Already viewed:', alreadyViewed);
+        console.log('Should increment view:', shouldIncrementView);
+        console.log('Viewed jobs in session:', viewedJobs);
+
+        const response = await fetch(`http://localhost:4000/api/jobs/${jobId}?incrementView=${shouldIncrementView}`);
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
@@ -93,18 +228,26 @@ export default function PublicJobDetailsPage() {
           );
         }
         const data = await response.json();
-        // Ensure all fields are initialized with defaults
         const normalizedJob = {
           ...data,
           title: data.title || 'Untitled Position',
           description: data.description || '',
-          guild: data.guild || '',
-          department: data.department || null,
           requirements: data.requirements || [],
           skills: data.skills || [],
           screeningQuestions: data.screeningQuestions || [],
+          department: data.department || null,
+          experienceLevel: data.experienceLevel || null,
+          equityOffered: data.equityOffered || null,
+          equityRange: data.equityRange || null,
+          publishedAt: data.publishedAt || null,
         };
         setJob(normalizedJob);
+
+        // Mark this job as viewed in this session
+        if (shouldIncrementView) {
+          const updatedViewedJobs = [...viewedJobs, jobId];
+          sessionStorage.setItem(viewedJobsKey, JSON.stringify(updatedViewedJobs));
+        }
       } catch (error) {
         setError(
           `Failed to load job details. Details: ${(error as Error).message}`,
@@ -119,15 +262,17 @@ export default function PublicJobDetailsPage() {
   }, [jobId]);
 
   const handleApply = () => {
-    // Check if user is authenticated
+    // Check if already applied
+    if (existingApplication) {
+      return; // Button should be disabled, but extra safety check
+    }
+
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {
-      // Redirect to signup with return URL
       const currentUrl = `/browse/jobs/${jobId}`;
-      router.push(`/candidate/signup?redirect=${encodeURIComponent(currentUrl)}`);
+      router.push(`/auth/signup?type=candidate&redirect=${encodeURIComponent(currentUrl)}`);
       return;
     }
-    // Initialize screening answers array
     if (job?.screeningQuestions) {
       setScreeningAnswers(new Array(job.screeningQuestions.length).fill(""));
     }
@@ -138,29 +283,39 @@ export default function PublicJobDetailsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
     if (!allowedTypes.includes(file.type)) {
       setApplicationError("Please upload a PDF, DOC, or DOCX file");
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       setApplicationError("File size must be less than 5MB");
       return;
     }
 
     setResumeFile(file);
+    setUseProfileResume(false);
     setApplicationError("");
   };
 
   const handleSubmitApplication = async () => {
     setApplicationError("");
 
+    // Double-check not already applied
+    if (existingApplication) {
+      setApplicationError("You have already applied to this position");
+      return;
+    }
+
     // Validation
-    if (!resumeFile) {
-      setApplicationError("Please upload your resume");
+    if (!useProfileResume && !resumeFile) {
+      setApplicationError("Please upload your resume or use your profile resume");
+      return;
+    }
+
+    if (useProfileResume && !profileResume?.resumeUrl) {
+      setApplicationError("No resume found in your profile. Please upload one.");
       return;
     }
 
@@ -169,7 +324,6 @@ export default function PublicJobDetailsPage() {
       return;
     }
 
-    // Check if all screening questions are answered
     if (job?.screeningQuestions && job.screeningQuestions.length > 0) {
       const allAnswered = screeningAnswers.every((answer) => answer.trim() !== "");
       if (!allAnswered) {
@@ -182,29 +336,33 @@ export default function PublicJobDetailsPage() {
     try {
       const authToken = localStorage.getItem("authToken");
       const candidateId = localStorage.getItem("candidateId");
+      let resumeUrl = profileResume?.resumeUrl;
 
-      // First, upload the resume
-      const resumeFormData = new FormData();
-      resumeFormData.append("resume", resumeFile);
+      // If uploading new resume, upload it first
+      if (!useProfileResume && resumeFile) {
+        const resumeFormData = new FormData();
+        resumeFormData.append("resume", resumeFile);
 
-      const resumeResponse = await fetch(
-        `http://localhost:4000/api/candidates/${candidateId}/resume`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: resumeFormData,
+        const resumeResponse = await fetch(
+          `http://localhost:4000/api/candidates/${candidateId}/resume`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: resumeFormData,
+          }
+        );
+
+        if (!resumeResponse.ok) {
+          throw new Error("Failed to upload resume");
         }
-      );
 
-      if (!resumeResponse.ok) {
-        throw new Error("Failed to upload resume");
+        const resumeData = await resumeResponse.json();
+        resumeUrl = resumeData.resumeUrl;
       }
 
-      const resumeData = await resumeResponse.json();
-
-      // Then, submit the application
+      // Submit the application
       const applicationResponse = await fetch(
         "http://localhost:4000/api/applications",
         {
@@ -217,21 +375,28 @@ export default function PublicJobDetailsPage() {
             jobId: job?.id,
             candidateId,
             coverLetter,
-            resumeUrl: resumeData.resumeUrl,
+            resumeUrl,
             screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
           }),
         }
       );
 
       if (!applicationResponse.ok) {
-        throw new Error("Failed to submit application");
+        const errorData = await applicationResponse.json();
+        throw new Error(errorData.message || "Failed to submit application");
       }
 
+      const newApplication = await applicationResponse.json();
+
+      // Update state to show user has applied
+      setExistingApplication(newApplication);
+
       // Success!
-      alert("Application submitted successfully!");
       setShowApplyModal(false);
+      setShowSuccessModal(true);
       setCoverLetter("");
       setResumeFile(null);
+      setUseProfileResume(true);
       setScreeningAnswers([]);
     } catch (error) {
       setApplicationError(
@@ -250,257 +415,224 @@ export default function PublicJobDetailsPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/candidate/login");
+    router.push("/auth/login?type=candidate");
   };
 
   if (isLoading) {
+    return <LoadingState message="Loading job details..." />;
+  }
+
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
-          <p className="text-gray-600">Loading job details...</p>
+        <Alert variant="error">{error}</Alert>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-900 mb-4">Job not found</p>
+          <Button onClick={() => router.push("/browse")}>
+            Browse All Jobs
+          </Button>
         </div>
       </div>
     );
   }
 
-  if (error || !job) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || "Job not found"}</p>
-          <button
-            onClick={() => router.push("/browse/jobs")}
-            className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-          >
-            Browse All Jobs
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const hasAlreadyApplied = !!existingApplication;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <nav className="border-b border-slate-200 bg-white sticky top-0 z-40">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push("/browse")}
-              className="flex items-center space-x-2"
-            >
+            <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
-              <span className="text-xl font-bold text-slate-900">Vetted</span>
-            </button>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/browse/jobs")}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Jobs
-              </button>
-
-              {/* User Account Menu */}
-              {isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="p-2 bg-violet-100 rounded-lg">
-                      <User className="w-4 h-4 text-violet-600" />
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 hidden sm:block">
-                      {candidateEmail}
-                    </span>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                      <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">
-                          {candidateEmail}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">Candidate</p>
-                      </div>
-                      <button
-                        onClick={() => router.push("/candidate/profile")}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <Briefcase className="w-4 h-4" />
-                        My Dashboard
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => router.push("/candidate/login")}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => router.push("/candidate/signup")}
-                    className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all text-sm font-medium"
-                  >
-                    Register
-                  </button>
-                </div>
-              )}
+              <span className="text-xl font-bold text-gray-900">Vetted</span>
             </div>
+
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="p-2 bg-violet-100 rounded-lg">
+                    <User className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 hidden sm:block">
+                    {candidateEmail}
+                  </span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-900">
+                        {candidateEmail}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Candidate Account
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push("/candidate/profile")}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => router.push("/auth/signup?type=candidate")}
+                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => router.push("/browse/jobs")}
+          className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Jobs
+        </button>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm p-8">
-              {/* Header */}
-              <div className="mb-6">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="p-3 bg-violet-100 rounded-xl">
-                    <Briefcase className="w-8 h-8 text-violet-600" />
-                  </div>
+              {/* Job Header */}
+              <div className="border-b border-gray-200 pb-6 mb-6">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
                       {job.title}
                     </h1>
-                    {job.companyName && (
-                      <p className="flex items-center gap-2 text-lg text-gray-700">
-                        <Building2 className="w-5 h-5" />
-                        {job.companyName}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-4 text-gray-600">
+                      <span className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4" />
+                        <span className="font-medium">{job.companyName || "Company"}</span>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {job.location}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        {job.type}
+                      </span>
+                    </div>
                   </div>
+                  {job.companyLogo && (
+                    <img
+                      src={`http://localhost:4000${job.companyLogo}`}
+                      alt={job.companyName || "Company"}
+                      className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200 shadow-md ml-6 flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {job.location}
-                  </span>
-                  <span className="px-3 py-1 bg-violet-50 text-violet-700 rounded-full text-xs font-medium capitalize">
-                    {job.locationType}
-                  </span>
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                    {job.type}
-                  </span>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     Posted {new Date(job.createdAt).toLocaleDateString()}
                   </span>
+                  {job.featured && (
+                    <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full text-xs font-bold">
+                      <Star className="w-3 h-3 fill-white" />
+                      FEATURED
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {job.applicants} applicants
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    {job.views} views
+                  </span>
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  About the Role
-                </h2>
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                  {job.description}
-                </p>
-              </div>
-
-              {/* Requirements */}
-              {job.requirements && job.requirements.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Requirements
+              {/* Job Description */}
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                    About the Role
                   </h2>
-                  <ul className="space-y-3">
-                    {job.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <span className="w-1.5 h-1.5 bg-violet-600 rounded-full mt-2 flex-shrink-0" />
-                        <span className="text-gray-700">{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Skills */}
-              {job.skills && job.skills.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Required Skills
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg text-sm font-medium"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Screening Questions */}
-              {job.screeningQuestions && job.screeningQuestions.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5" />
-                    Application Questions
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-4">
-                    You'll be asked to answer these questions during the
-                    application process:
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {job.description}
                   </p>
-                  <div className="space-y-3">
-                    {job.screeningQuestions.map((question, index) => (
-                      <div
-                        key={index}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-                      >
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          Question {index + 1}
-                        </p>
-                        <p className="text-gray-900">{question}</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              )}
 
-              {/* Guild Info */}
-              <div className="p-6 bg-violet-50 rounded-xl border border-violet-100">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-violet-100 rounded-lg">
-                    <Shield className="w-6 h-6 text-violet-600" />
-                  </div>
+                {/* Requirements */}
+                {job.requirements && job.requirements.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      Guild-Verified Position
-                    </h3>
-                    <p className="text-sm text-gray-700 mb-2">
-                      This role will be reviewed by the{" "}
-                      <span className="font-semibold text-violet-700">
-                        {job.guild}
-                      </span>
-                      . Your application will be evaluated by experienced
-                      professionals in the field who stake their reputation on
-                      their assessments.
-                    </p>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                      Requirements
+                    </h2>
+                    <ul className="space-y-2">
+                      {job.requirements.map((req, index) => (
+                        <li key={index} className="flex items-start gap-2 text-gray-700">
+                          <span className="text-violet-600 mt-1">•</span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
+                )}
+
+                {/* Skills */}
+                {job.skills && job.skills.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                      Skills
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -508,14 +640,50 @@ export default function PublicJobDetailsPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24 space-y-6">
-              {/* Apply Button */}
-              <button
-                onClick={handleApply}
-                className="w-full py-4 px-6 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                <Send className="w-5 h-5" />
-                Apply for this Role
-              </button>
+              {/* Already Applied Warning */}
+              {hasAlreadyApplied && (
+                <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-900">
+                      Already Applied
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-700 mb-3">
+                    You applied on {new Date(existingApplication.appliedAt).toLocaleDateString()}
+                  </p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-green-700">Status:</span>
+                    <StatusBadge status={existingApplication.status} size="sm" />
+                  </div>
+                  <button
+                    onClick={() => router.push("/candidate/profile")}
+                    className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    View My Applications →
+                  </button>
+                </div>
+              )}
+
+              {/* Apply Button - Disabled if already applied */}
+              <div className="space-y-2">
+                <Button
+                  onClick={handleApply}
+                  className="w-full"
+                  size="lg"
+                  disabled={hasAlreadyApplied || checkingApplication}
+                  isLoading={checkingApplication}
+                  icon={!checkingApplication && <Send className="w-5 h-5" />}
+                >
+                  {checkingApplication ? "Checking..." : hasAlreadyApplied ? "Already Applied" : "Apply for this Role"}
+                </Button>
+                {hasAlreadyApplied && (
+                  <p className="text-xs text-gray-500 text-center">
+                    You cannot apply to this position again
+                  </p>
+                )}
+              </div>
 
               {/* Job Details */}
               <div className="space-y-4 pt-4 border-t border-gray-200">
@@ -524,91 +692,44 @@ export default function PublicJobDetailsPage() {
                 </h3>
 
                 {job.salary.min && job.salary.max && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="font-medium">Salary Range</span>
+                  <div className="flex items-start gap-3">
+                    <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Salary Range
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
+                      </p>
                     </div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      ${job.salary.min / 1000}k - ${job.salary.max / 1000}k
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {job.salary.currency} per year
-                    </p>
                   </div>
                 )}
 
-                {job.equityOffered && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="font-medium">Equity</span>
-                    </div>
-                    <p className="text-gray-900">
-                      {job.equityRange || "Offered"}
-                    </p>
-                  </div>
-                )}
-
-                {job.experienceLevel && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <Users className="w-4 h-4" />
-                      <span className="font-medium">Experience Level</span>
-                    </div>
-                    <p className="text-gray-900 capitalize">
-                      {job.experienceLevel}
-                    </p>
-                  </div>
-                )}
-
-                {job.department && (
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <Building2 className="w-4 h-4" />
-                      <span className="font-medium">Department</span>
-                    </div>
-                    <p className="text-gray-900">{job.department}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Stats */}
-              <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-center gap-1 text-gray-600 mb-1">
-                      <Users className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {job.applicants}
-                    </p>
-                    <p className="text-xs text-gray-600">Applicants</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-center gap-1 text-gray-600 mb-1">
-                      <Eye className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {job.views}
-                    </p>
-                    <p className="text-xs text-gray-600">Views</p>
+                    <p className="text-sm font-medium text-gray-900">Location Type</p>
+                    <p className="text-sm text-gray-600 capitalize">{job.locationType}</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Share */}
-              <div className="pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert("Job link copied to clipboard!");
-                  }}
-                  className="w-full py-2 px-4 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Share this Job
-                </button>
+                {job.experienceLevel && (
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Experience Level</p>
+                      <p className="text-sm text-gray-600 capitalize">{job.experienceLevel}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Guild</p>
+                    <p className="text-sm text-gray-600">{job.guild}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -616,151 +737,247 @@ export default function PublicJobDetailsPage() {
       </div>
 
       {/* Apply Modal */}
-      {showApplyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full my-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Apply for {job.title}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Complete the form below to submit your application
-            </p>
+      <Modal
+        isOpen={showApplyModal}
+        onClose={() => {
+          setShowApplyModal(false);
+          setCoverLetter("");
+          setResumeFile(null);
+          setUseProfileResume(true);
+          setScreeningAnswers([]);
+          setApplicationError("");
+        }}
+        title={`Apply for ${job?.title}`}
+        size="lg"
+      >
+        <p className="text-gray-600 mb-6">
+          Complete the form below to submit your application
+        </p>
 
-            <div className="space-y-6">
-              {/* Resume Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resume / CV *
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-violet-500 transition-colors">
-                  <input
-                    type="file"
-                    id="resume-upload"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="resume-upload"
-                    className="cursor-pointer"
-                  >
-                    {resumeFile ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <FileText className="w-5 h-5 text-violet-600" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {resumeFile.name}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setResumeFile(null);
-                          }}
-                          className="text-red-600 hover:text-red-700 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          PDF, DOC, or DOCX (max 5MB)
-                        </p>
-                      </>
-                    )}
-                  </label>
-                </div>
-              </div>
+        <div className="space-y-6">
+          {/* Resume Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Resume / CV *
+            </label>
 
-              {/* Cover Letter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cover Letter *
-                </label>
-                <textarea
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
-                  placeholder="Tell us why you're a great fit for this role..."
-                />
-              </div>
-
-              {/* Screening Questions */}
-              {job?.screeningQuestions && job.screeningQuestions.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5" />
-                    Screening Questions
-                  </h3>
-                  {job.screeningQuestions.map((question, index) => (
-                    <div key={index}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {index + 1}. {question}
-                      </label>
-                      <textarea
-                        value={screeningAnswers[index] || ""}
-                        onChange={(e) => {
-                          const newAnswers = [...screeningAnswers];
-                          newAnswers[index] = e.target.value;
-                          setScreeningAnswers(newAnswers);
-                        }}
-                        rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
-                        placeholder="Your answer..."
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Error Message */}
-              {applicationError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{applicationError}</p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-4">
+            {/* Option to use profile resume */}
+            {profileResume?.resumeUrl && (
+              <div className="mb-4">
                 <button
+                  type="button"
                   onClick={() => {
-                    setShowApplyModal(false);
-                    setCoverLetter("");
+                    setUseProfileResume(true);
                     setResumeFile(null);
-                    setScreeningAnswers([]);
                     setApplicationError("");
                   }}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
+                  className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
+                    useProfileResume
+                      ? "border-violet-500 bg-violet-50"
+                      : "border-gray-300 hover:border-violet-300"
+                  }`}
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitApplication}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Submit Application
-                    </>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      useProfileResume ? "border-violet-500" : "border-gray-300"
+                    }`}>
+                      {useProfileResume && (
+                        <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                      )}
+                    </div>
+                    <FileText className={`w-5 h-5 ${useProfileResume ? "text-violet-600" : "text-gray-400"}`} />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Use Resume from Profile
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {profileResume.resumeFileName}
+                      </p>
+                    </div>
+                  </div>
                 </button>
               </div>
+            )}
+
+            {/* Option to upload new resume */}
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseProfileResume(false);
+                  document.getElementById("resume-upload")?.click();
+                }}
+                className={`w-full p-4 border-2 border-dashed rounded-lg text-left transition-all ${
+                  !useProfileResume && resumeFile
+                    ? "border-violet-500 bg-violet-50"
+                    : "border-gray-300 hover:border-violet-500"
+                }`}
+              >
+                <input
+                  type="file"
+                  id="resume-upload"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {!useProfileResume && resumeFile ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full border-2 border-violet-500 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                      </div>
+                      <FileText className="w-5 h-5 text-violet-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          Upload New Resume
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {resumeFile.name}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setResumeFile(null);
+                        setUseProfileResume(true);
+                      }}
+                      className="text-red-600 hover:text-red-700 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                    <Upload className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        Upload New Resume
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        PDF, DOC, or DOCX (max 5MB)
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </button>
             </div>
           </div>
+
+          {/* Cover Letter */}
+          <Textarea
+            label="Cover Letter *"
+            value={coverLetter}
+            onChange={(e) => setCoverLetter(e.target.value)}
+            rows={6}
+            placeholder="Tell us why you're a great fit for this role..."
+          />
+
+          {/* Screening Questions */}
+          {job?.screeningQuestions && job.screeningQuestions.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5" />
+                Screening Questions
+              </h3>
+              {job.screeningQuestions.map((question, index) => (
+                <Textarea
+                  key={index}
+                  label={`${index + 1}. ${question}`}
+                  value={screeningAnswers[index] || ""}
+                  onChange={(e) => {
+                    const newAnswers = [...screeningAnswers];
+                    newAnswers[index] = e.target.value;
+                    setScreeningAnswers(newAnswers);
+                  }}
+                  rows={3}
+                  placeholder="Your answer..."
+                />
+              ))}
+            </div>
+          )}
+
+          {applicationError && (
+            <Alert variant="error">{applicationError}</Alert>
+          )}
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowApplyModal(false);
+                setCoverLetter("");
+                setResumeFile(null);
+                setUseProfileResume(true);
+                setScreeningAnswers([]);
+                setApplicationError("");
+              }}
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitApplication}
+              isLoading={isSubmitting}
+              className="flex-1"
+              icon={!isSubmitting && <Send className="w-5 h-5" />}
+            >
+              Submit Application
+            </Button>
+          </div>
         </div>
-      )}
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        size="md"
+      >
+        <div className="text-center py-6">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Application Submitted!
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Your application for <strong>{job?.title}</strong> has been successfully submitted. The hiring team will review it and get back to you soon.
+          </p>
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => {
+                setShowSuccessModal(false);
+                router.push("/browse/jobs");
+              }}
+              className="w-full"
+              icon={<Search className="w-5 h-5" />}
+            >
+              Browse More Jobs
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowSuccessModal(false);
+                router.push("/candidate/profile");
+              }}
+              className="w-full"
+              icon={<ClipboardList className="w-5 h-5" />}
+            >
+              View My Applications
+            </Button>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-3 text-gray-600 hover:text-gray-900 transition-colors text-sm"
+            >
+              Stay on this page
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -13,6 +13,9 @@ import {
   X,
   User,
   LogOut,
+  CheckCircle2,
+  Clock,
+  Star,
 } from "lucide-react";
 
 interface Job {
@@ -29,8 +32,28 @@ interface Job {
   skills: string[];
   experienceLevel?: string;
   companyName?: string;
+  companyLogo?: string;
   createdAt: string;
+  featured?: boolean;
 }
+
+// Helper function to calculate time ago
+const getTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) return "Posted today";
+  if (diffInDays === 1) return "Posted 1 day ago";
+  if (diffInDays < 7) return `Posted ${diffInDays} days ago`;
+  if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7);
+    return `Posted ${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
+  }
+  const months = Math.floor(diffInDays / 30);
+  return `Posted ${months} ${months === 1 ? "month" : "months"} ago`;
+};
 
 export default function JobsListingPage() {
   const router = useRouter();
@@ -47,6 +70,7 @@ export default function JobsListingPage() {
   const [candidateEmail, setCandidateEmail] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const guilds = [
     "Engineering Guild",
@@ -70,6 +94,34 @@ export default function JobsListingPage() {
     }
   }, []);
 
+  // Fetch candidate's applications if authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch("http://localhost:4000/api/candidates/me/applications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const applications = data?.applications || [];
+          const jobIds = new Set(applications.map((app: { jobId: string }) => app.jobId));
+          setAppliedJobIds(jobIds);
+          console.log("Applied to job IDs:", Array.from(jobIds));
+        }
+      } catch (error) {
+        console.error("Failed to fetch applications:", error);
+      }
+    };
+
+    fetchApplications();
+  }, [isAuthenticated]);
+
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("candidateId");
@@ -78,20 +130,19 @@ export default function JobsListingPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/candidate/login");
+    router.push("/auth/login?type=candidate");
   };
 
   useEffect(() => {
     const fetchJobs = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          "http://localhost:4000/api/jobs?status=active",
-        );
+        const response = await fetch("http://localhost:4000/api/jobs?status=active");
+
         if (response.ok) {
           const data = await response.json();
           // Ensure all jobs have required fields with defaults
-          const normalizedJobs = data.map((job: any) => ({
+          const normalizedJobs = data.map((job: Record<string, unknown>) => ({
             ...job,
             title: job.title || 'Untitled Position',
             description: job.description || '',
@@ -410,80 +461,108 @@ export default function JobsListingPage() {
                     onClick={() => router.push(`/browse/jobs/${job.id}`)}
                     className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-200 hover:border-violet-300"
                   >
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-violet-600 transition-colors">
-                          {job.title}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-xl font-semibold text-gray-900 hover:text-violet-600 transition-colors">
+                            {job.title}
+                          </h3>
+                          {isAuthenticated && appliedJobIds.has(job.id) && (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Applied
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Company & Location */}
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
                           {job.companyName && (
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1.5 font-medium">
                               <Building2 className="w-4 h-4" />
                               {job.companyName}
                             </span>
                           )}
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1.5">
                             <MapPin className="w-4 h-4" />
                             {job.location}
                           </span>
-                          <span className="px-2 py-1 bg-violet-50 text-violet-700 rounded-full text-xs font-medium capitalize">
-                            {job.locationType}
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-4 h-4" />
+                            {getTimeAgo(job.createdAt)}
                           </span>
-                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                          {job.featured && (
+                            <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full text-xs font-bold">
+                              <Star className="w-3 h-3 fill-white" />
+                              FEATURED
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Job Details */}
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          {job.locationType && (
+                            <span className="px-2.5 py-1 bg-violet-50 text-violet-700 rounded-full text-xs font-medium capitalize">
+                              {job.locationType}
+                            </span>
+                          )}
+                          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
                             {job.type}
                           </span>
+                          {job.experienceLevel && (
+                            <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium capitalize">
+                              {job.experienceLevel}
+                            </span>
+                          )}
+                          {job.salary.min && job.salary.max && (
+                            <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                              <DollarSign className="w-3.5 h-3.5" />
+                              {job.salary.min / 1000}k - {job.salary.max / 1000}k {job.salary.currency}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                      {job.salary.min && job.salary.max && (
-                        <div className="text-right ml-4">
-                          <div className="flex items-center gap-1 text-lg font-semibold text-gray-900">
-                            <DollarSign className="w-5 h-5" />
-                            {job.salary.min / 1000}k - {job.salary.max / 1000}k
+
+                        {/* Skills */}
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="border-t border-gray-100 pt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                Skills Required
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {job.skills.slice(0, 6).map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-medium"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.skills.length > 6 && (
+                                <span className="px-2.5 py-1 text-slate-600 text-xs font-medium">
+                                  +{job.skills.length - 6} more
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {job.salary.currency}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-gray-700 mb-4 line-clamp-2">
-                      {job.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
-                        {job.guild}
-                      </span>
-                      {job.department && (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                          {job.department}
-                        </span>
-                      )}
-                      {job.experienceLevel && (
-                        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs capitalize">
-                          {job.experienceLevel}
-                        </span>
-                      )}
-                    </div>
-
-                    {job.skills && job.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {job.skills.slice(0, 5).map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                        {job.skills.length > 5 && (
-                          <span className="px-2 py-1 text-slate-600 text-xs">
-                            +{job.skills.length - 5} more
-                          </span>
                         )}
                       </div>
-                    )}
+
+                      {job.companyLogo && (
+                        <div className="flex items-center justify-center">
+                          <img
+                            src={`http://localhost:4000${job.companyLogo}`}
+                            alt={job.companyName}
+                            className="w-20 h-20 rounded-lg object-cover border border-gray-200 shadow-sm flex-shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

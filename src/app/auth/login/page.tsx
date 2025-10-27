@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -13,7 +13,7 @@ import {
 
 type UserType = "candidate" | "company";
 
-export default function UnifiedLoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
@@ -219,7 +219,7 @@ export default function UnifiedLoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 onClick={() => router.push("/auth/signup")}
                 className="text-violet-600 hover:text-violet-700 font-medium"
@@ -231,5 +231,13 @@ export default function UnifiedLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function UnifiedLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

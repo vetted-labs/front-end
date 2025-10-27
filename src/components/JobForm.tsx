@@ -131,7 +131,7 @@ export function JobForm() {
         setError(
           data.error ||
             (data.details
-              ? data.details.map((err: any) => err.message).join(", ")
+              ? data.details.map((err: Record<string, unknown>) => err.message).join(", ")
               : "Failed to save job"),
         );
       }
