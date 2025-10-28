@@ -8,8 +8,9 @@ interface SelectOption {
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string | ReactNode;
   error?: string;
-  options: SelectOption[];
+  options?: SelectOption[];
   placeholder?: string;
+  children?: ReactNode;
 }
 
 export function Select({
@@ -19,6 +20,7 @@ export function Select({
   placeholder,
   className = "",
   id,
+  children,
   ...props
 }: SelectProps) {
   const selectId = id || (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
@@ -44,14 +46,19 @@ export function Select({
         `}
         {...props}
       >
-        {placeholder && (
+        {/* Support both patterns: options prop or children */}
+        {placeholder && !children && (
           <option value="">{placeholder}</option>
         )}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {options ? (
+          options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))
+        ) : (
+          children
+        )}
       </select>
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>

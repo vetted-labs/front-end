@@ -1,7 +1,9 @@
 // components/homepage.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useConnect, useAccount } from "wagmi";
+import Image from "next/image";
 import {
   ArrowRight,
   Shield,
@@ -15,11 +17,133 @@ import {
   FileCheck,
   Award,
   Clock,
+  Coins,
+  Wallet,
 } from "lucide-react";
+import { Modal } from "./ui/Modal";
+
+// Wallet information helper
+const getWalletInfo = (walletName: string) => {
+  const wallets: Record<string, { icon: JSX.Element; description: string }> = {
+    MetaMask: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <path d="M36.5 3.5L22 13.5L24.5 7.5L36.5 3.5Z" fill="#E17726" stroke="#E17726" />
+          <path d="M3.5 3.5L17.8 13.6L15.5 7.5L3.5 3.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M31 28.5L27.5 34.5L35.5 36.5L37.5 28.5H31Z" fill="#E27625" stroke="#E27625" />
+          <path d="M2.5 28.5L4.5 36.5L12.5 34.5L9 28.5H2.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M12 17.5L10 20.5L18 20.8L17.7 12.5L12 17.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M28 17.5L22.2 12.4L22 20.8L30 20.5L28 17.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M12.5 34.5L17 32.5L13.2 28.6L12.5 34.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M23 32.5L27.5 34.5L26.8 28.6L23 32.5Z" fill="#E27625" stroke="#E27625" />
+        </svg>
+      ),
+      description: "Connect using MetaMask browser extension",
+    },
+    "Coinbase Wallet": {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#0052FF" />
+          <path
+            d="M20 36C28.8366 36 36 28.8366 36 20C36 11.1634 28.8366 4 20 4C11.1634 4 4 11.1634 4 20C4 28.8366 11.1634 36 20 36Z"
+            fill="#0052FF"
+          />
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M11 20C11 15.0294 15.0294 11 20 11C24.9706 11 29 15.0294 29 20C29 24.9706 24.9706 29 20 29C15.0294 29 11 24.9706 11 20ZM17.5 17.5H22.5V22.5H17.5V17.5Z"
+            fill="white"
+          />
+        </svg>
+      ),
+      description: "Connect using Coinbase Wallet app",
+    },
+    WalletConnect: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#3B99FC" />
+          <path
+            d="M12.5 15.5C17 11 25 11 29.5 15.5L30 16L27.5 18.5L27 18C24 15 17 15 14 18L13.5 18.5L11 16L12.5 15.5Z"
+            fill="white"
+          />
+          <path d="M24 21L26 23L20 29L14 23L16 21L20 25L24 21Z" fill="white" />
+        </svg>
+      ),
+      description: "Scan QR code with mobile wallet app",
+    },
+  };
+
+  return (
+    wallets[walletName] || {
+      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      description: "Connect with your wallet",
+    }
+  );
+};
 
 export function HomePage() {
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<"employers" | "jobseekers">("employers");
+  const { connectors, connect } = useConnect();
+  const { address, isConnected } = useAccount();
+  const [activeSection, setActiveSection] = useState<"employers" | "jobseekers" | "experts">("employers");
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Check expert status after wallet connection from experts tab
+  useEffect(() => {
+    if (mounted && isConnected && address && shouldCheckStatus && activeSection === "experts") {
+      checkExpertStatus(address);
+      setShouldCheckStatus(false);
+    }
+  }, [mounted, isConnected, address, shouldCheckStatus, activeSection]);
+
+  const checkExpertStatus = async (walletAddress: string) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/experts/profile?wallet=${walletAddress}`);
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          const expert = result.data;
+          // Redirect based on status
+          if (expert.status === "approved") {
+            router.push("/expert/dashboard");
+            return;
+          } else if (expert.status === "pending") {
+            router.push("/expert/application-pending");
+            return;
+          }
+        }
+      } else if (response.status === 404) {
+        // No profile found - redirect to application
+        router.push("/expert/apply");
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking expert status:", error);
+      // On error, redirect to expert home page
+      router.push("/expert");
+    }
+  };
+
+  const handleWalletConnect = async (connectorId: string) => {
+    const connector = connectors.find((c) => c.id === connectorId);
+    if (connector) {
+      try {
+        await connect({ connector });
+        setShowWalletModal(false);
+        // Set flag to check status after connection completes
+        setShouldCheckStatus(true);
+      } catch (error) {
+        console.error("Failed to connect:", error);
+      }
+    }
+  };
 
   const employerFeatures = [
     {
@@ -75,6 +199,33 @@ export function HomePage() {
     },
   ];
 
+  const expertFeatures = [
+    {
+      icon: <Coins className="w-6 h-6" />,
+      title: "Financial Rewards",
+      description:
+        "Earn tokens for voting with the majority consensus and making accurate assessments",
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6" />,
+      title: "Vote with the Flock",
+      description:
+        "Get rewarded when you align with expert consensus - financial incentives for accurate judgment",
+    },
+    {
+      icon: <Award className="w-6 h-6" />,
+      title: "Guild Membership",
+      description:
+        "Join domain-specific expert communities and advance through ranks with proven performance",
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "Stake Your Expertise",
+      description:
+        "Put your reputation on the line and earn more when your endorsements succeed",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Navigation Header */}
@@ -83,7 +234,7 @@ export function HomePage() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
+              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
               <span className="text-xl font-bold text-slate-900">Vetted</span>
             </div>
 
@@ -109,16 +260,36 @@ export function HomePage() {
               >
                 For Job Seekers
               </button>
+              <button
+                onClick={() => setActiveSection("experts")}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  activeSection === "experts"
+                    ? "bg-white text-violet-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                For Experts
+              </button>
             </div>
 
-            {/* Action Button */}
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
-              >
-                Sign In
-              </button>
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              {activeSection === "experts" ? (
+                <button
+                  onClick={() => setShowWalletModal(true)}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+                >
+                  <Wallet className="mr-2 w-4 h-4" />
+                  Connect Wallet
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -137,21 +308,34 @@ export function HomePage() {
             industry professionals who stake their reputation on every endorsement.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => router.push("/auth/login")}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Sign In
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-            {activeSection === "jobseekers" && (
+            {activeSection === "experts" ? (
               <button
-                onClick={() => router.push("/browse/jobs")}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-slate-700 bg-white border-2 border-slate-300 rounded-xl hover:border-violet-600 hover:text-violet-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                onClick={() => setShowWalletModal(true)}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <Search className="mr-2 w-5 h-5" />
-                Browse Jobs
+                <Wallet className="mr-2 w-5 h-5" />
+                Connect Wallet
+                <ArrowRight className="ml-2 w-5 h-5" />
               </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  Sign In
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </button>
+                {activeSection === "jobseekers" && (
+                  <button
+                    onClick={() => router.push("/browse/jobs")}
+                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-slate-700 bg-white border-2 border-slate-300 rounded-xl hover:border-violet-600 hover:text-violet-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <Search className="mr-2 w-5 h-5" />
+                    Browse Jobs
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -161,16 +345,27 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            {activeSection === "employers" ? "Why Employers Choose Vetted" : "Why Job Seekers Choose Vetted"}
+            {activeSection === "employers"
+              ? "Why Employers Choose Vetted"
+              : activeSection === "jobseekers"
+              ? "Why Job Seekers Choose Vetted"
+              : "Why Experts Choose Vetted"}
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             {activeSection === "employers"
               ? "Hire with confidence using our expert-validated talent pool"
-              : "Stand out with expert endorsements and build your verified reputation"}
+              : activeSection === "jobseekers"
+              ? "Stand out with expert endorsements and build your verified reputation"
+              : "Earn rewards while shaping the future of hiring in your industry"}
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {(activeSection === "employers" ? employerFeatures : jobSeekerFeatures).map((feature, index) => (
+          {(activeSection === "employers"
+            ? employerFeatures
+            : activeSection === "jobseekers"
+            ? jobSeekerFeatures
+            : expertFeatures
+          ).map((feature, index) => (
             <div
               key={index}
               className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 hover:border-violet-200"
@@ -195,63 +390,91 @@ export function HomePage() {
           <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
             {activeSection === "employers"
               ? "A simple process that connects you with pre-validated talent"
-              : "Get endorsed by experts and access quality job opportunities"}
+              : activeSection === "jobseekers"
+              ? "Get endorsed by experts and access quality job opportunities"
+              : "Join guilds, review candidates, and earn rewards"}
           </p>
           <div className="grid md:grid-cols-4 gap-8">
-            {(activeSection === "employers" ?
-              [
-                {
-                  step: "1",
-                  title: "Post Your Role",
-                  desc: "Define requirements and select the relevant expert guild",
-                  icon: <Briefcase className="w-5 h-5" />,
-                },
-                {
-                  step: "2",
-                  title: "Applications Flow In",
-                  desc: "Candidates apply and submit to guild review",
-                  icon: <Users className="w-5 h-5" />,
-                },
-                {
-                  step: "3",
-                  title: "Guild Validation",
-                  desc: "Expert reviewers evaluate candidates with stake-backed endorsements",
-                  icon: <Shield className="w-5 h-5" />,
-                },
-                {
-                  step: "4",
-                  title: "Hire Top Talent",
-                  desc: "Review validated candidates and make confident hiring decisions",
-                  icon: <CheckCircle className="w-5 h-5" />,
-                },
-              ]
-            :
-              [
-                {
-                  step: "1",
-                  title: "Create Profile",
-                  desc: "Build your profile and upload your resume",
-                  icon: <Users className="w-5 h-5" />,
-                },
-                {
-                  step: "2",
-                  title: "Apply to Jobs",
-                  desc: "Browse vetted companies and apply to roles that match your skills",
-                  icon: <Search className="w-5 h-5" />,
-                },
-                {
-                  step: "3",
-                  title: "Guild Review",
-                  desc: "Expert reviewers evaluate your application and provide endorsements",
-                  icon: <Award className="w-5 h-5" />,
-                },
-                {
-                  step: "4",
-                  title: "Get Hired",
-                  desc: "Stand out with verified credentials and land your next role",
-                  icon: <CheckCircle className="w-5 h-5" />,
-                },
-              ]
+            {(activeSection === "employers"
+              ? [
+                  {
+                    step: "1",
+                    title: "Post Your Role",
+                    desc: "Define requirements and select the relevant expert guild",
+                    icon: <Briefcase className="w-5 h-5" />,
+                  },
+                  {
+                    step: "2",
+                    title: "Applications Flow In",
+                    desc: "Candidates apply and submit to guild review",
+                    icon: <Users className="w-5 h-5" />,
+                  },
+                  {
+                    step: "3",
+                    title: "Guild Validation",
+                    desc: "Expert reviewers evaluate candidates with stake-backed endorsements",
+                    icon: <Shield className="w-5 h-5" />,
+                  },
+                  {
+                    step: "4",
+                    title: "Hire Top Talent",
+                    desc: "Review validated candidates and make confident hiring decisions",
+                    icon: <CheckCircle className="w-5 h-5" />,
+                  },
+                ]
+              : activeSection === "jobseekers"
+              ? [
+                  {
+                    step: "1",
+                    title: "Create Profile",
+                    desc: "Build your profile and upload your resume",
+                    icon: <Users className="w-5 h-5" />,
+                  },
+                  {
+                    step: "2",
+                    title: "Apply to Jobs",
+                    desc: "Browse vetted companies and apply to roles that match your skills",
+                    icon: <Search className="w-5 h-5" />,
+                  },
+                  {
+                    step: "3",
+                    title: "Guild Review",
+                    desc: "Expert reviewers evaluate your application and provide endorsements",
+                    icon: <Award className="w-5 h-5" />,
+                  },
+                  {
+                    step: "4",
+                    title: "Get Hired",
+                    desc: "Stand out with verified credentials and land your next role",
+                    icon: <CheckCircle className="w-5 h-5" />,
+                  },
+                ]
+              : [
+                  {
+                    step: "1",
+                    title: "Apply to Join",
+                    desc: "Connect wallet and apply to join an expert guild",
+                    icon: <Shield className="w-5 h-5" />,
+                  },
+                  {
+                    step: "2",
+                    title: "Get Approved",
+                    desc: "Current guild members review and vote on your application",
+                    icon: <Users className="w-5 h-5" />,
+                  },
+                  {
+                    step: "3",
+                    title: "Review Candidates",
+                    desc: "Evaluate job applicants and stake on your endorsements",
+                    icon: <Award className="w-5 h-5" />,
+                  },
+                  {
+                    step: "4",
+                    title: "Earn & Progress",
+                    desc: "Gain rewards and reputation, advance through guild ranks",
+                    icon: <TrendingUp className="w-5 h-5" />,
+                  },
+                ]
             ).map((item, index) => (
               <div key={index} className="text-center relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-4 shadow-lg">
@@ -330,21 +553,36 @@ export function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {activeSection === "employers"
               ? "Ready to hire validated talent?"
-              : "Ready to get verified and stand out?"}
+              : activeSection === "jobseekers"
+              ? "Ready to get verified and stand out?"
+              : "Ready to join the expert community?"}
           </h2>
           <p className="text-xl text-violet-100 mb-8">
             {activeSection === "employers"
               ? "Join companies that trust expert validation over traditional screening"
-              : "Join professionals building verified reputations through guild endorsements"}
+              : activeSection === "jobseekers"
+              ? "Join professionals building verified reputations through guild endorsements"
+              : "Earn rewards while shaping the future of hiring in your industry"}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => router.push("/auth/login")}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-violet-600 bg-white rounded-xl hover:bg-violet-50 transition-all shadow-lg"
-            >
-              {activeSection === "employers" ? "Start Hiring Today" : "Join Vetted Today"}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
+            {activeSection === "experts" ? (
+              <button
+                onClick={() => setShowWalletModal(true)}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-violet-600 bg-white rounded-xl hover:bg-violet-50 transition-all shadow-lg"
+              >
+                <Wallet className="mr-2 w-5 h-5" />
+                Connect Wallet
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/auth/login")}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-violet-600 bg-white rounded-xl hover:bg-violet-50 transition-all shadow-lg"
+              >
+                {activeSection === "employers" ? "Start Hiring Today" : "Join Vetted Today"}
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -355,7 +593,7 @@ export function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
+                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
                 <span className="text-xl font-bold text-white">Vetted</span>
               </div>
               <p className="text-sm text-slate-400">
@@ -377,10 +615,10 @@ export function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Platform</h4>
+              <h4 className="text-white font-semibold mb-4">For Experts</h4>
               <ul className="space-y-2 text-sm">
-                <li><button className="hover:text-white transition-colors">About</button></li>
-                <li><button className="hover:text-white transition-colors">How It Works</button></li>
+                <li><button onClick={() => router.push("/expert")} className="hover:text-white transition-colors">Become an Expert</button></li>
+                <li><button onClick={() => router.push("/expert/dashboard")} className="hover:text-white transition-colors">Expert Dashboard</button></li>
               </ul>
             </div>
           </div>
@@ -389,6 +627,40 @@ export function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Wallet Connection Modal */}
+      {mounted && (
+        <Modal
+          isOpen={showWalletModal}
+          onClose={() => setShowWalletModal(false)}
+          title="Connect Your Wallet"
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600 mb-4">
+              Choose your preferred wallet to get started as an expert
+            </p>
+            {connectors.map((connector) => {
+              const walletInfo = getWalletInfo(connector.name);
+              return (
+                <button
+                  key={connector.id}
+                  onClick={() => handleWalletConnect(connector.id)}
+                  className="w-full flex items-center gap-4 px-4 py-4 border-2 border-slate-200 rounded-xl hover:border-violet-500 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-white transition-colors">
+                    {walletInfo.icon}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-slate-900">{connector.name}</p>
+                    <p className="text-xs text-slate-500">{walletInfo.description}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-violet-600 transition-colors" />
+                </button>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
