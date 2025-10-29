@@ -47,7 +47,7 @@ const mockApplications = [
 
 export default function EndorsementsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       <EndorsementBiddingUI
         applications={mockApplications}
         expertTokenBalance={1500}

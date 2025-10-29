@@ -36,7 +36,7 @@ export function DynamicArrayField({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-card-foreground">
         {label}
       </label>
       <div className="space-y-2">
@@ -51,7 +51,7 @@ export function DynamicArrayField({
             <button
               type="button"
               onClick={() => handleRemove(index)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

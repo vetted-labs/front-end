@@ -186,7 +186,7 @@ export function GuildApplicationTemplateBuilder({
   if (!isConnected || !address) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <Alert type="error">Please connect your wallet to continue</Alert>
+        <Alert variant="error">Please connect your wallet to continue</Alert>
       </div>
     );
   }
@@ -196,31 +196,31 @@ export function GuildApplicationTemplateBuilder({
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Template Created!</h2>
-          <p className="text-slate-600">Your application template has been saved successfully.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Template Created!</h2>
+          <p className="text-muted-foreground">Your application template has been saved successfully.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
-      <nav className="border-b border-slate-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <button
               onClick={() => (onBack ? onBack() : router.push("/expert/dashboard"))}
-              className="flex items-center text-slate-600 hover:text-slate-900 transition-all mr-6"
+              className="flex items-center text-muted-foreground hover:text-foreground transition-all mr-6"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-slate-900">
+              <h1 className="text-lg font-semibold text-foreground">
                 Application Template Builder
               </h1>
-              <p className="text-xs text-slate-500">{guildName}</p>
+              <p className="text-xs text-muted-foreground">{guildName}</p>
             </div>
           </div>
         </div>
@@ -228,13 +228,13 @@ export function GuildApplicationTemplateBuilder({
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <Alert type="error" className="mb-6">
+          <Alert variant="error" className="mb-6">
             {error}
           </Alert>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Template Information</h2>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-4">Template Information</h2>
 
           <div className="space-y-4">
             <Input
@@ -246,14 +246,14 @@ export function GuildApplicationTemplateBuilder({
             />
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
                 Description (Optional)
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe what this template is for..."
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 rows={3}
               />
             </div>
@@ -261,9 +261,9 @@ export function GuildApplicationTemplateBuilder({
         </div>
 
         {/* Questions */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Questions</h2>
+            <h2 className="text-xl font-bold text-foreground">Questions</h2>
             <div className="flex gap-2">
               <Button onClick={() => addQuestion("text")} variant="secondary" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
@@ -289,10 +289,10 @@ export function GuildApplicationTemplateBuilder({
           </div>
 
           {formData.questions.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-lg">
-              <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-600 mb-4">No questions added yet</p>
-              <p className="text-sm text-slate-500">
+            <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+              <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">No questions added yet</p>
+              <p className="text-sm text-muted-foreground">
                 Click one of the buttons above to add your first question
               </p>
             </div>
@@ -301,16 +301,16 @@ export function GuildApplicationTemplateBuilder({
               {formData.questions.map((question, index) => (
                 <div
                   key={question.id}
-                  className="border border-slate-200 rounded-lg p-4 bg-slate-50"
+                  className="border border-border rounded-lg p-4 bg-muted"
                 >
                   <div className="flex items-start gap-3 mb-4">
-                    <GripVertical className="w-5 h-5 text-slate-400 mt-2 cursor-move" />
+                    <GripVertical className="w-5 h-5 text-muted-foreground mt-2 cursor-move" />
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="px-2 py-1 bg-violet-100 text-violet-700 text-xs font-semibold rounded">
+                        <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-semibold rounded">
                           {question.type.replace("_", " ").toUpperCase()}
                         </span>
-                        <span className="text-sm text-slate-500">Question {index + 1}</span>
+                        <span className="text-sm text-muted-foreground">Question {index + 1}</span>
                       </div>
 
                       <Input
@@ -324,7 +324,7 @@ export function GuildApplicationTemplateBuilder({
                       {/* Multiple Choice Options */}
                       {question.type === "multiple_choice" && (
                         <div className="mt-4">
-                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                          <label className="block text-sm font-medium text-card-foreground mb-2">
                             Options
                           </label>
                           <div className="space-y-2">
@@ -386,9 +386,9 @@ export function GuildApplicationTemplateBuilder({
                           onChange={(e) =>
                             updateQuestion(question.id, { required: e.target.checked })
                           }
-                          className="w-4 h-4 text-violet-600 border-slate-300 rounded focus:ring-violet-500"
+                          className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
                         />
-                        <label className="ml-2 text-sm text-slate-700">Required question</label>
+                        <label className="ml-2 text-sm text-card-foreground">Required question</label>
                       </div>
                     </div>
 

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -276,28 +277,31 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   if (error || !guild) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <Alert type="error">{error || "Failed to load guild details"}</Alert>
+        <Alert variant="error">{error || "Failed to load guild details"}</Alert>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
-      <nav className="border-b border-slate-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <button
-              onClick={() => router.push("/expert/dashboard")}
-              className="flex items-center text-slate-600 hover:text-slate-900 transition-all mr-6"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Dashboard
-            </button>
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">{guild.name}</h1>
-              <p className="text-xs text-slate-500">{guild.memberCount} members</p>
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <button
+                onClick={() => router.push("/expert/dashboard")}
+                className="flex items-center text-muted-foreground hover:text-foreground transition-all mr-6"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Back to Dashboard
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">{guild.name}</h1>
+                <p className="text-xs text-muted-foreground">{guild.memberCount} members</p>
+              </div>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </nav>
@@ -305,42 +309,42 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Guild Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-slate-600">Your Role</p>
-              <Award className="w-5 h-5 text-violet-600" />
+              <p className="text-sm text-muted-foreground">Your Role</p>
+              <Award className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-2xl font-bold text-slate-900 capitalize">{guild.expertRole}</p>
+            <p className="text-2xl font-bold text-foreground capitalize">{guild.expertRole}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-slate-600">Reputation</p>
-              <TrendingUp className="w-5 h-5 text-violet-600" />
+              <p className="text-sm text-muted-foreground">Reputation</p>
+              <TrendingUp className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-2xl font-bold text-slate-900">{guild.reputation}</p>
+            <p className="text-2xl font-bold text-foreground">{guild.reputation}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-slate-600">Total Earnings</p>
-              <DollarSign className="w-5 h-5 text-violet-600" />
+              <p className="text-sm text-muted-foreground">Total Earnings</p>
+              <DollarSign className="w-5 h-5 text-primary" />
             </div>
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-2xl font-bold text-foreground">
               ${guild.earnings.totalEndorsementEarnings.toLocaleString()}
             </p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
-          <div className="flex border-b border-slate-200">
+        <div className="bg-card rounded-xl shadow-sm border border-border mb-6">
+          <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab("proposals")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
                 activeTab === "proposals"
-                  ? "text-violet-600 border-b-2 border-violet-600"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <FileText className="w-4 h-4 inline mr-2" />
@@ -350,8 +354,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("applications")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
                 activeTab === "applications"
-                  ? "text-violet-600 border-b-2 border-violet-600"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Briefcase className="w-4 h-4 inline mr-2" />
@@ -361,14 +365,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("guildApplications")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
                 activeTab === "guildApplications"
-                  ? "text-violet-600 border-b-2 border-violet-600"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Users className="w-4 h-4 inline mr-2" />
               Guild Proposals
               {guild && guild.guildApplications && guild.guildApplications.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-violet-100 text-violet-700 text-xs font-semibold rounded-full">
+                <span className="ml-2 px-2 py-0.5 bg-violet-100 text-primary text-xs font-semibold rounded-full">
                   {guild.guildApplications.length}
                 </span>
               )}
@@ -377,8 +381,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("earnings")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
                 activeTab === "earnings"
-                  ? "text-violet-600 border-b-2 border-violet-600"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Coins className="w-4 h-4 inline mr-2" />
@@ -414,11 +418,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
                 {/* Pending Proposals */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     Pending Proposals - Stake to Participate
                   </h3>
                   {guild.proposals.pending.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">
+                    <p className="text-muted-foreground text-center py-8">
                       No pending proposals at the moment
                     </p>
                   ) : (
@@ -426,17 +430,17 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                       {guild.proposals.pending.map((proposal) => (
                         <div
                           key={proposal.id}
-                          className="border border-slate-200 rounded-lg p-4 hover:border-violet-300 transition-all"
+                          className="border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-slate-900 mb-1">
+                              <h4 className="font-semibold text-foreground mb-1">
                                 {proposal.candidateName}
                               </h4>
-                              <p className="text-sm text-slate-600 mb-2">
+                              <p className="text-sm text-muted-foreground mb-2">
                                 {proposal.candidateEmail}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                 <span className="flex items-center">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {new Date(proposal.submittedAt).toLocaleDateString()}
@@ -448,7 +452,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                               </div>
                             </div>
                             {proposal.expertHasStaked ? (
-                              <div className="flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                              <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg border border-green-500/20">
                                 <Unlock className="w-4 h-4 mr-2" />
                                 <span className="text-sm font-medium">Staked</span>
                               </div>
@@ -467,11 +471,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
                 {/* Ongoing Proposals */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     Ongoing Proposals
                   </h3>
                   {guild.proposals.ongoing.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">
+                    <p className="text-muted-foreground text-center py-8">
                       No ongoing proposals
                     </p>
                   ) : (
@@ -483,13 +487,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="font-semibold text-slate-900 mb-1">
+                              <h4 className="font-semibold text-foreground mb-1">
                                 {proposal.candidateName}
                               </h4>
-                              <p className="text-sm text-slate-600 mb-2">
+                              <p className="text-sm text-muted-foreground mb-2">
                                 {proposal.candidateEmail}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-slate-600">
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                 <span className="flex items-center">
                                   <Users className="w-3 h-3 mr-1" />
                                   {proposal.participantCount} participants
@@ -498,7 +502,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                                   <ThumbsUp className="w-3 h-3 mr-1" />
                                   {proposal.votesFor}
                                 </span>
-                                <span className="flex items-center text-red-600">
+                                <span className="flex items-center text-destructive">
                                   <ThumbsDown className="w-3 h-3 mr-1" />
                                   {proposal.votesAgainst}
                                 </span>
@@ -520,55 +524,55 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
             {activeTab === "applications" && (
               <div className="space-y-4">
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Active Job Applications
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Review candidates and endorse those you believe are a good fit
                   </p>
                 </div>
 
                 {guild.applications.length === 0 ? (
-                  <p className="text-slate-500 text-center py-12">
+                  <p className="text-muted-foreground text-center py-12">
                     No applications to review at the moment
                   </p>
                 ) : (
                   guild.applications.map((application) => (
                     <div
                       key={application.id}
-                      className="border border-slate-200 rounded-lg p-6 hover:border-violet-300 transition-all"
+                      className="border border-border rounded-lg p-6 hover:border-primary/50 transition-all"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-slate-900 mb-1">
+                          <h4 className="text-lg font-semibold text-foreground mb-1">
                             {application.jobTitle}
                           </h4>
-                          <p className="text-sm text-slate-600 mb-2">
+                          <p className="text-sm text-muted-foreground mb-2">
                             {application.candidateName} • {application.candidateEmail}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                             <span>Applied: {new Date(application.appliedAt).toLocaleDateString()}</span>
                             {!application.reviewedByRecruiter && (
-                              <span className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded-md border border-yellow-200">
+                              <span className="px-2 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 rounded-md border border-yellow-500/20">
                                 Awaiting Recruiter Review
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-violet-600 mb-1">
+                          <div className="text-3xl font-bold text-primary mb-1">
                             {application.matchScore}%
                           </div>
-                          <p className="text-xs text-slate-500">Match Score</p>
+                          <p className="text-xs text-muted-foreground">Match Score</p>
                         </div>
                       </div>
 
-                      <p className="text-sm text-slate-600 mb-4 pb-4 border-b border-slate-100">
+                      <p className="text-sm text-muted-foreground mb-4 pb-4 border-b border-border">
                         {application.applicationSummary}
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <div className="text-sm text-slate-600">
+                        <div className="text-sm text-muted-foreground">
                           {application.endorsementCount} endorsement(s)
                         </div>
                         <div className="flex gap-3">
@@ -595,42 +599,42 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
             {activeTab === "guildApplications" && (
               <div className="space-y-4">
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Expert Proposals to Join Guild
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Review proposals from experts wanting to join {guild.name}. 1+ approval
-                    needed for auto-acceptance as "Recruit" member.
+                    needed for auto-acceptance as &quot;Recruit&quot; member.
                   </p>
                 </div>
 
                 {!guild.guildApplications || guild.guildApplications.length === 0 ? (
-                  <p className="text-slate-500 text-center py-12">
+                  <p className="text-muted-foreground text-center py-12">
                     No pending guild proposals at the moment
                   </p>
                 ) : (
                   (guild.guildApplications || []).map((application) => (
                     <div
                       key={application.id}
-                      className="border border-slate-200 rounded-lg p-6 hover:border-violet-300 transition-all"
+                      className="border border-border rounded-lg p-6 hover:border-primary/50 transition-all"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-slate-900 mb-1">
+                          <h4 className="text-lg font-semibold text-foreground mb-1">
                             {application.fullName}
                           </h4>
-                          <p className="text-sm text-slate-600 mb-2">{application.email}</p>
+                          <p className="text-sm text-muted-foreground mb-2">{application.email}</p>
                           <div className="flex items-center gap-3 mb-3">
-                            <span className="px-3 py-1 bg-violet-100 text-violet-700 text-xs font-semibold rounded-full">
+                            <span className="px-3 py-1 bg-violet-100 text-primary text-xs font-semibold rounded-full">
                               {application.expertiseLevel}
                             </span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-muted-foreground">
                               {application.yearsOfExperience} years experience
                             </span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-slate-500 mb-2">Review Status</p>
+                          <p className="text-xs text-muted-foreground mb-2">Review Status</p>
                           <div className="flex items-center gap-2">
                             <div className="flex items-center text-green-600">
                               <CheckCircle className="w-4 h-4 mr-1" />
@@ -638,13 +642,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                                 {application.approvalCount}
                               </span>
                             </div>
-                            <div className="flex items-center text-red-600">
+                            <div className="flex items-center text-destructive">
                               <XCircle className="w-4 h-4 mr-1" />
                               <span className="text-sm font-semibold">
                                 {application.rejectionCount}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-muted-foreground">
                               ({application.reviewCount} total)
                             </span>
                           </div>
@@ -652,35 +656,35 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                       </div>
 
                       {/* Current Position */}
-                      <div className="mb-4 pb-4 border-b border-slate-100">
-                        <p className="text-xs text-slate-500 mb-1">Current Position</p>
-                        <p className="text-sm font-medium text-slate-900">
+                      <div className="mb-4 pb-4 border-b border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Current Position</p>
+                        <p className="text-sm font-medium text-foreground">
                           {application.currentTitle} at {application.currentCompany}
                         </p>
                       </div>
 
                       {/* Bio */}
-                      <div className="mb-4 pb-4 border-b border-slate-100">
-                        <p className="text-xs text-slate-500 mb-2">Bio</p>
-                        <p className="text-sm text-slate-700 leading-relaxed">{application.bio}</p>
+                      <div className="mb-4 pb-4 border-b border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Bio</p>
+                        <p className="text-sm text-card-foreground leading-relaxed">{application.bio}</p>
                       </div>
 
                       {/* Motivation */}
-                      <div className="mb-4 pb-4 border-b border-slate-100">
-                        <p className="text-xs text-slate-500 mb-2">Motivation to Join</p>
-                        <p className="text-sm text-slate-700 leading-relaxed">
+                      <div className="mb-4 pb-4 border-b border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Motivation to Join</p>
+                        <p className="text-sm text-card-foreground leading-relaxed">
                           {application.motivation}
                         </p>
                       </div>
 
                       {/* Expertise Areas */}
-                      <div className="mb-4 pb-4 border-b border-slate-100">
-                        <p className="text-xs text-slate-500 mb-2">Expertise Areas</p>
+                      <div className="mb-4 pb-4 border-b border-border">
+                        <p className="text-xs text-muted-foreground mb-2">Expertise Areas</p>
                         <div className="flex flex-wrap gap-2">
                           {(application.expertiseAreas || []).map((area, idx) => (
                             <span
                               key={idx}
-                              className="px-3 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                              className="px-3 py-1 bg-muted text-card-foreground text-xs rounded-full"
                             >
                               {area}
                             </span>
@@ -695,7 +699,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                             href={application.linkedinUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-violet-600 hover:text-violet-700 underline"
+                            className="text-primary hover:text-primary underline"
                           >
                             LinkedIn Profile
                           </a>
@@ -704,13 +708,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                               href={application.portfolioUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-violet-600 hover:text-violet-700 underline"
+                              className="text-primary hover:text-primary underline"
                             >
                               Portfolio
                             </a>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-2">
+                        <p className="text-xs text-muted-foreground mt-2">
                           Applied: {new Date(application.appliedAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -736,14 +740,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                   <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-xl p-6 border border-violet-200">
                     <div className="flex items-center justify-between mb-4">
-                      <Coins className="w-10 h-10 text-violet-600" />
+                      <Coins className="w-10 h-10 text-primary" />
                       <TrendingUp className="w-5 h-5 text-green-500" />
                     </div>
-                    <p className="text-sm text-slate-600 mb-1">Total Points Earned</p>
-                    <p className="text-3xl font-bold text-slate-900">
+                    <p className="text-sm text-muted-foreground mb-1">Total Points Earned</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {guild.earnings.totalPoints.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       From proposal participation
                     </p>
                   </div>
@@ -753,11 +757,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                       <DollarSign className="w-10 h-10 text-green-600" />
                       <TrendingUp className="w-5 h-5 text-green-500" />
                     </div>
-                    <p className="text-sm text-slate-600 mb-1">Endorsement Earnings</p>
-                    <p className="text-3xl font-bold text-slate-900">
+                    <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>
+                    <p className="text-3xl font-bold text-foreground">
                       ${guild.earnings.totalEndorsementEarnings.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       From successful endorsements
                     </p>
                   </div>
@@ -765,11 +769,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
                 {/* Recent Earnings */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     Recent Earnings History
                   </h3>
                   {guild.earnings.recentEarnings.length === 0 ? (
-                    <p className="text-slate-500 text-center py-12">
+                    <p className="text-muted-foreground text-center py-12">
                       No earnings yet. Start reviewing proposals and endorsing candidates!
                     </p>
                   ) : (
@@ -777,12 +781,12 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                       {guild.earnings.recentEarnings.map((earning) => (
                         <div
                           key={earning.id}
-                          className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg"
+                          className="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
                         >
                           <div className="flex items-center">
                             {earning.type === "proposal" ? (
                               <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center mr-4">
-                                <FileText className="w-5 h-5 text-violet-600" />
+                                <FileText className="w-5 h-5 text-primary" />
                               </div>
                             ) : (
                               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
@@ -790,10 +794,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                               </div>
                             )}
                             <div>
-                              <p className="font-medium text-slate-900">
+                              <p className="font-medium text-foreground">
                                 {earning.description}
                               </p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-muted-foreground">
                                 {new Date(earning.date).toLocaleDateString()}
                               </p>
                             </div>
@@ -824,9 +828,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       >
         {selectedProposal && (
           <div className="space-y-4">
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <p className="text-sm text-slate-600 mb-1">Candidate</p>
-              <p className="font-semibold text-slate-900">{selectedProposal.candidateName}</p>
+            <div className="p-4 bg-muted rounded-lg border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Candidate</p>
+              <p className="font-semibold text-foreground">{selectedProposal.candidateName}</p>
             </div>
 
             <Input
@@ -838,8 +842,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               required
             />
 
-            <Alert type="info">
-              By staking, you'll be able to participate in reviewing this proposal. Your stake
+            <Alert variant="info">
+              By staking, you&apos;ll be able to participate in reviewing this proposal. Your stake
               will be returned after the review, with rewards if you vote with the majority.
             </Alert>
 
@@ -881,17 +885,17 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       >
         {selectedGuildApplication && (
           <div className="space-y-4">
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <p className="text-sm text-slate-600 mb-1">Applicant</p>
-              <p className="font-semibold text-slate-900">
+            <div className="p-4 bg-muted rounded-lg border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Applicant</p>
+              <p className="font-semibold text-foreground">
                 {selectedGuildApplication.fullName}
               </p>
-              <p className="text-xs text-slate-500">{selectedGuildApplication.email}</p>
+              <p className="text-xs text-muted-foreground">{selectedGuildApplication.email}</p>
             </div>
 
             {/* Vote Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
                 Your Vote
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -900,17 +904,17 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                   className={`p-4 rounded-lg border-2 transition-all ${
                     reviewVote === "approve"
                       ? "border-green-500 bg-green-50"
-                      : "border-slate-200 hover:border-green-300"
+                      : "border-border hover:border-green-300"
                   }`}
                 >
                   <ThumbsUp
                     className={`w-6 h-6 mx-auto mb-2 ${
-                      reviewVote === "approve" ? "text-green-600" : "text-slate-400"
+                      reviewVote === "approve" ? "text-green-600" : "text-muted-foreground"
                     }`}
                   />
                   <p
                     className={`text-sm font-medium ${
-                      reviewVote === "approve" ? "text-green-700" : "text-slate-600"
+                      reviewVote === "approve" ? "text-green-700" : "text-muted-foreground"
                     }`}
                   >
                     Approve
@@ -920,18 +924,18 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                   onClick={() => setReviewVote("reject")}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     reviewVote === "reject"
-                      ? "border-red-500 bg-red-50"
-                      : "border-slate-200 hover:border-red-300"
+                      ? "border-red-500 bg-destructive/10"
+                      : "border-border hover:border-red-300"
                   }`}
                 >
                   <ThumbsDown
                     className={`w-6 h-6 mx-auto mb-2 ${
-                      reviewVote === "reject" ? "text-red-600" : "text-slate-400"
+                      reviewVote === "reject" ? "text-destructive" : "text-muted-foreground"
                     }`}
                   />
                   <p
                     className={`text-sm font-medium ${
-                      reviewVote === "reject" ? "text-red-700" : "text-slate-600"
+                      reviewVote === "reject" ? "text-red-700" : "text-muted-foreground"
                     }`}
                   >
                     Reject
@@ -942,7 +946,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
             {/* Confidence Level */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
                 Confidence Level (1-5)
               </label>
               <div className="flex gap-2">
@@ -952,40 +956,40 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                     onClick={() => setReviewConfidence(level.toString())}
                     className={`flex-1 py-3 rounded-lg border-2 transition-all ${
                       reviewConfidence === level.toString()
-                        ? "border-violet-500 bg-violet-50 text-violet-700 font-semibold"
-                        : "border-slate-200 text-slate-600 hover:border-violet-300"
+                        ? "border-violet-500 bg-primary/10 text-primary font-semibold"
+                        : "border-border text-muted-foreground hover:border-primary/50"
                     }`}
                   >
                     {level}
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 1 = Low confidence, 5 = Very high confidence
               </p>
             </div>
 
             {/* Feedback */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-card-foreground mb-2">
                 Feedback (Optional)
               </label>
               <textarea
                 value={reviewFeedback}
                 onChange={(e) => setReviewFeedback(e.target.value)}
                 placeholder="Share your thoughts on this application..."
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 rows={4}
                 maxLength={1000}
               />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {reviewFeedback.length}/1000 characters
               </p>
             </div>
 
-            <Alert type="info">
+            <Alert variant="info">
               Your review helps maintain guild quality. Applications with 2+ approvals are
-              automatically accepted as "recruit" members.
+              automatically accepted as &quot;recruit&quot; members.
             </Alert>
 
             <div className="flex gap-3">

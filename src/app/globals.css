@@ -1,25 +1,157 @@
 @import "tailwindcss";
 
 :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    /* Background colors */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    /* Card colors */
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    /* Popover colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Primary brand colors */
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary colors */
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    /* Muted colors */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    /* Accent colors */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    /* Destructive/Error colors */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border colors */
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262.1 83.3% 57.8%;
+
+    /* Additional UI colors */
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --info: 221.2 83.2% 53.3%;
+    --info-foreground: 210 40% 98%;
+
+    /* Chart colors */
+    --chart-1: 262.1 83.3% 57.8%;
+    --chart-2: 221.2 83.2% 53.3%;
+    --chart-3: 142.1 76.2% 36.3%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84.2% 60.2%;
+
+    /* Radius */
+    --radius: 0.5rem;
+}
+
+.dark {
+    /* Background colors - Rich dark slate with blue tint */
+    --background: 215 25% 10%;
+    --foreground: 210 40% 98%;
+
+    /* Card colors - Elevated slate surface */
+    --card: 215 22% 14%;
+    --card-foreground: 210 40% 98%;
+
+    /* Popover colors */
+    --popover: 215 22% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary brand colors - Vibrant blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary colors - Medium slate */
+    --secondary: 215 20% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted colors - Subtle slate background */
+    --muted: 215 18% 16%;
+    --muted-foreground: 215 16% 70%;
+
+    /* Accent colors */
+    --accent: 215 20% 18%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Destructive/Error colors */
+    --destructive: 0 63% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Border colors - Visible slate borders */
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 217 91% 60%;
+
+    /* Additional UI colors */
+    --success: 142 71% 55%;
+    --success-foreground: 144 80% 10%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 48 96% 89%;
+    --info: 217 91% 65%;
+    --info-foreground: 215 25% 10%;
+
+    /* Chart colors - Vibrant for dark mode */
+    --chart-1: 220 70% 55%;
+    --chart-2: 160 60% 50%;
+    --chart-3: 30 80% 60%;
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 60%;
 }
 
 @theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+    --color-popover: hsl(var(--popover));
+    --color-popover-foreground: hsl(var(--popover-foreground));
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
+    --color-success: hsl(var(--success));
+    --color-success-foreground: hsl(var(--success-foreground));
+    --color-warning: hsl(var(--warning));
+    --color-warning-foreground: hsl(var(--warning-foreground));
+    --color-info: hsl(var(--info));
+    --color-info-foreground: hsl(var(--info-foreground));
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+    --color-chart-1: hsl(var(--chart-1));
+    --color-chart-2: hsl(var(--chart-2));
+    --color-chart-3: hsl(var(--chart-3));
+    --color-chart-4: hsl(var(--chart-4));
+    --color-chart-5: hsl(var(--chart-5));
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-    }
+* {
+    border-color: hsl(var(--border));
 }
 
 body {
-    background: var(--background);
-    color: var(--foreground);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: Arial, Helvetica, sans-serif;
 }

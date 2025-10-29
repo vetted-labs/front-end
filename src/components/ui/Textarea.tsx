@@ -4,6 +4,9 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string | ReactNode;
   error?: string;
   helperText?: string;
+  showCounter?: boolean;
+  minLength?: number;
+  value?: string;
 }
 
 export function Textarea({
@@ -12,36 +15,50 @@ export function Textarea({
   helperText,
   className = "",
   id,
+  showCounter,
+  minLength,
+  maxLength,
+  value = "",
   ...props
 }: TextareaProps) {
   const textareaId = id || (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+  const currentLength = typeof value === 'string' ? value.length : 0;
+  const isTooShort = minLength && currentLength < minLength;
+  const isTooLong = maxLength && currentLength > maxLength;
 
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={textareaId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {label}
-        </label>
+        <div className="flex justify-between items-center mb-1">
+          <label
+            htmlFor={textareaId}
+            className="block text-sm font-medium text-card-foreground"
+          >
+            {label}
+          </label>
+          {showCounter && (minLength || maxLength) && (
+            <span className={`text-xs ${isTooShort || isTooLong ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {currentLength}{minLength && `/${minLength} min`}{maxLength && ` (max ${maxLength})`}
+            </span>
+          )}
+        </div>
       )}
       <textarea
         id={textareaId}
         className={`
-          w-full px-3 py-2 border rounded-lg bg-white text-gray-900
-          focus:ring-2 focus:ring-violet-500 focus:border-violet-500
-          disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-          ${error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300"}
+          w-full px-3 py-2 border rounded-lg bg-card text-foreground
+          focus:ring-2 focus:ring-primary focus:border-primary
+          disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
+          ${error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-border"}
           ${className}
         `}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-destructive">{error}</p>
       )}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
       )}
     </div>
   );

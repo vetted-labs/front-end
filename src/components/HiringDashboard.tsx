@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +24,7 @@ import { Button, LoadingState, Alert, Card, StatusBadge } from "./ui";
 import { jobsApi, dashboardApi } from "@/lib/api";
 import { useApi } from "@/hooks/useFetch";
 import { JOB_STATUSES } from "@/config/constants";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface JobPosting {
   id: string;
@@ -143,73 +145,76 @@ export function HiringDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
-                <span className="text-xl font-bold text-gray-900">Vetted</span>
+                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+                <span className="text-xl font-bold text-foreground">Vetted</span>
               </div>
               <nav className="hidden md:flex items-center space-x-6 ml-8">
-                <a href="#" className="text-gray-900 font-medium">
+                <a href="#" className="text-foreground font-medium">
                   Dashboard
                 </a>
-                <a href="#" className="text-gray-700 hover:text-gray-900">
+                <a href="#" className="text-card-foreground hover:text-foreground">
                   Candidates
                 </a>
-                <a href="#" className="text-gray-700 hover:text-gray-900">
+                <a href="#" className="text-card-foreground hover:text-foreground">
                   Analytics
                 </a>
-                <a href="#" className="text-gray-700 hover:text-gray-900">
+                <a href="#" className="text-card-foreground hover:text-foreground">
                   Settings
                 </a>
               </nav>
             </div>
 
             {/* User Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                >
                 <div className="p-2 bg-violet-100 rounded-lg">
-                  <User className="w-4 h-4 text-violet-600" />
+                  <User className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-gray-900 hidden sm:block">
+                <span className="text-sm font-medium text-foreground hidden sm:block">
                   {companyEmail || "Company"}
                 </span>
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-sm font-medium text-foreground">
                       {companyEmail}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Company Account</p>
+                    <p className="text-xs text-muted-foreground mt-1">Company Account</p>
                   </div>
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
                       router.push("/company/profile");
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
                   >
                     <User className="w-4 h-4" />
                     Company Profile
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
                   >
                     <LogOut className="w-4 h-4" />
                     Logout
                   </button>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
@@ -229,13 +234,13 @@ export function HiringDashboard() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 bg-violet-100 rounded-lg">
-                <Briefcase className="w-6 h-6 text-violet-600" />
+                <Briefcase className="w-6 h-6 text-primary" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-foreground">
               {stats?.totalJobs || 0}
             </h3>
-            <p className="text-gray-700 text-sm mt-1">Total Jobs</p>
+            <p className="text-card-foreground text-sm mt-1">Total Jobs</p>
           </Card>
 
           <Card>
@@ -244,10 +249,10 @@ export function HiringDashboard() {
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-foreground">
               {stats?.activeJobs || 0}
             </h3>
-            <p className="text-gray-700 text-sm mt-1">Active Postings</p>
+            <p className="text-card-foreground text-sm mt-1">Active Postings</p>
           </Card>
 
           <Card>
@@ -256,10 +261,10 @@ export function HiringDashboard() {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-foreground">
               {stats?.totalApplicants || 0}
             </h3>
-            <p className="text-gray-700 text-sm mt-1">Total Applicants</p>
+            <p className="text-card-foreground text-sm mt-1">Total Applicants</p>
           </Card>
 
           <Card>
@@ -268,33 +273,33 @@ export function HiringDashboard() {
                 <Clock className="w-6 h-6 text-amber-600" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-foreground">
               {stats?.averageTimeToHire || 0}
             </h3>
-            <p className="text-gray-700 text-sm mt-1">Avg. Days to Hire</p>
+            <p className="text-card-foreground text-sm mt-1">Avg. Days to Hire</p>
           </Card>
         </div>
 
         {/* Job Postings */}
         <Card padding="none">
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-border">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-xl font-bold text-gray-900">Job Postings</h2>
+              <h2 className="text-xl font-bold text-foreground">Job Postings</h2>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search jobs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900"
+                    className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
                   />
                 </div>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-gray-900"
+                  className="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
                 >
                   <option value="all">All Status</option>
                   {JOB_STATUSES.map((status) => (
@@ -318,16 +323,16 @@ export function HiringDashboard() {
               jobPostings.map((job) => (
                 <div
                   key={job.id}
-                  className="p-6 hover:bg-gray-50 transition-colors"
+                  className="p-6 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                          <h3 className="text-lg font-semibold text-foreground mb-1">
                             {job.title}
                           </h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-700">
+                          <div className="flex items-center gap-4 text-sm text-card-foreground">
                             <span className="flex items-center gap-1">
                               <Building2 className="w-4 h-4" />
                               {job.department || "N/A"}
@@ -355,15 +360,15 @@ export function HiringDashboard() {
                                 showActionMenu === job.id ? null : job.id
                               )
                             }
-                            className="p-1 hover:bg-gray-100 rounded"
+                            className="p-1 hover:bg-muted rounded"
                           >
-                            <MoreVertical className="w-5 h-5 text-gray-600" />
+                            <MoreVertical className="w-5 h-5 text-muted-foreground" />
                           </button>
                           {showActionMenu === job.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                            <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border py-1 z-10">
                               <button
                                 onClick={() => router.push(`/jobs/${job.id}`)}
-                                className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                               >
                                 <Eye className="w-4 h-4" /> View Details
                               </button>
@@ -371,13 +376,13 @@ export function HiringDashboard() {
                                 onClick={() =>
                                   router.push(`/jobs/${job.id}/edit`)
                                 }
-                                className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                               >
                                 <Edit className="w-4 h-4" /> Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteJob(job.id)}
-                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
                               >
                                 <Trash2 className="w-4 h-4" /> Delete
                               </button>
@@ -387,16 +392,16 @@ export function HiringDashboard() {
                       </div>
                       <div className="flex items-center gap-6 mt-4">
                         <StatusBadge status={job.status} />
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-card-foreground">
                           <strong>{job.applicants}</strong> applicants
                         </span>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-card-foreground">
                           <strong>{job.views}</strong> views
                         </span>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-card-foreground">
                           Guild: <strong>{job.guild}</strong>
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-muted-foreground">
                           Posted {new Date(job.createdAt).toLocaleDateString()}
                         </span>
                       </div>
@@ -406,7 +411,7 @@ export function HiringDashboard() {
               ))
             ) : (
               <div className="p-12 text-center">
-                <p className="text-gray-700 mb-4">No job postings found</p>
+                <p className="text-card-foreground mb-4">No job postings found</p>
                 <Button onClick={() => router.push("/jobs/new")}>
                   Create Your First Job Posting
                 </Button>

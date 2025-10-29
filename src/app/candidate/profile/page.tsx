@@ -1,5 +1,7 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -92,6 +94,7 @@ export default function CandidateProfilePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -276,9 +279,9 @@ export default function CandidateProfilePage() {
       case "accepted":
         return "bg-green-100 text-green-700 border-green-200";
       case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
+        return "bg-red-100 text-red-700 border-destructive/20";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-muted text-card-foreground border-border";
     }
   };
 
@@ -301,10 +304,10 @@ export default function CandidateProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -312,12 +315,12 @@ export default function CandidateProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Profile not found</p>
+          <p className="text-muted-foreground mb-4">Profile not found</p>
           <button
             onClick={() => router.push("/auth/signup?type=candidate")}
-            className="text-violet-600 hover:text-violet-700"
+            className="text-primary hover:text-primary"
           >
             Create Account
           </button>
@@ -327,38 +330,67 @@ export default function CandidateProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation */}
-      <nav className="border-b border-slate-200 bg-white sticky top-0 z-40">
+      <nav className="border-b border-border bg-card sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
               onClick={() => router.push("/browse")}
               className="flex items-center space-x-2"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
-              <span className="text-xl font-bold text-slate-900">Vetted</span>
+              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <button
                 onClick={() => router.push("/browse/jobs")}
-                className="text-sm text-gray-700 hover:text-gray-900 font-medium"
+                className="text-sm text-card-foreground hover:text-foreground font-medium"
               >
                 Browse Jobs
               </button>
-              <div className="flex items-center gap-2 px-3 py-2 bg-violet-50 rounded-lg">
-                <User className="w-4 h-4 text-violet-600" />
-                <span className="text-sm font-medium text-gray-900">
-                  {profile.email}
-                </span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground hidden sm:block">
+                    {profile.email}
+                  </span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                    <div className="px-4 py-3 border-b border-border">
+                      <p className="text-sm font-medium text-foreground">
+                        {profile.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Candidate Account</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        router.push("/candidate/profile");
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
             </div>
           </div>
         </div>
@@ -367,93 +399,93 @@ export default function CandidateProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <p className="text-green-700">{successMessage}</p>
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <p className="text-green-700 dark:text-green-300">{successMessage}</p>
           </div>
         )}
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome back, {profile.fullName}
           </h1>
-          <p className="text-gray-600">{profile.headline}</p>
+          <p className="text-muted-foreground">{profile.headline}</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-violet-600">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-primary">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Applications</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm text-muted-foreground mb-1">Total Applications</p>
+                <p className="text-3xl font-bold text-foreground">{stats.total}</p>
               </div>
-              <Send className="w-8 h-8 text-violet-600" />
+              <Send className="w-8 h-8 text-primary" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-yellow-500">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-yellow-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.pending}</p>
+                <p className="text-sm text-muted-foreground mb-1">Pending</p>
+                <p className="text-3xl font-bold text-foreground">{stats.pending}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Under Review</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.reviewing}</p>
+                <p className="text-sm text-muted-foreground mb-1">Under Review</p>
+                <p className="text-3xl font-bold text-foreground">{stats.reviewing}</p>
               </div>
               <Eye className="w-8 h-8 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-purple-500">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Interviewed</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.interviewed}</p>
+                <p className="text-sm text-muted-foreground mb-1">Interviewed</p>
+                <p className="text-3xl font-bold text-foreground">{stats.interviewed}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-purple-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-green-500">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Accepted</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.accepted}</p>
+                <p className="text-sm text-muted-foreground mb-1">Accepted</p>
+                <p className="text-3xl font-bold text-foreground">{stats.accepted}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-red-500">
+          <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-red-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Rejected</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.rejected}</p>
+                <p className="text-sm text-muted-foreground mb-1">Rejected</p>
+                <p className="text-3xl font-bold text-foreground">{stats.rejected}</p>
               </div>
-              <XCircle className="w-8 h-8 text-red-500" />
+              <XCircle className="w-8 h-8 text-destructive" />
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-card rounded-xl shadow-sm mb-6">
+          <div className="border-b border-border">
             <div className="flex">
               <button
                 onClick={() => setActiveTab("applications")}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === "applications"
-                    ? "border-violet-600 text-violet-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 My Applications
@@ -462,8 +494,8 @@ export default function CandidateProfilePage() {
                 onClick={() => setActiveTab("profile")}
                 className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === "profile"
-                    ? "border-violet-600 text-violet-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Profile & Resume
@@ -477,15 +509,15 @@ export default function CandidateProfilePage() {
               {applications.length === 0 ? (
                 <div className="text-center py-12">
                   <Send className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     No applications yet
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     Start applying to jobs to see them here
                   </p>
                   <button
                     onClick={() => router.push("/browse/jobs")}
-                    className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all"
                   >
                     Browse Jobs
                   </button>
@@ -495,14 +527,14 @@ export default function CandidateProfilePage() {
                   {applications.map((application) => (
                     <div
                       key={application.id}
-                      className="border border-gray-200 rounded-xl p-6 hover:border-violet-300 hover:shadow-md transition-all"
+                      className="border border-border rounded-xl p-6 hover:border-primary/50 hover:shadow-md transition-all"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          <h3 className="text-lg font-semibold text-foreground mb-2">
                             {application.job.title}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             {application.job.companyName && (
                               <span className="flex items-center gap-1">
                                 <Building2 className="w-4 h-4" />
@@ -541,7 +573,7 @@ export default function CandidateProfilePage() {
                       {application.job.skills && application.job.skills.length > 0 && (
                         <div className="mb-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                            <span className="text-xs font-semibold text-card-foreground uppercase tracking-wide">
                               Skills Required
                             </span>
                           </div>
@@ -549,13 +581,13 @@ export default function CandidateProfilePage() {
                             {application.job.skills.slice(0, 6).map((skill, index) => (
                               <span
                                 key={index}
-                                className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-medium"
+                                className="px-2.5 py-1 bg-muted text-card-foreground rounded-md text-xs font-medium"
                               >
                                 {skill}
                               </span>
                             ))}
                             {application.job.skills.length > 6 && (
-                              <span className="px-2.5 py-1 text-slate-600 text-xs font-medium">
+                              <span className="px-2.5 py-1 text-muted-foreground text-xs font-medium">
                                 +{application.job.skills.length - 6} more
                               </span>
                             )}
@@ -563,8 +595,8 @@ export default function CandidateProfilePage() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="w-4 h-4" />
                           Applied on{" "}
                           {new Date(application.appliedAt).toLocaleDateString("en-US", {
@@ -577,7 +609,7 @@ export default function CandidateProfilePage() {
                           onClick={() =>
                             router.push(`/browse/jobs/${application.job.id}`)
                           }
-                          className="text-sm text-violet-600 hover:text-violet-700 font-medium"
+                          className="text-sm text-primary hover:text-primary font-medium"
                         >
                           View Job →
                         </button>
@@ -594,7 +626,7 @@ export default function CandidateProfilePage() {
             <div className="p-6 space-y-8">
               {/* Resume Upload Section */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5" />
                   Resume / CV
                 </h2>
@@ -607,8 +639,8 @@ export default function CandidateProfilePage() {
                           <CheckCircle className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">Resume Uploaded</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="font-medium text-foreground">Resume Uploaded</p>
+                          <p className="text-sm text-muted-foreground">
                             {profile.resumeFileName || "resume.pdf"}
                           </p>
                         </div>
@@ -626,7 +658,7 @@ export default function CandidateProfilePage() {
                           onClick={() =>
                             setProfile({ ...profile, resumeUrl: undefined })
                           }
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -634,12 +666,12 @@ export default function CandidateProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-violet-400 transition-colors">
-                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-violet-400 transition-colors">
+                    <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
                       Upload your resume
                     </h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       PDF or Word document, max 5MB
                     </p>
                     <input
@@ -651,7 +683,7 @@ export default function CandidateProfilePage() {
                     />
                     <label
                       htmlFor="resume-upload"
-                      className="inline-flex items-center px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 cursor-pointer transition-colors"
+                      className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-violet-700 cursor-pointer transition-colors"
                     >
                       Choose File
                     </label>
@@ -659,28 +691,28 @@ export default function CandidateProfilePage() {
                 )}
 
                 {resumeFile && (
-                  <div className="p-4 bg-violet-50 border border-violet-200 rounded-lg">
+                  <div className="p-4 bg-primary/10 border border-violet-200 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-violet-600" />
-                        <span className="text-sm font-medium text-gray-900">
+                        <FileText className="w-5 h-5 text-primary" />
+                        <span className="text-sm font-medium text-foreground">
                           {resumeFile.name}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           ({(resumeFile.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
                       <button
                         onClick={() => setResumeFile(null)}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-muted-foreground hover:text-muted-foreground"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                     {uploadProgress > 0 && (
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div className="w-full bg-muted rounded-full h-2 mb-2">
                         <div
-                          className="bg-violet-600 h-2 rounded-full transition-all duration-300"
+                          className="bg-primary h-2 rounded-full transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
@@ -688,7 +720,7 @@ export default function CandidateProfilePage() {
                     <button
                       onClick={handleResumeUpload}
                       disabled={isSaving}
-                      className="w-full mt-2 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                      className="w-full mt-2 py-2 bg-primary text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                     >
                       {isSaving ? (
                         <>
@@ -706,20 +738,20 @@ export default function CandidateProfilePage() {
                 )}
 
                 {errors.resume && (
-                  <p className="text-red-500 text-sm">{errors.resume}</p>
+                  <p className="text-destructive text-sm">{errors.resume}</p>
                 )}
               </div>
 
               {/* Profile Information */}
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                   <User className="w-5 h-5" />
                   Personal Information
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Full Name
                     </label>
                     <input
@@ -728,12 +760,12 @@ export default function CandidateProfilePage() {
                       onChange={(e) =>
                         setProfile({ ...profile, fullName: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Email
                     </label>
                     <input
@@ -742,12 +774,12 @@ export default function CandidateProfilePage() {
                       onChange={(e) =>
                         setProfile({ ...profile, email: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Phone
                     </label>
                     <input
@@ -756,12 +788,12 @@ export default function CandidateProfilePage() {
                       onChange={(e) =>
                         setProfile({ ...profile, phone: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       Experience Level
                     </label>
                     <select
@@ -772,7 +804,7 @@ export default function CandidateProfilePage() {
                           experienceLevel: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     >
                       <option value="junior">Junior (0-2 years)</option>
                       <option value="mid">Mid-level (2-5 years)</option>
@@ -784,7 +816,7 @@ export default function CandidateProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-card-foreground mb-1">
                     Professional Headline
                   </label>
                   <input
@@ -793,12 +825,12 @@ export default function CandidateProfilePage() {
                     onChange={(e) =>
                       setProfile({ ...profile, headline: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-card-foreground mb-1">
                     Bio
                   </label>
                   <textarea
@@ -807,13 +839,13 @@ export default function CandidateProfilePage() {
                       setProfile({ ...profile, bio: e.target.value })
                     }
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       LinkedIn Profile
                     </label>
                     <input
@@ -822,12 +854,12 @@ export default function CandidateProfilePage() {
                       onChange={(e) =>
                         setProfile({ ...profile, linkedIn: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-card-foreground mb-1">
                       GitHub Profile
                     </label>
                     <input
@@ -836,23 +868,23 @@ export default function CandidateProfilePage() {
                       onChange={(e) =>
                         setProfile({ ...profile, github: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 bg-white text-gray-900"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-3 pt-6 border-t border-border">
                 <button
                   onClick={() => router.push("/browse/jobs")}
-                  className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-6 py-2 text-card-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveProfile}
                   disabled={isSaving}
-                  className="px-6 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSaving ? (
                     <>

@@ -10,10 +10,14 @@ export const config = createConfig({
   connectors: [
     metaMask(),
     coinbaseWallet({
-      appName: "Crypto App",
+      appName: "Vetted",
     }),
     walletConnect({
       projectId,
+      showQrModal: true,
+      qrModalOptions: {
+        themeMode: "light",
+      },
     }),
   ],
   transports: {
@@ -22,4 +26,5 @@ export const config = createConfig({
     [polygon.id]: http(),
     [arbitrum.id]: http(),
   },
+  ssr: true,
 });

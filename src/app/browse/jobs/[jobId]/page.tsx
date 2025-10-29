@@ -1,5 +1,7 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -324,6 +326,11 @@ export default function PublicJobDetailsPage() {
       return;
     }
 
+    if (coverLetter.length < 50) {
+      setApplicationError("Cover letter must be at least 50 characters");
+      return;
+    }
+
     if (job?.screeningQuestions && job.screeningQuestions.length > 0) {
       const allAnswered = screeningAnswers.every((answer) => answer.trim() !== "");
       if (!allAnswered) {
@@ -424,7 +431,7 @@ export default function PublicJobDetailsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
         <Alert variant="error">{error}</Alert>
       </div>
     );
@@ -432,9 +439,9 @@ export default function PublicJobDetailsPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-900 mb-4">Job not found</p>
+          <p className="text-foreground mb-4">Job not found</p>
           <Button onClick={() => router.push("/browse")}>
             Browse All Jobs
           </Button>
@@ -446,50 +453,52 @@ export default function PublicJobDetailsPage() {
   const hasAlreadyApplied = !!existingApplication;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
-              <span className="text-xl font-bold text-gray-900">Vetted</span>
+              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-bold text-foreground">Vetted</span>
             </div>
 
-            {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
                   <div className="p-2 bg-violet-100 rounded-lg">
-                    <User className="w-4 h-4 text-violet-600" />
+                    <User className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900 hidden sm:block">
+                  <span className="text-sm font-medium text-foreground hidden sm:block">
                     {candidateEmail}
                   </span>
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                    <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">
+                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                    <div className="px-4 py-3 border-b border-border">
+                      <p className="text-sm font-medium text-foreground">
                         {candidateEmail}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Candidate Account
                       </p>
                     </div>
                     <button
                       onClick={() => router.push("/candidate/profile")}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                     >
                       <User className="w-4 h-4" />
                       My Profile
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
                       Logout
@@ -501,18 +510,19 @@ export default function PublicJobDetailsPage() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                  className="px-4 py-2 text-card-foreground hover:text-foreground font-medium"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => router.push("/auth/signup?type=candidate")}
-                  className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all"
                 >
                   Sign Up
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </nav>
@@ -521,7 +531,7 @@ export default function PublicJobDetailsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.push("/browse/jobs")}
-          className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Jobs
@@ -530,15 +540,15 @@ export default function PublicJobDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-8">
+            <div className="bg-card rounded-xl shadow-sm p-8">
               {/* Job Header */}
-              <div className="border-b border-gray-200 pb-6 mb-6">
+              <div className="border-b border-border pb-6 mb-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-3xl font-bold text-foreground mb-2">
                       {job.title}
                     </h1>
-                    <div className="flex items-center gap-4 text-gray-600">
+                    <div className="flex items-center gap-4 text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
                         <span className="font-medium">{job.companyName || "Company"}</span>
@@ -557,7 +567,7 @@ export default function PublicJobDetailsPage() {
                     <img
                       src={`http://localhost:4000${job.companyLogo}`}
                       alt={job.companyName || "Company"}
-                      className="w-24 h-24 rounded-xl object-cover border-2 border-gray-200 shadow-md ml-6 flex-shrink-0"
+                      className="w-24 h-24 rounded-xl object-cover border-2 border-border shadow-md ml-6 flex-shrink-0"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
@@ -565,7 +575,7 @@ export default function PublicJobDetailsPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     Posted {new Date(job.createdAt).toLocaleDateString()}
@@ -590,10 +600,10 @@ export default function PublicJobDetailsPage() {
               {/* Job Description */}
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                  <h2 className="text-xl font-semibold text-foreground mb-3">
                     About the Role
                   </h2>
-                  <p className="text-gray-700 whitespace-pre-wrap">
+                  <p className="text-card-foreground whitespace-pre-wrap">
                     {job.description}
                   </p>
                 </div>
@@ -601,13 +611,13 @@ export default function PublicJobDetailsPage() {
                 {/* Requirements */}
                 {job.requirements && job.requirements.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                    <h2 className="text-xl font-semibold text-foreground mb-3">
                       Requirements
                     </h2>
                     <ul className="space-y-2">
                       {job.requirements.map((req, index) => (
-                        <li key={index} className="flex items-start gap-2 text-gray-700">
-                          <span className="text-violet-600 mt-1">•</span>
+                        <li key={index} className="flex items-start gap-2 text-card-foreground">
+                          <span className="text-primary mt-1">•</span>
                           <span>{req}</span>
                         </li>
                       ))}
@@ -618,14 +628,14 @@ export default function PublicJobDetailsPage() {
                 {/* Skills */}
                 {job.skills && job.skills.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                    <h2 className="text-xl font-semibold text-foreground mb-3">
                       Skills
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {job.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm font-medium"
+                          className="px-3 py-1 bg-violet-100 text-primary rounded-full text-sm font-medium"
                         >
                           {skill}
                         </span>
@@ -639,7 +649,7 @@ export default function PublicJobDetailsPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24 space-y-6">
+            <div className="bg-card rounded-xl shadow-sm p-6 sticky top-24 space-y-6">
               {/* Already Applied Warning */}
               {hasAlreadyApplied && (
                 <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
@@ -658,7 +668,7 @@ export default function PublicJobDetailsPage() {
                   </div>
                   <button
                     onClick={() => router.push("/candidate/profile")}
-                    className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+                    className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
                   >
                     <ClipboardList className="w-4 h-4" />
                     View My Applications →
@@ -679,26 +689,26 @@ export default function PublicJobDetailsPage() {
                   {checkingApplication ? "Checking..." : hasAlreadyApplied ? "Already Applied" : "Apply for this Role"}
                 </Button>
                 {hasAlreadyApplied && (
-                  <p className="text-xs text-gray-500 text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     You cannot apply to this position again
                   </p>
                 )}
               </div>
 
               {/* Job Details */}
-              <div className="space-y-4 pt-4 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-3">
+              <div className="space-y-4 pt-4 border-t border-border">
+                <h3 className="font-semibold text-foreground mb-3">
                   Job Details
                 </h3>
 
                 {job.salary.min && job.salary.max && (
                   <div className="flex items-start gap-3">
-                    <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <DollarSign className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         Salary Range
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
                       </p>
                     </div>
@@ -706,28 +716,28 @@ export default function PublicJobDetailsPage() {
                 )}
 
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Location Type</p>
-                    <p className="text-sm text-gray-600 capitalize">{job.locationType}</p>
+                    <p className="text-sm font-medium text-foreground">Location Type</p>
+                    <p className="text-sm text-muted-foreground capitalize">{job.locationType}</p>
                   </div>
                 </div>
 
                 {job.experienceLevel && (
                   <div className="flex items-start gap-3">
-                    <TrendingUp className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <TrendingUp className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Experience Level</p>
-                      <p className="text-sm text-gray-600 capitalize">{job.experienceLevel}</p>
+                      <p className="text-sm font-medium text-foreground">Experience Level</p>
+                      <p className="text-sm text-muted-foreground capitalize">{job.experienceLevel}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Guild</p>
-                    <p className="text-sm text-gray-600">{job.guild}</p>
+                    <p className="text-sm font-medium text-foreground">Guild</p>
+                    <p className="text-sm text-muted-foreground">{job.guild}</p>
                   </div>
                 </div>
               </div>
@@ -750,14 +760,14 @@ export default function PublicJobDetailsPage() {
         title={`Apply for ${job?.title}`}
         size="lg"
       >
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           Complete the form below to submit your application
         </p>
 
         <div className="space-y-6">
           {/* Resume Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-card-foreground mb-3">
               Resume / CV *
             </label>
 
@@ -773,24 +783,24 @@ export default function PublicJobDetailsPage() {
                   }}
                   className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
                     useProfileResume
-                      ? "border-violet-500 bg-violet-50"
-                      : "border-gray-300 hover:border-violet-300"
+                      ? "border-violet-500 bg-primary/10"
+                      : "border-border hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      useProfileResume ? "border-violet-500" : "border-gray-300"
+                      useProfileResume ? "border-violet-500" : "border-border"
                     }`}>
                       {useProfileResume && (
-                        <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-primary/100"></div>
                       )}
                     </div>
-                    <FileText className={`w-5 h-5 ${useProfileResume ? "text-violet-600" : "text-gray-400"}`} />
+                    <FileText className={`w-5 h-5 ${useProfileResume ? "text-primary" : "text-muted-foreground"}`} />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         Use Resume from Profile
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         {profileResume.resumeFileName}
                       </p>
                     </div>
@@ -809,8 +819,8 @@ export default function PublicJobDetailsPage() {
                 }}
                 className={`w-full p-4 border-2 border-dashed rounded-lg text-left transition-all ${
                   !useProfileResume && resumeFile
-                    ? "border-violet-500 bg-violet-50"
-                    : "border-gray-300 hover:border-violet-500"
+                    ? "border-violet-500 bg-primary/10"
+                    : "border-border hover:border-violet-500"
                 }`}
               >
                 <input
@@ -824,14 +834,14 @@ export default function PublicJobDetailsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full border-2 border-violet-500 flex items-center justify-center">
-                        <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-primary/100"></div>
                       </div>
-                      <FileText className="w-5 h-5 text-violet-600" />
+                      <FileText className="w-5 h-5 text-primary" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           Upload New Resume
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                           {resumeFile.name}
                         </p>
                       </div>
@@ -842,20 +852,20 @@ export default function PublicJobDetailsPage() {
                         setResumeFile(null);
                         setUseProfileResume(true);
                       }}
-                      className="text-red-600 hover:text-red-700 text-sm"
+                      className="text-destructive hover:text-red-700 text-sm"
                     >
                       Remove
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                    <Upload className="w-5 h-5 text-gray-400" />
+                    <div className="w-5 h-5 rounded-full border-2 border-border"></div>
+                    <Upload className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         Upload New Resume
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         PDF, DOC, or DOCX (max 5MB)
                       </p>
                     </div>
@@ -872,12 +882,14 @@ export default function PublicJobDetailsPage() {
             onChange={(e) => setCoverLetter(e.target.value)}
             rows={6}
             placeholder="Tell us why you're a great fit for this role..."
+            showCounter
+            minLength={50}
           />
 
           {/* Screening Questions */}
           {job?.screeningQuestions && job.screeningQuestions.length > 0 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <HelpCircle className="w-5 h-5" />
                 Screening Questions
               </h3>
@@ -940,10 +952,10 @@ export default function PublicJobDetailsPage() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             Application Submitted!
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-muted-foreground mb-8">
             Your application for <strong>{job?.title}</strong> has been successfully submitted. The hiring team will review it and get back to you soon.
           </p>
 
@@ -971,7 +983,7 @@ export default function PublicJobDetailsPage() {
             </Button>
             <button
               onClick={() => setShowSuccessModal(false)}
-              className="w-full py-3 text-gray-600 hover:text-gray-900 transition-colors text-sm"
+              className="w-full py-3 text-muted-foreground hover:text-foreground transition-colors text-sm"
             >
               Stay on this page
             </button>

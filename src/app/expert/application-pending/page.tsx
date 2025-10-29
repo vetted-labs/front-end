@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { useAccount, useDisconnect } from "wagmi";
 import Image from "next/image";
@@ -102,21 +103,21 @@ export default function ApplicationPendingPage() {
   if (error || !expert) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <Alert type="error">{error || "Failed to load application status"}</Alert>
+        <Alert variant="error">{error || "Failed to load application status"}</Alert>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
-      <nav className="border-b border-slate-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
               <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
-              <span className="text-xl font-bold text-slate-900">Vetted</span>
-              <span className="text-sm font-medium text-violet-600 bg-violet-50 px-2 py-1 rounded-md">
+              <span className="text-xl font-bold text-foreground">Vetted</span>
+              <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
                 Expert
               </span>
             </div>
@@ -125,13 +126,13 @@ export default function ApplicationPendingPage() {
               {mounted && address && (
                 <>
                   <div className="flex items-center px-3 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg border border-violet-200">
-                    <span className="text-xs font-mono text-violet-700">
+                    <span className="text-xs font-mono text-primary">
                       {address.slice(0, 6)}...{address.slice(-4)}
                     </span>
                   </div>
                   <button
                     onClick={handleDisconnect}
-                    className="flex items-center text-sm text-slate-600 hover:text-slate-900 transition-all"
+                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-all"
                   >
                     <LogOut className="w-4 h-4 mr-1" />
                     Disconnect
@@ -145,23 +146,23 @@ export default function ApplicationPendingPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 md:p-12 mb-6">
+        <div className="bg-card rounded-2xl shadow-lg border border-border p-8 md:p-12 mb-6">
           {/* Icon */}
-          <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-full flex items-center justify-center text-violet-600 mx-auto mb-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
             <Clock className="w-10 h-10" />
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-center">
             Application Under Review
           </h1>
 
           {/* Applied To Guild */}
           {expert.appliedToGuild && (
             <div className="text-center mb-8">
-              <p className="text-lg text-slate-600 mb-2">Applied to</p>
+              <p className="text-lg text-muted-foreground mb-2">Applied to</p>
               <div className="inline-block px-6 py-3 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg border border-violet-200">
-                <p className="text-xl font-semibold text-violet-700">
+                <p className="text-xl font-semibold text-primary">
                   {expert.appliedToGuild.name}
                 </p>
               </div>
@@ -170,10 +171,10 @@ export default function ApplicationPendingPage() {
 
           {/* Review Status */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <div className="text-center p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-slate-900">{expert.reviewCount}</p>
-              <p className="text-sm text-slate-600">Total Reviews</p>
+            <div className="text-center p-4 bg-muted rounded-lg border border-border">
+              <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-2xl font-bold text-foreground">{expert.reviewCount}</p>
+              <p className="text-sm text-muted-foreground">Total Reviews</p>
             </div>
 
             <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
@@ -182,23 +183,23 @@ export default function ApplicationPendingPage() {
               <p className="text-sm text-green-600">Approvals</p>
             </div>
 
-            <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-              <XCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+            <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+              <XCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
               <p className="text-2xl font-bold text-red-700">{expert.rejectionCount}</p>
-              <p className="text-sm text-red-600">Rejections</p>
+              <p className="text-sm text-destructive">Rejections</p>
             </div>
           </div>
 
           {/* Progress Info */}
-          <div className="bg-violet-50 rounded-lg p-6 mb-8 border border-violet-200">
+          <div className="bg-primary/10 rounded-lg p-6 mb-8 border border-violet-200">
             <div className="flex items-start">
-              <Shield className="w-6 h-6 text-violet-600 mt-0.5 mr-3 flex-shrink-0" />
+              <Shield className="w-6 h-6 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-slate-900 mb-2">Auto-Approval System</p>
-                <p className="text-sm text-slate-700 leading-relaxed">
+                <p className="font-semibold text-foreground mb-2">Auto-Approval System</p>
+                <p className="text-sm text-card-foreground leading-relaxed">
                   Your application needs <strong>1+ approval</strong> from a guild member to be
-                  automatically accepted. Once approved, you'll get instant access to the expert
-                  dashboard and join the guild as a "Recruit".
+                  automatically accepted. Once approved, you&apos;ll get instant access to the expert
+                  dashboard and join the guild as a &quot;Recruit&quot;.
                 </p>
               </div>
             </div>
@@ -206,12 +207,12 @@ export default function ApplicationPendingPage() {
 
           {/* Status Timeline */}
           <div className="space-y-4 mb-8">
-            <div className="flex items-start text-left p-4 bg-violet-50 rounded-lg border border-violet-200">
-              <CheckCircle className="w-5 h-5 text-violet-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-violet-200">
+              <CheckCircle className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-slate-900 mb-1">Application Received</p>
-                <p className="text-sm text-slate-600">
-                  We've successfully received your application and wallet information.
+                <p className="font-semibold text-foreground mb-1">Application Received</p>
+                <p className="text-sm text-muted-foreground">
+                  We&apos;ve successfully received your application and wallet information.
                 </p>
               </div>
             </div>
@@ -219,20 +220,20 @@ export default function ApplicationPendingPage() {
             <div className="flex items-start text-left p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <Clock className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-slate-900 mb-1">Under Guild Review</p>
-                <p className="text-sm text-slate-600">
+                <p className="font-semibold text-foreground mb-1">Under Guild Review</p>
+                <p className="text-sm text-muted-foreground">
                   Guild members are reviewing your credentials. You currently have{" "}
                   {expert.approvalCount} approval(s).
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start text-left p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <Mail className="w-5 h-5 text-slate-500 mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex items-start text-left p-4 bg-muted rounded-lg border border-border">
+              <Mail className="w-5 h-5 text-muted-foreground mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-slate-900 mb-1">Auto-Approval Pending</p>
-                <p className="text-sm text-slate-600">
-                  Once you receive 1+ approval, you'll automatically be accepted as a "Recruit"
+                <p className="font-semibold text-foreground mb-1">Auto-Approval Pending</p>
+                <p className="text-sm text-muted-foreground">
+                  Once you receive 1+ approval, you&apos;ll automatically be accepted as a &quot;Recruit&quot;
                   member and gain access to the dashboard.
                 </p>
               </div>
@@ -241,16 +242,16 @@ export default function ApplicationPendingPage() {
         </div>
 
         {/* Apply to Another Guild */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center">
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Want to Apply to Another Guild?
           </h2>
-          <p className="text-slate-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             While your current application is under review, you can apply to other guilds
           </p>
           <button
             onClick={() => router.push("/expert/apply")}
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90  transition-all shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Apply to Another Guild
@@ -261,7 +262,7 @@ export default function ApplicationPendingPage() {
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push("/expert")}
-            className="inline-flex items-center text-slate-600 hover:text-slate-900 transition-all"
+            className="inline-flex items-center text-muted-foreground hover:text-foreground transition-all"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Expert Home

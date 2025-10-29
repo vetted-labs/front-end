@@ -1,0 +1,139 @@
+/*
+ * Theme Configuration Example
+ * Copy this to globals.css to customize your colors
+ *
+ * Color format: HSL (Hue Saturation Lightness)
+ * - Hue: 0-360 (color wheel position)
+ * - Saturation: 0-100% (color intensity)
+ * - Lightness: 0-100% (brightness)
+ */
+
+/* ============================================
+   LIGHT MODE THEME
+   ============================================ */
+:root {
+  /* Primary Brand Color - Change this to rebrand */
+  --primary: 262.1 83.3% 57.8%;  /* Violet */
+
+  /* Alternative Primary Colors (uncomment one to use):
+   * Blue:       221 83% 53%
+   * Green:      142 76% 36%
+   * Red:        0 84% 60%
+   * Orange:     25 95% 53%
+   * Teal:       173 80% 40%
+   * Pink:       330 81% 60%
+   */
+
+  --primary-foreground: 210 40% 98%;  /* Text on primary color */
+
+  /* Background & Text */
+  --background: 0 0% 100%;            /* Page background (white) */
+  --foreground: 240 10% 3.9%;         /* Main text color (dark) */
+
+  /* Cards & Panels */
+  --card: 0 0% 100%;                  /* Card background */
+  --card-foreground: 240 10% 3.9%;   /* Card text */
+
+  /* Secondary & Muted */
+  --secondary: 240 4.8% 95.9%;        /* Secondary buttons */
+  --muted: 240 4.8% 95.9%;            /* Subtle backgrounds */
+  --muted-foreground: 240 3.8% 46.1%; /* Dimmed text */
+
+  /* Status Colors */
+  --success: 142.1 76.2% 36.3%;       /* Green for success */
+  --destructive: 0 84.2% 60.2%;       /* Red for errors/delete */
+  --warning: 38 92% 50%;              /* Orange/yellow for warnings */
+  --info: 221.2 83.2% 53.3%;          /* Blue for info */
+
+  /* UI Elements */
+  --border: 240 5.9% 90%;             /* Border color */
+  --input: 240 5.9% 90%;              /* Input borders */
+  --ring: 262.1 83.3% 57.8%;          /* Focus ring (usually matches primary) */
+
+  --radius: 0.5rem;                   /* Border radius (0.5rem = 8px) */
+}
+
+/* ============================================
+   DARK MODE THEME
+   ============================================ */
+.dark {
+  /* Primary Brand Color - Adjust for dark backgrounds */
+  --primary: 263.4 70% 50.4%;         /* Slightly darker violet */
+  --primary-foreground: 210 40% 98%;
+
+  /* Background & Text */
+  --background: 240 10% 3.9%;         /* Dark background */
+  --foreground: 0 0% 98%;             /* Light text */
+
+  /* Cards & Panels */
+  --card: 240 10% 3.9%;               /* Dark card background */
+  --card-foreground: 0 0% 98%;        /* Light card text */
+
+  /* Secondary & Muted */
+  --secondary: 240 3.7% 15.9%;        /* Darker secondary */
+  --muted: 240 3.7% 15.9%;            /* Darker muted */
+  --muted-foreground: 240 5% 64.9%;   /* Lighter muted text */
+
+  /* Status Colors - Adjusted for dark mode */
+  --success: 142.1 70.6% 45.3%;       /* Brighter green */
+  --destructive: 0 62.8% 30.6%;       /* Darker red */
+  --warning: 38 92% 50%;              /* Same orange */
+  --info: 217.2 91.2% 59.8%;          /* Brighter blue */
+
+  /* UI Elements */
+  --border: 240 3.7% 15.9%;           /* Dark borders */
+  --input: 240 3.7% 15.9%;            /* Dark input borders */
+  --ring: 263.4 70% 50.4%;            /* Focus ring */
+}
+
+/* ============================================
+   PRESET THEMES
+   ============================================ */
+
+/* Blue Theme */
+/*
+:root {
+  --primary: 221 83% 53%;
+  --ring: 221 83% 53%;
+}
+.dark {
+  --primary: 217 91% 60%;
+  --ring: 217 91% 60%;
+}
+*/
+
+/* Green/Eco Theme */
+/*
+:root {
+  --primary: 142 76% 36%;
+  --ring: 142 76% 36%;
+}
+.dark {
+  --primary: 142 70% 45%;
+  --ring: 142 70% 45%;
+}
+*/
+
+/* Sunset Theme (Orange/Red) */
+/*
+:root {
+  --primary: 25 95% 53%;
+  --ring: 25 95% 53%;
+}
+.dark {
+  --primary: 25 90% 48%;
+  --ring: 25 90% 48%;
+}
+*/
+
+/* Professional Navy Theme */
+/*
+:root {
+  --primary: 220 70% 45%;
+  --ring: 220 70% 45%;
+}
+.dark {
+  --primary: 220 60% 55%;
+  --ring: 220 60% 55%;
+}
+*/

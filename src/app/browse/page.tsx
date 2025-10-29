@@ -109,9 +109,9 @@ export default function BrowseJobsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation */}
-      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
@@ -119,12 +119,12 @@ export default function BrowseJobsPage() {
               className="flex items-center space-x-2"
             >
               <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
-              <span className="text-xl font-bold text-slate-900">Vetted</span>
+              <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/")}
-                className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 For Employers
               </button>
@@ -134,27 +134,27 @@ export default function BrowseJobsPage() {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                   >
                     <div className="p-2 bg-violet-100 rounded-lg">
                       <User className="w-4 h-4 text-violet-600" />
                     </div>
-                    <span className="text-sm font-medium text-gray-900 hidden sm:block">
+                    <span className="text-sm font-medium text-foreground hidden sm:block">
                       {candidateEmail}
                     </span>
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                      <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">
+                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="text-sm font-medium text-foreground">
                           {candidateEmail}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">Candidate</p>
+                        <p className="text-xs text-muted-foreground mt-1">Candidate</p>
                       </div>
                       <button
                         onClick={() => router.push("/candidate/profile")}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2"
+                        className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                       >
                         <Briefcase className="w-4 h-4" />
                         My Dashboard
@@ -173,7 +173,7 @@ export default function BrowseJobsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => router.push("/auth/login?type=candidate")}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                    className="px-4 py-2 text-sm font-medium text-card-foreground hover:text-foreground"
                   >
                     Sign In
                   </button>
@@ -193,13 +193,13 @@ export default function BrowseJobsPage() {
       {/* Hero Section with Metrics */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h1 className="text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="text-5xl font-bold text-foreground mb-6">
             Find Your Next{" "}
             <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
               Web3 Opportunity
             </span>
           </h1>
-          <p className="text-xl text-slate-600 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             Join a decentralized talent marketplace where expertise is validated
             by guilds and opportunities are vetted by the community.
           </p>
@@ -214,70 +214,70 @@ export default function BrowseJobsPage() {
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-          <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-green-100 rounded-xl">
                 <Users className="w-6 h-6 text-green-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900">
+            <h3 className="text-3xl font-bold text-foreground">
               {metrics.totalHired.toLocaleString()}
             </h3>
-            <p className="text-slate-600 text-sm mt-1">Talent Hired</p>
+            <p className="text-muted-foreground text-sm mt-1">Talent Hired</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-violet-100 rounded-xl">
                 <Briefcase className="w-6 h-6 text-violet-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-violet-600" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900">
+            <h3 className="text-3xl font-bold text-foreground">
               {metrics.activeJobs}
             </h3>
-            <p className="text-slate-600 text-sm mt-1">Active Jobs</p>
+            <p className="text-muted-foreground text-sm mt-1">Active Jobs</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-100 rounded-xl">
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900">
+            <h3 className="text-3xl font-bold text-foreground">
               {metrics.totalCandidates.toLocaleString()}
             </h3>
-            <p className="text-slate-600 text-sm mt-1">Registered Candidates</p>
+            <p className="text-muted-foreground text-sm mt-1">Registered Candidates</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-amber-100 rounded-xl">
                 <DollarSign className="w-6 h-6 text-amber-600" />
               </div>
               <TrendingUp className="w-5 h-5 text-amber-600" />
             </div>
-            <h3 className="text-3xl font-bold text-slate-900">
+            <h3 className="text-3xl font-bold text-foreground">
               ${(metrics.averageSalary / 1000).toFixed(0)}k
             </h3>
-            <p className="text-slate-600 text-sm mt-1">Average Salary</p>
+            <p className="text-muted-foreground text-sm mt-1">Average Salary</p>
           </div>
         </div>
       </div>
 
       {/* Featured Jobs Section */}
-      <div className="bg-white py-16">
+      <div className="bg-card py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
                 <Sparkles className="w-8 h-8 text-violet-600" />
                 Featured Jobs
               </h2>
-              <p className="text-slate-600 mt-2">
+              <p className="text-muted-foreground mt-2">
                 Top opportunities from leading Web3 organizations
               </p>
             </div>
@@ -292,7 +292,7 @@ export default function BrowseJobsPage() {
 
           {isLoading ? (
             <div className="text-center py-12">
-              <p className="text-slate-600">Loading featured jobs...</p>
+              <p className="text-muted-foreground">Loading featured jobs...</p>
             </div>
           ) : featuredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -300,10 +300,10 @@ export default function BrowseJobsPage() {
                 <div
                   key={job.id}
                   onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                  className="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border border-slate-200 hover:border-violet-300 group"
+                  className="bg-muted rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border border-border hover:border-violet-300 group"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <div className="p-2 bg-card rounded-lg shadow-sm">
                       <Briefcase className="w-6 h-6 text-violet-600" />
                     </div>
                     <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
@@ -311,39 +311,39 @@ export default function BrowseJobsPage() {
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-violet-600 transition-colors">
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-violet-600 transition-colors">
                     {job.title}
                   </h3>
 
                   {job.companyName && (
-                    <p className="flex items-center gap-1 text-sm text-slate-600 mb-3">
+                    <p className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
                       {job.companyName}
                     </p>
                   )}
 
-                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {job.description}
                   </p>
 
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2 py-1 bg-white rounded text-xs text-slate-700 border border-slate-200">
+                    <span className="px-2 py-1 bg-card rounded text-xs text-card-foreground border border-border">
                       {job.guild}
                     </span>
                     {job.department && (
-                      <span className="px-2 py-1 bg-white rounded text-xs text-slate-700 border border-slate-200">
+                      <span className="px-2 py-1 bg-card rounded text-xs text-card-foreground border border-border">
                         {job.department}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-1 text-sm text-slate-600">
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4" />
                       {job.location}
                     </div>
                     {job.salary.min && job.salary.max && (
-                      <div className="flex items-center gap-1 text-sm font-medium text-slate-900">
+                      <div className="flex items-center gap-1 text-sm font-medium text-foreground">
                         <DollarSign className="w-4 h-4" />
                         {job.salary.min / 1000}k - {job.salary.max / 1000}k
                       </div>
@@ -353,8 +353,8 @@ export default function BrowseJobsPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-slate-50 rounded-xl">
-              <p className="text-slate-600 mb-4">
+            <div className="text-center py-12 bg-muted rounded-xl">
+              <p className="text-muted-foreground mb-4">
                 No featured jobs available at the moment
               </p>
               <button
@@ -380,7 +380,7 @@ export default function BrowseJobsPage() {
           </p>
           <button
             onClick={() => router.push("/browse/jobs")}
-            className="px-8 py-4 bg-white text-violet-600 rounded-xl hover:bg-slate-50 transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="px-8 py-4 bg-card text-violet-600 rounded-xl hover:bg-muted transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Explore All Opportunities
           </button>

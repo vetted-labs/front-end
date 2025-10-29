@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -227,9 +228,9 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button
@@ -239,7 +240,7 @@ export default function CompanyProfilePage() {
             >
               Back to Dashboard
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Company Profile</h1>
+            <h1 className="text-2xl font-bold text-foreground">Company Profile</h1>
             <div className="w-32"></div> {/* Spacer for centering */}
           </div>
         </div>
@@ -249,7 +250,7 @@ export default function CompanyProfilePage() {
         {/* Success Message */}
         {successMessage && (
           <div className="mb-6">
-            <Alert variant="success" icon={<CheckCircle2 className="w-5 h-5" />}>
+            <Alert variant="success">
               {successMessage}
             </Alert>
           </div>
@@ -258,26 +259,26 @@ export default function CompanyProfilePage() {
         {/* Error Message */}
         {error && (
           <div className="mb-6">
-            <Alert variant="error" icon={<AlertCircle className="w-5 h-5" />}>
+            <Alert variant="error">
               {error}
             </Alert>
           </div>
         )}
 
         {/* Logo Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Logo</h2>
+        <div className="bg-card rounded-xl shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Company Logo</h2>
           <div className="flex items-center gap-6">
             <div className="relative">
               {profile.logoUrl ? (
                 <img
                   src={`http://localhost:4000${profile.logoUrl}`}
                   alt={profile.name}
-                  className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200"
+                  className="w-24 h-24 rounded-lg object-cover border-2 border-border"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center border-2 border-gray-200">
-                  <Building2 className="w-12 h-12 text-violet-600" />
+                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center border-2 border-border">
+                  <Building2 className="w-12 h-12 text-primary" />
                 </div>
               )}
               {isUploadingLogo && (
@@ -287,7 +288,7 @@ export default function CompanyProfilePage() {
               )}
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 Upload your company logo. JPG, PNG or GIF (max. 5MB)
               </p>
               <input
@@ -310,9 +311,9 @@ export default function CompanyProfilePage() {
         </div>
 
         {/* Company Information */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-card rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">Company Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Company Information</h2>
             {!isEditing && (
               <Button
                 variant="outline"
@@ -395,31 +396,31 @@ export default function CompanyProfilePage() {
             /* View Mode */
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
+                <label className="text-sm font-medium text-card-foreground block mb-1">
                   Company Name
                 </label>
-                <p className="text-gray-900">{profile.name}</p>
+                <p className="text-foreground">{profile.name}</p>
               </div>
 
               {profile.email && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Email
                   </label>
-                  <p className="text-gray-600">{profile.email}</p>
+                  <p className="text-muted-foreground">{profile.email}</p>
                 </div>
               )}
 
               {profile.website && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Website
                   </label>
                   <a
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-violet-600 hover:text-violet-700 flex items-center gap-1"
+                    className="text-primary hover:text-primary flex items-center gap-1"
                   >
                     <Globe className="w-4 h-4" />
                     {profile.website}
@@ -429,11 +430,11 @@ export default function CompanyProfilePage() {
 
               {profile.location && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Location
                   </label>
-                  <p className="text-gray-900 flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-gray-500" />
+                  <p className="text-foreground flex items-center gap-1">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
                     {profile.location}
                   </p>
                 </div>
@@ -441,11 +442,11 @@ export default function CompanyProfilePage() {
 
               {profile.size && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Company Size
                   </label>
-                  <p className="text-gray-900 flex items-center gap-1">
-                    <Users className="w-4 h-4 text-gray-500" />
+                  <p className="text-foreground flex items-center gap-1">
+                    <Users className="w-4 h-4 text-muted-foreground" />
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </p>
                 </div>
@@ -453,11 +454,11 @@ export default function CompanyProfilePage() {
 
               {profile.industry && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Industry
                   </label>
-                  <p className="text-gray-900 flex items-center gap-1">
-                    <Briefcase className="w-4 h-4 text-gray-500" />
+                  <p className="text-foreground flex items-center gap-1">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
                     {INDUSTRIES.find((i) => i.value === profile.industry)?.label ||
                       profile.industry}
                   </p>
@@ -466,10 +467,10 @@ export default function CompanyProfilePage() {
 
               {profile.description && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                  <label className="text-sm font-medium text-card-foreground block mb-1">
                     Company Description
                   </label>
-                  <p className="text-gray-700 whitespace-pre-wrap">{profile.description}</p>
+                  <p className="text-card-foreground whitespace-pre-wrap">{profile.description}</p>
                 </div>
               )}
 
@@ -486,18 +487,18 @@ export default function CompanyProfilePage() {
         </div>
 
         {/* Account Info */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
+        <div className="bg-card rounded-xl shadow-sm p-6 mt-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Account Information</h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <label className="text-gray-600">Member Since</label>
-              <p className="text-gray-900 font-medium">
+              <label className="text-muted-foreground">Member Since</label>
+              <p className="text-foreground font-medium">
                 {new Date(profile.createdAt).toLocaleDateString()}
               </p>
             </div>
             <div>
-              <label className="text-gray-600">Last Updated</label>
-              <p className="text-gray-900 font-medium">
+              <label className="text-muted-foreground">Last Updated</label>
+              <p className="text-foreground font-medium">
                 {new Date(profile.updatedAt).toLocaleDateString()}
               </p>
             </div>

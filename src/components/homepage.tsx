@@ -1,6 +1,6 @@
 // components/homepage.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { useConnect, useAccount } from "wagmi";
 import Image from "next/image";
@@ -21,10 +21,11 @@ import {
   Wallet,
 } from "lucide-react";
 import { Modal } from "./ui/Modal";
+import { ThemeToggle } from "./ThemeToggle";
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
-  const wallets: Record<string, { icon: JSX.Element; description: string }> = {
+  const wallets: Record<string, { icon: ReactElement; description: string }> = {
     MetaMask: {
       icon: (
         <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
@@ -120,12 +121,12 @@ export function HomePage() {
           }
         }
       } else if (response.status === 404) {
-        // No profile found - redirect to application
+        // No profile found - redirect to application (this is expected for new wallets)
         router.push("/expert/apply");
         return;
       }
     } catch (error) {
-      console.error("Error checking expert status:", error);
+      // Silently handle network errors - don't spam console
       // On error, redirect to expert home page
       router.push("/expert");
     }
@@ -227,25 +228,25 @@ export function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation Header */}
-      <nav className="border-b border-slate-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+      <nav className="border-b bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
               <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
-              <span className="text-xl font-bold text-slate-900">Vetted</span>
+              <span className="text-xl font-bold text-foreground">Vetted</span>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="hidden md:flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
+            <div className="hidden md:flex items-center space-x-1 bg-muted rounded-lg p-1">
               <button
                 onClick={() => setActiveSection("employers")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                   activeSection === "employers"
-                    ? "bg-white text-violet-600 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 For Employers
@@ -254,8 +255,8 @@ export function HomePage() {
                 onClick={() => setActiveSection("jobseekers")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                   activeSection === "jobseekers"
-                    ? "bg-white text-violet-600 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 For Job Seekers
@@ -264,8 +265,8 @@ export function HomePage() {
                 onClick={() => setActiveSection("experts")}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
                   activeSection === "experts"
-                    ? "bg-white text-violet-600 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 For Experts
@@ -274,10 +275,11 @@ export function HomePage() {
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-3">
+              <ThemeToggle />
               {activeSection === "experts" ? (
                 <button
                   onClick={() => setShowWalletModal(true)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
                   <Wallet className="mr-2 w-4 h-4" />
                   Connect Wallet
@@ -285,7 +287,7 @@ export function HomePage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
                   Sign In
                 </button>
@@ -297,13 +299,13 @@ export function HomePage() {
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
             Hiring Built on{" "}
-            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
               Trust & Expertise
             </span>
           </h1>
-          <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto">
             Vetted transforms hiring through expert guild validation. Get candidates verified by
             industry professionals who stake their reputation on every endorsement.
           </p>
@@ -329,7 +331,7 @@ export function HomePage() {
                 {activeSection === "jobseekers" && (
                   <button
                     onClick={() => router.push("/browse/jobs")}
-                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-slate-700 bg-white border-2 border-slate-300 rounded-xl hover:border-violet-600 hover:text-violet-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-foreground bg-card border-2 border-border rounded-xl hover:border-primary hover:text-primary transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     <Search className="mr-2 w-5 h-5" />
                     Browse Jobs
@@ -344,14 +346,14 @@ export function HomePage() {
       {/* Features Section - Dynamic based on active tab */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">
+          <h2 className="text-3xl font-bold text-foreground mb-4">
             {activeSection === "employers"
               ? "Why Employers Choose Vetted"
               : activeSection === "jobseekers"
               ? "Why Job Seekers Choose Vetted"
               : "Why Experts Choose Vetted"}
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {activeSection === "employers"
               ? "Hire with confidence using our expert-validated talent pool"
               : activeSection === "jobseekers"
@@ -368,26 +370,26 @@ export function HomePage() {
           ).map((feature, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 hover:border-violet-200"
+              className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border hover:border-primary/50"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-violet-600 mb-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-semibold text-card-foreground mb-2">
                 {feature.title}
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{feature.description}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>
       </div>
       {/* How It Works Section */}
-      <div className="bg-white py-20">
+      <div className="bg-card py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-slate-900 mb-4">
+          <h2 className="text-3xl font-bold text-center text-foreground mb-4">
             How Vetted Works
           </h2>
-          <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
             {activeSection === "employers"
               ? "A simple process that connects you with pre-validated talent"
               : activeSection === "jobseekers"
@@ -477,18 +479,18 @@ export function HomePage() {
                 ]
             ).map((item, index) => (
               <div key={index} className="text-center relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold mx-auto mb-4 shadow-lg">
                   <div className="flex flex-col items-center">
                     {item.icon}
                   </div>
                 </div>
-                <div className="absolute top-8 left-[60%] w-full h-0.5 bg-gradient-to-r from-violet-300 to-transparent hidden md:block -z-10">
+                <div className="absolute top-8 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/30 to-transparent hidden md:block -z-10">
                   {index === 3 && <div className="hidden" />}
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-2 text-base">
+                <h3 className="font-semibold text-card-foreground mb-2 text-base">
                   {item.title}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -496,49 +498,49 @@ export function HomePage() {
       </div>
 
       {/* Core Platform Features */}
-      <div className="bg-gradient-to-b from-slate-50 to-white py-20">
+      <div className="bg-gradient-to-b from-background to-muted py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
               The Vetted Difference
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Built on trust, expertise, and accountability
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-              <div className="w-14 h-14 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-violet-600 mb-5">
+            <div className="bg-card rounded-2xl p-8 shadow-sm border">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-5">
                 <Shield className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-xl font-semibold text-card-foreground mb-3">
                 Guild-Based Validation
               </h3>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Expert communities evaluate talent using domain-specific rubrics.
                 Reviewers stake their reputation on every endorsement they make.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-              <div className="w-14 h-14 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-violet-600 mb-5">
+            <div className="bg-card rounded-2xl p-8 shadow-sm border">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-5">
                 <Zap className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-xl font-semibold text-card-foreground mb-3">
                 AI-Enhanced Review
               </h3>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Context-aware AI assists human judgment by analyzing portfolios,
                 code samples, and work history—but experts always make the final call.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-              <div className="w-14 h-14 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-xl flex items-center justify-center text-violet-600 mb-5">
+            <div className="bg-card rounded-2xl p-8 shadow-sm border">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-5">
                 <TrendingUp className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">
+              <h3 className="text-xl font-semibold text-card-foreground mb-3">
                 Reputation System
               </h3>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Build a verified track record over time. Both candidates and reviewers
                 accumulate credibility through successful placements and accurate assessments.
               </p>
@@ -548,7 +550,7 @@ export function HomePage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 py-16">
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {activeSection === "employers"
@@ -557,7 +559,7 @@ export function HomePage() {
               ? "Ready to get verified and stand out?"
               : "Ready to join the expert community?"}
           </h2>
-          <p className="text-xl text-violet-100 mb-8">
+          <p className="text-xl text-primary-foreground/80 mb-8">
             {activeSection === "employers"
               ? "Join companies that trust expert validation over traditional screening"
               : activeSection === "jobseekers"
@@ -568,7 +570,7 @@ export function HomePage() {
             {activeSection === "experts" ? (
               <button
                 onClick={() => setShowWalletModal(true)}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-violet-600 bg-white rounded-xl hover:bg-violet-50 transition-all shadow-lg"
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
               >
                 <Wallet className="mr-2 w-5 h-5" />
                 Connect Wallet
@@ -577,7 +579,7 @@ export function HomePage() {
             ) : (
               <button
                 onClick={() => router.push("/auth/login")}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-violet-600 bg-white rounded-xl hover:bg-violet-50 transition-all shadow-lg"
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
               >
                 {activeSection === "employers" ? "Start Hiring Today" : "Join Vetted Today"}
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -588,41 +590,41 @@ export function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-300 py-12">
+      <footer className="bg-secondary text-muted-foreground py-12 border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
-                <span className="text-xl font-bold text-white">Vetted</span>
+                <span className="text-xl font-bold text-foreground">Vetted</span>
               </div>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm">
                 Hiring built on trust, expertise, and accountability.
               </p>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">For Employers</h4>
+              <h4 className="text-foreground font-semibold mb-4">For Employers</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => router.push("/auth/login")} className="hover:text-white transition-colors">Sign In</button></li>
-                <li><button onClick={() => router.push("/dashboard")} className="hover:text-white transition-colors">Dashboard</button></li>
+                <li><button onClick={() => router.push("/auth/login")} className="hover:text-foreground transition-colors">Sign In</button></li>
+                <li><button onClick={() => router.push("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">For Job Seekers</h4>
+              <h4 className="text-foreground font-semibold mb-4">For Job Seekers</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => router.push("/browse/jobs")} className="hover:text-white transition-colors">Browse Jobs</button></li>
-                <li><button onClick={() => router.push("/auth/login")} className="hover:text-white transition-colors">Sign In</button></li>
+                <li><button onClick={() => router.push("/browse/jobs")} className="hover:text-foreground transition-colors">Browse Jobs</button></li>
+                <li><button onClick={() => router.push("/auth/login")} className="hover:text-foreground transition-colors">Sign In</button></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">For Experts</h4>
+              <h4 className="text-foreground font-semibold mb-4">For Experts</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => router.push("/expert")} className="hover:text-white transition-colors">Become an Expert</button></li>
-                <li><button onClick={() => router.push("/expert/dashboard")} className="hover:text-white transition-colors">Expert Dashboard</button></li>
+                <li><button onClick={() => router.push("/expert")} className="hover:text-foreground transition-colors">Become an Expert</button></li>
+                <li><button onClick={() => router.push("/expert/dashboard")} className="hover:text-foreground transition-colors">Expert Dashboard</button></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-800 mt-8 pt-8 text-center text-sm text-slate-400">
+          <div className="border-t mt-8 pt-8 text-center text-sm">
             <p>&copy; 2025 Vetted. Building trust in hiring.</p>
           </div>
         </div>
@@ -636,7 +638,7 @@ export function HomePage() {
           title="Connect Your Wallet"
         >
           <div className="space-y-3">
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Choose your preferred wallet to get started as an expert
             </p>
             {connectors.map((connector) => {
@@ -645,16 +647,16 @@ export function HomePage() {
                 <button
                   key={connector.id}
                   onClick={() => handleWalletConnect(connector.id)}
-                  className="w-full flex items-center gap-4 px-4 py-4 border-2 border-slate-200 rounded-xl hover:border-violet-500 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 transition-all group"
+                  className="w-full flex items-center gap-4 px-4 py-4 border-2 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-white transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-background transition-colors">
                     {walletInfo.icon}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="font-semibold text-slate-900">{connector.name}</p>
-                    <p className="text-xs text-slate-500">{walletInfo.description}</p>
+                    <p className="font-semibold text-card-foreground">{connector.name}</p>
+                    <p className="text-xs text-muted-foreground">{walletInfo.description}</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-violet-600 transition-colors" />
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </button>
               );
             })}

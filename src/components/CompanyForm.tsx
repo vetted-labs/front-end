@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { useAccount, useConnect } from "wagmi";
 import {
@@ -111,37 +112,37 @@ export function CompanyForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50 to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl"></div>
-            <span className="text-2xl font-bold text-slate-900">Vetted</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-xl"></div>
+            <span className="text-2xl font-bold text-foreground">Vetted</span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Create Company Account
           </h1>
-          <p className="text-slate-600">Start hiring vetted Web3 talent</p>
+          <p className="text-muted-foreground">Start hiring vetted Web3 talent</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-card rounded-2xl shadow-xl p-8">
           {/* Wallet Connection Section */}
-          <div className="mb-6 p-6 bg-violet-50 rounded-xl border-2 border-violet-200">
+          <div className="mb-6 p-6 bg-primary/10 rounded-xl border-2 border-violet-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-violet-100 rounded-lg">
-                  <Wallet className="w-6 h-6 text-violet-600" />
+                  <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-foreground">
                     Wallet Connection
                   </h3>
                   {isConnected && address ? (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Connected: {address.slice(0, 6)}...{address.slice(-4)}
                     </p>
                   ) : (
-                    <p className="text-sm text-red-600">Not connected</p>
+                    <p className="text-sm text-destructive">Not connected</p>
                   )}
                 </div>
               </div>
@@ -155,14 +156,14 @@ export function CompanyForm() {
               )}
             </div>
             {errors.wallet && (
-              <p className="text-red-500 text-sm mt-2">{errors.wallet}</p>
+              <p className="text-destructive text-sm mt-2">{errors.wallet}</p>
             )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
                 Company Information
               </h3>
@@ -186,7 +187,7 @@ export function CompanyForm() {
 
             {/* Details Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Details</h3>
+              <h3 className="text-lg font-semibold text-foreground">Details</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
@@ -244,7 +245,7 @@ export function CompanyForm() {
 
             {/* Account Credentials */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Account Credentials</h3>
+              <h3 className="text-lg font-semibold text-foreground">Account Credentials</h3>
 
               <Input
                 label="Email *"
@@ -284,11 +285,11 @@ export function CompanyForm() {
             </Button>
           </form>
 
-          <p className="text-center mt-6 text-sm text-gray-600">
+          <p className="text-center mt-6 text-sm text-muted-foreground">
             Already have an account?{" "}
             <button
               onClick={() => router.push("/auth/login?type=company")}
-              className="text-violet-600 hover:text-violet-700 font-medium"
+              className="text-primary hover:text-primary font-medium"
             >
               Sign in
             </button>
@@ -311,7 +312,7 @@ export function CompanyForm() {
                 connect({ connector });
                 setShowWalletModal(false);
               }}
-              className="w-full py-4 px-6 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center justify-between group"
+              className="w-full py-4 px-6 bg-muted hover:bg-muted rounded-xl transition-colors flex items-center justify-between group"
             >
               <div className="flex items-center space-x-3">
                 <span className="text-2xl">
@@ -319,11 +320,11 @@ export function CompanyForm() {
                   {connector.name === "Coinbase Wallet" && "💙"}
                   {connector.name === "WalletConnect" && "🔗"}
                 </span>
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-foreground">
                   {connector.name}
                 </span>
               </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground" />
             </button>
           ))}
         </div>

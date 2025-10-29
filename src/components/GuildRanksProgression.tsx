@@ -1,10 +1,11 @@
 "use client";
+import { ReactElement } from "react";
 import { Shield, Target, Award, Crown, Sparkles } from "lucide-react";
 
 interface Rank {
   level: number;
   name: string;
-  icon: JSX.Element;
+  icon: ReactElement;
   description: string;
   requirements: string[];
   color: string;
@@ -22,7 +23,7 @@ const GUILD_RANKS: Rank[] = [
       "Receive 1+ approval from guild members",
       "Complete profile verification",
     ],
-    color: "text-slate-600",
+    color: "text-muted-foreground",
     bgGradient: "from-slate-100 to-slate-200",
   },
   {
@@ -49,7 +50,7 @@ const GUILD_RANKS: Rank[] = [
       "Reputation score 150+",
       "Successfully endorse 5+ candidates",
     ],
-    color: "text-violet-600",
+    color: "text-primary",
     bgGradient: "from-violet-100 to-violet-200",
   },
   {
@@ -106,15 +107,15 @@ export function GuildRanksProgression({
       {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-full mb-4">
-          <Sparkles className="w-4 h-4 text-violet-600 mr-2" />
-          <span className="text-sm font-medium text-violet-700">
+          <Sparkles className="w-4 h-4 text-primary mr-2" />
+          <span className="text-sm font-medium text-primary">
             Guild Progression System
           </span>
         </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-4">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
           Advance Your Guild Rank
         </h1>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Build reputation, contribute to the guild, and climb the ranks from Recruit to Guild Master.
         </p>
       </div>
@@ -124,22 +125,22 @@ export function GuildRanksProgression({
         <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl p-8 border border-violet-200 mb-12">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-violet-600 mb-1">Your Current Rank</p>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              <p className="text-sm font-medium text-primary mb-1">Your Current Rank</p>
+              <h2 className="text-3xl font-bold text-foreground mb-4">
                 {GUILD_RANKS[currentRankIndex].name}
               </h2>
               <div className="grid grid-cols-3 gap-6">
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Reputation</p>
-                  <p className="text-2xl font-bold text-violet-600">{reputation}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Reputation</p>
+                  <p className="text-2xl font-bold text-primary">{reputation}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Reviews</p>
-                  <p className="text-2xl font-bold text-violet-600">{reviewCount}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Reviews</p>
+                  <p className="text-2xl font-bold text-primary">{reviewCount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 mb-1">Consensus Rate</p>
-                  <p className="text-2xl font-bold text-violet-600">{consensusRate}%</p>
+                  <p className="text-sm text-muted-foreground mb-1">Consensus Rate</p>
+                  <p className="text-2xl font-bold text-primary">{consensusRate}%</p>
                 </div>
               </div>
             </div>
@@ -153,14 +154,14 @@ export function GuildRanksProgression({
           {/* Progress to next rank */}
           {currentRankIndex < GUILD_RANKS.length - 1 && (
             <div className="mt-6 pt-6 border-t border-violet-200">
-              <p className="text-sm font-medium text-slate-700 mb-3">
+              <p className="text-sm font-medium text-card-foreground mb-3">
                 Next: {GUILD_RANKS[currentRankIndex + 1].name}
               </p>
               <div className="flex gap-2">
                 {GUILD_RANKS[currentRankIndex + 1].requirements.map((req, i) => (
                   <div
                     key={i}
-                    className="flex-1 px-3 py-2 bg-white rounded-lg border border-violet-200 text-xs text-slate-600"
+                    className="flex-1 px-3 py-2 bg-card rounded-lg border border-violet-200 text-xs text-muted-foreground"
                   >
                     {req}
                   </div>
@@ -205,7 +206,7 @@ export function GuildRanksProgression({
                       ? "bg-gradient-to-br from-white to-violet-50 border-2 border-violet-300 shadow-lg scale-105"
                       : isPastRank
                       ? "bg-gradient-to-br from-white to-green-50 border border-green-200 opacity-75"
-                      : "bg-white border border-slate-200"
+                      : "bg-card border border-border"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
@@ -217,9 +218,9 @@ export function GuildRanksProgression({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-2xl font-bold text-slate-900">{rank.name}</h3>
+                          <h3 className="text-2xl font-bold text-foreground">{rank.name}</h3>
                           {isCurrentRank && (
-                            <span className="px-2 py-1 bg-violet-100 text-violet-700 text-xs font-semibold rounded-full">
+                            <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-semibold rounded-full">
                               Current
                             </span>
                           )}
@@ -229,14 +230,14 @@ export function GuildRanksProgression({
                             </span>
                           )}
                         </div>
-                        <p className="text-slate-600 mt-1">{rank.description}</p>
+                        <p className="text-muted-foreground mt-1">{rank.description}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Requirements */}
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-slate-700 mb-2">Requirements:</p>
+                    <p className="text-sm font-semibold text-card-foreground mb-2">Requirements:</p>
                     {rank.requirements.map((req, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <div
@@ -245,7 +246,7 @@ export function GuildRanksProgression({
                               ? "bg-green-500"
                               : isCurrentRank
                               ? "bg-violet-300"
-                              : "bg-slate-200"
+                              : "bg-muted"
                           }`}
                         >
                           {isPastRank && (
@@ -269,8 +270,8 @@ export function GuildRanksProgression({
                             isPastRank
                               ? "text-green-700 line-through"
                               : isCurrentRank
-                              ? "text-slate-700 font-medium"
-                              : "text-slate-500"
+                              ? "text-card-foreground font-medium"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {req}
@@ -298,13 +299,13 @@ export function GuildRanksProgression({
       </div>
 
       {/* Call to Action */}
-      <div className="mt-12 text-center bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl p-8 text-white">
+      <div className="mt-12 text-center bg-gradient-to-r from-primary to-indigo-600 rounded-2xl p-8 text-white">
         <Sparkles className="w-12 h-12 mx-auto mb-4" />
         <h3 className="text-2xl font-bold mb-2">Ready to Advance?</h3>
         <p className="text-violet-100 mb-6">
           Start reviewing proposals, build your reputation, and climb the ranks!
         </p>
-        <button className="px-8 py-3 bg-white text-violet-600 rounded-lg font-semibold hover:bg-violet-50 transition-all shadow-lg">
+        <button className="px-8 py-3 bg-card text-primary rounded-lg font-semibold hover:bg-primary/10 transition-all shadow-lg">
           Start Reviewing
         </button>
       </div>

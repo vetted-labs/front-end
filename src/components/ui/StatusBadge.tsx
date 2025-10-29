@@ -5,7 +5,7 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
   const statusConfig = {
-    draft: { label: "Draft", color: "bg-gray-100 text-gray-700" },
+    draft: { label: "Draft", color: "bg-muted text-card-foreground" },
     active: { label: "Active", color: "bg-green-100 text-green-700" },
     paused: { label: "Paused", color: "bg-yellow-100 text-yellow-700" },
     closed: { label: "Closed", color: "bg-red-100 text-red-700" },

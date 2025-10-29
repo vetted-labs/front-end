@@ -18,7 +18,7 @@ export function Card({ children, className = "", padding = "md", hover = false }
   return (
     <div
       className={`
-        bg-white rounded-xl shadow-sm border border-gray-100
+        bg-card rounded-xl shadow-sm border border-border
         ${paddingStyles[padding]}
         ${hover ? "transition-shadow hover:shadow-md" : ""}
         ${className}

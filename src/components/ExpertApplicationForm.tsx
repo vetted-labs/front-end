@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
-import { useAccount, useDisconnect } from "wagmi";
-import { Loader2, Send, Upload, X, ArrowLeft } from "lucide-react";
+import { useAccount, useDisconnect, useChainId } from "wagmi";
+import { Loader2, Send, Upload, X, ArrowLeft, User, Briefcase, FileText, Award, Shield } from "lucide-react";
+import Image from "next/image";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
@@ -34,13 +36,30 @@ const EXPERTISE_LEVELS = [
   { value: "principal", label: "Principal (12+ years)" },
 ];
 
+const getNetworkName = (chainId: number | undefined) => {
+  if (!chainId) return "Unknown";
+  const networks: Record<number, string> = {
+    1: "Ethereum",
+    11155111: "Sepolia",
+    137: "Polygon",
+    42161: "Arbitrum",
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
 export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps) {
   const router = useRouter();
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { disconnect } = useDisconnect();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -88,6 +107,39 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       return;
     }
 
+    // Frontend validation
+    if (!formData.fullName.trim() || formData.fullName.length < 2) {
+      setError("Full name must be at least 2 characters");
+      return;
+    }
+    if (!formData.guild.trim() || formData.guild.length < 2) {
+      setError("Guild must be at least 2 characters");
+      return;
+    }
+    if (!formData.currentTitle.trim() || formData.currentTitle.length < 2) {
+      setError("Current title must be at least 2 characters");
+      return;
+    }
+    if (!formData.currentCompany.trim() || formData.currentCompany.length < 2) {
+      setError("Current company must be at least 2 characters");
+      return;
+    }
+    if (formData.bio.length < 50) {
+      setError("Bio must be at least 50 characters");
+      return;
+    }
+    if (formData.bio.length > 2000) {
+      setError("Bio must not exceed 2000 characters");
+      return;
+    }
+    if (formData.motivation.length < 50) {
+      setError("Motivation must be at least 50 characters");
+      return;
+    }
+    if (formData.motivation.length > 2000) {
+      setError("Motivation must not exceed 2000 characters");
+      return;
+    }
     if (formData.expertiseAreas.length === 0) {
       setError("Please add at least one area of expertise");
       return;
@@ -132,7 +184,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   if (!isConnected || !address) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <Alert type="warning">
+        <Alert variant="warning">
           Please connect your wallet to apply as an expert.
         </Alert>
       </div>
@@ -142,7 +194,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   if (success) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
-        <Alert type="success">
+        <Alert variant="success">
           Application submitted successfully! Redirecting...
         </Alert>
       </div>
@@ -150,53 +202,86 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => router.push("/expert")}
-              className="flex items-center text-slate-600 hover:text-slate-900 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </button>
-            <button
-              onClick={() => {
-                disconnect();
-                router.push("/expert");
-              }}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-all border border-slate-200 rounded-lg hover:border-slate-300"
-            >
-              Disconnect Wallet
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      {/* Navigation Header */}
+      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/expert")}>
+              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-bold text-foreground">Vetted</span>
+              <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
+                Expert
+              </span>
+            </div>
 
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Apply as an Expert
-          </h1>
-          <p className="text-slate-600">
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              {mounted && address && (
+                <>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-indigo-600 rounded-lg flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-mono text-foreground font-medium">
+                        {address.slice(0, 6)}...{address.slice(-4)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {getNetworkName(chainId)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      disconnect();
+                      router.push("/expert");
+                    }}
+                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-all"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    Back
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Apply as an Expert
+            </h1>
+          <p className="text-muted-foreground">
             Join our expert guild and start earning by reviewing candidates and endorsing top
             talent.
           </p>
-          <div className="mt-4 p-3 bg-violet-50 rounded-lg border border-violet-200">
-            <p className="text-sm text-violet-700">
-              <span className="font-semibold">Connected Wallet:</span>{" "}
-              <span className="font-mono">{address.slice(0, 10)}...{address.slice(-8)}</span>
-            </p>
-          </div>
         </div>
 
-        {error && (
-          <Alert type="error" className="mb-6">
-            {error}
-          </Alert>
-        )}
+        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+          {error && (
+            <div className="p-6 bg-destructive/5">
+              <Alert variant="error">
+                {error}
+              </Alert>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-slate-900">Personal Information</h2>
+          <form onSubmit={handleSubmit}>
+            {/* Personal Information Section */}
+            <div className="p-8 space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Personal Information</h2>
+                  <p className="text-sm text-muted-foreground">Tell us about yourself</p>
+                </div>
+              </div>
 
             <Input
               label="Full Name"
@@ -232,11 +317,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               onChange={(e) => handleChange("portfolioUrl", e.target.value)}
               placeholder="https://johndoe.com"
             />
-          </div>
+            </div>
 
-          {/* Professional Background */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-slate-900">Professional Background</h2>
+            {/* Professional Background Section */}
+            <div className="p-8 space-y-6 bg-muted/30">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+                <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Professional Background</h2>
+                  <p className="text-sm text-muted-foreground">Your experience and expertise</p>
+                </div>
+              </div>
 
             <Select
               label="Select Guild"
@@ -293,15 +386,21 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               placeholder="Tech Corp"
               required
             />
-          </div>
+            </div>
 
-          {/* Areas of Expertise */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-slate-900">Areas of Expertise</h2>
-            <p className="text-sm text-slate-600">
-              Add specific skills or technologies you can evaluate (e.g., "React", "Machine
-              Learning", "Product Strategy")
-            </p>
+            {/* Areas of Expertise Section */}
+            <div className="p-8 space-y-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+                <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <Award className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Areas of Expertise</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Add specific skills or technologies you can evaluate (e.g., React, Machine Learning, Product Strategy)
+                  </p>
+                </div>
+              </div>
 
             <div className="flex gap-2">
               <Input
@@ -331,7 +430,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                 {formData.expertiseAreas.map((area, index) => (
                   <div
                     key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-violet-50 text-violet-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                   >
                     <span>{area}</span>
                     <button
@@ -345,11 +444,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                 ))}
               </div>
             )}
-          </div>
+            </div>
 
-          {/* Bio & Motivation */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-slate-900">About You</h2>
+            {/* Bio & Motivation Section */}
+            <div className="p-8 space-y-6 bg-muted/30">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+                <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">About You</h2>
+                  <p className="text-sm text-muted-foreground">Share your story and motivation</p>
+                </div>
+              </div>
 
             <Textarea
               label="Professional Bio"
@@ -358,6 +465,9 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               placeholder="Tell us about your professional background, key achievements, and what makes you qualified to be an expert reviewer..."
               rows={4}
               required
+              showCounter
+              minLength={50}
+              maxLength={2000}
             />
 
             <Textarea
@@ -367,35 +477,40 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               placeholder="Explain your motivation for joining Vetted as an expert reviewer, and how you plan to contribute to the guild..."
               rows={4}
               required
+              showCounter
+              minLength={50}
+              maxLength={2000}
             />
-          </div>
+            </div>
 
-          {/* Submit Button */}
-          <div className="pt-6 border-t border-slate-200">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin mr-2 w-5 h-5" />
-                  Submitting Application...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 w-5 h-5" />
-                  Submit Application
-                </>
-              )}
-            </Button>
-            <p className="mt-4 text-sm text-slate-500 text-center">
-              Your application will be reviewed by the founding team. You'll receive an email once
-              approved.
-            </p>
-          </div>
-        </form>
+            {/* Submit Section */}
+            <div className="p-8 bg-gradient-to-r from-primary/5 to-indigo-600/5">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-6 bg-gradient-to-r from-primary to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin w-5 h-5" />
+                    Submitting Application...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Submit Application
+                  </>
+                )}
+              </Button>
+              <p className="mt-4 text-sm text-muted-foreground text-center">
+                Your application will be reviewed by the founding team. You&apos;ll receive an email once
+                approved.
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
+    </div>
     </div>
   );
 }
