@@ -110,7 +110,7 @@ export function HiringDashboard() {
         return;
       }
       setError(
-        `Failed to load data. Ensure backend is running at http://localhost:4000. Details: ${(error as Error).message}`
+        `Failed to load data. Ensure backend is running. Details: ${(error as Error).message}`
       );
     } finally {
       setIsLoading(false);

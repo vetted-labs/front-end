@@ -25,6 +25,7 @@ import {
 import { Alert } from "./ui/Alert";
 import { LoadingState } from "./ui/LoadingState";
 import Image from "next/image";
+import { expertApi } from "@/lib/api";
 
 interface Guild {
   id: string;
@@ -121,16 +122,7 @@ export function EnhancedExpertDashboard() {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:4000/api/experts/profile?wallet=${address}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Expert profile not found. Please apply first.");
-        }
-        throw new Error("Failed to fetch profile");
-      }
-
-      const result = await response.json();
+      const result: any = await expertApi.getProfile(address);
       const data = result.data || result; // Handle both wrapped and unwrapped responses
 
       // Ensure guilds is an array

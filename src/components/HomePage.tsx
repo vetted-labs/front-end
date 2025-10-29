@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import { ThemeToggle } from "./ThemeToggle";
+import { expertApi } from "@/lib/api";
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
@@ -105,28 +106,25 @@ export function HomePage() {
 
   const checkExpertStatus = async (walletAddress: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/experts/profile?wallet=${walletAddress}`);
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const expert = result.data;
-          // Redirect based on status
-          if (expert.status === "approved") {
-            router.push("/expert/dashboard");
-            return;
-          } else if (expert.status === "pending") {
-            router.push("/expert/application-pending");
-            return;
-          }
+      const result: any = await expertApi.getProfile(walletAddress);
+      if (result.success && result.data) {
+        const expert = result.data;
+        // Redirect based on status
+        if (expert.status === "approved") {
+          router.push("/expert/dashboard");
+          return;
+        } else if (expert.status === "pending") {
+          router.push("/expert/application-pending");
+          return;
         }
-      } else if (response.status === 404) {
-        // No profile found - redirect to application (this is expected for new wallets)
+      }
+    } catch (error: any) {
+      // If 404, no profile found - redirect to application (this is expected for new wallets)
+      if (error.status === 404) {
         router.push("/expert/apply");
         return;
       }
-    } catch (error) {
-      // Silently handle network errors - don't spam console
+      // Silently handle other network errors - don't spam console
       // On error, redirect to expert home page
       router.push("/expert");
     }

@@ -1,3 +1,6 @@
+// API Configuration
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 export const GUILDS = [
   { value: "frontend", label: "Frontend Guild" },
   { value: "backend", label: "Backend Guild" },

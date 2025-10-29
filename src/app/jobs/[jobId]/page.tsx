@@ -15,6 +15,7 @@ import {
   Calendar,
   Eye,
 } from "lucide-react";
+import { jobsApi } from "@/lib/api";
 
 interface JobDetails {
   id: string;
@@ -60,14 +61,7 @@ export default function JobDetailsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:4000/api/jobs/${jobId}`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            `Failed to fetch job: ${response.status} - ${errorData.error || response.statusText}`,
-          );
-        }
-        const data = await response.json();
+        const data: any = await jobsApi.getById(jobId);
         console.log("Fetched job data:", data);
         setJob(data);
       } catch (error) {

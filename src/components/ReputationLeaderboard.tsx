@@ -17,6 +17,7 @@ import {
   Coins,
 } from "lucide-react";
 import { Button } from "./ui/Button";
+import { expertApi } from "@/lib/api";
 
 interface LeaderboardEntry {
   rank: number;
@@ -58,17 +59,11 @@ export function ReputationLeaderboard({
     setError(null);
 
     try {
-      const url = guildId && viewMode === "guild"
-        ? `http://localhost:4000/api/experts/reputation/leaderboard?guildId=${guildId}&limit=50`
-        : `http://localhost:4000/api/experts/reputation/leaderboard?limit=50`;
+      const params = guildId && viewMode === "guild"
+        ? { guildId, limit: 50 }
+        : { limit: 50 };
 
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch leaderboard");
-      }
-
-      const result = await response.json();
+      const result: any = await expertApi.getLeaderboard(params);
       setLeaderboard(result.data || []);
     } catch (err) {
       setError((err as Error).message);

@@ -16,6 +16,7 @@ import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Alert } from "./ui/Alert";
 import { LoadingState } from "./ui/LoadingState";
+import { expertApi } from "@/lib/api";
 
 interface Question {
   id: string;
@@ -147,26 +148,12 @@ export function GuildApplicationTemplateBuilder({
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/guilds/${guildId}/templates`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            walletAddress: address,
-            templateName: formData.templateName,
-            description: formData.description,
-            questions: formData.questions.map(({ id, ...rest }) => rest), // Remove temporary IDs
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create template");
-      }
+      await expertApi.saveGuildTemplate(guildId, {
+        walletAddress: address,
+        templateName: formData.templateName,
+        description: formData.description,
+        questions: formData.questions.map(({ id, ...rest }) => rest), // Remove temporary IDs
+      });
 
       setSuccess(true);
       setTimeout(() => {

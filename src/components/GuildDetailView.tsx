@@ -26,6 +26,7 @@ import { Alert } from "./ui/Alert";
 import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
 import { Input } from "./ui/Input";
+import { expertApi } from "@/lib/api";
 
 interface Proposal {
   id: string;
@@ -139,19 +140,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/guilds/${guildId}?wallet=${address}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch guild details");
-      }
-
-      const result = await response.json();
+      const result: any = await expertApi.getGuildDetails(guildId, address);
       const data = result.data || result; // Handle both wrapped and unwrapped responses
       setGuild(data);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch guild details");
     } finally {
       setIsLoading(false);
     }
@@ -169,29 +162,16 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setIsStaking(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/proposals/${selectedProposal.id}/stake`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            walletAddress: address,
-            stakeAmount: parseFloat(stakeAmount),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to stake on proposal");
-      }
+      await expertApi.stakeOnProposal(selectedProposal.id, {
+        walletAddress: address,
+        stakeAmount: parseFloat(stakeAmount),
+      });
 
       setShowStakeModal(false);
       setSelectedProposal(null);
       fetchGuildDetails(); // Refresh data
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      setError(err.message || "Failed to stake on proposal");
     } finally {
       setIsStaking(false);
     }
@@ -201,27 +181,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (!address) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/applications/${applicationId}/endorse`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            walletAddress: address,
-            endorse,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to endorse candidate");
-      }
+      await expertApi.endorseApplication(applicationId, {
+        walletAddress: address,
+        endorse,
+      });
 
       fetchGuildDetails(); // Refresh data
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      setError(err.message || "Failed to endorse candidate");
     }
   };
 
@@ -239,32 +206,18 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setIsReviewing(true);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/guild-applications/${selectedGuildApplication.id}/review`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            walletAddress: address,
-            vote: reviewVote,
-            confidenceLevel: parseInt(reviewConfidence),
-            feedback: reviewFeedback || undefined,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit review");
-      }
+      await expertApi.reviewGuildApplication(selectedGuildApplication.id, {
+        walletAddress: address,
+        vote: reviewVote,
+        confidenceLevel: parseInt(reviewConfidence),
+        feedback: reviewFeedback || undefined,
+      });
 
       setShowReviewModal(false);
       setSelectedGuildApplication(null);
       fetchGuildDetails(); // Refresh data
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      setError(err.message || "Failed to submit review");
     } finally {
       setIsReviewing(false);
     }

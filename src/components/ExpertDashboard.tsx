@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Alert } from "./ui/Alert";
 import { LoadingState } from "./ui/LoadingState";
+import { expertApi } from "@/lib/api";
 
 interface Guild {
   id: string;
@@ -82,19 +83,14 @@ export function ExpertDashboard() {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:4000/api/experts/profile?wallet=${address}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Expert profile not found. Please apply first.");
-        }
-        throw new Error("Failed to fetch profile");
-      }
-
-      const data = await response.json();
+      const data: any = await expertApi.getProfile(address);
       setProfile(data);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      if (err.status === 404) {
+        setError("Expert profile not found. Please apply first.");
+      } else {
+        setError(err.message || "Failed to fetch profile");
+      }
     } finally {
       setIsLoading(false);
     }

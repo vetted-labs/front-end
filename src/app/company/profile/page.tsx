@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button, Input, Textarea, Select, Alert, LoadingState } from "@/components/ui";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
+import { companyApi, getAssetUrl } from "@/lib/api";
 
 interface CompanyProfile {
   id: string;
@@ -76,22 +77,7 @@ export default function CompanyProfilePage() {
         return;
       }
 
-      const response = await fetch("http://localhost:4000/api/companies/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("companyAuthToken");
-          router.push("/auth/login?type=company");
-          return;
-        }
-        throw new Error("Failed to fetch profile");
-      }
-
-      const data = await response.json();
+      const data: any = await companyApi.getProfile();
       setProfile(data);
       setFormData({
         name: data.name || "",
@@ -101,7 +87,12 @@ export default function CompanyProfilePage() {
         industry: data.industry || "",
         description: data.description || "",
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.status === 401) {
+        localStorage.removeItem("companyAuthToken");
+        router.push("/auth/login?type=company");
+        return;
+      }
       console.error("Error fetching profile:", error);
       setError("Failed to load profile");
     } finally {
@@ -119,31 +110,16 @@ export default function CompanyProfilePage() {
     setSuccessMessage("");
 
     try {
-      const token = localStorage.getItem("companyAuthToken");
-      const response = await fetch("http://localhost:4000/api/companies/me", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update profile");
-      }
-
-      const updatedProfile = await response.json();
+      const updatedProfile: any = await companyApi.updateProfile(formData);
       setProfile(updatedProfile);
       setIsEditing(false);
       setSuccessMessage("Profile updated successfully!");
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
-      setError((error as Error).message);
+      setError(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
     }
@@ -170,31 +146,15 @@ export default function CompanyProfilePage() {
     setSuccessMessage("");
 
     try {
-      const token = localStorage.getItem("companyAuthToken");
-      const formData = new FormData();
-      formData.append("logo", file);
-
-      const response = await fetch("http://localhost:4000/api/companies/me/logo", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload logo");
-      }
-
-      const data = await response.json();
+      const data: any = await companyApi.uploadLogo(file);
       setProfile((prev) => (prev ? { ...prev, logoUrl: data.logoUrl } : null));
       setSuccessMessage("Logo uploaded successfully!");
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading logo:", error);
-      setError("Failed to upload logo");
+      setError(error.message || "Failed to upload logo");
     } finally {
       setIsUploadingLogo(false);
     }
@@ -272,7 +232,7 @@ export default function CompanyProfilePage() {
             <div className="relative">
               {profile.logoUrl ? (
                 <img
-                  src={`http://localhost:4000${profile.logoUrl}`}
+                  src={getAssetUrl(profile.logoUrl)}
                   alt={profile.name}
                   className="w-24 h-24 rounded-lg object-cover border-2 border-border"
                 />

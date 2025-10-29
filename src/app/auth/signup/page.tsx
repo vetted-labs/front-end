@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { candidateApi, companyApi } from "@/lib/api";
 
 type UserType = "candidate" | "company";
 
@@ -85,54 +86,34 @@ function SignupForm() {
     try {
       if (userType === "candidate") {
         // Create candidate account
-        const response = await fetch("http://localhost:4000/api/candidates", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName,
-            email,
-            password,
-            phone,
-            headline,
-            experienceLevel: "mid",
-            walletAddress: `0x${Math.random().toString(16).substr(2, 40)}`,
-          }),
+        const data: any = await candidateApi.signup({
+          fullName,
+          email,
+          password,
+          phone,
+          headline,
+          experienceLevel: "mid",
+          walletAddress: `0x${Math.random().toString(16).substr(2, 40)}`,
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("authToken", data.token);
-          localStorage.setItem("candidateId", data.id);
-          localStorage.setItem("userType", "candidate");
-          router.push(redirectUrl || "/candidate/profile");
-        } else {
-          const error = await response.json();
-          setErrors({ submit: error.error || "Failed to create account" });
-        }
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("candidateId", data.id);
+        localStorage.setItem("userType", "candidate");
+        router.push(redirectUrl || "/candidate/profile");
       } else {
         // Create company account
-        const response = await fetch("http://localhost:4000/api/companies", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            companyName,
-            email,
-            password,
-            website,
-          }),
+        const data: any = await companyApi.create({
+          companyName,
+          email,
+          password,
+          website,
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("companyAuthToken", data.token);
-          localStorage.setItem("companyId", data.company.id);
-          localStorage.setItem("companyEmail", data.company.email);
-          localStorage.setItem("userType", "company");
-          router.push(redirectUrl || "/dashboard");
-        } else {
-          const error = await response.json();
-          setErrors({ submit: error.error || "Failed to create account" });
-        }
+        localStorage.setItem("companyAuthToken", data.token);
+        localStorage.setItem("companyId", data.company.id);
+        localStorage.setItem("companyEmail", data.company.email);
+        localStorage.setItem("userType", "company");
+        router.push(redirectUrl || "/dashboard");
       }
     } catch (error) {
       setErrors({ submit: "Something went wrong. Please try again." });

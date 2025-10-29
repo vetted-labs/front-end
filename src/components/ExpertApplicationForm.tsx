@@ -10,6 +10,7 @@ import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { Textarea } from "./ui/Textarea";
 import { Alert } from "./ui/Alert";
+import { expertApi } from "@/lib/api";
 
 interface ExpertApplicationFormProps {
   onSuccess?: () => void;
@@ -148,22 +149,11 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/experts/apply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          yearsOfExperience: parseInt(formData.yearsOfExperience),
-          walletAddress: address,
-        }),
+      await expertApi.apply({
+        ...formData,
+        yearsOfExperience: parseInt(formData.yearsOfExperience),
+        walletAddress: address,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to submit application");
-      }
 
       setSuccess(true);
       setTimeout(() => {

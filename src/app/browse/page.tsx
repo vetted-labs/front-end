@@ -13,6 +13,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
+import { jobsApi } from "@/lib/api";
 
 interface FeaturedJob {
   id: string;
@@ -72,24 +73,19 @@ export default function BrowseJobsPage() {
     const fetchData = async () => {
       try {
         // Fetch featured jobs (active jobs)
-        const jobsResponse = await fetch(
-          "http://localhost:4000/api/jobs?status=active",
-        );
-        if (jobsResponse.ok) {
-          const jobs = await jobsResponse.json();
-          // Ensure all jobs have required fields with defaults
-          const normalizedJobs = jobs.map((job: Record<string, unknown>) => ({
-            ...job,
-            title: job.title || 'Untitled Position',
-            description: job.description || '',
-            guild: job.guild || '',
-            department: job.department || null,
-            requirements: job.requirements || [],
-            skills: job.skills || [],
-            screeningQuestions: job.screeningQuestions || [],
-          }));
-          setFeaturedJobs(normalizedJobs.slice(0, 6)); // Show top 6 featured jobs
-        }
+        const jobs: any = await jobsApi.getAll({ status: 'active' });
+        // Ensure all jobs have required fields with defaults
+        const normalizedJobs = jobs.map((job: Record<string, unknown>) => ({
+          ...job,
+          title: job.title || 'Untitled Position',
+          description: job.description || '',
+          guild: job.guild || '',
+          department: job.department || null,
+          requirements: job.requirements || [],
+          skills: job.skills || [],
+          screeningQuestions: job.screeningQuestions || [],
+        }));
+        setFeaturedJobs(normalizedJobs.slice(0, 6)); // Show top 6 featured jobs
 
         // Mock metrics - in production, fetch from API
         setMetrics({

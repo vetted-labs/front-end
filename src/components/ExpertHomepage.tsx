@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import { ThemeToggle } from "./ThemeToggle";
+import { expertApi } from "@/lib/api";
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
@@ -157,37 +158,33 @@ export function ExpertHomepage() {
   const checkExpertStatus = async (walletAddress: string) => {
     console.log("🔍 Checking expert status for:", walletAddress);
     try {
-      const response = await fetch(`http://localhost:4000/api/experts/profile?wallet=${walletAddress}`);
-      console.log("📡 API Response status:", response.status);
+      const result: any = await expertApi.getProfile(walletAddress);
+      console.log("📦 API Response data:", result);
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("📦 API Response data:", result);
+      if (result.success && result.data) {
+        const expert = result.data;
+        console.log("✅ Expert found, status:", expert.status);
 
-        if (result.success && result.data) {
-          const expert = result.data;
-          console.log("✅ Expert found, status:", expert.status);
-
-          // Check status and redirect appropriately
-          if (expert.status === "approved") {
-            console.log("🚀 Redirecting to dashboard...");
-            router.push("/expert/dashboard");
-            return true;
-          } else if (expert.status === "pending") {
-            console.log("⏳ Redirecting to pending page...");
-            router.push("/expert/application-pending");
-            return true;
-          }
-        } else {
-          console.log("⚠️ Response structure unexpected:", result);
+        // Check status and redirect appropriately
+        if (expert.status === "approved") {
+          console.log("🚀 Redirecting to dashboard...");
+          router.push("/expert/dashboard");
+          return true;
+        } else if (expert.status === "pending") {
+          console.log("⏳ Redirecting to pending page...");
+          router.push("/expert/application-pending");
+          return true;
         }
-      } else if (response.status === 404) {
+      } else {
+        console.log("⚠️ Response structure unexpected:", result);
+      }
+    } catch (error: any) {
+      if (error.status === 404) {
         console.log("❌ No profile found (404) - redirecting to apply");
         // No profile found - redirect to application
         router.push("/expert/apply");
         return false;
       }
-    } catch (error) {
       console.error("❌ Error checking expert status:", error);
       // On error, redirect to apply page
       router.push("/expert/apply");

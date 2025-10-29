@@ -13,6 +13,7 @@ import {
   Shield,
   FileText,
 } from "lucide-react";
+import { jobsApi } from "@/lib/api";
 
 interface JobFormData {
   title: string;
@@ -60,16 +61,7 @@ export function JobForm() {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await fetch(
-            `http://localhost:4000/api/jobs/${jobId}`,
-          );
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-              `Failed to fetch job: ${response.status} - ${errorData.error || response.statusText}`,
-            );
-          }
-          const data = await response.json();
+          const data: any = await jobsApi.getById(jobId);
           console.log("Fetched job data:", data);
           setFormData({
             title: data.title || "",
@@ -89,7 +81,7 @@ export function JobForm() {
             screeningQuestions: data.screeningQuestions || [],
             companyId: data.companyId || "00000000-0000-0000-0000-000000000000",
           });
-        } catch (error) {
+        } catch (error: any) {
           setError(
             `Failed to load job data. Details: ${(error as Error).message}`,
           );
@@ -130,40 +122,31 @@ export function JobForm() {
     }
 
     try {
-      const endpoint = isEditing ? `/api/jobs/${jobId}` : "/api/jobs";
-      const method = isEditing ? "PUT" : "POST";
-      const response = await fetch(`http://localhost:4000${endpoint}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          department: formData.department || undefined,
-          requirements: formData.requirements?.length
-            ? formData.requirements
-            : undefined,
-          skills: formData.skills?.length ? formData.skills : undefined,
-          experienceLevel: formData.experienceLevel || undefined,
-          salaryMin: formData.salaryMin || undefined,
-          salaryMax: formData.salaryMax || undefined,
-          screeningQuestions: formData.screeningQuestions?.length
-            ? formData.screeningQuestions
-            : undefined,
-          companyId: formData.companyId,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        router.push("/dashboard");
+      const jobData = {
+        ...formData,
+        department: formData.department || undefined,
+        requirements: formData.requirements?.length
+          ? formData.requirements
+          : undefined,
+        skills: formData.skills?.length ? formData.skills : undefined,
+        experienceLevel: formData.experienceLevel || undefined,
+        salaryMin: formData.salaryMin || undefined,
+        salaryMax: formData.salaryMax || undefined,
+        screeningQuestions: formData.screeningQuestions?.length
+          ? formData.screeningQuestions
+          : undefined,
+        companyId: formData.companyId,
+      };
+
+      if (isEditing && jobId) {
+        await jobsApi.update(jobId, jobData);
       } else {
-        setError(
-          data.error ||
-            (data.details
-              ? data.details.map((err: Record<string, unknown>) => err.message).join(", ")
-              : "Failed to save job"),
-        );
+        await jobsApi.create(jobData);
       }
-    } catch (error) {
-      setError(`Something went wrong. Details: ${(error as Error).message}`);
+
+      router.push("/dashboard");
+    } catch (error: any) {
+      setError(error.message || `Something went wrong. Details: ${error}`);
     } finally {
       setIsLoading(false);
     }

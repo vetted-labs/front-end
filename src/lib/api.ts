@@ -135,12 +135,68 @@ export const companyApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  login: (email: string, password: string) =>
+    apiRequest("/api/companies/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  getProfile: () => {
+    const token = localStorage.getItem("companyAuthToken");
+    return fetch(`${API_BASE_URL}/api/companies/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
+
+  updateProfile: (data: Record<string, unknown>) => {
+    const token = localStorage.getItem("companyAuthToken");
+    return fetch(`${API_BASE_URL}/api/companies/me`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
+
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append("logo", file);
+    const token = localStorage.getItem("companyAuthToken");
+    return fetch(`${API_BASE_URL}/api/companies/me/logo`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
 };
 
 // Applications API
 export const applicationsApi = {
   getAll: () =>
     apiRequest("/api/candidates/me/applications", {
+      requiresAuth: true,
+    }),
+
+  create: (data: Record<string, unknown>) =>
+    apiRequest("/api/applications", {
+      method: "POST",
+      body: JSON.stringify(data),
       requiresAuth: true,
     }),
 
@@ -180,4 +236,120 @@ export const profileApi = {
       return res.json();
     });
   },
+};
+
+// Candidate API
+export const candidateApi = {
+  login: (email: string, password: string) =>
+    apiRequest("/api/candidates/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  signup: (data: Record<string, unknown>) =>
+    apiRequest("/api/candidates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getProfile: () =>
+    apiRequest("/api/candidates/me", {
+      requiresAuth: true,
+    }),
+
+  getById: (candidateId: string) => {
+    const token = localStorage.getItem("authToken");
+    return fetch(`${API_BASE_URL}/api/candidates/${candidateId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
+
+  updateProfile: (candidateId: string, data: Record<string, unknown>) => {
+    const token = localStorage.getItem("authToken");
+    return fetch(`${API_BASE_URL}/api/candidates/${candidateId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    }).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
+
+  uploadResume: (candidateId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("resume", file);
+    const token = localStorage.getItem("authToken");
+    return fetch(`${API_BASE_URL}/api/candidates/${candidateId}/resume`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, res.statusText);
+      return res.json();
+    });
+  },
+};
+
+// Expert API
+export const expertApi = {
+  getProfile: (walletAddress: string) =>
+    apiRequest(`/api/experts/profile?wallet=${walletAddress}`),
+
+  apply: (data: Record<string, unknown>) =>
+    apiRequest("/api/experts/apply", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getGuildDetails: (guildId: string, walletAddress: string) =>
+    apiRequest(`/api/experts/guilds/${guildId}?wallet=${walletAddress}`),
+
+  stakeOnProposal: (proposalId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/experts/proposals/${proposalId}/stake`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  endorseApplication: (applicationId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/experts/applications/${applicationId}/endorse`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  reviewGuildApplication: (applicationId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/experts/guild-applications/${applicationId}/review`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  saveGuildTemplate: (guildId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/experts/guilds/${guildId}/templates`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getLeaderboard: (params?: { guildId?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.guildId) queryParams.append("guildId", params.guildId);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    return apiRequest(`/api/experts/reputation/leaderboard${query ? `?${query}` : ""}`);
+  },
+};
+
+// Utility function to get asset URL
+export const getAssetUrl = (path: string) => {
+  if (!path) return "";
+  return path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
 };

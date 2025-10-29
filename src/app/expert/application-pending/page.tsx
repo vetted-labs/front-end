@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Alert } from "@/components/ui/Alert";
+import { expertApi } from "@/lib/api";
 
 interface PendingExpert {
   id: string;
@@ -62,19 +63,7 @@ export default function ApplicationPendingPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/experts/profile?wallet=${address}`
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          router.push("/expert/apply");
-          return;
-        }
-        throw new Error("Failed to fetch application status");
-      }
-
-      const result = await response.json();
+      const result: any = await expertApi.getProfile(address);
       const expertData = result.data || result;
 
       if (expertData.status === "approved") {
@@ -83,8 +72,12 @@ export default function ApplicationPendingPage() {
       }
 
       setExpert(expertData);
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (err: any) {
+      if (err.status === 404) {
+        router.push("/expert/apply");
+        return;
+      }
+      setError(err.message || "Failed to fetch application status");
     } finally {
       setIsLoading(false);
     }

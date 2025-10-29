@@ -29,6 +29,7 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { candidateApi, applicationsApi } from "@/lib/api";
 
 interface CandidateProfile {
   id: string;
@@ -114,44 +115,32 @@ export default function CandidateProfilePage() {
     setIsLoading(true);
     try {
       // Fetch profile and applications in parallel
-      const [profileResponse, applicationsResponse] = await Promise.all([
-        fetch("http://localhost:4000/api/candidates/me", {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }),
-        fetch("http://localhost:4000/api/candidates/me/applications", {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }),
+      const [profileData, applicationsData]: any[] = await Promise.all([
+        candidateApi.getProfile(),
+        applicationsApi.getAll(),
       ]);
 
-      if (profileResponse.status === 401 || applicationsResponse.status === 401) {
+      setProfile(profileData);
+      const apps = applicationsData.applications || [];
+      setApplications(apps);
+
+      // Calculate stats
+      const newStats: ApplicationStats = {
+        total: apps.length,
+        pending: apps.filter((a: Application) => a.status === "pending").length,
+        reviewing: apps.filter((a: Application) => a.status === "reviewing").length,
+        interviewed: apps.filter((a: Application) => a.status === "interviewed").length,
+        accepted: apps.filter((a: Application) => a.status === "accepted").length,
+        rejected: apps.filter((a: Application) => a.status === "rejected").length,
+      };
+      setStats(newStats);
+    } catch (error: any) {
+      if (error.status === 401) {
         localStorage.removeItem("authToken");
         localStorage.removeItem("candidateId");
         router.push("/auth/login?type=candidate");
         return;
       }
-
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        setProfile(profileData);
-      }
-
-      if (applicationsResponse.ok) {
-        const applicationsData = await applicationsResponse.json();
-        const apps = applicationsData.applications || [];
-        setApplications(apps);
-
-        // Calculate stats
-        const newStats: ApplicationStats = {
-          total: apps.length,
-          pending: apps.filter((a: Application) => a.status === "pending").length,
-          reviewing: apps.filter((a: Application) => a.status === "reviewing").length,
-          interviewed: apps.filter((a: Application) => a.status === "interviewed").length,
-          accepted: apps.filter((a: Application) => a.status === "accepted").length,
-          rejected: apps.filter((a: Application) => a.status === "rejected").length,
-        };
-        setStats(newStats);
-      }
-    } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
@@ -196,31 +185,19 @@ export default function CandidateProfilePage() {
         setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 200);
 
-      const response = await fetch(
-        `http://localhost:4000/api/candidates/${profile.id}/resume`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${authToken}` },
-          body: formData,
-        }
-      );
+      const data: any = await candidateApi.uploadResume(profile.id, resumeFile);
 
       clearInterval(progressInterval);
 
-      if (response.ok) {
-        const data = await response.json();
-        setUploadProgress(100);
-        setProfile({
-          ...profile,
-          resumeUrl: data.resumeUrl,
-          resumeFileName: data.fileName,
-        });
-        setSuccessMessage("Resume uploaded successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        setResumeFile(null);
-      } else {
-        throw new Error("Upload failed");
-      }
+      setUploadProgress(100);
+      setProfile({
+        ...profile,
+        resumeUrl: data.resumeUrl,
+        resumeFileName: data.fileName,
+      });
+      setSuccessMessage("Resume uploaded successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setResumeFile(null);
     } catch (error) {
       setErrors({ resume: "Failed to upload resume. Please try again." });
     } finally {
@@ -237,22 +214,9 @@ export default function CandidateProfilePage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/candidates/${profile.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(profile),
-        }
-      );
-
-      if (response.ok) {
-        setSuccessMessage("Profile updated successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
-      }
+      await candidateApi.updateProfile(profile.id, profile as unknown as Record<string, unknown>);
+      setSuccessMessage("Profile updated successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       setErrors({ submit: "Failed to update profile" });
     } finally {

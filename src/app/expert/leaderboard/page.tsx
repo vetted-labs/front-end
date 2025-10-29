@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { expertApi } from "@/lib/api";
 
 export default function LeaderboardPage() {
   const router = useRouter();
@@ -18,14 +19,8 @@ export default function LeaderboardPage() {
       if (!address) return;
 
       try {
-        const response = await fetch(
-          `http://localhost:4000/api/experts/profile?wallet=${address}`
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          setExpertId(result.data?.id);
-        }
+        const result: any = await expertApi.getProfile(address);
+        setExpertId(result.data?.id);
       } catch (error) {
         console.error("Failed to fetch expert ID:", error);
       }

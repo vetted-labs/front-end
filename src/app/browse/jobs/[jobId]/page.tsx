@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useParams, useRouter } from "next/navigation";
+import { candidateApi, jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 import {
   ArrowLeft,
   Briefcase,
@@ -118,18 +119,11 @@ export default function PublicJobDetailsPage() {
       const fetchProfile = async () => {
         try {
           const candidateId = localStorage.getItem("candidateId");
-          const response = await fetch(`http://localhost:4000/api/candidates/${candidateId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          const data: any = await candidateApi.getById(candidateId as string);
+          setProfileResume({
+            resumeUrl: data.resumeUrl,
+            resumeFileName: data.resumeFileName || "Your Profile Resume",
           });
-          if (response.ok) {
-            const data = await response.json();
-            setProfileResume({
-              resumeUrl: data.resumeUrl,
-              resumeFileName: data.resumeFileName || "Your Profile Resume",
-            });
-          }
         } catch (err) {
           console.error("Failed to fetch profile:", err);
         }
@@ -145,47 +139,34 @@ export default function PublicJobDetailsPage() {
     const checkExistingApplication = async () => {
       setCheckingApplication(true);
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:4000/api/candidates/me/applications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const data: any = await applicationsApi.getAll();
+        console.log("Applications response:", data); // Debug log
+        console.log("Current jobId:", jobId); // Debug current job
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Applications response:", data); // Debug log
-          console.log("Current jobId:", jobId); // Debug current job
+        // Handle paginated response from backend: { applications: [...], pagination: {...} }
+        const applications: Application[] = Array.isArray(data)
+          ? data
+          : (data?.applications || data?.data || []);
 
-          // Handle paginated response from backend: { applications: [...], pagination: {...} }
-          const applications: Application[] = Array.isArray(data)
-            ? data
-            : (data?.applications || data?.data || []);
+        // Check if user has already applied to this job
+        if (Array.isArray(applications) && applications.length > 0) {
+          console.log("Applications found:", applications.length);
 
-          // Check if user has already applied to this job
-          if (Array.isArray(applications) && applications.length > 0) {
-            console.log("Applications found:", applications.length);
+          const existingApp = applications.find(app => {
+            const appJobId = String(app.jobId);
+            const currentJobId = String(jobId);
+            console.log("Comparing app:", appJobId, "with current job:", currentJobId, "→", appJobId === currentJobId);
+            return appJobId === currentJobId;
+          });
 
-            const existingApp = applications.find(app => {
-              const appJobId = String(app.jobId);
-              const currentJobId = String(jobId);
-              console.log("Comparing app:", appJobId, "with current job:", currentJobId, "→", appJobId === currentJobId);
-              return appJobId === currentJobId;
-            });
-
-            if (existingApp) {
-              console.log("✅ Found existing application for this job:", existingApp);
-              setExistingApplication(existingApp);
-            } else {
-              console.log("❌ No application found for this job ID:", jobId);
-            }
+          if (existingApp) {
+            console.log("✅ Found existing application for this job:", existingApp);
+            setExistingApplication(existingApp);
           } else {
-            console.log("No applications found for candidate");
+            console.log("❌ No application found for this job ID:", jobId);
           }
         } else {
-          // Log error response for debugging
-          const errorData = await response.json().catch(() => null);
-          console.error("Applications API error:", response.status, errorData);
+          console.log("No applications found for candidate");
         }
       } catch (err) {
         console.error("Failed to check applications:", err);
@@ -222,14 +203,7 @@ export default function PublicJobDetailsPage() {
         console.log('Should increment view:', shouldIncrementView);
         console.log('Viewed jobs in session:', viewedJobs);
 
-        const response = await fetch(`http://localhost:4000/api/jobs/${jobId}?incrementView=${shouldIncrementView}`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            `Failed to fetch job: ${response.status} - ${errorData.error || response.statusText}`,
-          );
-        }
-        const data = await response.json();
+        const data: any = await jobsApi.getById(jobId);
         const normalizedJob = {
           ...data,
           title: data.title || 'Untitled Position',
@@ -347,53 +321,18 @@ export default function PublicJobDetailsPage() {
 
       // If uploading new resume, upload it first
       if (!useProfileResume && resumeFile) {
-        const resumeFormData = new FormData();
-        resumeFormData.append("resume", resumeFile);
-
-        const resumeResponse = await fetch(
-          `http://localhost:4000/api/candidates/${candidateId}/resume`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: resumeFormData,
-          }
-        );
-
-        if (!resumeResponse.ok) {
-          throw new Error("Failed to upload resume");
-        }
-
-        const resumeData = await resumeResponse.json();
+        const resumeData: any = await candidateApi.uploadResume(candidateId as string, resumeFile);
         resumeUrl = resumeData.resumeUrl;
       }
 
       // Submit the application
-      const applicationResponse = await fetch(
-        "http://localhost:4000/api/applications",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            jobId: job?.id,
-            candidateId,
-            coverLetter,
-            resumeUrl,
-            screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
-          }),
-        }
-      );
-
-      if (!applicationResponse.ok) {
-        const errorData = await applicationResponse.json();
-        throw new Error(errorData.message || "Failed to submit application");
-      }
-
-      const newApplication = await applicationResponse.json();
+      const newApplication: any = await applicationsApi.create({
+        jobId: job?.id,
+        candidateId,
+        coverLetter,
+        resumeUrl,
+        screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
+      });
 
       // Update state to show user has applied
       setExistingApplication(newApplication);
@@ -565,7 +504,7 @@ export default function PublicJobDetailsPage() {
                   </div>
                   {job.companyLogo && (
                     <img
-                      src={`http://localhost:4000${job.companyLogo}`}
+                      src={getAssetUrl(job.companyLogo)}
                       alt={job.companyName || "Company"}
                       className="w-24 h-24 rounded-xl object-cover border-2 border-border shadow-md ml-6 flex-shrink-0"
                       onError={(e) => {

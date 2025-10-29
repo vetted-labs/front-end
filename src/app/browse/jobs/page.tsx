@@ -19,6 +19,7 @@ import {
   Clock,
   Star,
 } from "lucide-react";
+import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 
 interface Job {
   id: string;
@@ -102,20 +103,11 @@ export default function JobsListingPage() {
 
     const fetchApplications = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:4000/api/candidates/me/applications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const applications = data?.applications || [];
-          const jobIds = new Set<string>(applications.map((app: { jobId: string }) => app.jobId));
-          setAppliedJobIds(jobIds);
-          console.log("Applied to job IDs:", Array.from(jobIds));
-        }
+        const data: any = await applicationsApi.getAll();
+        const applications = data?.applications || [];
+        const jobIds = new Set<string>(applications.map((app: { jobId: string }) => app.jobId));
+        setAppliedJobIds(jobIds);
+        console.log("Applied to job IDs:", Array.from(jobIds));
       } catch (error) {
         console.error("Failed to fetch applications:", error);
       }
@@ -139,24 +131,20 @@ export default function JobsListingPage() {
     const fetchJobs = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("http://localhost:4000/api/jobs?status=active");
-
-        if (response.ok) {
-          const data = await response.json();
-          // Ensure all jobs have required fields with defaults
-          const normalizedJobs = data.map((job: Record<string, unknown>) => ({
-            ...job,
-            title: job.title || 'Untitled Position',
-            description: job.description || '',
-            guild: job.guild || '',
-            department: job.department || null,
-            requirements: job.requirements || [],
-            skills: job.skills || [],
-            screeningQuestions: job.screeningQuestions || [],
-          }));
-          setJobs(normalizedJobs);
-          setFilteredJobs(normalizedJobs);
-        }
+        const data: any = await jobsApi.getAll({ status: 'active' });
+        // Ensure all jobs have required fields with defaults
+        const normalizedJobs = data.map((job: Record<string, unknown>) => ({
+          ...job,
+          title: job.title || 'Untitled Position',
+          description: job.description || '',
+          guild: job.guild || '',
+          department: job.department || null,
+          requirements: job.requirements || [],
+          skills: job.skills || [],
+          screeningQuestions: job.screeningQuestions || [],
+        }));
+        setJobs(normalizedJobs);
+        setFilteredJobs(normalizedJobs);
       } catch (error) {
         console.error("Error fetching jobs:", error);
       } finally {
@@ -558,7 +546,7 @@ export default function JobsListingPage() {
                       {job.companyLogo && (
                         <div className="flex items-center justify-center">
                           <img
-                            src={`http://localhost:4000${job.companyLogo}`}
+                            src={getAssetUrl(job.companyLogo)}
                             alt={job.companyName}
                             className="w-20 h-20 rounded-lg object-cover border border-border shadow-sm flex-shrink-0"
                             onError={(e) => {

@@ -12,6 +12,7 @@ import {
   Building2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { candidateApi, companyApi } from "@/lib/api";
 
 type UserType = "candidate" | "company";
 
@@ -38,48 +39,26 @@ function LoginForm() {
     try {
       if (userType === "candidate") {
         // Login as candidate
-        const response = await fetch("http://localhost:4000/api/candidates/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("authToken", data.token);
-          localStorage.setItem("candidateId", data.id);
-          localStorage.setItem("candidateEmail", data.email);
-          localStorage.setItem("userType", "candidate");
-          if (data.walletAddress) {
-            localStorage.setItem("candidateWallet", data.walletAddress);
-          }
-          router.push(redirectUrl || "/candidate/profile");
-        } else {
-          const errorData = await response.json();
-          setError(errorData.error || "Login failed. Please check your credentials.");
+        const data: any = await candidateApi.login(email, password);
+        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("candidateId", data.id);
+        localStorage.setItem("candidateEmail", data.email);
+        localStorage.setItem("userType", "candidate");
+        if (data.walletAddress) {
+          localStorage.setItem("candidateWallet", data.walletAddress);
         }
+        router.push(redirectUrl || "/candidate/profile");
       } else {
         // Login as company
-        const response = await fetch("http://localhost:4000/api/companies/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("companyAuthToken", data.token);
-          localStorage.setItem("companyId", data.company.id);
-          localStorage.setItem("companyEmail", data.company.email);
-          localStorage.setItem("userType", "company");
-          router.push(redirectUrl || "/dashboard");
-        } else {
-          const errorData = await response.json();
-          setError(errorData.error || "Login failed. Please check your credentials.");
-        }
+        const data: any = await companyApi.login(email, password);
+        localStorage.setItem("companyAuthToken", data.token);
+        localStorage.setItem("companyId", data.company.id);
+        localStorage.setItem("companyEmail", data.company.email);
+        localStorage.setItem("userType", "company");
+        router.push(redirectUrl || "/dashboard");
       }
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
+    } catch (error: any) {
+      setError(error.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
