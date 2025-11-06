@@ -416,7 +416,7 @@ function SignupForm() {
                 Sign in
               </button>
             </p>
-          </form>
+          </div>
         </div>
       </div>
     </div>
