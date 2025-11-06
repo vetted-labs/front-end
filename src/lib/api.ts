@@ -299,6 +299,12 @@ export const candidateApi = {
       return res.json();
     });
   },
+
+  linkedinAuth: (code: string) =>
+    apiRequest("/api/auth/linkedin", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
 };
 
 // Expert API
@@ -345,6 +351,72 @@ export const expertApi = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     const query = queryParams.toString();
     return apiRequest(`/api/experts/reputation/leaderboard${query ? `?${query}` : ""}`);
+  },
+};
+
+// Guilds API
+export const guildsApi = {
+  // Get all guilds (public)
+  getAll: () => apiRequest("/api/guilds"),
+
+  // Get public guild details with members overview
+  getPublicDetail: (guildId: string) =>
+    apiRequest(`/api/guilds/${guildId}`),
+
+  // Get guild's application template
+  getApplicationTemplate: (guildId: string) =>
+    apiRequest(`/api/guilds/${guildId}/application-template`),
+
+  // Submit guild application (candidate)
+  submitApplication: (guildId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/guilds/${guildId}/applications`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  // Get candidate's guild memberships
+  getMemberships: (candidateId: string) =>
+    apiRequest(`/api/candidates/${candidateId}/guilds`, {
+      requiresAuth: true,
+    }),
+
+  // Check if candidate is member of specific guild
+  checkMembership: (candidateId: string, guildId: string) =>
+    apiRequest(`/api/candidates/${candidateId}/guilds/${guildId}/membership`, {
+      requiresAuth: true,
+    }),
+
+  // Get guild's candidate applications (for expert review)
+  getCandidateApplications: (guildId: string) =>
+    apiRequest(`/api/guilds/${guildId}/candidate-applications`, {
+      requiresAuth: true,
+    }),
+
+  // Review candidate guild application (expert)
+  reviewCandidateApplication: (applicationId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/guilds/candidate-applications/${applicationId}/review`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  // Get guild members (experts + candidates)
+  getMembers: (guildId: string, params?: { role?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.role) queryParams.append("role", params.role);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    return apiRequest(`/api/guilds/${guildId}/members${query ? `?${query}` : ""}`);
+  },
+
+  // Get guild leaderboard rankings
+  getLeaderboard: (guildId: string, params?: { limit?: number; period?: string }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.period) queryParams.append("period", params.period);
+    const query = queryParams.toString();
+    return apiRequest(`/api/guilds/${guildId}/leaderboard${query ? `?${query}` : ""}`);
   },
 };
 

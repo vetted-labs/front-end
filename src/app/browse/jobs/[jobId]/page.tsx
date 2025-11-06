@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useParams, useRouter } from "next/navigation";
-import { candidateApi, jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
+import { candidateApi, jobsApi, applicationsApi, guildsApi, getAssetUrl } from "@/lib/api";
 import {
   ArrowLeft,
   Briefcase,
@@ -27,6 +27,7 @@ import {
   ClipboardList,
   Clock,
   Star,
+  AlertCircle,
 } from "lucide-react";
 import { Modal, Button, Alert, LoadingState, Textarea, StatusBadge } from "@/components/ui";
 
@@ -106,6 +107,9 @@ export default function PublicJobDetailsPage() {
   const [applicationError, setApplicationError] = useState("");
   const [existingApplication, setExistingApplication] = useState<Application | null>(null);
   const [checkingApplication, setCheckingApplication] = useState(false);
+  const [isGuildMember, setIsGuildMember] = useState(false);
+  const [checkingGuildMembership, setCheckingGuildMembership] = useState(false);
+  const [guildMembershipStatus, setGuildMembershipStatus] = useState<"approved" | "pending" | "not_member">("not_member");
 
   // Check if user is authenticated and fetch profile + check for existing application
   useEffect(() => {
@@ -178,6 +182,86 @@ export default function PublicJobDetailsPage() {
     checkExistingApplication();
   }, [isAuthenticated, jobId]);
 
+  // Check guild membership after job is loaded
+  useEffect(() => {
+    if (!isAuthenticated || !job || !job.guild) {
+      if (job && !job.guild) {
+        console.warn("[Guild Check] ⚠️ Job has no guild field - skipping membership check");
+      }
+      return;
+    }
+
+    // Validate guild ID looks reasonable
+    const guildId = job.guild.trim();
+    if (!guildId || guildId.length < 2 || guildId.match(/^[0-9]+Guild$/)) {
+      console.warn("[Guild Check] ⚠️ Invalid guild ID detected:", guildId);
+      console.warn("[Guild Check] Job data:", { jobId: job.id, guild: job.guild });
+      // For invalid guilds, assume not a member but don't make API call
+      setIsGuildMember(false);
+      setGuildMembershipStatus("not_member");
+      setCheckingGuildMembership(false);
+      return;
+    }
+
+    const checkGuildMembership = async () => {
+      setCheckingGuildMembership(true);
+      try {
+        const candidateId = localStorage.getItem("candidateId");
+        if (!candidateId) {
+          console.log("[Guild Check] No candidateId found");
+          setGuildMembershipStatus("not_member");
+          setIsGuildMember(false);
+          return;
+        }
+
+        console.log("[Guild Check] 🔍 Checking membership for:", {
+          candidateId: candidateId.substring(0, 8) + "...",
+          guildId,
+          jobId: job.id
+        });
+
+        const membershipData: any = await guildsApi.checkMembership(candidateId, guildId);
+        console.log("[Guild Check] ✅ Membership response:", membershipData);
+
+        if (membershipData.isMember || membershipData.status === "approved") {
+          console.log("[Guild Check] ✅ User IS a member of", guildId);
+          setIsGuildMember(true);
+          setGuildMembershipStatus("approved");
+        } else if (membershipData.status === "pending") {
+          console.log("[Guild Check] ⏳ Application pending for", guildId);
+          setIsGuildMember(false);
+          setGuildMembershipStatus("pending");
+        } else {
+          console.log("[Guild Check] ❌ Not a member of", guildId);
+          setIsGuildMember(false);
+          setGuildMembershipStatus("not_member");
+        }
+      } catch (err: any) {
+        console.error("[Guild Check] ❌ Error checking membership:", {
+          guildId,
+          status: err.status,
+          message: err.message
+        });
+
+        // If 404, user is not a member - this is expected
+        if (err.status === 404) {
+          console.log("[Guild Check] 404 response - not a member (expected)");
+          setIsGuildMember(false);
+          setGuildMembershipStatus("not_member");
+        } else {
+          // For other errors, log but assume not a member for safety
+          console.error("[Guild Check] Unexpected error, assuming not a member");
+          setIsGuildMember(false);
+          setGuildMembershipStatus("not_member");
+        }
+      } finally {
+        setCheckingGuildMembership(false);
+      }
+    };
+
+    checkGuildMembership();
+  }, [isAuthenticated, job]);
+
   useEffect(() => {
     if (!jobId) {
       setError("Invalid job ID.");
@@ -249,6 +333,18 @@ export default function PublicJobDetailsPage() {
       router.push(`/auth/signup?type=candidate&redirect=${encodeURIComponent(currentUrl)}`);
       return;
     }
+
+    // Check guild membership before allowing application
+    if (!isGuildMember) {
+      // Redirect to guild page to join
+      if (job?.guild) {
+        // Clean guild name by removing " Guild" suffix
+        const cleanGuildName = job.guild.replace(/ Guild$/i, '');
+        router.push(`/guilds/${cleanGuildName}`);
+      }
+      return;
+    }
+
     if (job?.screeningQuestions) {
       setScreeningAnswers(new Array(job.screeningQuestions.length).fill(""));
     }
@@ -615,21 +711,88 @@ export default function PublicJobDetailsPage() {
                 </div>
               )}
 
-              {/* Apply Button - Disabled if already applied */}
+              {/* Invalid Guild Warning */}
+              {job.guild && (job.guild.match(/^[0-9]+Guild$/) || job.guild.length < 2) && (
+                <div className="p-4 bg-red-500/10 border-2 border-red-500/20 rounded-lg">
+                  <div className="flex items-start gap-2 mb-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-red-900 dark:text-red-300">
+                        Invalid Guild Data
+                      </p>
+                      <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                        This job has invalid guild information: <code className="px-1 py-0.5 bg-red-100 dark:bg-red-900 rounded text-xs">{job.guild}</code>
+                        <br />
+                        Please contact the employer to fix this issue.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Guild Membership Status */}
+              {isAuthenticated && guildMembershipStatus === "not_member" && job.guild && !job.guild.match(/^[0-9]+Guild$/) && job.guild.length >= 2 && (
+                <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/20 rounded-lg">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-300">
+                        Guild Membership Required
+                      </p>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                        You must join the <strong>{job.guild}</strong> guild to apply for this position
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isAuthenticated && guildMembershipStatus === "pending" && (
+                <div className="p-4 bg-blue-500/10 border-2 border-blue-500/20 rounded-lg">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-blue-900 dark:text-blue-300">
+                        Guild Application Pending
+                      </p>
+                      <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                        Your application to join <strong>{job.guild}</strong> is under review by expert members
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Apply Button */}
               <div className="space-y-2">
                 <Button
                   onClick={handleApply}
                   className="w-full"
                   size="lg"
-                  disabled={hasAlreadyApplied || checkingApplication}
-                  isLoading={checkingApplication}
-                  icon={!checkingApplication && <Send className="w-5 h-5" />}
+                  disabled={hasAlreadyApplied || checkingApplication || checkingGuildMembership || guildMembershipStatus === "pending"}
+                  isLoading={checkingApplication || checkingGuildMembership}
+                  icon={!checkingApplication && !checkingGuildMembership && <Send className="w-5 h-5" />}
                 >
-                  {checkingApplication ? "Checking..." : hasAlreadyApplied ? "Already Applied" : "Apply for this Role"}
+                  {checkingApplication || checkingGuildMembership
+                    ? "Checking..."
+                    : hasAlreadyApplied
+                    ? "Already Applied"
+                    : !isAuthenticated
+                    ? "Sign In to Apply"
+                    : guildMembershipStatus === "not_member"
+                    ? `Join ${job.guild} Guild`
+                    : guildMembershipStatus === "pending"
+                    ? "Guild Application Pending"
+                    : "Apply for this Role"}
                 </Button>
                 {hasAlreadyApplied && (
                   <p className="text-xs text-muted-foreground text-center">
                     You cannot apply to this position again
+                  </p>
+                )}
+                {!isGuildMember && isAuthenticated && guildMembershipStatus === "not_member" && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Click to visit the guild page and apply for membership
                   </p>
                 )}
               </div>

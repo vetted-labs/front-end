@@ -87,7 +87,7 @@ export function HomePage() {
   const router = useRouter();
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
-  const [activeSection, setActiveSection] = useState<"employers" | "jobseekers" | "experts">("employers");
+  const [activeSection, setActiveSection] = useState<"employers" | "jobseekers" | "experts" | "guilds">("employers");
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
@@ -225,6 +225,33 @@ export function HomePage() {
     },
   ];
 
+  const guildFeatures = [
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "Expert-Led Communities",
+      description:
+        "Professional communities organized by skill domain where experts vet and endorse candidates",
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Quality Assurance",
+      description:
+        "High standards maintained through decentralized review process and reputation staking",
+    },
+    {
+      icon: <Briefcase className="w-6 h-6" />,
+      title: "Exclusive Job Access",
+      description:
+        "Members get access to curated job opportunities from companies seeking pre-vetted talent",
+    },
+    {
+      icon: <Award className="w-6 h-6" />,
+      title: "DAO Governance",
+      description:
+        "Sub-guilds managed by decentralized autonomous organizations for community-led decision making",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation Header */}
@@ -269,6 +296,16 @@ export function HomePage() {
               >
                 For Experts
               </button>
+              <button
+                onClick={() => setActiveSection("guilds")}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  activeSection === "guilds"
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Guilds
+              </button>
             </div>
 
             {/* Action Buttons */}
@@ -277,10 +314,9 @@ export function HomePage() {
               {activeSection === "experts" ? (
                 <button
                   onClick={() => setShowWalletModal(true)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
-                  <Wallet className="mr-2 w-4 h-4" />
-                  Connect Wallet
+                  Sign In
                 </button>
               ) : (
                 <button
@@ -313,8 +349,7 @@ export function HomePage() {
                 onClick={() => setShowWalletModal(true)}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <Wallet className="mr-2 w-5 h-5" />
-                Connect Wallet
+                Sign In
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
             ) : (
@@ -335,6 +370,15 @@ export function HomePage() {
                     Browse Jobs
                   </button>
                 )}
+                {activeSection === "guilds" && (
+                  <button
+                    onClick={() => router.push("/guilds")}
+                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-foreground bg-card border-2 border-border rounded-xl hover:border-primary hover:text-primary transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    <Shield className="mr-2 w-5 h-5" />
+                    Explore Guilds
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -349,6 +393,8 @@ export function HomePage() {
               ? "Why Employers Choose Vetted"
               : activeSection === "jobseekers"
               ? "Why Job Seekers Choose Vetted"
+              : activeSection === "guilds"
+              ? "What are Guilds?"
               : "Why Experts Choose Vetted"}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -356,6 +402,8 @@ export function HomePage() {
               ? "Hire with confidence using our expert-validated talent pool"
               : activeSection === "jobseekers"
               ? "Stand out with expert endorsements and build your verified reputation"
+              : activeSection === "guilds"
+              ? "Professional communities where experts vet candidates and companies find pre-qualified talent"
               : "Earn rewards while shaping the future of hiring in your industry"}
           </p>
         </div>
@@ -364,6 +412,8 @@ export function HomePage() {
             ? employerFeatures
             : activeSection === "jobseekers"
             ? jobSeekerFeatures
+            : activeSection === "guilds"
+            ? guildFeatures
             : expertFeatures
           ).map((feature, index) => (
             <div

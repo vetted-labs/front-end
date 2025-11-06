@@ -20,17 +20,37 @@ const queryClient = new QueryClient({
 // Suppress WalletConnect WebSocket errors
 if (typeof window !== "undefined") {
   const originalError = console.error;
+  const originalWarn = console.warn;
+
   console.error = (...args) => {
-    const errorMessage = args[0]?.toString() || "";
-    // Suppress WalletConnect subscription errors
+    const errorMessage = args.map(arg => {
+      if (arg && typeof arg === 'object') {
+        return arg.message || arg.toString();
+      }
+      return String(arg);
+    }).join(' ');
+
+    // Suppress WalletConnect subscription and WebSocket errors
     if (
       errorMessage.includes("Connection interrupted") ||
       errorMessage.includes("WebSocket") ||
-      errorMessage.includes("subscribe")
+      errorMessage.includes("subscribe") ||
+      errorMessage.includes("WalletConnect")
     ) {
       return;
     }
     originalError.apply(console, args);
+  };
+
+  console.warn = (...args) => {
+    const warnMessage = String(args[0] || "");
+    if (
+      warnMessage.includes("Connection interrupted") ||
+      warnMessage.includes("WebSocket")
+    ) {
+      return;
+    }
+    originalWarn.apply(console, args);
   };
 }
 

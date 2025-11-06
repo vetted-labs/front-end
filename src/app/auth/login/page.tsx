@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   User,
   Building2,
+  Linkedin,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { candidateApi, companyApi } from "@/lib/api";
@@ -62,6 +63,17 @@ function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLinkedInLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/linkedin/callback`;
+    const state = redirectUrl || "/candidate/profile";
+    const scope = "openid profile email";
+
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scope)}`;
+
+    window.location.href = authUrl;
   };
 
   return (
@@ -200,6 +212,29 @@ function LoginForm() {
               )}
             </button>
           </form>
+
+          {/* LinkedIn Sign In - Only for Candidates */}
+          {userType === "candidate" && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLinkedInLogin}
+                className="w-full py-3 px-6 bg-[#0A66C2] text-white rounded-xl hover:bg-[#004182] transition-all font-semibold flex items-center justify-center gap-3 shadow-md"
+              >
+                <Linkedin className="w-5 h-5" />
+                Sign in with LinkedIn
+              </button>
+            </>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">

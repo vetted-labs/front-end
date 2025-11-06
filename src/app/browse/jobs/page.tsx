@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Clock,
   Star,
+  Shield,
 } from "lucide-react";
 import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 
@@ -495,6 +496,20 @@ export default function JobsListingPage() {
 
                         {/* Job Details */}
                         <div className="flex flex-wrap items-center gap-2 mb-3">
+                          {job.guild && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Clean guild name by removing " Guild" suffix
+                                const cleanGuildName = job.guild.replace(/ Guild$/i, '');
+                                router.push(`/guilds/${cleanGuildName}`);
+                              }}
+                              className="px-2.5 py-1 bg-violet-50 text-primary border border-violet-200 rounded-full text-xs font-semibold hover:bg-violet-100 transition-colors flex items-center gap-1"
+                            >
+                              <Shield className="w-3 h-3" />
+                              {job.guild}
+                            </button>
+                          )}
                           {job.locationType && (
                             <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium capitalize">
                               {job.locationType}
