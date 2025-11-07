@@ -87,6 +87,7 @@ export function HomePage() {
   const router = useRouter();
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
+
   const [activeSection, setActiveSection] = useState<"employers" | "jobseekers" | "experts" | "guilds">("employers");
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -94,6 +95,15 @@ export function HomePage() {
 
   useEffect(() => {
     setMounted(true);
+
+    // Get section from URL parameter if present
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const sectionParam = searchParams.get('section') as "employers" | "jobseekers" | "experts" | "guilds" | null;
+      if (sectionParam) {
+        setActiveSection(sectionParam);
+      }
+    }
   }, []);
 
   // Check expert status after wallet connection from experts tab
@@ -320,7 +330,7 @@ export function HomePage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => router.push("/auth/login")}
+                  onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
                   Sign In
@@ -355,7 +365,7 @@ export function HomePage() {
             ) : (
               <>
                 <button
-                  onClick={() => router.push("/auth/login")}
+                  onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   Sign In
@@ -626,7 +636,7 @@ export function HomePage() {
               </button>
             ) : (
               <button
-                onClick={() => router.push("/auth/login")}
+                onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
               >
                 {activeSection === "employers" ? "Start Hiring Today" : "Join Vetted Today"}
@@ -653,7 +663,7 @@ export function HomePage() {
             <div>
               <h4 className="text-foreground font-semibold mb-4">For Employers</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => router.push("/auth/login")} className="hover:text-foreground transition-colors">Sign In</button></li>
+                <li><button onClick={() => router.push("/auth/login?type=company")} className="hover:text-foreground transition-colors">Sign In</button></li>
                 <li><button onClick={() => router.push("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button></li>
               </ul>
             </div>
@@ -661,7 +671,7 @@ export function HomePage() {
               <h4 className="text-foreground font-semibold mb-4">For Job Seekers</h4>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => router.push("/browse/jobs")} className="hover:text-foreground transition-colors">Browse Jobs</button></li>
-                <li><button onClick={() => router.push("/auth/login")} className="hover:text-foreground transition-colors">Sign In</button></li>
+                <li><button onClick={() => router.push("/auth/login?type=candidate")} className="hover:text-foreground transition-colors">Sign In</button></li>
               </ul>
             </div>
             <div>

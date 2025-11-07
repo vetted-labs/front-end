@@ -229,7 +229,7 @@ export default function CandidateProfilePage() {
     localStorage.removeItem("candidateId");
     localStorage.removeItem("candidateEmail");
     localStorage.removeItem("candidateWallet");
-    router.push("/browse");
+    router.push("/?section=jobseekers");
   };
 
   const getStatusColor = (status: string) => {
@@ -300,8 +300,8 @@ export default function CandidateProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
-              onClick={() => router.push("/browse")}
-              className="flex items-center space-x-2"
+              onClick={() => router.push("/")}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
               <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>

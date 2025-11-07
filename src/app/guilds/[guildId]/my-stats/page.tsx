@@ -137,7 +137,7 @@ export default function MyGuildStatsPage() {
     localStorage.removeItem("authToken");
     localStorage.removeItem("candidateId");
     localStorage.removeItem("candidateEmail");
-    router.push("/auth/login");
+    router.push("/?section=guilds");
   };
 
   const getRoleBadgeColor = (role: string) => {

@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactElement } from "react";
 import { useRouter } from "next/navigation";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Shield,
@@ -17,8 +18,10 @@ import {
   Globe,
   User,
   LogOut,
+  Wallet,
 } from "lucide-react";
 import { LoadingState, Alert } from "@/components/ui";
+import { Modal } from "@/components/ui/Modal";
 import { guildsApi } from "@/lib/api";
 
 interface Guild {
@@ -33,14 +36,62 @@ interface Guild {
   color?: string;
 }
 
+// Wallet information helper
+const getWalletInfo = (walletName: string) => {
+  const wallets: Record<string, { icon: ReactElement; description: string }> = {
+    MetaMask: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <path d="M36.5 3.5L22 13.5L24.5 7.5L36.5 3.5Z" fill="#E17726" stroke="#E17726" />
+          <path d="M3.5 3.5L17.8 13.6L15.5 7.5L3.5 3.5Z" fill="#E27625" stroke="#E27625" />
+        </svg>
+      ),
+      description: "Connect using MetaMask browser extension",
+    },
+    "Coinbase Wallet": {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#0052FF" />
+        </svg>
+      ),
+      description: "Connect using Coinbase Wallet app",
+    },
+  };
+
+  return (
+    wallets[walletName] || {
+      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      description: "Connect with your wallet",
+    }
+  );
+};
+
 export default function GlobalGuildsPage() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+
+    // Restore scroll position when coming back to this page
+    const savedScrollPosition = sessionStorage.getItem('guildsScrollPosition');
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition));
+        sessionStorage.removeItem('guildsScrollPosition');
+      }, 100);
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -52,13 +103,29 @@ export default function GlobalGuildsPage() {
     fetchGuilds();
   }, []);
 
+  const handleWalletConnect = async (connectorId: string) => {
+    const connector = connectors.find((c) => c.id === connectorId);
+    if (connector) {
+      try {
+        await connect({ connector });
+        setShowWalletModal(false);
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+      }
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    router.push("/?section=guilds");
+  };
+
   const fetchGuilds = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const guildsData: any = await guildsApi.getAll();
-      console.log("[Guilds Page] All guilds:", guildsData);
       setGuilds(guildsData);
     } catch (err) {
       console.error("[Guilds Page] Error:", err);
@@ -119,7 +186,6 @@ export default function GlobalGuildsPage() {
           openPositions: 2,
         },
       ];
-      console.log("[Guilds Page] Using mock data");
       setGuilds(mockGuilds);
     } finally {
       setIsLoading(false);
@@ -135,7 +201,7 @@ export default function GlobalGuildsPage() {
     setIsAuthenticated(false);
     setUserEmail("");
     setShowUserMenu(false);
-    router.push("/");
+    router.push("/?section=guilds");
   };
 
   const getGuildColor = (index: number) => {
@@ -209,20 +275,12 @@ export default function GlobalGuildsPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => router.push("/auth/login")}
-                    className="px-4 py-2 text-card-foreground hover:text-foreground font-medium"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => router.push("/auth/signup")}
-                    className="px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all"
-                  >
-                    Sign Up
-                  </button>
-                </div>
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Sign In
+                </button>
               )}
             </div>
           </div>

@@ -2,7 +2,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactElement } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import {
   ArrowLeft,
   Search,
@@ -19,8 +20,10 @@ import {
   Clock,
   Star,
   Shield,
+  Wallet,
 } from "lucide-react";
 import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
 
 interface Job {
   id: string;
@@ -59,8 +62,41 @@ const getTimeAgo = (dateString: string): string => {
   return `Posted ${months} ${months === 1 ? "month" : "months"} ago`;
 };
 
+// Wallet information helper
+const getWalletInfo = (walletName: string) => {
+  const wallets: Record<string, { icon: ReactElement; description: string }> = {
+    MetaMask: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <path d="M36.5 3.5L22 13.5L24.5 7.5L36.5 3.5Z" fill="#E17726" stroke="#E17726" />
+          <path d="M3.5 3.5L17.8 13.6L15.5 7.5L3.5 3.5Z" fill="#E27625" stroke="#E27625" />
+        </svg>
+      ),
+      description: "Connect using MetaMask browser extension",
+    },
+    "Coinbase Wallet": {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#0052FF" />
+        </svg>
+      ),
+      description: "Connect using Coinbase Wallet app",
+    },
+  };
+
+  return (
+    wallets[walletName] || {
+      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      description: "Connect with your wallet",
+    }
+  );
+};
+
 export default function JobsListingPage() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +111,8 @@ export default function JobsListingPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const guilds = [
     "Engineering Guild",
@@ -87,6 +125,10 @@ export default function JobsListingPage() {
 
   const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
   const locationTypes = ["remote", "onsite", "hybrid"];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -117,6 +159,23 @@ export default function JobsListingPage() {
     fetchApplications();
   }, [isAuthenticated]);
 
+  const handleWalletConnect = async (connectorId: string) => {
+    const connector = connectors.find((c) => c.id === connectorId);
+    if (connector) {
+      try {
+        await connect({ connector });
+        setShowWalletModal(false);
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+      }
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    router.push("/?section=jobseekers");
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("candidateId");
@@ -125,7 +184,7 @@ export default function JobsListingPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/auth/login?type=candidate");
+    router.push("/?section=jobseekers");
   };
 
   useEffect(() => {
@@ -271,14 +330,14 @@ export default function JobsListingPage() {
                   </div>
                 )}
               </div>
-            ) : (
-              <button
-                onClick={() => router.push("/auth/login")}
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90  transition-all shadow-sm"
-              >
-                Sign In
-              </button>
-            )}
+              ) : (
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -596,6 +655,33 @@ export default function JobsListingPage() {
           </div>
         </div>
       </div>
+
+      {/* Wallet Connection Modal */}
+      <Modal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        title="Connect Your Wallet"
+      >
+        <p className="text-muted-foreground mb-6">
+          Choose your preferred wallet to get started
+        </p>
+        {connectors.map((connector) => {
+          const walletInfo = getWalletInfo(connector.name);
+          return (
+            <button
+              key={connector.id}
+              onClick={() => handleWalletConnect(connector.id)}
+              className="w-full flex items-center gap-4 p-4 bg-card hover:bg-muted rounded-lg border border-border hover:border-primary transition-all mb-3"
+            >
+              {walletInfo.icon}
+              <div className="text-left">
+                <p className="font-semibold text-card-foreground">{connector.name}</p>
+                <p className="text-xs text-muted-foreground">{walletInfo.description}</p>
+              </div>
+            </button>
+          );
+        })}
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -21,11 +21,25 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
-  const [userType, setUserType] = useState<UserType>("candidate");
+  const typeParam = searchParams.get("type");
+
+  // Derive userType from URL parameter (default to candidate)
+  const userType: UserType = typeParam === "company" ? "company" : "candidate";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Function to update userType by updating the URL
+  const handleUserTypeChange = (newType: UserType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("type", newType);
+    if (redirectUrl) {
+      params.set("redirect", redirectUrl);
+    }
+    router.push(`/auth/login?${params.toString()}`);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +73,39 @@ function LoginForm() {
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: any) {
-      setError(error.message || "Login failed. Please check your credentials.");
+      console.error("Login error:", error);
+
+      // Handle different types of errors
+      let errorMessage = "Something went wrong. Please try again.";
+
+      if (error.response) {
+        // HTTP error response from server
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 400) {
+          errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+        } else if (status === 401) {
+          errorMessage = "Invalid credentials. Please check your email and password.";
+        } else if (status === 403) {
+          errorMessage = "Access denied. Your account may be suspended.";
+        } else if (status === 404) {
+          errorMessage = "Account not found. Please check your email or sign up.";
+        } else if (status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = data.message || data.error || errorMessage;
+        }
+      } else if (error.message) {
+        // Network or other errors
+        if (error.message.includes("Network Error") || error.message.includes("fetch")) {
+          errorMessage = "Cannot connect to server. Please check your internet connection.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +170,7 @@ function LoginForm() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setUserType("candidate")}
+                onClick={() => handleUserTypeChange("candidate")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "candidate"
                     ? "border-primary bg-primary/10"
@@ -138,7 +184,7 @@ function LoginForm() {
               </button>
               <button
                 type="button"
-                onClick={() => setUserType("company")}
+                onClick={() => handleUserTypeChange("company")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "company"
                     ? "border-primary bg-primary/10"
@@ -240,7 +286,7 @@ function LoginForm() {
             <p className="text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <button
-                onClick={() => router.push("/auth/signup")}
+                onClick={() => router.push(`/auth/signup?type=${userType}`)}
                 className="text-primary hover:text-primary/80 font-medium"
               >
                 Sign up

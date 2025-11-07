@@ -178,8 +178,8 @@ export function EnhancedExpertDashboard() {
   const handleDisconnect = () => {
     setIsDisconnecting(true);
     disconnect();
-    // Navigate to main homepage instead of expert page
-    router.push("/");
+    // Navigate to homepage experts section
+    router.push("/?section=experts");
   };
 
   const getActivityIcon = (type: string) => {

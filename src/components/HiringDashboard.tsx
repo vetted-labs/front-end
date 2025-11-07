@@ -86,6 +86,7 @@ export function HiringDashboard() {
 
     try {
       const token = localStorage.getItem("companyAuthToken");
+      const companyId = localStorage.getItem("companyId");
       if (!token) {
         router.push("/auth/login?type=company?redirect=/dashboard");
         return;
@@ -95,6 +96,7 @@ export function HiringDashboard() {
         jobsApi.getAll({
           status: filterStatus !== "all" ? filterStatus : undefined,
           search: searchQuery || undefined,
+          companyId: companyId || undefined,
         }),
         dashboardApi.getStats(),
       ]);
@@ -137,7 +139,7 @@ export function HiringDashboard() {
     localStorage.removeItem("companyId");
     localStorage.removeItem("companyEmail");
     localStorage.removeItem("companyWallet");
-    router.push("/auth/login?type=company");
+    router.push("/?section=employers");
   };
 
   if (isLoading) {
@@ -151,23 +153,38 @@ export function HiringDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              >
                 <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-foreground">Vetted</span>
-              </div>
+              </button>
               <nav className="hidden md:flex items-center space-x-6 ml-8">
-                <a href="#" className="text-foreground font-medium">
+                <button
+                  onClick={() => router.push("/dashboard")}
+                  className="text-foreground font-medium hover:text-primary transition-colors"
+                >
                   Dashboard
-                </a>
-                <a href="#" className="text-card-foreground hover:text-foreground">
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/candidates")}
+                  className="text-card-foreground hover:text-foreground transition-colors"
+                >
                   Candidates
-                </a>
-                <a href="#" className="text-card-foreground hover:text-foreground">
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/analytics")}
+                  className="text-card-foreground hover:text-foreground transition-colors"
+                >
                   Analytics
-                </a>
-                <a href="#" className="text-card-foreground hover:text-foreground">
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/settings")}
+                  className="text-card-foreground hover:text-foreground transition-colors"
+                >
                   Settings
-                </a>
+                </button>
               </nav>
             </div>
 

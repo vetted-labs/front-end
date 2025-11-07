@@ -13,7 +13,7 @@ import {
   Shield,
   FileText,
 } from "lucide-react";
-import { jobsApi } from "@/lib/api";
+import { jobsApi, guildsApi } from "@/lib/api";
 
 interface JobFormData {
   title: string;
@@ -49,20 +49,41 @@ export function JobForm() {
     salaryCurrency: "USD",
     guild: "",
     status: "draft",
-    companyId: "00000000-0000-0000-0000-000000000000",
+    companyId: "",
   });
+  const [guilds, setGuilds] = useState<Array<{ id: string; name: string; description: string }>>([]);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch guilds on mount
+  useEffect(() => {
+    const fetchGuilds = async () => {
+      try {
+        const guildsData: any = await guildsApi.getAll();
+        setGuilds(guildsData);
+      } catch (error) {
+        console.error("Failed to fetch guilds:", error);
+      }
+    };
+    fetchGuilds();
+  }, []);
+
+  // Set companyId from localStorage
+  useEffect(() => {
+    const companyId = localStorage.getItem("companyId");
+    if (companyId) {
+      setFormData((prev) => ({ ...prev, companyId }));
+    }
+  }, []);
 
   useEffect(() => {
     if (isEditing && jobId) {
-      console.log("Fetching job for editing with jobId:", jobId);
       const fetchJob = async () => {
         setIsLoading(true);
         setError(null);
         try {
           const data: any = await jobsApi.getById(jobId);
-          console.log("Fetched job data:", data);
           setFormData({
             title: data.title || "",
             department: data.department || "",
@@ -94,29 +115,55 @@ export function JobForm() {
     }
   }, [isEditing, jobId]);
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Required fields
+    if (!formData.title.trim()) {
+      errors.title = "Job title is required";
+    }
+
+    if (!formData.description.trim()) {
+      errors.description = "Job description is required";
+    } else if (formData.description.length < 50) {
+      errors.description = "Description must be at least 50 characters";
+    }
+
+    if (!formData.location.trim()) {
+      errors.location = "Location is required";
+    }
+
+    if (!formData.guild) {
+      errors.guild = "Please select a guild";
+    }
+
+    if (!formData.companyId) {
+      errors.companyId = "Company ID is missing. Please log in again.";
+    }
+
+    // Optional but validated if provided
+    if (formData.salaryMin && formData.salaryMax && formData.salaryMin > formData.salaryMax) {
+      errors.salaryMin = "Minimum salary cannot be greater than maximum salary";
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setError("Please fix the errors above before submitting");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setFieldErrors({});
 
-    // Frontend validation
-    if (!formData.title.trim()) {
-      setError("Job title is required");
-      setIsLoading(false);
-      return;
-    }
-    if (formData.description.length < 50) {
-      setError("Description must be at least 50 characters");
-      setIsLoading(false);
-      return;
-    }
-    if (!formData.location.trim()) {
-      setError("Location is required");
-      setIsLoading(false);
-      return;
-    }
-    if (!formData.guild.trim()) {
-      setError("Guild is required");
+    // Validate form
+    if (!validateForm()) {
       setIsLoading(false);
       return;
     }
@@ -158,6 +205,14 @@ export function JobForm() {
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   return (
@@ -220,10 +275,15 @@ export function JobForm() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange("title", e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+                  className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+                    fieldErrors.title ? "border-red-500" : "border-border"
+                  }`}
                   placeholder="e.g., Senior Solidity Developer"
                 />
               </div>
+              {fieldErrors.title && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
@@ -242,7 +302,7 @@ export function JobForm() {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="block text-sm font-medium text-foreground">
-                  Description
+                  Description *
                 </label>
                 <span className={`text-xs ${formData.description.length < 50 ? 'text-destructive' : 'text-muted-foreground'}`}>
                   {formData.description.length}/50 min
@@ -253,10 +313,15 @@ export function JobForm() {
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+                className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+                  fieldErrors.description ? "border-red-500" : "border-border"
+                }`}
                 rows={6}
                 placeholder="Describe the job responsibilities..."
               />
+              {fieldErrors.description && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.description}</p>
+              )}
             </div>
             </div>
 
@@ -284,10 +349,15 @@ export function JobForm() {
                   onChange={(e) =>
                     handleInputChange("location", e.target.value)
                   }
-                  className="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+                  className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+                    fieldErrors.location ? "border-red-500" : "border-border"
+                  }`}
                   placeholder="e.g., Remote or San Francisco"
                 />
               </div>
+              {fieldErrors.location && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.location}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -350,10 +420,15 @@ export function JobForm() {
                         parseInt(e.target.value) || undefined,
                       )
                     }
-                    className="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+                    className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+                      fieldErrors.salaryMin ? "border-red-500" : "border-border"
+                    }`}
                     placeholder="e.g., 100000"
                   />
                 </div>
+                {fieldErrors.salaryMin && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.salaryMin}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">
@@ -394,13 +469,28 @@ export function JobForm() {
                 <label className="block text-sm font-medium text-foreground mb-1">
                   Guild *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.guild}
                   onChange={(e) => handleInputChange("guild", e.target.value)}
-                  className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-                  placeholder="e.g., Engineering Guild"
-                />
+                  className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+                    fieldErrors.guild ? "border-red-500" : "border-border"
+                  }`}
+                >
+                  <option value="">Select a guild</option>
+                  {guilds.map((guild) => (
+                    <option key={guild.id} value={guild.name}>
+                      {guild.name}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.guild && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.guild}</p>
+                )}
+                {!fieldErrors.guild && formData.guild && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {guilds.find(g => g.name === formData.guild)?.description}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">

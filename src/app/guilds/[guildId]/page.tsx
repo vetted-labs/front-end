@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactElement } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft,
@@ -24,8 +25,10 @@ import {
   CheckCircle,
   FileText,
   Calendar,
+  Wallet,
 } from "lucide-react";
 import { LoadingState, Alert, Button } from "@/components/ui";
+import { Modal } from "@/components/ui/Modal";
 import { guildsApi, getAssetUrl } from "@/lib/api";
 
 interface ExpertMember {
@@ -112,9 +115,42 @@ interface LeaderboardEntry {
   trend?: "up" | "down" | "same";
 }
 
+// Wallet information helper
+const getWalletInfo = (walletName: string) => {
+  const wallets: Record<string, { icon: ReactElement; description: string }> = {
+    MetaMask: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <path d="M36.5 3.5L22 13.5L24.5 7.5L36.5 3.5Z" fill="#E17726" stroke="#E17726" />
+          <path d="M3.5 3.5L17.8 13.6L15.5 7.5L3.5 3.5Z" fill="#E27625" stroke="#E27625" />
+        </svg>
+      ),
+      description: "Connect using MetaMask browser extension",
+    },
+    "Coinbase Wallet": {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#0052FF" />
+        </svg>
+      ),
+      description: "Connect using Coinbase Wallet app",
+    },
+  };
+
+  return (
+    wallets[walletName] || {
+      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      description: "Connect with your wallet",
+    }
+  );
+};
+
 export default function PublicGuildPage() {
   const params = useParams();
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
   const rawGuildId = params.guildId as string;
 
   // Clean up guild ID: decode URL encoding and remove " Guild" suffix
@@ -126,9 +162,15 @@ export default function PublicGuildPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const [candidateEmail, setCandidateEmail] = useState("");
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "experts" | "candidates" | "jobs" | "activity" | "leaderboard">("overview");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -139,6 +181,23 @@ export default function PublicGuildPage() {
     }
     fetchGuildData();
   }, [guildId]);
+
+  const handleWalletConnect = async (connectorId: string) => {
+    const connector = connectors.find((c) => c.id === connectorId);
+    if (connector) {
+      try {
+        await connect({ connector });
+        setShowWalletModal(false);
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+      }
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    router.push("/?section=guilds");
+  };
 
   const fetchGuildData = async () => {
     setIsLoading(true);
@@ -451,7 +510,7 @@ export default function PublicGuildPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/auth/login");
+    router.push("/?section=guilds");
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -519,19 +578,22 @@ export default function PublicGuildPage() {
       <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <span className="text-xl font-bold text-foreground">Vetted</span>
+            </button>
+
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => router.push("/browse/jobs")}
+                onClick={() => router.back()}
                 className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Jobs
+                Back to Guilds
               </button>
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-            </div>
-
-            <div className="flex items-center gap-3">
               <ThemeToggle />
               {isAuthenticated ? (
                 <div className="relative">
@@ -580,20 +642,12 @@ export default function PublicGuildPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => router.push("/auth/login")}
-                    className="px-4 py-2 text-card-foreground hover:text-foreground font-medium"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => router.push("/auth/signup")}
-                    className="px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all"
-                  >
-                    Sign Up
-                  </button>
-                </div>
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Sign In
+                </button>
               )}
             </div>
           </div>
@@ -805,7 +859,7 @@ export default function PublicGuildPage() {
                     Top Experts
                   </h2>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {guild.experts.slice(0, 4).map((expert) => (
+                    {(guild.experts || []).slice(0, 4).map((expert) => (
                       <div
                         key={expert.id}
                         className="border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
@@ -846,7 +900,7 @@ export default function PublicGuildPage() {
                       </div>
                     ))}
                   </div>
-                  {guild.experts.length > 4 && (
+                  {(guild.experts || []).length > 4 && (
                     <button
                       onClick={() => setActiveTab("experts")}
                       className="mt-4 text-sm text-primary hover:underline"
@@ -1021,7 +1075,7 @@ export default function PublicGuildPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Expert Members</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {guild.experts.map((expert) => (
+                {(guild.experts || []).map((expert) => (
                   <div
                     key={expert.id}
                     className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 transition-all"
@@ -1073,7 +1127,7 @@ export default function PublicGuildPage() {
                   </div>
                 ))}
               </div>
-              {guild.experts.length === 0 && (
+              {(guild.experts || []).length === 0 && (
                 <p className="text-center text-muted-foreground py-12">No experts in this guild yet</p>
               )}
             </div>

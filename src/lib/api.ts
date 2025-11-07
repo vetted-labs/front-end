@@ -87,10 +87,11 @@ export const authApi = {
 
 // Jobs API
 export const jobsApi = {
-  getAll: (params?: { status?: string; search?: string }) => {
+  getAll: (params?: { status?: string; search?: string; companyId?: string }) => {
     const queryParams = new URLSearchParams();
     if (params?.status) queryParams.append("status", params.status);
     if (params?.search) queryParams.append("search", params.search);
+    if (params?.companyId) queryParams.append("companyId", params.companyId);
     const query = queryParams.toString();
     return apiRequest(`/api/jobs${query ? `?${query}` : ""}`, {
       requiresAuth: true,

@@ -156,55 +156,42 @@ export function ExpertHomepage() {
   ];
 
   const checkExpertStatus = async (walletAddress: string) => {
-    console.log("🔍 Checking expert status for:", walletAddress);
     try {
       const result: any = await expertApi.getProfile(walletAddress);
-      console.log("📦 API Response data:", result);
 
       if (result.success && result.data) {
         const expert = result.data;
-        console.log("✅ Expert found, status:", expert.status);
 
         // Check status and redirect appropriately
         if (expert.status === "approved") {
-          console.log("🚀 Redirecting to dashboard...");
           router.push("/expert/dashboard");
           return true;
         } else if (expert.status === "pending") {
-          console.log("⏳ Redirecting to pending page...");
           router.push("/expert/application-pending");
           return true;
         }
-      } else {
-        console.log("⚠️ Response structure unexpected:", result);
       }
     } catch (error: any) {
       if (error.status === 404) {
-        console.log("❌ No profile found (404) - redirecting to apply");
         // No profile found - redirect to application
         router.push("/expert/apply");
         return false;
       }
-      console.error("❌ Error checking expert status:", error);
       // On error, redirect to apply page
       router.push("/expert/apply");
       return false;
     }
 
-    console.log("⚠️ No redirect performed - falling through");
     return false;
   };
 
   const handleGetStarted = async () => {
-    console.log("🎯 handleGetStarted called - isConnected:", isConnected, "address:", address);
     if (isConnected && address) {
       // User is connected, check their status and redirect immediately
-      console.log("✅ User connected, checking status...");
       await checkExpertStatus(address);
     } else {
       // User not connected, show wallet modal
       // Set flag so we auto-check after they connect
-      console.log("❌ User not connected, showing wallet modal");
       setShouldAutoCheck(true);
       setShowWalletModal(true);
     }
@@ -218,7 +205,6 @@ export function ExpertHomepage() {
         setShowWalletModal(false);
         // The useEffect will automatically check status once address is available
       } catch (error) {
-        console.error("Failed to connect:", error);
         setShouldAutoCheck(false); // Reset flag on error
       }
     }

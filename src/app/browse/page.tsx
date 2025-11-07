@@ -66,7 +66,7 @@ export default function BrowseJobsPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/auth/login?type=candidate");
+    router.push("/?section=jobseekers");
   };
 
   useEffect(() => {
@@ -166,20 +166,12 @@ export default function BrowseJobsPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => router.push("/auth/login?type=candidate")}
-                    className="px-4 py-2 text-sm font-medium text-card-foreground hover:text-foreground"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => router.push("/auth/signup?type=candidate")}
-                    className="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all text-sm font-medium"
-                  >
-                    Register
-                  </button>
-                </div>
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all"
+                >
+                  Sign In
+                </button>
               )}
             </div>
           </div>

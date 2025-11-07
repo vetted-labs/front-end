@@ -457,7 +457,7 @@ export default function PublicJobDetailsPage() {
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
-    router.push("/auth/login?type=candidate");
+    router.push("/?section=jobseekers");
   };
 
   if (isLoading) {
@@ -493,10 +493,13 @@ export default function PublicJobDetailsPage() {
       <nav className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
               <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
-            </div>
+            </button>
 
             <div className="flex items-center gap-3">
               <ThemeToggle />
@@ -542,20 +545,12 @@ export default function PublicJobDetailsPage() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-card-foreground hover:text-foreground font-medium"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => router.push("/auth/signup?type=candidate")}
-                  className="px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all"
-                >
-                  Sign Up
-                </button>
-              </div>
+              <button
+                onClick={() => router.push("/auth/login?type=candidate")}
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+              >
+                Sign In
+              </button>
             )}
             </div>
           </div>

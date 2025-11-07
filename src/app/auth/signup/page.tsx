@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   User,
@@ -24,9 +24,23 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
-  const [userType, setUserType] = useState<UserType>("candidate");
+  const typeParam = searchParams.get("type");
+
+  // Derive userType from URL parameter (default to candidate)
+  const userType: UserType = typeParam === "company" ? "company" : "candidate";
+
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Function to update userType by updating the URL
+  const handleUserTypeChange = (newType: UserType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("type", newType);
+    if (redirectUrl) {
+      params.set("redirect", redirectUrl);
+    }
+    router.push(`/auth/signup?${params.toString()}`);
+  };
 
   // Common fields
   const [fullName, setFullName] = useState("");
@@ -66,7 +80,7 @@ function SignupForm() {
         newErrors.fullName = "Full name is required";
       }
       if (!headline.trim()) {
-        newErrors.headline = "Professional headline is required";
+        newErrors.headline = "Current occupation is required";
       }
     } else {
       if (!companyName.trim()) {
@@ -116,8 +130,38 @@ function SignupForm() {
         localStorage.setItem("userType", "company");
         router.push(redirectUrl || "/dashboard");
       }
-    } catch (error) {
-      setErrors({ submit: "Something went wrong. Please try again." });
+    } catch (error: any) {
+      console.error("Signup error:", error);
+
+      // Handle different types of errors
+      let errorMessage = "Something went wrong. Please try again.";
+
+      if (error.response) {
+        // HTTP error response from server
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 400) {
+          errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+        } else if (status === 401) {
+          errorMessage = "Invalid credentials. Please check your email and password.";
+        } else if (status === 409 || status === 422) {
+          errorMessage = data.message || data.error || "This email is already registered. Please try logging in instead.";
+        } else if (status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else {
+          errorMessage = data.message || data.error || errorMessage;
+        }
+      } else if (error.message) {
+        // Network or other errors
+        if (error.message.includes("Network Error") || error.message.includes("fetch")) {
+          errorMessage = "Cannot connect to server. Please check your internet connection.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      setErrors({ submit: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +224,7 @@ function SignupForm() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setUserType("candidate")}
+                onClick={() => handleUserTypeChange("candidate")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "candidate"
                     ? "border-primary bg-primary/10"
@@ -194,7 +238,7 @@ function SignupForm() {
               </button>
               <button
                 type="button"
-                onClick={() => setUserType("company")}
+                onClick={() => handleUserTypeChange("company")}
                 className={`p-4 rounded-xl border-2 transition-all ${
                   userType === "company"
                     ? "border-primary bg-primary/10"
@@ -231,7 +275,7 @@ function SignupForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-card-foreground mb-1">
-                    Professional Headline *
+                    Current Occupation *
                   </label>
                   <input
                     type="text"
@@ -410,7 +454,7 @@ function SignupForm() {
               Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => router.push("/auth/login")}
+                onClick={() => router.push(`/auth/login?type=${userType}`)}
                 className="text-primary hover:text-primary/80 font-medium"
               >
                 Sign in

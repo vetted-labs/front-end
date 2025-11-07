@@ -17,41 +17,45 @@ const queryClient = new QueryClient({
   },
 });
 
-// Suppress WalletConnect WebSocket errors
+// Handle WalletConnect errors globally
 if (typeof window !== "undefined") {
-  const originalError = console.error;
-  const originalWarn = console.warn;
+  // Check if handlers are already installed (store on window to persist across hot reloads)
+  if (!(window as any).__walletConnectErrorHandlersInstalled) {
+    // Suppress unhandled promise rejections from WalletConnect
+    window.addEventListener('unhandledrejection', (event) => {
+      const errorMessage = event.reason?.message || String(event.reason);
+      const errorStack = event.reason?.stack || '';
 
-  console.error = (...args) => {
-    const errorMessage = args.map(arg => {
-      if (arg && typeof arg === 'object') {
-        return arg.message || arg.toString();
+      // Check for WalletConnect/WebSocket errors
+      if (
+        errorMessage.includes("Connection interrupted") ||
+        errorMessage.includes("WebSocket") ||
+        errorMessage.includes("subscribe") ||
+        errorStack.includes("walletconnect") ||
+        errorStack.includes("@walletconnect")
+      ) {
+        event.preventDefault();
+        return;
       }
-      return String(arg);
-    }).join(' ');
+    });
 
-    // Suppress WalletConnect subscription and WebSocket errors
-    if (
-      errorMessage.includes("Connection interrupted") ||
-      errorMessage.includes("WebSocket") ||
-      errorMessage.includes("subscribe") ||
-      errorMessage.includes("WalletConnect")
-    ) {
-      return;
-    }
-    originalError.apply(console, args);
-  };
+    // Suppress console errors from WalletConnect
+    const originalError = console.error;
+    console.error = (...args: any[]) => {
+      const errorStr = args.join(' ');
+      if (
+        errorStr.includes("Connection interrupted") ||
+        errorStr.includes("WebSocket") ||
+        (errorStr.includes("walletconnect") && errorStr.includes("subscribe"))
+      ) {
+        return; // Silently ignore
+      }
+      originalError.apply(console, args);
+    };
 
-  console.warn = (...args) => {
-    const warnMessage = String(args[0] || "");
-    if (
-      warnMessage.includes("Connection interrupted") ||
-      warnMessage.includes("WebSocket")
-    ) {
-      return;
-    }
-    originalWarn.apply(console, args);
-  };
+    // Mark as installed
+    (window as any).__walletConnectErrorHandlersInstalled = true;
+  }
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
