@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { candidateApi, companyApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 type UserType = "candidate" | "company";
 
@@ -30,6 +31,11 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Clear any existing auth on mount
+  useEffect(() => {
+    clearAllAuthState();
+  }, []);
 
   // Function to update userType by updating the URL
   const handleUserTypeChange = (newType: UserType) => {
@@ -59,9 +65,6 @@ function LoginForm() {
         localStorage.setItem("candidateId", data.id);
         localStorage.setItem("candidateEmail", data.email);
         localStorage.setItem("userType", "candidate");
-        if (data.walletAddress) {
-          localStorage.setItem("candidateWallet", data.walletAddress);
-        }
         router.push(redirectUrl || "/candidate/profile");
       } else {
         // Login as company
@@ -114,10 +117,17 @@ function LoginForm() {
   const handleLinkedInLogin = () => {
     const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
     const redirectUri = `${window.location.origin}/auth/linkedin/callback`;
-    const state = redirectUrl || "/candidate/profile";
     const scope = "openid profile email";
 
-    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scope)}`;
+    // Generate cryptographic state token for CSRF protection
+    const stateData = {
+      token: crypto.randomUUID(),
+      redirect: redirectUrl || "/candidate/profile",
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('linkedin_oauth_state', JSON.stringify(stateData));
+
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(stateData.token)}&scope=${encodeURIComponent(scope)}`;
 
     window.location.href = authUrl;
   };

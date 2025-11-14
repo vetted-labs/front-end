@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { candidateApi, companyApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 type UserType = "candidate" | "company";
 
@@ -31,6 +32,11 @@ function SignupForm() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Clear any existing auth on mount
+  useEffect(() => {
+    clearAllAuthState();
+  }, []);
 
   // Function to update userType by updating the URL
   const handleUserTypeChange = (newType: UserType) => {
@@ -108,7 +114,6 @@ function SignupForm() {
           phone,
           headline,
           experienceLevel: "mid",
-          walletAddress: `0x${Math.random().toString(16).substr(2, 40)}`,
         });
 
         localStorage.setItem("authToken", data.token);
@@ -142,13 +147,18 @@ function SignupForm() {
         const data = error.response.data;
 
         if (status === 400) {
-          errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+          // Extract specific field errors if available
+          if (data.errors && Array.isArray(data.errors)) {
+            errorMessage = data.errors.map((e: any) => e.msg).join(", ");
+          } else {
+            errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+          }
         } else if (status === 401) {
-          errorMessage = "Invalid credentials. Please check your email and password.";
+          errorMessage = data.message || data.error || "Authentication failed. This email may already be registered.";
         } else if (status === 409 || status === 422) {
           errorMessage = data.message || data.error || "This email is already registered. Please try logging in instead.";
         } else if (status === 500) {
-          errorMessage = "Server error. Please try again later.";
+          errorMessage = data.message || data.error || "Server error. Please try again later.";
         } else {
           errorMessage = data.message || data.error || errorMessage;
         }
@@ -170,10 +180,17 @@ function SignupForm() {
   const handleLinkedInSignup = () => {
     const clientId = process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID;
     const redirectUri = `${window.location.origin}/auth/linkedin/callback`;
-    const state = redirectUrl || "/candidate/profile";
     const scope = "openid profile email";
 
-    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scope)}`;
+    // Generate cryptographic state token for CSRF protection
+    const stateData = {
+      token: crypto.randomUUID(),
+      redirect: redirectUrl || "/candidate/profile",
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('linkedin_oauth_state', JSON.stringify(stateData));
+
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(stateData.token)}&scope=${encodeURIComponent(scope)}`;
 
     window.location.href = authUrl;
   };

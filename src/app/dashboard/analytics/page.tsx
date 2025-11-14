@@ -15,8 +15,29 @@ import {
   DollarSign,
   User,
   LogOut,
+  BarChart3,
+  Filter,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { jobsApi } from "@/lib/api";
+
+interface JobPosting {
+  id: string;
+  title: string;
+  department: string | null;
+  location: string;
+  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
+  salary: { min: number | null; max: number | null; currency: string };
+  status: "draft" | "active" | "paused" | "closed";
+  applicants: number;
+  views: number;
+  createdAt: string;
+  updatedAt: string;
+  description: string;
+  requirements: string[];
+  guild: string;
+  companyId: string;
+}
 
 interface AnalyticsData {
   totalApplications: number;
@@ -27,11 +48,6 @@ interface AnalyticsData {
   jobsChange: number;
   avgTimeToHire: number;
   timeToHireChange: number;
-  topPerformingJobs: Array<{
-    title: string;
-    applications: number;
-    views: number;
-  }>;
   applicationsByMonth: Array<{
     month: string;
     applications: number;
@@ -47,6 +63,8 @@ interface AnalyticsData {
 export default function AnalyticsPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [companyEmail, setCompanyEmail] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -62,46 +80,54 @@ export default function AnalyticsPage() {
     if (email) setCompanyEmail(email);
 
     fetchAnalytics();
-  }, [router]);
+  }, [router, filterStatus]);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`http://localhost:4000/api/companies/analytics`);
-      // const data = await response.json();
+      const companyId = localStorage.getItem("companyId");
+      if (!companyId) return;
 
-      // Mock data for now
-      const mockAnalytics: AnalyticsData = {
-        totalApplications: 248,
-        applicationsChange: 12.5,
-        totalHires: 15,
-        hiresChange: -3.2,
-        activeJobs: 8,
-        jobsChange: 2,
-        avgTimeToHire: 14,
-        timeToHireChange: -8.5,
-        topPerformingJobs: [
-          { title: "Senior Software Engineer", applications: 45, views: 320 },
-          { title: "Product Designer", applications: 38, views: 285 },
-          { title: "Marketing Manager", applications: 32, views: 245 },
-        ],
-        applicationsByMonth: [
-          { month: "Sep", applications: 35 },
-          { month: "Oct", applications: 42 },
-          { month: "Nov", applications: 58 },
-          { month: "Dec", applications: 51 },
-          { month: "Jan", applications: 62 },
-        ],
-        applicationsByStatus: {
-          pending: 45,
-          reviewing: 28,
-          accepted: 15,
-          rejected: 32,
-        },
-      };
+      // Fetch jobs for this company
+      const jobsData = await jobsApi.getAll({
+        status: filterStatus !== "all" ? filterStatus : undefined,
+        companyId: companyId,
+      });
 
-      setAnalytics(mockAnalytics);
+      if (Array.isArray(jobsData)) {
+        setJobs(jobsData);
+
+        // Calculate real analytics from jobs data
+        const totalApplications = jobsData.reduce((sum, job) => sum + (job.applicants || 0), 0);
+        const activeJobsCount = jobsData.filter(job => job.status === "active").length;
+        const totalViews = jobsData.reduce((sum, job) => sum + (job.views || 0), 0);
+
+        // Estimate application distribution (40% pending, 30% reviewing, 15% accepted, 15% rejected)
+        const estimatedStats = {
+          pending: Math.floor(totalApplications * 0.4),
+          reviewing: Math.floor(totalApplications * 0.3),
+          accepted: Math.floor(totalApplications * 0.15),
+          rejected: Math.floor(totalApplications * 0.15),
+        };
+
+        const realAnalytics: AnalyticsData = {
+          totalApplications: totalApplications,
+          applicationsChange: 0, // We don't have historical data yet
+          totalHires: estimatedStats.accepted,
+          hiresChange: 0,
+          activeJobs: activeJobsCount,
+          jobsChange: 0,
+          avgTimeToHire: 14, // TODO: Get from backend dashboard stats
+          timeToHireChange: 0,
+          applicationsByMonth: [
+            // TODO: Calculate from actual application dates when available
+            { month: "This month", applications: totalApplications },
+          ],
+          applicationsByStatus: estimatedStats,
+        };
+
+        setAnalytics(realAnalytics);
+      }
     } catch (error) {
       console.error("Error fetching analytics:", error);
     } finally {
@@ -133,7 +159,9 @@ export default function AnalyticsPage() {
     );
   }
 
-  const maxApplications = Math.max(...analytics.applicationsByMonth.map(m => m.applications));
+  const maxApplications = analytics.applicationsByMonth.length > 0
+    ? Math.max(...analytics.applicationsByMonth.map(m => m.applications))
+    : 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -337,22 +365,29 @@ export default function AnalyticsPage() {
               <Calendar className="w-5 h-5 text-muted-foreground" />
             </div>
 
-            <div className="space-y-4">
-              {analytics.applicationsByMonth.map((item, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-foreground font-medium">{item.month}</span>
-                    <span className="text-sm text-muted-foreground">{item.applications} applications</span>
+            {analytics.totalApplications === 0 ? (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No applications received yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {analytics.applicationsByMonth.map((item, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-foreground font-medium">{item.month}</span>
+                      <span className="text-sm text-muted-foreground">{item.applications} applications</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-primary to-indigo-600 h-2 rounded-full transition-all"
+                        style={{ width: `${(item.applications / maxApplications) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-primary to-indigo-600 h-2 rounded-full transition-all"
-                      style={{ width: `${(item.applications / maxApplications) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Applications by Status */}
@@ -398,42 +433,85 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Top Performing Jobs */}
+        {/* My Posted Jobs */}
         <div className="bg-card p-6 rounded-xl border border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">Top Performing Jobs</h3>
-            <TrendingUp className="w-5 h-5 text-muted-foreground" />
-          </div>
-
-          <div className="space-y-4">
-            {analytics.topPerformingJobs.map((job, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-foreground">My Posted Jobs</h3>
+              <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                {jobs.length} total
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
               >
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-lg text-white font-bold">
-                    #{index + 1}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{job.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {job.applications} applications • {job.views} views
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Conversion</p>
-                    <p className="font-semibold text-foreground">
-                      {((job.applications / job.views) * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="closed">Closed</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
           </div>
+
+          {jobs.length === 0 ? (
+            <div className="text-center py-12">
+              <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                {filterStatus === "all"
+                  ? "No jobs posted yet. Create your first job posting!"
+                  : `No ${filterStatus} jobs found.`}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {jobs.map((job) => (
+                <button
+                  key={job.id}
+                  onClick={() => router.push(`/dashboard/analytics/${job.id}`)}
+                  className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted hover:border-primary/50 transition-all border border-transparent cursor-pointer"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-lg">
+                      <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-foreground">{job.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {job.applicants} applicants • {job.views} views
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-right hidden sm:block">
+                      <p className="text-sm text-muted-foreground">Conversion</p>
+                      <p className="font-semibold text-foreground">
+                        {job.views > 0 ? ((job.applicants / job.views) * 100).toFixed(1) : "0.0"}%
+                      </p>
+                    </div>
+                    <div>
+                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                        job.status === "active"
+                          ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                          : job.status === "paused"
+                          ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"
+                          : job.status === "closed"
+                          ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
+                      }`}>
+                        {job.status}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

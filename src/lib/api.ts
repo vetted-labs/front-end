@@ -133,10 +133,14 @@ export const jobsApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  getStats: () =>
-    apiRequest("/api/dashboard/stats", {
+  getStats: (companyId?: string) => {
+    const queryParams = new URLSearchParams();
+    if (companyId) queryParams.append("companyId", companyId);
+    const query = queryParams.toString();
+    return apiRequest(`/api/dashboard/stats${query ? `?${query}` : ""}`, {
       requiresAuth: true,
-    }),
+    });
+  },
 };
 
 // Company API

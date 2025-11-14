@@ -66,6 +66,14 @@ export function HiringDashboard() {
 
   // Check authentication on mount
   useEffect(() => {
+    const userType = localStorage.getItem("userType");
+
+    // Redirect candidates to their profile page
+    if (userType === "candidate") {
+      router.push("/candidate/profile");
+      return;
+    }
+
     const token = localStorage.getItem("companyAuthToken");
     if (!token) {
       router.push("/auth/login?type=company?redirect=/dashboard");
@@ -98,7 +106,7 @@ export function HiringDashboard() {
           search: searchQuery || undefined,
           companyId: companyId || undefined,
         }),
-        dashboardApi.getStats(),
+        dashboardApi.getStats(companyId || undefined),
       ]);
 
       if (Array.isArray(jobsData)) {
@@ -154,7 +162,7 @@ export function HiringDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/?section=employers")}
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
                 <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />

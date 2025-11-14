@@ -98,6 +98,14 @@ export default function CandidateProfilePage() {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
+    const userType = localStorage.getItem("userType");
+
+    // Redirect companies to their dashboard
+    if (userType === "company") {
+      router.push("/dashboard");
+      return;
+    }
+
     // Check if user is logged in
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {

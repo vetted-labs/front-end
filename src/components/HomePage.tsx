@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect, ReactElement } from "react";
 import { useRouter } from "next/navigation";
-import { useConnect, useAccount } from "wagmi";
+import { useConnect, useAccount, useDisconnect, useChainId } from "wagmi";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -19,10 +19,14 @@ import {
   Clock,
   Coins,
   Wallet,
+  User,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import { ThemeToggle } from "./ThemeToggle";
 import { expertApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
@@ -83,28 +87,105 @@ const getWalletInfo = (walletName: string) => {
   );
 };
 
+const getNetworkName = (chainId: number | undefined) => {
+  if (!chainId) return "Unknown";
+  const networks: Record<number, string> = {
+    1: "Ethereum",
+    11155111: "Sepolia",
+    137: "Polygon",
+    42161: "Arbitrum",
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
 export function HomePage() {
   const router = useRouter();
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { disconnect } = useDisconnect();
 
   const [activeSection, setActiveSection] = useState<"employers" | "jobseekers" | "experts" | "guilds">("employers");
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    // Get section from URL parameter if present
+    // Check authentication status
     if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("authToken") || localStorage.getItem("companyAuthToken");
+      const storedUserType = localStorage.getItem("userType");
+      const storedEmail = localStorage.getItem("candidateEmail") || localStorage.getItem("companyEmail");
+
+      // Check if user is authenticated via token OR wallet connection
+      const isTokenAuth = !!token;
+      const isWalletAuth = !!(isConnected && address);
+
+      setIsAuthenticated(isTokenAuth || isWalletAuth);
+      setUserType(storedUserType || (isWalletAuth ? "expert" : null));
+      setUserEmail(storedEmail || (isWalletAuth ? address : null));
+
+      // Get section from URL parameter if present
       const searchParams = new URLSearchParams(window.location.search);
       const sectionParam = searchParams.get('section') as "employers" | "jobseekers" | "experts" | "guilds" | null;
       if (sectionParam) {
         setActiveSection(sectionParam);
       }
     }
-  }, []);
+  }, [isConnected, address]);
+
+  const handleSignInClick = (type: "company" | "candidate") => {
+    // Clear any existing auth before navigating to sign in
+    clearAllAuthState();
+
+    // Disconnect wallet if connected
+    if (isConnected) {
+      disconnect();
+    }
+
+    // Navigate to login page
+    router.push(`/auth/login?type=${type}`);
+  };
+
+  const handleLogout = () => {
+    // Clear all auth data using centralized function
+    clearAllAuthState();
+
+    // Disconnect wallet if expert
+    if (userType === "expert" && isConnected) {
+      disconnect();
+    }
+
+    // Update state immediately
+    setIsAuthenticated(false);
+    setUserEmail(null);
+    setUserType(null);
+    setShowUserMenu(false);
+
+    // Use router navigation to avoid theme flash
+    router.push("/");
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   // Check expert status after wallet connection from experts tab
   useEffect(() => {
@@ -144,6 +225,9 @@ export function HomePage() {
     const connector = connectors.find((c) => c.id === connectorId);
     if (connector) {
       try {
+        // Clear any existing auth before connecting wallet
+        clearAllAuthState();
+
         await connect({ connector });
         setShowWalletModal(false);
         // Set flag to check status after connection completes
@@ -321,7 +405,117 @@ export function HomePage() {
             {/* Action Buttons */}
             <div className="flex items-center space-x-3">
               <ThemeToggle />
-              {activeSection === "experts" ? (
+              {isAuthenticated ? (
+                <div className="relative user-menu-container">
+                  {userType === "expert" && address ? (
+                    // Expert wallet dropdown (matching expert dashboard)
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary to-indigo-600 rounded-lg flex items-center justify-center">
+                        <Wallet className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-xs font-mono text-foreground font-medium">
+                          {address.slice(0, 6)}...{address.slice(-4)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {getNetworkName(chainId)}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  ) : (
+                    // Standard user dropdown
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="p-2 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground hidden sm:block">
+                        {userEmail || (userType === "company" ? "Company" : "Candidate")}
+                      </span>
+                    </button>
+                  )}
+
+                  {showUserMenu && userType === "expert" && address ? (
+                    // Expert wallet dropdown menu (matching expert dashboard)
+                    <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
+                      <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 px-4 py-3 border-b border-border">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Connected Wallet</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-primary to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Wallet className="w-4 h-4 text-white" />
+                          </div>
+                          <p className="text-sm font-mono text-foreground break-all font-medium">{address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-foreground">
+                            Connected to <span className="font-semibold">{getNetworkName(chainId)}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          router.push("/expert/dashboard");
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-card-foreground hover:bg-muted transition-all"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Expert Dashboard
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  ) : showUserMenu ? (
+                    // Standard user dropdown menu
+                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="text-sm font-medium text-foreground">
+                          {userEmail}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {userType === "company" ? "Company Account" : "Candidate Account"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          if (userType === "company") {
+                            router.push("/dashboard");
+                          } else if (userType === "candidate") {
+                            router.push("/candidate/profile");
+                          }
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        {userType === "company" ? "Dashboard" : "My Profile"}
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : activeSection === "experts" ? (
                 <button
                   onClick={() => setShowWalletModal(true)}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
@@ -330,7 +524,7 @@ export function HomePage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
+                  onClick={() => handleSignInClick(activeSection === "employers" ? "company" : "candidate")}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
                   Sign In
@@ -354,21 +548,37 @@ export function HomePage() {
             industry professionals who stake their reputation on every endorsement.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {activeSection === "experts" ? (
+            {isAuthenticated &&
+             ((activeSection === "employers" && userType === "company") ||
+              (activeSection === "jobseekers" && userType === "candidate")) ? (
+              <button
+                onClick={() => {
+                  if (userType === "company") {
+                    router.push("/dashboard");
+                  } else if (userType === "candidate") {
+                    router.push("/candidate/profile");
+                  }
+                }}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            ) : activeSection === "experts" ? (
               <button
                 onClick={() => setShowWalletModal(true)}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Sign In
+                Join Us
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
             ) : (
               <>
                 <button
-                  onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
+                  onClick={() => handleSignInClick(activeSection === "employers" ? "company" : "candidate")}
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  Sign In
+                  Join Us
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </button>
                 {activeSection === "jobseekers" && (
@@ -625,18 +835,33 @@ export function HomePage() {
               : "Earn rewards while shaping the future of hiring in your industry"}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {activeSection === "experts" ? (
+            {isAuthenticated &&
+             ((activeSection === "employers" && userType === "company") ||
+              (activeSection === "jobseekers" && userType === "candidate")) ? (
+              <button
+                onClick={() => {
+                  if (userType === "company") {
+                    router.push("/dashboard");
+                  } else if (userType === "candidate") {
+                    router.push("/candidate/profile");
+                  }
+                }}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            ) : activeSection === "experts" ? (
               <button
                 onClick={() => setShowWalletModal(true)}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
               >
-                <Wallet className="mr-2 w-5 h-5" />
-                Connect Wallet
+                Join Us
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
             ) : (
               <button
-                onClick={() => router.push(`/auth/login?type=${activeSection === "employers" ? "company" : "candidate"}`)}
+                onClick={() => handleSignInClick(activeSection === "employers" ? "company" : "candidate")}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-primary bg-white rounded-xl hover:bg-white/90 transition-all shadow-lg"
               >
                 {activeSection === "employers" ? "Start Hiring Today" : "Join Vetted Today"}
@@ -663,7 +888,7 @@ export function HomePage() {
             <div>
               <h4 className="text-foreground font-semibold mb-4">For Employers</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => router.push("/auth/login?type=company")} className="hover:text-foreground transition-colors">Sign In</button></li>
+                <li><button onClick={() => handleSignInClick("company")} className="hover:text-foreground transition-colors">Sign In</button></li>
                 <li><button onClick={() => router.push("/dashboard")} className="hover:text-foreground transition-colors">Dashboard</button></li>
               </ul>
             </div>
@@ -671,7 +896,7 @@ export function HomePage() {
               <h4 className="text-foreground font-semibold mb-4">For Job Seekers</h4>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => router.push("/browse/jobs")} className="hover:text-foreground transition-colors">Browse Jobs</button></li>
-                <li><button onClick={() => router.push("/auth/login?type=candidate")} className="hover:text-foreground transition-colors">Sign In</button></li>
+                <li><button onClick={() => handleSignInClick("candidate")} className="hover:text-foreground transition-colors">Sign In</button></li>
               </ul>
             </div>
             <div>

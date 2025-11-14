@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { candidateApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 function LinkedInCallbackContent() {
   const router = useRouter();
@@ -31,6 +32,41 @@ function LinkedInCallbackContent() {
           return;
         }
 
+        // Validate OAuth state token (CSRF protection)
+        const savedStateData = sessionStorage.getItem('linkedin_oauth_state');
+        if (!savedStateData) {
+          setStatus("error");
+          setMessage("OAuth state validation failed - session expired");
+          setTimeout(() => router.push("/auth/login"), 3000);
+          return;
+        }
+
+        const stateData = JSON.parse(savedStateData);
+
+        // Verify state token matches
+        if (state !== stateData.token) {
+          setStatus("error");
+          setMessage("OAuth state validation failed - potential CSRF attack");
+          setTimeout(() => router.push("/auth/login"), 3000);
+          return;
+        }
+
+        // Check state token age (max 10 minutes)
+        const stateAge = Date.now() - stateData.timestamp;
+        if (stateAge > 10 * 60 * 1000) {
+          setStatus("error");
+          setMessage("OAuth state expired - please try again");
+          sessionStorage.removeItem('linkedin_oauth_state');
+          setTimeout(() => router.push("/auth/login"), 3000);
+          return;
+        }
+
+        // Clear state token after validation
+        sessionStorage.removeItem('linkedin_oauth_state');
+
+        // Clear any existing authentication before setting up LinkedIn auth
+        clearAllAuthState();
+
         // Exchange code for user data via backend
         setMessage("Exchanging authorization code...");
         const data: any = await candidateApi.linkedinAuth(code);
@@ -40,15 +76,12 @@ function LinkedInCallbackContent() {
         localStorage.setItem("candidateId", data.id);
         localStorage.setItem("candidateEmail", data.email);
         localStorage.setItem("userType", "candidate");
-        if (data.walletAddress) {
-          localStorage.setItem("candidateWallet", data.walletAddress);
-        }
 
         setStatus("success");
         setMessage("Successfully authenticated! Redirecting...");
 
-        // Redirect to the state value or default to profile
-        const redirectUrl = state || "/candidate/profile";
+        // Redirect to the saved redirect URL
+        const redirectUrl = stateData.redirect || "/candidate/profile";
         setTimeout(() => router.push(redirectUrl), 1500);
       } catch (error: any) {
         console.error("LinkedIn OAuth error:", error);

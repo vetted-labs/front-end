@@ -19,6 +19,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { companyApi } from "@/lib/api";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,14 +27,15 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Company Settings
-  const [companyName, setCompanyName] = useState("Acme Corporation");
-  const [companyEmail, setCompanyEmail] = useState("hr@acme.com");
-  const [companyPhone, setCompanyPhone] = useState("+1 (555) 123-4567");
-  const [companyWebsite, setCompanyWebsite] = useState("https://acme.com");
-  const [companyAddress, setCompanyAddress] = useState("123 Main St, San Francisco, CA 94105");
-  const [companyDescription, setCompanyDescription] = useState("We're building the future of technology.");
+  const [companyName, setCompanyName] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [companyPhone, setCompanyPhone] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyDescription, setCompanyDescription] = useState("");
 
   // Notification Settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -55,8 +57,25 @@ export default function SettingsPage() {
   }, [router]);
 
   const loadSettings = async () => {
-    // TODO: Load settings from API
-    // For now, using default values set above
+    try {
+      setIsLoading(true);
+      const profile = await companyApi.getProfile();
+
+      // Set company data from API
+      setCompanyName(profile.company_name || "");
+      setCompanyEmail(profile.email || localStorage.getItem("companyEmail") || "");
+      setCompanyPhone(profile.phone || "");
+      setCompanyWebsite(profile.website || "");
+      setCompanyAddress(profile.address || "");
+      setCompanyDescription(profile.description || "");
+    } catch (error) {
+      console.error("Error loading settings:", error);
+      // If error, at least set the email from localStorage
+      const email = localStorage.getItem("companyEmail");
+      if (email) setCompanyEmail(email);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -64,21 +83,25 @@ export default function SettingsPage() {
     setSaveMessage("");
 
     try {
-      // TODO: Save settings to API
-      // await fetch(`http://localhost:4000/api/companies/settings`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ ... })
-      // });
+      await companyApi.updateProfile({
+        company_name: companyName,
+        email: companyEmail,
+        phone: companyPhone || null,
+        website: companyWebsite || null,
+        address: companyAddress || null,
+        description: companyDescription || null,
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Update localStorage email if changed
+      if (companyEmail) {
+        localStorage.setItem("companyEmail", companyEmail);
+      }
 
       setSaveMessage("Settings saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving settings:", error);
-      setSaveMessage("Failed to save settings. Please try again.");
+      setSaveMessage(error.message || "Failed to save settings. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -91,6 +114,14 @@ export default function SettingsPage() {
     localStorage.removeItem("companyWallet");
     router.push("/?section=employers");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+        <p className="text-muted-foreground">Loading settings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -273,7 +304,8 @@ export default function SettingsPage() {
                       type="text"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                      placeholder="Enter your company name"
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -285,55 +317,60 @@ export default function SettingsPage() {
                       type="email"
                       value={companyEmail}
                       onChange={(e) => setCompanyEmail(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                      placeholder="contact@company.com"
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Phone Number
+                      Phone Number (Optional)
                     </label>
                     <input
                       type="tel"
                       value={companyPhone}
                       onChange={(e) => setCompanyPhone(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                      placeholder="+1 (555) 123-4567"
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Website
+                      Website (Optional)
                     </label>
                     <input
                       type="url"
                       value={companyWebsite}
                       onChange={(e) => setCompanyWebsite(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                      placeholder="https://yourcompany.com"
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Address
+                      Address (Optional)
                     </label>
                     <input
                       type="text"
                       value={companyAddress}
                       onChange={(e) => setCompanyAddress(e.target.value)}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                      placeholder="123 Main St, City, State, ZIP"
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Company Description
+                      Company Description (Optional)
                     </label>
                     <textarea
                       value={companyDescription}
                       onChange={(e) => setCompanyDescription(e.target.value)}
                       rows={4}
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground resize-none"
+                      placeholder="Tell candidates about your company, culture, and mission..."
+                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground resize-none placeholder:text-muted-foreground"
                     />
                   </div>
                 </div>
