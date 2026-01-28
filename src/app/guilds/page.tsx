@@ -19,10 +19,29 @@ import {
   User,
   LogOut,
   Wallet,
+  ChevronDown,
+  Code2,
+  Palette,
+  Package,
+  Megaphone,
+  BarChart3,
+  Handshake,
+  Settings,
+  Calculator,
+  UserPlus,
+  Scale,
+  Swords,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { LoadingState, Alert } from "@/components/ui";
-import { Modal } from "@/components/ui/Modal";
+import { Modal } from "@/components/ui/modal";
 import { guildsApi } from "@/lib/api";
+import { GuildCard } from "@/components/GuildCard";
+import { getGuildDetailedInfo } from "@/lib/guildHelpers";
 
 interface Guild {
   id: string;
@@ -32,9 +51,51 @@ interface Guild {
   candidateCount: number;
   totalMembers: number;
   openPositions: number;
+  totalProposalsReviewed: number;
   icon?: string;
   color?: string;
 }
+
+// Network name helper
+const getNetworkName = (chainId: number | undefined) => {
+  if (!chainId) return "Unknown";
+  const networks: Record<number, string> = {
+    1: "Ethereum",
+    11155111: "Sepolia",
+    137: "Polygon",
+    42161: "Arbitrum",
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
+// Get guild icon based on guild name
+const getGuildIcon = (guildName: string) => {
+  const name = guildName.toLowerCase();
+
+  if (name.includes('engineering') || name.includes('technology')) {
+    return Code2;
+  } else if (name.includes('design') || name.includes('ux')) {
+    return Palette;
+  } else if (name.includes('product')) {
+    return Package;
+  } else if (name.includes('marketing') || name.includes('growth')) {
+    return Megaphone;
+  } else if (name.includes('data') || name.includes('analytics')) {
+    return BarChart3;
+  } else if (name.includes('sales') || name.includes('business')) {
+    return Handshake;
+  } else if (name.includes('operations') || name.includes('strategy')) {
+    return Settings;
+  } else if (name.includes('finance') || name.includes('accounting')) {
+    return Calculator;
+  } else if (name.includes('people') || name.includes('hr')) {
+    return UserPlus;
+  } else if (name.includes('legal') || name.includes('compliance')) {
+    return Scale;
+  }
+
+  return Shield; // Default fallback
+};
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
@@ -60,7 +121,7 @@ const getWalletInfo = (walletName: string) => {
 
   return (
     wallets[walletName] || {
-      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      icon: <Wallet className="w-6 h-6 text-primary" />,
       description: "Connect with your wallet",
     }
   );
@@ -68,7 +129,7 @@ const getWalletInfo = (walletName: string) => {
 
 export default function GlobalGuildsPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
   const [guilds, setGuilds] = useState<Guild[]>([]);
@@ -79,6 +140,9 @@ export default function GlobalGuildsPage() {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
+  const guildsPerPage = 6;
 
   useEffect(() => {
     setMounted(true);
@@ -95,13 +159,28 @@ export default function GlobalGuildsPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) {
+    if (token || isConnected) {
       setIsAuthenticated(true);
-      const email = localStorage.getItem("candidateEmail") || localStorage.getItem("companyEmail");
+      const email = localStorage.getItem("candidateEmail") || localStorage.getItem("companyEmail") || address || "";
       if (email) setUserEmail(email);
     }
     fetchGuilds();
-  }, []);
+  }, [isConnected, address]);
+
+  // Close wallet menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('[data-wallet-menu]')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   const handleWalletConnect = async (connectorId: string) => {
     const connector = connectors.find((c) => c.id === connectorId);
@@ -139,6 +218,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 45,
           totalMembers: 57,
           openPositions: 8,
+          totalProposalsReviewed: 342,
         },
         {
           id: "Design",
@@ -148,6 +228,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 32,
           totalMembers: 40,
           openPositions: 5,
+          totalProposalsReviewed: 198,
         },
         {
           id: "Product",
@@ -157,6 +238,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 28,
           totalMembers: 34,
           openPositions: 4,
+          totalProposalsReviewed: 156,
         },
         {
           id: "Marketing",
@@ -166,6 +248,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 22,
           totalMembers: 27,
           openPositions: 3,
+          totalProposalsReviewed: 124,
         },
         {
           id: "Data Science",
@@ -175,6 +258,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 25,
           totalMembers: 32,
           openPositions: 6,
+          totalProposalsReviewed: 187,
         },
         {
           id: "Sales",
@@ -184,6 +268,7 @@ export default function GlobalGuildsPage() {
           candidateCount: 18,
           totalMembers: 22,
           openPositions: 2,
+          totalProposalsReviewed: 89,
         },
       ];
       setGuilds(mockGuilds);
@@ -204,16 +289,41 @@ export default function GlobalGuildsPage() {
     router.push("/?section=guilds");
   };
 
-  const getGuildColor = (index: number) => {
-    const colors = [
-      "from-violet-500 to-indigo-600",
-      "from-blue-500 to-cyan-600",
-      "from-emerald-500 to-green-600",
-      "from-amber-500 to-orange-600",
-      "from-pink-500 to-rose-600",
-      "from-purple-500 to-fuchsia-600",
-    ];
-    return colors[index % colors.length];
+  const handleInfoClick = (guildId: string) => {
+    setOpenTooltipId(openTooltipId === guildId ? null : guildId);
+  };
+
+  const closeTooltip = () => {
+    setOpenTooltipId(null);
+  };
+
+  // Get guild color based on guild name (consistent colors)
+  const getGuildColor = (guildName: string) => {
+    const name = guildName.toLowerCase();
+
+    if (name.includes('engineering') || name.includes('technology')) {
+      return 'from-primary to-accent';
+    } else if (name.includes('design') || name.includes('ux')) {
+      return 'from-pink-500 to-rose-600';
+    } else if (name.includes('product')) {
+      return 'from-purple-500 to-fuchsia-600';
+    } else if (name.includes('marketing') || name.includes('growth')) {
+      return 'from-amber-500 to-orange-600';
+    } else if (name.includes('data') || name.includes('analytics')) {
+      return 'from-blue-500 to-cyan-600';
+    } else if (name.includes('sales') || name.includes('business')) {
+      return 'from-emerald-500 to-green-600';
+    } else if (name.includes('operations') || name.includes('strategy')) {
+      return 'from-slate-500 to-gray-600';
+    } else if (name.includes('finance') || name.includes('accounting')) {
+      return 'from-teal-500 to-cyan-600';
+    } else if (name.includes('people') || name.includes('hr')) {
+      return 'from-indigo-500 to-blue-600';
+    } else if (name.includes('legal') || name.includes('compliance')) {
+      return 'from-stone-600 to-neutral-700';
+    }
+
+    return 'from-primary to-accent'; // Default fallback
   };
 
   if (isLoading) {
@@ -221,30 +331,119 @@ export default function GlobalGuildsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted overflow-x-hidden">
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <button
                 onClick={() => router.push("/")}
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
-                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-foreground">Vetted</span>
               </button>
+
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center space-x-1">
+                <button
+                  onClick={() => router.push("/browse/jobs")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Find Jobs
+                </button>
+                <button
+                  onClick={() => router.push("/expert/apply")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Award className="w-4 h-4" />
+                  Start Vetting
+                </button>
+                <button
+                  onClick={() => router.push("/auth/signup?type=company")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Start Hiring
+                </button>
+                <button
+                  onClick={() => router.push("/guilds")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary transition-all"
+                >
+                  <Swords className="w-4 h-4" />
+                  Guilds
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              {isAuthenticated ? (
+              {isAuthenticated && mounted && address ? (
+                <div className="relative" data-wallet-menu>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                  >
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-mono text-foreground font-medium">
+                        {address.slice(0, 6)}...{address.slice(-4)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {getNetworkName(chainId)}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
+                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-3 border-b border-border">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Connected Wallet</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Wallet className="w-4 h-4 text-primary" />
+                          </div>
+                          <p className="text-sm font-mono text-foreground break-all font-medium">{address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-foreground">
+                            Connected to <span className="font-semibold">{getNetworkName(chainId)}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => router.push("/browse/jobs")}
+                        className="w-full flex items-center px-4 py-3 text-sm text-foreground hover:bg-muted transition-all"
+                      >
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        Browse Jobs
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleDisconnect();
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                   >
-                    <div className="p-2 bg-violet-100 rounded-lg">
+                    <div className="p-2 bg-primary/10 rounded-lg">
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -277,7 +476,7 @@ export default function GlobalGuildsPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                  className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
@@ -288,11 +487,13 @@ export default function GlobalGuildsPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 border-b border-border">
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-indigo-600 rounded-2xl mb-6 shadow-lg">
-              <Globe className="w-10 h-10 text-white" />
+            <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 via-primary to-accent rounded-2xl mb-6 shadow-2xl">
+              <Swords className="w-10 h-10 text-white" />
+              <Sparkles className="w-4 h-4 text-amber-300 absolute -top-1 -right-1 animate-pulse" />
+              <Sparkles className="w-3 h-3 text-primary/60 absolute -bottom-1 -left-1 animate-pulse" style={{ animationDelay: '0.5s' }} />
             </div>
             <h1 className="text-5xl font-bold text-foreground mb-4">Guilds</h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
@@ -302,144 +503,128 @@ export default function GlobalGuildsPage() {
         </div>
       </div>
 
-      {/* What are Guilds Section */}
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-2xl p-8 mb-12 border-2 border-violet-200 dark:border-violet-800">
-          <h2 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-            <Shield className="w-8 h-8 text-primary" />
-            What are Guilds?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6 text-muted-foreground">
-            <div>
-              <p className="text-lg leading-relaxed mb-4">
-                Guilds are professional communities organized by skill domain, where industry experts
-                review and endorse candidates based on their expertise.
-              </p>
-              <p className="text-lg leading-relaxed">
-                Each guild maintains high standards through a decentralized review process, ensuring
-                companies only connect with pre-vetted, qualified talent.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-foreground">Expert-Led Vetting</p>
-                  <p className="text-sm">Experienced professionals review and endorse candidates</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-foreground">Quality Assurance</p>
-                  <p className="text-sm">High standards maintained through reputation staking</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-foreground">Exclusive Access</p>
-                  <p className="text-sm">Members get access to curated job opportunities</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-foreground">DAO Governance</p>
-                  <p className="text-sm">Sub-guilds managed by decentralized autonomous organizations</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Global Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-violet-100 dark:bg-violet-900/30 rounded-full mb-3">
-              <Shield className="w-6 h-6 text-primary" />
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
+              <Shield className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <p className="text-3xl font-bold text-foreground mb-1">
               {guilds.length}
             </p>
-            <p className="text-sm text-muted-foreground">Active Guilds</p>
+            <p className="text-sm text-muted-foreground font-medium">Active Guilds</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-3">
-              <Award className="w-6 h-6 text-amber-600" />
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
+              <Award className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <p className="text-3xl font-bold text-foreground mb-1">
               {guilds.reduce((sum, g) => sum + (g.expertCount || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground">Expert Reviewers</p>
+            <p className="text-sm text-muted-foreground font-medium">Expert Reviewers</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-3">
-              <Users className="w-6 h-6 text-blue-600" />
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
+              <Users className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <p className="text-3xl font-bold text-foreground mb-1">
               {guilds.reduce((sum, g) => sum + (g.totalMembers || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground">Total Members</p>
+            <p className="text-sm text-muted-foreground font-medium">Total Members</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full mb-3">
-              <Briefcase className="w-6 h-6 text-green-600" />
+          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
+              <Briefcase className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <p className="text-3xl font-bold text-foreground mb-1">
               {guilds.reduce((sum, g) => sum + (g.openPositions || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground">Open Positions</p>
+            <p className="text-sm text-muted-foreground font-medium">Open Positions</p>
           </div>
         </div>
 
         {/* All Guilds */}
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-8">All Guilds</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-8 font-serif">All Guilds</h2>
 
           {error && (
             <Alert variant="error" className="mb-6">{error}</Alert>
           )}
 
           {guilds.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {guilds.map((guild, index) => (
-                <button
-                  key={guild.id}
-                  onClick={() => router.push(`/guilds/${guild.id}`)}
-                  className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 hover:shadow-lg transition-all text-left group"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-14 h-14 bg-gradient-to-br ${getGuildColor(index)} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
-                      <Shield className="w-7 h-7 text-white" />
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(() => {
+                  const indexOfLastGuild = currentPage * guildsPerPage;
+                  const indexOfFirstGuild = indexOfLastGuild - guildsPerPage;
+                  const currentGuilds = guilds.slice(indexOfFirstGuild, indexOfLastGuild);
+
+                  return currentGuilds.map((guild) => {
+                    return (
+                      <GuildCard
+                        key={guild.id}
+                        guild={{
+                          id: guild.id,
+                          name: guild.name,
+                          description: guild.description,
+                          memberCount: guild.totalMembers || guild.candidateCount || 0,
+                          expertCount: guild.expertCount,
+                          jobCount: guild.openPositions,
+                          totalProposalsReviewed: guild.totalProposalsReviewed,
+                        }}
+                        variant="browse"
+                        onViewDetails={(guildId) => {
+                          sessionStorage.setItem('guildsScrollPosition', window.scrollY.toString());
+                          router.push(`/guilds/${guildId}`);
+                        }}
+                        showDescription={true}
+                      />
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* Pagination Controls */}
+              {guilds.length > guildsPerPage && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.ceil(guilds.length / guildsPerPage) }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                          currentPage === page
+                            ? 'bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 shadow-lg'
+                            : 'bg-card border border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
                   </div>
 
-                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {guild.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {guild.description}
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border">
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-foreground">{guild.expertCount || 0}</p>
-                      <p className="text-xs text-muted-foreground">Experts</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-foreground">{guild.totalMembers || guild.candidateCount || 0}</p>
-                      <p className="text-xs text-muted-foreground">Members</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-foreground">{guild.openPositions || 0}</p>
-                      <p className="text-xs text-muted-foreground">Jobs</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(guilds.length / guildsPerPage)))}
+                    disabled={currentPage === Math.ceil(guilds.length / guildsPerPage)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16 bg-card rounded-xl border border-border">
               <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -449,42 +634,64 @@ export default function GlobalGuildsPage() {
           )}
         </div>
 
-        {/* How to Join Section */}
-        <div className="mt-12 bg-card rounded-xl p-8 shadow-sm border border-border">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Target className="w-6 h-6 text-primary" />
-            How to Join a Guild
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <span className="text-xl font-bold text-primary">1</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Choose Your Guild</h3>
-              <p className="text-sm text-muted-foreground">
-                Browse guilds and select one that matches your expertise
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <span className="text-xl font-bold text-primary">2</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Submit Application</h3>
-              <p className="text-sm text-muted-foreground">
-                Complete the guild's custom application form
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-4">
-                <span className="text-xl font-bold text-primary">3</span>
-              </div>
-              <h3 className="font-semibold text-foreground mb-2">Get Vetted</h3>
-              <p className="text-sm text-muted-foreground">
-                Expert members review and endorse your application
-              </p>
+        {/* Mobile tooltip modal */}
+        {openTooltipId && (
+          <div className="md:hidden fixed inset-0 z-50 flex items-end">
+            <div className="absolute inset-0 bg-black/50" onClick={closeTooltip} />
+            <div className="relative bg-card rounded-t-2xl p-6 w-full max-h-[80vh] overflow-y-auto">
+              <button onClick={closeTooltip} className="absolute top-4 right-4 p-2 hover:bg-muted rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+              {(() => {
+                const guild = guilds.find(g => g.id === openTooltipId);
+                if (!guild) return null;
+                const GuildIcon = getGuildIcon(guild.name);
+                const detailedInfo = getGuildDetailedInfo(guild.name);
+                return (
+                  <>
+                    <div className="flex items-start gap-3 mb-4 pr-8">
+                      <div className="w-12 h-12 rounded-xl border-2 border-border flex items-center justify-center flex-shrink-0">
+                        <GuildIcon className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-foreground mb-1">{guild.name}</h3>
+                        <p className="text-sm text-primary font-medium">{detailedInfo.focus}</p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {detailedInfo.details}
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs font-semibold text-foreground mb-2">Common Roles:</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {detailedInfo.examples}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-foreground mb-1">{guild.expertCount}</p>
+                        <p className="text-xs text-muted-foreground">Expert Reviewers</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-foreground mb-1">{guild.totalMembers}</p>
+                        <p className="text-xs text-muted-foreground">Total Members</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-foreground mb-1">{guild.openPositions}</p>
+                        <p className="text-xs text-muted-foreground">Open Positions</p>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

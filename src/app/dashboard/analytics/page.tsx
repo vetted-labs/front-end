@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                 onClick={() => router.push("/")}
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
-                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-foreground">Vetted</span>
               </button>
               <nav className="hidden md:flex items-center space-x-6 ml-8">
@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <div className="p-2 bg-violet-100 rounded-lg">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -380,7 +380,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-primary to-indigo-600 h-2 rounded-full transition-all"
+                        className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all"
                         style={{ width: `${(item.applications / maxApplications) * 100}%` }}
                       ></div>
                     </div>
@@ -476,8 +476,8 @@ export default function AnalyticsPage() {
                   className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted hover:border-primary/50 transition-all border border-transparent cursor-pointer"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-lg">
-                      <BarChart3 className="w-5 h-5 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
+                      <BarChart3 className="w-5 h-5 text-primary" />
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-foreground">{job.title}</p>

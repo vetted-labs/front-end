@@ -26,15 +26,27 @@ import {
   FileText,
   Calendar,
   Wallet,
+  ChevronDown,
+  Code2,
+  Palette,
+  Package,
+  Megaphone,
+  BarChart3,
+  Handshake,
+  Settings,
+  Calculator,
+  UserPlus,
+  Scale,
 } from "lucide-react";
 import { LoadingState, Alert, Button } from "@/components/ui";
-import { Modal } from "@/components/ui/Modal";
+import { Modal } from "@/components/ui/modal";
 import { guildsApi, getAssetUrl } from "@/lib/api";
 
 interface ExpertMember {
   id: string;
   fullName: string;
   email: string;
+  walletAddress: string;
   role: "recruit" | "craftsman" | "master";
   reputation: number;
   expertise: string[];
@@ -105,6 +117,7 @@ interface LeaderboardEntry {
   rank: number;
   previousRank?: number;
   memberId: string;
+  walletAddress?: string;
   fullName: string;
   role: "recruit" | "craftsman" | "master" | "candidate";
   reputation: number;
@@ -114,6 +127,105 @@ interface LeaderboardEntry {
   reputationChange?: string;
   trend?: "up" | "down" | "same";
 }
+
+// Network name helper
+const getNetworkName = (chainId: number | undefined) => {
+  if (!chainId) return "Unknown";
+  const networks: Record<number, string> = {
+    1: "Ethereum",
+    11155111: "Sepolia",
+    137: "Polygon",
+    42161: "Arbitrum",
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
+// Get guild icon based on guild name
+const getGuildIcon = (guildName: string) => {
+  const name = guildName.toLowerCase();
+
+  if (name.includes('engineering') || name.includes('technology')) {
+    return Code2;
+  } else if (name.includes('design') || name.includes('ux')) {
+    return Palette;
+  } else if (name.includes('product')) {
+    return Package;
+  } else if (name.includes('marketing') || name.includes('growth')) {
+    return Megaphone;
+  } else if (name.includes('data') || name.includes('analytics')) {
+    return BarChart3;
+  } else if (name.includes('sales') || name.includes('business')) {
+    return Handshake;
+  } else if (name.includes('operations') || name.includes('strategy')) {
+    return Settings;
+  } else if (name.includes('finance') || name.includes('accounting')) {
+    return Calculator;
+  } else if (name.includes('people') || name.includes('hr')) {
+    return UserPlus;
+  } else if (name.includes('legal') || name.includes('compliance')) {
+    return Scale;
+  }
+
+  return Shield; // Default fallback
+};
+
+// Get guild color based on guild name (consistent colors)
+const getGuildColor = (guildName: string) => {
+  const name = guildName.toLowerCase();
+
+  if (name.includes('engineering') || name.includes('technology')) {
+    return 'from-primary to-accent';
+  } else if (name.includes('design') || name.includes('ux')) {
+    return 'from-pink-500 to-rose-600';
+  } else if (name.includes('product')) {
+    return 'from-purple-500 to-fuchsia-600';
+  } else if (name.includes('marketing') || name.includes('growth')) {
+    return 'from-amber-500 to-orange-600';
+  } else if (name.includes('data') || name.includes('analytics')) {
+    return 'from-blue-500 to-cyan-600';
+  } else if (name.includes('sales') || name.includes('business')) {
+    return 'from-emerald-500 to-green-600';
+  } else if (name.includes('operations') || name.includes('strategy')) {
+    return 'from-slate-500 to-gray-600';
+  } else if (name.includes('finance') || name.includes('accounting')) {
+    return 'from-teal-500 to-cyan-600';
+  } else if (name.includes('people') || name.includes('hr')) {
+    return 'from-indigo-500 to-blue-600';
+  } else if (name.includes('legal') || name.includes('compliance')) {
+    return 'from-stone-600 to-neutral-700';
+  }
+
+  return 'from-primary to-accent'; // Default fallback
+};
+
+// Get guild background color (lighter version for hero)
+const getGuildBgColor = (guildName: string) => {
+  const name = guildName.toLowerCase();
+
+  if (name.includes('engineering') || name.includes('technology')) {
+    return 'from-primary/5 to-primary/10';
+  } else if (name.includes('design') || name.includes('ux')) {
+    return 'from-pink-500/10 to-rose-600/10';
+  } else if (name.includes('product')) {
+    return 'from-purple-500/10 to-fuchsia-600/10';
+  } else if (name.includes('marketing') || name.includes('growth')) {
+    return 'from-amber-500/10 to-orange-600/10';
+  } else if (name.includes('data') || name.includes('analytics')) {
+    return 'from-blue-500/10 to-cyan-600/10';
+  } else if (name.includes('sales') || name.includes('business')) {
+    return 'from-emerald-500/10 to-green-600/10';
+  } else if (name.includes('operations') || name.includes('strategy')) {
+    return 'from-slate-500/10 to-gray-600/10';
+  } else if (name.includes('finance') || name.includes('accounting')) {
+    return 'from-teal-500/10 to-cyan-600/10';
+  } else if (name.includes('people') || name.includes('hr')) {
+    return 'from-blue-500/10 to-blue-600/10';
+  } else if (name.includes('legal') || name.includes('compliance')) {
+    return 'from-stone-600/10 to-neutral-700/10';
+  }
+
+  return 'from-primary/5 to-primary/10'; // Default fallback
+};
 
 // Wallet information helper
 const getWalletInfo = (walletName: string) => {
@@ -139,7 +251,7 @@ const getWalletInfo = (walletName: string) => {
 
   return (
     wallets[walletName] || {
-      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      icon: <Wallet className="w-6 h-6 text-primary" />,
       description: "Connect with your wallet",
     }
   );
@@ -148,7 +260,7 @@ const getWalletInfo = (walletName: string) => {
 export default function PublicGuildPage() {
   const params = useParams();
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
   const rawGuildId = params.guildId as string;
@@ -174,13 +286,28 @@ export default function PublicGuildPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) {
+    if (token || isConnected) {
       setIsAuthenticated(true);
-      const email = localStorage.getItem("candidateEmail");
+      const email = localStorage.getItem("candidateEmail") || localStorage.getItem("expertEmail") || address || "";
       if (email) setCandidateEmail(email);
     }
     fetchGuildData();
-  }, [guildId]);
+  }, [guildId, isConnected, address]);
+
+  // Close wallet menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('[data-wallet-menu]')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   const handleWalletConnect = async (connectorId: string) => {
     const connector = connectors.find((c) => c.id === connectorId);
@@ -210,10 +337,14 @@ export default function PublicGuildPage() {
       setGuild(guildData);
 
       // If authenticated, check membership status
+      // Check if user is logged in as expert (wallet) or candidate
+      const expertId = localStorage.getItem("expertId");
       const candidateId = localStorage.getItem("candidateId");
-      if (candidateId) {
+      const userId = expertId || candidateId || address; // Use wallet address if logged in via wallet
+
+      if (userId) {
         try {
-          const membershipData: any = await guildsApi.checkMembership(candidateId, guildId);
+          const membershipData: any = await guildsApi.checkMembership(userId, guildId);
           setMembership(membershipData);
         } catch (err) {
           // Not a member - that's okay
@@ -221,179 +352,9 @@ export default function PublicGuildPage() {
         }
       }
     } catch (err) {
-      // Silently fall back to mock data if backend isn't ready
-      // console.error("[Guild Page] Error loading guild:", err);
-
-      // Use mock data if backend isn't ready
-      const mockGuild: Guild = {
-        id: guildId,
-        name: guildId,
-        description: `Professional community for ${guildId} professionals, where experts vet candidates and maintain high standards`,
-        expertCount: 12,
-        candidateCount: 45,
-        totalMembers: 57,
-        openPositions: 8,
-        totalProposalsReviewed: 156,
-        averageApprovalTime: "24h",
-        establishedDate: "2024-01-01",
-        experts: [
-          {
-            id: "expert-1",
-            fullName: "Sarah Chen",
-            email: "sarah@example.com",
-            role: "master",
-            reputation: 1850,
-            expertise: ["React", "Node.js", "TypeScript", "AWS"],
-            totalReviews: 48,
-            successRate: 94,
-            joinedAt: "2024-01-15",
-          },
-          {
-            id: "expert-2",
-            fullName: "Michael Rodriguez",
-            email: "michael@example.com",
-            role: "craftsman",
-            reputation: 1420,
-            expertise: ["Python", "Django", "PostgreSQL", "Docker"],
-            totalReviews: 35,
-            successRate: 91,
-            joinedAt: "2024-02-20",
-          },
-          {
-            id: "expert-3",
-            fullName: "Emily Watson",
-            email: "emily@example.com",
-            role: "craftsman",
-            reputation: 1280,
-            expertise: ["Vue.js", "Laravel", "MySQL", "Redis"],
-            totalReviews: 29,
-            successRate: 89,
-            joinedAt: "2024-03-10",
-          },
-          {
-            id: "expert-4",
-            fullName: "James Kim",
-            email: "james@example.com",
-            role: "recruit",
-            reputation: 850,
-            expertise: ["JavaScript", "Express", "MongoDB"],
-            totalReviews: 18,
-            successRate: 85,
-            joinedAt: "2024-04-05",
-          },
-        ],
-        candidates: [
-          {
-            id: "candidate-1",
-            fullName: "Alex Johnson",
-            email: "alex@example.com",
-            headline: "Full Stack Developer",
-            experienceLevel: "senior",
-            reputation: 450,
-            endorsements: 8,
-            joinedAt: "2024-05-12",
-          },
-          {
-            id: "candidate-2",
-            fullName: "Maria Garcia",
-            email: "maria@example.com",
-            headline: "Frontend Engineer",
-            experienceLevel: "mid",
-            reputation: 320,
-            endorsements: 5,
-            joinedAt: "2024-06-01",
-          },
-          {
-            id: "candidate-3",
-            fullName: "David Lee",
-            email: "david@example.com",
-            headline: "Backend Developer",
-            experienceLevel: "junior",
-            reputation: 180,
-            endorsements: 3,
-            joinedAt: "2024-06-15",
-          },
-        ],
-        recentJobs: [
-          {
-            id: "job-1",
-            title: "Senior Full Stack Engineer",
-            location: "Remote",
-            type: "Full-time",
-            salary: { min: 120000, max: 180000, currency: "USD" },
-            applicants: 12,
-            createdAt: "2024-10-15",
-          },
-          {
-            id: "job-2",
-            title: "Frontend Developer",
-            location: "New York, NY",
-            type: "Full-time",
-            salary: { min: 90000, max: 140000, currency: "USD" },
-            applicants: 8,
-            createdAt: "2024-10-20",
-          },
-          {
-            id: "job-3",
-            title: "DevOps Engineer",
-            location: "San Francisco, CA",
-            type: "Contract",
-            salary: { min: 100000, max: 150000, currency: "USD" },
-            applicants: 5,
-            createdAt: "2024-10-25",
-          },
-        ],
-        recentActivity: [
-          {
-            id: "activity-1",
-            type: "candidate_approved",
-            actor: "Sarah Chen",
-            target: "Alex Johnson",
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            details: "approved",
-          },
-          {
-            id: "activity-2",
-            type: "proposal_submitted",
-            actor: "Maria Garcia",
-            timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            details: "submitted application",
-          },
-          {
-            id: "activity-3",
-            type: "job_posted",
-            actor: "Tech Corp",
-            target: "Senior Full Stack Engineer",
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            details: "posted",
-          },
-          {
-            id: "activity-4",
-            type: "endorsement_given",
-            actor: "Michael Rodriguez",
-            target: "David Lee",
-            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            details: "endorsed",
-          },
-          {
-            id: "activity-5",
-            type: "candidate_approved",
-            actor: "Emily Watson",
-            target: "Maria Garcia",
-            timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            details: "approved",
-          },
-        ],
-      };
-
-      // console.log("[Guild Page] Using mock data for guild:", guildId);
-      setGuild(mockGuild);
-
-      // Check membership with mock data for authenticated users
-      const candidateId = localStorage.getItem("candidateId");
-      if (candidateId) {
-        setMembership({ isMember: false });
-      }
+      console.error("[Guild Page] Error loading guild:", err);
+      setError("Failed to load guild details. Please try again later.");
+      setGuild(null);
     } finally {
       setIsLoading(false);
     }
@@ -507,6 +468,8 @@ export default function PublicGuildPage() {
     localStorage.removeItem("authToken");
     localStorage.removeItem("candidateId");
     localStorage.removeItem("candidateEmail");
+    localStorage.removeItem("expertId");
+    localStorage.removeItem("expertEmail");
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);
@@ -518,7 +481,7 @@ export default function PublicGuildPage() {
       case "master":
         return "bg-gradient-to-r from-amber-400 to-orange-500 text-white";
       case "craftsman":
-        return "bg-gradient-to-r from-violet-500 to-indigo-600 text-white";
+        return "bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900";
       case "recruit":
         return "bg-gradient-to-r from-blue-400 to-cyan-500 text-white";
       default:
@@ -548,7 +511,7 @@ export default function PublicGuildPage() {
       case "candidate_approved":
         return "bg-green-100 text-green-600";
       case "job_posted":
-        return "bg-violet-100 text-primary";
+        return "bg-primary/10 text-primary";
       case "endorsement_given":
         return "bg-amber-100 text-amber-600";
       default:
@@ -562,7 +525,7 @@ export default function PublicGuildPage() {
 
   if (error || !guild) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted overflow-x-hidden flex items-center justify-center">
         <Alert variant="error">{error || "Guild not found"}</Alert>
       </div>
     );
@@ -573,7 +536,7 @@ export default function PublicGuildPage() {
   const showMemberBadge = membership?.isMember;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted overflow-x-hidden">
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -582,7 +545,7 @@ export default function PublicGuildPage() {
               onClick={() => router.push("/")}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
 
@@ -595,13 +558,72 @@ export default function PublicGuildPage() {
                 Back to Guilds
               </button>
               <ThemeToggle />
-              {isAuthenticated ? (
+              {isAuthenticated && mounted && address ? (
+                <div className="relative" data-wallet-menu>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                  >
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-mono text-foreground font-medium">
+                        {address.slice(0, 6)}...{address.slice(-4)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {getNetworkName(chainId)}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
+                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-3 border-b border-border">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Connected Wallet</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Wallet className="w-4 h-4 text-primary" />
+                          </div>
+                          <p className="text-sm font-mono text-foreground break-all font-medium">{address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-foreground">
+                            Connected to <span className="font-semibold">{getNetworkName(chainId)}</span>
+                          </span>
+                        </div>
+                      </div>
+                      {membership?.isMember && (
+                        <button
+                          onClick={() => router.push(`/guilds/${guildId}/my-stats`)}
+                          className="w-full flex items-center px-4 py-3 text-sm text-foreground hover:bg-muted transition-all"
+                        >
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          My Guild Stats
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleDisconnect();
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                   >
-                    <div className="p-2 bg-violet-100 rounded-lg">
+                    <div className="p-2 bg-primary/10 rounded-lg">
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -644,7 +666,7 @@ export default function PublicGuildPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                  className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
@@ -655,66 +677,70 @@ export default function PublicGuildPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 border-b border-border">
+      <div className={`bg-gradient-to-r ${getGuildBgColor(guild.name)} border-b border-border`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Shield className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-foreground mb-3">{guild.name}</h1>
-                <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed mb-4">
-                  {guild.description}
-                </p>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users className="w-5 h-5" />
-                    <span className="font-semibold">{guild.totalMembers || (guild.expertCount + guild.candidateCount)} Members</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Award className="w-5 h-5 text-amber-500" />
-                    <span className="font-semibold">{guild.expertCount} Experts</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    <span className="font-semibold">{guild.openPositions} Open Roles</span>
-                  </div>
-                  {guild.establishedDate && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="w-5 h-5" />
-                      <span className="text-sm">Est. {new Date(guild.establishedDate).getFullYear()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+          <div className="flex items-start gap-6">
+            <div className={`w-20 h-20 bg-gradient-to-br ${getGuildColor(guild.name)} rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+              {(() => {
+                const GuildIcon = getGuildIcon(guild.name);
+                return <GuildIcon className="w-10 h-10 text-white" />;
+              })()}
             </div>
-
-            <div className="flex flex-col gap-3">
-              {showMemberBadge && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-green-500/10 border-2 border-green-500/20 rounded-lg">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-700 dark:text-green-300">Guild Member</p>
-                    {membership.role && (
-                      <p className="text-xs text-green-600 capitalize">{membership.role}</p>
-                    )}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                <h1 className="text-4xl font-bold text-foreground">{guild.name}</h1>
+                {showMemberBadge && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-green-700 dark:text-green-300 text-sm">Member</span>
+                      {membership.role && (
+                        <>
+                          <span className="text-green-600 dark:text-green-400">•</span>
+                          <span className={`font-bold text-sm capitalize ${
+                            membership.role === 'master'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : membership.role === 'craftsman'
+                              ? 'text-primary dark:text-primary/70'
+                              : 'text-blue-600 dark:text-blue-400'
+                          }`}>
+                            {membership.role}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-              {showPendingStatus && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-yellow-500/10 border-2 border-yellow-500/20 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                  <div>
-                    <p className="font-semibold text-yellow-700 dark:text-yellow-300">
-                      Application Pending
-                    </p>
-                    <p className="text-xs text-yellow-600 mt-1">
-                      Applied {membership?.appliedAt ? new Date(membership.appliedAt).toLocaleDateString() : "Recently"}
-                    </p>
+                )}
+                {showPendingStatus && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/40 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400 animate-pulse" />
+                    <span className="font-bold text-yellow-700 dark:text-yellow-300 text-sm">Pending Review</span>
                   </div>
+                )}
+              </div>
+              <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed mb-4">
+                {guild.description}
+              </p>
+              <div className="flex items-center gap-6 flex-wrap mb-4">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="w-5 h-5" />
+                  <span className="font-semibold">{guild.totalMembers || (guild.expertCount + guild.candidateCount)} Members</span>
                 </div>
-              )}
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Award className="w-5 h-5 text-amber-500" />
+                  <span className="font-semibold">{guild.expertCount} Experts</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                  <span className="font-semibold">{guild.openPositions} Open Roles</span>
+                </div>
+                {guild.establishedDate && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="w-5 h-5" />
+                    <span className="text-sm">Est. {new Date(guild.establishedDate).getFullYear()}</span>
+                  </div>
+                )}
+              </div>
               {showApplyButton && (
                 <Button onClick={handleApplyToGuild} size="lg" className="px-8">
                   Apply to Join Guild
@@ -860,13 +886,14 @@ export default function PublicGuildPage() {
                   </h2>
                   <div className="grid md:grid-cols-2 gap-4">
                     {(guild.experts || []).slice(0, 4).map((expert) => (
-                      <div
+                      <button
                         key={expert.id}
-                        className="border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
+                        onClick={() => router.push(`/experts/${expert.walletAddress}`)}
+                        className="border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all text-left cursor-pointer"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold text-foreground mb-1">{expert.fullName}</h3>
+                            <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{expert.fullName}</h3>
                             <span
                               className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(
                                 expert.role
@@ -897,7 +924,7 @@ export default function PublicGuildPage() {
                             {expert.totalReviews} reviews • {expert.successRate}% success rate
                           </div>
                         )}
-                      </div>
+                      </button>
                     ))}
                   </div>
                   {(guild.experts || []).length > 4 && (
@@ -932,7 +959,7 @@ export default function PublicGuildPage() {
                                   <MapPin className="w-4 h-4" />
                                   {job.location}
                                 </span>
-                                <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-medium rounded">
+                                <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">
                                   {job.type}
                                 </span>
                                 {job.salary.min && job.salary.max && (
@@ -1056,7 +1083,7 @@ export default function PublicGuildPage() {
 
                 {/* CTA */}
                 {!showMemberBadge && !showPendingStatus && (
-                  <div className="bg-gradient-to-br from-primary/10 to-indigo-600/10 rounded-xl border-2 border-primary/20 p-6">
+                  <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20 p-6">
                     <h3 className="text-lg font-bold text-foreground mb-2">Ready to Join?</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Submit your application and get vetted by our expert community
@@ -1076,13 +1103,14 @@ export default function PublicGuildPage() {
               <h2 className="text-2xl font-bold text-foreground mb-6">Expert Members</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(guild.experts || []).map((expert) => (
-                  <div
+                  <button
                     key={expert.id}
-                    className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 transition-all"
+                    onClick={() => router.push(`/experts/${expert.walletAddress}`)}
+                    className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="font-semibold text-foreground text-lg mb-2">{expert.fullName}</h3>
+                        <h3 className="font-semibold text-foreground text-lg mb-2 group-hover:text-primary transition-colors">{expert.fullName}</h3>
                         <span
                           className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(
                             expert.role
@@ -1124,7 +1152,7 @@ export default function PublicGuildPage() {
                         Joined {new Date(expert.joinedAt).toLocaleDateString()}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
               {(guild.experts || []).length === 0 && (
@@ -1201,7 +1229,7 @@ export default function PublicGuildPage() {
                               <MapPin className="w-4 h-4" />
                               {job.location}
                             </span>
-                            <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-medium rounded">
+                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">
                               {job.type}
                             </span>
                             {job.salary.min && job.salary.max && (
@@ -1287,9 +1315,17 @@ export default function PublicGuildPage() {
               {leaderboard.length > 0 ? (
                 <div className="space-y-3">
                   {leaderboard.map((entry, index) => (
-                    <div
+                    <button
                       key={entry.memberId}
-                      className={`bg-card border rounded-xl p-5 hover:border-primary/50 transition-all ${
+                      onClick={() => {
+                        // Route to expert profile if expert, otherwise don't navigate (candidates don't have public profiles yet)
+                        if (entry.role !== 'candidate' && entry.walletAddress) {
+                          router.push(`/experts/${entry.walletAddress}`);
+                        }
+                      }}
+                      className={`w-full bg-card border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all text-left ${
+                        entry.role !== 'candidate' && entry.walletAddress ? 'cursor-pointer' : 'cursor-default'
+                      } ${
                         index < 3 ? "border-2 border-amber-500/30 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/20" : "border-border"
                       }`}
                     >
@@ -1400,7 +1436,7 @@ export default function PublicGuildPage() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -1414,7 +1450,7 @@ export default function PublicGuildPage() {
               )}
 
               {/* Leaderboard Info */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-xl border border-violet-200 dark:border-violet-800">
+              <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 rounded-xl border border-primary/20 dark:border-primary/30">
                 <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   How Rankings Work

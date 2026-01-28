@@ -16,7 +16,7 @@ import {
   DollarSign,
   Coins,
 } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 import { expertApi } from "@/lib/api";
 
 interface LeaderboardEntry {
@@ -229,7 +229,7 @@ export function ReputationLeaderboard({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {leaderboard.map((entry) => (
                 <tr
                   key={entry.expertId}
@@ -257,7 +257,7 @@ export function ReputationLeaderboard({
                       <div className="font-medium text-foreground flex items-center gap-2">
                         {entry.fullName}
                         {entry.expertId === currentExpertId && (
-                          <span className="px-2 py-0.5 bg-violet-100 text-primary text-xs font-semibold rounded-full">
+                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
                             You
                           </span>
                         )}
@@ -291,7 +291,7 @@ export function ReputationLeaderboard({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-card-foreground">{entry.guildCount || 0}</span>
+                        <span className="text-foreground font-medium">{entry.guildCount || 0}</span>
                       </div>
                     </td>
                   )}
@@ -319,7 +319,7 @@ export function ReputationLeaderboard({
                           }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium text-card-foreground">
+                      <span className="text-sm font-medium text-foreground">
                         {calculateConsensusRate(entry.approvals, entry.rejections)}%
                       </span>
                     </div>

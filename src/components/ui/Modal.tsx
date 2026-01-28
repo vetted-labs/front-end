@@ -43,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative bg-card rounded-xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border`}
+          className={`relative bg-card rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -52,7 +52,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
               <h2 className="text-xl font-semibold text-card-foreground">{title}</h2>
               <button
                 onClick={onClose}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -64,7 +64,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
             {!title && (
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-primary transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>

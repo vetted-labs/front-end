@@ -15,8 +15,8 @@ import {
   Plus,
   Shield,
 } from "lucide-react";
-import { LoadingState } from "@/components/ui/LoadingState";
-import { Alert } from "@/components/ui/Alert";
+import { LoadingState } from "@/components/ui/loadingstate";
+import { Alert } from "@/components/ui/alert";
 import { expertApi } from "@/lib/api";
 
 interface PendingExpert {
@@ -52,7 +52,7 @@ export default function ApplicationPendingPage() {
     if (isConnected && address) {
       fetchPendingStatus();
     } else {
-      router.push("/expert");
+      router.push("/");
     }
   }, [isConnected, address]);
 
@@ -108,7 +108,7 @@ export default function ApplicationPendingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
               <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
                 Expert
@@ -118,7 +118,7 @@ export default function ApplicationPendingPage() {
             <div className="flex items-center space-x-4">
               {mounted && address && (
                 <>
-                  <div className="flex items-center px-3 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg border border-violet-200">
+                  <div className="flex items-center px-3 py-2 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
                     <span className="text-xs font-mono text-primary">
                       {address.slice(0, 6)}...{address.slice(-4)}
                     </span>
@@ -141,7 +141,7 @@ export default function ApplicationPendingPage() {
         {/* Main Card */}
         <div className="bg-card rounded-2xl shadow-lg border border-border p-8 md:p-12 mb-6">
           {/* Icon */}
-          <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/15 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
             <Clock className="w-10 h-10" />
           </div>
 
@@ -154,7 +154,7 @@ export default function ApplicationPendingPage() {
           {expert.appliedToGuild && (
             <div className="text-center mb-8">
               <p className="text-lg text-muted-foreground mb-2">Applied to</p>
-              <div className="inline-block px-6 py-3 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-lg border border-violet-200">
+              <div className="inline-block px-6 py-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
                 <p className="text-xl font-semibold text-primary">
                   {expert.appliedToGuild.name}
                 </p>
@@ -184,7 +184,7 @@ export default function ApplicationPendingPage() {
           </div>
 
           {/* Progress Info */}
-          <div className="bg-primary/10 rounded-lg p-6 mb-8 border border-violet-200">
+          <div className="bg-primary/10 rounded-lg p-6 mb-8 border border-primary/20">
             <div className="flex items-start">
               <Shield className="w-6 h-6 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
@@ -200,7 +200,7 @@ export default function ApplicationPendingPage() {
 
           {/* Status Timeline */}
           <div className="space-y-4 mb-8">
-            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-violet-200">
+            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
               <CheckCircle className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground mb-1">Application Received</p>
@@ -244,7 +244,7 @@ export default function ApplicationPendingPage() {
           </p>
           <button
             onClick={() => router.push("/expert/apply")}
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90  transition-all shadow-sm"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90  transition-all shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Apply to Another Guild
@@ -254,11 +254,11 @@ export default function ApplicationPendingPage() {
         {/* Back Button */}
         <div className="mt-6 text-center">
           <button
-            onClick={() => router.push("/expert")}
+            onClick={() => router.push("/")}
             className="inline-flex items-center text-muted-foreground hover:text-foreground transition-all"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Expert Home
+            Back to Home
           </button>
         </div>
       </div>

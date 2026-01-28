@@ -134,7 +134,7 @@ export default function SettingsPage() {
                 onClick={() => router.push("/")}
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
-                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-foreground">Vetted</span>
               </button>
               <nav className="hidden md:flex items-center space-x-6 ml-8">
@@ -172,7 +172,7 @@ export default function SettingsPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <div className="p-2 bg-violet-100 rounded-lg">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 border border-primary/20 rounded-lg p-6">
+                  <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-lg p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-1">Pro Plan</h3>

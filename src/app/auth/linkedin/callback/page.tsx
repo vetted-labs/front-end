@@ -101,7 +101,7 @@ function LinkedInCallbackContent() {
           {status === "loading" && (
             <>
               <div className="mb-6 flex justify-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-primary to-indigo-600 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-white animate-spin" />
                 </div>
               </div>
@@ -139,7 +139,7 @@ function LinkedInCallbackContent() {
               <p className="text-muted-foreground mb-4">{message}</p>
               <button
                 onClick={() => router.push("/auth/login")}
-                className="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all"
+                className="px-6 py-2 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 rounded-lg hover:opacity-90 transition-all"
               >
                 Back to Login
               </button>

@@ -274,7 +274,7 @@ export default function GuildApplicationPage() {
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Back to Guild
               </button>
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </div>
             <ThemeToggle />
@@ -283,11 +283,11 @@ export default function GuildApplicationPage() {
       </nav>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 border-b border-border">
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-start gap-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Shield className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center shadow-lg">
+              <Shield className="w-8 h-8 text-primary" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">

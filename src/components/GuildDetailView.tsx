@@ -1,32 +1,20 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { useRouter } from "next/navigation";
+import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { useAccount } from "wagmi";
-import {
-  ArrowLeft,
-  Loader2,
-  FileText,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Briefcase,
-  Users,
-  DollarSign,
-  Coins,
-  TrendingUp,
-  Award,
-  ThumbsUp,
-  ThumbsDown,
-  Lock,
-  Unlock,
-} from "lucide-react";
-import { LoadingState } from "./ui/LoadingState";
-import { Alert } from "./ui/Alert";
-import { Button } from "./ui/Button";
-import { Modal } from "./ui/Modal";
-import { Input } from "./ui/Input";
+import { FileText, Briefcase, Coins, Trophy, UserPlus } from "lucide-react";
+import { LoadingState } from "./ui/loadingstate";
+import { Alert } from "./ui/alert";
 import { expertApi } from "@/lib/api";
+import { GuildHeader } from "./guild/GuildHeader";
+import { GuildProposalsTab } from "./guild/GuildProposalsTab";
+import { GuildLeaderboardTab } from "./guild/GuildLeaderboardTab";
+import { GuildJobApplicationsTab } from "./guild/GuildJobApplicationsTab";
+import { GuildMembershipApplicationsTab } from "./guild/GuildMembershipApplicationsTab";
+import { GuildEarningsTab } from "./guild/GuildEarningsTab";
+import { StakeModal } from "./guild/StakeModal";
+import { ReviewGuildApplicationModal } from "./guild/ReviewGuildApplicationModal";
 
 interface Proposal {
   id: string;
@@ -85,6 +73,17 @@ interface GuildApplication {
   rejectionCount: number;
 }
 
+interface LeaderboardExpert {
+  id: string;
+  name: string;
+  role: "recruit" | "craftsman" | "master";
+  reputation: number;
+  totalReviews: number;
+  accuracy: number;
+  totalEarnings: number;
+  rank: number;
+}
+
 interface GuildDetail {
   id: string;
   name: string;
@@ -107,18 +106,21 @@ interface GuildDetailViewProps {
 }
 
 export function GuildDetailView({ guildId }: GuildDetailViewProps) {
-  const router = useRouter();
   const { address, isConnected } = useAccount();
   const [guild, setGuild] = useState<GuildDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "proposals" | "applications" | "guildApplications" | "earnings"
-  >("proposals");
+    "reviews" | "applications" | "membershipApplications" | "leaderboard" | "earnings"
+  >("reviews");
+
+  // Stake modal state
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [stakeAmount, setStakeAmount] = useState("");
   const [isStaking, setIsStaking] = useState(false);
+
+  // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedGuildApplication, setSelectedGuildApplication] =
     useState<GuildApplication | null>(null);
@@ -127,11 +129,24 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [reviewFeedback, setReviewFeedback] = useState("");
   const [isReviewing, setIsReviewing] = useState(false);
 
+  // Leaderboard state
+  const [leaderboardData, setLeaderboardData] = useState<{
+    topExperts: LeaderboardExpert[];
+    currentUser: LeaderboardExpert | null;
+  }>({ topExperts: [], currentUser: null });
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
+
   useEffect(() => {
     if (isConnected && address) {
       fetchGuildDetails();
     }
   }, [guildId, isConnected, address]);
+
+  useEffect(() => {
+    if (isConnected && address && activeTab === "leaderboard" && guild) {
+      fetchLeaderboard();
+    }
+  }, [activeTab, guildId, leaderboardPeriod, isConnected, address, guild]);
 
   const fetchGuildDetails = async () => {
     if (!address) return;
@@ -141,12 +156,87 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
     try {
       const result: any = await expertApi.getGuildDetails(guildId, address);
-      const data = result.data || result; // Handle both wrapped and unwrapped responses
+      const data = result.data || result;
       setGuild(data);
     } catch (err: any) {
       setError(err.message || "Failed to fetch guild details");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    if (!address) return;
+
+    try {
+      // Mock leaderboard data - replace with actual API call
+      const mockLeaderboard = {
+        topExperts: [
+          {
+            id: "1",
+            name: "Alex Morgan",
+            role: "master" as const,
+            reputation: 950,
+            totalReviews: 142,
+            accuracy: 94,
+            totalEarnings: 25800,
+            rank: 1,
+          },
+          {
+            id: "2",
+            name: "Sarah Chen",
+            role: "craftsman" as const,
+            reputation: 875,
+            totalReviews: 98,
+            accuracy: 92,
+            totalEarnings: 18500,
+            rank: 2,
+          },
+          {
+            id: "3",
+            name: "Marcus Johnson",
+            role: "craftsman" as const,
+            reputation: 820,
+            totalReviews: 87,
+            accuracy: 89,
+            totalEarnings: 16200,
+            rank: 3,
+          },
+          {
+            id: "4",
+            name: "Emily Rodriguez",
+            role: "craftsman" as const,
+            reputation: 785,
+            totalReviews: 76,
+            accuracy: 91,
+            totalEarnings: 14900,
+            rank: 4,
+          },
+          {
+            id: "5",
+            name: "David Kim",
+            role: "recruit" as const,
+            reputation: 720,
+            totalReviews: 65,
+            accuracy: 88,
+            totalEarnings: 12300,
+            rank: 5,
+          },
+        ],
+        currentUser: {
+          id: address,
+          name: "You",
+          role: guild?.expertRole as "recruit" | "craftsman" | "master",
+          reputation: guild?.reputation || 0,
+          totalReviews: 45,
+          accuracy: 87,
+          totalEarnings: guild?.earnings.totalEndorsementEarnings || 0,
+          rank: 8,
+        },
+      };
+      setLeaderboardData(mockLeaderboard);
+    } catch (err: any) {
+      console.error("Failed to fetch leaderboard:", err);
     }
   };
 
@@ -169,7 +259,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       setShowStakeModal(false);
       setSelectedProposal(null);
-      fetchGuildDetails(); // Refresh data
+      fetchGuildDetails();
     } catch (err: any) {
       setError(err.message || "Failed to stake on proposal");
     } finally {
@@ -186,7 +276,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         endorse,
       });
 
-      fetchGuildDetails(); // Refresh data
+      fetchGuildDetails();
     } catch (err: any) {
       setError(err.message || "Failed to endorse candidate");
     }
@@ -215,7 +305,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       setShowReviewModal(false);
       setSelectedGuildApplication(null);
-      fetchGuildDetails(); // Refresh data
+      fetchGuildDetails();
     } catch (err: any) {
       setError(err.message || "Failed to submit review");
     } finally {
@@ -237,102 +327,71 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push("/expert/dashboard")}
-                className="flex items-center text-muted-foreground hover:text-foreground transition-all mr-6"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Dashboard
-              </button>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">{guild.name}</h1>
-                <p className="text-xs text-muted-foreground">{guild.memberCount} members</p>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </nav>
+      <ExpertNavbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Guild Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Your Role</p>
-              <Award className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground capitalize">{guild.expertRole}</p>
-          </div>
+      <GuildHeader guild={guild} />
 
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Reputation</p>
-              <TrendingUp className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{guild.reputation}</p>
-          </div>
-
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Earnings</p>
-              <DollarSign className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              ${guild.earnings.totalEndorsementEarnings.toLocaleString()}
-            </p>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {/* Tabs */}
         <div className="bg-card rounded-xl shadow-sm border border-border mb-6">
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border overflow-x-auto">
             <button
-              onClick={() => setActiveTab("proposals")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
-                activeTab === "proposals"
+              onClick={() => setActiveTab("reviews")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "reviews"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <FileText className="w-4 h-4 inline mr-2" />
-              Proposals
+              Candidate Reviews
+              {guild && guild.proposals.pending.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                  {guild.proposals.pending.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("membershipApplications")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "membershipApplications"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <UserPlus className="w-4 h-4 inline mr-2" />
+              Membership Applications
+              {guild && guild.guildApplications && guild.guildApplications.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                  {guild.guildApplications.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "leaderboard"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Trophy className="w-4 h-4 inline mr-2" />
+              Leaderboard
             </button>
             <button
               onClick={() => setActiveTab("applications")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "applications"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Briefcase className="w-4 h-4 inline mr-2" />
-              Applications
-            </button>
-            <button
-              onClick={() => setActiveTab("guildApplications")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
-                activeTab === "guildApplications"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Users className="w-4 h-4 inline mr-2" />
-              Guild Proposals
-              {guild && guild.guildApplications && guild.guildApplications.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-violet-100 text-primary text-xs font-semibold rounded-full">
-                  {guild.guildApplications.length}
-                </span>
-              )}
+              Job Applications
             </button>
             <button
               onClick={() => setActiveTab("earnings")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "earnings"
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -344,640 +403,67 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           </div>
 
           <div className="p-6">
-            {/* Proposals Tab */}
-            {activeTab === "proposals" && (
-              <div className="space-y-6">
-                {/* Proposal Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <p className="text-2xl font-bold text-yellow-700">
-                      {guild.proposals.pending.length}
-                    </p>
-                    <p className="text-sm text-yellow-600 mt-1">Pending</p>
-                  </div>
-                  <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-2xl font-bold text-blue-700">
-                      {guild.proposals.ongoing.length}
-                    </p>
-                    <p className="text-sm text-blue-600 mt-1">Ongoing</p>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-2xl font-bold text-green-700">
-                      {guild.proposals.closed.length}
-                    </p>
-                    <p className="text-sm text-green-600 mt-1">Closed</p>
-                  </div>
-                </div>
-
-                {/* Pending Proposals */}
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Pending Proposals - Stake to Participate
-                  </h3>
-                  {guild.proposals.pending.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      No pending proposals at the moment
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {guild.proposals.pending.map((proposal) => (
-                        <div
-                          key={proposal.id}
-                          className="border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-foreground mb-1">
-                                {proposal.candidateName}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {proposal.candidateEmail}
-                              </p>
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <span className="flex items-center">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  {new Date(proposal.submittedAt).toLocaleDateString()}
-                                </span>
-                                <span className="flex items-center">
-                                  <Lock className="w-3 h-3 mr-1" />
-                                  Required: {proposal.requiredStake} tokens
-                                </span>
-                              </div>
-                            </div>
-                            {proposal.expertHasStaked ? (
-                              <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg border border-green-500/20">
-                                <Unlock className="w-4 h-4 mr-2" />
-                                <span className="text-sm font-medium">Staked</span>
-                              </div>
-                            ) : (
-                              <Button onClick={() => handleStakeOnProposal(proposal)}>
-                                <Lock className="w-4 h-4 mr-2" />
-                                Stake to Participate
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Ongoing Proposals */}
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Ongoing Proposals
-                  </h3>
-                  {guild.proposals.ongoing.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      No ongoing proposals
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {guild.proposals.ongoing.map((proposal) => (
-                        <div
-                          key={proposal.id}
-                          className="border border-blue-200 bg-blue-50 rounded-lg p-4"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-foreground mb-1">
-                                {proposal.candidateName}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {proposal.candidateEmail}
-                              </p>
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <span className="flex items-center">
-                                  <Users className="w-3 h-3 mr-1" />
-                                  {proposal.participantCount} participants
-                                </span>
-                                <span className="flex items-center text-green-600">
-                                  <ThumbsUp className="w-3 h-3 mr-1" />
-                                  {proposal.votesFor}
-                                </span>
-                                <span className="flex items-center text-destructive">
-                                  <ThumbsDown className="w-3 h-3 mr-1" />
-                                  {proposal.votesAgainst}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-xs text-blue-700 font-medium">
-                              Under Review
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+            {activeTab === "reviews" && (
+              <GuildProposalsTab
+                proposals={guild.proposals}
+                onStakeProposal={handleStakeOnProposal}
+              />
             )}
 
-            {/* Applications Tab */}
+            {activeTab === "leaderboard" && (
+              <GuildLeaderboardTab
+                leaderboardData={leaderboardData}
+                leaderboardPeriod={leaderboardPeriod}
+                onPeriodChange={setLeaderboardPeriod}
+              />
+            )}
+
             {activeTab === "applications" && (
-              <div className="space-y-4">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Active Job Applications
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Review candidates and endorse those you believe are a good fit
-                  </p>
-                </div>
-
-                {guild.applications.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-12">
-                    No applications to review at the moment
-                  </p>
-                ) : (
-                  guild.applications.map((application) => (
-                    <div
-                      key={application.id}
-                      className="border border-border rounded-lg p-6 hover:border-primary/50 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-foreground mb-1">
-                            {application.jobTitle}
-                          </h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {application.candidateName} • {application.candidateEmail}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                            <span>Applied: {new Date(application.appliedAt).toLocaleDateString()}</span>
-                            {!application.reviewedByRecruiter && (
-                              <span className="px-2 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 rounded-md border border-yellow-500/20">
-                                Awaiting Recruiter Review
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-primary mb-1">
-                            {application.matchScore}%
-                          </div>
-                          <p className="text-xs text-muted-foreground">Match Score</p>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-muted-foreground mb-4 pb-4 border-b border-border">
-                        {application.applicationSummary}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-muted-foreground">
-                          {application.endorsementCount} endorsement(s)
-                        </div>
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={() => handleEndorseCandidate(application.id, false)}
-                            variant="secondary"
-                          >
-                            <ThumbsDown className="w-4 h-4 mr-2" />
-                            Pass
-                          </Button>
-                          <Button onClick={() => handleEndorseCandidate(application.id, true)}>
-                            <ThumbsUp className="w-4 h-4 mr-2" />
-                            Endorse
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <GuildJobApplicationsTab
+                applications={guild.applications}
+                onEndorseCandidate={handleEndorseCandidate}
+              />
             )}
 
-            {/* Guild Proposals Tab - Layer 1: Expert proposals to join the guild */}
-            {activeTab === "guildApplications" && (
-              <div className="space-y-4">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Expert Proposals to Join Guild
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Review proposals from experts wanting to join {guild.name}. 1+ approval
-                    needed for auto-acceptance as &quot;Recruit&quot; member.
-                  </p>
-                </div>
-
-                {!guild.guildApplications || guild.guildApplications.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-12">
-                    No pending guild proposals at the moment
-                  </p>
-                ) : (
-                  (guild.guildApplications || []).map((application) => (
-                    <div
-                      key={application.id}
-                      className="border border-border rounded-lg p-6 hover:border-primary/50 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-foreground mb-1">
-                            {application.fullName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground mb-2">{application.email}</p>
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="px-3 py-1 bg-violet-100 text-primary text-xs font-semibold rounded-full">
-                              {application.expertiseLevel}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {application.yearsOfExperience} years experience
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground mb-2">Review Status</p>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center text-green-600">
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              <span className="text-sm font-semibold">
-                                {application.approvalCount}
-                              </span>
-                            </div>
-                            <div className="flex items-center text-destructive">
-                              <XCircle className="w-4 h-4 mr-1" />
-                              <span className="text-sm font-semibold">
-                                {application.rejectionCount}
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              ({application.reviewCount} total)
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Current Position */}
-                      <div className="mb-4 pb-4 border-b border-border">
-                        <p className="text-xs text-muted-foreground mb-1">Current Position</p>
-                        <p className="text-sm font-medium text-foreground">
-                          {application.currentTitle} at {application.currentCompany}
-                        </p>
-                      </div>
-
-                      {/* Bio */}
-                      <div className="mb-4 pb-4 border-b border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Bio</p>
-                        <p className="text-sm text-card-foreground leading-relaxed">{application.bio}</p>
-                      </div>
-
-                      {/* Motivation */}
-                      <div className="mb-4 pb-4 border-b border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Motivation to Join</p>
-                        <p className="text-sm text-card-foreground leading-relaxed">
-                          {application.motivation}
-                        </p>
-                      </div>
-
-                      {/* Expertise Areas */}
-                      <div className="mb-4 pb-4 border-b border-border">
-                        <p className="text-xs text-muted-foreground mb-2">Expertise Areas</p>
-                        <div className="flex flex-wrap gap-2">
-                          {(application.expertiseAreas || []).map((area, idx) => (
-                            <span
-                              key={idx}
-                              className="px-3 py-1 bg-muted text-card-foreground text-xs rounded-full"
-                            >
-                              {area}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Links */}
-                      <div className="mb-4">
-                        <div className="flex gap-4 text-sm">
-                          <a
-                            href={application.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:text-primary underline"
-                          >
-                            LinkedIn Profile
-                          </a>
-                          {application.portfolioUrl && (
-                            <a
-                              href={application.portfolioUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:text-primary underline"
-                            >
-                              Portfolio
-                            </a>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Applied: {new Date(application.appliedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-
-                      {/* Review Button */}
-                      <Button
-                        onClick={() => handleReviewApplication(application)}
-                        className="w-full"
-                      >
-                        <Users className="w-4 h-4 mr-2" />
-                        Review Application
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </div>
+            {activeTab === "membershipApplications" && (
+              <GuildMembershipApplicationsTab
+                guildName={guild.name}
+                guildApplications={guild.guildApplications}
+                onReviewApplication={handleReviewApplication}
+              />
             )}
 
-            {/* Earnings Tab */}
             {activeTab === "earnings" && (
-              <div className="space-y-6">
-                {/* Earnings Summary */}
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-xl p-6 border border-violet-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <Coins className="w-10 h-10 text-primary" />
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Points Earned</p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {guild.earnings.totalPoints.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      From proposal participation
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <DollarSign className="w-10 h-10 text-green-600" />
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>
-                    <p className="text-3xl font-bold text-foreground">
-                      ${guild.earnings.totalEndorsementEarnings.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      From successful endorsements
-                    </p>
-                  </div>
-                </div>
-
-                {/* Recent Earnings */}
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">
-                    Recent Earnings History
-                  </h3>
-                  {guild.earnings.recentEarnings.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-12">
-                      No earnings yet. Start reviewing proposals and endorsing candidates!
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {guild.earnings.recentEarnings.map((earning) => (
-                        <div
-                          key={earning.id}
-                          className="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
-                        >
-                          <div className="flex items-center">
-                            {earning.type === "proposal" ? (
-                              <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center mr-4">
-                                <FileText className="w-5 h-5 text-primary" />
-                              </div>
-                            ) : (
-                              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                                <Award className="w-5 h-5 text-green-600" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-medium text-foreground">
-                                {earning.description}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(earning.date).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-semibold text-green-600">
-                              {earning.type === "proposal"
-                                ? `+${earning.amount} pts`
-                                : `+$${earning.amount}`}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <GuildEarningsTab earnings={guild.earnings} />
             )}
           </div>
         </div>
       </div>
 
-      {/* Stake Modal */}
-      <Modal
+      {/* Modals */}
+      <StakeModal
         isOpen={showStakeModal}
         onClose={() => setShowStakeModal(false)}
-        title="Stake on Proposal"
-      >
-        {selectedProposal && (
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground mb-1">Candidate</p>
-              <p className="font-semibold text-foreground">{selectedProposal.candidateName}</p>
-            </div>
+        proposal={selectedProposal}
+        stakeAmount={stakeAmount}
+        onStakeAmountChange={setStakeAmount}
+        onConfirmStake={handleConfirmStake}
+        isStaking={isStaking}
+      />
 
-            <Input
-              label="Stake Amount (tokens)"
-              type="number"
-              value={stakeAmount}
-              onChange={(e) => setStakeAmount(e.target.value)}
-              min={selectedProposal.requiredStake}
-              required
-            />
-
-            <Alert variant="info">
-              By staking, you&apos;ll be able to participate in reviewing this proposal. Your stake
-              will be returned after the review, with rewards if you vote with the majority.
-            </Alert>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowStakeModal(false)}
-                variant="secondary"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmStake}
-                disabled={isStaking}
-                className="flex-1"
-              >
-                {isStaking ? (
-                  <>
-                    <Loader2 className="animate-spin mr-2 w-4 h-4" />
-                    Staking...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 w-4 h-4" />
-                    Confirm Stake
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Review Modal */}
-      <Modal
+      <ReviewGuildApplicationModal
         isOpen={showReviewModal}
         onClose={() => setShowReviewModal(false)}
-        title="Review Expert Application"
-      >
-        {selectedGuildApplication && (
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground mb-1">Applicant</p>
-              <p className="font-semibold text-foreground">
-                {selectedGuildApplication.fullName}
-              </p>
-              <p className="text-xs text-muted-foreground">{selectedGuildApplication.email}</p>
-            </div>
-
-            {/* Vote Selection */}
-            <div>
-              <label className="block text-sm font-medium text-card-foreground mb-2">
-                Your Vote
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setReviewVote("approve")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    reviewVote === "approve"
-                      ? "border-green-500 bg-green-50"
-                      : "border-border hover:border-green-300"
-                  }`}
-                >
-                  <ThumbsUp
-                    className={`w-6 h-6 mx-auto mb-2 ${
-                      reviewVote === "approve" ? "text-green-600" : "text-muted-foreground"
-                    }`}
-                  />
-                  <p
-                    className={`text-sm font-medium ${
-                      reviewVote === "approve" ? "text-green-700" : "text-muted-foreground"
-                    }`}
-                  >
-                    Approve
-                  </p>
-                </button>
-                <button
-                  onClick={() => setReviewVote("reject")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    reviewVote === "reject"
-                      ? "border-red-500 bg-destructive/10"
-                      : "border-border hover:border-red-300"
-                  }`}
-                >
-                  <ThumbsDown
-                    className={`w-6 h-6 mx-auto mb-2 ${
-                      reviewVote === "reject" ? "text-destructive" : "text-muted-foreground"
-                    }`}
-                  />
-                  <p
-                    className={`text-sm font-medium ${
-                      reviewVote === "reject" ? "text-red-700" : "text-muted-foreground"
-                    }`}
-                  >
-                    Reject
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            {/* Confidence Level */}
-            <div>
-              <label className="block text-sm font-medium text-card-foreground mb-2">
-                Confidence Level (1-5)
-              </label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setReviewConfidence(level.toString())}
-                    className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-                      reviewConfidence === level.toString()
-                        ? "border-violet-500 bg-primary/10 text-primary font-semibold"
-                        : "border-border text-muted-foreground hover:border-primary/50"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                1 = Low confidence, 5 = Very high confidence
-              </p>
-            </div>
-
-            {/* Feedback */}
-            <div>
-              <label className="block text-sm font-medium text-card-foreground mb-2">
-                Feedback (Optional)
-              </label>
-              <textarea
-                value={reviewFeedback}
-                onChange={(e) => setReviewFeedback(e.target.value)}
-                placeholder="Share your thoughts on this application..."
-                className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                rows={4}
-                maxLength={1000}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {reviewFeedback.length}/1000 characters
-              </p>
-            </div>
-
-            <Alert variant="info">
-              Your review helps maintain guild quality. Applications with 2+ approvals are
-              automatically accepted as &quot;recruit&quot; members.
-            </Alert>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowReviewModal(false)}
-                variant="secondary"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmitReview}
-                disabled={isReviewing}
-                className="flex-1"
-              >
-                {isReviewing ? (
-                  <>
-                    <Loader2 className="animate-spin mr-2 w-4 h-4" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    {reviewVote === "approve" ? (
-                      <CheckCircle className="mr-2 w-4 h-4" />
-                    ) : (
-                      <XCircle className="mr-2 w-4 h-4" />
-                    )}
-                    Submit Review
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        application={selectedGuildApplication}
+        reviewVote={reviewVote}
+        onVoteChange={setReviewVote}
+        reviewConfidence={reviewConfidence}
+        onConfidenceChange={setReviewConfidence}
+        reviewFeedback={reviewFeedback}
+        onFeedbackChange={setReviewFeedback}
+        onSubmitReview={handleSubmitReview}
+        isReviewing={isReviewing}
+      />
     </div>
   );
 }

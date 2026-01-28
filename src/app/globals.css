@@ -1,114 +1,148 @@
 @import "tailwindcss";
 
 :root {
-    /* Background colors */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Background colors - Warm cream with dark gray text */
+    --background: 30 40% 98%;
+    --foreground: 0 0% 17%;
 
-    /* Card colors */
+    /* Card colors - Pure white cards on warm background */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 0 0% 17%;
 
     /* Popover colors */
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 0 0% 17%;
 
-    /* Primary brand colors */
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary brand colors - Vibrant orange */
+    --primary: 24 100% 51%;  /* #ff6a00 - exact brand match */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary colors */
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    /* Secondary colors - Light cream with dark text */
+    --secondary: 30 100% 97%;
+    --secondary-foreground: 0 0% 17%;
 
-    /* Muted colors */
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    /* Muted colors - Warm gray with medium text */
+    --muted: 30 20% 95%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Accent colors */
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    /* Accent colors - Soft orange */
+    --accent: 22 83% 58%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive/Error colors */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border colors */
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 262.1 83.3% 57.8%;
+    /* Border colors - Warm neutral borders */
+    --border: 30 10% 90%;
+    --input: 30 10% 90%;
+    --ring: 24 100% 50%;
 
     /* Additional UI colors */
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
+    --success: 158 64% 42%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --info: 221.2 83.2% 53.3%;
-    --info-foreground: 210 40% 98%;
+    --warning-foreground: 0 0% 100%;
+    --info: 24 100% 50%;
+    --info-foreground: 0 0% 100%;
 
-    /* Chart colors */
-    --chart-1: 262.1 83.3% 57.8%;
-    --chart-2: 221.2 83.2% 53.3%;
-    --chart-3: 142.1 76.2% 36.3%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84.2% 60.2%;
+    /* Gradient button text - dark for contrast on orange */
+    --gradient-button-text: 0 0% 4%;
 
-    /* Radius */
-    --radius: 0.5rem;
+    /* Chart colors - Orange spectrum */
+    --chart-1: 24 100% 50%;
+    --chart-2: 22 83% 58%;
+    --chart-3: 27 96% 61%;
+    --chart-4: 20 90% 48%;
+    --chart-5: 30 100% 70%;
+
+    /* Radius - Slightly larger for modern feel */
+    --radius: 0.75rem;
+
+    /* Brand gray scale - Medium to light grays */
+    --gray-medium: 0 0% 40%;          /* #666 */
+    --gray-light: 0 0% 55%;           /* #8c8c8c */
+    --gray-lighter: 0 0% 90%;         /* #e6e6e6 */
+    --gray-lightest: 0 0% 97%;        /* #f7f7f7 */
+
+    /* Accent neutrals - Tan and beige */
+    --tan-accent: 30 8% 91%;          /* #e7e6e4 */
+    --beige-light: 30 14% 95%;        /* #f3f2f1 */
+
+    /* Secondary oranges */
+    --orange-secondary: 24 85% 60%;   /* #ed8133 */
+    --orange-light: 24 100% 72%;      /* #ffac70 */
 }
 
 .dark {
-    /* Background colors - Rich dark slate with blue tint */
-    --background: 215 25% 10%;
-    --foreground: 210 40% 98%;
+    /* Background colors - Near-black pure dark */
+    --background: 0 0% 0.4%;  /* #010101 - near-black */
+    --foreground: 30 10% 95%;
 
-    /* Card colors - Elevated slate surface */
-    --card: 215 22% 14%;
-    --card-foreground: 210 40% 98%;
+    /* Card colors - Pure dark gray */
+    --card: 0 0% 8%;  /* Pure dark gray */
+    --card-foreground: 30 10% 95%;
 
     /* Popover colors */
-    --popover: 215 22% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 24 12% 15%;
+    --popover-foreground: 30 10% 95%;
 
-    /* Primary brand colors - Vibrant blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary brand colors - Lighter orange for dark mode */
+    --primary: 24 100% 60%;
+    --primary-foreground: 24 15% 10%;
 
-    /* Secondary colors - Medium slate */
-    --secondary: 215 20% 18%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary colors - Dark warm surface */
+    --secondary: 24 12% 18%;
+    --secondary-foreground: 30 10% 95%;
 
-    /* Muted colors - Subtle slate background */
-    --muted: 215 18% 16%;
-    --muted-foreground: 215 16% 70%;
+    /* Muted colors */
+    --muted: 24 10% 20%;
+    --muted-foreground: 0 0% 55%;
 
-    /* Accent colors */
-    --accent: 215 20% 18%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent colors - Brighter orange for contrast */
+    --accent: 22 83% 65%;
+    --accent-foreground: 24 15% 10%;
 
-    /* Destructive/Error colors */
-    --destructive: 0 63% 55%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive/Error colors - Muted red */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Border colors - Visible slate borders */
-    --border: 215 20% 22%;
-    --input: 215 20% 22%;
-    --ring: 217 91% 60%;
+    /* Border colors - Warm dark borders */
+    --border: 24 10% 25%;
+    --input: 24 10% 25%;
+    --ring: 24 100% 60%;
 
-    /* Additional UI colors */
-    --success: 142 71% 55%;
-    --success-foreground: 144 80% 10%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --info: 217 91% 65%;
-    --info-foreground: 215 25% 10%;
+    /* Additional UI colors - Adjusted for dark mode */
+    --success: 158 64% 50%;
+    --success-foreground: 24 15% 10%;
+    --warning: 38 80% 60%;
+    --warning-foreground: 24 15% 10%;
+    --info: 24 100% 60%;
+    --info-foreground: 24 15% 10%;
 
-    /* Chart colors - Vibrant for dark mode */
-    --chart-1: 220 70% 55%;
-    --chart-2: 160 60% 50%;
-    --chart-3: 30 80% 60%;
-    --chart-4: 280 65% 65%;
-    --chart-5: 340 75% 60%;
+    /* Chart colors - Orange spectrum for dark mode */
+    --chart-1: 24 100% 60%;
+    --chart-2: 22 83% 65%;
+    --chart-3: 27 96% 68%;
+    --chart-4: 20 90% 55%;
+    --chart-5: 30 100% 75%;
+
+    /* Gradient button text stays dark even in dark mode */
+    --gradient-button-text: 0 0% 4%;
+
+    /* Dark mode gray adjustments (inverted) */
+    --gray-medium: 0 0% 55%;
+    --gray-light: 0 0% 40%;
+    --gray-lighter: 0 0% 20%;
+    --gray-lightest: 0 0% 12%;
+
+    /* Accent neutrals - darker versions */
+    --tan-accent: 30 8% 18%;
+    --beige-light: 30 14% 15%;
+
+    /* Secondary oranges - brighter for contrast */
+    --orange-secondary: 24 85% 65%;
+    --orange-light: 24 100% 75%;
 }
 
 @theme inline {
@@ -142,7 +176,18 @@
     --color-chart-3: hsl(var(--chart-3));
     --color-chart-4: hsl(var(--chart-4));
     --color-chart-5: hsl(var(--chart-5));
-    --font-sans: var(--font-geist-sans);
+    --color-gradient-button-text: hsl(var(--gradient-button-text));
+    --color-gray-medium: hsl(var(--gray-medium));
+    --color-gray-light: hsl(var(--gray-light));
+    --color-gray-lighter: hsl(var(--gray-lighter));
+    --color-gray-lightest: hsl(var(--gray-lightest));
+    --color-tan-accent: hsl(var(--tan-accent));
+    --color-beige-light: hsl(var(--beige-light));
+    --color-orange-secondary: hsl(var(--orange-secondary));
+    --color-orange-light: hsl(var(--orange-light));
+    --font-sans: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
+    --font-display: var(--font-display), 'Bricolage Grotesque', 'Inter', sans-serif;
     --font-mono: var(--font-geist-mono);
 }
 
@@ -153,5 +198,5 @@
 body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }

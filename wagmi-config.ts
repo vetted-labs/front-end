@@ -11,7 +11,7 @@ const connectors = [
 ];
 
 export const config = createConfig({
-  chains: [mainnet, sepolia, polygon, arbitrum],
+  chains: [sepolia, mainnet, polygon, arbitrum], // Sepolia first as default since contracts are deployed there
   connectors,
   transports: {
     [mainnet.id]: http(),

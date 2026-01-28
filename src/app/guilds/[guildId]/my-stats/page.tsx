@@ -145,7 +145,7 @@ export default function MyGuildStatsPage() {
       case "master":
         return "bg-gradient-to-r from-amber-400 to-orange-500 text-white";
       case "craftsman":
-        return "bg-gradient-to-r from-violet-500 to-indigo-600 text-white";
+        return "bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900";
       case "recruit":
         return "bg-gradient-to-r from-blue-400 to-cyan-500 text-white";
       case "candidate":
@@ -200,7 +200,7 @@ export default function MyGuildStatsPage() {
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Back to Guild
               </button>
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </div>
 
@@ -211,7 +211,7 @@ export default function MyGuildStatsPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <div className="p-2 bg-violet-100 rounded-lg">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -257,12 +257,12 @@ export default function MyGuildStatsPage() {
       </nav>
 
       {/* Hero Section - Personal Overview */}
-      <div className="bg-gradient-to-r from-primary/10 to-indigo-600/10 border-b border-border">
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <User className="w-10 h-10 text-white" />
+              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
+                <User className="w-10 h-10 text-primary" />
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-foreground mb-2">My Guild Statistics</h1>
@@ -486,7 +486,7 @@ export default function MyGuildStatsPage() {
           <div className="space-y-6">
             {/* Role Progress */}
             {stats.nextRole && (
-              <div className="bg-gradient-to-br from-primary/10 to-indigo-600/10 rounded-xl p-6 border-2 border-primary/20">
+              <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-6 border-2 border-primary/20">
                 <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Role Progression
@@ -499,7 +499,7 @@ export default function MyGuildStatsPage() {
                     </div>
                     <div className="w-full bg-muted rounded-full h-3">
                       <div
-                        className="bg-gradient-to-r from-primary to-indigo-600 h-3 rounded-full transition-all"
+                        className="bg-gradient-to-r from-primary to-accent h-3 rounded-full transition-all"
                         style={{ width: `${stats.progressToNextRole || 0}%` }}
                       />
                     </div>
@@ -528,8 +528,8 @@ export default function MyGuildStatsPage() {
                 Contribution Score
               </h3>
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary to-indigo-600 mb-3">
-                  <span className="text-3xl font-bold text-white">{stats.contributionScore || 0}</span>
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 mb-3">
+                  <span className="text-3xl font-bold text-primary">{stats.contributionScore || 0}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Based on reviews, endorsements, and activity

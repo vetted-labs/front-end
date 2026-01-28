@@ -21,9 +21,11 @@ import {
   Star,
   Shield,
   Wallet,
+  Award,
+  Swords,
 } from "lucide-react";
 import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
-import { Modal } from "@/components/ui/Modal";
+import { Modal } from "@/components/ui/modal";
 
 interface Job {
   id: string;
@@ -86,7 +88,7 @@ const getWalletInfo = (walletName: string) => {
 
   return (
     wallets[walletName] || {
-      icon: <Wallet className="w-6 h-6 text-violet-600" />,
+      icon: <Wallet className="w-6 h-6 text-primary" />,
       description: "Connect with your wallet",
     }
   );
@@ -106,25 +108,33 @@ export default function JobsListingPage() {
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>(
     [],
   );
-  const [showFilters, setShowFilters] = useState(true);
   const [candidateEmail, setCandidateEmail] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const guilds = [
-    "Engineering Guild",
-    "Product Guild",
-    "Design Guild",
-    "Marketing Guild",
-    "Operations Guild",
-    "Sales Guild",
-  ];
+  const JOBS_PER_PAGE = 5;
+
+  // Get unique guilds from actual jobs data
+  const allGuilds = Array.from(
+    new Set(
+      jobs
+        .map((job) => job.guild?.replace(/ Guild$/i, ''))
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const visibleGuilds = allGuilds.slice(0, 6);
 
   const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
-  const locationTypes = ["remote", "onsite", "hybrid"];
+  const locationTypes = ["Remote", "Onsite", "Hybrid"];
+
+  const [locationQuery, setLocationQuery] = useState("");
+  const [showGuildModal, setShowGuildModal] = useState(false);
+  const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -226,13 +236,32 @@ export default function JobsListingPage() {
           (job.title && job.title.toLowerCase().includes(query)) ||
           (job.description && job.description.toLowerCase().includes(query)) ||
           (job.guild && job.guild.toLowerCase().includes(query)) ||
-          (job.department && job.department.toLowerCase().includes(query)),
+          (job.department && job.department.toLowerCase().includes(query)) ||
+          (job.companyName && job.companyName.toLowerCase().includes(query)),
+      );
+    }
+
+    // Filter by location
+    if (locationQuery) {
+      const query = locationQuery.toLowerCase();
+      filtered = filtered.filter(
+        (job) =>
+          (job.location && job.location.toLowerCase().includes(query)) ||
+          (job.locationType && job.locationType.toLowerCase().includes(query)),
       );
     }
 
     // Filter by guilds
     if (selectedGuilds.length > 0) {
-      filtered = filtered.filter((job) => job.guild && selectedGuilds.includes(job.guild));
+      filtered = filtered.filter((job) => {
+        if (!job.guild) return false;
+        // Match guild name with or without " Guild" suffix
+        const jobGuild = job.guild.replace(/ Guild$/i, '');
+        return selectedGuilds.some(selectedGuild => {
+          const cleanSelected = selectedGuild.replace(/ Guild$/i, '');
+          return jobGuild.toLowerCase() === cleanSelected.toLowerCase();
+        });
+      });
     }
 
     // Filter by job types
@@ -240,15 +269,18 @@ export default function JobsListingPage() {
       filtered = filtered.filter((job) => job.type && selectedJobTypes.includes(job.type));
     }
 
-    // Filter by location types
+    // Filter by location types (case-insensitive)
     if (selectedLocationTypes.length > 0) {
       filtered = filtered.filter((job) =>
-        job.locationType && selectedLocationTypes.includes(job.locationType),
+        job.locationType && selectedLocationTypes.some(
+          type => type.toLowerCase() === job.locationType.toLowerCase()
+        ),
       );
     }
 
     setFilteredJobs(filtered);
-  }, [searchQuery, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchQuery, locationQuery, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
 
   const toggleFilter = (
     filterArray: string[],
@@ -267,6 +299,7 @@ export default function JobsListingPage() {
     setSelectedJobTypes([]);
     setSelectedLocationTypes([]);
     setSearchQuery("");
+    setLocationQuery("");
   };
 
   const activeFilterCount =
@@ -274,19 +307,92 @@ export default function JobsListingPage() {
     selectedJobTypes.length +
     selectedLocationTypes.length;
 
+  const toggleGuild = (guild: string) => {
+    if (selectedGuilds.includes(guild)) {
+      setSelectedGuilds(selectedGuilds.filter((g) => g !== guild));
+    } else {
+      setSelectedGuilds([...selectedGuilds, guild]);
+    }
+  };
+
+  const toggleJobType = (type: string) => {
+    if (selectedJobTypes.includes(type)) {
+      setSelectedJobTypes(selectedJobTypes.filter((t) => t !== type));
+    } else {
+      setSelectedJobTypes([...selectedJobTypes, type]);
+    }
+  };
+
+  const toggleLocationType = (type: string) => {
+    if (selectedLocationTypes.includes(type)) {
+      setSelectedLocationTypes(selectedLocationTypes.filter((t) => t !== type));
+    } else {
+      setSelectedLocationTypes([...selectedLocationTypes, type]);
+    }
+  };
+
+  const selectAllGuilds = () => {
+    setSelectedGuilds([...allGuilds]);
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredJobs.length / JOBS_PER_PAGE);
+  const startIndex = (currentPage - 1) * JOBS_PER_PAGE;
+  const endIndex = startIndex + JOBS_PER_PAGE;
+  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation */}
       <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center space-x-2"
-            >
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-            </button>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center space-x-2"
+              >
+                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+                <span className="text-xl font-bold text-foreground">Vetted</span>
+              </button>
+
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center space-x-1">
+                <button
+                  onClick={() => router.push("/browse/jobs")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary transition-all"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Find Jobs
+                </button>
+                <button
+                  onClick={() => router.push("/expert/apply")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Award className="w-4 h-4" />
+                  Start Vetting
+                </button>
+                <button
+                  onClick={() => router.push("/auth/signup?type=company")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Start Hiring
+                </button>
+                <button
+                  onClick={() => router.push("/guilds")}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Swords className="w-4 h-4" />
+                  Guilds
+                </button>
+              </div>
+            </div>
 
             {/* User Account Menu */}
             <div className="flex items-center gap-3">
@@ -297,7 +403,7 @@ export default function JobsListingPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <div className="p-2 bg-violet-100 rounded-lg">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -333,7 +439,7 @@ export default function JobsListingPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-lg hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
@@ -343,10 +449,10 @@ export default function JobsListingPage() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2 font-display">
             Find Your Next Opportunity
           </h1>
           <p className="text-muted-foreground">
@@ -354,305 +460,262 @@ export default function JobsListingPage() {
           </p>
         </div>
 
-        {/* Search Bar */}
+        {/* Two-Column Search Bar */}
         <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search jobs by title, description, or guild..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Role/Keywords Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Role, company, or keywords"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            {/* Location Search */}
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Where?"
+                value={locationQuery}
+                onChange={(e) => setLocationQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-6">
-          {/* Filters Sidebar */}
-          <div
-            className={`${showFilters ? "w-72" : "w-0"} transition-all duration-300 flex-shrink-0`}
-          >
-            {showFilters && (
-              <div className="bg-card rounded-xl shadow-sm p-6 sticky top-24">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <span className="px-2 py-0.5 bg-violet-100 text-primary rounded-full text-xs">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </h3>
-                  {activeFilterCount > 0 && (
-                    <button
-                      onClick={clearAllFilters}
-                      className="text-sm text-primary hover:text-primary"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-
-                {/* Guild Filter */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
-                    Guilds
-                  </h4>
-                  <div className="space-y-2">
-                    {guilds.map((guild) => (
-                      <label
-                        key={guild}
-                        className="flex items-center gap-2 cursor-pointer group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedGuilds.includes(guild)}
-                          onChange={() =>
-                            toggleFilter(
-                              selectedGuilds,
-                              setSelectedGuilds,
-                              guild,
-                            )
-                          }
-                          className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                        />
-                        <span className="text-sm text-card-foreground group-hover:text-foreground">
-                          {guild}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Job Type Filter */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
-                    Job Type
-                  </h4>
-                  <div className="space-y-2">
-                    {jobTypes.map((type) => (
-                      <label
-                        key={type}
-                        className="flex items-center gap-2 cursor-pointer group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedJobTypes.includes(type)}
-                          onChange={() =>
-                            toggleFilter(
-                              selectedJobTypes,
-                              setSelectedJobTypes,
-                              type,
-                            )
-                          }
-                          className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                        />
-                        <span className="text-sm text-card-foreground group-hover:text-foreground">
-                          {type}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Location Type Filter */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
-                    Location Type
-                  </h4>
-                  <div className="space-y-2">
-                    {locationTypes.map((type) => (
-                      <label
-                        key={type}
-                        className="flex items-center gap-2 cursor-pointer group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedLocationTypes.includes(type)}
-                          onChange={() =>
-                            toggleFilter(
-                              selectedLocationTypes,
-                              setSelectedLocationTypes,
-                              type,
-                            )
-                          }
-                          className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
-                        />
-                        <span className="text-sm text-card-foreground group-hover:text-foreground capitalize">
-                          {type}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Jobs List */}
-          <div className="flex-1">
-            {/* Toggle Filters Button (Mobile) */}
+        {/* Guild Filter Chips */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 items-center">
+            {visibleGuilds.map((guild) => (
+              <button
+                key={guild}
+                onClick={() => toggleGuild(guild)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedGuilds.includes(guild)
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                {guild}
+              </button>
+            ))}
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="mb-4 md:hidden flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg"
+              onClick={() => setShowAllGuildsModal(true)}
+              className="px-4 py-2 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-all flex items-center gap-1"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? "Hide" : "Show"} Filters
+              Filter
             </button>
+            {(selectedGuilds.length > 0 || selectedJobTypes.length > 0 || selectedLocationTypes.length > 0) && (
+              <button
+                onClick={() => {
+                  setSelectedGuilds([]);
+                  setSelectedJobTypes([]);
+                  setSelectedLocationTypes([]);
+                }}
+                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-destructive transition-all flex items-center gap-1"
+              >
+                <X className="w-4 h-4" />
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
 
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading jobs...</p>
-              </div>
-            ) : filteredJobs.length > 0 ? (
-              <div className="space-y-4">
-                {filteredJobs.map((job) => (
+        {/* Jobs List - Full Width */}
+        <div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading jobs...</p>
+            </div>
+          ) : filteredJobs.length > 0 ? (
+            <>
+              <div className="space-y-3">
+                {currentJobs.map((job) => (
                   <div
                     key={job.id}
                     onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                    className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border border-border hover:border-primary/50"
+                    className="bg-card rounded-lg p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-border hover:border-primary/30 group relative"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-xl font-semibold text-foreground hover:text-primary transition-colors">
-                            {job.title}
-                          </h3>
-                          {isAuthenticated && appliedJobIds.has(job.id) && (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Applied
-                            </span>
-                          )}
+                    {/* Posted Date - Top Right Corner */}
+                    <div className="absolute top-4 right-5 text-xs text-muted-foreground">
+                      {getTimeAgo(job.createdAt)}
+                    </div>
+
+                    <div className="flex gap-5">
+                      {/* Company Logo - Left Side */}
+                      <div className="flex-shrink-0">
+                        {job.companyLogo ? (
+                          <img
+                            src={getAssetUrl(job.companyLogo)}
+                            alt={job.companyName || "Company"}
+                            className="w-16 h-16 rounded-lg object-cover border border-border"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
+                        >
+                          <Building2 className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+
+                      {/* Job Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Job Title and Featured Badge */}
+                        <div className="flex items-start gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                {job.title}
+                              </h3>
+                              {job.featured && (
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded text-xs font-bold">
+                                  <Star className="w-3 h-3 fill-white" />
+                                  FEATURED
+                                </span>
+                              )}
+                              {isAuthenticated && appliedJobIds.has(job.id) && (
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Applied
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Company & Location */}
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
+                        {/* Company Name and Location on same line */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mb-3">
                           {job.companyName && (
-                            <span className="flex items-center gap-1.5 font-medium">
-                              <Building2 className="w-4 h-4" />
+                            <span className="font-medium text-foreground">
                               {job.companyName}
                             </span>
                           )}
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="w-4 h-4" />
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5" />
                             {job.location}
+                            {job.locationType && job.locationType.toLowerCase() !== job.location.toLowerCase() && (
+                              <span className="capitalize"> • {job.locationType}</span>
+                            )}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <Clock className="w-4 h-4" />
-                            {getTimeAgo(job.createdAt)}
-                          </span>
-                          {job.featured && (
-                            <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full text-xs font-bold">
-                              <Star className="w-3 h-3 fill-white" />
-                              FEATURED
-                            </span>
-                          )}
                         </div>
 
-                        {/* Job Details */}
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                        {/* Tags: Guild, Job Type, Salary */}
+                        <div className="flex flex-wrap items-center gap-2">
                           {job.guild && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Clean guild name by removing " Guild" suffix
                                 const cleanGuildName = job.guild.replace(/ Guild$/i, '');
                                 router.push(`/guilds/${cleanGuildName}`);
                               }}
-                              className="px-2.5 py-1 bg-violet-50 text-primary border border-violet-200 rounded-full text-xs font-semibold hover:bg-violet-100 transition-colors flex items-center gap-1"
+                              className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded text-xs font-medium hover:bg-primary/20 transition-colors"
                             >
-                              <Shield className="w-3 h-3" />
                               {job.guild}
                             </button>
                           )}
-                          {job.locationType && (
-                            <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium capitalize">
-                              {job.locationType}
-                            </span>
-                          )}
-                          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                          <span className="px-2.5 py-1 bg-muted text-card-foreground rounded text-xs font-medium">
                             {job.type}
                           </span>
-                          {job.experienceLevel && (
-                            <span className="px-2.5 py-1 bg-muted text-card-foreground rounded-full text-xs font-medium capitalize">
-                              {job.experienceLevel}
+                          {job.salary.min && job.salary.max && (
+                            <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">
+                              ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
                             </span>
                           )}
-                          {job.salary.min && job.salary.max && (
-                            <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                              <DollarSign className="w-3.5 h-3.5" />
-                              {job.salary.min / 1000}k - {job.salary.max / 1000}k {job.salary.currency}
+                          {job.experienceLevel && (
+                            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium capitalize">
+                              {job.experienceLevel}
                             </span>
                           )}
                         </div>
 
                         {/* Skills */}
                         {job.skills && job.skills.length > 0 && (
-                          <div className="border-t border-border pt-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-semibold text-card-foreground uppercase tracking-wide">
-                                Skills Required
-                              </span>
-                            </div>
+                          <div className="mt-3 pt-3 border-t border-border">
                             <div className="flex flex-wrap gap-1.5">
-                              {job.skills.slice(0, 6).map((skill, index) => (
+                              {job.skills.slice(0, 5).map((skill, index) => (
                                 <span
                                   key={index}
-                                  className="px-2.5 py-1 bg-muted text-card-foreground rounded-md text-xs font-medium"
+                                  className="px-2 py-0.5 bg-muted/50 text-card-foreground rounded text-xs"
                                 >
                                   {skill}
                                 </span>
                               ))}
-                              {job.skills.length > 6 && (
-                                <span className="px-2.5 py-1 text-muted-foreground text-xs font-medium">
-                                  +{job.skills.length - 6} more
+                              {job.skills.length > 5 && (
+                                <span className="px-2 py-0.5 text-muted-foreground text-xs">
+                                  +{job.skills.length - 5} more
                                 </span>
                               )}
                             </div>
                           </div>
                         )}
                       </div>
-
-                      {job.companyLogo && (
-                        <div className="flex items-center justify-center">
-                          <img
-                            src={getAssetUrl(job.companyLogo)}
-                            alt={job.companyName}
-                            className="w-20 h-20 rounded-lg object-cover border border-border shadow-sm flex-shrink-0"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12 bg-card rounded-xl">
-                <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  No jobs found
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Try adjusting your filters or search query
-                </p>
-                {activeFilterCount > 0 && (
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-8">
                   <button
-                    onClick={clearAllFilters}
-                    className="text-primary hover:text-primary font-medium"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Clear all filters
+                    <ArrowLeft className="w-4 h-4 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Previous</span>
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span className="text-sm font-medium text-foreground">Next</span>
+                    <ArrowLeft className="w-4 h-4 text-foreground rotate-180" />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12 bg-card rounded-xl">
+              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No jobs found
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your filters or search query
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-primary hover:text-primary font-medium"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -681,6 +744,132 @@ export default function JobsListingPage() {
             </button>
           );
         })}
+      </Modal>
+
+      {/* Guild Selection Modal (Other button) */}
+      <Modal
+        isOpen={showGuildModal}
+        onClose={() => setShowGuildModal(false)}
+        title="Select Additional Guilds"
+      >
+        <p className="text-muted-foreground mb-4">
+          Choose additional guild categories to filter jobs
+        </p>
+        <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+          {allGuilds
+            .filter((guild) => !visibleGuilds.includes(guild))
+            .map((guild) => (
+              <button
+                key={guild}
+                onClick={() => {
+                  toggleGuild(guild);
+                }}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                  selectedGuilds.includes(guild)
+                    ? "bg-primary text-white"
+                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                {guild}
+              </button>
+            ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-border">
+          <button
+            onClick={() => setShowGuildModal(false)}
+            className="w-full px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
+
+      {/* Filter Modal */}
+      <Modal
+        isOpen={showAllGuildsModal}
+        onClose={() => setShowAllGuildsModal(false)}
+        title="Filter Jobs"
+      >
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Guilds Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Guilds</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {allGuilds.map((guild) => (
+                <button
+                  key={guild}
+                  onClick={() => toggleGuild(guild)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedGuilds.includes(guild)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {guild}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Types Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Job Type</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {jobTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleJobType(type)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedJobTypes.includes(type)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Location Types Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Work Location</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {locationTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleLocationType(type)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedLocationTypes.includes(type)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-border flex gap-2">
+          <button
+            onClick={() => {
+              setSelectedGuilds([]);
+              setSelectedJobTypes([]);
+              setSelectedLocationTypes([]);
+            }}
+            className="flex-1 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Clear All
+          </button>
+          <button
+            onClick={() => setShowAllGuildsModal(false)}
+            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Apply Filters
+          </button>
+        </div>
       </Modal>
     </div>
   );

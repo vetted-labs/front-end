@@ -1,0 +1,479 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useAccount, useSwitchChain } from "wagmi";
+import { formatEther } from "viem";
+import { sepolia } from "wagmi/chains";
+import { X, Coins, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { useVettedToken, useExpertStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
+import { CONTRACT_ADDRESSES } from "@/contracts/abis";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { TransactionModal } from "./TransactionModal";
+
+interface StakingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+type ActionMode = "stake" | "withdraw";
+
+export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) {
+  const { address, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
+  const [actionMode, setActionMode] = useState<ActionMode>("stake");
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
+  const [step, setStep] = useState<"input" | "approving" | "transaction">("input");
+
+  // Transaction modal state
+  const [showTxModal, setShowTxModal] = useState(false);
+  const [txStatus, setTxStatus] = useState<"pending" | "success" | "error">("pending");
+  const [txErrorMessage, setTxErrorMessage] = useState<string>("");
+  const [currentTxAmount, setCurrentTxAmount] = useState<string>("");
+  const [currentTxAction, setCurrentTxAction] = useState<ActionMode>("stake");
+
+  // Contract hooks
+  const { balance, allowance, approve, mint, refetchBalance, refetchAllowance } = useVettedToken();
+  const { stakeInfo, minimumStake, isPaused, stake, requestUnstake, refetchStake } = useExpertStaking();
+  const { isSuccess: txConfirmed, isError: txError, error: txErrorDetails } = useTransactionConfirmation(txHash || undefined);
+
+  const isOnSepolia = chain?.id === sepolia.id;
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setStakeAmount("");
+      setStep("input");
+      setTxHash(null);
+      setIsApproving(false);
+      setActionMode("stake");
+      setShowTxModal(false);
+      setTxStatus("pending");
+      setTxErrorMessage("");
+    }
+  }, [isOpen]);
+
+  // Handle transaction confirmation
+  useEffect(() => {
+    if (txConfirmed && txHash) {
+      if (step === "approving") {
+        toast.success("Approval confirmed! Starting transaction...");
+        setIsApproving(false);
+        setTxHash(null);
+        setShowTxModal(false);
+        refetchAllowance();
+        // Automatically proceed to staking/withdrawal
+        handleStakeAfterApproval();
+      } else if (step === "transaction") {
+        // Show success in transaction modal
+        setTxStatus("success");
+        refetchBalance();
+        refetchStake();
+        onSuccess?.();
+
+        // Reset step so user can perform another action
+        setStep("input");
+        setStakeAmount("");
+      }
+    }
+  }, [txConfirmed, txHash, step]);
+
+  // Handle transaction errors
+  useEffect(() => {
+    if (txError && txHash) {
+      const errorMessage = (txErrorDetails as any)?.shortMessage ||
+                          (txErrorDetails as any)?.message ||
+                          "Transaction failed on blockchain";
+
+      if (step === "approving") {
+        toast.error(`Approval failed: ${errorMessage}`);
+        setIsApproving(false);
+        setShowTxModal(false);
+        setStep("input");
+        setTxHash(null);
+      } else if (step === "transaction") {
+        // Show error in transaction modal
+        setTxStatus("error");
+        setTxErrorMessage(errorMessage);
+      }
+
+      console.error("Transaction error:", txErrorDetails);
+    }
+  }, [txError, txHash, step, txErrorDetails]);
+
+  // Automatically stake/withdraw after approval is confirmed
+  const handleStakeAfterApproval = async () => {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
+
+    try {
+      setStep("transaction");
+      setCurrentTxAmount(stakeAmount);
+      setCurrentTxAction(actionMode);
+      setShowTxModal(true);
+      setTxStatus("pending");
+
+      const hash = actionMode === "stake"
+        ? await stake(stakeAmount)
+        : await requestUnstake(stakeAmount);
+
+      setTxHash(hash);
+    } catch (error: any) {
+      console.error("Transaction error:", error);
+
+      // Check if user rejected the transaction
+      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
+        toast.error("Transaction rejected by user");
+        setShowTxModal(false);
+      } else {
+        setTxStatus("error");
+        setTxErrorMessage(error.shortMessage || error.message || "Transaction failed");
+      }
+
+      setStep("input");
+    }
+  };
+
+  const handleStake = async () => {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+      toast.error("Please enter a valid stake amount");
+      return;
+    }
+
+    const currentBalance = balance ? parseFloat(formatEther(balance)) : 0;
+    if (currentBalance < parseFloat(stakeAmount)) {
+      toast.error(`Insufficient balance. You have ${currentBalance.toFixed(2)} VETD`);
+      return;
+    }
+
+    const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
+
+    // If approval is needed, start with approve transaction
+    if (currentAllowance < parseFloat(stakeAmount)) {
+      try {
+        setIsApproving(true);
+        setStep("approving");
+        setShowTxModal(true);
+        setTxStatus("pending");
+        setCurrentTxAmount(stakeAmount);
+        setCurrentTxAction("stake");
+
+        const hash = await approve(CONTRACT_ADDRESSES.STAKING as `0x${string}`, stakeAmount);
+        setTxHash(hash);
+      } catch (error: any) {
+        console.error("Approval error:", error);
+
+        // Check if user rejected the transaction
+        if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
+          toast.error("Transaction rejected by user");
+          setShowTxModal(false);
+        } else {
+          toast.error(error.shortMessage || error.message || "Failed to approve tokens");
+          setShowTxModal(false);
+        }
+
+        setIsApproving(false);
+        setStep("input");
+        setTxHash(null);
+      }
+      return;
+    }
+
+    // If already approved, proceed with staking
+    try {
+      setStep("transaction");
+      setCurrentTxAmount(stakeAmount);
+      setCurrentTxAction("stake");
+      setShowTxModal(true);
+      setTxStatus("pending");
+
+      const hash = await stake(stakeAmount);
+      setTxHash(hash);
+    } catch (error: any) {
+      console.error("Staking error:", error);
+
+      // Check if user rejected the transaction
+      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
+        toast.error("Transaction rejected by user");
+        setShowTxModal(false);
+      } else {
+        setTxStatus("error");
+        setTxErrorMessage(error.shortMessage || error.message || "Failed to stake tokens");
+      }
+
+      setStep("input");
+    }
+  };
+
+  const handleMaxClick = () => {
+    if (actionMode === "stake" && balance) {
+      setStakeAmount(parseFloat(formatEther(balance)).toFixed(2));
+    } else if (actionMode === "withdraw" && stakeInfo) {
+      setStakeAmount(parseFloat(formatEther(stakeInfo[0])).toFixed(2));
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+      toast.error("Please enter a valid withdrawal amount");
+      return;
+    }
+
+    const currentStake = stakeInfo ? parseFloat(formatEther(stakeInfo[0])) : 0;
+    if (currentStake < parseFloat(stakeAmount)) {
+      toast.error(`Insufficient staked balance. You have ${currentStake.toFixed(2)} VETD staked`);
+      return;
+    }
+
+    try {
+      setStep("transaction");
+      setCurrentTxAmount(stakeAmount);
+      setCurrentTxAction("withdraw");
+      setShowTxModal(true);
+      setTxStatus("pending");
+
+      const hash = await requestUnstake(stakeAmount);
+      setTxHash(hash);
+    } catch (error: any) {
+      console.error("Withdrawal error:", error);
+
+      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
+        toast.error("Transaction rejected by user");
+        setShowTxModal(false);
+      } else {
+        setTxStatus("error");
+        setTxErrorMessage(error.shortMessage || error.message || "Failed to withdraw tokens");
+      }
+
+      setStep("input");
+    }
+  };
+
+  const handleClose = () => {
+    if (step !== "approving" && step !== "transaction") {
+      onClose();
+    }
+  };
+
+  const handleTxModalClose = () => {
+    setShowTxModal(false);
+    setTxHash(null);
+    setTxStatus("pending");
+    setTxErrorMessage("");
+    // Keep the modal open so user can do another transaction
+  };
+
+  if (!isOpen) return null;
+
+  const currentBalance = balance ? parseFloat(formatEther(balance)) : 0;
+  const currentStake = stakeInfo ? parseFloat(formatEther(stakeInfo[0])) : 0;
+  const minStake = minimumStake ? parseFloat(formatEther(minimumStake)) : 10;
+  const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
+  const needsApproval = currentAllowance < parseFloat(stakeAmount || "0");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+      <div className="bg-gradient-to-br from-card via-card to-card/95 rounded-3xl shadow-2xl border border-border/50 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto backdrop-blur-sm">
+        {/* Header */}
+        <div className="relative flex items-center justify-between p-6 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <Coins className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                Manage Staking
+              </h2>
+              <p className="text-xs text-muted-foreground">Earn rewards by staking VETD</p>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            disabled={step === "approving" || step === "transaction"}
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-5">
+          {/* Wrong Network Warning */}
+          {!isOnSepolia && (
+            <div className="p-4 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
+                  Wrong Network
+                </p>
+                <p className="text-xs text-yellow-800 dark:text-yellow-300 mb-3">
+                  Please switch to Sepolia Testnet to stake tokens.
+                </p>
+                <Button
+                  onClick={() => switchChain({ chainId: sepolia.id })}
+                  size="sm"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg"
+                >
+                  Switch to Sepolia
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Contract Paused Warning */}
+          {isPaused && isOnSepolia && (
+            <div className="p-4 bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 border border-red-500/30 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
+                  Staking Paused
+                </p>
+                <p className="text-xs text-red-800 dark:text-red-300">
+                  The staking contract is currently paused. Please try again later or contact support.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Input State */}
+          {(
+            <>
+              {/* Action Mode Tabs */}
+              <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl">
+                <button
+                  onClick={() => setActionMode("stake")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                    actionMode === "stake"
+                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Stake
+                </button>
+                <button
+                  onClick={() => setActionMode("withdraw")}
+                  disabled={currentStake === 0}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                    actionMode === "withdraw"
+                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                  }`}
+                >
+                  <TrendingDown className="w-4 h-4" />
+                  Withdraw
+                </button>
+              </div>
+
+              {/* Current Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative p-5 bg-gradient-to-br from-muted via-muted to-muted/80 rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Your Balance</p>
+                  <p className="text-xl font-bold text-foreground">{currentBalance.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">VETD</p>
+                </div>
+                <div className="relative p-5 bg-gradient-to-br from-orange-500/5 via-orange-500/10 to-orange-500/5 rounded-2xl border border-orange-500/20 shadow-sm hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2">Staked Balance</p>
+                  <p className="text-xl font-bold text-orange-600 dark:text-orange-400">{currentStake.toFixed(2)}</p>
+                  <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">VETD</p>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="p-4 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-blue-500/10 border border-blue-500/30 rounded-2xl backdrop-blur-sm">
+                <p className="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">
+                  <strong>Minimum Stake:</strong> {minStake} VETD tokens required to participate in guild voting and earn rewards.
+                </p>
+              </div>
+
+              {/* Amount Input */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-semibold text-foreground">
+                    Amount to {actionMode === "stake" ? "Stake" : "Withdraw"}
+                  </label>
+                  <button
+                    onClick={handleMaxClick}
+                    className="px-3 py-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-500/10 hover:bg-orange-500/20 rounded-lg transition-colors"
+                  >
+                    Max
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    disabled={step === "approving" || step === "transaction"}
+                    className="text-lg h-14 pr-16 rounded-xl border-border/50 focus:border-orange-500/50 focus:ring-orange-500/20"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+                    VETD
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {actionMode === "stake" ? `Minimum: ${minStake} VETD` : `Available: ${currentStake.toFixed(2)} VETD`}
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <Button
+                onClick={actionMode === "stake" ? handleStake : handleWithdraw}
+                disabled={
+                  !isOnSepolia ||
+                  isPaused ||
+                  isApproving ||
+                  step === "approving" ||
+                  step === "transaction" ||
+                  !stakeAmount ||
+                  parseFloat(stakeAmount) <= 0
+                }
+                className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all rounded-xl font-semibold"
+              >
+                {actionMode === "stake" ? (
+                  <>
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Stake Tokens
+                  </>
+                ) : (
+                  <>
+                    <TrendingDown className="mr-2 h-5 w-5" />
+                    Withdraw Tokens
+                  </>
+                )}
+              </Button>
+
+              {/* Help Text */}
+              <div className="text-center space-y-1">
+                {actionMode === "stake" && needsApproval && (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    You need to approve tokens before staking. This is a one-time approval and will happen automatically.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {actionMode === "stake"
+                    ? "Staking VETD tokens allows you to participate in guild voting and earn rewards."
+                    : "Withdraw your staked tokens back to your wallet. You can re-stake them anytime."}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Transaction Modal */}
+      <TransactionModal
+        isOpen={showTxModal}
+        onClose={handleTxModalClose}
+        status={txStatus}
+        txHash={txHash || undefined}
+        actionType={currentTxAction}
+        amount={currentTxAmount}
+        errorMessage={txErrorMessage}
+      />
+    </div>
+  );
+}

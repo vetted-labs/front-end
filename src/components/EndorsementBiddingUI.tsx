@@ -15,9 +15,9 @@ import {
   Zap,
   Info,
 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Modal } from "./ui/Modal";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Modal } from "./ui/modal";
 
 interface JobApplication {
   id: string;
@@ -107,7 +107,7 @@ export function EndorsementBiddingUI({
 
       {/* Expert Balance Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-xl p-6 border border-violet-200">
+        <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-primary">Your Balance</p>
             <Coins className="w-5 h-5 text-primary" />
@@ -173,7 +173,7 @@ export function EndorsementBiddingUI({
                       <h3 className="text-xl font-semibold text-foreground">
                         {app.candidateName}
                       </h3>
-                      <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-semibold rounded-full">
+                      <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
                         {app.matchScore}% Match
                       </span>
                     </div>
@@ -282,7 +282,7 @@ export function EndorsementBiddingUI({
       >
         {selectedApplication && (
           <div className="space-y-4">
-            <div className="bg-primary/10 rounded-lg p-4 border border-violet-200">
+            <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
               <p className="text-sm font-semibold text-foreground mb-1">
                 {selectedApplication.candidateName}
               </p>

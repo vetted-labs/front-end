@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Input, Textarea, Select, Button, Alert, Modal } from "./ui";
 import { companyApi } from "@/lib/api";
-import { useApi } from "@/hooks/useFetch";
+import { useApi } from "@/lib/hooks/useFetch";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 
 interface FormData {
@@ -116,7 +116,7 @@ export function CompanyForm() {
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-xl"></div>
+            <div className="w-10 h-10 bg-primary/10 rounded-xl"></div>
             <span className="text-2xl font-bold text-foreground">Vetted</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -127,10 +127,10 @@ export function CompanyForm() {
 
         <div className="bg-card rounded-2xl shadow-xl p-8">
           {/* Wallet Connection Section */}
-          <div className="mb-6 p-6 bg-primary/10 rounded-xl border-2 border-violet-200">
+          <div className="mb-6 p-6 bg-primary/10 rounded-xl border-2 border-primary/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-100 rounded-lg">
+                <div className="p-2 bg-primary/10 rounded-lg">
                   <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>

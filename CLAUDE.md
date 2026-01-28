@@ -10,11 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Running the Application
 ```bash
-npm run dev        # Start development server with Turbopack (http://localhost:3000)
+npm run dev        # Start development server with Turbopack (http://localhost:3030)
 npm run build      # Build for production with Turbopack
 npm start          # Start production server
 npm run lint       # Run ESLint
 ```
+
+**Port Configuration**: The application runs on port `3030` by default (configured in `package.json` scripts with `-p 3030` flag). You can override this by setting a different port: `PORT=3000 npm run dev`
 
 ### Backend Dependency
 The application expects a backend API running at `http://localhost:4000` for job management and dashboard statistics. Without this backend, the hiring dashboard and job CRUD operations will fail.

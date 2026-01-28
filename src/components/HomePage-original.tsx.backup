@@ -1,0 +1,902 @@
+// components/homepage.tsx
+"use client";
+import { useState, useEffect, ReactElement } from "react";
+import { useRouter } from "next/navigation";
+import { useConnect, useAccount, useDisconnect, useChainId } from "wagmi";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Shield,
+  Users,
+  Briefcase,
+  User,
+  LogOut,
+  ChevronDown,
+  Wallet,
+  MapPin,
+  Building2,
+  CheckCircle2,
+  Loader2,
+  Star,
+} from "lucide-react";
+import { Modal } from "./ui/modal";
+import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
+import { expertApi, jobsApi, guildsApi, getAssetUrl } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
+
+// Wallet information helper
+const getWalletInfo = (walletName: string) => {
+  const wallets: Record<string, { icon: ReactElement; description: string }> = {
+    MetaMask: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <path d="M36.5 3.5L22 13.5L24.5 7.5L36.5 3.5Z" fill="#E17726" stroke="#E17726" />
+          <path d="M3.5 3.5L17.8 13.6L15.5 7.5L3.5 3.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M31 28.5L27.5 34.5L35.5 36.5L37.5 28.5H31Z" fill="#E27625" stroke="#E27625" />
+          <path d="M2.5 28.5L4.5 36.5L12.5 34.5L9 28.5H2.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M12 17.5L10 20.5L18 20.8L17.7 12.5L12 17.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M28 17.5L22.2 12.4L22 20.8L30 20.5L28 17.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M12.5 34.5L17 32.5L13.2 28.6L12.5 34.5Z" fill="#E27625" stroke="#E27625" />
+          <path d="M23 32.5L27.5 34.5L26.8 28.6L23 32.5Z" fill="#E27625" stroke="#E27625" />
+        </svg>
+      ),
+      description: "Connect using MetaMask browser extension",
+    },
+    "Coinbase Wallet": {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#0052FF" />
+          <path
+            d="M20 36C28.8366 36 36 28.8366 36 20C36 11.1634 28.8366 4 20 4C11.1634 4 4 11.1634 4 20C4 28.8366 11.1634 36 20 36Z"
+            fill="#0052FF"
+          />
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M11 20C11 15.0294 15.0294 11 20 11C24.9706 11 29 15.0294 29 20C29 24.9706 24.9706 29 20 29C15.0294 29 11 24.9706 11 20ZM17.5 17.5H22.5V22.5H17.5V17.5Z"
+            fill="white"
+          />
+        </svg>
+      ),
+      description: "Connect using Coinbase Wallet app",
+    },
+    WalletConnect: {
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="8" fill="#3B99FC" />
+          <path
+            d="M12.5 15.5C17 11 25 11 29.5 15.5L30 16L27.5 18.5L27 18C24 15 17 15 14 18L13.5 18.5L11 16L12.5 15.5Z"
+            fill="white"
+          />
+          <path d="M24 21L26 23L20 29L14 23L16 21L20 25L24 21Z" fill="white" />
+        </svg>
+      ),
+      description: "Scan QR code with mobile wallet app",
+    },
+  };
+
+  return (
+    wallets[walletName] || {
+      icon: <Wallet className="w-6 h-6 text-primary" />,
+      description: "Connect with your wallet",
+    }
+  );
+};
+
+const getNetworkName = (chainId: number | undefined) => {
+  if (!chainId) return "Unknown";
+  const networks: Record<number, string> = {
+    1: "Ethereum",
+    11155111: "Sepolia",
+    137: "Polygon",
+    42161: "Arbitrum",
+  };
+  return networks[chainId] || `Chain ${chainId}`;
+};
+
+interface Guild {
+  id: string;
+  name: string;
+  description?: string;
+  memberCount?: number;
+}
+
+interface Job {
+  id: string;
+  title: string;
+  department: string | null;
+  location: string;
+  locationType: "remote" | "onsite" | "hybrid";
+  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
+  salary: { min: number | null; max: number | null; currency: string };
+  guild: string;
+  description: string;
+  requirements: string[];
+  skills: string[];
+  experienceLevel?: string;
+  companyName?: string;
+  companyLogo?: string;
+  createdAt: string;
+  featured?: boolean;
+}
+
+const getTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) return "Today";
+  if (diffInDays === 1) return "1d ago";
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7);
+    return `${weeks}w ago`;
+  }
+  const months = Math.floor(diffInDays / 30);
+  return `${months}mo ago`;
+};
+
+export function HomePage() {
+  const router = useRouter();
+  const { connectors, connect } = useConnect();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { disconnect } = useDisconnect();
+
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // New state for guilds and jobs
+  const [guilds, setGuilds] = useState<Guild[]>([]);
+  const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+
+  // Filter state
+  const [selectedGuilds, setSelectedGuilds] = useState<string[]>([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
+  const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+
+    // Check authentication status
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("authToken") || localStorage.getItem("companyAuthToken");
+      const storedUserType = localStorage.getItem("userType");
+      const storedEmail = localStorage.getItem("candidateEmail") || localStorage.getItem("companyEmail");
+
+      // Check if user is authenticated via token OR wallet connection
+      const isTokenAuth = !!token;
+      const isWalletAuth = !!(isConnected && address);
+
+      setIsAuthenticated(isTokenAuth || isWalletAuth);
+      setUserType(storedUserType || (isWalletAuth ? "expert" : null));
+      setUserEmail(storedEmail || (isWalletAuth ? address : null));
+    }
+  }, [isConnected, address]);
+
+  // Fetch guilds on mount
+  useEffect(() => {
+    const fetchGuilds = async () => {
+      try {
+        const data: any = await guildsApi.getAll();
+        setGuilds(data.guilds || data || []);
+      } catch (error) {
+        console.error("Failed to fetch guilds:", error);
+        setGuilds([]);
+      } finally {
+        setIsLoadingGuilds(false);
+      }
+    };
+
+    fetchGuilds();
+  }, []);
+
+  // Fetch active jobs on mount
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const data: any = await jobsApi.getAll({ status: 'active' });
+        const normalizedJobs = (Array.isArray(data) ? data : []).map((job: any) => ({
+          ...job,
+          title: job.title || 'Untitled Position',
+          description: job.description || '',
+          guild: job.guild || '',
+          department: job.department || null,
+          requirements: job.requirements || [],
+          skills: job.skills || [],
+        }));
+        setJobs(normalizedJobs);
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+        setJobs([]);
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const handleLogout = () => {
+    // Clear all auth data using centralized function
+    clearAllAuthState();
+
+    // Disconnect wallet if expert
+    if (userType === "expert" && isConnected) {
+      disconnect();
+    }
+
+    // Update state immediately
+    setIsAuthenticated(false);
+    setUserEmail(null);
+    setUserType(null);
+    setShowUserMenu(false);
+
+    // Use router navigation to avoid theme flash
+    router.push("/");
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showUserMenu]);
+
+  // Check expert status after wallet connection
+  useEffect(() => {
+    if (mounted && isConnected && address && shouldCheckStatus) {
+      checkExpertStatus(address);
+      setShouldCheckStatus(false);
+    }
+  }, [mounted, isConnected, address, shouldCheckStatus]);
+
+  const checkExpertStatus = async (walletAddress: string) => {
+    try {
+      const result: any = await expertApi.getProfile(walletAddress);
+      if (result.success && result.data) {
+        const expert = result.data;
+        // Redirect based on status
+        if (expert.status === "approved") {
+          router.push("/expert/dashboard");
+          return;
+        } else if (expert.status === "pending") {
+          router.push("/expert/application-pending");
+          return;
+        }
+      }
+    } catch (error: any) {
+      // If 404, no profile found - redirect to application (this is expected for new wallets)
+      if (error.status === 404) {
+        router.push("/expert/apply");
+        return;
+      }
+      // On error, redirect to expert home page
+      router.push("/expert");
+    }
+  };
+
+  const handleWalletConnect = async (connectorId: string) => {
+    const connector = connectors.find((c) => c.id === connectorId);
+    if (connector) {
+      try {
+        // Clear any existing auth before connecting wallet
+        clearAllAuthState();
+
+        await connect({ connector });
+        setShowWalletModal(false);
+        // Set flag to check status after connection completes
+        setShouldCheckStatus(true);
+      } catch (error) {
+        console.error("Failed to connect:", error);
+      }
+    }
+  };
+
+  const handleExpertJoin = () => {
+    if (isConnected && address) {
+      // Check expert status
+      checkExpertStatus(address);
+    } else {
+      // Show wallet modal
+      setShowWalletModal(true);
+    }
+  };
+
+  const handlePostJob = () => {
+    if (isAuthenticated && userType === "company") {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/signup?type=company");
+    }
+  };
+
+  const handleJoinAsCandidate = () => {
+    if (isAuthenticated && userType === "candidate") {
+      router.push("/candidate/profile");
+    } else {
+      router.push("/auth/signup?type=candidate");
+    }
+  };
+
+  // Filter jobs based on selected filters
+  const filteredJobs = jobs.filter(job => {
+    if (selectedGuilds.length > 0) {
+      const jobGuild = job.guild?.replace(/ Guild$/i, '');
+      const matchesGuild = selectedGuilds.some(selectedGuild => {
+        const cleanSelected = selectedGuild.replace(/ Guild$/i, '');
+        return jobGuild?.toLowerCase() === cleanSelected.toLowerCase();
+      });
+      if (!matchesGuild) return false;
+    }
+
+    if (selectedJobTypes.length > 0 && !selectedJobTypes.includes(job.type)) {
+      return false;
+    }
+
+    if (selectedLocationTypes.length > 0) {
+      const matchesLocationType = selectedLocationTypes.some(
+        type => type.toLowerCase() === job.locationType?.toLowerCase()
+      );
+      if (!matchesLocationType) return false;
+    }
+
+    return true;
+  });
+
+  // Display only first 6 jobs on homepage
+  const displayedJobs = filteredJobs.slice(0, 6);
+
+  // Get unique guilds from jobs for filter options
+  const allGuilds = Array.from(
+    new Set(
+      jobs
+        .map((job) => job.guild?.replace(/ Guild$/i, ''))
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
+  const locationTypes = ["Remote", "Onsite", "Hybrid"];
+
+  const toggleGuild = (guild: string) => {
+    if (selectedGuilds.includes(guild)) {
+      setSelectedGuilds(selectedGuilds.filter((g) => g !== guild));
+    } else {
+      setSelectedGuilds([...selectedGuilds, guild]);
+    }
+  };
+
+  const toggleJobType = (type: string) => {
+    if (selectedJobTypes.includes(type)) {
+      setSelectedJobTypes(selectedJobTypes.filter((t) => t !== type));
+    } else {
+      setSelectedJobTypes([...selectedJobTypes, type]);
+    }
+  };
+
+  const toggleLocationType = (type: string) => {
+    if (selectedLocationTypes.includes(type)) {
+      setSelectedLocationTypes(selectedLocationTypes.filter((t) => t !== type));
+    } else {
+      setSelectedLocationTypes([...selectedLocationTypes, type]);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-background">
+      {/* Navigation Header */}
+      <nav className="border-b bg-card/95 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Logo onClick={() => router.push("/")} />
+
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-6">
+              <button
+                onClick={() => router.push("/browse/jobs")}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Find a Job
+              </button>
+              <button
+                onClick={handleExpertJoin}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Start Vetting
+              </button>
+              <button
+                onClick={handlePostJob}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Start Hiring
+              </button>
+              <button
+                onClick={() => router.push("/guilds")}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Guilds
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <ThemeToggle />
+              {isAuthenticated ? (
+                <div className="relative user-menu-container">
+                  {userType === "expert" && address ? (
+                    // Expert wallet dropdown
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                    >
+                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Wallet className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-xs font-mono text-foreground font-medium">
+                          {address.slice(0, 6)}...{address.slice(-4)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {getNetworkName(chainId)}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  ) : (
+                    // Standard user dropdown
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground hidden sm:block">
+                        {userEmail || (userType === "company" ? "Company" : "Candidate")}
+                      </span>
+                    </button>
+                  )}
+
+                  {showUserMenu && userType === "expert" && address ? (
+                    // Expert wallet dropdown menu
+                    <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
+                      <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 border-b border-border">
+                        <p className="text-xs font-medium text-foreground mb-2">Connected Wallet</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Wallet className="w-4 h-4 text-primary" />
+                          </div>
+                          <p className="text-sm font-mono text-foreground break-all font-medium">{address}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-foreground">
+                            Connected to <span className="font-semibold">{getNetworkName(chainId)}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          router.push("/expert/dashboard");
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-card-foreground hover:bg-muted transition-all"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Expert Dashboard
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  ) : showUserMenu ? (
+                    // Standard user dropdown menu
+                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="text-sm font-medium text-foreground">
+                          {userEmail}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {userType === "company" ? "Company Account" : "Candidate Account"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          if (userType === "company") {
+                            router.push("/dashboard");
+                          } else if (userType === "candidate") {
+                            router.push("/candidate/profile");
+                          }
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        {userType === "company" ? "Dashboard" : "My Profile"}
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Login / Sign-up
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+        <div className="text-center max-w-3xl mx-auto">
+          {/* Private Beta Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-6 animate-pulse">
+            <div className="w-2 h-2 bg-primary rounded-full"></div>
+            <span className="text-sm font-semibold text-primary">Private beta LIVE</span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
+            Expert-Vetted Web3 Hiring
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-lg text-muted-foreground mb-6">
+            Join guilds, review candidates, earn rewards
+          </p>
+
+          {/* Active Guilds */}
+          {!isLoadingGuilds && guilds.length > 0 && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <span className="font-medium">Active Guilds:</span>
+              <span>
+                {guilds.slice(0, 3).map((g, i) => (
+                  <span key={g.id}>
+                    {g.name.replace(/ Guild$/i, '')}
+                    {i < Math.min(guilds.length, 3) - 1 ? ' • ' : ''}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action Cards */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Join as Candidate */}
+          <button
+            onClick={handleJoinAsCandidate}
+            className="bg-card rounded-xl p-6 border border-border hover:border-primary/50 hover:shadow-lg transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
+              <Users className="w-6 h-6 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+              Join as a Candidate
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Get expert endorsements and stand out to top companies
+            </p>
+          </button>
+
+          {/* Join as Expert - Featured */}
+          <button
+            onClick={handleExpertJoin}
+            className="bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-xl p-6 border-2 border-primary/30 hover:border-primary hover:shadow-xl transition-all text-left group relative overflow-hidden"
+          >
+            <div className="absolute top-2 right-2">
+              <Star className="w-4 h-4 text-primary fill-primary" />
+            </div>
+            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors">
+              <Shield className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+              Join as an Expert
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Review candidates and earn rewards for accurate assessments
+            </p>
+          </button>
+
+          {/* Post a Job */}
+          <button
+            onClick={handlePostJob}
+            className="bg-card rounded-xl p-6 border border-border hover:border-primary/50 hover:shadow-lg transition-all text-left group"
+          >
+            <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-colors">
+              <Briefcase className="w-6 h-6 text-green-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+              Post a Job
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Hire pre-vetted talent from expert-validated guilds
+            </p>
+          </button>
+        </div>
+      </div>
+
+      {/* Job Listings with Filters */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-2xl font-bold text-foreground mb-6">Latest Opportunities</h2>
+
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Filters Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-card rounded-xl p-6 border border-border sticky top-20">
+              <h3 className="text-sm font-semibold text-foreground mb-4">Filters</h3>
+
+              {/* Guilds */}
+              <div className="mb-6">
+                <h4 className="text-xs font-medium text-muted-foreground mb-3">Guilds</h4>
+                <div className="space-y-2">
+                  {allGuilds.slice(0, 5).map((guild) => (
+                    <label key={guild} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedGuilds.includes(guild)}
+                        onChange={() => toggleGuild(guild)}
+                        className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
+                      />
+                      <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                        {guild}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Job Type */}
+              <div className="mb-6">
+                <h4 className="text-xs font-medium text-muted-foreground mb-3">Job Type</h4>
+                <div className="space-y-2">
+                  {jobTypes.map((type) => (
+                    <label key={type} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedJobTypes.includes(type)}
+                        onChange={() => toggleJobType(type)}
+                        className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
+                      />
+                      <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                        {type}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location Type */}
+              <div>
+                <h4 className="text-xs font-medium text-muted-foreground mb-3">Location</h4>
+                <div className="space-y-2">
+                  {locationTypes.map((type) => (
+                    <label key={type} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={selectedLocationTypes.includes(type)}
+                        onChange={() => toggleLocationType(type)}
+                        className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
+                      />
+                      <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                        {type}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              {(selectedGuilds.length > 0 || selectedJobTypes.length > 0 || selectedLocationTypes.length > 0) && (
+                <button
+                  onClick={() => {
+                    setSelectedGuilds([]);
+                    setSelectedJobTypes([]);
+                    setSelectedLocationTypes([]);
+                  }}
+                  className="mt-6 w-full px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Jobs Grid */}
+          <div className="lg:col-span-3">
+            {isLoadingJobs ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              </div>
+            ) : displayedJobs.length > 0 ? (
+              <>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  {displayedJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      onClick={() => router.push(`/browse/jobs/${job.id}`)}
+                      className="bg-card rounded-lg p-5 border border-border hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group"
+                    >
+                      {/* Company Logo & Time */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          {job.companyLogo ? (
+                            <img
+                              src={getAssetUrl(job.companyLogo)}
+                              alt={job.companyName || "Company"}
+                              className="w-10 h-10 rounded-lg object-cover border border-border"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
+                          >
+                            <Building2 className="w-5 h-5 text-primary" />
+                          </div>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {getTimeAgo(job.createdAt)}
+                        </span>
+                      </div>
+
+                      {/* Job Title */}
+                      <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                        {job.title}
+                      </h3>
+
+                      {/* Company & Location */}
+                      <div className="text-sm text-muted-foreground mb-3 space-y-1">
+                        {job.companyName && (
+                          <p className="font-medium text-foreground">{job.companyName}</p>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span>{job.location}</span>
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        {job.guild && (
+                          <span className="px-2 py-1 bg-primary/10 text-primary border border-primary/20 rounded text-xs font-medium">
+                            {job.guild}
+                          </span>
+                        )}
+                        <span className="px-2 py-1 bg-muted text-card-foreground rounded text-xs font-medium">
+                          {job.type}
+                        </span>
+                        {job.salary.min && job.salary.max && (
+                          <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs font-medium">
+                            ${job.salary.min / 1000}k - ${job.salary.max / 1000}k
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* View All Jobs Button */}
+                <div className="text-center">
+                  <button
+                    onClick={() => router.push("/browse/jobs")}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-card border-2 border-border hover:border-primary rounded-xl text-foreground hover:text-primary font-medium transition-all hover:shadow-lg"
+                  >
+                    View All Jobs
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12 bg-card rounded-xl border border-border">
+                <Briefcase className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  No jobs found
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your filters
+                </p>
+                {(selectedGuilds.length > 0 || selectedJobTypes.length > 0 || selectedLocationTypes.length > 0) && (
+                  <button
+                    onClick={() => {
+                      setSelectedGuilds([]);
+                      setSelectedJobTypes([]);
+                      setSelectedLocationTypes([]);
+                    }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Minimal Footer */}
+      <footer className="border-t py-8 mt-12">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>&copy; 2026 Vetted. All rights reserved.</p>
+        </div>
+      </footer>
+
+      {/* Wallet Connection Modal */}
+      {mounted && (
+        <Modal
+          isOpen={showWalletModal}
+          onClose={() => setShowWalletModal(false)}
+          title="Connect Your Wallet"
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose your preferred wallet to get started as an expert
+            </p>
+            {connectors.map((connector) => {
+              const walletInfo = getWalletInfo(connector.name);
+              return (
+                <button
+                  key={connector.id}
+                  onClick={() => handleWalletConnect(connector.id)}
+                  className="w-full flex items-center gap-4 px-4 py-4 border-2 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-background transition-colors">
+                    {walletInfo.icon}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-card-foreground">{connector.name}</p>
+                    <p className="text-xs text-muted-foreground">{walletInfo.description}</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </button>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}

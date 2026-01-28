@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -16,6 +15,7 @@ import {
   Linkedin,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 import { candidateApi, companyApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
 
@@ -201,13 +201,7 @@ function SignupForm() {
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center space-x-2"
-            >
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-            </button>
+            <Logo onClick={() => router.push("/")} />
             <div className="flex items-center space-x-3">
               <ThemeToggle />
               <button
@@ -427,7 +421,7 @@ function SignupForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl hover:opacity-90  transition-all font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 rounded-xl hover:opacity-90  transition-all font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>

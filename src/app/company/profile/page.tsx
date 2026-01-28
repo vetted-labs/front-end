@@ -237,7 +237,7 @@ export default function CompanyProfilePage() {
                   className="w-24 h-24 rounded-lg object-cover border-2 border-border"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center border-2 border-border">
+                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-primary/10 to-primary/15 flex items-center justify-center border-2 border-border">
                   <Building2 className="w-12 h-12 text-primary" />
                 </div>
               )}

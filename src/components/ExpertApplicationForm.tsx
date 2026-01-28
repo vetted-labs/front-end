@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAccount, useDisconnect, useChainId } from "wagmi";
 import { Loader2, Send, Upload, X, ArrowLeft, User, Briefcase, FileText, Award, Shield } from "lucide-react";
 import Image from "next/image";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Select } from "./ui/Select";
-import { Textarea } from "./ui/Textarea";
-import { Alert } from "./ui/Alert";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { NativeSelect } from "./ui/native-select";
+import { Textarea } from "./ui/textarea";
+import { Alert } from "./ui/alert";
 import { expertApi } from "@/lib/api";
 
 interface ExpertApplicationFormProps {
@@ -197,8 +197,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/expert")}>
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
               <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
                 Expert
@@ -210,8 +210,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               {mounted && address && (
                 <>
                   <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border">
-                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-indigo-600 rounded-lg flex items-center justify-center">
-                      <Shield className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex flex-col items-start">
                       <span className="text-xs font-mono text-foreground font-medium">
@@ -225,7 +225,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                   <button
                     onClick={() => {
                       disconnect();
-                      router.push("/expert");
+                      router.push("/");
                     }}
                     className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-all"
                   >
@@ -279,6 +279,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.fullName}
               onChange={(e) => handleChange("fullName", e.target.value)}
               placeholder="John Doe"
+              description="Your legal name as it appears on official documents"
               required
             />
 
@@ -288,6 +289,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
               placeholder="john@example.com"
+              description="We'll use this to send you important updates about your application"
               required
             />
 
@@ -297,6 +299,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.linkedinUrl}
               onChange={(e) => handleChange("linkedinUrl", e.target.value)}
               placeholder="https://linkedin.com/in/johndoe"
+              description="Link to your LinkedIn profile for verification"
               required
             />
 
@@ -306,6 +309,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.portfolioUrl}
               onChange={(e) => handleChange("portfolioUrl", e.target.value)}
               placeholder="https://johndoe.com"
+              description="Optional: Link to your personal website, GitHub, or portfolio"
             />
             </div>
 
@@ -321,33 +325,35 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                 </div>
               </div>
 
-            <Select
+            <NativeSelect
               label="Select Guild"
               value={formData.guild}
               onChange={(e) => handleChange("guild", e.target.value)}
+              description="Choose ONE guild that best matches your primary expertise area"
               required
             >
-              <option value="">Choose a guild...</option>
+              <option value="" disabled>Choose a guild...</option>
               {GUILDS.map((guild) => (
                 <option key={guild} value={guild}>
                   {guild}
                 </option>
               ))}
-            </Select>
+            </NativeSelect>
 
-            <Select
+            <NativeSelect
               label="Expertise Level"
               value={formData.expertiseLevel}
               onChange={(e) => handleChange("expertiseLevel", e.target.value)}
+              description="Select the level that matches your years of experience"
               required
             >
-              <option value="">Choose your level...</option>
+              <option value="" disabled>Choose your level...</option>
               {EXPERTISE_LEVELS.map((level) => (
                 <option key={level.value} value={level.value}>
                   {level.label}
                 </option>
               ))}
-            </Select>
+            </NativeSelect>
 
             <Input
               label="Years of Experience"
@@ -356,6 +362,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               onChange={(e) => handleChange("yearsOfExperience", e.target.value)}
               placeholder="10"
               min="1"
+              description="Total years of professional experience in your field"
               required
             />
 
@@ -365,6 +372,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.currentTitle}
               onChange={(e) => handleChange("currentTitle", e.target.value)}
               placeholder="Senior Software Engineer"
+              description="Your current job title or most recent position"
               required
             />
 
@@ -374,6 +382,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.currentCompany}
               onChange={(e) => handleChange("currentCompany", e.target.value)}
               placeholder="Tech Corp"
+              description="Your current employer or most recent company"
               required
             />
             </div>
@@ -392,27 +401,33 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                 </div>
               </div>
 
-            <div className="flex gap-2">
-              <Input
-                label=""
-                type="text"
-                value={formData.newExpertiseArea}
-                onChange={(e) => handleChange("newExpertiseArea", e.target.value)}
-                placeholder="e.g., React, TypeScript, AWS"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddExpertiseArea();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={handleAddExpertiseArea}
-                className="mt-0 whitespace-nowrap"
-              >
-                Add
-              </Button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={formData.newExpertiseArea}
+                    onChange={(e) => handleChange("newExpertiseArea", e.target.value)}
+                    placeholder="e.g., React, TypeScript, AWS"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddExpertiseArea();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAddExpertiseArea}
+                  className="whitespace-nowrap"
+                >
+                  Add
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Add specific skills, technologies, or domains you can evaluate (e.g., React, Machine Learning, Product Strategy). Press Enter or click Add to include each one.
+              </p>
             </div>
 
             {formData.expertiseAreas.length > 0 && (
@@ -426,7 +441,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                     <button
                       type="button"
                       onClick={() => handleRemoveExpertiseArea(index)}
-                      className="hover:text-violet-900"
+                      className="hover:text-primary"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -453,6 +468,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.bio}
               onChange={(e) => handleChange("bio", e.target.value)}
               placeholder="Tell us about your professional background, key achievements, and what makes you qualified to be an expert reviewer..."
+              description="Share your professional background, key achievements, and what makes you qualified to be an expert reviewer (50-2000 characters)"
               rows={4}
               required
               showCounter
@@ -465,6 +481,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               value={formData.motivation}
               onChange={(e) => handleChange("motivation", e.target.value)}
               placeholder="Explain your motivation for joining Vetted as an expert reviewer, and how you plan to contribute to the guild..."
+              description="Explain why you want to become an expert on Vetted and how you plan to contribute to your guild (50-2000 characters)"
               rows={4}
               required
               showCounter
@@ -474,11 +491,11 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
             </div>
 
             {/* Submit Section */}
-            <div className="p-8 bg-gradient-to-r from-primary/5 to-indigo-600/5">
+            <div className="p-8 bg-gradient-to-r from-primary/5 to-accent/5">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 px-6 bg-gradient-to-r from-primary to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 px-6 bg-gradient-to-r from-primary via-accent to-primary/80 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

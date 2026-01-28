@@ -114,7 +114,7 @@ export default function BrowseJobsPage() {
               onClick={() => router.push("/")}
               className="flex items-center space-x-2"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg"></div>
+              <div className="w-8 h-8 bg-primary/10 rounded-lg"></div>
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
             <div className="flex items-center gap-4">
@@ -132,8 +132,8 @@ export default function BrowseJobsPage() {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                   >
-                    <div className="p-2 bg-violet-100 rounded-lg">
-                      <User className="w-4 h-4 text-violet-600" />
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <User className="w-4 h-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium text-foreground hidden sm:block">
                       {candidateEmail}
@@ -168,7 +168,7 @@ export default function BrowseJobsPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all"
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-lg hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
@@ -183,7 +183,7 @@ export default function BrowseJobsPage() {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h1 className="text-5xl font-bold text-foreground mb-6">
             Find Your Next{" "}
-            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
               Web3 Opportunity
             </span>
           </h1>
@@ -193,7 +193,7 @@ export default function BrowseJobsPage() {
           </p>
           <button
             onClick={() => router.push("/browse/jobs")}
-            className="inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Find the Job for You
             <ArrowRight className="ml-2 w-5 h-5" />
@@ -217,10 +217,10 @@ export default function BrowseJobsPage() {
 
           <div className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-violet-100 rounded-xl">
-                <Briefcase className="w-6 h-6 text-violet-600" />
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Briefcase className="w-6 h-6 text-primary" />
               </div>
-              <TrendingUp className="w-5 h-5 text-violet-600" />
+              <TrendingUp className="w-5 h-5 text-primary" />
             </div>
             <h3 className="text-3xl font-bold text-foreground">
               {metrics.activeJobs}
@@ -262,7 +262,7 @@ export default function BrowseJobsPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="w-8 h-8 text-violet-600" />
+                <Sparkles className="w-8 h-8 text-primary" />
                 Featured Jobs
               </h2>
               <p className="text-muted-foreground mt-2">
@@ -271,7 +271,7 @@ export default function BrowseJobsPage() {
             </div>
             <button
               onClick={() => router.push("/browse/jobs")}
-              className="text-violet-600 hover:text-violet-700 font-medium flex items-center gap-2"
+              className="text-primary hover:text-primary font-medium flex items-center gap-2"
             >
               View All Jobs
               <ArrowRight className="w-4 h-4" />
@@ -288,18 +288,18 @@ export default function BrowseJobsPage() {
                 <div
                   key={job.id}
                   onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                  className="bg-muted rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border border-border hover:border-violet-300 group"
+                  className="bg-muted rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border border-border hover:border-primary/30 group"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-2 bg-card rounded-lg shadow-sm">
-                      <Briefcase className="w-6 h-6 text-violet-600" />
+                      <Briefcase className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
                       {job.type}
                     </span>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-violet-600 transition-colors">
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                     {job.title}
                   </h3>
 
@@ -347,7 +347,7 @@ export default function BrowseJobsPage() {
               </p>
               <button
                 onClick={() => router.push("/browse/jobs")}
-                className="text-violet-600 hover:text-violet-700 font-medium"
+                className="text-primary hover:text-primary font-medium"
               >
                 Browse All Jobs →
               </button>
@@ -358,17 +358,17 @@ export default function BrowseJobsPage() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+        <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-12 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-900 mb-4">
             Ready to Start Your Web3 Journey?
           </h2>
-          <p className="text-violet-100 text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-gray-900 dark:text-gray-900/80 text-lg mb-8 max-w-2xl mx-auto">
             Join thousands of professionals who have found their dream jobs
             through our guild-validated talent marketplace.
           </p>
           <button
             onClick={() => router.push("/browse/jobs")}
-            className="px-8 py-4 bg-card text-violet-600 rounded-xl hover:bg-muted transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="px-8 py-4 bg-card text-primary rounded-xl hover:bg-muted transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Explore All Opportunities
           </button>

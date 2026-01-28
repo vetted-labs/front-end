@@ -12,10 +12,10 @@ import {
   CheckCircle,
   GripVertical,
 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Alert } from "./ui/Alert";
-import { LoadingState } from "./ui/LoadingState";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Alert } from "./ui/alert";
+import { LoadingState } from "./ui/loadingstate";
 import { expertApi } from "@/lib/api";
 
 interface Question {
@@ -294,7 +294,7 @@ export function GuildApplicationTemplateBuilder({
                     <GripVertical className="w-5 h-5 text-muted-foreground mt-2 cursor-move" />
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="px-2 py-1 bg-violet-100 text-primary text-xs font-semibold rounded">
+                        <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded">
                           {question.type.replace("_", " ").toUpperCase()}
                         </span>
                         <span className="text-sm text-muted-foreground">Question {index + 1}</span>

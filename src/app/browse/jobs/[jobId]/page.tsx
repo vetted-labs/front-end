@@ -497,7 +497,7 @@ export default function PublicJobDetailsPage() {
               onClick={() => router.push("/")}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
 
@@ -509,7 +509,7 @@ export default function PublicJobDetailsPage() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <div className="p-2 bg-violet-100 rounded-lg">
+                  <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -547,7 +547,7 @@ export default function PublicJobDetailsPage() {
             ) : (
               <button
                 onClick={() => router.push("/auth/login?type=candidate")}
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-indigo-600 rounded-lg hover:opacity-90 transition-all"
+                className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90 transition-all"
               >
                 Sign In
               </button>
@@ -665,7 +665,7 @@ export default function PublicJobDetailsPage() {
                       {job.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-violet-100 text-primary rounded-full text-sm font-medium"
+                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
                         >
                           {skill}
                         </span>
@@ -880,13 +880,13 @@ export default function PublicJobDetailsPage() {
                   }}
                   className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
                     useProfileResume
-                      ? "border-violet-500 bg-primary/10"
+                      ? "border-primary bg-primary/10"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      useProfileResume ? "border-violet-500" : "border-border"
+                      useProfileResume ? "border-primary" : "border-border"
                     }`}>
                       {useProfileResume && (
                         <div className="w-3 h-3 rounded-full bg-primary/100"></div>
@@ -916,8 +916,8 @@ export default function PublicJobDetailsPage() {
                 }}
                 className={`w-full p-4 border-2 border-dashed rounded-lg text-left transition-all ${
                   !useProfileResume && resumeFile
-                    ? "border-violet-500 bg-primary/10"
-                    : "border-border hover:border-violet-500"
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary"
                 }`}
               >
                 <input
@@ -930,7 +930,7 @@ export default function PublicJobDetailsPage() {
                 {!useProfileResume && resumeFile ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full border-2 border-violet-500 flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center">
                         <div className="w-3 h-3 rounded-full bg-primary/100"></div>
                       </div>
                       <FileText className="w-5 h-5 text-primary" />

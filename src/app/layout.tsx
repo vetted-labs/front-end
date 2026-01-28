@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bree_Serif, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const breeSerif = Bree_Serif({
+  weight: '400',
+  subsets: ["latin"],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+const bricolageGrotesque = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['400', '500', '700'],
+});
 
 export const metadata: Metadata = {
   title: "Vetted",
@@ -39,11 +57,11 @@ export default function RootLayout({
                   if (isDark) {
                     root.classList.add('dark');
                     root.style.colorScheme = 'dark';
-                    root.style.backgroundColor = 'hsl(215, 25%, 10%)';
+                    root.style.backgroundColor = 'hsl(0, 0%, 0.4%)';
                   } else {
                     root.classList.remove('dark');
                     root.style.colorScheme = 'light';
-                    root.style.backgroundColor = 'hsl(0, 0%, 100%)';
+                    root.style.backgroundColor = 'hsl(30, 40%, 98%)';
                   }
                 } catch (e) {}
               })();
@@ -51,7 +69,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${breeSerif.variable} ${bricolageGrotesque.variable} font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>

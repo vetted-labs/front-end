@@ -22,9 +22,10 @@ import {
 } from "lucide-react";
 import { Button, LoadingState, Alert, Card, StatusBadge } from "./ui";
 import { jobsApi, dashboardApi } from "@/lib/api";
-import { useApi } from "@/hooks/useFetch";
+import { useApi } from "@/lib/hooks/useFetch";
 import { JOB_STATUSES } from "@/config/constants";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 interface JobPosting {
   id: string;
@@ -161,13 +162,7 @@ export function HiringDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push("/?section=employers")}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-                <span className="text-xl font-bold text-foreground">Vetted</span>
-              </button>
+              <Logo onClick={() => router.push("/?section=employers")} />
               <nav className="hidden md:flex items-center space-x-6 ml-8">
                 <button
                   onClick={() => router.push("/dashboard")}
@@ -204,7 +199,7 @@ export function HiringDashboard() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
                 >
-                <div className="p-2 bg-violet-100 rounded-lg">
+                <div className="p-2 bg-primary/10 rounded-lg">
                   <User className="w-4 h-4 text-primary" />
                 </div>
                 <span className="text-sm font-medium text-foreground hidden sm:block">
@@ -258,7 +253,7 @@ export function HiringDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-violet-100 rounded-lg">
+              <div className="p-2 bg-primary/10 rounded-lg">
                 <Briefcase className="w-6 h-6 text-primary" />
               </div>
             </div>
@@ -270,8 +265,8 @@ export function HiringDashboard() {
 
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
             <h3 className="text-2xl font-bold text-foreground">
@@ -282,8 +277,8 @@ export function HiringDashboard() {
 
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
             <h3 className="text-2xl font-bold text-foreground">
@@ -294,8 +289,8 @@ export function HiringDashboard() {
 
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock className="w-6 h-6 text-amber-600" />
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
+                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
             <h3 className="text-2xl font-bold text-foreground">
@@ -348,7 +343,8 @@ export function HiringDashboard() {
               jobPostings.map((job) => (
                 <div
                   key={job.id}
-                  className="p-6 hover:bg-muted transition-colors"
+                  onClick={() => router.push(`/jobs/${job.id}`)}
+                  className="p-6 hover:bg-muted hover:border-primary transition-all cursor-pointer border border-transparent"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -380,11 +376,12 @@ export function HiringDashboard() {
                         </div>
                         <div className="relative">
                           <button
-                            onClick={() =>
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setShowActionMenu(
                                 showActionMenu === job.id ? null : job.id
-                              )
-                            }
+                              );
+                            }}
                             className="p-1 hover:bg-muted rounded"
                           >
                             <MoreVertical className="w-5 h-5 text-muted-foreground" />

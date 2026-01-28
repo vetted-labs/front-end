@@ -311,7 +311,7 @@ export default function CandidateProfilePage() {
               onClick={() => router.push("/")}
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
             >
-              <Image src="/Vetted.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
+              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
             <div className="flex items-center gap-4">
@@ -489,7 +489,7 @@ export default function CandidateProfilePage() {
                   </p>
                   <button
                     onClick={() => router.push("/browse/jobs")}
-                    className="px-6 py-3 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all"
+                    className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 rounded-lg hover:opacity-90  transition-all"
                   >
                     Browse Jobs
                   </button>
@@ -638,7 +638,7 @@ export default function CandidateProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-violet-400 transition-colors">
+                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors">
                     <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                       Upload your resume
@@ -655,7 +655,7 @@ export default function CandidateProfilePage() {
                     />
                     <label
                       htmlFor="resume-upload"
-                      className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-violet-700 cursor-pointer transition-colors"
+                      className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary cursor-pointer transition-colors"
                     >
                       Choose File
                     </label>
@@ -663,7 +663,7 @@ export default function CandidateProfilePage() {
                 )}
 
                 {resumeFile && (
-                  <div className="p-4 bg-primary/10 border border-violet-200 rounded-lg">
+                  <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-primary" />
@@ -692,7 +692,7 @@ export default function CandidateProfilePage() {
                     <button
                       onClick={handleResumeUpload}
                       disabled={isSaving}
-                      className="w-full mt-2 py-2 bg-primary text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                      className="w-full mt-2 py-2 bg-primary text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                     >
                       {isSaving ? (
                         <>
@@ -856,7 +856,7 @@ export default function CandidateProfilePage() {
                 <button
                   onClick={handleSaveProfile}
                   disabled={isSaving}
-                  className="px-6 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-lg hover:opacity-90  transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 rounded-lg hover:opacity-90  transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSaving ? (
                     <>

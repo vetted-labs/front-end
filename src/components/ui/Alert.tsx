@@ -11,20 +11,20 @@ interface AlertProps {
 export function Alert({ variant = "info", children, onClose, className = "" }: AlertProps) {
   const styles = {
     error: {
-      container: "bg-destructive/10 border-destructive/20 text-red-800",
+      container: "bg-destructive/10 border-destructive/20 text-red-800 dark:text-red-300",
       icon: <XCircle className="w-5 h-5 text-destructive" />
     },
     success: {
-      container: "bg-green-50 border-green-200 text-green-800",
-      icon: <CheckCircle2 className="w-5 h-5 text-green-600" />
+      container: "bg-success/10 border-success/20 text-green-800 dark:text-green-300",
+      icon: <CheckCircle2 className="w-5 h-5 text-success" />
     },
     warning: {
-      container: "bg-yellow-50 border-yellow-200 text-yellow-800",
-      icon: <AlertCircle className="w-5 h-5 text-yellow-600" />
+      container: "bg-warning/10 border-warning/20 text-amber-800 dark:text-amber-300",
+      icon: <AlertCircle className="w-5 h-5 text-warning" />
     },
     info: {
-      container: "bg-blue-50 border-blue-200 text-blue-800",
-      icon: <Info className="w-5 h-5 text-blue-600" />
+      container: "bg-primary/10 border-primary/20 text-primary",
+      icon: <Info className="w-5 h-5 text-primary" />
     }
   };
 
