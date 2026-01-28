@@ -33,7 +33,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'", // unsafe-inline still needed for Tailwind and styled components
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io https://*.metamask.io https://*.cx.metamask.io",
+    "connect-src 'self' https://*.up.railway.app https://eth-sepolia.g.alchemy.com https://eth.merkle.io https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io https://*.metamask.io https://*.cx.metamask.io https://mainnet.infura.io https://polygon-rpc.com https://arb1.arbitrum.io",
     "frame-ancestors 'none'", // Prevent clickjacking
     "base-uri 'self'", // Prevent base tag injection
     "form-action 'self'", // Prevent form hijacking
