@@ -15,9 +15,9 @@ export function middleware(request: NextRequest) {
   const devCSP = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-eval' 'nonce-${nonce}'`, // unsafe-eval needed for webpack HMR
-    "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for CSS-in-JS libraries
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for CSS-in-JS libraries
     "img-src 'self' data: https: blob:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.metamask.io https://*.cx.metamask.io https://*.drpc.org https://cca-lite.coinbase.com https://*.coinbase.com https://rpc.ankr.com https://*.publicnode.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -30,9 +30,9 @@ export function middleware(request: NextRequest) {
   const prodCSP = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'`, // unsafe-inline needed for Next.js inline scripts (nonce removed as it disables unsafe-inline)
-    "style-src 'self' 'unsafe-inline'", // unsafe-inline still needed for Tailwind and styled components
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline still needed for Tailwind and styled components
     "img-src 'self' data: https: blob:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://*.up.railway.app https://eth-sepolia.g.alchemy.com https://eth.merkle.io https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io https://*.metamask.io https://*.cx.metamask.io https://mainnet.infura.io https://polygon-rpc.com https://arb1.arbitrum.io https://*.drpc.org https://cca-lite.coinbase.com https://*.coinbase.com https://rpc.ankr.com https://*.publicnode.com",
     "frame-ancestors 'none'", // Prevent clickjacking
     "base-uri 'self'", // Prevent base tag injection
