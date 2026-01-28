@@ -108,13 +108,13 @@ export const jobsApi = {
     if (params?.companyId) queryParams.append("companyId", params.companyId);
     const query = queryParams.toString();
     return apiRequest(`/api/jobs${query ? `?${query}` : ""}`, {
-      requiresAuth: true,
+      requiresAuth: false, // Public endpoint - no auth required for browsing jobs
     });
   },
 
   getById: (id: string) =>
     apiRequest(`/api/jobs/${id}`, {
-      requiresAuth: true,
+      requiresAuth: false, // Public endpoint - anyone can view job details
     }),
 
   create: (data: Record<string, unknown>) =>
