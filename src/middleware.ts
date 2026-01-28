@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for CSS-in-JS libraries
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org",
+    "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.metamask.io https://*.cx.metamask.io",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -29,11 +29,11 @@ export function middleware(request: NextRequest) {
   // Production CSP: Strict policy without unsafe-eval or unsafe-inline for scripts
   const prodCSP = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'`, // Only nonce-based scripts allowed
+    `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`, // unsafe-inline needed for Next.js inline scripts
     "style-src 'self' 'unsafe-inline'", // unsafe-inline still needed for Tailwind and styled components
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io",
+    "connect-src 'self' https://eth-sepolia.g.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.infura.io https://*.metamask.io https://*.cx.metamask.io",
     "frame-ancestors 'none'", // Prevent clickjacking
     "base-uri 'self'", // Prevent base tag injection
     "form-action 'self'", // Prevent form hijacking
