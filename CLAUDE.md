@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General Guidelines
+
+**Git Commits:**
+- NEVER add "Co-Authored-By: Claude" or similar attribution to commit messages
+- Keep commit messages concise and follow conventional commit format
+- Focus on describing what changed and why
+
 ## Project Overview
 
 **Vetted** is a decentralized hiring platform built on Next.js 15 (App Router) that connects companies with Web3 talent through a guild-based review system. The platform integrates Web3 wallet authentication using RainbowKit, Wagmi, and WalletConnect for decentralized identity management.

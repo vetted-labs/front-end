@@ -309,7 +309,7 @@ export const candidateApi = {
 
   getById: (candidateId: string) =>
     apiRequest(`/api/candidates/${candidateId}`, {
-      requiresAuth: true,
+      requiresAuth: false, // Public endpoint - anyone can view candidate profiles
     }),
 
   updateProfile: (candidateId: string, data: Record<string, unknown>) =>
