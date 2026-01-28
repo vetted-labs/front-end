@@ -26,10 +26,10 @@ export function middleware(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join("; ");
 
-  // Production CSP: Strict policy without unsafe-eval or unsafe-inline for scripts
+  // Production CSP: Permissive policy for Next.js inline scripts
   const prodCSP = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`, // unsafe-inline needed for Next.js inline scripts
+    `script-src 'self' 'unsafe-inline'`, // unsafe-inline needed for Next.js inline scripts (nonce removed as it disables unsafe-inline)
     "style-src 'self' 'unsafe-inline'", // unsafe-inline still needed for Tailwind and styled components
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
