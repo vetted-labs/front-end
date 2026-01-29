@@ -18,6 +18,7 @@ interface Guild {
   totalEarnings?: number;
   joinedAt?: string;
   pendingProposals?: number;
+  pendingApplications?: number;
   ongoingProposals?: number;
   closedProposals?: number;
 }
@@ -67,6 +68,9 @@ export function GuildCard({
               {guild.expertRole && (
                 <p className="text-xs text-muted-foreground capitalize">
                   {guild.expertRole} • {guild.memberCount} members
+                  {guild.pendingApplications !== undefined && guild.pendingApplications > 0 && (
+                    <span className="text-primary font-medium"> • {guild.pendingApplications} pending</span>
+                  )}
                 </p>
               )}
             </div>
@@ -158,6 +162,9 @@ export function GuildCard({
               </h3>
               <p className="text-xs text-muted-foreground capitalize">
                 {guild.expertRole} • {guild.memberCount} members
+                {guild.pendingApplications !== undefined && guild.pendingApplications > 0 && (
+                  <span className="text-primary font-medium"> • {guild.pendingApplications} pending</span>
+                )}
               </p>
             </div>
             <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all flex-shrink-0" />
