@@ -294,7 +294,7 @@ export default function BrowseJobsPage() {
                     <div className="p-2 bg-card rounded-lg shadow-sm">
                       <Briefcase className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-full text-xs font-medium">
                       {job.type}
                     </span>
                   </div>

@@ -50,8 +50,8 @@ const GUILD_RANKS: Rank[] = [
       "Reputation score 150+",
       "Successfully endorse 5+ candidates",
     ],
-    color: "text-primary",
-    bgGradient: "from-primary/10 to-primary/20",
+    color: "text-orange-600",
+    bgGradient: "from-orange-100 to-orange-200",
   },
   {
     level: 4,
@@ -220,7 +220,7 @@ export function GuildRanksProgression({
                         <div className="flex items-center gap-2">
                           <h3 className="text-2xl font-bold text-foreground">{rank.name}</h3>
                           {isCurrentRank && (
-                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                            <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
                               Current
                             </span>
                           )}

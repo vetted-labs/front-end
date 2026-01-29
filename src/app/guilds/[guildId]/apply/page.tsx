@@ -395,7 +395,7 @@ export default function GuildApplicationPage() {
                         onClick={() => updateAnswer(question.id, rating.toString())}
                         className={`w-12 h-12 rounded-lg border-2 transition-all font-semibold ${
                           answers[question.id] === rating.toString()
-                            ? "border-primary bg-primary/10 text-primary"
+                            ? "border-primary bg-primary/30 dark:bg-primary/40 text-primary"
                             : "border-border text-muted-foreground hover:border-primary/50"
                         }`}
                       >

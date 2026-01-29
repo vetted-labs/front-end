@@ -370,7 +370,7 @@ export default function GlobalGuildsPage() {
                 </button>
                 <button
                   onClick={() => router.push("/guilds")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 transition-all"
                 >
                   <Swords className="w-4 h-4" />
                   Guilds

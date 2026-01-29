@@ -145,7 +145,7 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
                     onClick={() => router.push(item.path)}
                     className={`relative flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                       isActive
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >

@@ -438,7 +438,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-foreground">My Posted Jobs</h3>
-              <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded-full">
                 {jobs.length} total
               </span>
             </div>

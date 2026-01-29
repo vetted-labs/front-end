@@ -173,7 +173,7 @@ export function EndorsementBiddingUI({
                       <h3 className="text-xl font-semibold text-foreground">
                         {app.candidateName}
                       </h3>
-                      <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                      <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
                         {app.matchScore}% Match
                       </span>
                     </div>

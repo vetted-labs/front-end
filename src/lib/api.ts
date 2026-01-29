@@ -18,11 +18,20 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public statusText: string,
+    public data?: any,
     message?: string
   ) {
     super(message || `${status} - ${statusText}`);
     this.name = "ApiError";
+    // Make response property available for compatibility with error handling
+    this.response = { status, statusText, data };
   }
+
+  response: {
+    status: number;
+    statusText: string;
+    data: any;
+  };
 }
 
 export async function apiRequest<T = unknown>(
@@ -66,7 +75,16 @@ export async function apiRequest<T = unknown>(
     });
 
     if (!response.ok) {
-      throw new ApiError(response.status, response.statusText);
+      // Try to parse error response body
+      let errorData: any = {};
+      try {
+        const text = await response.text();
+        errorData = text ? JSON.parse(text) : {};
+      } catch {
+        // If parsing fails, leave errorData empty
+      }
+
+      throw new ApiError(response.status, response.statusText, errorData);
     }
 
     const data = await response.json();

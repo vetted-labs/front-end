@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy } from "lucide-react";
+import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 
 interface LeaderboardExpert {
   id: string;
@@ -11,6 +11,8 @@ interface LeaderboardExpert {
   accuracy: number;
   totalEarnings: number;
   rank: number;
+  rankChange?: number; // Positive = moved up, negative = moved down
+  reputationChange?: number; // Change in reputation this period
 }
 
 interface GuildLeaderboardTabProps {
@@ -27,11 +29,46 @@ export function GuildLeaderboardTab({
   leaderboardPeriod,
   onPeriodChange,
 }: GuildLeaderboardTabProps) {
+  // Helper function to render rank change indicator
+  const renderRankChange = (rankChange?: number) => {
+    if (!rankChange || rankChange === 0) return null;
+
+    const isImproving = rankChange > 0;
+    const Icon = isImproving ? ChevronUp : ChevronDown;
+    const color = isImproving ? "text-green-600" : "text-red-600";
+
+    return (
+      <span className={`inline-flex items-center ml-1 ${color}`} title={`${isImproving ? 'Up' : 'Down'} ${Math.abs(rankChange)} ${Math.abs(rankChange) === 1 ? 'position' : 'positions'}`}>
+        <Icon className="w-3 h-3" />
+      </span>
+    );
+  };
+
+  // Helper function to render reputation change
+  const renderReputationChange = (reputationChange?: number) => {
+    if (!reputationChange || reputationChange === 0) return null;
+
+    const isPositive = reputationChange > 0;
+    const color = isPositive ? "text-green-600" : "text-red-600";
+    const sign = isPositive ? "+" : "";
+
+    return (
+      <span className={`text-xs ml-2 ${color} font-medium`}>
+        ({sign}{reputationChange})
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Time Period Selector */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-foreground">Top Experts</h3>
+        <div>
+          <h3 className="text-xl font-semibold text-foreground">Top Experts</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Showing {leaderboardData.topExperts.length} top performing experts
+          </p>
+        </div>
         <select
           value={leaderboardPeriod}
           onChange={(e) =>
@@ -62,26 +99,26 @@ export function GuildLeaderboardTab({
       ) : (
         <>
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full">
-                <thead className="bg-muted/50">
+                <thead className="bg-muted/50 sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Rank
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Expert
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Reputation
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Reviews
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Accuracy
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Earnings
                     </th>
                   </tr>
@@ -92,31 +129,34 @@ export function GuildLeaderboardTab({
                       key={expert.id}
                       className="border-t border-border hover:bg-muted/30 transition-colors"
                     >
-                      {/* Rank with medal icons for top 3 */}
-                      <td className="px-4 py-4">
-                        {index === 0 && <span className="text-2xl">🥇</span>}
-                        {index === 1 && <span className="text-2xl">🥈</span>}
-                        {index === 2 && <span className="text-2xl">🥉</span>}
-                        {index > 2 && (
-                          <span className="text-foreground font-medium">
-                            #{index + 1}
-                          </span>
-                        )}
+                      {/* Rank with medal icons for top 3 and rank change indicators */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1">
+                          {index === 0 && <span className="text-xl">🥇</span>}
+                          {index === 1 && <span className="text-xl">🥈</span>}
+                          {index === 2 && <span className="text-xl">🥉</span>}
+                          {index > 2 && (
+                            <span className="text-foreground font-medium text-sm">
+                              #{index + 1}
+                            </span>
+                          )}
+                          {index < 10 && renderRankChange(expert.rankChange)}
+                        </div>
                       </td>
 
-                      {/* Expert Info */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-bold text-primary">
+                      {/* Expert Info - Condensed */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-primary">
                               {expert.name
                                 .split(" ")
                                 .map((n) => n[0])
                                 .join("")}
                             </span>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground text-sm truncate">
                               {expert.name}
                             </p>
                             <p className="text-xs text-muted-foreground capitalize">
@@ -126,22 +166,25 @@ export function GuildLeaderboardTab({
                         </div>
                       </td>
 
-                      {/* Stats */}
-                      <td className="px-4 py-4 text-center">
-                        <span className="font-semibold text-foreground">
-                          {expert.reputation}
-                        </span>
+                      {/* Stats - Condensed */}
+                      <td className="px-3 py-3 text-center">
+                        <div className="flex items-center justify-center">
+                          <span className="font-semibold text-foreground text-sm">
+                            {expert.reputation}
+                          </span>
+                          {renderReputationChange(expert.reputationChange)}
+                        </div>
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className="text-muted-foreground">
+                      <td className="px-3 py-3 text-center">
+                        <span className="text-muted-foreground text-sm">
                           {expert.totalReviews}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className="text-foreground">{expert.accuracy}%</span>
+                      <td className="px-3 py-3 text-center">
+                        <span className="text-foreground text-sm">{expert.accuracy}%</span>
                       </td>
-                      <td className="px-4 py-4 text-right">
-                        <span className="font-semibold text-foreground">
+                      <td className="px-3 py-3 text-right">
+                        <span className="font-semibold text-foreground text-sm">
                           ${expert.totalEarnings.toLocaleString()}
                         </span>
                       </td>
@@ -152,18 +195,21 @@ export function GuildLeaderboardTab({
             </div>
           </div>
 
-          {/* Current User Position (if not in top 10) */}
+          {/* Current User Position (if not in top list) */}
           {leaderboardData.currentUser &&
-            leaderboardData.currentUser.rank > 5 && (
+            leaderboardData.currentUser.rank > leaderboardData.topExperts.length && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                 <p className="text-sm text-muted-foreground mb-2">
                   Your Position
                 </p>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-foreground">
-                      #{leaderboardData.currentUser.rank}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-lg font-bold text-foreground">
+                        #{leaderboardData.currentUser.rank}
+                      </span>
+                      {renderRankChange(leaderboardData.currentUser.rankChange)}
+                    </div>
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-sm font-bold text-primary">
                         {leaderboardData.currentUser.name
@@ -187,6 +233,7 @@ export function GuildLeaderboardTab({
                       <strong className="text-foreground">
                         {leaderboardData.currentUser.reputation}
                       </strong>
+                      {renderReputationChange(leaderboardData.currentUser.reputationChange)}
                     </span>
                     <span className="text-muted-foreground">
                       Earnings:{" "}

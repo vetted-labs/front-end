@@ -97,9 +97,6 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
   const [approvalTxHash, setApprovalTxHash] = useState<`0x${string}` | undefined>();
   const [bidTxHash, setBidTxHash] = useState<`0x${string}` | undefined>();
 
-  // Add ref to track if component is mounted
-  const isMountedRef = useRef(true);
-
   const { balance, endorsementAllowance, approve, refetchBalance, refetchEndorsementAllowance } = useVettedToken();
   const { placeBid, minimumBid } = useEndorsementBidding();
   const { stakeInfo, minimumStake } = useExpertStaking();
@@ -111,22 +108,34 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
   // Filter endorsements for current guild
   const userEndorsements = allUserEndorsements.filter((e: any) => e.guild?.id === guildId);
 
-  // Cleanup on unmount
+  // Debug logging for balance
   useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+    if (address) {
+      console.log('[Balance Debug] Wallet Address:', address);
+      console.log('[Balance Debug] Raw Balance:', balance);
+      console.log('[Balance Debug] Formatted Balance:', balance ? formatEther(balance) : 'N/A');
+      console.log('[Balance Debug] Token Contract:', CONTRACT_ADDRESSES.TOKEN);
+    }
+  }, [balance, address]);
 
   // Load applications
   useEffect(() => {
+    const abortController = new AbortController();
+
     if (guildId && address) {
       console.log('[useEffect] Triggering loadApplications with:', { guildId, address });
-      loadApplications();
+      loadApplications(abortController.signal);
     } else {
       console.warn('[useEffect] Missing guildId or address:', { guildId, address });
       setLoading(false);
+      // Clear applications when wallet disconnects
+      setApplications([]);
     }
+
+    return () => {
+      console.log('[useEffect] Cleanup: Aborting pending requests');
+      abortController.abort();
+    };
   }, [guildId, address]);
 
   // Handle transaction success
@@ -168,7 +177,7 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
     }
   }, [txSuccess, txReceipt, approving, endorsing]);
 
-  const loadApplications = async () => {
+  const loadApplications = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
 
@@ -183,17 +192,17 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
         return;
       }
 
-      // Add timeout to prevent infinite loading (reduced to 10 seconds)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout after 10 seconds. Please try again.')), 10000)
-      );
-
-      const apiPromise = apiRequest(
-        `/api/blockchain/endorsements/applications/${guildId}?expert_address=${address}`
-      );
-
       console.log('[loadApplications] Making API request...');
-      const response: any = await Promise.race([apiPromise, timeoutPromise]);
+      const response: any = await apiRequest(
+        `/api/blockchain/endorsements/applications/${guildId}?expert_address=${address}`,
+        { signal }
+      );
+
+      // Check if request was aborted
+      if (signal?.aborted) {
+        console.log('[loadApplications] Request was aborted, skipping state update');
+        return;
+      }
 
       // Detailed response inspection
       console.log('[loadApplications] Response type:', typeof response);
@@ -227,15 +236,15 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
       }
 
       console.log('[loadApplications] Setting', applicationsData.length, 'applications');
-
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
-        setApplications(applicationsData);
-      } else {
-        console.log('[loadApplications] Component unmounted, skipping state update');
-      }
+      setApplications(applicationsData);
 
     } catch (error: any) {
+      // Don't show errors for aborted requests
+      if (error.name === 'AbortError' || signal?.aborted) {
+        console.log('[loadApplications] Request aborted');
+        return;
+      }
+
       console.error("[loadApplications] ❌ Exception caught:", error);
       console.error("[loadApplications] Error details:", {
         message: error.message,
@@ -243,11 +252,10 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
         name: error.name
       });
 
-      if (isMountedRef.current) {
-        toast.error(error.message || "Failed to load applications");
-      }
+      toast.error(error.message || "Failed to load applications");
     } finally {
-      if (isMountedRef.current) {
+      // Only update loading state if not aborted
+      if (!signal?.aborted) {
         setLoading(false);
       }
     }
@@ -493,7 +501,9 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
     );
   }
 
-  if (loading || endorsementsLoading) {
+  // Only show loading if we have an address and are actually loading
+  // This prevents infinite spinner when wallet is not connected
+  if ((loading || endorsementsLoading) && address) {
     return (
       <Card className="border-border">
         <CardContent className="p-12 text-center">
@@ -514,7 +524,7 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
   // Handler for refresh button
   const handleRefresh = () => {
     console.log('Manually refreshing data...');
-    loadApplications();
+    loadApplications(); // No signal needed for manual refresh
     refetchEndorsements();
     refetchBalance();
     refetchEndorsementAllowance();
@@ -564,6 +574,23 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
         </Card>
       )}
 
+      {/* Connected Wallet Info */}
+      {address && (
+        <Card className="border-border bg-muted/50">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between text-sm">
+              <div>
+                <span className="text-muted-foreground">Connected Wallet: </span>
+                <code className="text-primary font-mono">{address.substring(0, 6)}...{address.substring(38)}</code>
+              </div>
+              <Badge variant="outline" className="ml-2">
+                {chain?.name || 'Unknown Network'}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Stats */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Endorsement Dashboard</h2>
@@ -582,13 +609,42 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
         <Card className="border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Your VETD Balance</p>
-                <p className="text-2xl font-bold">
-                  {balance ? parseFloat(formatEther(balance)).toFixed(2) : "0"}
-                </p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Your VETD Balance</p>
+                  <button
+                    onClick={() => {
+                      console.log('Manually refreshing balance...');
+                      refetchBalance();
+                      toast.success('Balance refreshed');
+                    }}
+                    className="p-1 hover:bg-muted rounded"
+                    title="Refresh balance"
+                  >
+                    <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                  </button>
+                </div>
+                {!address ? (
+                  <p className="text-lg text-muted-foreground">Connect Wallet</p>
+                ) : balance === undefined ? (
+                  <p className="text-lg text-muted-foreground">Loading...</p>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold break-all">
+                      {parseFloat(formatEther(balance)).toLocaleString('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                      })}
+                    </p>
+                    {parseFloat(formatEther(balance)) > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1 font-mono break-all">
+                        {formatEther(balance)} VETD
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
-              <Coins className="w-8 h-8 text-primary" />
+              <Coins className="w-8 h-8 text-primary flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

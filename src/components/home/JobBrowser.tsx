@@ -294,7 +294,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2">
                       {job.guild && (
-                        <span className="px-2 py-1 bg-primary/10 text-primary border border-primary/20 rounded text-xs font-medium">
+                        <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded text-xs font-medium">
                           {job.guild}
                         </span>
                       )}

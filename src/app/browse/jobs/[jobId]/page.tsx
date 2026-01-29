@@ -665,7 +665,7 @@ export default function PublicJobDetailsPage() {
                       {job.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
+                          className="px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-full text-sm font-medium"
                         >
                           {skill}
                         </span>

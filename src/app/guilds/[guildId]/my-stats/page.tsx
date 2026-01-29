@@ -576,7 +576,7 @@ export default function MyGuildStatsPage() {
               <div className="space-y-2">
                 <button
                   onClick={() => router.push(`/guilds/${guildId}`)}
-                  className="w-full px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all font-medium"
+                  className="w-full px-4 py-2 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-lg hover:bg-primary/20 transition-all font-medium"
                 >
                   View Guild Dashboard
                 </button>

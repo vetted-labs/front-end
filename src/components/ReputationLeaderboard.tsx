@@ -257,7 +257,7 @@ export function ReputationLeaderboard({
                       <div className="font-medium text-foreground flex items-center gap-2">
                         {entry.fullName}
                         {entry.expertId === currentExpertId && (
-                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                          <span className="px-2 py-0.5 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
                             You
                           </span>
                         )}

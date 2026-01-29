@@ -1,4 +1,4 @@
-import { ExpertPublicProfileView } from "@/components/ExpertPublicProfileView";
+import { ExpertProfile } from "@/components/ExpertProfile";
 
 export default async function ExpertPublicProfilePage({
   params,
@@ -7,5 +7,5 @@ export default async function ExpertPublicProfilePage({
 }) {
   const { walletAddress } = await params;
 
-  return <ExpertPublicProfileView walletAddress={walletAddress} />;
+  return <ExpertProfile walletAddress={walletAddress} showBackButton />;
 }

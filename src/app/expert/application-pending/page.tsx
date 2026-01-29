@@ -170,16 +170,16 @@ export default function ApplicationPendingPage() {
               <p className="text-sm text-muted-foreground">Total Reviews</p>
             </div>
 
-            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="text-center p-4 bg-muted rounded-lg border border-border">
               <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-green-700">{expert.approvalCount}</p>
-              <p className="text-sm text-green-600">Approvals</p>
+              <p className="text-2xl font-bold text-foreground">{expert.approvalCount}</p>
+              <p className="text-sm text-muted-foreground">Approvals</p>
             </div>
 
-            <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+            <div className="text-center p-4 bg-muted rounded-lg border border-border">
               <XCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
-              <p className="text-2xl font-bold text-red-700">{expert.rejectionCount}</p>
-              <p className="text-sm text-destructive">Rejections</p>
+              <p className="text-2xl font-bold text-foreground">{expert.rejectionCount}</p>
+              <p className="text-sm text-muted-foreground">Rejections</p>
             </div>
           </div>
 

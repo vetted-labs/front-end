@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { getGuildIcon } from "@/lib/guildHelpers";
 import { InfoTooltip } from "./ui/InfoTooltip";
+import { Badge, getRankBadgeVariant } from "./ui/badge";
 import { Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
 
 interface Guild {
@@ -69,9 +70,9 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
                 {guild.name}
               </h4>
               <div className="inline-flex items-center gap-2">
-                <span className="bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded-md text-primary text-[10px] font-bold uppercase tracking-wide">
+                <Badge variant={getRankBadgeVariant(guild.expertRole)} className="text-[10px] uppercase tracking-wide">
                   {guild.expertRole}
-                </span>
+                </Badge>
                 <InfoTooltip content={getRankExplanation(guild.expertRole)} side="right" />
               </div>
             </div>
@@ -82,18 +83,18 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
         <div className="p-4">
           <div className="grid grid-cols-2 gap-2.5">
             {/* Reputation - Primary Metric */}
-            <div className="bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 rounded-lg p-3 border border-primary/20 hover:border-primary/30 transition-colors">
+            <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Reputation</p>
               </div>
               <p className="text-xl font-bold text-foreground">{guild.reputation}</p>
             </div>
 
             {/* Earnings - Primary Metric */}
-            <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-500/10 dark:to-green-500/10 rounded-lg p-3 border border-emerald-200/50 dark:border-emerald-500/20 hover:border-emerald-300/50 dark:hover:border-emerald-500/30 transition-colors">
+            <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Earned</p>
               </div>
               <p className="text-xl font-bold text-foreground">${guild.totalEarnings}</p>
@@ -134,9 +135,9 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
               {guild.name}
             </h3>
             <div className="inline-flex items-center gap-2">
-              <span className="bg-primary/10 dark:bg-primary/20 px-3 py-1 rounded-lg text-primary text-xs font-bold uppercase tracking-wide">
+              <Badge variant={getRankBadgeVariant(guild.expertRole)} className="text-xs uppercase tracking-wide">
                 {guild.expertRole}
-              </span>
+              </Badge>
               <InfoTooltip content={getRankExplanation(guild.expertRole)} side="right" />
             </div>
           </div>
@@ -147,18 +148,18 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
       <div className="p-5 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           {/* Reputation - Primary Metric */}
-          <div className="bg-gradient-to-br from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 rounded-xl p-4 border border-primary/20 hover:border-primary/30 transition-colors">
+          <div className="bg-secondary dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
+              <TrendingUp className="w-4 h-4 text-muted-foreground" />
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reputation</p>
             </div>
             <p className="text-2xl font-bold text-foreground">{guild.reputation}</p>
           </div>
 
           {/* Earnings - Primary Metric */}
-          <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-500/10 dark:to-green-500/10 rounded-xl p-4 border border-emerald-200/50 dark:border-emerald-500/20 hover:border-emerald-300/50 dark:hover:border-emerald-500/30 transition-colors">
+          <div className="bg-secondary dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Earned</p>
             </div>
             <p className="text-2xl font-bold text-foreground">${guild.totalEarnings}</p>

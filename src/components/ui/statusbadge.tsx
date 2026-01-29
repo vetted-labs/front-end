@@ -6,7 +6,7 @@ interface StatusBadgeProps {
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
   const statusConfig = {
     draft: { label: "Draft", color: "bg-muted text-muted-foreground" },
-    active: { label: "Active", color: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary" },
+    active: { label: "Active", color: "bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:text-primary dark:border-primary/70" },
     paused: { label: "Paused", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
     closed: { label: "Closed", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
     pending: { label: "Pending", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },

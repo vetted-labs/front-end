@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Award, TrendingUp, DollarSign } from "lucide-react";
+import { Users, Award, TrendingUp, DollarSign, Target, Zap, Trophy } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
 
 interface GuildHeaderProps {
@@ -13,6 +13,11 @@ interface GuildHeaderProps {
       totalPoints: number;
       totalEndorsementEarnings: number;
     };
+    description: string;
+    totalProposalsReviewed: number;
+    averageApprovalTime: string;
+    candidateCount: number;
+    openPositions: number;
   };
 }
 
@@ -47,8 +52,49 @@ export function GuildHeader({ guild }: GuildHeaderProps) {
         </div>
       </div>
 
-      {/* Guild Stats */}
+      {/* Guild Overview */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Guild Overview</h2>
+          <p className="text-lg text-muted-foreground mb-6 line-clamp-3">
+            {guild.description}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Target className="w-5 h-5 text-primary" />
+                <p className="text-2xl font-bold text-foreground">{guild.totalProposalsReviewed}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Proposals Reviewed</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                <p className="text-2xl font-bold text-foreground">{guild.averageApprovalTime}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Avg Approval Time</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                <p className="text-2xl font-bold text-foreground">{guild.candidateCount}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Active Candidates</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5 text-green-500" />
+                <p className="text-2xl font-bold text-foreground">{guild.openPositions}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">Open Positions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Personal Stats */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-lg font-semibold text-foreground mb-6">Your Performance</h2>
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">

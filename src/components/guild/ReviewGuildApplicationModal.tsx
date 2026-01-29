@@ -123,7 +123,7 @@ export function ReviewGuildApplicationModal({
                   onClick={() => onConfidenceChange(level.toString())}
                   className={`flex-1 py-3 rounded-lg border-2 transition-all ${
                     reviewConfidence === level.toString()
-                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      ? "border-primary bg-primary/30 dark:bg-primary/40 text-primary font-semibold"
                       : "border-border text-muted-foreground hover:border-primary/50"
                   }`}
                 >

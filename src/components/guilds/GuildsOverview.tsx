@@ -138,7 +138,7 @@ export function GuildsOverview() {
         >
           My Guilds
           {profile.guilds.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+            <span className="ml-2 px-2 py-0.5 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
               {profile.guilds.length}
             </span>
           )}

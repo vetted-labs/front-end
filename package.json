@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3030",
+    "dev": "dotenv -e .env.local -- next dev --turbopack",
     "build": "NODE_OPTIONS='--no-deprecation' next build",
-    "start": "next start -p 3030",
+    "start": "dotenv -e .env.local -- next start",
     "lint": "eslint"
   },
   "dependencies": {
@@ -34,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",

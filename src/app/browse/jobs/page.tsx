@@ -365,7 +365,7 @@ export default function JobsListingPage() {
               <div className="hidden md:flex items-center space-x-1">
                 <button
                   onClick={() => router.push("/browse/jobs")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/10 text-primary transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 transition-all"
                 >
                   <Briefcase className="w-4 h-4" />
                   Find Jobs
@@ -622,7 +622,7 @@ export default function JobsListingPage() {
                                 const cleanGuildName = job.guild.replace(/ Guild$/i, '');
                                 router.push(`/guilds/${cleanGuildName}`);
                               }}
-                              className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded text-xs font-medium hover:bg-primary/20 transition-colors"
+                              className="px-2.5 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded text-xs font-medium hover:bg-primary/20 transition-colors"
                             >
                               {job.guild}
                             </button>

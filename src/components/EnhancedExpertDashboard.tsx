@@ -182,7 +182,7 @@ export function EnhancedExpertDashboard() {
       case "earning":
         return "bg-green-100 text-green-600";
       case "reputation_gain":
-        return "bg-primary/10 text-primary";
+        return "bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70";
       default:
         return "bg-muted text-muted-foreground";
     }

@@ -37,6 +37,7 @@ import {
   Calculator,
   UserPlus,
   Scale,
+  LayoutDashboard,
 } from "lucide-react";
 import { LoadingState, Alert, Button } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
@@ -511,7 +512,7 @@ export default function PublicGuildPage() {
       case "candidate_approved":
         return "bg-green-100 text-green-600";
       case "job_posted":
-        return "bg-primary/10 text-primary";
+        return "bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70";
       case "endorsement_given":
         return "bg-amber-100 text-amber-600";
       default:
@@ -721,6 +722,18 @@ export default function PublicGuildPage() {
               <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed mb-4">
                 {guild.description}
               </p>
+              {/* Expert Dashboard Link - Only show for guild members */}
+              {membership?.isMember && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => router.push(`/expert/guild/${guildId}`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Expert Dashboard
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-6 flex-wrap mb-4">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Users className="w-5 h-5" />
@@ -959,7 +972,7 @@ export default function PublicGuildPage() {
                                   <MapPin className="w-4 h-4" />
                                   {job.location}
                                 </span>
-                                <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">
+                                <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded">
                                   {job.type}
                                 </span>
                                 {job.salary.min && job.salary.max && (
@@ -1229,7 +1242,7 @@ export default function PublicGuildPage() {
                               <MapPin className="w-4 h-4" />
                               {job.location}
                             </span>
-                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">
+                            <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded">
                               {job.type}
                             </span>
                             {job.salary.min && job.salary.max && (
