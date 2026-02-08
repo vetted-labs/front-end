@@ -45,7 +45,7 @@ export default function RootLayout({
                   const root = document.documentElement;
                   let isDark = false;
 
-                  if (theme === 'dark') {
+                  if (!theme || theme === 'dark') {
                     isDark = true;
                   } else if (theme === 'light') {
                     isDark = false;
@@ -57,7 +57,7 @@ export default function RootLayout({
                   if (isDark) {
                     root.classList.add('dark');
                     root.style.colorScheme = 'dark';
-                    root.style.backgroundColor = 'hsl(0, 0%, 0.4%)';
+                    root.style.backgroundColor = 'hsl(0 0% 4%)';
                   } else {
                     root.classList.remove('dark');
                     root.style.colorScheme = 'light';

@@ -20,6 +20,7 @@ import {
   Users,
   Loader2,
   Plus,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -36,11 +37,11 @@ import { VotingScoreSlider } from "@/components/VotingScoreSlider";
 import { ProposalFinalizationDisplay } from "@/components/ProposalFinalizationDisplay";
 
 const GUILDS = [
-  { id: "ddc980f6-c5f2-4f67-8090-76b631db5cd5", name: "Engineering & Technology" },
-  { id: "ce9fc191-b3a4-48f9-bc2d-a6020410ced6", name: "Product Management" },
-  { id: "00ac1711-2e9a-430d-9c2d-a4d5fb7ec316", name: "Design & UX" },
-  { id: "e065d991-436f-453d-b201-a7858728babb", name: "Data & Analytics" },
-  { id: "ae3b2342-0948-477b-b00e-1e64d9217f73", name: "Marketing & Growth" },
+  { id: "ddc980f6-c5f2-4f67-8090-76b631db5cd5", name: "Engineering Guild" },
+  { id: "ce9fc191-b3a4-48f9-bc2d-a6020410ced6", name: "Product Guild" },
+  { id: "00ac1711-2e9a-430d-9c2d-a4d5fb7ec316", name: "Design Guild" },
+  { id: "ae3b2342-0948-477b-b00e-1e64d9217f73", name: "Marketing & Growth Guild" },
+  { id: "09e92ec4-c2e1-428e-b77d-c91dff4d869e", name: "Sales & Success Guild" },
 ];
 
 interface Proposal {
@@ -75,6 +76,8 @@ interface Proposal {
   consensus_score?: number;
   my_vote_score?: number;
   alignment_distance?: number;
+  // Commit-reveal
+  voting_phase?: string;
   // Finalization
   finalized: boolean;
   outcome?: "approved" | "rejected";
@@ -371,6 +374,11 @@ export default function VotingPage() {
                         {proposal.has_voted && (
                           <Badge variant="secondary">
                             Already Voted
+                          </Badge>
+                        )}
+                        {proposal.voting_phase && proposal.voting_phase !== "direct" && (
+                          <Badge variant="outline" className="border-orange-500/30 text-orange-500">
+                            {proposal.voting_phase}
                           </Badge>
                         )}
                       </div>

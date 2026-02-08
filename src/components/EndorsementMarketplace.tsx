@@ -30,11 +30,13 @@ import {
   Users,
   Award,
   Loader2,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
   AlertTriangle,
   RefreshCw,
+  Wallet,
+  Network,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
@@ -76,9 +78,10 @@ interface UserEndorsement {
 interface EndorsementMarketplaceProps {
   guildId: string;
   guildName: string;
+  initialApplicationId?: string;
 }
 
-export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarketplaceProps) {
+export function EndorsementMarketplace({ guildId, guildName, initialApplicationId }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -96,6 +99,9 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
   const [txError, setTxError] = useState<string | null>(null);
   const [approvalTxHash, setApprovalTxHash] = useState<`0x${string}` | undefined>();
   const [bidTxHash, setBidTxHash] = useState<`0x${string}` | undefined>();
+
+  // Track whether we've already auto-opened the modal for initialApplicationId
+  const hasAutoOpened = useRef(false);
 
   const { balance, endorsementAllowance, approve, refetchBalance, refetchEndorsementAllowance } = useVettedToken();
   const { placeBid, minimumBid } = useEndorsementBidding();
@@ -137,6 +143,25 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
       abortController.abort();
     };
   }, [guildId, address]);
+
+  // Auto-open endorsement modal when navigated with ?applicationId=
+  useEffect(() => {
+    if (
+      initialApplicationId &&
+      !hasAutoOpened.current &&
+      applications.length > 0 &&
+      !loading
+    ) {
+      const targetApp = applications.find(
+        (app) => app.application_id === initialApplicationId
+      );
+      if (targetApp) {
+        hasAutoOpened.current = true;
+        setSelectedApp(targetApp);
+        setTransactionModalOpen(true);
+      }
+    }
+  }, [initialApplicationId, applications, loading]);
 
   // Handle transaction success
   useEffect(() => {
@@ -483,6 +508,13 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
   const userStake = stakeInfo ? formatEther(stakeInfo[0]) : "0";
   const requiredStake = minimumStake ? formatEther(minimumStake) : "0";
   const meetsMinimumStake = parseFloat(userStake) >= parseFloat(requiredStake);
+  const shortAddress = address ? `${address.substring(0, 6)}...${address.substring(38)}` : '';
+  const formattedBalance = balance
+    ? parseFloat(formatEther(balance)).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })
+    : null;
 
   if (!meetsMinimumStake) {
     return (
@@ -576,16 +608,41 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
 
       {/* Connected Wallet Info */}
       {address && (
-        <Card className="border-border bg-muted/50">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between text-sm">
-              <div>
-                <span className="text-muted-foreground">Connected Wallet: </span>
-                <code className="text-primary font-mono">{address.substring(0, 6)}...{address.substring(38)}</code>
+        <Card className="border-border/60 bg-card shadow-sm dark:bg-gradient-to-r dark:from-slate-950/85 dark:via-slate-900/80 dark:to-slate-950/85 dark:shadow-[0_25px_70px_-45px_rgba(14,116,144,0.6)]">
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10">
+                  <Wallet className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connected Wallet</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-lg font-semibold text-foreground">{shortAddress}</code>
+                    <Badge className="border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300">
+                      Vault
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {formattedBalance ? `${formattedBalance} VETD available` : 'Balance loading...'}
+                  </p>
+                </div>
               </div>
-              <Badge variant="outline" className="ml-2">
-                {chain?.name || 'Unknown Network'}
-              </Badge>
+              <div className="flex items-center gap-4">
+                <div className="rounded-xl border border-border/60 bg-background/60 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Network</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm font-semibold">
+                    <Network className="h-4 w-4 text-sky-400" />
+                    <span>{chain?.name || 'Unknown Network'}</span>
+                  </div>
+                  <p className={`mt-1 text-xs ${isOnSepolia ? 'text-orange-600 dark:text-orange-400' : 'text-yellow-500'}`}>
+                    {isOnSepolia ? 'Sepolia ready' : 'Switch required'}
+                  </p>
+                </div>
+                <Badge className={`${isOnSepolia ? 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300' : 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'}`}>
+                  {isOnSepolia ? 'Sepolia' : 'Wrong network'}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -593,7 +650,10 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
 
       {/* Header Stats */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Endorsement Dashboard</h2>
+        <h2 className="text-2xl font-bold font-display flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          Endorsement Dashboard
+        </h2>
         <Button
           variant="outline"
           size="sm"
@@ -606,107 +666,107 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="border-border">
+        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-cyan-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(255,106,0,0.6)]">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-muted-foreground">Your VETD Balance</p>
-                  <button
-                    onClick={() => {
-                      console.log('Manually refreshing balance...');
-                      refetchBalance();
-                      toast.success('Balance refreshed');
-                    }}
-                    className="p-1 hover:bg-muted rounded"
-                    title="Refresh balance"
-                  >
-                    <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-primary" />
-                  </button>
-                </div>
-                {!address ? (
-                  <p className="text-lg text-muted-foreground">Connect Wallet</p>
-                ) : balance === undefined ? (
-                  <p className="text-lg text-muted-foreground">Loading...</p>
-                ) : (
-                  <>
-                    <p className="text-2xl font-bold break-all">
-                      {parseFloat(formatEther(balance)).toLocaleString('en-US', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2
-                      })}
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10">
+                <Coins className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-sm text-muted-foreground">Your VETD Balance</p>
+                <button
+                  onClick={() => {
+                    console.log('Manually refreshing balance...');
+                    refetchBalance();
+                    toast.success('Balance refreshed');
+                  }}
+                  className="p-1 hover:bg-muted rounded"
+                  title="Refresh balance"
+                >
+                    <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400" />
+                </button>
+              </div>
+              {!address ? (
+                <p className="text-lg text-muted-foreground">Connect Wallet</p>
+              ) : balance === undefined ? (
+                <p className="text-lg text-muted-foreground">Loading...</p>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold break-all">
+                    {parseFloat(formatEther(balance)).toLocaleString('en-US', {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2
+                    })}
+                  </p>
+                  {parseFloat(formatEther(balance)) > 0 && (
+                    <p className="text-xs text-muted-foreground font-mono break-all">
+                      {formatEther(balance)} VETD
                     </p>
-                    {parseFloat(formatEther(balance)) > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1 font-mono break-all">
-                        {formatEther(balance)} VETD
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-              <Coins className="w-8 h-8 text-primary flex-shrink-0" />
+                  )}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border">
+        <Card className="border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-slate-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(56,189,248,0.6)]">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Staked Amount</p>
-                <p className="text-2xl font-bold">{userStake}</p>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-500/20 bg-sky-500/10">
+                <TrendingUp className="w-6 h-6 text-sky-400" />
               </div>
-              <TrendingUp className="w-8 h-8 text-green-500" />
+              <p className="text-sm text-muted-foreground">Staked Amount</p>
+              <p className="text-2xl font-bold">{userStake}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border">
+        <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(245,158,11,0.6)]">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">My Endorsements</p>
-                <p className="text-2xl font-bold">{userEndorsements.length}</p>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10">
+                <Award className="w-6 h-6 text-amber-400" />
               </div>
-              <Award className="w-8 h-8 text-yellow-500" />
+              <p className="text-sm text-muted-foreground">My Endorsements</p>
+              <p className="text-2xl font-bold">{userEndorsements.length}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border">
+        <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(99,102,241,0.6)]">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Available Applications</p>
-                <p className="text-2xl font-bold">{applications.length}</p>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
+                <Users className="w-6 h-6 text-indigo-400" />
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <p className="text-sm text-muted-foreground">Available Applications</p>
+              <p className="text-2xl font-bold">{applications.length}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border">
+        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(249,115,22,0.6)]">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Minimum Bid</p>
-                <p className="text-2xl font-bold">
-                  {minimumBid ? formatEther(minimumBid) : "1"}
-                </p>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10">
+                <Award className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
-              <Award className="w-8 h-8 text-purple-500" />
+              <p className="text-sm text-muted-foreground">Minimum Bid</p>
+              <p className="text-2xl font-bold">
+                {minimumBid ? formatEther(minimumBid) : "1"}
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* My Endorsements Section */}
-      <Card className="border-border bg-gradient-to-r from-primary/5 to-purple/5">
+      <Card className="border-border/60 bg-gradient-to-r from-orange-500/10 via-cyan-500/5 to-transparent shadow-[0_30px_80px_-60px_rgba(255,106,0,0.7)]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-primary" />
+                <Award className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 My Active Endorsements
               </CardTitle>
               <CardDescription>
@@ -739,13 +799,13 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
                 You haven't endorsed any candidates in {guildName} yet
               </p>
               {allUserEndorsements.length > 0 ? (
-                <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
                   <p className="text-xs text-muted-foreground mb-2">
                     You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {Array.from(new Set(allUserEndorsements.map((e: any) => e.guild?.name).filter(Boolean))).map((guildName: any) => (
-                      <span key={guildName} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+                      <span key={guildName} className="text-xs px-2 py-1 bg-orange-500/10 rounded-full">
                         {guildName}
                       </span>
                     ))}
@@ -816,11 +876,11 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
                     setSelectedApp(applicationForModal);
                     setDetailsModalOpen(true);
                   }}
-                  className="flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:border-primary/50 hover:shadow-md cursor-pointer transition-all group"
+                  className="flex items-center justify-between p-4 bg-card/80 rounded-lg border border-border/60 hover:border-orange-500/40 hover:shadow-[0_20px_50px_-35px_rgba(255,106,0,0.6)] cursor-pointer transition-all group"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-semibold group-hover:text-primary transition-colors">
+                      <h4 className="font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors">
                         {endorsement.candidate?.name}
                       </h4>
                       {endorsement.blockchainData?.rank > 0 && endorsement.blockchainData?.rank <= 3 && (
@@ -832,7 +892,7 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
                     <p className="text-sm text-muted-foreground">
                       {endorsement.job?.title} at {endorsement.job?.companyName}
                     </p>
-                    <p className="text-sm font-medium text-primary mt-1">
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-400 mt-1">
                       Your Bid: {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VETD
                     </p>
                   </div>
@@ -848,7 +908,7 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
                         }
                       </p>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-600 dark:group-hover:text-orange-300 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
               ))}
@@ -858,7 +918,7 @@ export function EndorsementMarketplace({ guildId, guildName }: EndorsementMarket
       </Card>
 
       {/* Applications List */}
-      <Card className="border-border">
+      <Card className="border-border/60 bg-card/80">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />

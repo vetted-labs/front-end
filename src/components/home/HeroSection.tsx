@@ -39,7 +39,7 @@ export function HeroSection({
 
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight font-display">
-            Expert-Vetted Web3 Hiring
+            Hiring Finally Built on Trust
           </h1>
 
           {/* Subtitle */}
@@ -75,12 +75,9 @@ export function HeroSection({
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
               <Users className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
               Join as a Candidate
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Get expert endorsements and stand out to top companies
-            </p>
           </button>
 
           {/* Join as Expert - Featured */}
@@ -94,12 +91,9 @@ export function HeroSection({
             <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors">
               <Shield className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
               Join as an Expert
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Review candidates and earn rewards for accurate assessments
-            </p>
           </button>
 
           {/* Post a Job */}
@@ -110,12 +104,9 @@ export function HeroSection({
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
               <Briefcase className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
               Post a Job
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Hire pre-vetted talent from expert-validated guilds
-            </p>
           </button>
         </div>
       </div>

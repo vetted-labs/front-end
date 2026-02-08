@@ -1,25 +1,33 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther } from "viem";
+import { formatEther, keccak256, toBytes } from "viem";
 import { sepolia } from "wagmi/chains";
-import { X, Coins, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
-import { useVettedToken, useExpertStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
+import { X, Coins, AlertTriangle, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
+import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
+import { blockchainApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
 
+interface GuildOption {
+  id: string;
+  name: string;
+  blockchainGuildId: `0x${string}`;
+}
+
 interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  preselectedGuildId?: string;
 }
 
 type ActionMode = "stake" | "withdraw";
 
-export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) {
+export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }: StakingModalProps) {
   const { address, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const [actionMode, setActionMode] = useState<ActionMode>("stake");
@@ -28,6 +36,12 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [step, setStep] = useState<"input" | "approving" | "transaction">("input");
 
+  // Guild selection
+  const [guilds, setGuilds] = useState<GuildOption[]>([]);
+  const [selectedGuild, setSelectedGuild] = useState<GuildOption | null>(null);
+  const [isLoadingGuilds, setIsLoadingGuilds] = useState(false);
+  const [showGuildDropdown, setShowGuildDropdown] = useState(false);
+
   // Transaction modal state
   const [showTxModal, setShowTxModal] = useState(false);
   const [txStatus, setTxStatus] = useState<"pending" | "success" | "error">("pending");
@@ -35,12 +49,76 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
   const [currentTxAmount, setCurrentTxAmount] = useState<string>("");
   const [currentTxAction, setCurrentTxAction] = useState<ActionMode>("stake");
 
-  // Contract hooks
+  // Contract hooks - use per-guild staking
   const { balance, allowance, approve, mint, refetchBalance, refetchAllowance } = useVettedToken();
-  const { stakeInfo, minimumStake, isPaused, stake, requestUnstake, refetchStake } = useExpertStaking();
+  const { stakeInfo, minimumStake, isPaused, stake, requestUnstake, refetchStake, guildTotalStaked } = useGuildStaking(selectedGuild?.blockchainGuildId);
   const { isSuccess: txConfirmed, isError: txError, error: txErrorDetails } = useTransactionConfirmation(txHash || undefined);
 
   const isOnSepolia = chain?.id === sepolia.id;
+  const formatTokenAmount = (value: number | null, fractionDigits: number = 2) => {
+    if (value === null || Number.isNaN(value)) return "—";
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    });
+  };
+
+  // Fetch user's guild memberships
+  useEffect(() => {
+    if (!isOpen || !address) return;
+
+    const fetchGuilds = async () => {
+      setIsLoadingGuilds(true);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        // Fetch guilds the expert is a member of
+        const response = await fetch(`${apiUrl}/api/blockchain/staking/guilds/${address}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            const guildOptions: GuildOption[] = data.data.map((g: any) => ({
+              id: g.guildId,
+              name: g.guildName,
+              blockchainGuildId: g.blockchainGuildId as `0x${string}`,
+            }));
+            setGuilds(guildOptions);
+
+            // If we have a preselected guild, select it
+            if (preselectedGuildId) {
+              const preselected = guildOptions.find(g => g.id === preselectedGuildId);
+              if (preselected) setSelectedGuild(preselected);
+            }
+            return;
+          }
+        }
+
+        // Fallback: fetch all guilds and let user pick
+        const allGuildsResponse = await fetch(`${apiUrl}/api/guilds`);
+        if (allGuildsResponse.ok) {
+          const allData = await allGuildsResponse.json();
+          const allGuilds = Array.isArray(allData) ? allData : (allData.data || []);
+          const guildOptions: GuildOption[] = allGuilds.map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            blockchainGuildId: keccak256(toBytes(g.id)) as `0x${string}`,
+          }));
+          setGuilds(guildOptions);
+
+          if (preselectedGuildId) {
+            const preselected = guildOptions.find(g => g.id === preselectedGuildId);
+            if (preselected) setSelectedGuild(preselected);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch guilds:', error);
+      } finally {
+        setIsLoadingGuilds(false);
+      }
+    };
+
+    fetchGuilds();
+  }, [isOpen, address, preselectedGuildId]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -53,8 +131,18 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       setShowTxModal(false);
       setTxStatus("pending");
       setTxErrorMessage("");
+      setSelectedGuild(null);
+      setShowGuildDropdown(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && address) {
+      refetchBalance();
+      refetchStake();
+      refetchAllowance();
+    }
+  }, [isOpen, address, selectedGuild]);
 
   // Handle transaction confirmation
   useEffect(() => {
@@ -65,16 +153,16 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
         setTxHash(null);
         setShowTxModal(false);
         refetchAllowance();
-        // Automatically proceed to staking/withdrawal
         handleStakeAfterApproval();
       } else if (step === "transaction") {
-        // Show success in transaction modal
         setTxStatus("success");
         refetchBalance();
         refetchStake();
+        // Sync stake to database so dashboard reflects the update
+        if (address && selectedGuild) {
+          blockchainApi.syncStake(address, selectedGuild.blockchainGuildId).catch(() => {});
+        }
         onSuccess?.();
-
-        // Reset step so user can perform another action
         setStep("input");
         setStakeAmount("");
       }
@@ -95,7 +183,6 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
         setStep("input");
         setTxHash(null);
       } else if (step === "transaction") {
-        // Show error in transaction modal
         setTxStatus("error");
         setTxErrorMessage(errorMessage);
       }
@@ -104,9 +191,8 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
     }
   }, [txError, txHash, step, txErrorDetails]);
 
-  // Automatically stake/withdraw after approval is confirmed
   const handleStakeAfterApproval = async () => {
-    if (!stakeAmount || parseFloat(stakeAmount) <= 0) return;
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0 || !selectedGuild) return;
 
     try {
       setStep("transaction");
@@ -116,14 +202,13 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       setTxStatus("pending");
 
       const hash = actionMode === "stake"
-        ? await stake(stakeAmount)
-        : await requestUnstake(stakeAmount);
+        ? await stake(selectedGuild.blockchainGuildId, stakeAmount)
+        : await requestUnstake(selectedGuild.blockchainGuildId, stakeAmount);
 
       setTxHash(hash);
     } catch (error: any) {
       console.error("Transaction error:", error);
 
-      // Check if user rejected the transaction
       if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
         toast.error("Transaction rejected by user");
         setShowTxModal(false);
@@ -137,6 +222,11 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
   };
 
   const handleStake = async () => {
+    if (!selectedGuild) {
+      toast.error("Please select a guild to stake for");
+      return;
+    }
+
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
       toast.error("Please enter a valid stake amount");
       return;
@@ -144,13 +234,12 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
 
     const currentBalance = balance ? parseFloat(formatEther(balance)) : 0;
     if (currentBalance < parseFloat(stakeAmount)) {
-      toast.error(`Insufficient balance. You have ${currentBalance.toFixed(2)} VETD`);
+      toast.error(`Insufficient balance. You have ${formatTokenAmount(currentBalance)} VETD`);
       return;
     }
 
     const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
 
-    // If approval is needed, start with approve transaction
     if (currentAllowance < parseFloat(stakeAmount)) {
       try {
         setIsApproving(true);
@@ -165,7 +254,6 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       } catch (error: any) {
         console.error("Approval error:", error);
 
-        // Check if user rejected the transaction
         if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
           toast.error("Transaction rejected by user");
           setShowTxModal(false);
@@ -181,7 +269,6 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       return;
     }
 
-    // If already approved, proceed with staking
     try {
       setStep("transaction");
       setCurrentTxAmount(stakeAmount);
@@ -189,12 +276,11 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       setShowTxModal(true);
       setTxStatus("pending");
 
-      const hash = await stake(stakeAmount);
+      const hash = await stake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
     } catch (error: any) {
       console.error("Staking error:", error);
 
-      // Check if user rejected the transaction
       if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
         toast.error("Transaction rejected by user");
         setShowTxModal(false);
@@ -216,6 +302,11 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
   };
 
   const handleWithdraw = async () => {
+    if (!selectedGuild) {
+      toast.error("Please select a guild to withdraw from");
+      return;
+    }
+
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
       toast.error("Please enter a valid withdrawal amount");
       return;
@@ -223,7 +314,9 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
 
     const currentStake = stakeInfo ? parseFloat(formatEther(stakeInfo[0])) : 0;
     if (currentStake < parseFloat(stakeAmount)) {
-      toast.error(`Insufficient staked balance. You have ${currentStake.toFixed(2)} VETD staked`);
+      toast.error(
+        `Insufficient staked balance. You have ${formatTokenAmount(currentStake)} VETD staked`
+      );
       return;
     }
 
@@ -234,7 +327,7 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
       setShowTxModal(true);
       setTxStatus("pending");
 
-      const hash = await requestUnstake(stakeAmount);
+      const hash = await requestUnstake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
     } catch (error: any) {
       console.error("Withdrawal error:", error);
@@ -258,26 +351,43 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
   };
 
   const handleTxModalClose = () => {
+    const wasSuccess = txStatus === "success";
     setShowTxModal(false);
     setTxHash(null);
     setTxStatus("pending");
     setTxErrorMessage("");
-    // Keep the modal open so user can do another transaction
+
+    // On success, close the entire staking modal and return to the page
+    if (wasSuccess) {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
 
-  const currentBalance = balance ? parseFloat(formatEther(balance)) : 0;
-  const currentStake = stakeInfo ? parseFloat(formatEther(stakeInfo[0])) : 0;
+  const currentBalance =
+    balance && isOnSepolia ? parseFloat(formatEther(balance)) : null;
+  const currentStake =
+    stakeInfo && isOnSepolia ? parseFloat(formatEther(stakeInfo[0])) : null;
   const minStake = minimumStake ? parseFloat(formatEther(minimumStake)) : 10;
   const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
   const needsApproval = currentAllowance < parseFloat(stakeAmount || "0");
+  const balanceLabel = !isOnSepolia
+    ? "Switch to Sepolia"
+    : balance === undefined
+    ? "Loading..."
+    : "VETD";
+  const stakeLabel = !isOnSepolia
+    ? "Switch to Sepolia"
+    : stakeInfo === undefined
+    ? "Loading..."
+    : "VETD";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-      <div className="bg-gradient-to-br from-card via-card to-card/95 rounded-3xl shadow-2xl border border-border/50 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto backdrop-blur-sm">
+      <div className="bg-card/95 rounded-3xl shadow-2xl border border-border/60 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto backdrop-blur-sm">
         {/* Header */}
-        <div className="relative flex items-center justify-between p-6 border-b border-border/50">
+        <div className="relative flex items-center justify-between p-6 border-b border-border/60">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
               <Coins className="w-6 h-6 text-white" />
@@ -286,7 +396,7 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
               <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                 Manage Staking
               </h2>
-              <p className="text-xs text-muted-foreground">Earn rewards by staking VETD</p>
+              <p className="text-xs text-muted-foreground">Stake VETD per guild to unlock reviewing</p>
             </div>
           </div>
           <button
@@ -340,8 +450,55 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
           {/* Input State */}
           {(
             <>
+              {/* Guild Selector */}
+              <div>
+                <label className="text-sm font-semibold text-foreground mb-2 block">
+                  Select Guild
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowGuildDropdown(!showGuildDropdown)}
+                    disabled={isLoadingGuilds || step !== "input"}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className={selectedGuild ? "text-foreground" : "text-muted-foreground"}>
+                      {isLoadingGuilds
+                        ? "Loading guilds..."
+                        : selectedGuild
+                        ? selectedGuild.name
+                        : "Choose a guild to stake for..."}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {showGuildDropdown && guilds.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-card border border-border/60 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                      {guilds.map((guild) => (
+                        <button
+                          key={guild.id}
+                          onClick={() => {
+                            setSelectedGuild(guild);
+                            setShowGuildDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm first:rounded-t-xl last:rounded-b-xl ${
+                            selectedGuild?.id === guild.id ? "bg-orange-500/10 text-orange-600 font-medium" : "text-foreground"
+                          }`}
+                        >
+                          {guild.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {guilds.length === 0 && !isLoadingGuilds && (
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    No guilds available. Join a guild first to stake.
+                  </p>
+                )}
+              </div>
+
               {/* Action Mode Tabs */}
-              <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl">
+              <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-2xl">
                 <button
                   onClick={() => setActionMode("stake")}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
@@ -355,7 +512,7 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
                 </button>
                 <button
                   onClick={() => setActionMode("withdraw")}
-                  disabled={currentStake === 0}
+                  disabled={!currentStake || currentStake === 0}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
                     actionMode === "withdraw"
                       ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/20"
@@ -369,23 +526,24 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
 
               {/* Current Status */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="relative p-5 bg-gradient-to-br from-muted via-muted to-muted/80 rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Your Balance</p>
-                  <p className="text-xl font-bold text-foreground">{currentBalance.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">VETD</p>
+                <div className="relative p-5 bg-muted/40 rounded-2xl border border-border/60 shadow-sm hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Wallet Balance</p>
+                  <p className="text-2xl font-semibold text-foreground">
+                    {formatTokenAmount(currentBalance)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{balanceLabel}</p>
                 </div>
-                <div className="relative p-5 bg-gradient-to-br from-orange-500/5 via-orange-500/10 to-orange-500/5 rounded-2xl border border-orange-500/20 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2">Staked Balance</p>
-                  <p className="text-xl font-bold text-orange-600 dark:text-orange-400">{currentStake.toFixed(2)}</p>
-                  <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">VETD</p>
+                <div className="relative p-5 bg-orange-500/10 rounded-2xl border border-orange-500/25 shadow-sm hover:shadow-md transition-shadow">
+                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2">
+                    {selectedGuild ? `Staked in ${selectedGuild.name}` : "Staked Balance"}
+                  </p>
+                  <p className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
+                    {selectedGuild ? formatTokenAmount(currentStake) : "—"}
+                  </p>
+                  <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">
+                    {selectedGuild ? stakeLabel : "Select a guild"}
+                  </p>
                 </div>
-              </div>
-
-              {/* Info Box */}
-              <div className="p-4 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-blue-500/10 border border-blue-500/30 rounded-2xl backdrop-blur-sm">
-                <p className="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">
-                  <strong>Minimum Stake:</strong> {minStake} VETD tokens required to participate in guild voting and earn rewards.
-                </p>
               </div>
 
               {/* Amount Input */}
@@ -415,7 +573,9 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {actionMode === "stake" ? `Minimum: ${minStake} VETD` : `Available: ${currentStake.toFixed(2)} VETD`}
+                  {actionMode === "stake"
+                    ? `Minimum: ${formatTokenAmount(minStake)} VETD per guild`
+                    : `Available: ${formatTokenAmount(currentStake)} VETD`}
                 </p>
               </div>
 
@@ -429,19 +589,20 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
                   step === "approving" ||
                   step === "transaction" ||
                   !stakeAmount ||
-                  parseFloat(stakeAmount) <= 0
+                  parseFloat(stakeAmount) <= 0 ||
+                  !selectedGuild
                 }
                 className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all rounded-xl font-semibold"
               >
                 {actionMode === "stake" ? (
                   <>
                     <TrendingUp className="mr-2 h-5 w-5" />
-                    Stake Tokens
+                    {selectedGuild ? `Stake for ${selectedGuild.name}` : "Select a Guild"}
                   </>
                 ) : (
                   <>
                     <TrendingDown className="mr-2 h-5 w-5" />
-                    Withdraw Tokens
+                    {selectedGuild ? `Withdraw from ${selectedGuild.name}` : "Select a Guild"}
                   </>
                 )}
               </Button>
@@ -455,8 +616,8 @@ export function StakingModal({ isOpen, onClose, onSuccess }: StakingModalProps) 
                 )}
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {actionMode === "stake"
-                    ? "Staking VETD tokens allows you to participate in guild voting and earn rewards."
-                    : "Withdraw your staked tokens back to your wallet. You can re-stake them anytime."}
+                    ? "Stake per guild to join reviewer pools and earn rewards."
+                    : "Withdraw your staked tokens back to your wallet."}
                 </p>
               </div>
             </>

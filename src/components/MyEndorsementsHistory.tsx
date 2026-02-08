@@ -4,13 +4,22 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useMyActiveEndorsements } from "@/lib/hooks/useVettedContracts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Trophy, Award, TrendingUp, Building2, User, Briefcase, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  Trophy,
+  Award,
+  TrendingUp,
+  Building2,
+  User,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 export function MyEndorsementsHistory() {
   const { address, isConnected } = useAccount();
-  const { endorsements, isLoading, error, refetch } = useMyActiveEndorsements();
-  const [selectedGuild, setSelectedGuild] = useState<string>("all");
+  const { endorsements, isLoading, error } = useMyActiveEndorsements();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (!isConnected || !address) {
     return (
@@ -57,31 +66,37 @@ export function MyEndorsementsHistory() {
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card padding="md" hover>
+        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
-            <Award className="h-8 w-8 text-primary" />
+            <div className="h-12 w-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+              <Award className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Active Endorsements</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Active</p>
               <p className="text-2xl font-bold text-foreground">{endorsements.length}</p>
             </div>
           </div>
         </Card>
 
-        <Card padding="md" hover>
+        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-amber-500" />
+            <div className="h-12 w-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+              <Trophy className="h-6 w-6 text-amber-400" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Top 3 Rankings</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Top 3</p>
               <p className="text-2xl font-bold text-foreground">{top3Rankings}</p>
             </div>
           </div>
         </Card>
 
-        <Card padding="md" hover>
+        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-primary" />
+            <div className="h-12 w-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-emerald-300" />
+            </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Staked</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Total Staked</p>
               <p className="text-2xl font-bold text-foreground">{totalStaked.toFixed(2)} VTD</p>
             </div>
           </div>
@@ -89,160 +104,158 @@ export function MyEndorsementsHistory() {
       </div>
 
       {/* Endorsements List */}
-      <Card padding="md">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-foreground">My Active Endorsements</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refetch}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Endorsements</p>
+          <h2 className="text-2xl font-semibold text-foreground">My Active Endorsements</h2>
         </div>
-        <div className="space-y-4">
-          {endorsements.map((endorsement: any) => (
+        <p className="text-sm text-muted-foreground">Data syncs automatically</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {endorsements.map((endorsement: any, index: number) => {
+          const endorsementId =
+            endorsement.endorsementId ||
+            endorsement.applicationId ||
+            endorsement.job?.id ||
+            `${endorsement.candidate?.name || "candidate"}-${endorsement.createdAt || index}`;
+          const isExpanded = expandedId === endorsementId;
+          const toggle = () =>
+            setExpandedId((prev) => (prev === endorsementId ? null : endorsementId));
+
+          return (
             <Card
-              key={endorsement.endorsementId}
+              key={endorsementId}
               padding="md"
               hover
-              className="border-border"
+              onClick={toggle}
+              role="button"
+              tabIndex={0}
+              className="cursor-pointer border-white/10 bg-gradient-to-br from-card to-secondary/30"
             >
               <div className="space-y-4">
-                {/* Header with Rank Badge */}
-                <div className="flex items-start justify-between">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <Briefcase className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold text-foreground">{endorsement.job?.title}</h3>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="h-4 w-4" />
-                      <span>{endorsement.job?.companyName}</span>
-                      <span className="text-muted-foreground/50">•</span>
-                      <span>{endorsement.job?.location || 'Remote'}</span>
+                      <div className="h-9 w-9 rounded-lg border border-primary/30 bg-primary/15 flex items-center justify-center">
+                        <Briefcase className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {endorsement.job?.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Building2 className="h-3.5 w-3.5" />
+                          <span>{endorsement.job?.companyName}</span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span>{endorsement.job?.location || "Remote"}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  {endorsement.blockchainData?.rank > 0 && endorsement.blockchainData?.rank <= 3 && (
-                    <div className="flex flex-col items-end gap-2">
-                      {endorsement.blockchainData.rank === 1 && (
-                        <span className="px-3 py-1 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-sm font-semibold rounded-full border border-amber-500/30">
-                          🏆 Rank #1
+                  <div className="flex items-center gap-2">
+                    {endorsement.blockchainData?.rank > 0 &&
+                      endorsement.blockchainData?.rank <= 3 && (
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-amber-500/10 text-amber-200 border border-amber-500/30">
+                          Rank #{endorsement.blockchainData.rank}
                         </span>
                       )}
-                      {endorsement.blockchainData.rank === 2 && (
-                        <span className="px-3 py-1 bg-primary/20 text-primary text-sm font-semibold rounded-full border border-primary/30">
-                          🥈 Rank #2
-                        </span>
-                      )}
-                      {endorsement.blockchainData.rank === 3 && (
-                        <span className="px-3 py-1 bg-primary/20 text-primary text-sm font-semibold rounded-full border border-primary/30">
-                          🥉 Rank #3
-                        </span>
+                    <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center">
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Candidate Info */}
-                <div className="border-t border-border pt-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <User className="h-4 w-4 text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">{endorsement.candidate?.name}</span>
+                {/* Candidate + key metrics */}
+                <div className="rounded-xl border border-white/10 bg-background/60 px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">
+                        {endorsement.candidate?.name}
+                      </span>
                       {endorsement.candidate?.headline && (
-                        <span className="text-muted-foreground"> • {endorsement.candidate.headline}</span>
+                        <span className="text-muted-foreground">
+                          • {endorsement.candidate.headline}
+                        </span>
                       )}
-                    </p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-primary/10 text-primary border border-primary/30">
+                      {endorsement.application?.status}
+                    </span>
                   </div>
-                  {endorsement.application?.coverLetter && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 ml-7">
-                      {endorsement.application.coverLetter}
-                    </p>
-                  )}
-                </div>
-
-                {/* Endorsement Details */}
-                <div className="border-t border-border pt-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Your Stake</p>
-                      <p className="text-lg font-semibold text-primary">
-                        {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VTD
+                      <p className="text-xs text-muted-foreground">Stake</p>
+                      <p className="font-semibold text-primary">
+                        {parseFloat(endorsement.stakeAmount || "0").toFixed(2)} VTD
                       </p>
                     </div>
-                    {endorsement.blockchainData?.rank > 0 && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Your Rank</p>
-                        <p className="text-lg font-semibold text-amber-600 dark:text-amber-400">
-                          #{endorsement.blockchainData.rank}
-                        </p>
-                      </div>
-                    )}
-                    {endorsement.confidenceLevel && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Confidence</p>
-                        <p className="text-lg font-semibold text-primary">
-                          {endorsement.confidenceLevel}/5
-                        </p>
-                      </div>
-                    )}
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Guild</p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-xs text-muted-foreground">Guild</p>
+                      <p className="font-medium text-foreground">
                         {endorsement.guild?.name}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Notes */}
-                {endorsement.notes && (
-                  <div className="border-t border-border pt-4">
-                    <p className="text-xs text-muted-foreground mb-1">Your Notes</p>
-                    <p className="text-sm text-foreground">{endorsement.notes}</p>
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="space-y-3">
+                    {endorsement.application?.coverLetter && (
+                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                          Candidate Summary
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {endorsement.application.coverLetter}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                        <p className="text-xs text-muted-foreground">Endorsed On</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {new Date(endorsement.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {endorsement.blockchainData?.bidAmount && (
+                        <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                          <p className="text-xs text-muted-foreground">Blockchain Bid</p>
+                          <p className="text-sm font-semibold text-primary">
+                            {parseFloat(endorsement.blockchainData.bidAmount).toFixed(2)} VTD
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {endorsement.notes && (
+                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                          Your Notes
+                        </p>
+                        <p className="text-sm text-foreground">{endorsement.notes}</p>
+                      </div>
+                    )}
                   </div>
                 )}
-
-                {/* Footer */}
-                <div className="border-t border-border pt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Application Status</p>
-                      <p className="text-sm font-medium text-primary capitalize">
-                        {endorsement.application?.status}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Endorsed On</p>
-                      <p className="text-sm text-foreground">
-                        {new Date(endorsement.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  {endorsement.blockchainData?.bidAmount && (
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Blockchain Bid</p>
-                      <p className="text-sm font-medium text-primary">
-                        {parseFloat(endorsement.blockchainData.bidAmount).toFixed(2)} VTD
-                      </p>
-                    </div>
-                  )}
-                </div>
               </div>
             </Card>
-          ))}
-        </div>
-      </Card>
+          );
+        })}
+      </div>
 
       {/* Info Card */}
       <Card padding="md" className="border-primary/20 bg-primary/5">
         <p className="text-sm text-foreground">
-          <strong className="text-primary">Note:</strong> These are your active endorsements with complete details.
-          Top 3 endorsers earn rewards when the candidate is hired. You can increase your stake to improve your ranking.
+          <strong className="text-primary">Note:</strong> Top 3 endorsers earn rewards when a candidate is hired. Increase your stake to improve ranking.
         </p>
       </Card>
     </div>

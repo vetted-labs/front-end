@@ -12,6 +12,7 @@ import {
   Shield,
   Copy,
   Check,
+  ExternalLink,
   FileText,
   TrendingUp,
   ThumbsUp,
@@ -23,6 +24,7 @@ import {
 import { expertApi } from "@/lib/api";
 import { LoadingState } from "./ui/loadingstate";
 import { Alert } from "./ui/alert";
+import { GuildCard } from "./GuildCard";
 import { GuildMembershipCard } from "./GuildMembershipCard";
 import {
   getActivityIconComponent,
@@ -87,33 +89,36 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, subtitle, colorScheme }: StatCardProps) {
   const colorClasses = {
-    primary: "bg-gradient-to-br from-violet-50/50 to-indigo-50/50 dark:from-violet-500/10 dark:to-indigo-500/10 border-violet-200/50 dark:border-violet-500/20 hover:border-violet-300/50 dark:hover:border-violet-500/30",
-    emerald: "bg-gradient-to-br from-emerald-50/50 to-green-50/50 dark:from-emerald-500/10 dark:to-green-500/10 border-emerald-200/50 dark:border-emerald-500/20 hover:border-emerald-300/50 dark:hover:border-emerald-500/30",
-    neutral: "bg-card border-border",
+    primary:
+      "bg-white/[0.03] border border-white/10 hover:border-orange-400/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.45)]",
+    emerald:
+      "bg-white/[0.03] border border-white/10 hover:border-emerald-400/40 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.45)]",
+    neutral:
+      "bg-white/[0.03] border border-white/10 hover:border-orange-400/20 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.45)]",
   };
 
   const iconColorClasses = {
-    primary: "text-violet-600 dark:text-violet-400",
-    emerald: "text-emerald-600 dark:text-emerald-400",
-    neutral: "text-muted-foreground",
+    primary: "text-amber-200",
+    emerald: "text-emerald-300",
+    neutral: "text-slate-300",
   };
 
   const iconBgClasses = {
-    primary: "bg-violet-50 dark:bg-violet-500/10",
-    emerald: "bg-emerald-50 dark:bg-emerald-500/10",
-    neutral: "bg-muted",
+    primary: "bg-orange-500/10 border border-orange-400/20",
+    emerald: "bg-emerald-500/10 border border-emerald-400/20",
+    neutral: "bg-white/5 border border-white/10",
   };
 
   return (
-    <div className={`rounded-xl p-6 shadow-sm border transition-colors ${colorClasses[colorScheme]}`}>
+    <div className={`rounded-2xl p-6 transition-colors ${colorClasses[colorScheme]}`}>
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 ${iconBgClasses[colorScheme]} rounded-lg flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-12 h-12 ${iconBgClasses[colorScheme]} rounded-xl flex items-center justify-center flex-shrink-0`}>
           <Icon className={`w-6 h-6 ${iconColorClasses[colorScheme]}`} />
         </div>
         <div className="flex-1">
-          <p className="text-sm text-muted-foreground mb-1">{label}</p>
-          <p className="text-3xl font-bold text-foreground">{value}</p>
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+          <p className="text-sm text-slate-400 mb-1">{label}</p>
+          <p className="text-3xl font-semibold text-slate-100">{value}</p>
+          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
         </div>
       </div>
     </div>
@@ -247,7 +252,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-background to-muted">
+      <div className="min-h-screen flex items-center justify-center px-4 text-slate-100">
         <div className="max-w-md w-full">
           <Alert variant="error" className="mb-4">
             {error}
@@ -255,7 +260,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           {mode === "public" && (
             <button
               onClick={() => router.back()}
-              className="w-full px-6 py-3 text-foreground bg-card border border-border rounded-lg hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 text-slate-100 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 hover:border-orange-400/40 transition-all flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Go Back
@@ -269,7 +274,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   // No profile state
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center text-slate-100">
         <Alert variant="error">No profile data available</Alert>
       </div>
     );
@@ -278,25 +283,25 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   // Pending expert state (public mode only)
   if (mode === "public" && profile.status === "pending") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      <div className="min-h-screen text-slate-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           {showBackButton && (
             <button
               onClick={() => router.back()}
-              className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+              className="mb-8 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </button>
           )}
 
-          <div className="bg-card rounded-xl p-12 text-center shadow-sm border border-border">
-            <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2 text-foreground">Application Under Review</h2>
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-2xl p-12 text-center border border-white/10 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.45)]">
+            <Clock className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold mb-2 text-slate-100">Application Under Review</h2>
+            <p className="text-slate-400 mb-4">
               {profile.fullName ? `${profile.fullName}'s expert application` : "This expert application"} is currently being reviewed.
             </p>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-slate-400">
               <p>Wallet: {profile.walletAddress}</p>
             </div>
           </div>
@@ -316,13 +321,13 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
   // Main profile view
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen text-slate-100">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Back button (public mode only) */}
         {mode === "public" && showBackButton && (
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+            className="mb-6 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -332,82 +337,99 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         {/* Single-column layout */}
         <div className="space-y-6">
           {/* Profile Card */}
-          <div className="bg-card rounded-xl p-8 shadow-sm border border-border">
+          <div className="rounded-2xl p-8 border border-white/10 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_24px_60px_rgba(0,0,0,0.55)]">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-300 via-orange-400 to-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_20px_60px_rgba(251,146,60,0.35)]">
               {mode === "private" ? (
-                <User className="w-12 h-12 text-white" />
+                <User className="w-12 h-12 text-slate-900" />
               ) : (
-                <span className="text-3xl font-bold text-white">
+                <span className="text-3xl font-bold text-slate-900">
                   {getInitials(profile.fullName)}
                 </span>
               )}
             </div>
 
             {/* Name */}
-            <h1 className="text-3xl font-bold text-foreground text-center mb-2">
+            <h1 className="text-3xl font-semibold text-slate-100 text-center mb-2">
               {profile.fullName || "Unknown Expert"}
             </h1>
 
             {/* Email (private mode only) */}
             {mode === "private" && profile.email && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-2">
-                <Mail className="w-4 h-4" />
+              <div className="flex items-center justify-center gap-1.5 text-sm text-slate-400 mb-2">
+                <Mail className="w-4 h-4 text-amber-200" />
                 {profile.email}
               </div>
             )}
 
             {/* Member Since (centered) */}
-            <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-4">
-              <Calendar className="w-4 h-4" />
+            <div className="flex items-center justify-center gap-1.5 text-sm text-slate-400 mb-4">
+              <Calendar className="w-4 h-4 text-amber-200" />
               Member since {memberSince}
             </div>
 
             {/* Wallet Address */}
             {mode === "private" ? (
               <details className="group">
-                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 py-2 justify-center">
-                  <Wallet className="w-3 h-3" />
+                <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2 py-2 justify-center">
+                  <Wallet className="w-3 h-3 text-amber-200" />
                   <span>Show wallet address</span>
                 </summary>
-                <div className="mt-2 bg-muted/50 rounded-lg p-3 flex items-center justify-between">
+                <div className="mt-2 bg-white/5 border border-white/10 rounded-lg p-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-muted-foreground" />
-                    <p className="font-mono text-xs text-foreground">{profile.walletAddress}</p>
+                    <Wallet className="w-4 h-4 text-amber-200" />
+                    <p className="font-mono text-xs text-slate-100">{profile.walletAddress}</p>
                   </div>
                   <button
                     onClick={copyAddress}
-                    className="px-2 py-1 rounded-md hover:bg-muted transition-all flex items-center gap-1"
+                    className="px-2 py-1 rounded-md hover:bg-white/10 transition-all flex items-center gap-1"
                   >
                     {copiedAddress ? (
                       <>
-                        <Check className="w-3 h-3 text-green-600" />
-                        <span className="text-xs text-green-600">Copied!</span>
+                        <Check className="w-3 h-3 text-emerald-300" />
+                        <span className="text-xs text-emerald-300">Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Copy</span>
+                        <Copy className="w-3 h-3 text-slate-400" />
+                        <span className="text-xs text-slate-400">Copy</span>
                       </>
                     )}
                   </button>
                 </div>
               </details>
             ) : (
-              <div className="text-center mb-4">
-                <p className="text-sm font-mono text-muted-foreground">
-                  {profile.walletAddress
-                    ? `${profile.walletAddress.slice(0, 6)}...${profile.walletAddress.slice(-4)}`
-                    : "Wallet address not available"}
-                </p>
-              </div>
+              profile.walletAddress && (
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <a
+                    href={`https://etherscan.io/address/${profile.walletAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-orange-400/40 hover:bg-white/10 transition-all text-xs font-mono text-slate-300 hover:text-slate-100"
+                  >
+                    <Wallet className="w-3 h-3 text-amber-200" />
+                    {profile.walletAddress.slice(0, 6)}...{profile.walletAddress.slice(-4)}
+                    <ExternalLink className="w-3 h-3 text-slate-500" />
+                  </a>
+                  <button
+                    onClick={copyAddress}
+                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-orange-400/40 hover:bg-white/10 transition-all"
+                  >
+                    {copiedAddress ? (
+                      <Check className="w-3 h-3 text-emerald-300" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-slate-400" />
+                    )}
+                  </button>
+                </div>
+              )
             )}
 
             {/* Bio Section */}
             {profile.bio && (
-              <div className="pt-4 border-t border-border mt-4">
-                <h3 className="text-sm font-semibold text-foreground mb-2">Bio</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="pt-4 border-t border-white/10 mt-4">
+                <h3 className="text-sm font-semibold text-slate-100 mb-2">Bio</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
                   {profile.bio}
                 </p>
               </div>
@@ -422,14 +444,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               label="Reputation Score"
               value={profile.reputation}
               colorScheme="primary"
-            />
-
-            {/* Joined Since */}
-            <StatCard
-              icon={Calendar}
-              label="Joined Since"
-              value={memberSince}
-              colorScheme="neutral"
             />
 
             {/* Total Earnings */}
@@ -478,10 +492,10 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
           {/* Recent Activity (public mode only) */}
           {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
-            <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+            <div className="rounded-2xl p-6 border border-white/10 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.45)]">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-amber-200" />
                   Recent Activity
                 </h2>
               </div>
@@ -500,17 +514,17 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                         })()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground mb-1">
+                        <p className="text-sm font-medium text-slate-100 mb-1">
                           {activity.description}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
                           <span className="truncate">{activity.guildName}</span>
                           <span>•</span>
                           <span>{formatTimeAgo(activity.timestamp)}</span>
                         </div>
                       </div>
                       {activity.amount && (
-                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-shrink-0">
+                        <div className="text-sm font-semibold text-amber-200 flex-shrink-0">
                           +{activity.amount}
                         </div>
                       )}
@@ -523,28 +537,29 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
           {/* Guild Memberships - Horizontal Grid */}
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold text-slate-100 mb-6 flex items-center gap-2">
+              <Shield className="w-6 h-6 text-amber-200" />
               Guild Memberships
             </h2>
 
             {profile.guilds.length === 0 ? (
-              <div className="text-center py-12 bg-card rounded-xl border border-border">
-                <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <p className="text-lg text-muted-foreground mb-2">
+              <div className="text-center py-12 rounded-2xl border border-white/10 bg-white/[0.03]">
+                <Shield className="w-16 h-16 text-slate-500 mx-auto mb-4 opacity-60" />
+                <p className="text-lg text-slate-300 mb-2">
                   {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-400">
                   Join guilds to start vetting candidates and earning reputation
                 </p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {profile.guilds.map((guild) => (
-                  <GuildMembershipCard
+                  <GuildCard
                     key={guild.id}
                     guild={guild}
-                    variant={mode === "public" ? "compact" : "default"}
+                    variant="membership"
+                    onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
                   />
                 ))}
               </div>

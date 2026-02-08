@@ -11,6 +11,9 @@ import {
   Users,
   User,
   Bell,
+  Menu,
+  X,
+  Landmark,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBadge } from "./notifications/NotificationBadge";
@@ -40,6 +43,7 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
   const { disconnect } = useDisconnect();
   const [mounted, setMounted] = useState(false);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [totalPoints, setTotalPoints] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -47,6 +51,10 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setShowMobileMenu(false);
+  }, [pathname]);
 
   // Fetch profile data for total points
   useEffect(() => {
@@ -116,6 +124,7 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
   const navItems = [
     { path: "/expert/dashboard", label: "Dashboard", icon: Home },
     { path: "/expert/guilds", label: "Guilds", icon: Users },
+    { path: "/expert/governance", label: "Governance", icon: Landmark },
     { path: "/expert/profile", label: "My Profile", icon: User },
     { path: "/expert/notifications", label: "Notifications", icon: Bell, badge: notificationCount },
   ];
@@ -161,8 +170,10 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
+          <div className="flex items-center space-x-3">
+            <div className="hidden md:flex">
+              <ThemeToggle />
+            </div>
             {/* Total Points Badge */}
             {mounted && profile && (
               <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border border-primary/20">
@@ -217,8 +228,71 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
                 )}
               </div>
             )}
+            <button
+              onClick={() => {
+                setShowMobileMenu(!showMobileMenu);
+                setShowWalletMenu(false);
+              }}
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors"
+              aria-label="Toggle navigation"
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {showMobileMenu && (
+          <div className="md:hidden border-t border-border/60 py-3">
+            <div className="grid gap-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.path || pathname?.startsWith(item.path + "/");
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => router.push(item.path)}
+                    className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                      isActive
+                        ? "bg-primary/20 text-primary border border-primary/40"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <NotificationBadge count={item.badge} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-primary" />
+                </div>
+                <div className="text-xs">
+                  <p className="text-muted-foreground">Wallet</p>
+                  <p className="font-mono text-foreground">
+                    {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected"}
+                  </p>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
+
+            {mounted && address && (
+              <button
+                onClick={handleDisconnect}
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg border border-destructive/30 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Disconnect
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -93,145 +93,193 @@ export function CandidateDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col border border-border/60 bg-gradient-to-b from-background via-background/95 to-muted/30 shadow-[0_30px_110px_-70px_rgba(255,106,0,0.55)]">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Candidate Profile & Application</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-muted-foreground uppercase tracking-wider">
+            Candidate Profile & Application
+          </DialogTitle>
         </DialogHeader>
 
-        {/* Large Header with Avatar and Key Info */}
-        <div className="flex items-start gap-8 p-6 pb-6 border-b flex-shrink-0 bg-gradient-to-br from-primary/5 to-purple-500/5">
-          <Avatar className="w-20 h-20 border-4 border-primary/20 shadow-lg">
-            {application.candidate_profile_picture_url && (
-              <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
-            )}
-            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-              {candidateInitials}
-            </AvatarFallback>
-          </Avatar>
+        {/* Hero Header */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 dark:bg-gradient-to-br dark:from-slate-950/80 dark:via-slate-900/80 dark:to-slate-950/90">
+          <div className="pointer-events-none absolute -right-24 -top-20 h-60 w-60 rounded-full bg-orange-200/40 blur-3xl dark:bg-orange-500/20" />
+          <div className="pointer-events-none absolute -left-24 -bottom-24 h-60 w-60 rounded-full bg-blue-200/40 blur-3xl dark:bg-blue-500/15" />
 
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold mb-1">{application.candidate_name}</h2>
-            <p className="text-muted-foreground mb-3">{application.candidate_headline}</p>
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-5">
+              <Avatar className="w-20 h-20 border-4 border-orange-500/30 shadow-lg">
+                {application.candidate_profile_picture_url && (
+                  <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
+                )}
+                <AvatarFallback className="bg-orange-500/10 text-orange-700 dark:text-orange-300 text-2xl font-semibold">
+                  {candidateInitials}
+                </AvatarFallback>
+              </Avatar>
 
-            {/* Badges */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              {application.experience_level && (
-                <Badge variant="secondary">
-                  {application.experience_level}
-                </Badge>
-              )}
-              {skillMatchData.percentage > 0 && (
-                <Badge
-                  variant="outline"
-                  className={`${
-                    skillMatchData.percentage >= 70
-                      ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20'
-                      : skillMatchData.percentage >= 40
-                      ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20'
-                      : 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20'
-                  }`}
-                >
-                  <Star className="w-4 h-4 mr-1" />
-                  {skillMatchData.percentage}% Skill Match
-                </Badge>
-              )}
-              {guildScore && (
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20">
-                  <Award className="w-4 h-4 mr-1" />
-                  Guild Score: {guildScore}/100
-                </Badge>
-              )}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-bold font-display">{application.candidate_name}</h2>
+                  <Badge className="border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300">
+                    Verified Candidate
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground mt-1">{application.candidate_headline}</p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {application.experience_level && (
+                    <Badge variant="secondary">
+                      {application.experience_level}
+                    </Badge>
+                  )}
+                  {skillMatchData.percentage > 0 && (
+                    <Badge
+                      variant="outline"
+                      className={`${
+                        skillMatchData.percentage >= 70
+                          ? 'bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20'
+                          : skillMatchData.percentage >= 40
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/20'
+                      }`}
+                    >
+                      <Star className="w-4 h-4 mr-1" />
+                      {skillMatchData.percentage}% Skill Match
+                    </Badge>
+                  )}
+                  {guildScore && (
+                    <Badge variant="outline" className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20">
+                      <Award className="w-4 h-4 mr-1" />
+                      Guild Score: {guildScore}/100
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Quick Links */}
-            <div className="flex flex-wrap gap-4 items-center">
-              {application.linkedin && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="h-12 px-6 font-semibold text-base border-2 hover:border-primary/50 bg-white dark:bg-gray-950 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  <a
-                    href={ensureHttps(application.linkedin)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
-                    <Linkedin className="w-5 h-5" />
-                    <span>LinkedIn</span>
-                  </a>
-                </Button>
+            <div className="grid grid-cols-2 gap-3">
+              {skillMatchData.percentage > 0 && (
+                <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-center">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Skill Match</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{skillMatchData.percentage}%</p>
+                </div>
               )}
-              {application.github && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="h-12 px-6 font-semibold text-base border-2 hover:border-primary/50 bg-white dark:bg-gray-950 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  <a
-                    href={ensureHttps(application.github)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
-                    <Github className="w-5 h-5" />
-                    <span>GitHub</span>
-                  </a>
-                </Button>
+              {guildScore && (
+                <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-center">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Guild Score</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{guildScore}</p>
+                </div>
               )}
-              {application.resume_url && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="h-12 px-6 font-semibold text-base border-2 hover:border-primary/50 bg-white dark:bg-gray-950 hover:bg-purple-50 dark:hover:bg-purple-950/20 hover:text-purple-600 dark:hover:text-purple-400 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  <a
-                    href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="w-5 h-5" />
-                    <span>Resume</span>
-                  </a>
-                </Button>
-              )}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="relative mt-6 flex flex-wrap gap-3">
+            {application.linkedin && (
               <Button
-                variant="default"
+                variant="outline"
                 size="lg"
                 asChild
-                className="h-12 px-8 font-bold text-base bg-gradient-to-r from-primary via-primary to-purple-600 hover:from-primary/90 hover:via-primary/90 hover:to-purple-700 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-110 border-0"
+                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
               >
                 <a
-                  href={`/candidates/${application.candidate_id}`}
+                  href={ensureHttps(application.linkedin)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <span>View Full Profile</span>
-                  <ExternalLink className="w-5 h-5" />
+                  <Linkedin className="w-4 h-4" />
+                  <span>LinkedIn</span>
                 </a>
               </Button>
-            </div>
+            )}
+            {application.github && (
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                <a
+                  href={ensureHttps(application.github)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Github className="w-4 h-4" />
+                  <span>GitHub</span>
+                </a>
+              </Button>
+            )}
+            {application.resume_url && (
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                <a
+                  href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Resume</span>
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="default"
+              size="lg"
+              asChild
+              className="h-11 px-6 font-bold text-sm bg-gradient-to-r from-orange-500 to-orange-400 text-slate-900 hover:from-orange-400 hover:to-orange-300 shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <a
+                href={`/candidates/${application.candidate_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <span>View Full Profile</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
           </div>
         </div>
 
         {/* Scrollable Tabs Content */}
         <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b shadow-sm">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="application">Application</TabsTrigger>
-              <TabsTrigger value="job">Job Details</TabsTrigger>
-              <TabsTrigger value="skills">Skills Match</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 sticky top-0 z-10 rounded-full border border-border/60 bg-background/80 p-1 shadow-sm backdrop-blur">
+              <TabsTrigger
+                value="overview"
+                className="rounded-full data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-200 data-[state=active]:shadow"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="application"
+                className="rounded-full data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-200 data-[state=active]:shadow"
+              >
+                Application
+              </TabsTrigger>
+              <TabsTrigger
+                value="job"
+                className="rounded-full data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-200 data-[state=active]:shadow"
+              >
+                Job Details
+              </TabsTrigger>
+              <TabsTrigger
+                value="skills"
+                className="rounded-full data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-200 data-[state=active]:shadow"
+              >
+                Skills Match
+              </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6 mt-6">
-              <Card>
+              <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle>Candidate Bio</CardTitle>
                 </CardHeader>
@@ -246,7 +294,7 @@ export function CandidateDetailsModal({
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle>Application Summary</CardTitle>
                 </CardHeader>
@@ -278,7 +326,7 @@ export function CandidateDetailsModal({
             {/* Application Tab */}
             <TabsContent value="application" className="space-y-6 mt-6">
               {application.cover_letter && (
-                <Card>
+                <Card className="border-border/60 bg-card/80">
                   <CardHeader>
                     <CardTitle>Cover Letter</CardTitle>
                   </CardHeader>
@@ -291,7 +339,7 @@ export function CandidateDetailsModal({
               )}
 
               {application.screening_answers && Object.keys(application.screening_answers).length > 0 && (
-                <Card>
+                <Card className="border-border/60 bg-card/80">
                   <CardHeader>
                     <CardTitle>Screening Questions & Answers</CardTitle>
                   </CardHeader>
@@ -318,7 +366,7 @@ export function CandidateDetailsModal({
 
             {/* Job Details Tab */}
             <TabsContent value="job" className="space-y-6 mt-6">
-              <Card>
+              <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle>Job Posting</CardTitle>
                 </CardHeader>
@@ -364,7 +412,7 @@ export function CandidateDetailsModal({
                       <ul className="space-y-2">
                         {application.requirements.map((req: string, i: number) => (
                           <li key={i} className="flex items-start gap-2 text-sm">
-                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                            <CheckCircle className="w-4 h-4 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0" />
                             <span>{req}</span>
                           </li>
                         ))}
@@ -391,7 +439,7 @@ export function CandidateDetailsModal({
 
             {/* Skills Match Tab */}
             <TabsContent value="skills" className="space-y-6 mt-6">
-              <Card>
+              <Card className="border-border/60 bg-card/80">
                 <CardHeader>
                   <CardTitle>Skill Match Analysis</CardTitle>
                 </CardHeader>
@@ -405,10 +453,10 @@ export function CandidateDetailsModal({
                       value={skillMatchData.percentage}
                       className={`h-3 ${
                         skillMatchData.percentage >= 70
-                          ? '[&>div]:bg-green-500'
+                          ? '[&>div]:bg-orange-400'
                           : skillMatchData.percentage >= 40
-                          ? '[&>div]:bg-yellow-500'
-                          : '[&>div]:bg-red-500'
+                          ? '[&>div]:bg-amber-400'
+                          : '[&>div]:bg-rose-400'
                       }`}
                     />
                     <p className="text-sm text-muted-foreground mt-2">
@@ -419,14 +467,14 @@ export function CandidateDetailsModal({
                   {skillMatchData.matched.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className="w-5 h-5 text-orange-500 dark:text-orange-400" />
                         <h4 className="font-semibold">Matched Skills ({skillMatchData.matched.length})</h4>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {skillMatchData.matched.map((skill: string, i: number) => (
                           <Badge
                             key={i}
-                            className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
+                            className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20"
                           >
                             <CheckCircle className="w-3 h-3 mr-1" />
                             {skill}
@@ -447,7 +495,7 @@ export function CandidateDetailsModal({
                           <Badge
                             key={i}
                             variant="outline"
-                            className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
+                            className="bg-rose-500/10 text-rose-300 border-rose-500/20"
                           >
                             <XCircle className="w-3 h-3 mr-1" />
                             {skill}
@@ -459,7 +507,7 @@ export function CandidateDetailsModal({
 
                   {guildScore && (
                     <div className="pt-4 border-t">
-                      <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/20">
+                      <Card className="bg-gradient-to-br from-orange-500/10 to-blue-500/10 border-orange-500/20">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div>
@@ -472,8 +520,8 @@ export function CandidateDetailsModal({
                             </div>
                             <div className="text-right">
                               <div className="flex items-center gap-2">
-                                <Award className="w-6 h-6 text-purple-500" />
-                                <span className="text-3xl font-bold text-purple-700 dark:text-purple-400">
+                                <Award className="w-6 h-6 text-orange-500 dark:text-orange-400" />
+                                <span className="text-3xl font-bold text-orange-700 dark:text-orange-300">
                                   {guildScore}
                                 </span>
                                 <span className="text-muted-foreground">/100</span>
@@ -496,7 +544,7 @@ export function CandidateDetailsModal({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 h-14 text-base font-semibold hover:bg-muted hover:scale-105 transition-all duration-200"
+              className="flex-1 h-14 text-base font-semibold border-border/60 hover:bg-muted/60 hover:scale-105 transition-all duration-200"
             >
               Close
             </Button>
@@ -505,7 +553,7 @@ export function CandidateDetailsModal({
                 onClose();
                 onEndorseCandidate(application);
               }}
-              className="flex-1 h-14 text-base font-bold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 hover:scale-105 hover:shadow-xl transition-all duration-200"
+              className="flex-1 h-14 text-base font-bold bg-gradient-to-r from-orange-500 to-orange-400 text-slate-900 hover:from-orange-400 hover:to-orange-300 hover:scale-105 hover:shadow-xl transition-all duration-200"
             >
               <Zap className="w-5 h-5 mr-2" />
               Endorse Candidate

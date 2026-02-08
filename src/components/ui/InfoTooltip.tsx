@@ -80,10 +80,10 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
         onMouseLeave={() => setIsVisible(false)}
         onFocus={() => setIsVisible(true)}
         onBlur={() => setIsVisible(false)}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors border border-slate-300 dark:border-slate-600"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted/60 hover:bg-muted transition-colors border border-border"
         aria-label="More information"
       >
-        <HelpCircle className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+        <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
       </button>
 
       {isVisible && (
@@ -92,7 +92,7 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
           role="tooltip"
         >
           <div className="relative">
-            <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-5 py-4 shadow-2xl w-[520px] text-sm leading-relaxed">
+            <div className="bg-card text-foreground border-2 border-border rounded-xl px-5 py-4 shadow-2xl w-[90vw] max-w-[520px] text-sm leading-relaxed">
               {renderContent()}
             </div>
           </div>

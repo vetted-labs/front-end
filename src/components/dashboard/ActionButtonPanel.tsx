@@ -10,9 +10,10 @@ interface ActionButtonPanelProps {
     stakedAmount: string;
   };
   hasGuilds?: boolean;
+  onRefresh?: () => void;
 }
 
-export function ActionButtonPanel({ stakingStatus, hasGuilds = false }: ActionButtonPanelProps) {
+export function ActionButtonPanel({ stakingStatus, hasGuilds = false, onRefresh }: ActionButtonPanelProps) {
   const router = useRouter();
   const [showStakingModal, setShowStakingModal] = useState(false);
 
@@ -27,7 +28,7 @@ export function ActionButtonPanel({ stakingStatus, hasGuilds = false }: ActionBu
   };
 
   const handleStakingSuccess = () => {
-    // Success is handled within the modal, no need to reload
+    onRefresh?.();
   };
 
   return (

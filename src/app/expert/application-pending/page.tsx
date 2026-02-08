@@ -49,12 +49,13 @@ export default function ApplicationPendingPage() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     if (isConnected && address) {
       fetchPendingStatus();
     } else {
       router.push("/");
     }
-  }, [isConnected, address]);
+  }, [mounted, isConnected, address]);
 
   const fetchPendingStatus = async () => {
     if (!address) return;
@@ -164,20 +165,20 @@ export default function ApplicationPendingPage() {
 
           {/* Review Status */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <div className="text-center p-4 bg-muted rounded-lg border border-border">
-              <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <Users className="w-8 h-8 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold text-foreground">{expert.reviewCount}</p>
               <p className="text-sm text-muted-foreground">Total Reviews</p>
             </div>
 
-            <div className="text-center p-4 bg-muted rounded-lg border border-border">
-              <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <CheckCircle className="w-8 h-8 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold text-foreground">{expert.approvalCount}</p>
               <p className="text-sm text-muted-foreground">Approvals</p>
             </div>
 
-            <div className="text-center p-4 bg-muted rounded-lg border border-border">
-              <XCircle className="w-8 h-8 text-destructive mx-auto mb-2" />
+            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <XCircle className="w-8 h-8 text-primary mx-auto mb-2" />
               <p className="text-2xl font-bold text-foreground">{expert.rejectionCount}</p>
               <p className="text-sm text-muted-foreground">Rejections</p>
             </div>
@@ -210,8 +211,8 @@ export default function ApplicationPendingPage() {
               </div>
             </div>
 
-            <div className="flex items-start text-left p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <Clock className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <Clock className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground mb-1">Under Guild Review</p>
                 <p className="text-sm text-muted-foreground">
@@ -221,8 +222,8 @@ export default function ApplicationPendingPage() {
               </div>
             </div>
 
-            <div className="flex items-start text-left p-4 bg-muted rounded-lg border border-border">
-              <Mail className="w-5 h-5 text-muted-foreground mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <Mail className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground mb-1">Auto-Approval Pending</p>
                 <p className="text-sm text-muted-foreground">

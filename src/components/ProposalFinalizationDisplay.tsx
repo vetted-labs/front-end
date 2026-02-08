@@ -21,12 +21,23 @@ interface ProposalFinalizationDisplayProps {
     consensus_score?: number;
     vote_count: number;
     assigned_reviewer_count?: number;
+    // IQR data
+    iqr?: {
+      median: number;
+      q1: number;
+      q3: number;
+      iqr: number;
+      includedCount: number;
+      excludedCount: number;
+    };
   };
   myVote?: {
     score: number;
     alignment_distance?: number;
     reputation_change?: number;
     reward_amount?: number;
+    slashing_tier?: string;
+    slash_percent?: number;
   };
   compact?: boolean;
 }
@@ -166,6 +177,37 @@ export function ProposalFinalizationDisplay({
               </p>
             </div>
           </div>
+
+          {/* IQR Statistics */}
+          {proposal.iqr && (
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm font-medium text-muted-foreground mb-3 text-center">
+                IQR-Based Scoring Statistics
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground">Median</p>
+                  <p className="text-lg font-bold">{proposal.iqr.median.toFixed(1)}</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground">Q1 - Q3</p>
+                  <p className="text-lg font-bold">
+                    {proposal.iqr.q1.toFixed(1)} - {proposal.iqr.q3.toFixed(1)}
+                  </p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground">IQR</p>
+                  <p className="text-lg font-bold">{proposal.iqr.iqr.toFixed(1)}</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground">Included / Excluded</p>
+                  <p className="text-lg font-bold">
+                    {proposal.iqr.includedCount} / {proposal.iqr.excludedCount}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -253,6 +295,34 @@ export function ProposalFinalizationDisplay({
                 </div>
               )}
             </div>
+
+            {/* Slashing Tier Info */}
+            {myVote.slashing_tier && (
+              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Slashing Tier:</span>
+                  <Badge
+                    variant="outline"
+                    className={
+                      myVote.slashing_tier === "aligned"
+                        ? "border-green-500/30 text-green-500"
+                        : myVote.slashing_tier === "mild"
+                        ? "border-amber-500/30 text-amber-500"
+                        : myVote.slashing_tier === "moderate"
+                        ? "border-orange-500/30 text-orange-500"
+                        : "border-red-500/30 text-red-500"
+                    }
+                  >
+                    {myVote.slashing_tier}
+                  </Badge>
+                </div>
+                {myVote.slash_percent !== undefined && myVote.slash_percent > 0 && (
+                  <span className="text-sm text-red-500 font-medium">
+                    -{myVote.slash_percent}% slashed
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Alignment Explanation */}
             {myVote.alignment_distance !== undefined && (

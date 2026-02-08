@@ -2,8 +2,7 @@
 
 import { getGuildIcon, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { InfoTooltip } from "./ui/InfoTooltip";
-import { Users, Briefcase, UserCheck, ArrowRight, CheckCircle2 } from "lucide-react";
-import { GuildMembershipCard } from "./GuildMembershipCard";
+import { Users, Briefcase, UserCheck, ArrowRight, CheckCircle2, Calendar, DollarSign, Star, Coins } from "lucide-react";
 
 interface Guild {
   id: string;
@@ -21,6 +20,7 @@ interface Guild {
   pendingApplications?: number;
   ongoingProposals?: number;
   closedProposals?: number;
+  stakedAmount?: string;
 }
 
 interface GuildCardProps {
@@ -34,16 +34,92 @@ interface GuildCardProps {
 export function GuildCard({
   guild,
   variant,
-  membershipSubVariant = "default",
   onViewDetails,
   showDescription = true,
 }: GuildCardProps) {
-  // Membership variant delegates to GuildMembershipCard
-  if (variant === "membership") {
-    return <GuildMembershipCard guild={guild} variant={membershipSubVariant} />;
-  }
-
   const GuildIcon = getGuildIcon(guild.name);
+  // Membership variant (shared styling with public guild cards)
+  if (variant === "membership") {
+    const totalProposals =
+      (guild.pendingProposals || 0) + (guild.ongoingProposals || 0) + (guild.closedProposals || 0);
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+    };
+
+    return (
+      <div
+        onClick={() => onViewDetails?.(guild.id)}
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)] opacity-60" />
+        <div className="pointer-events-none absolute -top-24 right-[-10%] h-48 w-48 rounded-full bg-orange-500/12 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-[-10%] h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/30 via-orange-400/70 to-amber-400/30 opacity-80" />
+
+        <div className="relative">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-500/15 border border-white/10 flex items-center justify-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+                <GuildIcon className="w-6 h-6 text-amber-200" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-slate-100 group-hover:text-amber-200 transition-colors">
+                  {guild.name}
+                </h3>
+                {guild.expertRole && (
+                  <span className="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.2em] bg-orange-500/15 text-amber-200 border border-orange-400/30">
+                    {guild.expertRole}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
+              <div className="flex items-center justify-center gap-1 mb-1 text-amber-200">
+                <Star className="w-4 h-4 fill-current" />
+              </div>
+              <p className="text-lg font-semibold text-slate-100">{guild.reputation || 0}</p>
+              <p className="text-xs text-slate-400">Reputation</p>
+            </div>
+            <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
+              <div className="flex items-center justify-center gap-1 mb-1 text-amber-200">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              <p className="text-lg font-semibold text-slate-100">
+                ${Number(guild.totalEarnings || 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-slate-400">Earned</p>
+            </div>
+            <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
+              <div className="flex items-center justify-center gap-1 mb-1 text-amber-200">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <p className="text-lg font-semibold text-slate-100">{totalProposals}</p>
+              <p className="text-xs text-slate-400">Proposals</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-400 border-t border-white/10 pt-3">
+            <div className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-amber-200" />
+              <span>{guild.memberCount || 0} members</span>
+            </div>
+            {guild.joinedAt && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-200" />
+                <span>Since {formatDate(guild.joinedAt)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Browse variant (public guild browsing and expert dashboard)
   if (variant === "browse") {
@@ -53,23 +129,29 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
-        className="bg-card rounded-xl p-6 border border-border hover:border-primary/50 transition-all cursor-pointer group"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)] opacity-60" />
+        <div className="pointer-events-none absolute -top-24 right-[-10%] h-48 w-48 rounded-full bg-orange-500/12 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-[-10%] h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/30 via-orange-400/70 to-amber-400/30 opacity-80" />
+
+        <div className="relative">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-muted dark:bg-card rounded-xl flex items-center justify-center">
-              <GuildIcon className="w-6 h-6 text-muted-foreground" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-500/15 border border-white/10 flex items-center justify-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+              <GuildIcon className="w-6 h-6 text-amber-200" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+              <h3 className="text-xl font-semibold text-slate-100 group-hover:text-amber-200 transition-colors">
                 {guild.name}
               </h3>
               {guild.expertRole && (
-                <p className="text-xs text-muted-foreground capitalize">
+                <p className="text-xs text-slate-400 capitalize">
                   {guild.expertRole} • {guild.memberCount} members
                   {guild.pendingApplications !== undefined && guild.pendingApplications > 0 && (
-                    <span className="text-primary font-medium"> • {guild.pendingApplications} pending</span>
+                    <span className="text-amber-200 font-medium"> • {guild.pendingApplications} pending</span>
                   )}
                 </p>
               )}
@@ -80,7 +162,7 @@ export function GuildCard({
 
         {/* Description */}
         {showDescription && !isExpertView && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+          <p className="text-sm text-slate-300/80 mb-4 line-clamp-2">
             {getGuildPreviewDescription(guild.name)}
           </p>
         )}
@@ -90,54 +172,55 @@ export function GuildCard({
           {isExpertView ? (
             // Expert view: show proposals
             <>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">{guild.pendingProposals || 0}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
+                <p className="text-xl font-semibold text-slate-100">{(guild.pendingProposals || 0) + (guild.pendingApplications || 0)}</p>
+                <p className="text-xs text-slate-400">Pending</p>
               </div>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  <Coins className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">{guild.ongoingProposals || 0}</p>
-                <p className="text-xs text-muted-foreground">Ongoing</p>
+                <p className="text-xl font-semibold text-slate-100">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</p>
+                <p className="text-xs text-slate-400">Staked</p>
               </div>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">${guild.totalEarnings || 0}</p>
-                <p className="text-xs text-muted-foreground">Earned</p>
+                <p className="text-xl font-semibold text-slate-100">${guild.totalEarnings || 0}</p>
+                <p className="text-xs text-slate-400">Earned</p>
               </div>
             </>
           ) : (
             // Public view: show experts, members, jobs
             <>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                  <UserCheck className="w-3.5 h-3.5 text-slate-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">{guild.expertCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Experts</p>
+                <p className="text-xl font-semibold text-slate-100">{guild.expertCount || 0}</p>
+                <p className="text-xs text-slate-400">Experts</p>
               </div>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">{guild.totalProposalsReviewed || 0}</p>
-                <p className="text-xs text-muted-foreground">Proposals</p>
+                <p className="text-xl font-semibold text-slate-100">{guild.totalProposalsReviewed || 0}</p>
+                <p className="text-xs text-slate-400">Proposals</p>
               </div>
-              <div className="text-center p-3 bg-secondary dark:bg-muted rounded-lg border border-border">
+              <div className="text-center p-3 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400" />
                 </div>
-                <p className="text-xl font-bold text-foreground">{guild.jobCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Jobs</p>
+                <p className="text-xl font-semibold text-slate-100">{guild.jobCount || 0}</p>
+                <p className="text-xs text-slate-400">Jobs</p>
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
     );
@@ -175,12 +258,12 @@ export function GuildCard({
         <div className="p-5">
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">{guild.pendingProposals || 0}</p>
+              <p className="font-semibold text-foreground">{(guild.pendingProposals || 0) + (guild.pendingApplications || 0)}</p>
               <p className="text-muted-foreground">Pending</p>
             </div>
             <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">{guild.ongoingProposals || 0}</p>
-              <p className="text-muted-foreground">Ongoing</p>
+              <p className="font-semibold text-foreground">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</p>
+              <p className="text-muted-foreground">Staked</p>
             </div>
             <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
               <p className="font-semibold text-foreground">${guild.totalEarnings || 0}</p>

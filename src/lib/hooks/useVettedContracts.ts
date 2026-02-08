@@ -95,19 +95,34 @@ export function useVettedToken() {
 }
 
 /**
- * Hook for staking operations
+ * Hook for per-guild staking operations (V2)
+ * @param blockchainGuildId - bytes32 guild ID for the blockchain contract
  */
-export function useExpertStaking() {
+export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
-  // Read stake info
+  // Read stake info for this guild
   const { data: stakeInfo, refetch: refetchStake } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
     functionName: 'stakes',
-    args: address ? [address] : undefined,
+    args: address && blockchainGuildId ? [address, blockchainGuildId] : undefined,
     query: {
+      enabled: !!address && !!blockchainGuildId,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  // Read guild total staked
+  const { data: guildTotalStaked, refetch: refetchGuildTotal } = useReadContract({
+    address: CONTRACT_ADDRESSES.STAKING,
+    abi: EXPERT_STAKING_ABI,
+    functionName: 'guildTotalStaked',
+    args: blockchainGuildId ? [blockchainGuildId] : undefined,
+    query: {
+      enabled: !!blockchainGuildId,
       refetchInterval: false,
       staleTime: 10000,
     },
@@ -120,11 +135,11 @@ export function useExpertStaking() {
     functionName: 'minimumStake',
     query: {
       refetchInterval: false,
-      staleTime: 60000, // Minimum stake rarely changes, cache for 60s
+      staleTime: 60000,
     },
   });
 
-  // Read total staked
+  // Read global total staked
   const { data: totalStaked } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
@@ -142,49 +157,50 @@ export function useExpertStaking() {
     functionName: 'paused',
     query: {
       refetchInterval: false,
-      staleTime: 30000, // Pause state rarely changes, cache for 30s
+      staleTime: 30000,
     },
   });
 
-  // Stake tokens
-  const stake = async (amount: string) => {
+  // Stake tokens for a guild
+  const stake = async (guildId: `0x${string}`, amount: string) => {
     if (!address) throw new Error('Wallet not connected');
 
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.STAKING,
       abi: EXPERT_STAKING_ABI,
       functionName: 'stake',
-      args: [parseEther(amount)],
-      gas: 300000n, // Manual gas limit to prevent estimation issues
+      args: [guildId, parseEther(amount)],
+      gas: 300000n,
     });
 
     return hash;
   };
 
-  // Request unstake
-  const requestUnstake = async (amount: string) => {
+  // Request unstake from a guild
+  const requestUnstake = async (guildId: `0x${string}`, amount: string) => {
     if (!address) throw new Error('Wallet not connected');
 
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.STAKING,
       abi: EXPERT_STAKING_ABI,
       functionName: 'requestUnstake',
-      args: [parseEther(amount)],
-      gas: 200000n, // Manual gas limit
+      args: [guildId, parseEther(amount)],
+      gas: 200000n,
     });
 
     return hash;
   };
 
-  // Complete unstake
-  const completeUnstake = async () => {
+  // Complete unstake for a guild
+  const completeUnstake = async (guildId: `0x${string}`) => {
     if (!address) throw new Error('Wallet not connected');
 
     const hash = await writeContractAsync({
       address: CONTRACT_ADDRESSES.STAKING,
       abi: EXPERT_STAKING_ABI,
       functionName: 'completeUnstake',
-      gas: 200000n, // Manual gas limit
+      args: [guildId],
+      gas: 200000n,
     });
 
     return hash;
@@ -193,6 +209,8 @@ export function useExpertStaking() {
   return {
     stakeInfo,
     refetchStake,
+    guildTotalStaked,
+    refetchGuildTotal,
     minimumStake,
     totalStaked,
     isPaused,
@@ -200,6 +218,14 @@ export function useExpertStaking() {
     requestUnstake,
     completeUnstake,
   };
+}
+
+/**
+ * Legacy hook for staking operations (wraps useGuildStaking for backward compatibility)
+ * @deprecated Use useGuildStaking instead
+ */
+export function useExpertStaking() {
+  return useGuildStaking();
 }
 
 /**

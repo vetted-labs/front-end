@@ -37,9 +37,9 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+        <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-10 h-10 text-green-600" />
+            <DollarSign className="w-10 h-10 text-primary" />
             <TrendingUp className="w-5 h-5 text-green-500" />
           </div>
           <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>

@@ -331,9 +331,17 @@ export default function GlobalGuildsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#07080c] text-slate-100">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
+        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/15 blur-3xl" />
+        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-amber-500/12 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#07080c] via-transparent to-transparent" />
+      </div>
+
+      <div className="relative z-10">
       {/* Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
+      <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0f1a]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-6">
@@ -342,35 +350,35 @@ export default function GlobalGuildsPage() {
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
                 <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-                <span className="text-xl font-bold text-foreground">Vetted</span>
+                <span className="text-xl font-semibold text-slate-100">Vetted</span>
               </button>
 
               {/* Navigation Links */}
               <div className="hidden md:flex items-center space-x-1">
                 <button
                   onClick={() => router.push("/browse/jobs")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-all"
                 >
                   <Briefcase className="w-4 h-4" />
                   Find Jobs
                 </button>
                 <button
                   onClick={() => router.push("/expert/apply")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-all"
                 >
                   <Award className="w-4 h-4" />
                   Start Vetting
                 </button>
                 <button
                   onClick={() => router.push("/auth/signup?type=company")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-all"
                 >
                   <Briefcase className="w-4 h-4" />
                   Start Hiring
                 </button>
                 <button
                   onClick={() => router.push("/guilds")}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-white/10 text-amber-100 border border-amber-400/30 transition-all shadow-[0_0_20px_rgba(251,146,60,0.18)]"
                 >
                   <Swords className="w-4 h-4" />
                   Guilds
@@ -384,42 +392,42 @@ export default function GlobalGuildsPage() {
                 <div className="relative" data-wallet-menu>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:border-orange-400/40 hover:bg-white/10 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.03)]"
                   >
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Wallet className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center border border-orange-400/20">
+                      <Wallet className="w-4 h-4 text-amber-200" />
                     </div>
                     <div className="flex flex-col items-start">
-                      <span className="text-xs font-mono text-foreground font-medium">
+                      <span className="text-xs font-mono text-slate-100 font-medium">
                         {address.slice(0, 6)}...{address.slice(-4)}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[10px] text-slate-400">
                         {getNetworkName(chainId)}
                       </span>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
-                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-3 border-b border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Connected Wallet</p>
+                    <div className="absolute right-0 mt-2 w-72 rounded-xl shadow-2xl border border-white/10 bg-[#0b0f1a] overflow-hidden z-50">
+                      <div className="bg-gradient-to-r from-orange-500/10 via-white/5 to-amber-500/10 px-4 py-3 border-b border-white/10">
+                        <p className="text-xs font-medium text-slate-400 mb-2">Connected Wallet</p>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Wallet className="w-4 h-4 text-primary" />
+                          <div className="w-8 h-8 bg-orange-500/10 rounded-lg flex items-center justify-center flex-shrink-0 border border-orange-400/20">
+                            <Wallet className="w-4 h-4 text-amber-200" />
                           </div>
-                          <p className="text-sm font-mono text-foreground break-all font-medium">{address}</p>
+                          <p className="text-sm font-mono text-slate-100 break-all font-medium">{address}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-xs text-foreground">
+                          <span className="text-xs text-slate-200">
                             Connected to <span className="font-semibold">{getNetworkName(chainId)}</span>
                           </span>
                         </div>
                       </div>
                       <button
                         onClick={() => router.push("/browse/jobs")}
-                        className="w-full flex items-center px-4 py-3 text-sm text-foreground hover:bg-muted transition-all"
+                        className="w-full flex items-center px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-all"
                       >
                         <Briefcase className="w-4 h-4 mr-2" />
                         Browse Jobs
@@ -429,7 +437,7 @@ export default function GlobalGuildsPage() {
                           setShowUserMenu(false);
                           handleDisconnect();
                         }}
-                        className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
+                        className="w-full flex items-center px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 transition-all"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Disconnect Wallet
@@ -441,31 +449,31 @@ export default function GlobalGuildsPage() {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
                   >
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <User className="w-4 h-4 text-primary" />
+                    <div className="p-2 bg-orange-500/10 rounded-lg border border-orange-400/20">
+                      <User className="w-4 h-4 text-amber-200" />
                     </div>
-                    <span className="text-sm font-medium text-foreground hidden sm:block">
+                    <span className="text-sm font-medium text-slate-100 hidden sm:block">
                       {userEmail}
                     </span>
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                      <div className="px-4 py-3 border-b border-border">
-                        <p className="text-sm font-medium text-foreground">{userEmail}</p>
+                    <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-xl border border-white/10 bg-[#0b0f1a] py-1 z-50">
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-sm font-medium text-slate-100">{userEmail}</p>
                       </div>
                       <button
                         onClick={() => router.push("/browse/jobs")}
-                        className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
+                        className="w-full px-4 py-2 text-left text-sm text-slate-100 hover:bg-white/5 flex items-center gap-2"
                       >
                         <Briefcase className="w-4 h-4" />
                         Browse Jobs
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                        className="w-full px-4 py-2 text-left text-sm text-red-300 hover:bg-red-500/10 flex items-center gap-2"
                       >
                         <LogOut className="w-4 h-4" />
                         Logout
@@ -476,7 +484,7 @@ export default function GlobalGuildsPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-slate-900 bg-gradient-to-r from-amber-300 via-orange-300 to-amber-200 rounded-lg hover:opacity-90 transition-all shadow-[0_12px_30px_rgba(251,146,60,0.25)]"
                 >
                   Sign In
                 </button>
@@ -487,17 +495,19 @@ export default function GlobalGuildsPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="relative overflow-hidden border-b border-white/10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.22),transparent_60%)]" />
+        <div className="absolute -bottom-20 left-1/2 h-40 w-96 -translate-x-1/2 bg-amber-500/10 blur-3xl" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 via-primary to-accent rounded-2xl mb-6 shadow-2xl">
-              <Swords className="w-10 h-10 text-white" />
-              <Sparkles className="w-4 h-4 text-amber-300 absolute -top-1 -right-1 animate-pulse" />
-              <Sparkles className="w-3 h-3 text-primary/60 absolute -bottom-1 -left-1 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] uppercase tracking-[0.3em] text-amber-200/90 mb-6">
+              Noble Protocol Guilds
             </div>
-            <h1 className="text-5xl font-bold text-foreground mb-4">Guilds</h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Professional communities where experts vet candidates and companies find pre-qualified talent
+            <h1 className="text-5xl md:text-6xl font-semibold mb-4 bg-gradient-to-r from-amber-200 via-orange-200 to-amber-100 bg-clip-text text-transparent">
+              Guilds
+            </h1>
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed">
+              Elite communities where vetted experts stake reputation, curate talent, and steer the frontier of crypto work.
             </p>
           </div>
         </div>
@@ -507,47 +517,53 @@ export default function GlobalGuildsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Global Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
-              <Shield className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-white/10 bg-white/5 mb-3">
+              <Shield className="w-6 h-6 text-amber-200" />
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-3xl font-semibold text-slate-100 mb-1">
               {guilds.length}
             </p>
-            <p className="text-sm text-muted-foreground font-medium">Active Guilds</p>
+            <p className="text-sm text-slate-400 font-medium">Active Guilds</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
-              <Award className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-white/10 bg-white/5 mb-3">
+              <Award className="w-6 h-6 text-amber-200" />
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-3xl font-semibold text-slate-100 mb-1">
               {guilds.reduce((sum, g) => sum + (g.expertCount || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground font-medium">Expert Reviewers</p>
+            <p className="text-sm text-slate-400 font-medium">Expert Reviewers</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
-              <Users className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-white/10 bg-white/5 mb-3">
+              <Users className="w-6 h-6 text-amber-200" />
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-3xl font-semibold text-slate-100 mb-1">
               {guilds.reduce((sum, g) => sum + (g.totalMembers || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground font-medium">Total Members</p>
+            <p className="text-sm text-slate-400 font-medium">Total Members</p>
           </div>
-          <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md transition-shadow text-center group">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg border-2 border-border group-hover:border-primary/30 transition-colors mb-3">
-              <Briefcase className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-white/10 bg-white/5 mb-3">
+              <Briefcase className="w-6 h-6 text-amber-200" />
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-3xl font-semibold text-slate-100 mb-1">
               {guilds.reduce((sum, g) => sum + (g.openPositions || 0), 0)}
             </p>
-            <p className="text-sm text-muted-foreground font-medium">Open Positions</p>
+            <p className="text-sm text-slate-400 font-medium">Open Positions</p>
           </div>
         </div>
 
         {/* All Guilds */}
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-8 font-serif">All Guilds</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold text-slate-100 mb-8 font-serif">
+            All Guilds
+          </h2>
 
           {error && (
             <Alert variant="error" className="mb-6">{error}</Alert>
@@ -592,7 +608,7 @@ export default function GlobalGuildsPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:border-orange-400/40 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -605,8 +621,8 @@ export default function GlobalGuildsPage() {
                         onClick={() => setCurrentPage(page)}
                         className={`w-10 h-10 rounded-lg font-medium transition-all ${
                           currentPage === page
-                            ? 'bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 shadow-lg'
-                            : 'bg-card border border-border hover:border-primary/50'
+                            ? 'bg-gradient-to-r from-amber-300 via-orange-300 to-amber-200 text-slate-900 shadow-[0_12px_30px_rgba(251,146,60,0.25)]'
+                            : 'border border-white/10 bg-white/5 text-slate-200 hover:border-orange-400/40 hover:bg-white/10'
                         }`}
                       >
                         {page}
@@ -617,7 +633,7 @@ export default function GlobalGuildsPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(guilds.length / guildsPerPage)))}
                     disabled={currentPage === Math.ceil(guilds.length / guildsPerPage)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-200 hover:border-orange-400/40 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />
@@ -626,10 +642,10 @@ export default function GlobalGuildsPage() {
               )}
             </>
           ) : (
-            <div className="text-center py-16 bg-card rounded-xl border border-border">
-              <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-lg text-muted-foreground mb-2">No guilds available yet</p>
-              <p className="text-sm text-muted-foreground">Check back soon for new professional communities</p>
+            <div className="text-center py-16 rounded-2xl border border-white/10 bg-white/[0.03]">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 opacity-60" />
+              <p className="text-lg text-slate-300 mb-2">No guilds available yet</p>
+              <p className="text-sm text-slate-400">Check back soon for new professional communities</p>
             </div>
           )}
         </div>
@@ -638,9 +654,9 @@ export default function GlobalGuildsPage() {
         {openTooltipId && (
           <div className="md:hidden fixed inset-0 z-50 flex items-end">
             <div className="absolute inset-0 bg-black/50" onClick={closeTooltip} />
-            <div className="relative bg-card rounded-t-2xl p-6 w-full max-h-[80vh] overflow-y-auto">
-              <button onClick={closeTooltip} className="absolute top-4 right-4 p-2 hover:bg-muted rounded-lg transition-colors">
-                <X className="w-5 h-5" />
+            <div className="relative rounded-t-2xl p-6 w-full max-h-[80vh] overflow-y-auto border border-white/10 bg-[#0b0f1a]">
+              <button onClick={closeTooltip} className="absolute top-4 right-4 p-2 hover:bg-white/5 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-slate-300" />
               </button>
               {(() => {
                 const guild = guilds.find(g => g.id === openTooltipId);
@@ -650,40 +666,40 @@ export default function GlobalGuildsPage() {
                 return (
                   <>
                     <div className="flex items-start gap-3 mb-4 pr-8">
-                      <div className="w-12 h-12 rounded-xl border-2 border-border flex items-center justify-center flex-shrink-0">
-                        <GuildIcon className="w-6 h-6 text-primary" />
+                      <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center flex-shrink-0">
+                        <GuildIcon className="w-6 h-6 text-cyan-200" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-foreground mb-1">{guild.name}</h3>
-                        <p className="text-sm text-primary font-medium">{detailedInfo.focus}</p>
+                        <h3 className="text-lg font-semibold text-slate-100 mb-1">{guild.name}</h3>
+                        <p className="text-sm text-cyan-200 font-medium">{detailedInfo.focus}</p>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                      <p className="text-sm text-slate-300 leading-relaxed">
                         {detailedInfo.details}
                       </p>
                     </div>
 
-                    <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs font-semibold text-foreground mb-2">Common Roles:</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                    <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                      <p className="text-xs font-semibold text-slate-100 mb-2">Common Roles:</p>
+                      <p className="text-sm text-slate-300 leading-relaxed">
                         {detailedInfo.examples}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-foreground mb-1">{guild.expertCount}</p>
-                        <p className="text-xs text-muted-foreground">Expert Reviewers</p>
+                        <p className="text-2xl font-semibold text-slate-100 mb-1">{guild.expertCount}</p>
+                        <p className="text-xs text-slate-400">Expert Reviewers</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-foreground mb-1">{guild.totalMembers}</p>
-                        <p className="text-xs text-muted-foreground">Total Members</p>
+                        <p className="text-2xl font-semibold text-slate-100 mb-1">{guild.totalMembers}</p>
+                        <p className="text-xs text-slate-400">Total Members</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-foreground mb-1">{guild.openPositions}</p>
-                        <p className="text-xs text-muted-foreground">Open Positions</p>
+                        <p className="text-2xl font-semibold text-slate-100 mb-1">{guild.openPositions}</p>
+                        <p className="text-xs text-slate-400">Open Positions</p>
                       </div>
                     </div>
                   </>
@@ -692,6 +708,7 @@ export default function GlobalGuildsPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

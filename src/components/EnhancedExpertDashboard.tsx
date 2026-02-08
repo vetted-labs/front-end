@@ -24,16 +24,18 @@ import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { GuildCard } from "@/components/GuildCard";
 import { blockchainApi } from "@/lib/api";
+import { keccak256, toBytes } from "viem";
 
 interface Guild {
   id: string;
   name: string;
   description: string;
   memberCount: number;
-  expertRole: "recruit" | "craftsman" | "master";
+  expertRole: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
   reputation: number;
   totalEarnings: number;
   pendingProposals: number;
+  pendingApplications?: number;
   ongoingProposals: number;
   closedProposals: number;
 }
@@ -67,18 +69,25 @@ export function EnhancedExpertDashboard() {
   const { address, isConnected } = useAccount();
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [stakingStatus, setStakingStatus] = useState<any>(null);
+  const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (isConnected && address) {
       fetchExpertProfile();
     } else if (!isDisconnecting) {
       // Only redirect if not intentionally disconnecting
       router.push("/");
     }
-  }, [isConnected, address, isDisconnecting]);
+  }, [mounted, isConnected, address, isDisconnecting]);
 
   const fetchExpertProfile = async () => {
     if (!address) return;
@@ -87,29 +96,43 @@ export function EnhancedExpertDashboard() {
     setError(null);
 
     try {
-      // Fetch profile and staking status in parallel
-      const [profileResult, stakingResult] = await Promise.allSettled([
-        expertApi.getProfile(address),
-        blockchainApi.getStakeBalance(address),
-      ]);
-
-      // Handle profile data
-      let data: any = null;
-      if (profileResult.status === "fulfilled") {
-        data = (profileResult.value as any).data || profileResult.value;
-      }
-
-      // Handle staking data
-      if (stakingResult.status === "fulfilled") {
-        setStakingStatus((stakingResult.value as any).data);
-      }
+      // Fetch profile first
+      const profileResponse = await expertApi.getProfile(address);
+      const data: any = (profileResponse as any).data || profileResponse;
 
       if (!data) {
         throw new Error("Failed to load profile data");
       }
 
-      // Ensure guilds is an array
+      // Read stake balances from blockchain for each guild
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];
+      if (guilds.length > 0) {
+        const stakePromises = guilds.map((guild: Guild) => {
+          const blockchainGuildId = keccak256(toBytes(guild.id));
+          return blockchainApi.getStakeBalance(address, blockchainGuildId)
+            .then((result: any) => ({
+              guildId: guild.id,
+              stakedAmount: (result.data || result).stakedAmount || "0",
+            }))
+            .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
+        });
+
+        const stakeResults = await Promise.all(stakePromises);
+        const stakesMap: Record<string, string> = {};
+        let totalStaked = 0;
+        for (const result of stakeResults) {
+          stakesMap[result.guildId] = result.stakedAmount;
+          totalStaked += parseFloat(result.stakedAmount);
+        }
+        setGuildStakes(stakesMap);
+        setStakingStatus({ stakedAmount: totalStaked.toString() });
+
+        // Sync stakes to database in background (fire-and-forget)
+        for (const guild of guilds) {
+          const blockchainGuildId = keccak256(toBytes(guild.id));
+          blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
+        }
+      }
 
       // Add mock recent activity and pending tasks for now
       // TODO: These should come from the backend
@@ -122,21 +145,21 @@ export function EnhancedExpertDashboard() {
             type: "proposal_vote",
             description: "Voted on candidate proposal for Senior Engineer",
             timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            guildName: "Engineering & Technology",
+            guildName: "Engineering Guild",
           },
           {
             id: "2",
             type: "endorsement",
             description: "Endorsed candidate for Product Manager role",
             timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            guildName: "Product Management",
+            guildName: "Product Guild",
           },
           {
             id: "3",
             type: "earning",
             description: "Earned 50 points from aligned proposal vote",
             timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            guildName: "Engineering & Technology",
+            guildName: "Engineering Guild",
             amount: 50,
           },
         ],
@@ -269,6 +292,7 @@ export function EnhancedExpertDashboard() {
         <ActionButtonPanel
           stakingStatus={stakingStatus}
           hasGuilds={profile.guilds.length > 0}
+          onRefresh={fetchExpertProfile}
         />
 
         {/* Quick Stats - 4 Key Metrics */}
@@ -338,7 +362,10 @@ export function EnhancedExpertDashboard() {
                   {profile.guilds.map((guild) => (
                     <GuildCard
                       key={guild.id}
-                      guild={guild}
+                      guild={{
+                        ...guild,
+                        stakedAmount: guildStakes[guild.id] || "0",
+                      }}
                       variant="browse"
                       showDescription={false}
                       onViewDetails={handleGuildClick}

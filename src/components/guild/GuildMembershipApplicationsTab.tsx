@@ -1,6 +1,7 @@
 "use client";
 
-import { UserPlus, CheckCircle, XCircle, Users } from "lucide-react";
+import { useState } from "react";
+import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface GuildApplication {
@@ -10,6 +11,7 @@ interface GuildApplication {
   walletAddress: string;
   linkedinUrl: string;
   portfolioUrl?: string;
+  resumeUrl?: string;
   expertiseLevel: string;
   yearsOfExperience: number;
   currentTitle: string;
@@ -23,166 +25,334 @@ interface GuildApplication {
   rejectionCount: number;
 }
 
+interface CandidateApplication {
+  id: string;
+  candidateName: string;
+  candidateEmail: string;
+  status: string;
+  expertiseLevel: string;
+  applicationResponses: any;
+  resumeUrl?: string | null;
+  submittedAt: string;
+  reviewCount: number;
+  approvalCount: number;
+  rejectionCount: number;
+  jobTitle: string | null;
+  jobId: string | null;
+  expertHasReviewed: boolean;
+}
+
 interface GuildMembershipApplicationsTabProps {
   guildName: string;
   guildApplications: GuildApplication[];
+  candidateApplications: CandidateApplication[];
   onReviewApplication: (application: GuildApplication) => void;
+  onReviewCandidateApplication: (application: CandidateApplication) => void;
 }
 
 export function GuildMembershipApplicationsTab({
   guildName,
   guildApplications,
+  candidateApplications,
   onReviewApplication,
+  onReviewCandidateApplication,
 }: GuildMembershipApplicationsTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<"expert" | "candidate">("expert");
+
+  const expertCount = guildApplications?.length || 0;
+  const candidateCount = candidateApplications?.length || 0;
+
   return (
     <div className="space-y-4">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Expert Proposals to Join Guild
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Review proposals from experts wanting to join {guildName}. 1+ approval
-          needed for auto-acceptance as &quot;Recruit&quot; member.
-        </p>
+      {/* Sub-tab toggle */}
+      <div className="flex items-center gap-2 p-1 bg-white/[0.03] rounded-xl border border-white/10 w-fit">
+        <button
+          onClick={() => setActiveSubTab("expert")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            activeSubTab === "expert"
+              ? "bg-white/10 text-amber-200 border border-white/10"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          Expert Reviews
+          {expertCount > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+              {expertCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab("candidate")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            activeSubTab === "candidate"
+              ? "bg-white/10 text-amber-200 border border-white/10"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          Candidate Reviews
+          {candidateCount > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+              {candidateCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      {!guildApplications || guildApplications.length === 0 ? (
-        <div className="bg-card rounded-xl border border-border p-12 text-center">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserPlus className="w-8 h-8 text-muted-foreground" />
+      {/* Expert Reviews */}
+      {activeSubTab === "expert" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">
+                Expert Proposals to Join Guild
+              </h3>
+              <p className="text-sm text-slate-400">
+                Review proposals from experts wanting to join {guildName}. 1+ approval
+                needed for auto-acceptance as &quot;Recruit&quot; member.
+              </p>
+            </div>
+            {expertCount > 0 && (
+              <span className="shrink-0 px-3 py-1 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                {expertCount} pending
+              </span>
+            )}
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            No Pending Applications
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            There are no pending membership applications for {guildName}. When
-            experts apply to join, you&apos;ll be able to review and vote on
-            their applications here.
-          </p>
-        </div>
-      ) : (
-        (guildApplications || []).map((application) => (
-          <div
-            key={application.id}
-            className="border border-border rounded-lg p-6 hover:border-primary/50 transition-all"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h4 className="text-lg font-semibold text-foreground mb-1">
-                  {application.fullName}
-                </h4>
-                <p className="text-sm text-muted-foreground mb-2">
-                  {application.email}
-                </p>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
-                    {application.expertiseLevel}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {application.yearsOfExperience} years experience
-                  </span>
-                </div>
+
+          {expertCount === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
+              <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-slate-500" />
               </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground mb-2">Review Status</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center text-green-600">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    <span className="text-sm font-semibold">
-                      {application.approvalCount}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-destructive">
-                    <XCircle className="w-4 h-4 mr-1" />
-                    <span className="text-sm font-semibold">
-                      {application.rejectionCount}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({application.reviewCount} total)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Position */}
-            <div className="mb-4 pb-4 border-b border-border">
-              <p className="text-xs text-muted-foreground mb-1">Current Position</p>
-              <p className="text-sm font-medium text-foreground">
-                {application.currentTitle} at {application.currentCompany}
+              <h3 className="text-lg font-semibold text-slate-200 mb-2">
+                No Pending Expert Applications
+              </h3>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                There are no pending expert membership applications for {guildName}.
               </p>
             </div>
-
-            {/* Bio */}
-            <div className="mb-4 pb-4 border-b border-border">
-              <p className="text-xs text-muted-foreground mb-2">Bio</p>
-              <p className="text-sm text-card-foreground leading-relaxed">
-                {application.bio}
-              </p>
-            </div>
-
-            {/* Motivation */}
-            <div className="mb-4 pb-4 border-b border-border">
-              <p className="text-xs text-muted-foreground mb-2">
-                Motivation to Join
-              </p>
-              <p className="text-sm text-card-foreground leading-relaxed">
-                {application.motivation}
-              </p>
-            </div>
-
-            {/* Expertise Areas */}
-            <div className="mb-4 pb-4 border-b border-border">
-              <p className="text-xs text-muted-foreground mb-2">Expertise Areas</p>
-              <div className="flex flex-wrap gap-2">
-                {(application.expertiseAreas || []).map((area, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-muted text-card-foreground text-xs rounded-full"
-                  >
-                    {area}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Links */}
-            <div className="mb-4">
-              <div className="flex gap-4 text-sm">
-                <a
-                  href={application.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary underline"
+          ) : (
+            <div className="space-y-3">
+              {(guildApplications || []).map((application) => (
+                <div
+                  key={application.id}
+                  className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
                 >
-                  LinkedIn Profile
-                </a>
-                {application.portfolioUrl && (
-                  <a
-                    href={application.portfolioUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:text-primary underline"
-                  >
-                    Portfolio
-                  </a>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Applied: {new Date(application.appliedAt).toLocaleDateString()}
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                          {application.fullName}
+                        </h4>
+                        <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                          {application.expertiseLevel}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-slate-400 mb-2">
+                        {application.currentTitle} at {application.currentCompany}
+                      </p>
+
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                        <span className="text-slate-400">
+                          {application.yearsOfExperience}y experience
+                        </span>
+                        <span className="flex items-center text-slate-400">
+                          <Clock className="w-3.5 h-3.5 mr-1" />
+                          {new Date(application.appliedAt).toLocaleDateString()}
+                        </span>
+
+                        <a
+                          href={application.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          LinkedIn
+                          <ExternalLink className="w-3 h-3 ml-1" />
+                        </a>
+                        {application.portfolioUrl && (
+                          <a
+                            href={application.portfolioUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Portfolio
+                            <ExternalLink className="w-3 h-3 ml-1" />
+                          </a>
+                        )}
+                        {application.resumeUrl && (
+                          <a
+                            href={application.resumeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Resume
+                            <ExternalLink className="w-3 h-3 ml-1" />
+                          </a>
+                        )}
+                      </div>
+
+                      {application.expertiseAreas && application.expertiseAreas.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                          {application.expertiseAreas.slice(0, 4).map((area, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 bg-white/5 text-slate-300 text-[11px] rounded-md border border-white/10"
+                            >
+                              {area}
+                            </span>
+                          ))}
+                          {application.expertiseAreas.length > 4 && (
+                            <span className="px-2 py-0.5 bg-white/5 text-slate-500 text-[11px] rounded-md border border-white/10">
+                              +{application.expertiseAreas.length - 4} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="shrink-0 flex flex-col items-end gap-3">
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center text-green-400">
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                          <span className="font-semibold">{application.approvalCount}</span>
+                        </div>
+                        <div className="flex items-center text-red-400">
+                          <XCircle className="w-3.5 h-3.5 mr-1" />
+                          <span className="font-semibold">{application.rejectionCount}</span>
+                        </div>
+                        <span className="text-slate-500">
+                          ({application.reviewCount})
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={() => onReviewApplication(application)}
+                        size="sm"
+                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                      >
+                        <Users className="w-3.5 h-3.5 mr-1.5" />
+                        Review
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Candidate Reviews */}
+      {activeSubTab === "candidate" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">
+                Candidate Applications to Join Guild
+              </h3>
+              <p className="text-sm text-slate-400">
+                Review applications from candidates wanting to join {guildName}.
               </p>
             </div>
-
-            {/* Review Button */}
-            <Button
-              onClick={() => onReviewApplication(application)}
-              className="w-full"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Review Application
-            </Button>
+            {candidateCount > 0 && (
+              <span className="shrink-0 px-3 py-1 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                {candidateCount} pending
+              </span>
+            )}
           </div>
-        ))
+
+          {candidateCount === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
+              <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-slate-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-200 mb-2">
+                No Pending Candidate Applications
+              </h3>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                There are no pending candidate membership applications for {guildName}.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {candidateApplications.map((application) => (
+                <div
+                  key={application.id}
+                  className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                          {application.candidateName}
+                        </h4>
+                        <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                          {application.expertiseLevel}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-slate-400 mb-2">
+                        {application.candidateEmail}
+                      </p>
+
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                        <span className="flex items-center text-slate-400">
+                          <Clock className="w-3.5 h-3.5 mr-1" />
+                          {new Date(application.submittedAt).toLocaleDateString()}
+                        </span>
+                        {application.jobTitle && (
+                          <span className="flex items-center text-amber-300/80">
+                            <Briefcase className="w-3.5 h-3.5 mr-1" />
+                            {application.jobTitle}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex flex-col items-end gap-3">
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center text-green-400">
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                          <span className="font-semibold">{application.approvalCount}</span>
+                        </div>
+                        <div className="flex items-center text-red-400">
+                          <XCircle className="w-3.5 h-3.5 mr-1" />
+                          <span className="font-semibold">{application.rejectionCount}</span>
+                        </div>
+                        <span className="text-slate-500">
+                          ({application.reviewCount})
+                        </span>
+                      </div>
+
+                      {application.expertHasReviewed ? (
+                        <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+                          <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                          <span className="text-sm font-medium">Reviewed</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => onReviewCandidateApplication(application)}
+                          size="sm"
+                          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                        >
+                          <Users className="w-3.5 h-3.5 mr-1.5" />
+                          Review
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -38,6 +38,7 @@ import {
   UserPlus,
   Scale,
   LayoutDashboard,
+  Coins,
 } from "lucide-react";
 import { LoadingState, Alert, Button } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
@@ -482,7 +483,7 @@ export default function PublicGuildPage() {
       case "master":
         return "bg-gradient-to-r from-amber-400 to-orange-500 text-white";
       case "craftsman":
-        return "bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900";
+        return "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]";
       case "recruit":
         return "bg-gradient-to-r from-blue-400 to-cyan-500 text-white";
       default:
@@ -508,15 +509,15 @@ export default function PublicGuildPage() {
   const getActivityColor = (type: string) => {
     switch (type) {
       case "proposal_submitted":
-        return "bg-blue-100 text-blue-600";
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
       case "candidate_approved":
-        return "bg-green-100 text-green-600";
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
       case "job_posted":
-        return "bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70";
+        return "bg-primary/20 text-primary border border-primary/40";
       case "endorsement_given":
-        return "bg-amber-100 text-amber-600";
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-muted text-muted-foreground border border-border";
     }
   };
 
@@ -537,9 +538,15 @@ export default function PublicGuildPage() {
   const showMemberBadge = membership?.isMember;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted overflow-x-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-background via-background to-muted overflow-x-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -top-20 right-[-10%] h-[360px] w-[360px] rounded-full bg-orange-500/15 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.35)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.35)_1px,transparent_1px)] bg-[size:140px_140px] opacity-20" />
+      </div>
+      <div className="relative z-10">
       {/* Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
+      <nav className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
@@ -553,9 +560,9 @@ export default function PublicGuildPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.back()}
-                className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-card/60 text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
               >
-                <ArrowLeft className="w-5 h-5 mr-2" />
+                <ArrowLeft className="w-4 h-4" />
                 Back to Guilds
               </button>
               <ThemeToggle />
@@ -667,7 +674,7 @@ export default function PublicGuildPage() {
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-[hsl(var(--gradient-button-text))] bg-gradient-to-r from-primary to-accent rounded-full hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
@@ -678,86 +685,94 @@ export default function PublicGuildPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className={`bg-gradient-to-r ${getGuildBgColor(guild.name)} border-b border-border`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-start gap-6">
-            <div className={`w-20 h-20 bg-gradient-to-br ${getGuildColor(guild.name)} rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
-              {(() => {
-                const GuildIcon = getGuildIcon(guild.name);
-                return <GuildIcon className="w-10 h-10 text-white" />;
-              })()}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <h1 className="text-4xl font-bold text-foreground">{guild.name}</h1>
-                {showMemberBadge && (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-green-700 dark:text-green-300 text-sm">Member</span>
-                      {membership.role && (
-                        <>
-                          <span className="text-green-600 dark:text-green-400">•</span>
-                          <span className={`font-bold text-sm capitalize ${
-                            membership.role === 'master'
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : membership.role === 'craftsman'
-                              ? 'text-primary dark:text-primary/70'
-                              : 'text-blue-600 dark:text-blue-400'
-                          }`}>
-                            {membership.role}
-                          </span>
-                        </>
-                      )}
-                    </div>
+      <div className={`relative overflow-hidden bg-gradient-to-r ${getGuildBgColor(guild.name)} border-b border-border/60`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.2),transparent_60%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <div className="rounded-3xl border border-border bg-card/80 backdrop-blur p-6 sm:p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_25px_60px_rgba(0,0,0,0.45)]">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+              <div className="flex items-start gap-4">
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${getGuildColor(guild.name)} rounded-2xl flex items-center justify-center shadow-lg ring-1 ring-white/10 flex-shrink-0`}>
+                  {(() => {
+                    const GuildIcon = getGuildIcon(guild.name);
+                    return <GuildIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />;
+                  })()}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3 flex-wrap">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{guild.name}</h1>
+                    {showMemberBadge && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/40 rounded-full shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-emerald-300 text-xs">Member</span>
+                          {membership.role && (
+                            <>
+                              <span className="text-emerald-300/70">•</span>
+                              <span className={`font-semibold text-xs capitalize ${
+                                membership.role === 'master'
+                                  ? 'text-amber-300'
+                                  : membership.role === 'craftsman'
+                                  ? 'text-primary'
+                                  : 'text-blue-300'
+                              }`}>
+                                {membership.role}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {showPendingStatus && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/15 border border-amber-500/40 rounded-full shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <Clock className="w-4 h-4 text-amber-300 animate-pulse" />
+                        <span className="font-semibold text-amber-200 text-xs">Pending Review</span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {showPendingStatus && (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/40 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400 animate-pulse" />
-                    <span className="font-bold text-yellow-700 dark:text-yellow-300 text-sm">Pending Review</span>
-                  </div>
-                )}
+                  <p className="text-base sm:text-lg text-muted-foreground max-w-3xl leading-relaxed mb-4">
+                    {guild.description}
+                  </p>
+                </div>
               </div>
-              <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed mb-4">
-                {guild.description}
-              </p>
-              {/* Expert Dashboard Link - Only show for guild members */}
-              {membership?.isMember && (
-                <div className="mb-4">
+
+              <div className="flex flex-wrap gap-3 lg:ml-auto">
+                {membership?.isMember && (
                   <button
                     onClick={() => router.push(`/expert/guild/${guildId}`)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-card/70 border border-border rounded-full hover:border-primary/50 hover:shadow-md transition-all"
                   >
                     <LayoutDashboard className="w-4 h-4" />
                     Expert Dashboard
                   </button>
-                </div>
-              )}
-              <div className="flex items-center gap-6 flex-wrap mb-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-5 h-5" />
-                  <span className="font-semibold">{guild.totalMembers || (guild.expertCount + guild.candidateCount)} Members</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Award className="w-5 h-5 text-amber-500" />
-                  <span className="font-semibold">{guild.expertCount} Experts</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Briefcase className="w-5 h-5 text-primary" />
-                  <span className="font-semibold">{guild.openPositions} Open Roles</span>
-                </div>
-                {guild.establishedDate && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="w-5 h-5" />
-                    <span className="text-sm">Est. {new Date(guild.establishedDate).getFullYear()}</span>
-                  </div>
+                )}
+                {showApplyButton && (
+                  <Button onClick={handleApplyToGuild} size="lg" className="px-8 rounded-full">
+                    Apply to Join Guild
+                  </Button>
                 )}
               </div>
-              {showApplyButton && (
-                <Button onClick={handleApplyToGuild} size="lg" className="px-8">
-                  Apply to Join Guild
-                </Button>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span className="font-semibold text-foreground">
+                  {guild.totalMembers || (guild.expertCount + guild.candidateCount)} Members
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-400" />
+                <span className="font-semibold text-foreground">{guild.expertCount} Experts</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-foreground">{guild.openPositions} Open Roles</span>
+              </div>
+              {guild.establishedDate && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>Est. {new Date(guild.establishedDate).getFullYear()}</span>
+                </div>
               )}
             </div>
           </div>
@@ -765,36 +780,43 @@ export default function PublicGuildPage() {
       </div>
 
       {/* Guild Stats Bar */}
-      <div className="bg-card border-b border-border">
+
+      <div className="border-b border-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Target className="w-5 h-5 text-primary" />
                 <p className="text-2xl font-bold text-foreground">{guild.totalProposalsReviewed || 0}</p>
               </div>
               <p className="text-sm text-muted-foreground">Proposals Reviewed</p>
             </div>
-            <div className="text-center">
+            <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="w-5 h-5 text-amber-500" />
                 <p className="text-2xl font-bold text-foreground">{guild.averageApprovalTime || "24h"}</p>
               </div>
               <p className="text-sm text-muted-foreground">Avg Approval Time</p>
             </div>
-            <div className="text-center">
+            <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <p className="text-2xl font-bold text-foreground">{guild.candidateCount}</p>
               </div>
               <p className="text-sm text-muted-foreground">Active Candidates</p>
             </div>
-            <div className="text-center">
+            <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                <p className="text-2xl font-bold text-foreground">{guild.openPositions}</p>
+                <Coins className="w-5 h-5 text-green-500" />
+                <p className="text-2xl font-bold text-foreground">
+                  {(guild as any).totalVetdStaked != null
+                    ? Number((guild as any).totalVetdStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                    : (guild as any).statistics?.totalVetdStaked != null
+                    ? Number((guild as any).statistics.totalVetdStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                    : "0"}
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">Open Positions</p>
+              <p className="text-sm text-muted-foreground">Total VETD Staked</p>
             </div>
           </div>
         </div>
@@ -802,85 +824,67 @@ export default function PublicGuildPage() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="border-b border-border mb-8">
-          <div className="flex gap-6">
+        <div className="border-b border-border/60 mb-8">
+          <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "overview"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Overview
-              {activeTab === "overview" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
             <button
               onClick={() => setActiveTab("experts")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "experts"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Experts ({guild.expertCount})
-              {activeTab === "experts" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
             <button
               onClick={() => setActiveTab("candidates")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "candidates"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Candidates ({guild.candidateCount})
-              {activeTab === "candidates" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
             <button
               onClick={() => setActiveTab("jobs")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "jobs"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Jobs ({guild.recentJobs?.length || 0})
-              {activeTab === "jobs" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
             <button
               onClick={() => setActiveTab("activity")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "activity"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Activity
-              {activeTab === "activity" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
             <button
               onClick={() => setActiveTab("leaderboard")}
-              className={`pb-4 px-2 font-medium transition-all relative ${
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                 activeTab === "leaderboard"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_20px_rgba(255,122,0,0.15)]"
+                  : "bg-card/60 text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
               }`}
             >
               Leaderboard
-              {activeTab === "leaderboard" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
             </button>
           </div>
         </div>
@@ -892,7 +896,7 @@ export default function PublicGuildPage() {
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                 {/* Top Experts */}
-                <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
                   <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Award className="w-5 h-5 text-amber-500" />
                     Top Experts
@@ -902,7 +906,7 @@ export default function PublicGuildPage() {
                       <button
                         key={expert.id}
                         onClick={() => router.push(`/experts/${expert.walletAddress}`)}
-                        className="border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all text-left cursor-pointer"
+                        className="rounded-xl border border-border/80 bg-card/60 p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left cursor-pointer"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -926,7 +930,7 @@ export default function PublicGuildPage() {
                           {expert.expertise.slice(0, 3).map((skill, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-muted text-card-foreground text-xs rounded-md"
+                              className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border/60"
                             >
                               {skill}
                             </span>
@@ -951,7 +955,7 @@ export default function PublicGuildPage() {
                 </div>
 
                 {/* Recent Jobs */}
-                <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
                   <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Briefcase className="w-5 h-5 text-primary" />
                     Recent Positions
@@ -962,7 +966,7 @@ export default function PublicGuildPage() {
                         <button
                           key={job.id}
                           onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                          className="w-full border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all text-left"
+                          className="w-full rounded-xl border border-border/80 bg-card/60 p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -1013,14 +1017,14 @@ export default function PublicGuildPage() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Why Join */}
-                <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
                   <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-primary" />
                     Why Join This Guild?
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-foreground">Vetted by Experts</p>
                         <p className="text-sm text-muted-foreground">
@@ -1029,7 +1033,7 @@ export default function PublicGuildPage() {
                       </div>
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-foreground">Exclusive Access</p>
                         <p className="text-sm text-muted-foreground">
@@ -1038,7 +1042,7 @@ export default function PublicGuildPage() {
                       </div>
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-foreground">Build Reputation</p>
                         <p className="text-sm text-muted-foreground">
@@ -1047,7 +1051,7 @@ export default function PublicGuildPage() {
                       </div>
                     </li>
                     <li className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="font-medium text-foreground">Community Support</p>
                         <p className="text-sm text-muted-foreground">
@@ -1060,7 +1064,7 @@ export default function PublicGuildPage() {
 
                 {/* Recent Activity */}
                 {guild.recentActivity && guild.recentActivity.length > 0 && (
-                  <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                  <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
                     <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                       <Activity className="w-5 h-5 text-primary" />
                       Recent Activity
@@ -1096,7 +1100,7 @@ export default function PublicGuildPage() {
 
                 {/* CTA */}
                 {!showMemberBadge && !showPendingStatus && (
-                  <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border-2 border-primary/20 p-6">
+                  <div className="bg-gradient-to-br from-primary/15 via-primary/10 to-accent/10 rounded-2xl border border-primary/30 p-6 shadow-[0_0_30px_rgba(255,122,0,0.12)]">
                     <h3 className="text-lg font-bold text-foreground mb-2">Ready to Join?</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Submit your application and get vetted by our expert community
@@ -1119,7 +1123,7 @@ export default function PublicGuildPage() {
                   <button
                     key={expert.id}
                     onClick={() => router.push(`/experts/${expert.walletAddress}`)}
-                    className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
+                    className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)] hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div>
@@ -1144,7 +1148,7 @@ export default function PublicGuildPage() {
                       {expert.expertise.map((skill, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-1 bg-muted text-card-foreground text-xs rounded-md"
+                          className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border/60"
                         >
                           {skill}
                         </span>
@@ -1182,7 +1186,7 @@ export default function PublicGuildPage() {
                 {guild.candidates && guild.candidates.map((candidate) => (
                   <div
                     key={candidate.id}
-                    className="bg-card rounded-xl p-6 shadow-sm border border-border hover:border-primary/50 transition-all"
+                    className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)] hover:border-primary/50 transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -1470,19 +1474,19 @@ export default function PublicGuildPage() {
                 </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>Members are ranked by reputation and contribution score</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>Complete reviews, earn endorsements, and successfully place candidates to climb</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>Top 3 members receive special recognition badges</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>Rankings update in real-time as you contribute to the guild</span>
                   </li>
                 </ul>
@@ -1490,6 +1494,7 @@ export default function PublicGuildPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -1,0 +1,135 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAccount } from "wagmi";
+import { governanceApi } from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, FileText, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { ExpertNavbar } from "@/components/ExpertNavbar";
+import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
+
+type FilterStatus = "active" | "passed" | "rejected" | "all";
+
+interface GovernanceProposal {
+  id: string;
+  title: string;
+  description: string;
+  proposal_type: string;
+  status: string;
+  voting_deadline: string;
+  votes_for: number;
+  votes_against: number;
+  votes_abstain: number;
+  total_voting_power: number;
+  quorum_required: number;
+  voter_count?: number;
+}
+
+export default function GovernancePage() {
+  const router = useRouter();
+  const { address } = useAccount();
+  const [proposals, setProposals] = useState<GovernanceProposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterStatus>("active");
+
+  useEffect(() => {
+    loadProposals();
+  }, [filter]);
+
+  const loadProposals = async () => {
+    try {
+      setLoading(true);
+      const params = filter !== "all" ? { status: filter } : undefined;
+      const response: any = await governanceApi.getProposals(params);
+      if (response.success) {
+        setProposals(response.data || []);
+      }
+    } catch (error: any) {
+      console.error("Error loading governance proposals:", error);
+      toast.error("Failed to load proposals");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filters: { value: FilterStatus; label: string }[] = [
+    { value: "active", label: "Active" },
+    { value: "passed", label: "Passed" },
+    { value: "rejected", label: "Rejected" },
+    { value: "all", label: "All" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      <ExpertNavbar />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Governance</h1>
+            <p className="text-muted-foreground">
+              Vote on protocol changes, guild elections, and platform governance proposals.
+            </p>
+          </div>
+          <Button onClick={() => router.push("/expert/governance/create")}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Proposal
+          </Button>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2 mb-6">
+          {filters.map((f) => (
+            <Button
+              key={f.value}
+              variant={filter === f.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(f.value)}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* Proposals List */}
+        {loading ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading proposals...</p>
+            </CardContent>
+          </Card>
+        ) : proposals.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg font-medium mb-2">No proposals found</p>
+              <p className="text-muted-foreground mb-6">
+                {filter === "active"
+                  ? "There are no active governance proposals right now."
+                  : `No ${filter} proposals to display.`}
+              </p>
+              <Button onClick={() => router.push("/expert/governance/create")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Proposal
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {proposals.map((proposal) => (
+              <GovernanceProposalCard
+                key={proposal.id}
+                proposal={proposal}
+                onClick={() => router.push(`/expert/governance/${proposal.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

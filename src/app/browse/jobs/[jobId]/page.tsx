@@ -336,11 +336,10 @@ export default function PublicJobDetailsPage() {
 
     // Check guild membership before allowing application
     if (!isGuildMember) {
-      // Redirect to guild page to join
+      // Redirect directly to guild application form
       if (job?.guild) {
-        // Clean guild name by removing " Guild" suffix
         const cleanGuildName = job.guild.replace(/ Guild$/i, '');
-        router.push(`/guilds/${cleanGuildName}`);
+        router.push(`/guilds/${cleanGuildName}/apply?jobId=${job.id}`);
       }
       return;
     }
@@ -570,15 +569,15 @@ export default function PublicJobDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-card rounded-xl shadow-sm p-8">
+            <div className="bg-card rounded-xl shadow-sm p-5 sm:p-8">
               {/* Job Header */}
               <div className="border-b border-border pb-6 mb-6">
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-foreground mb-2">
                       {job.title}
                     </h1>
-                    <div className="flex items-center gap-4 text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
                         <span className="font-medium">{job.companyName || "Company"}</span>
@@ -597,7 +596,7 @@ export default function PublicJobDetailsPage() {
                     <img
                       src={getAssetUrl(job.companyLogo)}
                       alt={job.companyName || "Company"}
-                      className="w-24 h-24 rounded-xl object-cover border-2 border-border shadow-md ml-6 flex-shrink-0"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border-2 border-border shadow-md sm:ml-6 flex-shrink-0"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
@@ -605,7 +604,7 @@ export default function PublicJobDetailsPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     Posted {new Date(job.createdAt).toLocaleDateString()}
@@ -679,21 +678,21 @@ export default function PublicJobDetailsPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl shadow-sm p-6 sticky top-24 space-y-6">
+            <div className="bg-card rounded-xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24">
               {/* Already Applied Warning */}
               {hasAlreadyApplied && (
-                <div className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                <div className="p-4 bg-green-500/10 border-2 border-green-500/20 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold text-green-900">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <span className="font-semibold text-green-900 dark:text-green-300">
                       Already Applied
                     </span>
                   </div>
-                  <p className="text-sm text-green-700 mb-3">
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
                     You applied on {new Date(existingApplication.appliedAt).toLocaleDateString()}
                   </p>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm text-green-700">Status:</span>
+                    <span className="text-sm text-green-700 dark:text-green-300">Status:</span>
                     <StatusBadge status={existingApplication.status} size="sm" />
                   </div>
                   <button
@@ -775,7 +774,7 @@ export default function PublicJobDetailsPage() {
                     : !isAuthenticated
                     ? "Sign In to Apply"
                     : guildMembershipStatus === "not_member"
-                    ? `Join ${job.guild} Guild`
+                    ? `Apply & Join ${job.guild}`
                     : guildMembershipStatus === "pending"
                     ? "Guild Application Pending"
                     : "Apply for this Role"}
@@ -787,7 +786,7 @@ export default function PublicJobDetailsPage() {
                 )}
                 {!isGuildMember && isAuthenticated && guildMembershipStatus === "not_member" && (
                   <p className="text-xs text-muted-foreground text-center">
-                    Click to visit the guild page and apply for membership
+                    Fill out a short application to join this guild
                   </p>
                 )}
               </div>

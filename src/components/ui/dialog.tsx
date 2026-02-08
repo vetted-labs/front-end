@@ -63,7 +63,7 @@ export function DialogContent({ children, className }: DialogContentProps) {
       />
 
       {/* Dialog */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
           className={cn(
             "relative bg-card rounded-lg shadow-xl w-full max-w-2xl border border-border",

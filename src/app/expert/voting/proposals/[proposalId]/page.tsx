@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
-import { proposalsApi, expertApi, blockchainApi } from "@/lib/api";
+import { proposalsApi, expertApi, blockchainApi, commitRevealApi } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -28,6 +28,10 @@ import { StructuredProposalDisplay } from "@/components/StructuredProposalDispla
 import { VotingScoreSlider } from "@/components/VotingScoreSlider";
 import { ProposalFinalizationDisplay } from "@/components/ProposalFinalizationDisplay";
 import { ExpertNavbar } from "@/components/ExpertNavbar";
+import { CommitRevealPhaseIndicator } from "@/components/CommitRevealPhaseIndicator";
+import { CommitmentForm } from "@/components/CommitmentForm";
+import { RevealForm } from "@/components/RevealForm";
+import { CommitRevealStatusCard } from "@/components/CommitRevealStatusCard";
 
 interface ProposalDetail {
   id: string;
@@ -91,6 +95,7 @@ export default function ProposalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showVoting, setShowVoting] = useState(false);
   const [isSubmittingVote, setIsSubmittingVote] = useState(false);
+  const [crPhase, setCrPhase] = useState<any>(null);
 
   const proposalId = params.proposalId as string;
 
@@ -99,6 +104,7 @@ export default function ProposalDetailPage() {
       loadExpertData();
       loadStakingStatus();
     }
+    loadPhaseStatus();
   }, [address]);
 
   useEffect(() => {
@@ -126,6 +132,17 @@ export default function ProposalDetailPage() {
       }
     } catch (error) {
       console.error("Error loading staking status:", error);
+    }
+  };
+
+  const loadPhaseStatus = async () => {
+    try {
+      const response: any = await commitRevealApi.getPhaseStatus(proposalId);
+      if (response.success) {
+        setCrPhase(response.data);
+      }
+    } catch {
+      // Not a commit-reveal proposal, or endpoint not available
     }
   };
 
@@ -305,6 +322,20 @@ export default function ProposalDetailPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Commit-Reveal Phase Indicator */}
+        {crPhase && crPhase.phase !== "direct" && (
+          <div className="mb-6">
+            <CommitRevealPhaseIndicator
+              currentPhase={crPhase.phase}
+              commitDeadline={crPhase.commitDeadline}
+              revealDeadline={crPhase.revealDeadline}
+              commitCount={crPhase.commitCount}
+              revealCount={crPhase.revealCount}
+              totalExpected={crPhase.totalExpected || proposal?.assigned_reviewer_count}
+            />
+          </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -489,48 +520,92 @@ export default function ProposalDetailPage() {
 
             {/* Voting Interface */}
             {!proposal.finalized && proposal.is_assigned_reviewer && (
-              <Card className={proposal.has_voted ? "border-green-500/50" : ""}>
-                <CardHeader>
-                  <CardTitle>Your Vote</CardTitle>
-                  <CardDescription>
-                    {proposal.has_voted
-                      ? "You have submitted your score"
-                      : "Submit your score for this candidate"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {proposal.has_voted ? (
-                    <div className="text-center py-6">
-                      <Badge variant="default" className="text-lg px-6 py-2 mb-2">
-                        Score: {proposal.my_vote_score}/100
-                      </Badge>
-                      <p className="text-sm text-muted-foreground">
-                        Your vote has been recorded. Results will be available after the
-                        voting deadline.
-                      </p>
-                    </div>
-                  ) : showVoting ? (
-                    <VotingScoreSlider
-                      proposalId={proposal.id}
-                      requiredStake={proposal.required_stake}
-                      onSubmit={handleVote}
-                      onCancel={() => setShowVoting(false)}
-                      isSubmitting={isSubmittingVote}
-                    />
-                  ) : (
-                    <Button
-                      onClick={() => setShowVoting(true)}
-                      disabled={!canVote()}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {!stakingStatus?.meetsMinimum
-                        ? "🔒 Stake Required"
-                        : "Cast Your Vote"}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+              <>
+                {/* Direct voting (no commit-reveal or direct phase) */}
+                {(!crPhase || crPhase.phase === "direct") && (
+                  <Card className={proposal.has_voted ? "border-green-500/50" : ""}>
+                    <CardHeader>
+                      <CardTitle>Your Vote</CardTitle>
+                      <CardDescription>
+                        {proposal.has_voted
+                          ? "You have submitted your score"
+                          : "Submit your score for this candidate"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {proposal.has_voted ? (
+                        <div className="text-center py-6">
+                          <Badge variant="default" className="text-lg px-6 py-2 mb-2">
+                            Score: {proposal.my_vote_score}/100
+                          </Badge>
+                          <p className="text-sm text-muted-foreground">
+                            Your vote has been recorded. Results will be available after the
+                            voting deadline.
+                          </p>
+                        </div>
+                      ) : showVoting ? (
+                        <VotingScoreSlider
+                          proposalId={proposal.id}
+                          requiredStake={proposal.required_stake}
+                          onSubmit={handleVote}
+                          onCancel={() => setShowVoting(false)}
+                          isSubmitting={isSubmittingVote}
+                        />
+                      ) : (
+                        <Button
+                          onClick={() => setShowVoting(true)}
+                          disabled={!canVote()}
+                          className="w-full"
+                          size="lg"
+                        >
+                          {!stakingStatus?.meetsMinimum
+                            ? "🔒 Stake Required"
+                            : "Cast Your Vote"}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Commit phase */}
+                {crPhase?.phase === "commit" && !crPhase.userCommitted && expertData && (
+                  <CommitmentForm
+                    proposalId={proposal.id}
+                    expertId={expertData.id}
+                    requiredStake={proposal.required_stake}
+                    onSubmit={() => { loadPhaseStatus(); loadProposal(); }}
+                    onCancel={() => {}}
+                  />
+                )}
+
+                {/* Reveal phase */}
+                {crPhase?.phase === "reveal" && crPhase.userCommitted && !crPhase.userRevealed && expertData && (
+                  <RevealForm
+                    proposalId={proposal.id}
+                    expertId={expertData.id}
+                    onSubmit={() => { loadPhaseStatus(); loadProposal(); }}
+                    onCancel={() => {}}
+                  />
+                )}
+
+                {/* Commit-Reveal Status Card */}
+                {crPhase && crPhase.phase !== "direct" && (
+                  <CommitRevealStatusCard
+                    phase={crPhase.phase}
+                    deadline={crPhase.phase === "commit" ? crPhase.commitDeadline : crPhase.revealDeadline}
+                    userStatus={
+                      crPhase.userRevealed
+                        ? "revealed"
+                        : crPhase.userCommitted
+                        ? "committed"
+                        : "pending"
+                    }
+                    commitCount={crPhase.commitCount || 0}
+                    revealCount={crPhase.revealCount || 0}
+                    totalExpected={crPhase.totalExpected || proposal.assigned_reviewer_count || 0}
+                  />
+                )}
+              </>
             )}
 
             {/* Proposal Info */}

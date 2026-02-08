@@ -368,8 +368,20 @@ export const expertApi = {
       body: JSON.stringify(data),
     }),
 
+  getGuildApplicationTemplate: (
+    guildId: string,
+    stage: "general" | "level",
+    level?: string
+  ) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("stage", stage);
+    if (level) queryParams.append("level", level);
+    const query = queryParams.toString();
+    return apiRequest(`/api/experts/guilds/${guildId}/application-template?${query}`);
+  },
+
   getGuildDetails: (guildId: string, walletAddress: string) =>
-    apiRequest(`/api/experts/guilds/${guildId}?wallet=${walletAddress}`),
+    apiRequest(`/api/experts/guilds/${encodeURIComponent(guildId)}?wallet=${encodeURIComponent(walletAddress)}`),
 
   stakeOnProposal: (proposalId: string, data: Record<string, unknown>) =>
     apiRequest(`/api/experts/proposals/${proposalId}/stake`, {
@@ -394,6 +406,15 @@ export const expertApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  uploadResume: (expertId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("resume", file);
+    return apiRequest(`/api/experts/${expertId}/resume`, {
+      method: "POST",
+      body: formData,
+    });
+  },
 
   getLeaderboard: (params?: { guildId?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
@@ -446,15 +467,17 @@ export const guildsApi = {
 
   // Get public guild details with members overview
   getPublicDetail: (guildId: string) =>
-    apiRequest(`/api/guilds/${guildId}`),
+    apiRequest(`/api/guilds/${encodeURIComponent(guildId)}`),
 
   // Get guild's application template
-  getApplicationTemplate: (guildId: string) =>
-    apiRequest(`/api/guilds/${guildId}/application-template`),
+  getApplicationTemplate: (guildId: string, jobId?: string) => {
+    const query = jobId ? `?jobId=${encodeURIComponent(jobId)}` : "";
+    return apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/application-template${query}`);
+  },
 
   // Submit guild application (candidate)
   submitApplication: (guildId: string, data: Record<string, unknown>) =>
-    apiRequest(`/api/guilds/${guildId}/applications`, {
+    apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/applications`, {
       method: "POST",
       body: JSON.stringify(data),
       requiresAuth: true,
@@ -468,23 +491,25 @@ export const guildsApi = {
 
   // Check if user (expert or candidate) is member of specific guild
   checkMembership: (userId: string, guildId: string) =>
-    apiRequest(`/api/guilds/membership/${userId}/${guildId}`, {
+    apiRequest(`/api/guilds/membership/${encodeURIComponent(userId)}/${encodeURIComponent(guildId)}`, {
       requiresAuth: false, // Public endpoint
     }),
 
   // Get guild's candidate applications (for expert review)
-  getCandidateApplications: (guildId: string) =>
-    apiRequest(`/api/guilds/${guildId}/candidate-applications`, {
-      requiresAuth: true,
-    }),
+  getCandidateApplications: (guildId: string, wallet?: string) => {
+    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+    return apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`);
+  },
 
   // Review candidate guild application (expert)
-  reviewCandidateApplication: (applicationId: string, data: Record<string, unknown>) =>
-    apiRequest(`/api/guilds/candidate-applications/${applicationId}/review`, {
+  reviewCandidateApplication: (applicationId: string, data: Record<string, unknown>) => {
+    const wallet = (data.wallet || data.walletAddress) as string;
+    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+    return apiRequest(`/api/guilds/candidate-applications/${applicationId}/review${query}`, {
       method: "POST",
       body: JSON.stringify(data),
-      requiresAuth: true,
-    }),
+    });
+  },
 
   // Get guild members (experts + candidates)
   getMembers: (guildId: string, params?: { role?: string; limit?: number }) => {
@@ -492,7 +517,7 @@ export const guildsApi = {
     if (params?.role) queryParams.append("role", params.role);
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     const query = queryParams.toString();
-    return apiRequest(`/api/guilds/${guildId}/members${query ? `?${query}` : ""}`);
+    return apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/members${query ? `?${query}` : ""}`);
   },
 
   // Get guild leaderboard rankings
@@ -501,20 +526,23 @@ export const guildsApi = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.period) queryParams.append("period", params.period);
     const query = queryParams.toString();
-    return apiRequest(`/api/guilds/${guildId}/leaderboard${query ? `?${query}` : ""}`);
+    return apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/leaderboard${query ? `?${query}` : ""}`);
   },
 };
 
 // Blockchain API
 export const blockchainApi = {
   // Staking endpoints
-  getStakeBalance: (walletAddress: string) =>
-    apiRequest(`/api/blockchain/staking/balance/${walletAddress}`),
+  getStakeBalance: (walletAddress: string, blockchainGuildId?: string) =>
+    apiRequest(`/api/blockchain/staking/balance/${walletAddress}${blockchainGuildId ? `/${blockchainGuildId}` : ''}`),
 
-  syncStake: (walletAddress: string) =>
+  getExpertGuildStakes: (walletAddress: string) =>
+    apiRequest(`/api/blockchain/staking/guilds/${walletAddress}`),
+
+  syncStake: (walletAddress: string, guildId?: string) =>
     apiRequest("/api/blockchain/staking/sync", {
       method: "POST",
-      body: JSON.stringify({ walletAddress }),
+      body: JSON.stringify({ walletAddress, guildId }),
     }),
 
   getUnstakeRequest: (walletAddress: string) =>
@@ -709,4 +737,117 @@ export const meetsStakingMinimum = (stakingStatus: {
   }
 
   return false;
+};
+
+// Governance API
+export const governanceApi = {
+  createProposal: (data: Record<string, unknown>, wallet: string) =>
+    apiRequest(`/api/governance/proposals?wallet=${encodeURIComponent(wallet)}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getProposals: (params?: {
+    status?: string;
+    type?: string;
+    guildId?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.type) queryParams.append("type", params.type);
+    if (params?.guildId) queryParams.append("guildId", params.guildId);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    const query = queryParams.toString();
+    return apiRequest(`/api/governance/proposals${query ? `?${query}` : ""}`);
+  },
+
+  getActiveProposals: () =>
+    apiRequest("/api/governance/proposals/active"),
+
+  getProposal: (id: string) =>
+    apiRequest(`/api/governance/proposals/${id}`),
+
+  vote: (id: string, data: Record<string, unknown>, wallet: string) =>
+    apiRequest(`/api/governance/proposals/${id}/vote?wallet=${encodeURIComponent(wallet)}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  finalize: (id: string) =>
+    apiRequest(`/api/governance/proposals/${id}/finalize`, {
+      method: "POST",
+    }),
+
+  getGuildMaster: (guildId: string) =>
+    apiRequest(`/api/governance/guilds/${encodeURIComponent(guildId)}/master`),
+};
+
+// Endorsement Accountability API
+export const endorsementAccountabilityApi = {
+  recordHireOutcome: (data: Record<string, unknown>) =>
+    apiRequest("/api/endorsements/hire-outcome", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  reportPerformanceIssue: (data: Record<string, unknown>) =>
+    apiRequest("/api/endorsements/performance-issue", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  getHireOutcome: (applicationId: string) =>
+    apiRequest(`/api/endorsements/hire-outcome/${applicationId}`),
+
+  getExpertRewards: (expertId: string) =>
+    apiRequest(`/api/endorsements/rewards/${expertId}`),
+
+  fileDispute: (data: Record<string, unknown>) =>
+    apiRequest("/api/endorsements/disputes", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  submitArbitrationVote: (disputeId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/endorsements/disputes/${disputeId}/vote`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+};
+
+// Commit-Reveal Voting API
+export const commitRevealApi = {
+  enableCommitReveal: (proposalId: string, data?: Record<string, unknown>) =>
+    apiRequest(`/api/proposals/${proposalId}/commit-reveal/enable`, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  getPhaseStatus: (proposalId: string) =>
+    apiRequest(`/api/proposals/${proposalId}/commit-reveal/status`),
+
+  submitCommitment: (proposalId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/proposals/${proposalId}/commit`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  revealVote: (proposalId: string, data: Record<string, unknown>) =>
+    apiRequest(`/api/proposals/${proposalId}/reveal`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  generateHash: (score: number, nonce: string) =>
+    apiRequest("/api/proposals/commit-reveal/generate-hash", {
+      method: "POST",
+      body: JSON.stringify({ score, nonce }),
+    }),
 };

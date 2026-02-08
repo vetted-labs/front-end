@@ -14,6 +14,7 @@ import {
   Building2,
   ChevronDown,
   X,
+  Menu,
   User,
   LogOut,
   CheckCircle2,
@@ -111,6 +112,7 @@ export default function JobsListingPage() {
   const [candidateEmail, setCandidateEmail] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -396,70 +398,154 @@ export default function JobsListingPage() {
 
             {/* User Account Menu */}
             <div className="flex items-center gap-3">
-              <ThemeToggle />
-              {isAuthenticated ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">
-                    {candidateEmail}
-                  </span>
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">
-                        {candidateEmail}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Candidate</p>
-                    </div>
-                    <button
-                      onClick={() => router.push("/candidate/profile")}
-                      className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      My Dashboard
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
+              <div className="hidden sm:block">
+                <ThemeToggle />
               </div>
+              {isAuthenticated ? (
+                <div className="relative hidden sm:block">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground hidden sm:block">
+                      {candidateEmail}
+                    </span>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="text-sm font-medium text-foreground">
+                          {candidateEmail}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Candidate</p>
+                      </div>
+                      <button
+                        onClick={() => router.push("/candidate/profile")}
+                        className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
+                      >
+                        <Briefcase className="w-4 h-4" />
+                        My Dashboard
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-lg hover:opacity-90 transition-all"
+                  className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Sign In
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setShowMobileMenu((prev) => !prev);
+                  setShowUserMenu(false);
+                }}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-foreground hover:bg-muted transition-colors sm:hidden"
+                aria-label="Toggle menu"
+              >
+                {showMobileMenu ? (
+                  <X className="w-4 h-4" />
+                ) : (
+                  <Menu className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+        {showMobileMenu && (
+          <div className="sm:hidden border-t border-border bg-card/95 backdrop-blur">
+            <div className="px-4 py-3 space-y-2">
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/browse/jobs");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Briefcase className="w-4 h-4 text-primary" />
+                Find Jobs
+              </button>
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/expert/apply");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Award className="w-4 h-4 text-primary" />
+                Start Vetting
+              </button>
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/auth/signup?type=company");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Briefcase className="w-4 h-4 text-primary" />
+                Start Hiring
+              </button>
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/guilds");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Swords className="w-4 h-4 text-primary" />
+                Guilds
+              </button>
+              <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-muted/40">
+                <span className="text-sm text-muted-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      router.push("/candidate/profile");
+                    }}
+                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <User className="w-4 h-4 text-primary" />
+                    My Dashboard
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => router.push("/auth/login?type=candidate")}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary via-accent to-primary/80 hover:opacity-90 transition-all"
                 >
                   Sign In
                 </button>
               )}
             </div>
           </div>
-        </div>
+        )}
       </nav>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2 font-display">
-            Find Your Next Opportunity
-          </h1>
-          <p className="text-muted-foreground">
-            Explore {filteredJobs.length} open positions in the Web3 ecosystem
-          </p>
-        </div>
-
         {/* Two-Column Search Bar */}
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -699,7 +785,7 @@ export default function JobsListingPage() {
             </>
           ) : (
             <div className="text-center py-12 bg-card rounded-xl">
-              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <Briefcase className="w-16 h-16 text-muted-foreground/60 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 No jobs found
               </h3>
@@ -755,7 +841,7 @@ export default function JobsListingPage() {
         <p className="text-muted-foreground mb-4">
           Choose additional guild categories to filter jobs
         </p>
-        <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto">
           {allGuilds
             .filter((guild) => !visibleGuilds.includes(guild))
             .map((guild) => (
@@ -794,7 +880,7 @@ export default function JobsListingPage() {
           {/* Guilds Section */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Guilds</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {allGuilds.map((guild) => (
                 <button
                   key={guild}
@@ -814,7 +900,7 @@ export default function JobsListingPage() {
           {/* Job Types Section */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Job Type</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {jobTypes.map((type) => (
                 <button
                   key={type}
@@ -834,7 +920,7 @@ export default function JobsListingPage() {
           {/* Location Types Section */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Work Location</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {locationTypes.map((type) => (
                 <button
                   key={type}
@@ -852,7 +938,7 @@ export default function JobsListingPage() {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border flex gap-2">
+        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row gap-2">
           <button
             onClick={() => {
               setSelectedGuilds([]);

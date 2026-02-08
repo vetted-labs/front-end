@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useEffect } from "react";
+import { RouteChangeOverlay } from "@/components/RouteChangeOverlay";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,10 +65,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <ThemeProvider defaultTheme="system" storageKey="vetted-ui-theme">
+          <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
             <AuthProvider>
               {children}
             </AuthProvider>
+            <RouteChangeOverlay />
           </ThemeProvider>
         </RainbowKitProvider>
       </QueryClientProvider>

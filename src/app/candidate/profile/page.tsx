@@ -16,6 +16,7 @@ import {
   Save,
   CheckCircle,
   X,
+  Menu,
   Download,
   Clock,
   TrendingUp,
@@ -96,6 +97,7 @@ export default function CandidateProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     const userType = localStorage.getItem("userType");
@@ -304,7 +306,7 @@ export default function CandidateProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card sticky top-0 z-40">
+      <nav className="border-b border-border bg-card/95 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
@@ -314,15 +316,17 @@ export default function CandidateProfilePage() {
               <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-bold text-foreground">Vetted</span>
             </button>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
+            <div className="flex items-center gap-3">
+              <div className="hidden md:block">
+                <ThemeToggle />
+              </div>
               <button
                 onClick={() => router.push("/browse/jobs")}
-                className="text-sm text-card-foreground hover:text-foreground font-medium"
+                className="hidden md:inline-flex text-sm text-card-foreground hover:text-foreground font-medium"
               >
                 Browse Jobs
               </button>
-              <div className="relative">
+              <div className="relative hidden sm:block">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
@@ -330,8 +334,8 @@ export default function CandidateProfilePage() {
                   <div className="p-2 bg-primary/10 rounded-lg">
                     <User className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">
-                    {profile.email}
+                  <span className="text-sm font-medium text-foreground hidden md:block">
+                    {profile?.email ?? "Candidate"}
                   </span>
                 </button>
 
@@ -339,7 +343,7 @@ export default function CandidateProfilePage() {
                   <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-sm font-medium text-foreground">
-                        {profile.email}
+                        {profile?.email ?? "Candidate"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">Candidate Account</p>
                     </div>
@@ -363,9 +367,60 @@ export default function CandidateProfilePage() {
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => {
+                  setShowMobileMenu((prev) => !prev);
+                  setShowUserMenu(false);
+                }}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-card p-2 text-foreground hover:bg-muted transition-colors sm:hidden"
+                aria-label="Toggle menu"
+              >
+                {showMobileMenu ? (
+                  <X className="w-4 h-4" />
+                ) : (
+                  <Menu className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
         </div>
+        {showMobileMenu && (
+          <div className="sm:hidden border-t border-border bg-card/95 backdrop-blur">
+            <div className="px-4 py-3 space-y-2">
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/browse/jobs");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <Briefcase className="w-4 h-4 text-primary" />
+                Browse Jobs
+              </button>
+              <button
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  router.push("/candidate/profile");
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+              >
+                <User className="w-4 h-4 text-primary" />
+                My Profile
+              </button>
+              <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-muted/40">
+                <span className="text-sm text-muted-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -386,7 +441,7 @@ export default function CandidateProfilePage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
           <div className="bg-card rounded-xl p-6 shadow-sm border-l-4 border-primary">
             <div className="flex items-center justify-between">
               <div>
@@ -480,7 +535,7 @@ export default function CandidateProfilePage() {
             <div className="p-6">
               {applications.length === 0 ? (
                 <div className="text-center py-12">
-                  <Send className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <Send className="w-16 h-16 text-muted-foreground/60 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
                     No applications yet
                   </h3>
@@ -728,7 +783,7 @@ export default function CandidateProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.fullName}
+                      value={profile.fullName ?? ""}
                       onChange={(e) =>
                         setProfile({ ...profile, fullName: e.target.value })
                       }
@@ -742,7 +797,7 @@ export default function CandidateProfilePage() {
                     </label>
                     <input
                       type="email"
-                      value={profile.email}
+                      value={profile.email ?? ""}
                       onChange={(e) =>
                         setProfile({ ...profile, email: e.target.value })
                       }
@@ -756,7 +811,7 @@ export default function CandidateProfilePage() {
                     </label>
                     <input
                       type="tel"
-                      value={profile.phone}
+                      value={profile.phone ?? ""}
                       onChange={(e) =>
                         setProfile({ ...profile, phone: e.target.value })
                       }
@@ -793,7 +848,7 @@ export default function CandidateProfilePage() {
                   </label>
                   <input
                     type="text"
-                    value={profile.headline}
+                    value={profile.headline ?? ""}
                     onChange={(e) =>
                       setProfile({ ...profile, headline: e.target.value })
                     }
@@ -806,7 +861,7 @@ export default function CandidateProfilePage() {
                     Bio
                   </label>
                   <textarea
-                    value={profile.bio}
+                    value={profile.bio ?? ""}
                     onChange={(e) =>
                       setProfile({ ...profile, bio: e.target.value })
                     }
@@ -822,7 +877,7 @@ export default function CandidateProfilePage() {
                     </label>
                     <input
                       type="url"
-                      value={profile.linkedIn}
+                      value={profile.linkedIn ?? ""}
                       onChange={(e) =>
                         setProfile({ ...profile, linkedIn: e.target.value })
                       }
@@ -836,7 +891,7 @@ export default function CandidateProfilePage() {
                     </label>
                     <input
                       type="url"
-                      value={profile.github}
+                      value={profile.github ?? ""}
                       onChange={(e) =>
                         setProfile({ ...profile, github: e.target.value })
                       }

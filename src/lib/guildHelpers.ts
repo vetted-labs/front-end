@@ -4,12 +4,10 @@ import {
   Palette,
   Package,
   Megaphone,
-  BarChart3,
   Handshake,
   Settings,
   Calculator,
   UserPlus,
-  Scale,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,18 +23,14 @@ export const getGuildIcon = (guildName: string): LucideIcon => {
     return Package;
   } else if (name.includes('marketing') || name.includes('growth')) {
     return Megaphone;
-  } else if (name.includes('data') || name.includes('analytics')) {
-    return BarChart3;
-  } else if (name.includes('sales') || name.includes('business')) {
+  } else if (name.includes('sales') || name.includes('success')) {
     return Handshake;
   } else if (name.includes('operations') || name.includes('strategy')) {
     return Settings;
-  } else if (name.includes('finance') || name.includes('accounting')) {
+  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
     return Calculator;
-  } else if (name.includes('people') || name.includes('hr')) {
+  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
     return UserPlus;
-  } else if (name.includes('legal') || name.includes('compliance')) {
-    return Scale;
   }
 
   return Shield; // Default fallback
@@ -56,21 +50,17 @@ export const getGuildColor = (guildName: string): string => {
     return 'from-primary/90 to-orange-secondary/90';
   } else if (name.includes('marketing') || name.includes('growth')) {
     return 'from-primary to-orange-light';
-  } else if (name.includes('data') || name.includes('analytics')) {
-    return 'from-orange-secondary/80 to-primary/80';
-  } else if (name.includes('sales') || name.includes('business')) {
+  } else if (name.includes('sales') || name.includes('success')) {
     return 'from-primary/70 to-orange-secondary/70';
   }
 
   // Supporting guilds: Neutral grays
   else if (name.includes('operations') || name.includes('strategy')) {
     return 'from-gray-medium to-gray-light';
-  } else if (name.includes('finance') || name.includes('accounting')) {
+  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
     return 'from-tan-accent to-beige-light';
-  } else if (name.includes('people') || name.includes('hr')) {
+  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
     return 'from-gray-light to-gray-lighter';
-  } else if (name.includes('legal') || name.includes('compliance')) {
-    return 'from-gray-medium to-gray-lighter';
   }
 
   return 'from-primary to-orange-secondary'; // Default
@@ -90,8 +80,8 @@ export const getGuildDetailedInfo = (guildName: string): GuildDetailedInfo => {
   if (name.includes('engineering') || name.includes('technology')) {
     return {
       focus: 'Technical Excellence & Innovation',
-      details: 'Expert engineers review candidates on system design, code quality, architecture decisions, and problem-solving abilities. Members gain access to cutting-edge projects and technical leadership roles.',
-      examples: 'Backend, Frontend, Full-Stack, DevOps, Mobile, Security Engineers'
+      details: 'Expert engineers review candidates on system design, code quality, architecture decisions, and problem-solving abilities. Covers software engineering, data science, ML, and all technical disciplines.',
+      examples: 'Backend, Frontend, Full-Stack, DevOps, Mobile, Data Scientist, ML Engineer, Security Engineers'
     };
   } else if (name.includes('design') || name.includes('ux')) {
     return {
@@ -111,17 +101,11 @@ export const getGuildDetailedInfo = (guildName: string): GuildDetailedInfo => {
       details: 'Marketing experts evaluate campaign strategy, growth metrics, creative execution, and brand building. Access roles at high-growth startups and established brands.',
       examples: 'Growth Marketing, Content Strategy, Brand Marketing, Performance Marketing, CMO'
     };
-  } else if (name.includes('data')) {
+  } else if (name.includes('sales') || name.includes('success')) {
     return {
-      focus: 'Data-Driven Insights & ML',
-      details: 'Data professionals review analytical skills, statistical knowledge, ML expertise, and business impact. Work on transformative data initiatives and AI projects.',
-      examples: 'Data Scientist, ML Engineer, Data Analyst, Analytics Lead, AI Researcher'
-    };
-  } else if (name.includes('sales')) {
-    return {
-      focus: 'Revenue Growth & Partnerships',
-      details: 'Sales leaders evaluate deal-closing ability, relationship building, territory management, and revenue impact. Join high-performing sales organizations.',
-      examples: 'Account Executive, Sales Lead, VP Sales, Business Development, Revenue Operations'
+      focus: 'Revenue Growth & Customer Success',
+      details: 'Sales leaders evaluate deal-closing ability, relationship building, territory management, and revenue impact. Join high-performing sales and customer success organizations.',
+      examples: 'Account Executive, Sales Lead, VP Sales, Customer Success Manager, Revenue Operations'
     };
   } else if (name.includes('operations')) {
     return {
@@ -129,23 +113,17 @@ export const getGuildDetailedInfo = (guildName: string): GuildDetailedInfo => {
       details: 'Operations experts assess process optimization, cross-functional leadership, and operational excellence. Drive efficiency at scaling companies.',
       examples: 'Operations Manager, COO, Strategy Lead, Program Manager, Operations Analyst'
     };
-  } else if (name.includes('finance')) {
+  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
     return {
-      focus: 'Financial Strategy & Planning',
-      details: 'Finance professionals review analytical rigor, financial modeling, strategic planning, and business acumen. Shape financial strategy at growing companies.',
-      examples: 'Finance Manager, FP&A Analyst, CFO, Controller, Financial Planning, Accounting'
+      focus: 'Financial Strategy, Legal & Compliance',
+      details: 'Finance and legal professionals review analytical rigor, financial modeling, regulatory knowledge, contract negotiation, and strategic planning. Shape financial and legal strategy at growing companies.',
+      examples: 'CFO, FP&A Analyst, Controller, General Counsel, Compliance Manager, IP Attorney'
     };
-  } else if (name.includes('people') || name.includes('hr')) {
+  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
     return {
       focus: 'Talent & Organizational Development',
       details: 'People leaders evaluate talent strategy, culture building, organizational design, and employee experience expertise. Build exceptional workplace cultures.',
       examples: 'People Operations, Talent Acquisition, CHRO, HR Business Partner, Recruiting Lead'
-    };
-  } else if (name.includes('legal')) {
-    return {
-      focus: 'Legal Strategy & Compliance',
-      details: 'Legal experts assess regulatory knowledge, contract negotiation, risk management, and business advisory skills. Protect and enable business growth.',
-      examples: 'General Counsel, Legal Counsel, Compliance Manager, IP Attorney, Contract Specialist'
     };
   }
 
@@ -182,21 +160,17 @@ export const getGuildBgColor = (guildName: string): string => {
     return 'bg-gradient-to-r from-[#ff6a00]/90 to-[#ed8133]/90 dark:from-[#ff7a00]/90 dark:to-[#ed8133]/90';
   } else if (name.includes('marketing') || name.includes('growth')) {
     return 'bg-gradient-to-r from-[#ff6a00] to-[#ffac70] dark:from-[#ff7a00] dark:to-[#ffac70]';
-  } else if (name.includes('data') || name.includes('analytics')) {
-    return 'bg-gradient-to-r from-[#ed8133]/80 to-[#ff6a00]/80 dark:from-[#ed8133]/80 dark:to-[#ff7a00]/80';
-  } else if (name.includes('sales') || name.includes('business')) {
+  } else if (name.includes('sales') || name.includes('success')) {
     return 'bg-gradient-to-r from-[#ff6a00]/70 to-[#ed8133]/70 dark:from-[#ff7a00]/70 dark:to-[#ed8133]/70';
   }
 
   // Supporting guilds: Neutral grays with warmth
   else if (name.includes('operations') || name.includes('strategy')) {
     return 'bg-gradient-to-r from-gray-600 to-gray-500 dark:from-gray-700 dark:to-gray-600';
-  } else if (name.includes('finance') || name.includes('accounting')) {
+  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
     return 'bg-gradient-to-r from-stone-600 to-stone-500 dark:from-stone-700 dark:to-stone-600';
-  } else if (name.includes('people') || name.includes('hr')) {
+  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
     return 'bg-gradient-to-r from-neutral-600 to-neutral-500 dark:from-neutral-700 dark:to-neutral-600';
-  } else if (name.includes('legal') || name.includes('compliance')) {
-    return 'bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-800 dark:to-slate-700';
   }
 
   // Default fallback: primary orange gradient

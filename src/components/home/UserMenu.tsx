@@ -60,7 +60,9 @@ export function UserMenu({
             <User className="w-4 h-4 text-primary" />
           </div>
           <span className="text-sm font-medium text-foreground hidden sm:block">
-            {userEmail || (userType === "company" ? "Company" : "Candidate")}
+            {address && !userEmail
+              ? `${address.slice(0, 6)}...${address.slice(-4)}`
+              : userEmail || (userType === "company" ? "Company" : "Candidate")}
           </span>
         </button>
       )}
@@ -112,8 +114,10 @@ export function UserMenu({
             // Standard user dropdown menu
             <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
               <div className="px-4 py-3 border-b border-border">
-                <p className="text-sm font-medium text-foreground">
-                  {userEmail}
+                <p className="text-sm font-medium text-foreground font-mono">
+                  {address && !userEmail
+                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                    : userEmail}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {userType === "company"

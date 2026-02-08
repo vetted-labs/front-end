@@ -55,12 +55,35 @@ export const VETTED_TOKEN_ABI = [
 export const EXPERT_STAKING_ABI = [
   // Read functions
   {
-    inputs: [{ name: '', type: 'address' }],
+    inputs: [
+      { name: '', type: 'address' },
+      { name: '', type: 'bytes32' },
+    ],
     name: 'stakes',
     outputs: [
       { name: 'amount', type: 'uint256' },
       { name: 'stakedAt', type: 'uint256' },
     ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'address' },
+      { name: '', type: 'bytes32' },
+    ],
+    name: 'unstakeRequests',
+    outputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'unlockTime', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'guildTotalStaked',
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -85,24 +108,87 @@ export const EXPERT_STAKING_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'meetsMinimumStake',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'getStakeInfo',
+    outputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'stakedAt', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'getUnstakeRequest',
+    outputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'unlockTime', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'getGuildTotalStaked',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
   // Write functions
   {
-    inputs: [{ name: 'amount', type: 'uint256' }],
+    inputs: [
+      { name: 'guildId', type: 'bytes32' },
+      { name: 'amount', type: 'uint256' },
+    ],
     name: 'stake',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [{ name: 'amount', type: 'uint256' }],
+    inputs: [
+      { name: 'guildId', type: 'bytes32' },
+      { name: 'amount', type: 'uint256' },
+    ],
     name: 'requestUnstake',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
     name: 'completeUnstake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'cancelUnstake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'emergencyWithdraw',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -112,6 +198,7 @@ export const EXPERT_STAKING_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
       { indexed: false, name: 'amount', type: 'uint256' },
       { indexed: false, name: 'totalStake', type: 'uint256' },
     ],
@@ -122,6 +209,7 @@ export const EXPERT_STAKING_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
       { indexed: false, name: 'amount', type: 'uint256' },
       { indexed: false, name: 'unlockTime', type: 'uint256' },
     ],
@@ -132,9 +220,20 @@ export const EXPERT_STAKING_ABI = [
     anonymous: false,
     inputs: [
       { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
       { indexed: false, name: 'amount', type: 'uint256' },
     ],
     name: 'Unstaked',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'EmergencyWithdraw',
     type: 'event',
   },
 ] as const;
@@ -240,7 +339,7 @@ export const REPUTATION_MANAGER_ABI = [
 // Contract addresses on Sepolia (updated 2026-01-27)
 export const CONTRACT_ADDRESSES = {
   TOKEN: '0x28bfc34939066d0aba30206b4865855b4f175c31',
-  STAKING: '0x38fd365fe7c33e8ef0ce1fd0adcc4dd0ba743535',
+  STAKING: '0xEF2e84d22EA4A10F7f30558eF11a0670A356f2cd',
   ENDORSEMENT: '0x4a3ae6b94ecb901fd704b4613aab1d1d5142dd74',
   REPUTATION: '0x573f8d7130933911a1024fd2cf639f6c58aac197',
   REWARD: '0x218637bc4fab50ee4339d09a477048d62f97b613',
