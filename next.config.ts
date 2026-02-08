@@ -13,6 +13,17 @@ const nextConfig: NextConfig = {
   },
   // 🔐 SECURITY: CSP headers moved to src/middleware.ts for nonce-based policy
   // Middleware provides better control and per-request nonce generation
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "pino-pretty": false,
+    };
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@react-native-async-storage/async-storage": false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

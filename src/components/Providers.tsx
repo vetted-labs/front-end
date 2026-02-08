@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { RouteChangeOverlay } from "@/components/RouteChangeOverlay";
 
 const queryClient = new QueryClient({
@@ -69,7 +69,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AuthProvider>
               {children}
             </AuthProvider>
-            <RouteChangeOverlay />
+            <Suspense fallback={null}>
+              <RouteChangeOverlay />
+            </Suspense>
           </ThemeProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
