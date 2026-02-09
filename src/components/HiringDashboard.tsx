@@ -26,6 +26,8 @@ import { useApi } from "@/lib/hooks/useFetch";
 import { JOB_STATUSES } from "@/config/constants";
 import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
+import { useDisconnect } from "wagmi";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface JobPosting {
   id: string;
@@ -64,6 +66,7 @@ export function HiringDashboard() {
   const [companyEmail, setCompanyEmail] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { execute } = useApi();
+  const { disconnect } = useDisconnect();
 
   // Check authentication on mount
   useEffect(() => {
@@ -144,10 +147,8 @@ export function HiringDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("companyAuthToken");
-    localStorage.removeItem("companyId");
-    localStorage.removeItem("companyEmail");
-    localStorage.removeItem("companyWallet");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=employers");
   };
 

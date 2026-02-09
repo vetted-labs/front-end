@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { useAccount, useDisconnect, useChainId } from "wagmi";
-import { Loader2, Send, Upload, X, ArrowLeft, User, Briefcase, FileText, Award, Shield, Paperclip } from "lucide-react";
+import { Loader2, Send, Upload, X, ArrowLeft, User, Briefcase, FileText, Award, Shield, Paperclip, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -11,6 +11,7 @@ import { NativeSelect } from "./ui/native-select";
 import { Textarea } from "./ui/textarea";
 import { Alert } from "./ui/alert";
 import { expertApi, guildsApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface ExpertApplicationFormProps {
   onSuccess?: () => void;
@@ -374,8 +375,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       setSuccess(true);
       setTimeout(() => {
         onSuccess?.();
-        router.push("/expert/application-pending");
-      }, 2000);
+        router.push("/");
+      }, 4000);
     } catch (err: any) {
       const apiError = err as any;
       const responseData = apiError?.response?.data || apiError?.data;
@@ -413,10 +414,18 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
 
   if (success) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <Alert variant="success">
-          Application submitted successfully! Redirecting...
-        </Alert>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Thanks for Applying!</h2>
+          <p className="text-muted-foreground">
+            Your application has been submitted successfully. Guild members will review your
+            credentials and you&apos;ll be notified once a decision is made.
+          </p>
+          <p className="text-sm text-muted-foreground">Redirecting to homepage...</p>
+        </div>
       </div>
     );
   }
@@ -454,6 +463,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                   </div>
                   <button
                     onClick={() => {
+                      clearAllAuthState();
                       disconnect();
                       router.push("/");
                     }}

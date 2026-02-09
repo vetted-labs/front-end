@@ -18,6 +18,7 @@ import {
 import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
 import { expertApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface PendingExpert {
   id: string;
@@ -85,8 +86,8 @@ export default function ApplicationPendingPage() {
   };
 
   const handleDisconnect = () => {
+    clearAllAuthState();
     disconnect();
-    // Navigate to main homepage instead of expert page
     router.push("/");
   };
 

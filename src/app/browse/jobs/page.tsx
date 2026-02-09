@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface Job {
   id: string;
@@ -175,6 +176,7 @@ export default function JobsListingPage() {
     const connector = connectors.find((c) => c.id === connectorId);
     if (connector) {
       try {
+        clearAllAuthState();
         await connect({ connector });
         setShowWalletModal(false);
       } catch (error) {
@@ -184,15 +186,14 @@ export default function JobsListingPage() {
   };
 
   const handleDisconnect = () => {
+    clearAllAuthState();
     disconnect();
     router.push("/?section=jobseekers");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
-    localStorage.removeItem("candidateWallet");
+    clearAllAuthState();
+    disconnect();
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);

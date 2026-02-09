@@ -14,6 +14,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { jobsApi } from "@/lib/api";
+import { useDisconnect } from "wagmi";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface FeaturedJob {
   id: string;
@@ -47,6 +49,7 @@ export default function BrowseJobsPage() {
   const [candidateEmail, setCandidateEmail] = useState<string>("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { disconnect } = useDisconnect();
 
   // Check if user is authenticated
   useEffect(() => {
@@ -59,10 +62,8 @@ export default function BrowseJobsPage() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
-    localStorage.removeItem("candidateWallet");
+    clearAllAuthState();
+    disconnect();
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);

@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { LoadingState, Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
+import { useDisconnect } from "wagmi";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface PersonalStats {
   memberId: string;
@@ -96,6 +98,7 @@ export default function MyGuildStatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [candidateEmail, setCandidateEmail] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     const email = localStorage.getItem("candidateEmail");
@@ -134,9 +137,8 @@ export default function MyGuildStatsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=guilds");
   };
 

@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { companyApi } from "@/lib/api";
+import { useDisconnect } from "wagmi";
+import { clearAllAuthState } from "@/lib/auth";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -42,6 +44,7 @@ export default function SettingsPage() {
   const [newApplications, setNewApplications] = useState(true);
   const [applicationUpdates, setApplicationUpdates] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     // Check authentication
@@ -108,10 +111,8 @@ export default function SettingsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("companyAuthToken");
-    localStorage.removeItem("companyId");
-    localStorage.removeItem("companyEmail");
-    localStorage.removeItem("companyWallet");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=employers");
   };
 

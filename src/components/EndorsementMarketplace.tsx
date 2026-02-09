@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther, parseEther } from "viem";
+import { formatEther, parseEther, keccak256, toBytes } from "viem";
 import { sepolia } from "wagmi/chains";
 import Link from "next/link";
 import {
   useVettedToken,
   useEndorsementBidding,
-  useExpertStaking,
+  useGuildStaking,
   useTransactionConfirmation,
   useUserEndorsements,
   useMyActiveEndorsements,
@@ -105,7 +105,8 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   const { balance, endorsementAllowance, approve, refetchBalance, refetchEndorsementAllowance } = useVettedToken();
   const { placeBid, minimumBid } = useEndorsementBidding();
-  const { stakeInfo, minimumStake } = useExpertStaking();
+  const blockchainGuildId = guildId ? keccak256(toBytes(guildId)) as `0x${string}` : undefined;
+  const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
   const { data: txReceipt, isLoading: txPending, isSuccess: txSuccess } = useTransactionConfirmation(txHash);
 
   // Use backend API to get user's endorsements (more reliable than blockchain)

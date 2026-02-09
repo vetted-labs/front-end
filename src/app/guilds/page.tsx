@@ -40,6 +40,7 @@ import {
 import { LoadingState, Alert } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { guildsApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 import { GuildCard } from "@/components/GuildCard";
 import { getGuildDetailedInfo } from "@/lib/guildHelpers";
 
@@ -186,6 +187,7 @@ export default function GlobalGuildsPage() {
     const connector = connectors.find((c) => c.id === connectorId);
     if (connector) {
       try {
+        clearAllAuthState();
         await connect({ connector });
         setShowWalletModal(false);
       } catch (error) {
@@ -195,6 +197,7 @@ export default function GlobalGuildsPage() {
   };
 
   const handleDisconnect = () => {
+    clearAllAuthState();
     disconnect();
     router.push("/?section=guilds");
   };
@@ -278,11 +281,8 @@ export default function GlobalGuildsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
-    localStorage.removeItem("companyId");
-    localStorage.removeItem("companyEmail");
+    clearAllAuthState();
+    disconnect();
     setIsAuthenticated(false);
     setUserEmail("");
     setShowUserMenu(false);

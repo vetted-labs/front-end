@@ -4,12 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { candidateApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
+import { useDisconnect } from "wagmi";
 
 function LinkedInCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Processing LinkedIn authentication...");
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -66,6 +68,7 @@ function LinkedInCallbackContent() {
 
         // Clear any existing authentication before setting up LinkedIn auth
         clearAllAuthState();
+        disconnect();
 
         // Exchange code for user data via backend
         setMessage("Exchanging authorization code...");

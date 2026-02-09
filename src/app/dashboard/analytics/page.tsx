@@ -18,8 +18,10 @@ import {
   BarChart3,
   Filter,
 } from "lucide-react";
+import { useDisconnect } from "wagmi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { jobsApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface JobPosting {
   id: string;
@@ -68,6 +70,7 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [companyEmail, setCompanyEmail] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     // Check authentication
@@ -136,10 +139,8 @@ export default function AnalyticsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("companyAuthToken");
-    localStorage.removeItem("companyId");
-    localStorage.removeItem("companyEmail");
-    localStorage.removeItem("companyWallet");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=employers");
   };
 

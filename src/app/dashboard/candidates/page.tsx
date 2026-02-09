@@ -19,8 +19,10 @@ import {
   User,
   LogOut,
 } from "lucide-react";
+import { useDisconnect } from "wagmi";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { companyApi, applicationsApi } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -81,6 +83,7 @@ export default function CandidatesPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [companyEmail, setCompanyEmail] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { disconnect } = useDisconnect();
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
@@ -125,10 +128,8 @@ export default function CandidatesPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("companyAuthToken");
-    localStorage.removeItem("companyId");
-    localStorage.removeItem("companyEmail");
-    localStorage.removeItem("companyWallet");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=employers");
   };
 

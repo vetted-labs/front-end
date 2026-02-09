@@ -43,6 +43,7 @@ import {
 import { LoadingState, Alert, Button } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { guildsApi, getAssetUrl } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface ExpertMember {
   id: string;
@@ -315,6 +316,7 @@ export default function PublicGuildPage() {
     const connector = connectors.find((c) => c.id === connectorId);
     if (connector) {
       try {
+        clearAllAuthState();
         await connect({ connector });
         setShowWalletModal(false);
       } catch (error) {
@@ -324,6 +326,7 @@ export default function PublicGuildPage() {
   };
 
   const handleDisconnect = () => {
+    clearAllAuthState();
     disconnect();
     router.push("/?section=guilds");
   };
@@ -467,11 +470,8 @@ export default function PublicGuildPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
-    localStorage.removeItem("expertId");
-    localStorage.removeItem("expertEmail");
+    clearAllAuthState();
+    disconnect();
     setIsAuthenticated(false);
     setCandidateEmail("");
     setShowUserMenu(false);

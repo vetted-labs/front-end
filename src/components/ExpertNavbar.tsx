@@ -18,6 +18,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBadge } from "./notifications/NotificationBadge";
 import { expertApi, notificationsApi, calculateTotalPoints } from "@/lib/api";
+import { clearAllAuthState } from "@/lib/auth";
 
 const getNetworkName = (chainId: number | undefined) => {
   if (!chainId) return "Unknown";
@@ -117,6 +118,7 @@ export function ExpertNavbar({ title, showBackButton = false }: ExpertNavbarProp
   }, [showWalletMenu]);
 
   const handleDisconnect = () => {
+    clearAllAuthState();
     disconnect();
     router.push("/?section=experts");
   };

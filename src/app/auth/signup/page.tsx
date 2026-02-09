@@ -18,6 +18,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
 import { candidateApi, companyApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
+import { useDisconnect } from "wagmi";
 
 type UserType = "candidate" | "company";
 
@@ -29,6 +30,7 @@ function SignupForm() {
 
   // Derive userType from URL parameter (default to candidate)
   const userType: UserType = typeParam === "company" ? "company" : "candidate";
+  const { disconnect } = useDisconnect();
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,6 +38,7 @@ function SignupForm() {
   // Clear any existing auth on mount
   useEffect(() => {
     clearAllAuthState();
+    disconnect();
   }, []);
 
   // Function to update userType by updating the URL

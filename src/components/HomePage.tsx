@@ -74,6 +74,16 @@ export function HomePage() {
       const isTokenAuth = !!token;
       const isWalletAuth = !!(isConnected && address);
 
+      // Safety net: if both token auth AND wallet are present, disconnect wallet
+      // Token auth wins since the user explicitly logged in
+      if (isTokenAuth && isWalletAuth) {
+        disconnect();
+        setIsAuthenticated(true);
+        setUserType(storedUserType);
+        setUserEmail(storedEmail);
+        return;
+      }
+
       setIsAuthenticated(isTokenAuth || isWalletAuth);
       setUserType(storedUserType || (isWalletAuth ? "expert" : null));
       setUserEmail(storedEmail || (isWalletAuth ? address : null));
@@ -129,10 +139,8 @@ export function HomePage() {
     // Clear all auth data using centralized function
     clearAllAuthState();
 
-    // Disconnect wallet if expert
-    if (userType === "expert" && isConnected) {
-      disconnect();
-    }
+    // Always disconnect wallet - it can linger regardless of stored userType
+    disconnect();
 
     // Update state immediately
     setIsAuthenticated(false);
@@ -170,17 +178,17 @@ export function HomePage() {
   const checkExpertStatus = async (walletAddress: string) => {
     try {
       const result: any = await expertApi.getProfile(walletAddress);
-      if (result.success && result.data) {
-        const expert = result.data;
-        // Redirect based on status
-        if (expert.status === "approved") {
-          router.push("/expert/dashboard");
-          return;
-        } else if (expert.status === "pending") {
-          router.push("/expert/application-pending");
-          return;
-        }
+      const expert = result.data || result;
+      // Redirect based on status
+      if (expert.status === "approved") {
+        router.push("/expert/dashboard");
+        return;
+      } else if (expert.status === "pending") {
+        router.push("/expert/application-pending");
+        return;
       }
+      // Expert exists but unknown status — send to apply
+      router.push("/expert/apply");
     } catch (error: any) {
       // If 404, no profile found - redirect to application (this is expected for new wallets)
       if (error.status === 404) {
@@ -211,7 +219,9 @@ export function HomePage() {
 
   const handleExpertJoin = () => {
     if (isConnected && address) {
-      // Check expert status
+      // Clear any token auth before entering expert flow
+      clearAllAuthState();
+      localStorage.setItem("userType", "expert");
       checkExpertStatus(address);
     } else {
       // Show wallet modal

@@ -31,6 +31,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { candidateApi, applicationsApi } from "@/lib/api";
+import { useDisconnect } from "wagmi";
+import { clearAllAuthState } from "@/lib/auth";
 
 interface CandidateProfile {
   id: string;
@@ -98,6 +100,7 @@ export default function CandidateProfilePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     const userType = localStorage.getItem("userType");
@@ -235,10 +238,8 @@ export default function CandidateProfilePage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("candidateId");
-    localStorage.removeItem("candidateEmail");
-    localStorage.removeItem("candidateWallet");
+    clearAllAuthState();
+    disconnect();
     router.push("/?section=jobseekers");
   };
 
