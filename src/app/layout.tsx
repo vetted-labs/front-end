@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Bree_Serif, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -70,7 +71,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${breeSerif.variable} ${bricolageGrotesque.variable} font-sans`}>
-        <Providers>{children}</Providers>
+        <ErrorBoundary>
+          <Providers>{children}</Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

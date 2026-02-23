@@ -255,6 +255,25 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       setFormError("Full name must be at least 2 characters");
       return;
     }
+    if (formData.fullName.length > 255) {
+      setFormError("Full name must not exceed 255 characters");
+      return;
+    }
+    // 🔐 SECURITY: Robust email validation
+    if (!formData.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+    // 🔐 SECURITY: URL validation for LinkedIn
+    if (formData.linkedinUrl && !/^https?:\/\/.+\..+/.test(formData.linkedinUrl)) {
+      setFormError("Please enter a valid LinkedIn URL starting with http:// or https://");
+      return;
+    }
+    // URL validation for portfolio
+    if (formData.portfolioUrl && !/^https?:\/\/.+\..+/.test(formData.portfolioUrl)) {
+      setFormError("Please enter a valid portfolio URL starting with http:// or https://");
+      return;
+    }
     if (!formData.guild.trim() || formData.guild.length < 2) {
       setFormError("Guild must be at least 2 characters");
       return;

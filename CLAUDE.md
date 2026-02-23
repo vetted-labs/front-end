@@ -9,6 +9,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Keep commit messages concise and follow conventional commit format
 - Focus on describing what changed and why
 
+## Engineering Principles
+
+| Principle | How We Apply It |
+|---|---|
+| **DRY** | Shared types in `src/types/`. One API client (`lib/api.ts`). One auth context. Reuse `useFetch`/`useApi` hooks — no raw `fetch` in components. |
+| **KISS** | Flat component directories. No wrapper components that just pass props through. Prefer Tailwind utilities over custom CSS. |
+| **SRP** | Hooks own data fetching + logic. Components own rendering. Page files (`page.tsx`) are thin routing shells only. |
+| **OCP** | New guild = add entry to `constants.ts` + helpers. New page = add route + component. Don't modify shared UI components for page-specific needs — extend via props or compose. |
+| **DIP** | Components consume `useAuthContext()`, not `localStorage` directly. Use `apiRequest()` from `lib/api.ts`, not raw `fetch`. Depend on hooks, not implementation details. |
+| **ISP** | Component props should be narrow — pass only what's needed, not entire objects. Split large interfaces into focused ones when only a subset is used. |
+| **YAGNI** | No abstraction until the third use. No global state library until local state proves insufficient. No caching layer until there's a measured problem. |
+| **SoC** | Data fetching in hooks (`lib/hooks/`). Presentation in components. Config in `config/`. Validation separate from form submission logic. |
+| **Fail Fast** | Type narrowing over `any`. Validate at system boundaries (API responses, user input). Prefer TypeScript's type system to catch errors at compile time. |
+| **SSOT** | Types defined once in `src/types/`. Constants in `src/config/constants.ts`. Auth state flows from `AuthContext` only. Environment config read in one place. |
+| **Composition > Inheritance** | Build complex UIs by composing small components via children/slots. Compose hooks for shared logic. No class hierarchies. |
+| **LoD** | Components receive data via props, not by reaching deep into context or global state. A child component shouldn't know where its parent fetched data from. |
+| **CoC** | Every page follows: `page.tsx` (shell) → container component (data + logic) → presentational sub-components (UI). Every API call goes through `lib/api.ts`. Errors shown via `Alert` component. |
+
+### Frontend-Specific
+
+| Principle | How We Apply It |
+|---|---|
+| **Colocation** | Keep related code close — a component's types, helpers, and sub-components should live nearby (same directory or adjacent file), not scattered across the tree. |
+| **Unidirectional Data Flow** | Props down, callbacks up. If prop drilling exceeds 2 levels, extract to a context. Never mutate props or reach upward. |
+| **Minimal Client Boundary** | Use `"use client"` only on components that need interactivity (hooks, event handlers, browser APIs). Keep data-fetching and static rendering on the server where possible. Push `"use client"` as far down the tree as you can. |
+| **Controlled Components** | Forms use controlled inputs with React state. No uncontrolled refs unless performance requires it (e.g., large lists). |
+
 ## Project Overview
 
 **Vetted** is a decentralized hiring platform built on Next.js 15 (App Router) that connects companies with Web3 talent through a guild-based review system. The platform integrates Web3 wallet authentication using RainbowKit, Wagmi, and WalletConnect for decentralized identity management.

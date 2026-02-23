@@ -8,12 +8,15 @@ export function clearAllAuthState() {
   // Clear all localStorage auth tokens
   localStorage.removeItem("authToken");
   localStorage.removeItem("companyAuthToken");
+  localStorage.removeItem("refreshToken");
   localStorage.removeItem("candidateId");
   localStorage.removeItem("companyId");
+  localStorage.removeItem("expertId");
   localStorage.removeItem("candidateEmail");
   localStorage.removeItem("companyEmail");
   localStorage.removeItem("candidateWallet");
   localStorage.removeItem("companyWallet");
+  localStorage.removeItem("walletAddress");
   localStorage.removeItem("userType");
 }
 

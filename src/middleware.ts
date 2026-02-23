@@ -1,7 +1,7 @@
 // middleware.ts - Next.js middleware for security headers and CSP
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   const response = NextResponse.next();
 
   // Generate nonce for CSP (cryptographically secure random value)
@@ -9,6 +9,7 @@ export function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString("base64");
 
   // 🔐 SECURITY: Strict Content Security Policy
+  // Use strict NODE_ENV check - only "development" enables dev mode
   const isDevelopment = process.env.NODE_ENV === "development";
 
   // Development CSP: More permissive for hot reload and dev tools
@@ -26,11 +27,12 @@ export function middleware(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join("; ");
 
-  // Production CSP: Permissive policy for Next.js inline scripts
+  // Production CSP: Use nonce-based script policy instead of unsafe-inline
+  // Note: Next.js requires unsafe-inline for styles due to Tailwind/CSS injection
   const prodCSP = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'`, // unsafe-inline needed for Next.js inline scripts (nonce removed as it disables unsafe-inline)
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline still needed for Tailwind and styled components
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`, // Nonce-based for production security
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline still needed for Tailwind
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://*.up.railway.app https://rpc.sepolia.org https://eth.llamarpc.com https://eth-sepolia.g.alchemy.com https://*.alchemy.com https://*.infura.io https://eth.merkle.io https://*.walletconnect.com https://*.walletconnect.org https://*.metamask.io https://*.cx.metamask.io https://mainnet.infura.io https://polygon-rpc.com https://arb1.arbitrum.io https://*.drpc.org https://cca-lite.coinbase.com https://*.coinbase.com https://rpc.ankr.com https://*.publicnode.com",

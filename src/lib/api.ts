@@ -12,6 +12,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 interface ApiRequestOptions extends RequestInit {
   requiresAuth?: boolean;
+  _isRetry?: boolean; // Internal flag to prevent infinite refresh loops
 }
 
 export class ApiError extends Error {
@@ -34,11 +35,75 @@ export class ApiError extends Error {
   };
 }
 
+/**
+ * 🔐 SECURITY: Sanitize error message to prevent XSS via API responses
+ * Strips HTML tags and limits length
+ */
+export function sanitizeErrorMessage(message: unknown): string {
+  if (typeof message !== "string") return "An error occurred";
+  // Strip HTML tags
+  const stripped = message.replace(/<[^>]*>/g, "");
+  // Limit length
+  return stripped.slice(0, 500);
+}
+
+// Track whether a token refresh is in progress to prevent concurrent refreshes
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
+ * 🔐 SECURITY: Attempt to refresh the access token using the stored refresh token
+ * Returns true if refresh succeeded, false otherwise
+ */
+async function attemptTokenRefresh(): Promise<boolean> {
+  // If a refresh is already in progress, wait for it
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) return false;
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        // Refresh failed - clear auth state
+        if (response.status === 401) {
+          localStorage.removeItem("refreshToken");
+        }
+        return false;
+      }
+
+      const data = await response.json();
+
+      // Store new tokens
+      const userType = localStorage.getItem("userType");
+      if (userType === "company") {
+        localStorage.setItem("companyAuthToken", data.accessToken);
+      } else {
+        localStorage.setItem("authToken", data.accessToken);
+      }
+      localStorage.setItem("refreshToken", data.refreshToken);
+
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const { requiresAuth = false, headers = {}, body, ...fetchOptions } = options;
+  const { requiresAuth = false, _isRetry = false, headers = {}, body, ...fetchOptions } = options;
 
   const requestHeaders: Record<string, string> = {
     ...(headers as Record<string, string>),
@@ -75,6 +140,15 @@ export async function apiRequest<T = unknown>(
     });
 
     if (!response.ok) {
+      // 🔐 SECURITY: Auto-refresh on 401 (token expired)
+      if (response.status === 401 && requiresAuth && !_isRetry) {
+        const refreshed = await attemptTokenRefresh();
+        if (refreshed) {
+          // Retry the original request with new token
+          return apiRequest<T>(endpoint, { ...options, _isRetry: true });
+        }
+      }
+
       // Try to parse error response body
       let errorData: any = {};
       try {
@@ -99,21 +173,46 @@ export async function apiRequest<T = unknown>(
 
 // Auth API
 export const authApi = {
-  login: (email: string, password: string, userType: "candidate" | "company") =>
-    apiRequest("/api/auth/login", {
+  login: (email: string, password: string, userType: "candidate" | "company") => {
+    // Route to correct backend endpoint based on user type
+    const endpoint = userType === "company" ? "/api/companies/login" : "/api/candidates/login";
+    return apiRequest(endpoint, {
       method: "POST",
-      body: JSON.stringify({ email, password, userType }),
-    }),
+      body: JSON.stringify({ email, password }),
+    });
+  },
 
-  signup: (data: Record<string, unknown>) =>
-    apiRequest("/api/auth/signup", {
+  signup: (data: Record<string, unknown> & { userType?: string }) => {
+    // Route to correct backend endpoint based on user type
+    const endpoint = data.userType === "company" ? "/api/companies" : "/api/candidates";
+    return apiRequest(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
-    }),
+    });
+  },
 
-  logout: () => {
+  // 🔐 SECURITY: Revoke refresh token on backend before clearing local state
+  logout: async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch {
+      // Best-effort: clear local state even if backend call fails
+    }
     localStorage.removeItem("authToken");
+    localStorage.removeItem("companyAuthToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userType");
+    localStorage.removeItem("candidateId");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("candidateEmail");
+    localStorage.removeItem("companyEmail");
   },
 };
 
@@ -163,13 +262,13 @@ export const jobsApi = {
     }),
 };
 
-// Dashboard API
+// Dashboard API - uses /api/jobs/stats endpoint on backend
 export const dashboardApi = {
   getStats: (companyId?: string) => {
     const queryParams = new URLSearchParams();
     if (companyId) queryParams.append("companyId", companyId);
     const query = queryParams.toString();
-    return apiRequest(`/api/dashboard/stats${query ? `?${query}` : ""}`, {
+    return apiRequest(`/api/jobs/stats${query ? `?${query}` : ""}`, {
       requiresAuth: true,
     });
   },
@@ -276,7 +375,7 @@ export const applicationsApi = {
     }),
 
   updateStatus: (id: string, status: string, notes?: string) =>
-    apiRequest(`/api/applications/${id}`, {
+    apiRequest(`/api/applications/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ status, notes }),
       requiresAuth: true,

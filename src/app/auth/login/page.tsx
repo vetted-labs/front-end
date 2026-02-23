@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { candidateApi, companyApi } from "@/lib/api";
+import { candidateApi, companyApi, sanitizeErrorMessage } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
 import { useDisconnect } from "wagmi";
 
@@ -90,7 +90,7 @@ function LoginForm() {
         const data = error.response.data;
 
         if (status === 400) {
-          errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+          errorMessage = sanitizeErrorMessage(data.message || data.error) || "Invalid input. Please check your information.";
         } else if (status === 401) {
           errorMessage = "Invalid credentials. Please check your email and password.";
         } else if (status === 403) {
@@ -100,14 +100,15 @@ function LoginForm() {
         } else if (status === 500) {
           errorMessage = "Server error. Please try again later.";
         } else {
-          errorMessage = data.message || data.error || errorMessage;
+          // 🔐 SECURITY: Sanitize error messages to prevent XSS
+          errorMessage = sanitizeErrorMessage(data.message || data.error) || errorMessage;
         }
       } else if (error.message) {
         // Network or other errors
         if (error.message.includes("Network Error") || error.message.includes("fetch")) {
           errorMessage = "Cannot connect to server. Please check your internet connection.";
         } else {
-          errorMessage = error.message;
+          errorMessage = sanitizeErrorMessage(error.message);
         }
       }
 

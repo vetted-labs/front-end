@@ -6,6 +6,22 @@ import { candidateApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
 import { useDisconnect } from "wagmi";
 
+/**
+ * 🔐 SECURITY: Validate that a redirect path is internal (no open redirect)
+ * Rejects protocol-relative URLs (//evil.com), external URLs, and javascript: URIs
+ */
+function isInternalPath(path: string): boolean {
+  if (!path || typeof path !== "string") return false;
+  // Must start with a single slash and not be protocol-relative
+  if (!path.startsWith("/") || path.startsWith("//")) return false;
+  // Block javascript: and data: URIs
+  const lower = path.toLowerCase().trim();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:")) return false;
+  // Block URLs with protocol
+  if (/^[a-z]+:/i.test(path)) return false;
+  return true;
+}
+
 function LinkedInCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,7 +59,17 @@ function LinkedInCallbackContent() {
           return;
         }
 
-        const stateData = JSON.parse(savedStateData);
+        // 🔐 SECURITY: Safely parse sessionStorage data
+        let stateData: any;
+        try {
+          stateData = JSON.parse(savedStateData);
+        } catch {
+          setStatus("error");
+          setMessage("OAuth state data is corrupted - please try again");
+          sessionStorage.removeItem('linkedin_oauth_state');
+          setTimeout(() => router.push("/auth/login"), 3000);
+          return;
+        }
 
         // Verify state token matches
         if (state !== stateData.token) {
@@ -83,9 +109,11 @@ function LinkedInCallbackContent() {
         setStatus("success");
         setMessage("Successfully authenticated! Redirecting...");
 
-        // Redirect to the saved redirect URL
-        const redirectUrl = stateData.redirect || "/candidate/profile";
-        setTimeout(() => router.push(redirectUrl), 1500);
+        // 🔐 SECURITY: Validate redirect URL against whitelist of internal paths
+        // Prevents open redirect attacks via manipulated sessionStorage
+        const rawRedirect = stateData.redirect || "/candidate/profile";
+        const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/profile";
+        setTimeout(() => router.push(safeRedirect), 1500);
       } catch (error: any) {
         console.error("LinkedIn OAuth error:", error);
         setStatus("error");

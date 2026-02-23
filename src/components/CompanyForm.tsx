@@ -59,11 +59,17 @@ export function CompanyForm() {
     }
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    if (!formData.password || formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/[0-9]/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one number";
+    } else if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one special character";
     }
     if (!address) {
       newErrors.wallet = "Please connect your wallet";
@@ -174,6 +180,7 @@ export function CompanyForm() {
                 onChange={(e) => handleInputChange("companyName", e.target.value)}
                 placeholder="Acme Inc."
                 error={errors.companyName}
+                maxLength={255}
               />
 
               <Textarea
@@ -182,6 +189,7 @@ export function CompanyForm() {
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 rows={3}
                 placeholder="Tell us about your company..."
+                maxLength={2000}
               />
             </div>
 
@@ -265,7 +273,7 @@ export function CompanyForm() {
                 icon={<Lock className="h-5 w-5" />}
                 placeholder="••••••••"
                 error={errors.password}
-                helperText="Minimum 6 characters"
+                helperText="Min 8 characters with uppercase, number, and special character"
               />
             </div>
 
