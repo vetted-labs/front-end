@@ -10,12 +10,8 @@ import {
   DollarSign,
   Building2,
   Sparkles,
-  User,
-  LogOut,
 } from "lucide-react";
 import { jobsApi } from "@/lib/api";
-import { useDisconnect } from "wagmi";
-import { clearAllAuthState } from "@/lib/auth";
 
 interface FeaturedJob {
   id: string;
@@ -46,35 +42,13 @@ export default function BrowseJobsPage() {
     averageSalary: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [candidateEmail, setCandidateEmail] = useState<string>("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const { disconnect } = useDisconnect();
-
-  // Check if user is authenticated
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      setIsAuthenticated(true);
-      const email = localStorage.getItem("candidateEmail");
-      if (email) setCandidateEmail(email);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    clearAllAuthState();
-    disconnect();
-    setIsAuthenticated(false);
-    setCandidateEmail("");
-    setShowUserMenu(false);
-    router.push("/?section=jobseekers");
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch featured jobs (active jobs)
-        const jobs: any = await jobsApi.getAll({ status: 'active' });
+        const response: any = await jobsApi.getAll({ status: 'active' });
+        const jobs = Array.isArray(response) ? response : [];
         // Ensure all jobs have required fields with defaults
         const normalizedJobs = jobs.map((job: Record<string, unknown>) => ({
           ...job,
@@ -106,79 +80,7 @@ export default function BrowseJobsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Navigation */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <button
-              onClick={() => router.push("/")}
-              className="flex items-center space-x-2"
-            >
-              <div className="w-8 h-8 bg-primary/10 rounded-lg"></div>
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-            </button>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/")}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                For Employers
-              </button>
-
-              {/* User Account Menu */}
-              {isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground hidden sm:block">
-                      {candidateEmail}
-                    </span>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                      <div className="px-4 py-3 border-b border-border">
-                        <p className="text-sm font-medium text-foreground">
-                          {candidateEmail}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">Candidate</p>
-                      </div>
-                      <button
-                        onClick={() => router.push("/candidate/profile")}
-                        className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
-                      >
-                        <Briefcase className="w-4 h-4" />
-                        My Dashboard
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => router.push("/auth/login?type=candidate")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-lg hover:opacity-90 transition-all"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-full">
       {/* Hero Section with Metrics */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto mb-12">

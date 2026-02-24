@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Bree_Serif, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -27,38 +28,45 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: "Vetted",
   description: "Decentralized Hiring Platform",
+  icons: {
+    icon: "/Vetted-orange.png",
+    apple: "/Vetted-orange.png",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || '';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('vetted-ui-theme');
-                  const root = document.documentElement;
-                  let isDark = false;
+                  var theme = localStorage.getItem('vetted-ui-theme');
+                  var root = document.documentElement;
+                  var isDark = false;
 
                   if (!theme || theme === 'dark') {
                     isDark = true;
                   } else if (theme === 'light') {
                     isDark = false;
                   } else {
-                    // system theme
                     isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   }
 
                   if (isDark) {
                     root.classList.add('dark');
                     root.style.colorScheme = 'dark';
-                    root.style.backgroundColor = 'hsl(0 0% 4%)';
+                    root.style.backgroundColor = 'hsl(225 12% 6%)';
                   } else {
                     root.classList.remove('dark');
                     root.style.colorScheme = 'light';

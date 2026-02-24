@@ -37,7 +37,7 @@ export function ActionButtonPanel({ stakingStatus, hasGuilds = false, onRefresh 
         {/* Stake to Start Vetting Button */}
         <button
           onClick={handleStakeClick}
-          className="group relative overflow-hidden bg-gradient-to-r from-orange-500/20 to-orange-400/20 hover:from-orange-500/30 hover:to-orange-400/30 border border-orange-500/30 hover:border-orange-500/40 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
+          className="group relative overflow-hidden bg-gradient-to-r from-orange-500/20 to-orange-400/20 hover:from-orange-500/30 hover:to-orange-400/30 border border-orange-500/30 hover:border-orange-500/40 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all dark:backdrop-blur-xl dark:border-orange-500/15 dark:shadow-black/20"
         >
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -66,7 +66,7 @@ export function ActionButtonPanel({ stakingStatus, hasGuilds = false, onRefresh 
         {/* Start Endorsing Button */}
         <button
           onClick={handleEndorseClick}
-          className="group relative overflow-hidden bg-gradient-to-r from-orange-500/20 to-orange-400/20 hover:from-orange-500/30 hover:to-orange-400/30 border border-orange-500/30 hover:border-orange-500/40 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
+          className="group relative overflow-hidden bg-gradient-to-r from-orange-500/20 to-orange-400/20 hover:from-orange-500/30 hover:to-orange-400/30 border border-orange-500/30 hover:border-orange-500/40 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all dark:backdrop-blur-xl dark:border-orange-500/15 dark:shadow-black/20"
         >
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">

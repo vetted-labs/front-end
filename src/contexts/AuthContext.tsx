@@ -1,17 +1,19 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
+import { clearAllAuthState } from '@/lib/auth';
 
 interface AuthState {
   isAuthenticated: boolean;
   userType: 'candidate' | 'company' | 'expert' | null;
   userId: string | null;
+  email: string | null;
   token: string | null;
   walletAddress?: string;
 }
 
 interface AuthContextValue extends AuthState {
-  login: (token: string, userType: string, userId: string, walletAddress?: string) => void;
+  login: (token: string, userType: string, userId: string, email?: string, walletAddress?: string) => void;
   logout: () => void;
   updateWallet: (address: string) => void;
 }
@@ -24,7 +26,7 @@ export const AuthContext = createContext<AuthContextValue | undefined>(undefined
  */
 function getInitialAuthState(): AuthState {
   if (typeof window === "undefined") {
-    return { isAuthenticated: false, userType: null, userId: null, token: null };
+    return { isAuthenticated: false, userType: null, userId: null, email: null, token: null };
   }
   try {
     const token = localStorage.getItem('authToken') ||
@@ -34,6 +36,8 @@ function getInitialAuthState(): AuthState {
     const companyId = localStorage.getItem('companyId');
     const expertId = localStorage.getItem('expertId');
     const walletAddress = localStorage.getItem('walletAddress');
+    const email = localStorage.getItem('candidateEmail') ||
+                  localStorage.getItem('companyEmail');
     const userId = candidateId || companyId || expertId;
 
     if (token && userType && userId) {
@@ -41,25 +45,43 @@ function getInitialAuthState(): AuthState {
         isAuthenticated: true,
         userType: userType as AuthState['userType'],
         userId,
+        email,
         token,
         walletAddress: walletAddress || undefined,
+      };
+    }
+
+    // Expert wallet auth: experts authenticate via wallet, not token
+    if (!token && userType === 'expert' && expertId && walletAddress) {
+      return {
+        isAuthenticated: true,
+        userType: 'expert',
+        userId: expertId,
+        email: null,
+        token: null,
+        walletAddress,
       };
     }
   } catch {
     // localStorage may throw in some environments
   }
-  return { isAuthenticated: false, userType: null, userId: null, token: null };
+  return { isAuthenticated: false, userType: null, userId: null, email: null, token: null };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
-  const login = (token: string, userType: string, userId: string, walletAddress?: string) => {
-    // Store in localStorage
-    localStorage.setItem('authToken', token);
+  const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string) => {
+    // Store in localStorage — experts may not have a token
+    if (token) {
+      localStorage.setItem('authToken', token);
+    }
     localStorage.setItem('userType', userType);
     localStorage.setItem(`${userType}Id`, userId);
 
+    if (email) {
+      localStorage.setItem(`${userType}Email`, email);
+    }
     if (walletAddress) {
       localStorage.setItem('walletAddress', walletAddress);
     }
@@ -67,54 +89,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update state
     setAuthState({
       isAuthenticated: true,
-      userType: userType as any,
+      userType: userType as AuthState['userType'],
       userId,
+      email: email || null,
       token,
       walletAddress,
     });
   };
 
-  const logout = async () => {
-    // 🔐 SECURITY: Revoke backend refresh token before clearing local state
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        await fetch(`${apiUrl}/api/auth/logout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
-        });
-      }
-    } catch {
-      // Best-effort: clear local state even if backend call fails
-    }
+  const logout = () => {
+    // Grab refresh token before clearing localStorage
+    const refreshToken = localStorage.getItem('refreshToken');
 
-    // Clear all auth-related localStorage items
-    const keysToRemove = [
-      'authToken',
-      'companyAuthToken',
-      'refreshToken',
-      'userType',
-      'candidateId',
-      'companyId',
-      'expertId',
-      'walletAddress',
-      'candidateEmail',
-      'companyEmail',
-      'candidateWallet',
-      'companyWallet',
-    ];
+    // Clear all auth data from localStorage
+    clearAllAuthState();
 
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-
-    // Reset state
+    // Reset React state immediately
     setAuthState({
       isAuthenticated: false,
       userType: null,
       userId: null,
+      email: null,
       token: null,
+      walletAddress: undefined,
     });
+
+    // Best-effort: revoke refresh token on backend (fire-and-forget)
+    if (refreshToken) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      fetch(`${apiUrl}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {});
+    }
   };
 
   const updateWallet = (address: string) => {

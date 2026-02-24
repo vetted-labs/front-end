@@ -1,14 +1,12 @@
 "use client";
 
 import { MyEndorsementsHistory } from "@/components/MyEndorsementsHistory";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default function EndorsementHistoryPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <ExpertNavbar />
+    <div className="bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header with Back Button */}

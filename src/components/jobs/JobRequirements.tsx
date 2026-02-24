@@ -2,12 +2,7 @@
 
 import { FileText, Shield } from "lucide-react";
 import { JobFormData } from "@/hooks/useJobForm";
-
-interface Guild {
-  id: string;
-  name: string;
-  description: string;
-}
+import type { Guild } from "@/types";
 
 interface JobRequirementsProps {
   formData: JobFormData;
@@ -90,10 +85,15 @@ export function JobRequirements({
                 e.target.value.split("\n").filter(Boolean)
               )
             }
-            className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.requirements ? "border-red-500" : "border-border"
+            }`}
             rows={4}
             placeholder="e.g., 5+ years experience"
           />
+          {fieldErrors.requirements && (
+            <p className="text-red-500 text-sm mt-1">{fieldErrors.requirements}</p>
+          )}
         </div>
 
         <div>
@@ -105,10 +105,15 @@ export function JobRequirements({
             onChange={(e) =>
               onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
             }
-            className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.skills ? "border-red-500" : "border-border"
+            }`}
             rows={4}
             placeholder="e.g., Solidity, React"
           />
+          {fieldErrors.skills && (
+            <p className="text-red-500 text-sm mt-1">{fieldErrors.skills}</p>
+          )}
         </div>
 
         <div>
@@ -123,10 +128,15 @@ export function JobRequirements({
                 e.target.value.split("\n").filter(Boolean)
               )
             }
-            className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.screeningQuestions ? "border-red-500" : "border-border"
+            }`}
             rows={4}
             placeholder="e.g., Describe your experience with DeFi"
           />
+          {fieldErrors.screeningQuestions && (
+            <p className="text-red-500 text-sm mt-1">{fieldErrors.screeningQuestions}</p>
+          )}
         </div>
       </div>
     </>

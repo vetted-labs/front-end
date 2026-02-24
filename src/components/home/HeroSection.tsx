@@ -1,13 +1,7 @@
 "use client";
 
 import { Users, Shield, Briefcase, Star } from "lucide-react";
-
-interface Guild {
-  id: string;
-  name: string;
-  description?: string;
-  memberCount?: number;
-}
+import type { Guild } from "@/types";
 
 interface HeroSectionProps {
   guilds: Guild[];

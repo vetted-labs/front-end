@@ -1,9 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
-import { useAccount, useDisconnect } from "wagmi";
-import Image from "next/image";
+import { useAccount } from "wagmi";
 import {
   Clock,
   ArrowLeft,
@@ -11,14 +9,25 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  LogOut,
   Plus,
   Shield,
+  Swords,
 } from "lucide-react";
 import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
 import { expertApi } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
+
+interface GuildApplication {
+  id: string;
+  name: string;
+  description?: string;
+  status: "pending" | "approved";
+  role?: string;
+  joinedAt?: string;
+  reviewCount?: number;
+  approvalCount?: number;
+  rejectionCount?: number;
+}
 
 interface PendingExpert {
   id: string;
@@ -31,6 +40,7 @@ interface PendingExpert {
     name: string;
     description: string;
   } | null;
+  guildApplications?: GuildApplication[];
   reviewCount: number;
   approvalCount: number;
   rejectionCount: number;
@@ -39,7 +49,6 @@ interface PendingExpert {
 export default function ApplicationPendingPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
   const [expert, setExpert] = useState<PendingExpert | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,14 +75,13 @@ export default function ApplicationPendingPage() {
 
     try {
       const result: any = await expertApi.getProfile(address);
-      const expertData = result.data || result;
 
-      if (expertData.status === "approved") {
+      if (result.status === "approved") {
         router.push("/expert/dashboard");
         return;
       }
 
-      setExpert(expertData);
+      setExpert(result);
     } catch (err: any) {
       if (err.status === 404) {
         router.push("/expert/apply");
@@ -83,12 +91,6 @@ export default function ApplicationPendingPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDisconnect = () => {
-    clearAllAuthState();
-    disconnect();
-    router.push("/");
   };
 
   if (isLoading) {
@@ -103,42 +105,29 @@ export default function ApplicationPendingPage() {
     );
   }
 
+  // Build guild list: use guildApplications from API if available, otherwise fall back to single appliedToGuild
+  const guildApplications: GuildApplication[] =
+    expert.guildApplications && expert.guildApplications.length > 0
+      ? expert.guildApplications
+      : expert.appliedToGuild
+        ? [
+            {
+              id: expert.appliedToGuild.id,
+              name: expert.appliedToGuild.name,
+              description: expert.appliedToGuild.description,
+              status: "pending" as const,
+              reviewCount: expert.reviewCount,
+              approvalCount: expert.approvalCount,
+              rejectionCount: expert.rejectionCount,
+            },
+          ]
+        : [];
+
+  const pendingApps = guildApplications.filter((g) => g.status === "pending");
+  const approvedApps = guildApplications.filter((g) => g.status === "approved");
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
-              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-              <span className="text-sm font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">
-                Expert
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {mounted && address && (
-                <>
-                  <div className="flex items-center px-3 py-2 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
-                    <span className="text-xs font-mono text-primary">
-                      {address.slice(0, 6)}...{address.slice(-4)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleDisconnect}
-                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-all"
-                  >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Disconnect
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-full">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Main Card */}
         <div className="bg-card rounded-2xl shadow-lg border border-border p-8 md:p-12 mb-6">
@@ -148,51 +137,98 @@ export default function ApplicationPendingPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 text-center">
             Application Under Review
           </h1>
+          <p className="text-muted-foreground text-center mb-8">
+            Your guild application{pendingApps.length > 1 ? "s are" : " is"} being reviewed by guild members
+          </p>
 
-          {/* Applied To Guild */}
-          {expert.appliedToGuild && (
-            <div className="text-center mb-8">
-              <p className="text-lg text-muted-foreground mb-2">Applied to</p>
-              <div className="inline-block px-6 py-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
-                <p className="text-xl font-semibold text-primary">
-                  {expert.appliedToGuild.name}
-                </p>
+          {/* Guild Applications List */}
+          <div className="space-y-4 mb-8">
+            <h2 className="text-lg font-semibold text-foreground">Your Guild Applications</h2>
+
+            {guildApplications.map((guild) => (
+              <div
+                key={guild.id}
+                className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Swords className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">{guild.name}</p>
+                    {guild.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-1">{guild.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {guild.status === "pending" ? (
+                    <>
+                      <div className="hidden sm:flex items-center gap-2 text-sm">
+                        <span className="flex items-center gap-1 text-green-500">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          {guild.approvalCount ?? expert.approvalCount}
+                        </span>
+                        <span className="flex items-center gap-1 text-red-400">
+                          <XCircle className="w-3.5 h-3.5" />
+                          {guild.rejectionCount ?? expert.rejectionCount}
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                        <Clock className="w-3 h-3" />
+                        Pending
+                      </span>
+                    </>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500 border border-green-500/20">
+                      <CheckCircle className="w-3 h-3" />
+                      {guild.role || "Member"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {guildApplications.length === 0 && (
+              <p className="text-muted-foreground text-sm">No guild applications found.</p>
+            )}
+          </div>
+
+          {/* Review Stats - only show if there are pending apps */}
+          {pendingApps.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
+                <Users className="w-7 h-7 text-muted-foreground mx-auto mb-2" />
+                <p className="text-2xl font-bold text-foreground">{expert.reviewCount}</p>
+                <p className="text-sm text-muted-foreground">Total Reviews</p>
+              </div>
+
+              <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
+                <CheckCircle className="w-7 h-7 text-green-500 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-foreground">{expert.approvalCount}</p>
+                <p className="text-sm text-muted-foreground">Approvals</p>
+              </div>
+
+              <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
+                <XCircle className="w-7 h-7 text-red-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-foreground">{expert.rejectionCount}</p>
+                <p className="text-sm text-muted-foreground">Rejections</p>
               </div>
             </div>
           )}
 
-          {/* Review Status */}
-          <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <Users className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{expert.reviewCount}</p>
-              <p className="text-sm text-muted-foreground">Total Reviews</p>
-            </div>
-
-            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <CheckCircle className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{expert.approvalCount}</p>
-              <p className="text-sm text-muted-foreground">Approvals</p>
-            </div>
-
-            <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <XCircle className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{expert.rejectionCount}</p>
-              <p className="text-sm text-muted-foreground">Rejections</p>
-            </div>
-          </div>
-
-          {/* Progress Info */}
-          <div className="bg-primary/10 rounded-lg p-6 mb-8 border border-primary/20">
+          {/* Auto-Approval Info */}
+          <div className="rounded-lg p-5 mb-8 border border-border bg-muted/30">
             <div className="flex items-start">
-              <Shield className="w-6 h-6 text-primary mt-0.5 mr-3 flex-shrink-0" />
+              <Shield className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-2">Auto-Approval System</p>
-                <p className="text-sm text-card-foreground leading-relaxed">
-                  Your application needs <strong>1+ approval</strong> from a guild member to be
+                <p className="font-semibold text-foreground mb-1">Auto-Approval System</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your application needs <strong className="text-foreground">1+ approval</strong> from a guild member to be
                   automatically accepted. Once approved, you&apos;ll get instant access to the expert
                   dashboard and join the guild as a &quot;Recruit&quot;.
                 </p>
@@ -201,21 +237,21 @@ export default function ApplicationPendingPage() {
           </div>
 
           {/* Status Timeline */}
-          <div className="space-y-4 mb-8">
-            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <CheckCircle className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+          <div className="space-y-3 mb-8">
+            <div className="flex items-start text-left p-4 rounded-lg border border-border bg-muted/30">
+              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-1">Application Received</p>
+                <p className="font-semibold text-foreground mb-0.5">Application Received</p>
                 <p className="text-sm text-muted-foreground">
                   We&apos;ve successfully received your application and wallet information.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex items-start text-left p-4 rounded-lg border border-primary/30 bg-primary/5">
               <Clock className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-1">Under Guild Review</p>
+                <p className="font-semibold text-foreground mb-0.5">Under Guild Review</p>
                 <p className="text-sm text-muted-foreground">
                   Guild members are reviewing your credentials. You currently have{" "}
                   {expert.approvalCount} approval(s).
@@ -223,10 +259,10 @@ export default function ApplicationPendingPage() {
               </div>
             </div>
 
-            <div className="flex items-start text-left p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <Mail className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
+            <div className="flex items-start text-left p-4 rounded-lg border border-border bg-muted/30 opacity-60">
+              <Mail className="w-5 h-5 text-muted-foreground mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-1">Auto-Approval Pending</p>
+                <p className="font-semibold text-foreground mb-0.5">Approval &amp; Dashboard Access</p>
                 <p className="text-sm text-muted-foreground">
                   Once you receive 1+ approval, you&apos;ll automatically be accepted as a &quot;Recruit&quot;
                   member and gain access to the dashboard.
@@ -236,21 +272,30 @@ export default function ApplicationPendingPage() {
           </div>
         </div>
 
-        {/* Apply to Another Guild */}
+        {/* Browse Guilds CTA */}
         <div className="bg-card rounded-xl shadow-sm border border-border p-6 text-center">
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Want to Apply to Another Guild?
+            Explore More Guilds
           </h2>
           <p className="text-muted-foreground mb-4">
-            While your current application is under review, you can apply to other guilds
+            Browse available guilds and apply to join more communities
           </p>
-          <button
-            onClick={() => router.push("/expert/apply")}
-            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-900 dark:text-gray-900 bg-gradient-to-r from-primary to-accent rounded-lg hover:opacity-90  transition-all shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Apply to Another Guild
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() => router.push("/guilds")}
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+            >
+              <Swords className="w-4 h-4 mr-2" />
+              Browse Guilds
+            </button>
+            <button
+              onClick={() => router.push("/expert/apply")}
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Apply to Another Guild
+            </button>
+          </div>
         </div>
 
         {/* Back Button */}

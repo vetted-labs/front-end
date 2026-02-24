@@ -27,68 +27,18 @@ import { toast } from "sonner";
 import { StructuredProposalDisplay } from "@/components/StructuredProposalDisplay";
 import { VotingScoreSlider } from "@/components/VotingScoreSlider";
 import { ProposalFinalizationDisplay } from "@/components/ProposalFinalizationDisplay";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { CommitRevealPhaseIndicator } from "@/components/CommitRevealPhaseIndicator";
 import { CommitmentForm } from "@/components/CommitmentForm";
 import { RevealForm } from "@/components/RevealForm";
 import { CommitRevealStatusCard } from "@/components/CommitRevealStatusCard";
-
-interface ProposalDetail {
-  id: string;
-  candidate_name: string;
-  candidate_email: string;
-  candidate_id?: string;
-  // Structured fields
-  years_of_experience?: number;
-  skills_summary?: string;
-  experience_summary?: string;
-  motivation_statement?: string;
-  credibility_evidence?: string;
-  achievements?: string[];
-  // Legacy field
-  proposal_text?: string;
-  // Voting data
-  guild_id: string;
-  guild_name: string;
-  required_stake: number;
-  status: string;
-  created_at: string;
-  voting_deadline: string;
-  vote_count: number;
-  assigned_reviewer_count?: number;
-  // Consensus & finalization
-  consensus_score?: number;
-  finalized: boolean;
-  outcome?: "approved" | "rejected";
-  finalized_at?: string;
-  total_rewards_distributed?: number;
-  // My data
-  is_assigned_reviewer?: boolean;
-  has_voted?: boolean;
-  my_vote_score?: number;
-  alignment_distance?: number;
-  my_reputation_change?: number;
-  my_reward_amount?: number;
-}
-
-interface VoteHistoryItem {
-  id: string;
-  expert_id: string;
-  expert_name?: string;
-  score: number;
-  alignment_distance?: number;
-  reputation_change?: number;
-  reward_amount?: number;
-  comment?: string;
-  created_at: string;
-}
+import type { Proposal, VoteHistoryItem } from "@/types";
 
 export default function ProposalDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { address } = useAccount();
 
-  const [proposal, setProposal] = useState<ProposalDetail | null>(null);
+  const [proposal, setProposal] = useState<Proposal | null>(null);
   const [expertData, setExpertData] = useState<any>(null);
   const [stakingStatus, setStakingStatus] = useState<any>(null);
   const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
@@ -115,10 +65,8 @@ export default function ProposalDetailPage() {
 
   const loadExpertData = async () => {
     try {
-      const response: any = await expertApi.getExpertByWallet(address as string);
-      if (response.success) {
-        setExpertData(response.data);
-      }
+      const response = await expertApi.getProfile(address as string);
+      setExpertData(response);
     } catch (error) {
       console.error("Error loading expert data:", error);
     }
@@ -126,10 +74,8 @@ export default function ProposalDetailPage() {
 
   const loadStakingStatus = async () => {
     try {
-      const response: any = await blockchainApi.getStakeBalance(address as string);
-      if (response.success) {
-        setStakingStatus(response.data);
-      }
+      const response = await blockchainApi.getStakeBalance(address as string);
+      setStakingStatus(response);
     } catch (error) {
       console.error("Error loading staking status:", error);
     }
@@ -137,10 +83,8 @@ export default function ProposalDetailPage() {
 
   const loadPhaseStatus = async () => {
     try {
-      const response: any = await commitRevealApi.getPhaseStatus(proposalId);
-      if (response.success) {
-        setCrPhase(response.data);
-      }
+      const response = await commitRevealApi.getPhaseStatus(proposalId);
+      setCrPhase(response);
     } catch {
       // Not a commit-reveal proposal, or endpoint not available
     }
@@ -151,19 +95,15 @@ export default function ProposalDetailPage() {
       setLoading(true);
 
       // Get proposal details with expert context
-      const response: any = await proposalsApi.getProposalDetails(
+      const response = await proposalsApi.getProposalDetails(
         proposalId,
         expertData?.id
       );
-      if (response.success) {
-        setProposal(response.data);
+      setProposal(response);
 
-        // Get vote history if proposal is finalized
-        if (response.data?.finalized) {
-          loadVoteHistory();
-        }
-      } else {
-        toast.error(response.error || "Failed to load proposal");
+      // Get vote history if proposal is finalized
+      if (response?.finalized) {
+        loadVoteHistory();
       }
     } catch (error: any) {
       console.error("Error loading proposal:", error);
@@ -175,16 +115,10 @@ export default function ProposalDetailPage() {
 
   const loadVoteHistory = async () => {
     try {
-      // This endpoint would return all votes for the proposal
-      const response: any = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/proposals/${proposalId}/votes`
-      ).then((res) => res.json());
-
-      if (response.success) {
-        setVoteHistory(response.data || []);
-      }
-    } catch (error) {
-      console.error("Error loading vote history:", error);
+      const response = await proposalsApi.getVotes(proposalId);
+      setVoteHistory(response || []);
+    } catch {
+      // Vote history may not be available yet
     }
   };
 
@@ -201,18 +135,16 @@ export default function ProposalDetailPage() {
 
     try {
       setIsSubmittingVote(true);
-      const response: any = await proposalsApi.voteOnProposal(proposalId, {
+      await proposalsApi.voteOnProposal(proposalId, {
         expertId: expertData.id,
         score,
         stakeAmount,
         comment,
       });
 
-      if (response.success) {
-        toast.success("Score submitted successfully!");
-        setShowVoting(false);
-        loadProposal(); // Reload to get updated data
-      }
+      toast.success("Score submitted successfully!");
+      setShowVoting(false);
+      loadProposal(); // Reload to get updated data
     } catch (error: any) {
       console.error("Vote error:", error);
       toast.error(error.message || "Failed to submit score");
@@ -249,8 +181,7 @@ export default function ProposalDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -265,8 +196,7 @@ export default function ProposalDetailPage() {
 
   if (!proposal) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -283,9 +213,7 @@ export default function ProposalDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">

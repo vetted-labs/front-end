@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
+
 import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
 
 type FilterStatus = "active" | "passed" | "rejected" | "all";
@@ -43,10 +43,13 @@ export default function GovernancePage() {
     try {
       setLoading(true);
       const params = filter !== "all" ? { status: filter } : undefined;
-      const response: any = await governanceApi.getProposals(params);
-      if (response.success) {
-        setProposals(response.data || []);
-      }
+      const response = await governanceApi.getProposals(params);
+      const list = Array.isArray(response)
+        ? response
+        : Array.isArray((response as any)?.proposals)
+          ? (response as any).proposals
+          : [];
+      setProposals(list);
     } catch (error: any) {
       console.error("Error loading governance proposals:", error);
       toast.error("Failed to load proposals");
@@ -63,9 +66,7 @@ export default function GovernancePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

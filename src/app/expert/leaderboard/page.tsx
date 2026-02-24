@@ -1,6 +1,5 @@
 "use client";
 import { ReputationLeaderboard } from "@/components/ReputationLeaderboard";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import { expertApi } from "@/lib/api";
@@ -26,9 +25,7 @@ export default function LeaderboardPage() {
   }, [address]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <ReputationLeaderboard currentExpertId={expertId} />
       </div>

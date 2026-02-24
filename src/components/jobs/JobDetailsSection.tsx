@@ -2,12 +2,7 @@
 
 import { MapPin, DollarSign, Shield } from "lucide-react";
 import { JobFormData } from "@/hooks/useJobForm";
-
-interface Guild {
-  id: string;
-  name: string;
-  description: string;
-}
+import type { Guild } from "@/types";
 
 interface JobDetailsSectionProps {
   formData: JobFormData;

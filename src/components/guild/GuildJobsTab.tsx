@@ -13,39 +13,14 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
-
-interface Job {
-  id: string;
-  title: string;
-  location: string;
-  type: string; // "full-time", "part-time", "contract"
-  salary: {
-    min: number | null;
-    max: number | null;
-    currency: string;
-  };
-  applicants: number;
-  createdAt: string;
-}
-
-interface JobApplication {
-  id: string;
-  jobTitle: string;
-  candidateName: string;
-  candidateEmail: string;
-  appliedAt: string;
-  matchScore: number;
-  reviewedByRecruiter: boolean;
-  endorsementCount: number;
-  applicationSummary: string;
-}
+import type { Job, GuildJobApplication } from "@/types";
 
 interface GuildJobsTabProps {
   jobs: Job[];
   guildId?: string;
   guildName: string;
   jobsCount?: number;
-  applications?: JobApplication[];
+  applications?: GuildJobApplication[];
   onEndorseCandidate?: (applicationId: string, endorse: boolean) => void;
 }
 
@@ -131,13 +106,13 @@ export function GuildJobsTab({
   return (
     <div>
       {/* Section Tabs */}
-      <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-4 mb-6 border-b border-border pb-4">
         <button
           onClick={() => setActiveSection("positions")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
             activeSection === "positions"
-              ? "bg-orange-500/15 text-amber-200 border border-orange-400/30"
-              : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              ? "bg-primary/10 text-primary border border-primary/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
           <Briefcase className="w-5 h-5" />
@@ -147,14 +122,14 @@ export function GuildJobsTab({
           onClick={() => setActiveSection("applications")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
             activeSection === "applications"
-              ? "bg-orange-500/15 text-amber-200 border border-orange-400/30"
-              : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+              ? "bg-primary/10 text-primary border border-primary/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
           <Users className="w-5 h-5" />
           Job Applications ({applications.length})
           {applications.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-orange-500/20 text-amber-200 border border-orange-400/40 text-xs font-semibold rounded-full">
+            <span className="ml-1 px-2 py-0.5 bg-primary/10 text-primary border border-primary/40 text-xs font-semibold rounded-full">
               {applications.length}
             </span>
           )}
@@ -166,10 +141,10 @@ export function GuildJobsTab({
         <div>
           {sortedJobs.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                <Briefcase className="w-8 h-8 text-slate-400" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 border border-border flex items-center justify-center">
+                <Briefcase className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="text-lg text-slate-300">
+              <p className="text-lg text-muted-foreground">
                 {displayJobsCount > 0
                   ? `${displayJobsCount} open positions are syncing.`
                   : `No open positions in ${guildName}`}
@@ -180,10 +155,10 @@ export function GuildJobsTab({
               {sortedJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="rounded-2xl p-5 border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_70px_rgba(0,0,0,0.6)] transition-all hover:-translate-y-0.5 hover:border-orange-400/40 cursor-pointer group"
+                  className="rounded-2xl p-5 border border-border bg-card shadow-sm dark:shadow-lg transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
                 >
                   {/* Job Title */}
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 group-hover:text-amber-200 transition-colors">
+                  <h3 className="text-lg font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
                     {job.title}
                   </h3>
 
@@ -201,15 +176,15 @@ export function GuildJobsTab({
                   {/* Job Details */}
                   <div className="space-y-2 mb-4">
                     {/* Location */}
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <MapPin className="w-4 h-4 flex-shrink-0 text-amber-200" />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 flex-shrink-0 text-primary" />
                       <span>{job.location}</span>
                     </div>
 
                     {/* Salary Range */}
                     {job.salary.min && job.salary.max && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <DollarSign className="w-4 h-4 flex-shrink-0 text-amber-200" />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <DollarSign className="w-4 h-4 flex-shrink-0 text-primary" />
                         <span>
                           {job.salary.currency} {(job.salary.min / 1000).toFixed(0)}k -{" "}
                           {(job.salary.max / 1000).toFixed(0)}k
@@ -218,9 +193,9 @@ export function GuildJobsTab({
                     )}
 
                     {/* Applicant Count */}
-                    {job.applicants > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <Users className="w-4 h-4 flex-shrink-0 text-amber-200" />
+                    {(job.applicants ?? 0) > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="w-4 h-4 flex-shrink-0 text-primary" />
                         <span>
                           {job.applicants} {job.applicants === 1 ? "applicant" : "applicants"}
                         </span>
@@ -229,9 +204,9 @@ export function GuildJobsTab({
                   </div>
 
                   {/* Posted Date */}
-                  <div className="pt-3 border-t border-white/10">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Clock className="w-3.5 h-3.5 flex-shrink-0 text-amber-200" />
+                  <div className="pt-3 border-t border-border">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5 flex-shrink-0 text-primary" />
                       <span>Posted {getRelativeTime(job.createdAt)}</span>
                     </div>
                   </div>
@@ -246,16 +221,16 @@ export function GuildJobsTab({
       {activeSection === "applications" && (
         <div>
           {applications.length === 0 ? (
-            <div className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-12 text-center overflow-hidden">
+            <div className="relative rounded-2xl border border-border bg-card p-12 text-center overflow-hidden">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)]" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-white/5 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-4">
-                  <Briefcase className="w-8 h-8 text-slate-400" />
+                <div className="w-16 h-16 bg-muted/50 rounded-full border border-border flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   No Applications Yet
                 </h3>
-                <p className="text-sm text-slate-400 max-w-md mx-auto">
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   There are no job applications to review at the moment. Check back
                   later when candidates apply for positions in your guild.
                 </p>
@@ -266,7 +241,7 @@ export function GuildJobsTab({
               {applications.map((application) => (
                 <div
                   key={application.id}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_24px_70px_rgba(0,0,0,0.6)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   {/* Glassmorphism background layers */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_55%)] opacity-60" />
@@ -277,30 +252,30 @@ export function GuildJobsTab({
                     {/* Header: Job title + Match score */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0 pr-4">
-                        <h4 className="text-lg font-semibold text-slate-100 mb-1.5 group-hover:text-amber-200 transition-colors">
+                        <h4 className="text-lg font-semibold text-foreground mb-1.5 group-hover:text-primary transition-colors">
                           {application.jobTitle}
                         </h4>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-white/10 flex items-center justify-center">
-                            <span className="text-xs font-bold text-amber-200">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-border flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">
                               {application.candidateName.charAt(0)}
                             </span>
                           </div>
-                          <span className="text-sm text-slate-300 font-medium">
+                          <span className="text-sm text-foreground font-medium">
                             {application.candidateName}
                           </span>
-                          <span className="text-slate-600">·</span>
-                          <span className="text-sm text-slate-500 truncate">
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-sm text-muted-foreground truncate">
                             {application.candidateEmail}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
-                          <span className="text-slate-500 flex items-center gap-1.5">
+                          <span className="text-muted-foreground flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
                             {new Date(application.appliedAt).toLocaleDateString()}
                           </span>
                           {!application.reviewedByRecruiter && (
-                            <span className="px-2.5 py-1 bg-orange-500/15 text-amber-200 rounded-full border border-orange-400/25 text-[11px] font-medium">
+                            <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full border border-primary/25 text-[11px] font-medium">
                               Awaiting Recruiter Review
                             </span>
                           )}
@@ -309,12 +284,12 @@ export function GuildJobsTab({
 
                       {/* Match Score Circle */}
                       <div className="flex-shrink-0">
-                        <div className={`relative w-[72px] h-[72px] rounded-2xl bg-gradient-to-br ${getMatchScoreColor(application.matchScore)} p-[2px] shadow-lg ${getMatchScoreGlow(application.matchScore)}`}>
-                          <div className="w-full h-full rounded-[14px] bg-[#0b0f1b]/90 flex flex-col items-center justify-center backdrop-blur-sm">
+                        <div className={`relative w-[72px] h-[72px] rounded-2xl bg-gradient-to-br ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-lg ${getMatchScoreGlow(application.matchScore ?? 0)}`}>
+                          <div className="w-full h-full rounded-[14px] bg-card flex flex-col items-center justify-center backdrop-blur-sm">
                             <span className="text-2xl font-bold text-white leading-none">
                               {application.matchScore}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium mt-0.5">
+                            <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
                               MATCH
                             </span>
                           </div>
@@ -323,19 +298,19 @@ export function GuildJobsTab({
                     </div>
 
                     {/* Application summary */}
-                    <p className="text-sm text-slate-400 leading-relaxed mb-5 line-clamp-2">
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-5 line-clamp-2">
                       {application.applicationSummary}
                     </p>
 
                     {/* Footer: endorsements + actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-white/[0.06]">
+                    <div className="flex items-center justify-between pt-4 border-t border-border">
                       <div className="flex items-center gap-2 text-sm">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
                           <Award className="w-3.5 h-3.5 text-amber-300" />
-                          <span className="text-slate-300 font-medium">
+                          <span className="text-foreground font-medium">
                             {application.endorsementCount}
                           </span>
-                          <span className="text-slate-500">
+                          <span className="text-muted-foreground">
                             endorsement{application.endorsementCount !== 1 ? "s" : ""}
                           </span>
                         </div>
@@ -343,7 +318,7 @@ export function GuildJobsTab({
 
                       <button
                         onClick={() => handleEndorseClick(application.id)}
-                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-400/30 text-amber-200 font-medium text-sm transition-all hover:border-amber-400/50 hover:from-amber-500/25 hover:via-orange-500/20 hover:to-amber-500/25 hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98]"
+                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-primary/30 text-primary font-medium text-sm transition-all hover:border-primary/50 hover:from-amber-500/25 hover:via-orange-500/20 hover:to-amber-500/25 hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98]"
                       >
                         <Sparkles className="w-4 h-4" />
                         Endorse

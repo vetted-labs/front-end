@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Image from "next/image";
 import {
   ArrowLeft,
   Briefcase,
@@ -11,16 +10,11 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  User,
-  LogOut,
   Calendar,
   MapPin,
   DollarSign,
 } from "lucide-react";
-import { useDisconnect } from "wagmi";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { jobsApi } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
 
 interface JobPosting {
   id: string;
@@ -47,9 +41,6 @@ export default function JobAnalyticsPage() {
 
   const [job, setJob] = useState<JobPosting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [companyEmail, setCompanyEmail] = useState<string>("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     // Check authentication
@@ -58,17 +49,14 @@ export default function JobAnalyticsPage() {
       router.push("/auth/login?type=company");
       return;
     }
-    const email = localStorage.getItem("companyEmail");
-    if (email) setCompanyEmail(email);
-
     fetchJobDetails();
   }, [jobId, router]);
 
   const fetchJobDetails = async () => {
     setIsLoading(true);
     try {
-      const data = await jobsApi.getById(jobId);
-      setJob(data as JobPosting);
+      const result = await jobsApi.getById(jobId);
+      setJob(result as JobPosting);
     } catch (error) {
       console.error("Error fetching job details:", error);
     } finally {
@@ -76,15 +64,9 @@ export default function JobAnalyticsPage() {
     }
   };
 
-  const handleLogout = () => {
-    clearAllAuthState();
-    disconnect();
-    router.push("/?section=employers");
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading job analytics...</p>
       </div>
     );
@@ -92,7 +74,7 @@ export default function JobAnalyticsPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <p className="text-muted-foreground">Job not found</p>
       </div>
     );
@@ -109,95 +91,7 @@ export default function JobAnalyticsPage() {
   const conversionRate = job.views > 0 ? ((job.applicants / job.views) * 100).toFixed(1) : "0.0";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push("/")}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-                <span className="text-xl font-bold text-foreground">Vetted</span>
-              </button>
-              <nav className="hidden md:flex items-center space-x-6 ml-8">
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/candidates")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Candidates
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/analytics")}
-                  className="text-foreground font-medium hover:text-primary transition-colors"
-                >
-                  Analytics
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/settings")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Settings
-                </button>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">
-                    {companyEmail || "Company"}
-                  </span>
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">
-                        {companyEmail}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Company Account</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        router.push("/company/profile");
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      Company Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

@@ -5,7 +5,7 @@ import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide
 interface LeaderboardExpert {
   id: string;
   name: string;
-  role: "recruit" | "craftsman" | "master";
+  role: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
   reputation: number;
   totalReviews: number;
   accuracy: number;

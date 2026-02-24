@@ -1,11 +1,8 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft,
-  Shield,
   Star,
   TrendingUp,
   Award,
@@ -17,18 +14,15 @@ import {
   FileText,
   Briefcase,
   Users,
-  TrendingDown,
   Activity,
   Calendar,
   Zap,
   Trophy,
   User,
-  LogOut,
 } from "lucide-react";
 import { LoadingState, Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
-import { useDisconnect } from "wagmi";
-import { clearAllAuthState } from "@/lib/auth";
+import { useAuthContext } from "@/hooks/useAuthContext";
 
 interface PersonalStats {
   memberId: string;
@@ -96,13 +90,9 @@ export default function MyGuildStatsPage() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [candidateEmail, setCandidateEmail] = useState("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const { disconnect } = useDisconnect();
+  const auth = useAuthContext();
 
   useEffect(() => {
-    const email = localStorage.getItem("candidateEmail");
-    if (email) setCandidateEmail(email);
     fetchMyStats();
   }, [guildId]);
 
@@ -111,7 +101,7 @@ export default function MyGuildStatsPage() {
     setError(null);
 
     try {
-      const candidateId = localStorage.getItem("candidateId");
+      const candidateId = auth.userId;
       if (!candidateId) {
         router.push(`/auth/login?redirect=/guilds/${guildId}/my-stats`);
         return;
@@ -120,11 +110,10 @@ export default function MyGuildStatsPage() {
       // Fetch personal stats
       const [statsData, averagesData, activityData]: any[] = await Promise.all([
         guildsApi.checkMembership(candidateId, guildId),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/guilds/${guildId}/averages`).then(r => r.json()),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/guilds/${guildId}/members/${candidateId}/activity`).then(r => r.json()),
+        guildsApi.getAverages(guildId),
+        guildsApi.getMemberActivity(guildId, candidateId),
       ]);
 
-      console.log("[My Stats] Personal stats:", statsData);
       setStats(statsData);
       setGuildAverages(averagesData);
       setRecentActivity(activityData.activities || []);
@@ -134,12 +123,6 @@ export default function MyGuildStatsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    clearAllAuthState();
-    disconnect();
-    router.push("/?section=guilds");
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -180,7 +163,7 @@ export default function MyGuildStatsPage() {
 
   if (error || !stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <Alert variant="error">{error || "Could not load statistics"}</Alert>
       </div>
     );
@@ -189,75 +172,7 @@ export default function MyGuildStatsPage() {
   const isExpert = ["recruit", "craftsman", "master"].includes(stats.role);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-40 backdrop-blur-sm bg-card/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push(`/guilds/${guildId}`)}
-                className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Guild
-              </button>
-              <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-              <span className="text-xl font-bold text-foreground">Vetted</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">
-                    {candidateEmail}
-                  </span>
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">{candidateEmail}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {isExpert ? "Expert" : "Candidate"} Account
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => router.push("/candidate/profile")}
-                      className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      My Profile
-                    </button>
-                    <button
-                      onClick={() => router.push(`/guilds/${guildId}`)}
-                      className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Guild Dashboard
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-full">
       {/* Hero Section - Personal Overview */}
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
@@ -71,9 +72,9 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
             </div>
 
             {isOwner && (
-              <Button variant="outline" asChild>
-                <Link href="/candidate/profile">Edit Profile</Link>
-              </Button>
+              <Link href="/candidate/profile" className={cn(buttonVariants({ variant: "outline" }))}>
+                Edit Profile
+              </Link>
             )}
           </div>
 
@@ -131,31 +132,25 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
         <CardContent>
           <div className="flex flex-wrap gap-3">
             {profile.linkedIn && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="w-4 h-4 mr-2" />
-                  LinkedIn
-                  <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </Button>
+              <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                <Linkedin className="w-4 h-4 mr-2" />
+                LinkedIn
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
             )}
             {profile.github && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={profile.github} target="_blank" rel="noopener noreferrer">
-                  <Github className="w-4 h-4 mr-2" />
-                  GitHub
-                  <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </Button>
+              <a href={profile.github} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                <Github className="w-4 h-4 mr-2" />
+                GitHub
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
             )}
             {profile.resumeUrl && (
-              <Button variant="default" size="sm" asChild>
-                <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-                  <FileText className="w-4 h-4 mr-2" />
-                  View Resume
-                  <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </Button>
+              <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
+                <FileText className="w-4 h-4 mr-2" />
+                View Resume
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
             )}
           </div>
 

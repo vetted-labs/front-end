@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { HelpCircle } from "lucide-react";
 
 interface InfoTooltipProps {
@@ -10,42 +11,63 @@ interface InfoTooltipProps {
 
 export function InfoTooltip({ content, side = "top", className = "" }: InfoTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const positionClasses = {
-    top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-    bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-    left: "right-full top-1/2 -translate-y-1/2 mr-2",
-    right: "left-full top-1/2 -translate-y-1/2 ml-2",
-  };
-
-  const arrowClasses = {
-    top: "top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent",
-    bottom: "bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent",
-    left: "left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent",
-    right: "right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent",
-  };
-
-  // Return null if no content provided
   if (!content) {
     return null;
   }
 
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    let top = 0;
+    let left = 0;
+
+    switch (side) {
+      case "top":
+        top = rect.top + scrollY;
+        left = rect.left + scrollX + rect.width / 2;
+        break;
+      case "bottom":
+        top = rect.bottom + scrollY;
+        left = rect.left + scrollX + rect.width / 2;
+        break;
+      case "left":
+        top = rect.top + scrollY + rect.height / 2;
+        left = rect.left + scrollX;
+        break;
+      case "right":
+        top = rect.top + scrollY + rect.height / 2;
+        left = rect.right + scrollX;
+        break;
+    }
+
+    setCoords({ top, left });
+  }, [side]);
+
+  const handleShow = () => {
+    updatePosition();
+    setIsVisible(true);
+  };
+
   // Detect if content has markdown-style formatting
   const hasFormatting = content.includes('**') || content.includes('\n\n');
 
-  // Parse formatted content into sections
   const renderContent = () => {
     if (!hasFormatting) {
       return <>{content}</>;
     }
 
-    // Split by double newlines to get sections
     const sections = content.split('\n\n');
 
     return (
       <>
         {sections.map((section, index) => {
-          // Check if this section has bold formatting
           if (section.includes('**')) {
             const boldMatch = section.match(/\*\*(.*?)\*\*/);
             if (boldMatch) {
@@ -61,7 +83,6 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
             }
           }
 
-          // Regular section
           return (
             <div key={index} className={index > 0 ? 'mt-2' : ''}>
               {section}
@@ -72,32 +93,49 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
     );
   };
 
+  const positionStyle: React.CSSProperties = (() => {
+    switch (side) {
+      case "top":
+        return { bottom: `calc(100vh - ${coords.top}px + 8px)`, left: coords.left, transform: "translateX(-50%)" };
+      case "bottom":
+        return { top: coords.top + 8, left: coords.left, transform: "translateX(-50%)" };
+      case "left":
+        return { top: coords.top, right: `calc(100vw - ${coords.left}px + 8px)`, transform: "translateY(-50%)" };
+      case "right":
+        return { top: coords.top, left: coords.left + 8, transform: "translateY(-50%)" };
+    }
+  })();
+
   return (
-    <div className={`relative inline-block ${className}`}>
+    <>
       <button
+        ref={buttonRef}
         type="button"
-        onMouseEnter={() => setIsVisible(true)}
+        onMouseEnter={handleShow}
         onMouseLeave={() => setIsVisible(false)}
-        onFocus={() => setIsVisible(true)}
+        onFocus={handleShow}
         onBlur={() => setIsVisible(false)}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted/60 hover:bg-muted transition-colors border border-border"
+        className={`inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted/60 hover:bg-muted transition-colors border border-border ${className}`}
         aria-label="More information"
       >
         <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
       </button>
 
-      {isVisible && (
-        <div
-          className={`absolute z-50 ${positionClasses[side]} animate-in fade-in-0 zoom-in-95`}
-          role="tooltip"
-        >
-          <div className="relative">
-            <div className="bg-card text-foreground border-2 border-border rounded-xl px-5 py-4 shadow-2xl w-[90vw] max-w-[520px] text-sm leading-relaxed">
+      {isVisible && typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={tooltipRef}
+            role="tooltip"
+            className="fixed z-[9999] animate-in fade-in-0 zoom-in-95 pointer-events-none"
+            style={positionStyle}
+          >
+            <div className="bg-popover text-popover-foreground border border-border rounded-xl px-4 py-3 shadow-2xl w-[min(90vw,420px)] text-sm leading-relaxed dark:bg-popover/95 dark:backdrop-blur-xl dark:border-white/[0.1]">
               {renderContent()}
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </div>,
+          document.body
+        )
+      }
+    </>
   );
 }

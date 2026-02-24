@@ -23,7 +23,6 @@ import {
   Award,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { EndorsementRewardCard } from "@/components/endorsements/EndorsementRewardCard";
 
 interface RewardSummary {
@@ -70,24 +69,21 @@ export default function EndorsementRewardsPage() {
       setLoading(true);
 
       // Get expert ID from wallet
-      const profileResponse: any = await expertApi.getExpertByWallet(address as string);
-      if (!profileResponse.success) return;
+      const profileResponse: any = await expertApi.getProfile(address as string);
+      if (!profileResponse) return;
 
-      const expertId = profileResponse.data.id;
-      const response: any = await endorsementAccountabilityApi.getExpertRewards(expertId);
+      const expertId = profileResponse.id;
+      const data: any = await endorsementAccountabilityApi.getExpertRewards(expertId);
 
-      if (response.success) {
-        const data = response.data;
-        setRewards(data.rewards || []);
-        setSummary(
-          data.summary || {
-            totalRewards: 0,
-            immediatePaid: 0,
-            lockedPending: 0,
-            forfeited: 0,
-          }
-        );
-      }
+      setRewards(data.rewards || []);
+      setSummary(
+        data.summary || {
+          totalRewards: 0,
+          immediatePaid: 0,
+          lockedPending: 0,
+          forfeited: 0,
+        }
+      );
     } catch (error: any) {
       console.error("Error loading rewards:", error);
       toast.error("Failed to load rewards data");
@@ -124,8 +120,7 @@ export default function EndorsementRewardsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
+    <div className="min-h-full">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">

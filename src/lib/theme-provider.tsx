@@ -34,19 +34,16 @@ export function ThemeProvider({
 
   React.useEffect(() => {
     const root = window.document.documentElement;
+    const resolvedTheme = theme === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme;
 
-    root.classList.remove("light", "dark");
+    root.classList.toggle("dark", resolvedTheme === "dark");
+    root.classList.toggle("light", resolvedTheme === "light");
+    root.style.colorScheme = resolvedTheme;
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
+    // Clear the inline backgroundColor set by the blocking script (CSS handles it now)
+    root.style.removeProperty('background-color');
   }, [theme]);
 
   const value = {

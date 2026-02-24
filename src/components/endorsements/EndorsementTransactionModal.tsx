@@ -153,7 +153,7 @@ export function EndorsementTransactionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border border-white/10 bg-gradient-to-b from-[#151824]/95 via-[#101420]/98 to-[#0b0f1b]/98 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_30px_110px_-30px_rgba(251,146,60,0.25),0_50px_100px_-40px_rgba(0,0,0,0.8)]" onInteractOutside={(e) => {
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border border-border bg-gradient-to-b from-background/95 via-background/98 to-background/98 backdrop-blur-xl shadow-sm dark:shadow-lg" onInteractOutside={(e) => {
         // Prevent closing during transactions
         if (txStep === 'approving' || txStep === 'bidding') {
           e.preventDefault();
@@ -165,8 +165,8 @@ export function EndorsementTransactionModal({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)]" />
 
         <div className="relative z-10 p-4 sm:p-6">
-        <DialogHeader className="pb-6 border-b border-white/10">
-          <DialogTitle className="text-2xl font-bold font-display text-slate-100">
+        <DialogHeader className="pb-6 border-b border-border">
+          <DialogTitle className="text-2xl font-bold font-display text-foreground">
             {txStep === 'success'
               ? 'Endorsement Successful!'
               : application?.current_bid
@@ -186,7 +186,7 @@ export function EndorsementTransactionModal({
                     {idx > 0 && (
                       <div
                         className={`flex-1 h-0.5 ${
-                          idx <= currentStepIndex ? 'bg-amber-400' : 'bg-white/10'
+                          idx <= currentStepIndex ? 'bg-amber-400' : 'bg-border'
                         }`}
                       />
                     )}
@@ -194,7 +194,7 @@ export function EndorsementTransactionModal({
                       className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 mx-2 ${
                         idx <= currentStepIndex
                           ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-slate-900 shadow-lg shadow-orange-500/30 scale-110'
-                          : 'bg-white/5 border border-white/10 text-slate-500'
+                          : 'bg-muted/50 border border-border text-muted-foreground'
                       }`}
                     >
                       {idx < currentStepIndex ? (
@@ -206,12 +206,12 @@ export function EndorsementTransactionModal({
                     {idx < progressSteps.length - 1 && (
                       <div
                         className={`flex-1 h-0.5 ${
-                          idx < currentStepIndex ? 'bg-amber-400' : 'bg-white/10'
+                          idx < currentStepIndex ? 'bg-amber-400' : 'bg-border'
                         }`}
                       />
                     )}
                   </div>
-                  <p className={`text-xs mt-2 font-medium ${idx <= currentStepIndex ? 'text-amber-200' : 'text-slate-500'}`}>
+                  <p className={`text-xs mt-2 font-medium ${idx <= currentStepIndex ? 'text-primary' : 'text-muted-foreground'}`}>
                     {stepName}
                   </p>
                 </div>
@@ -221,25 +221,25 @@ export function EndorsementTransactionModal({
         )}
 
         {/* Candidate Info Card (shown in all steps) */}
-        <Card className="border border-white/10 bg-white/[0.03] backdrop-blur-sm shadow-lg mb-6">
+        <Card className="border border-border bg-muted/50 backdrop-blur-sm shadow-sm dark:shadow-lg mb-6">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Avatar className="w-16 h-16 border-2 border-orange-400/30 shadow-lg shadow-orange-500/10">
                 {application.candidate_profile_picture_url && (
                   <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
                 )}
-                <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-200 font-bold text-lg">
+                <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-primary font-bold text-lg">
                   {candidateInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-lg truncate text-slate-100">{application.candidate_name}</h4>
-                <p className="text-sm text-slate-400 truncate">
+                <h4 className="font-bold text-lg truncate text-foreground">{application.candidate_name}</h4>
+                <p className="text-sm text-muted-foreground truncate">
                   {application.job_title} at {application.company_name}
                 </p>
               </div>
               {application.guild_score && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-200 border-amber-400/30 font-semibold">
+                <Badge variant="outline" className="bg-amber-500/10 text-primary border-amber-400/30 font-semibold">
                   <Award className="w-4 h-4 mr-1" />
                   {(parseFloat(application.guild_score.toString()) * 10).toFixed(0)}/100
                 </Badge>
@@ -254,7 +254,7 @@ export function EndorsementTransactionModal({
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-300 mt-0.5" />
               <div>
-                <p className="font-semibold text-amber-200">
+                <p className="font-semibold text-primary">
                   You already endorsed this candidate
                 </p>
                 <p className="text-sm text-amber-300/80 mt-1">
@@ -273,12 +273,12 @@ export function EndorsementTransactionModal({
           <div className="space-y-6">
             {/* Balance Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-orange-400/30 transition-all duration-300">
+              <div className="rounded-xl border border-border bg-muted/50 p-5 hover:border-orange-400/30 transition-all duration-300">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Your Balance</p>
-                    <p className="text-3xl font-bold text-amber-200 mb-1">{parseFloat(userBalance).toFixed(2)}</p>
-                    <p className="text-sm font-semibold text-slate-500">VETD</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Your Balance</p>
+                    <p className="text-3xl font-bold text-primary mb-1">{parseFloat(userBalance).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-muted-foreground">VETD</p>
                   </div>
                   <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-400/20">
                     <Wallet className="w-6 h-6 text-amber-300" />
@@ -286,12 +286,12 @@ export function EndorsementTransactionModal({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-sky-400/30 transition-all duration-300">
+              <div className="rounded-xl border border-border bg-muted/50 p-5 hover:border-sky-400/30 transition-all duration-300">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Staked Amount</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Staked Amount</p>
                     <p className="text-3xl font-bold text-sky-300 mb-1">{parseFloat(userStake).toFixed(2)}</p>
-                    <p className="text-sm font-semibold text-slate-500">VETD</p>
+                    <p className="text-sm font-semibold text-muted-foreground">VETD</p>
                   </div>
                   <div className="p-3 bg-sky-500/10 rounded-xl border border-sky-400/20">
                     <TrendingUp className="w-6 h-6 text-sky-300" />
@@ -344,7 +344,7 @@ export function EndorsementTransactionModal({
             {/* Bid Input */}
             <div className="space-y-4">
               <div className="space-y-3">
-                <Label htmlFor="bidAmount" className="text-base font-bold text-slate-200">
+                <Label htmlFor="bidAmount" className="text-base font-bold text-foreground">
                   Enter Your Bid Amount
                 </Label>
                 <div className="relative">
@@ -364,44 +364,44 @@ export function EndorsementTransactionModal({
                       min={minimumBid}
                       step="0.1"
                       disabled={!!application?.current_bid}
-                    className="text-2xl font-bold h-16 pr-20 pl-6 border border-white/10 bg-white/[0.03] text-slate-100 placeholder:text-slate-600 focus:border-orange-400/50 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="text-2xl font-bold h-16 pr-20 pl-6 border border-border bg-muted/50 text-foreground placeholder:text-muted-foreground focus:border-orange-400/50 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
                     VETD
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Minimum bid: {minimumBid} VETD
                 </p>
               </div>
 
               {/* Quick Amount Buttons */}
               <div>
-                <p className="text-sm font-medium text-slate-500 mb-3 uppercase tracking-wide">
+                <p className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">
                   Quick Select
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <button
                     onClick={() => handleQuickAmount(0.1, 'min')}
-                    className="h-12 text-xs font-semibold rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-orange-500/15 hover:text-amber-200 hover:border-orange-400/30 active:scale-95 transition-all duration-200"
+                    className="h-12 text-xs font-semibold rounded-lg border border-border bg-muted/50 text-foreground hover:bg-orange-500/15 hover:text-primary hover:border-orange-400/30 active:scale-95 transition-all duration-200"
                   >
                     Min +10%
                   </button>
                   <button
                     onClick={() => handleQuickAmount(0.5, 'min')}
-                    className="h-12 text-xs font-semibold rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-orange-500/15 hover:text-amber-200 hover:border-orange-400/30 active:scale-95 transition-all duration-200"
+                    className="h-12 text-xs font-semibold rounded-lg border border-border bg-muted/50 text-foreground hover:bg-orange-500/15 hover:text-primary hover:border-orange-400/30 active:scale-95 transition-all duration-200"
                   >
                     Min +50%
                   </button>
                   <button
                     onClick={() => handleQuickAmount(0.25, 'balance')}
-                    className="h-12 text-xs font-semibold rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-orange-500/15 hover:text-amber-200 hover:border-orange-400/30 active:scale-95 transition-all duration-200"
+                    className="h-12 text-xs font-semibold rounded-lg border border-border bg-muted/50 text-foreground hover:bg-orange-500/15 hover:text-primary hover:border-orange-400/30 active:scale-95 transition-all duration-200"
                   >
                     25% Balance
                   </button>
                   <button
                     onClick={() => handleQuickAmount(0.5, 'balance')}
-                    className="h-12 text-xs font-semibold rounded-lg border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-orange-500/15 hover:text-amber-200 hover:border-orange-400/30 active:scale-95 transition-all duration-200"
+                    className="h-12 text-xs font-semibold rounded-lg border border-border bg-muted/50 text-foreground hover:bg-orange-500/15 hover:text-primary hover:border-orange-400/30 active:scale-95 transition-all duration-200"
                   >
                     50% Balance
                   </button>
@@ -416,14 +416,14 @@ export function EndorsementTransactionModal({
                       <Award className="w-7 h-7 text-amber-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-2">
+                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
                         Estimated Rank
                       </p>
-                      <p className="text-lg font-bold text-slate-200">
+                      <p className="text-lg font-bold text-foreground">
                         Your bid of{' '}
-                        <span className="text-amber-200">{parseFloat(bidAmount).toFixed(2)} VETD</span>{' '}
+                        <span className="text-primary">{parseFloat(bidAmount).toFixed(2)} VETD</span>{' '}
                         would rank{' '}
-                        <span className="text-2xl text-amber-300">#{estimatedRank()}</span>
+                        <span className="text-2xl text-primary">#{estimatedRank()}</span>
                       </p>
                     </div>
                   </div>
@@ -446,11 +446,11 @@ export function EndorsementTransactionModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 pt-6 border-t border-white/10">
+            <div className="flex gap-4 pt-6 border-t border-border">
               <Button
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 h-14 text-base font-semibold border border-white/10 text-slate-300 bg-transparent hover:bg-white/5 hover:scale-105 transition-all duration-200"
+                className="flex-1 h-14 text-base font-semibold border border-border text-foreground bg-transparent hover:bg-muted hover:scale-105 transition-all duration-200"
               >
                 Cancel
               </Button>
@@ -477,14 +477,14 @@ export function EndorsementTransactionModal({
                 <Wallet className="w-12 h-12 text-amber-300" />
               </div>
             </div>
-            <h3 className="text-3xl font-bold mb-4 text-slate-100">Approving Tokens...</h3>
-            <p className="text-lg text-slate-400 mb-6">
+            <h3 className="text-3xl font-bold mb-4 text-foreground">Approving Tokens...</h3>
+            <p className="text-lg text-muted-foreground mb-6">
               Please confirm the approval transaction in your wallet
             </p>
-            <div className="max-w-md mx-auto rounded-xl border border-white/10 bg-white/[0.03] p-6">
-              <p className="text-sm font-medium text-slate-300 mb-4">
-                <span className="text-slate-500">Step 1/2:</span> Approving{' '}
-                <span className="text-amber-200 font-bold">{bidAmount} VETD</span> tokens for endorsement contract
+            <div className="max-w-md mx-auto rounded-xl border border-border bg-muted/50 p-6">
+              <p className="text-sm font-medium text-foreground mb-4">
+                <span className="text-muted-foreground">Step 1/2:</span> Approving{' '}
+                <span className="text-primary font-bold">{bidAmount} VETD</span> tokens for endorsement contract
               </p>
               {approvalTxHash && (
                 <a
@@ -511,13 +511,13 @@ export function EndorsementTransactionModal({
                 <Zap className="w-12 h-12 text-sky-300" />
               </div>
             </div>
-            <h3 className="text-3xl font-bold mb-4 text-slate-100">Placing Endorsement...</h3>
-            <p className="text-lg text-slate-400 mb-6">
+            <h3 className="text-3xl font-bold mb-4 text-foreground">Placing Endorsement...</h3>
+            <p className="text-lg text-muted-foreground mb-6">
               Please confirm the endorsement transaction in your wallet
             </p>
-            <div className="max-w-md mx-auto rounded-xl border border-white/10 bg-white/[0.03] p-6">
-              <p className="text-sm font-medium text-slate-300 mb-4">
-                <span className="text-slate-500">Step 2/2:</span> Placing endorsement bid of{' '}
+            <div className="max-w-md mx-auto rounded-xl border border-border bg-muted/50 p-6">
+              <p className="text-sm font-medium text-foreground mb-4">
+                <span className="text-muted-foreground">Step 2/2:</span> Placing endorsement bid of{' '}
                 <span className="text-sky-300 font-bold">{bidAmount} VETD</span>
               </p>
               {bidTxHash && (
@@ -545,22 +545,22 @@ export function EndorsementTransactionModal({
               </div>
             </div>
 
-            <h3 className="text-4xl font-bold mb-3 text-amber-200">
+            <h3 className="text-4xl font-bold mb-3 text-primary">
               Endorsement Successful!
             </h3>
-            <p className="text-lg text-slate-400 mb-10">
+            <p className="text-lg text-muted-foreground mb-10">
               Your endorsement has been placed. You'll earn rewards if this candidate is hired and you're in the top 3 endorsers.
             </p>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 mb-8 shadow-xl">
+            <div className="rounded-2xl border border-border bg-muted/50 backdrop-blur-sm p-8 mb-8 shadow-sm dark:shadow-lg">
               <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
-                  <span className="text-sm font-medium text-slate-400">Bid Amount</span>
-                  <span className="text-xl font-bold text-amber-200">{bidAmount} VETD</span>
+                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border">
+                  <span className="text-sm font-medium text-muted-foreground">Bid Amount</span>
+                  <span className="text-xl font-bold text-primary">{bidAmount} VETD</span>
                 </div>
                 {estimatedRank() && (
-                  <div className="flex justify-between items-center p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
-                    <span className="text-sm font-medium text-slate-400">Estimated Rank</span>
+                  <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border">
+                    <span className="text-sm font-medium text-muted-foreground">Estimated Rank</span>
                     <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-lg px-4 py-1 font-bold">
                       #{estimatedRank()}
                     </Badge>
@@ -569,12 +569,12 @@ export function EndorsementTransactionModal({
 
                 {/* Transaction Links */}
                 {(approvalTxHash || bidTxHash) && (
-                  <div className="pt-4 border-t border-white/[0.06]">
-                    <p className="text-sm font-medium text-slate-400 mb-3">Transaction Details</p>
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm font-medium text-muted-foreground mb-3">Transaction Details</p>
                     <div className="space-y-2 text-sm">
                       {approvalTxHash && (
-                        <div className="flex items-center justify-between p-2 bg-white/[0.03] rounded border border-white/[0.06]">
-                          <span className="text-slate-500">Approval:</span>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded border border-border">
+                          <span className="text-muted-foreground">Approval:</span>
                           <a
                             href={`https://sepolia.etherscan.io/tx/${approvalTxHash}`}
                             target="_blank"
@@ -587,8 +587,8 @@ export function EndorsementTransactionModal({
                         </div>
                       )}
                       {bidTxHash && (
-                        <div className="flex items-center justify-between p-2 bg-white/[0.03] rounded border border-white/[0.06]">
-                          <span className="text-slate-500">Endorsement:</span>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded border border-border">
+                          <span className="text-muted-foreground">Endorsement:</span>
                           <a
                             href={`https://sepolia.etherscan.io/tx/${bidTxHash}`}
                             target="_blank"
@@ -604,10 +604,10 @@ export function EndorsementTransactionModal({
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-white/[0.06]">
+                <div className="pt-4 border-t border-border">
                   <div className="flex items-center gap-2 justify-center text-sm">
                     <Award className="w-4 h-4 text-amber-300" />
-                    <p className="text-slate-400 font-medium">
+                    <p className="text-muted-foreground font-medium">
                       Top 3 endorsers earn rewards when candidate is hired!
                     </p>
                   </div>
@@ -638,7 +638,7 @@ export function EndorsementTransactionModal({
               Transaction Failed
             </h3>
 
-            <Card className="max-w-md mx-auto mb-8 border border-red-500/30 bg-red-500/10 shadow-lg">
+            <Card className="max-w-md mx-auto mb-8 border border-red-500/30 bg-red-500/10 shadow-sm dark:shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 mb-4">
                   <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -650,11 +650,11 @@ export function EndorsementTransactionModal({
                 {/* Transaction Links if available */}
                 {(approvalTxHash || bidTxHash) && (
                   <div className="pt-4 border-t border-red-500/20">
-                    <p className="text-sm font-medium text-slate-400 mb-3">Transaction Details</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-3">Transaction Details</p>
                     <div className="space-y-2 text-sm">
                       {approvalTxHash && (
-                        <div className="flex items-center justify-between p-2 bg-white/5 rounded">
-                          <span className="text-slate-400">Approval:</span>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Approval:</span>
                           <a
                             href={`https://sepolia.etherscan.io/tx/${approvalTxHash}`}
                             target="_blank"
@@ -667,8 +667,8 @@ export function EndorsementTransactionModal({
                         </div>
                       )}
                       {bidTxHash && (
-                        <div className="flex items-center justify-between p-2 bg-white/5 rounded">
-                          <span className="text-slate-400">Endorsement:</span>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                          <span className="text-muted-foreground">Endorsement:</span>
                           <a
                             href={`https://sepolia.etherscan.io/tx/${bidTxHash}`}
                             target="_blank"
@@ -690,7 +690,7 @@ export function EndorsementTransactionModal({
               <Button
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 h-14 text-base font-semibold border border-white/10 text-slate-300 hover:bg-white/5 hover:scale-105 transition-all duration-200"
+                className="flex-1 h-14 text-base font-semibold border border-border text-foreground hover:bg-muted hover:scale-105 transition-all duration-200"
               >
                 Cancel
               </Button>

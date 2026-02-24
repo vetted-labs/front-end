@@ -32,9 +32,16 @@ export function JobBasicInfo({
 
       {/* Job Title */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1">
-          Job Title *
-        </label>
+        <div className="flex justify-between items-center mb-1">
+          <label className="block text-sm font-medium text-foreground">
+            Job Title *
+          </label>
+          <span
+            className={`text-xs ${formData.title.trim().length < 3 ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            {formData.title.trim().length}/3 min
+          </span>
+        </div>
         <div className="relative">
           <Briefcase className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
           <input

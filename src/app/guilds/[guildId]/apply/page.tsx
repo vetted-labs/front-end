@@ -320,7 +320,7 @@ export default function GuildApplicationPage() {
 
   if (error && !template) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen min-h-full flex items-center justify-center">
         <Alert variant="error">{error}</Alert>
       </div>
     );
@@ -328,7 +328,7 @@ export default function GuildApplicationPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen min-h-full flex items-center justify-center">
         <div className="text-center max-w-md">
           <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-foreground mb-4">
@@ -354,7 +354,7 @@ export default function GuildApplicationPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen min-h-full">
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

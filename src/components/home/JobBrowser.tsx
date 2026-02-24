@@ -4,47 +4,13 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Briefcase, Building2, MapPin } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
-
-interface Job {
-  id: string;
-  title: string;
-  department: string | null;
-  location: string;
-  locationType: "remote" | "onsite" | "hybrid";
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
-  salary: { min: number | null; max: number | null; currency: string };
-  guild: string;
-  description: string;
-  requirements: string[];
-  skills: string[];
-  experienceLevel?: string;
-  companyName?: string;
-  companyLogo?: string;
-  createdAt: string;
-  featured?: boolean;
-}
+import { getTimeAgo } from "@/lib/utils";
+import type { Job } from "@/types";
 
 interface JobBrowserProps {
   jobs: Job[];
   isLoadingJobs: boolean;
 }
-
-const getTimeAgo = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays === 0) return "Today";
-  if (diffInDays === 1) return "1d ago";
-  if (diffInDays < 7) return `${diffInDays}d ago`;
-  if (diffInDays < 30) {
-    const weeks = Math.floor(diffInDays / 7);
-    return `${weeks}w ago`;
-  }
-  const months = Math.floor(diffInDays / 30);
-  return `${months}mo ago`;
-};
 
 export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
   const router = useRouter();
@@ -112,6 +78,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
       }
 
       if (selectedLocationTypes.length > 0) {
+        if (!job.locationType) return false;
         const jobLocationType =
           job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1);
         if (!selectedLocationTypes.includes(jobLocationType)) {

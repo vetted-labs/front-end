@@ -65,18 +65,18 @@ export function GuildMembershipApplicationsTab({
   return (
     <div className="space-y-4">
       {/* Sub-tab toggle */}
-      <div className="flex items-center gap-2 p-1 bg-white/[0.03] rounded-xl border border-white/10 w-fit">
+      <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-xl border border-border w-fit">
         <button
           onClick={() => setActiveSubTab("expert")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
             activeSubTab === "expert"
-              ? "bg-white/10 text-amber-200 border border-white/10"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-muted text-primary border border-border"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Expert Reviews
           {expertCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
               {expertCount}
             </span>
           )}
@@ -85,13 +85,13 @@ export function GuildMembershipApplicationsTab({
           onClick={() => setActiveSubTab("candidate")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
             activeSubTab === "candidate"
-              ? "bg-white/10 text-amber-200 border border-white/10"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-muted text-primary border border-border"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Candidate Reviews
           {candidateCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
               {candidateCount}
             </span>
           )}
@@ -103,30 +103,30 @@ export function GuildMembershipApplicationsTab({
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-1">
+              <h3 className="text-lg font-semibold text-foreground mb-1">
                 Expert Proposals to Join Guild
               </h3>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Review proposals from experts wanting to join {guildName}. 1+ approval
                 needed for auto-acceptance as &quot;Recruit&quot; member.
               </p>
             </div>
             {expertCount > 0 && (
-              <span className="shrink-0 px-3 py-1 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                 {expertCount} pending
               </span>
             )}
           </div>
 
           {expertCount === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
-              <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserPlus className="w-8 h-8 text-slate-500" />
+            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-200 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 No Pending Expert Applications
               </h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto">
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 There are no pending expert membership applications for {guildName}.
               </p>
             </div>
@@ -135,28 +135,28 @@ export function GuildMembershipApplicationsTab({
               {(guildApplications || []).map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1.5">
-                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                        <h4 className="font-semibold text-foreground text-base truncate">
                           {application.fullName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                           {application.expertiseLevel}
                         </span>
                       </div>
 
-                      <p className="text-sm text-slate-400 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         {application.currentTitle} at {application.currentCompany}
                       </p>
 
                       <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
-                        <span className="text-slate-400">
+                        <span className="text-muted-foreground">
                           {application.yearsOfExperience}y experience
                         </span>
-                        <span className="flex items-center text-slate-400">
+                        <span className="flex items-center text-muted-foreground">
                           <Clock className="w-3.5 h-3.5 mr-1" />
                           {new Date(application.appliedAt).toLocaleDateString()}
                         </span>
@@ -165,7 +165,7 @@ export function GuildMembershipApplicationsTab({
                           href={application.linkedinUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                          className="flex items-center text-primary/80 hover:text-primary transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           LinkedIn
@@ -176,7 +176,7 @@ export function GuildMembershipApplicationsTab({
                             href={application.portfolioUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                            className="flex items-center text-primary/80 hover:text-primary transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             Portfolio
@@ -188,7 +188,7 @@ export function GuildMembershipApplicationsTab({
                             href={application.resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-amber-300/80 hover:text-amber-200 transition-colors"
+                            className="flex items-center text-primary/80 hover:text-primary transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <FileText className="w-3 h-3 mr-1" />
@@ -203,13 +203,13 @@ export function GuildMembershipApplicationsTab({
                           {application.expertiseAreas.slice(0, 4).map((area, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 bg-white/5 text-slate-300 text-[11px] rounded-md border border-white/10"
+                              className="px-2 py-0.5 bg-muted/50 text-foreground text-[11px] rounded-md border border-border"
                             >
                               {area}
                             </span>
                           ))}
                           {application.expertiseAreas.length > 4 && (
-                            <span className="px-2 py-0.5 bg-white/5 text-slate-500 text-[11px] rounded-md border border-white/10">
+                            <span className="px-2 py-0.5 bg-muted/50 text-muted-foreground text-[11px] rounded-md border border-border">
                               +{application.expertiseAreas.length - 4} more
                             </span>
                           )}
@@ -227,7 +227,7 @@ export function GuildMembershipApplicationsTab({
                           <XCircle className="w-3.5 h-3.5 mr-1" />
                           <span className="font-semibold">{application.rejectionCount}</span>
                         </div>
-                        <span className="text-slate-500">
+                        <span className="text-muted-foreground">
                           ({application.reviewCount})
                         </span>
                       </div>
@@ -254,29 +254,29 @@ export function GuildMembershipApplicationsTab({
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-1">
+              <h3 className="text-lg font-semibold text-foreground mb-1">
                 Candidate Applications to Join Guild
               </h3>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Review applications from candidates wanting to join {guildName}.
               </p>
             </div>
             {candidateCount > 0 && (
-              <span className="shrink-0 px-3 py-1 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                 {candidateCount} pending
               </span>
             )}
           </div>
 
           {candidateCount === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
-              <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserPlus className="w-8 h-8 text-slate-500" />
+            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-200 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 No Pending Candidate Applications
               </h3>
-              <p className="text-sm text-slate-400 max-w-md mx-auto">
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
                 There are no pending candidate membership applications for {guildName}.
               </p>
             </div>
@@ -285,25 +285,25 @@ export function GuildMembershipApplicationsTab({
               {candidateApplications.map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1.5">
-                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                        <h4 className="font-semibold text-foreground text-base truncate">
                           {application.candidateName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                           {application.expertiseLevel}
                         </span>
                       </div>
 
-                      <p className="text-sm text-slate-400 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         {application.candidateEmail}
                       </p>
 
                       <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
-                        <span className="flex items-center text-slate-400">
+                        <span className="flex items-center text-muted-foreground">
                           <Clock className="w-3.5 h-3.5 mr-1" />
                           {new Date(application.submittedAt).toLocaleDateString()}
                         </span>
@@ -326,7 +326,7 @@ export function GuildMembershipApplicationsTab({
                           <XCircle className="w-3.5 h-3.5 mr-1" />
                           <span className="font-semibold">{application.rejectionCount}</span>
                         </div>
-                        <span className="text-slate-500">
+                        <span className="text-muted-foreground">
                           ({application.reviewCount})
                         </span>
                       </div>

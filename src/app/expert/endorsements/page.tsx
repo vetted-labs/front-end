@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
+import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,42 +12,35 @@ import {
 } from "@/components/ui/select";
 import { Sparkles, ShieldCheck, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Guild list with correct IDs from database
-const GUILDS = [
-  { id: "484305be-3acc-4135-acac-c0e572d5553f", name: "Design Guild" },
-  { id: "e5854418-f2ba-4150-b3fa-4f14013d4e65", name: "Engineering Guild" },
-  { id: "ea2b7374-9268-43ec-ada4-9231d63493c6", name: "Finance, Legal & Compliance Guild" },
-  { id: "2d5bac64-dffc-4d83-82d3-6dbaba46739b", name: "Marketing & Growth Guild" },
-  { id: "7f87b692-ce62-4016-a25a-d5636e6ba7a6", name: "Operations & Strategy Guild" },
-  { id: "306973a6-3776-412b-b464-d55548f613cf", name: "People, HR & Recruitment Guild" },
-  { id: "9f13bb4a-2760-4699-baf2-51a92cc17ba2", name: "Product Guild" },
-  { id: "09e92ec4-c2e1-428e-b77d-c91dff4d869e", name: "Sales & Success Guild" },
-];
+import { useGuilds } from "@/lib/hooks/useGuilds";
 
 export default function EndorsementsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const applicationIdParam = searchParams.get("applicationId");
   const guildIdParam = searchParams.get("guildId");
+  const { guilds: guildRecords } = useGuilds();
 
-  // Auto-select guild from URL param, or default to Engineering & Technology
-  const initialGuild = (guildIdParam && GUILDS.find(g => g.id === guildIdParam))
-    || GUILDS.find(g => g.name === "Engineering Guild")
-    || GUILDS[0];
+  const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string } | null>(null);
 
-  const [selectedGuild, setSelectedGuild] = useState(initialGuild);
-
-  // Update guild selection if URL params change
+  // Auto-select guild once data loads or URL params change
   useEffect(() => {
+    if (guildRecords.length === 0) return;
+
     if (guildIdParam) {
-      const guild = GUILDS.find(g => g.id === guildIdParam);
-      if (guild) setSelectedGuild(guild);
+      const match = guildRecords.find(g => g.id === guildIdParam);
+      if (match) { setSelectedGuild(match); return; }
     }
-  }, [guildIdParam]);
+
+    // Default to Engineering Guild, or first guild
+    if (!selectedGuild) {
+      const eng = guildRecords.find(g => g.name === "Engineering Guild");
+      setSelectedGuild(eng || guildRecords[0]);
+    }
+  }, [guildRecords, guildIdParam, selectedGuild]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
+    <div className="min-h-full">
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -68,7 +60,7 @@ export default function EndorsementsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = "/expert/endorsements/rewards"}
+                onClick={() => router.push("/expert/endorsements/rewards")}
                 className="mt-2"
               >
                 <Award className="w-4 h-4 mr-2" />
@@ -88,9 +80,9 @@ export default function EndorsementsPage() {
                   </Badge>
                 </div>
                 <Select
-                  value={selectedGuild.id}
+                  value={selectedGuild?.id ?? ""}
                   onValueChange={(value) => {
-                    const guild = GUILDS.find((g) => g.id === value);
+                    const guild = guildRecords.find((g) => g.id === value);
                     if (guild) setSelectedGuild(guild);
                   }}
                 >
@@ -98,7 +90,7 @@ export default function EndorsementsPage() {
                     <SelectValue placeholder="Select a guild" />
                   </SelectTrigger>
                   <SelectContent>
-                    {GUILDS.map((guild) => (
+                    {guildRecords.map((guild) => (
                       <SelectItem key={guild.id} value={guild.id}>
                         {guild.name}
                       </SelectItem>
@@ -113,11 +105,13 @@ export default function EndorsementsPage() {
           </div>
         </div>
 
-        <EndorsementMarketplace
-          guildId={selectedGuild.id}
-          guildName={selectedGuild.name}
-          initialApplicationId={applicationIdParam || undefined}
-        />
+        {selectedGuild && (
+          <EndorsementMarketplace
+            guildId={selectedGuild.id}
+            guildName={selectedGuild.name}
+            initialApplicationId={applicationIdParam || undefined}
+          />
+        )}
       </div>
     </div>
   );

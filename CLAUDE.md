@@ -1,180 +1,148 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Git Commits
 
-## General Guidelines
-
-**Git Commits:**
 - NEVER add "Co-Authored-By: Claude" or similar attribution to commit messages
-- Keep commit messages concise and follow conventional commit format
-- Focus on describing what changed and why
-
-## Engineering Principles
-
-| Principle | How We Apply It |
-|---|---|
-| **DRY** | Shared types in `src/types/`. One API client (`lib/api.ts`). One auth context. Reuse `useFetch`/`useApi` hooks — no raw `fetch` in components. |
-| **KISS** | Flat component directories. No wrapper components that just pass props through. Prefer Tailwind utilities over custom CSS. |
-| **SRP** | Hooks own data fetching + logic. Components own rendering. Page files (`page.tsx`) are thin routing shells only. |
-| **OCP** | New guild = add entry to `constants.ts` + helpers. New page = add route + component. Don't modify shared UI components for page-specific needs — extend via props or compose. |
-| **DIP** | Components consume `useAuthContext()`, not `localStorage` directly. Use `apiRequest()` from `lib/api.ts`, not raw `fetch`. Depend on hooks, not implementation details. |
-| **ISP** | Component props should be narrow — pass only what's needed, not entire objects. Split large interfaces into focused ones when only a subset is used. |
-| **YAGNI** | No abstraction until the third use. No global state library until local state proves insufficient. No caching layer until there's a measured problem. |
-| **SoC** | Data fetching in hooks (`lib/hooks/`). Presentation in components. Config in `config/`. Validation separate from form submission logic. |
-| **Fail Fast** | Type narrowing over `any`. Validate at system boundaries (API responses, user input). Prefer TypeScript's type system to catch errors at compile time. |
-| **SSOT** | Types defined once in `src/types/`. Constants in `src/config/constants.ts`. Auth state flows from `AuthContext` only. Environment config read in one place. |
-| **Composition > Inheritance** | Build complex UIs by composing small components via children/slots. Compose hooks for shared logic. No class hierarchies. |
-| **LoD** | Components receive data via props, not by reaching deep into context or global state. A child component shouldn't know where its parent fetched data from. |
-| **CoC** | Every page follows: `page.tsx` (shell) → container component (data + logic) → presentational sub-components (UI). Every API call goes through `lib/api.ts`. Errors shown via `Alert` component. |
-
-### Frontend-Specific
-
-| Principle | How We Apply It |
-|---|---|
-| **Colocation** | Keep related code close — a component's types, helpers, and sub-components should live nearby (same directory or adjacent file), not scattered across the tree. |
-| **Unidirectional Data Flow** | Props down, callbacks up. If prop drilling exceeds 2 levels, extract to a context. Never mutate props or reach upward. |
-| **Minimal Client Boundary** | Use `"use client"` only on components that need interactivity (hooks, event handlers, browser APIs). Keep data-fetching and static rendering on the server where possible. Push `"use client"` as far down the tree as you can. |
-| **Controlled Components** | Forms use controlled inputs with React state. No uncontrolled refs unless performance requires it (e.g., large lists). |
+- Use conventional commit format (`feat:`, `fix:`, `refactor:`, `chore:`, etc.)
+- Focus on the "why", not the "what"
 
 ## Project Overview
 
-**Vetted** is a decentralized hiring platform built on Next.js 15 (App Router) that connects companies with Web3 talent through a guild-based review system. The platform integrates Web3 wallet authentication using RainbowKit, Wagmi, and WalletConnect for decentralized identity management.
+**Vetted** is a decentralized hiring platform on Next.js 15 (App Router) + React 19. Companies post jobs, experts in guilds review candidates, and reputation is staked on-chain. Web3 wallet auth via RainbowKit + Wagmi.
 
-## Development Commands
+## Quick Reference
 
-### Running the Application
 ```bash
-npm run dev        # Start development server with Turbopack (http://localhost:3030)
-npm run build      # Build for production with Turbopack
+npm run dev        # Dev server with Turbopack (default port 3000)
+npm run build      # Production build (no Turbopack)
 npm start          # Start production server
-npm run lint       # Run ESLint
+npm run lint       # ESLint
 ```
 
-**Port Configuration**: The application runs on port `3030` by default (configured in `package.json` scripts with `-p 3030` flag). You can override this by setting a different port: `PORT=3000 npm run dev`
-
-### Backend Dependency
-The application expects a backend API running at `http://localhost:4000` for job management and dashboard statistics. Without this backend, the hiring dashboard and job CRUD operations will fail.
+- `dotenv-cli` loads `.env.local` automatically in dev/start scripts
+- Backend API: `NEXT_PUBLIC_API_URL` env var (defaults to `http://localhost:4000`)
+- Path alias: `@/` → `./src/`
 
 ## Architecture
 
-### Web3 Integration Layer
-The application uses a multi-provider Web3 architecture:
+### Directory Structure
 
-- **wagmi-config.ts**: Configures blockchain connections (Ethereum Mainnet, Sepolia, Polygon, Arbitrum) and wallet connectors (MetaMask, Coinbase Wallet, WalletConnect)
-- **src/components/providers.tsx**: Wraps the app with `WagmiProvider`, `QueryClientProvider` (TanStack Query), and `RainbowKitProvider`
-- Requires `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` environment variable for WalletConnect functionality
-
-### Application Flow
-1. **Landing** (`/` → `homepage.tsx`): Marketing page with wallet connection modal
-2. **Company Onboarding** (`/company` → `CompanyForm.tsx`): Registration form (currently mock - navigates to dashboard after 1s delay)
-3. **Dashboard** (`/dashboard` → `HiringDashboard.tsx`): Main hub showing job postings, stats, and management actions
-4. **Job Management**:
-   - Create: `/jobs/new` → `JobForm.tsx`
-   - Edit: `/jobs/[jobId]/edit` → `JobForm.tsx` (with jobId param)
-   - View: `/jobs/[jobId]` → `JobDetails.tsx`
-
-### Component Patterns
-- All interactive components use `"use client"` directive (Client Components)
-- Forms use local state management with controlled inputs
-- API calls to backend use standard `fetch` with error handling
-- Loading states managed with `isLoading` boolean and Lucide `Loader2` icon
-- Path aliases: `@/` maps to `./src/`
-
-### Data Models
-**JobPosting Interface** (from `HiringDashboard.tsx`):
-```typescript
-{
-  id: string
-  title: string
-  department: string | null
-  location: string
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance"
-  salary: { min: number | null; max: number | null; currency: string }
-  status: "draft" | "active" | "paused" | "closed"
-  applicants: number
-  views: number
-  createdAt: string
-  updatedAt: string
-  description: string
-  requirements: string[]
-  guild: string  // Guild-based review system identifier
-  companyId: string
-}
+```
+src/
+├── app/                    # Next.js App Router pages (thin shells only)
+├── components/             # All UI components
+│   ├── ui/                 # Shared primitives (Button, Input, Modal, Alert, etc.)
+│   ├── guild/              # Guild-specific components
+│   ├── guilds/             # Guilds listing/overview
+│   ├── home/               # Homepage sections
+│   ├── jobs/               # Job form sections
+│   ├── dashboard/          # Dashboard-specific components
+│   ├── endorsements/       # Endorsement components
+│   ├── expert/             # Expert-specific components
+│   ├── browse/             # Browse page components
+│   ├── candidate/          # Candidate components
+│   └── layout/             # Layout components
+├── config/
+│   └── constants.ts        # Form options, enums (JOB_TYPES, SKILLS, etc.)
+├── contexts/
+│   └── AuthContext.tsx      # Single auth context (candidate/company/expert)
+├── hooks/
+│   ├── useAuthContext.ts    # Auth context consumer hook
+│   └── useJobForm.ts       # Job form logic
+├── lib/
+│   ├── api.ts              # API client — ALL backend calls go through here
+│   ├── auth.ts             # Token management helpers
+│   ├── utils.ts            # General utilities (cn, formatters, etc.)
+│   ├── validation.ts       # Input validation (validateMinLength, etc.)
+│   ├── guildHelpers.ts     # Guild-related helpers
+│   └── hooks/
+│       ├── useFetch.ts     # Generic data-fetching hooks (useFetch, useApi)
+│       ├── useVettedContracts.ts  # On-chain contract interactions
+│       ├── useGuilds.ts    # Guild data hook
+│       ├── useClickOutside.ts
+│       └── useWalletVerification.ts
+└── types/                  # All TypeScript types (job, guild, expert, candidate, application, proposal)
 ```
 
-### Backend API Endpoints Expected
-- `GET /api/jobs?status={status}&search={query}` - Fetch filtered jobs
-- `GET /api/dashboard/stats` - Fetch dashboard statistics
-- `POST /api/jobs` - Create job posting
-- `PUT /api/jobs/{jobId}` - Update job posting
-- `GET /api/jobs/{jobId}` - Fetch single job
-- `DELETE /api/jobs/{jobId}` - Delete job posting
+### Key Patterns
 
-### Styling
-- **TailwindCSS 4** with PostCSS integration
-- Design system: Violet/Indigo gradients, slate color scheme
-- Typography: Inter font via `next/font/google`
-- Icons: Lucide React
-- No component library - custom components with utility-first CSS
+**Page structure:** `page.tsx` (thin shell) → container component (data + logic) → presentational sub-components.
 
-## Key Technical Decisions
+**API calls:** Always use `apiRequest()` or the domain-specific API namespaces from `lib/api.ts` (`authApi`, `jobsApi`, `expertApi`, `guildsApi`, `candidateApi`, `companyApi`, `applicationsApi`, `proposalsApi`, `governanceApi`, `endorsementAccountabilityApi`, `commitRevealApi`, etc.). Never use raw `fetch`.
 
-### Next.js Configuration
-- Uses **Turbopack** for faster development builds and production compilation
-- App Router with file-based routing under `src/app/`
-- TypeScript strict mode enabled
-- Target: ES2017 with modern ESNext modules
+**Data fetching in components:** Use `useFetch` or `useApi` hooks from `lib/hooks/useFetch.ts` for loading/error state management. Avoid manual `useState(isLoading)` + try/catch patterns.
 
-### State Management
-- Local component state with `useState` (no global state library)
-- TanStack Query integrated for caching (via RainbowKit setup) but not actively used for data fetching yet
-- Wagmi hooks (`useAccount`, `useConnect`, `useDisconnect`) for wallet state
+**Auth:** Three user types — `candidate`, `company`, `expert`. Candidates/companies use JWT tokens. Experts use wallet-only auth (no token). Access via `useAuthContext()` from `src/hooks/useAuthContext.ts`.
 
-### Authentication Pattern
-The CompanyForm currently bypasses actual authentication - it simulates a 1-second delay and navigates to the dashboard without API calls. Real authentication needs to be implemented to persist company sessions.
+**Error handling:** Use `ApiError` class from `lib/api.ts`. Display errors via the `Alert` component (`variant="error"`) or `toast` from `sonner`.
 
-## Common Development Patterns
+**Types:** Always import from `@/types`. Never define types inline in components when a shared type exists.
+
+### Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15.5, React 19, TypeScript (strict) |
+| Styling | TailwindCSS 4, Radix UI primitives, Lucide icons |
+| Fonts | Inter (sans), Bree Serif (serif), Bricolage Grotesque (display) |
+| Web3 | Wagmi, Viem, RainbowKit (MetaMask + Coinbase Wallet) |
+| State | Local `useState`, TanStack Query (via RainbowKit), `AuthContext` |
+| Toasts | Sonner |
+| Env | `dotenv-cli` for `.env.local` loading |
+
+### Provider Stack (layout.tsx)
+
+`WagmiProvider` → `QueryClientProvider` → `RainbowKitProvider` → `ThemeProvider` → `AuthProvider` + `ErrorBoundary` + `RouteChangeOverlay`
+
+## Code Quality Rules
+
+### Do
+
+- Use `apiRequest()` or domain API namespaces — never raw `fetch`
+- Use `useFetch`/`useApi` hooks for data fetching in components
+- Import types from `@/types` — keep type definitions in `src/types/`
+- Keep `page.tsx` files as thin routing shells (import + render component)
+- Use `useAuthContext()` for auth state — never read `localStorage` directly
+- Use Tailwind utilities — no custom CSS unless absolutely necessary
+- Validate user input at system boundaries using `lib/validation.ts`
+- Use `Alert` component or `sonner` toast for user-facing errors
+- Use narrow component props — pass only what's needed
+- Props down, callbacks up — if prop drilling exceeds 2 levels, extract to context
+- Push `"use client"` as far down the component tree as possible
+
+### Don't
+
+- Put data-fetching logic directly in `page.tsx` files
+- Use `any` — use proper type narrowing
+- Create wrapper components that just pass props through
+- Add abstractions until the third use (YAGNI)
+- Modify shared UI components for page-specific needs — extend via props or compose
+- Mutate props or reach upward in the component tree
+- Use uncontrolled form inputs unless performance requires it
+
+## Common Tasks
 
 ### Adding a New Page
-1. Create route file in `src/app/{route}/page.tsx`
-2. Import/create component from `src/components/`
-3. Use `"use client"` if component needs interactivity
-4. Use `useRouter` from `next/navigation` for programmatic navigation
 
-### Making API Calls
-Always include error handling and loading states:
-```typescript
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+1. Create `src/app/{route}/page.tsx` as a thin shell
+2. Create the actual component in `src/components/`
+3. Add `"use client"` only if the component needs interactivity
+4. Use types from `@/types`, API calls via `lib/api.ts`
 
-const fetchData = async () => {
-  setIsLoading(true);
-  setError(null);
-  try {
-    const response = await fetch('http://localhost:4000/api/endpoint');
-    if (!response.ok) throw new Error(`${response.status} - ${response.statusText}`);
-    const data = await response.json();
-    // Handle data
-  } catch (error) {
-    setError((error as Error).message);
-  } finally {
-    setIsLoading(false);
-  }
-};
-```
+### Adding a New API Call
+
+Add to the appropriate namespace in `lib/api.ts`. The client handles:
+- Auth token injection (for `requiresAuth` requests)
+- Automatic 401 → token refresh → retry
+- Response envelope unwrapping (`{ success, data }`)
+- `FormData` support
+- Error sanitization (XSS prevention)
 
 ### Wallet Integration
-Access wallet state via Wagmi hooks:
+
 ```typescript
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 const { address, isConnected } = useAccount();
-const { connectors, connect } = useConnect();
-const { disconnect } = useDisconnect();
 ```
 
-## Important Notes
-
-- Backend must be running on port 4000 for full functionality
-- WalletConnect requires a valid project ID from WalletConnect Cloud
-- The "guild" concept is central to the platform's trust model - reviewers stake their judgment
-- Job status workflow: draft → active → paused/closed
-- All monetary values stored in smallest currency unit (e.g., cents/wei)
+WalletConnect is disabled — only MetaMask and Coinbase Wallet are supported.

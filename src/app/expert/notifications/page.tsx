@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { notificationsApi } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
@@ -64,9 +63,8 @@ export default function NotificationsPage() {
       const filters: any = { limit: 50 };
 
       const result: any = await notificationsApi.getNotifications(address, filters);
-      const data = result.data || result;
 
-      const notificationsData = Array.isArray(data) ? data : [];
+      const notificationsData = Array.isArray(result) ? result : [];
       setNotifications(notificationsData);
       setAllNotifications(notificationsData); // Store all notifications for badge counts
     } catch (err) {
@@ -75,6 +73,20 @@ export default function NotificationsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const buildNotificationUrl = (notification: Notification): string => {
+    const url = new URL(notification.link, window.location.origin);
+    // For guild application notifications, ensure applicationId and tab are in the URL
+    if (notification.type === "guild_application" && notification.applicationId) {
+      if (!url.searchParams.has("applicationId")) {
+        url.searchParams.set("applicationId", notification.applicationId);
+      }
+      if (!url.searchParams.has("tab")) {
+        url.searchParams.set("tab", "membershipApplications");
+      }
+    }
+    return url.pathname + url.search;
   };
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -93,12 +105,14 @@ export default function NotificationsPage() {
         setAllNotifications((prev) => prev.map(updateFn));
       }
 
-      // Navigate to the link
-      router.push(notification.link);
+      // Build navigation URL, enriching guild application links with applicationId
+      const navUrl = buildNotificationUrl(notification);
+      router.push(navUrl);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       // Still navigate even if marking as read fails
-      router.push(notification.link);
+      const navUrl = buildNotificationUrl(notification);
+      router.push(navUrl);
     }
   };
 
@@ -166,8 +180,7 @@ export default function NotificationsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <LoadingState message="Loading notifications..." />
       </div>
     );
@@ -175,8 +188,7 @@ export default function NotificationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="flex items-center justify-center py-20">
           <Alert variant="error">{error}</Alert>
         </div>
@@ -199,9 +211,7 @@ export default function NotificationsPage() {
       : allNotifications.filter((n) => n.type === activeFilter);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

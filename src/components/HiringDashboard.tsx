@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,75 +16,39 @@ import {
   MapPin,
   DollarSign,
   Building2,
-  LogOut,
-  User,
 } from "lucide-react";
 import { Button, LoadingState, Alert, Card, StatusBadge } from "./ui";
+import { StatCard } from "./dashboard/StatCard";
 import { jobsApi, dashboardApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { JOB_STATUSES } from "@/config/constants";
-import { ThemeToggle } from "./ThemeToggle";
-import { Logo } from "./Logo";
-import { useDisconnect } from "wagmi";
-import { clearAllAuthState } from "@/lib/auth";
 
-interface JobPosting {
-  id: string;
-  title: string;
-  department: string | null;
-  location: string;
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
-  salary: { min: number | null; max: number | null; currency: string };
-  status: "draft" | "active" | "paused" | "closed";
-  applicants: number;
-  views: number;
-  createdAt: string;
-  updatedAt: string;
-  description: string;
-  requirements: string[];
-  guild: string;
-  companyId: string;
-}
+import { useAuthContext } from "@/hooks/useAuthContext";
 
-interface DashboardStats {
-  totalJobs: number;
-  activeJobs: number;
-  totalApplicants: number;
-  averageTimeToHire: number;
-}
+import type { Job, DashboardStats } from "@/types";
 
 export function HiringDashboard() {
   const router = useRouter();
-  const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+  const [jobPostings, setJobPostings] = useState<Job[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [companyEmail, setCompanyEmail] = useState<string>("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const { execute } = useApi();
-  const { disconnect } = useDisconnect();
+  const auth = useAuthContext();
 
   // Check authentication on mount
   useEffect(() => {
-    const userType = localStorage.getItem("userType");
-
-    // Redirect candidates to their profile page
-    if (userType === "candidate") {
+    if (auth.userType === "candidate") {
       router.push("/candidate/profile");
       return;
     }
-
-    const token = localStorage.getItem("companyAuthToken");
-    if (!token) {
-      router.push("/auth/login?type=company?redirect=/dashboard");
-      return;
+    if (!auth.isAuthenticated || auth.userType !== "company") {
+      router.push("/auth/login?type=company&redirect=/dashboard");
     }
-    const email = localStorage.getItem("companyEmail");
-    if (email) setCompanyEmail(email);
-  }, [router]);
+  }, [auth.isAuthenticated, auth.userType, router]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -97,14 +60,13 @@ export function HiringDashboard() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("companyAuthToken");
-      const companyId = localStorage.getItem("companyId");
-      if (!token) {
-        router.push("/auth/login?type=company?redirect=/dashboard");
+      const companyId = auth.userId;
+      if (!auth.isAuthenticated) {
+        router.push("/auth/login?type=company&redirect=/dashboard");
         return;
       }
 
-      const [jobsData, statsData] = await Promise.all([
+      const [jobsResponse, statsData] = await Promise.all([
         jobsApi.getAll({
           status: filterStatus !== "all" ? filterStatus : undefined,
           search: searchQuery || undefined,
@@ -113,14 +75,15 @@ export function HiringDashboard() {
         dashboardApi.getStats(companyId || undefined),
       ]);
 
+      const jobsData = Array.isArray(jobsResponse) ? jobsResponse : [];
       if (Array.isArray(jobsData)) {
         setJobPostings(jobsData);
       }
       setStats(statsData as DashboardStats);
     } catch (error: unknown) {
       if ((error as { status?: number }).status === 401) {
-        localStorage.removeItem("companyAuthToken");
-        router.push("/auth/login?type=company?redirect=/dashboard");
+        auth.logout();
+        router.push("/auth/login?type=company&redirect=/dashboard");
         return;
       }
       setError(
@@ -140,16 +103,10 @@ export function HiringDashboard() {
       },
       onError: (err) => {
         if (err.includes("401")) {
-          router.push("/auth/login?type=company?redirect=/dashboard");
+          router.push("/auth/login?type=company&redirect=/dashboard");
         }
       },
     });
-  };
-
-  const handleLogout = () => {
-    clearAllAuthState();
-    disconnect();
-    router.push("/?section=employers");
   };
 
   if (isLoading) {
@@ -157,90 +114,7 @@ export function HiringDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Logo onClick={() => router.push("/?section=employers")} />
-              <nav className="hidden md:flex items-center space-x-6 ml-8">
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="text-foreground font-medium hover:text-primary transition-colors"
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/candidates")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Candidates
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/analytics")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Analytics
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/settings")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Settings
-                </button>
-              </nav>
-            </div>
-
-            {/* User Menu */}
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <User className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-foreground hidden sm:block">
-                  {companyEmail || "Company"}
-                </span>
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                  <div className="px-4 py-3 border-b border-border">
-                    <p className="text-sm font-medium text-foreground">
-                      {companyEmail}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Company Account</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      router.push("/company/profile");
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
-                  >
-                    <User className="w-4 h-4" />
-                    Company Profile
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
-              )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="mb-6">
@@ -252,53 +126,32 @@ export function HiringDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground">
-              {stats?.totalJobs || 0}
-            </h3>
-            <p className="text-card-foreground text-sm mt-1">Total Jobs</p>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground">
-              {stats?.activeJobs || 0}
-            </h3>
-            <p className="text-card-foreground text-sm mt-1">Active Postings</p>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground">
-              {stats?.totalApplicants || 0}
-            </h3>
-            <p className="text-card-foreground text-sm mt-1">Total Applicants</p>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-foreground">
-              {stats?.averageTimeToHire || 0}
-            </h3>
-            <p className="text-card-foreground text-sm mt-1">Avg. Days to Hire</p>
-          </Card>
+          <StatCard
+            title="Total Jobs"
+            value={stats?.totalJobs || 0}
+            icon={Briefcase}
+          />
+          <StatCard
+            title="Active Postings"
+            value={stats?.activeJobs || 0}
+            icon={TrendingUp}
+            iconBgColor="bg-green-100 dark:bg-green-900/20"
+            iconColor="text-green-600 dark:text-green-400"
+          />
+          <StatCard
+            title="Total Applicants"
+            value={stats?.totalApplicants || 0}
+            icon={Users}
+            iconBgColor="bg-blue-100 dark:bg-blue-900/20"
+            iconColor="text-blue-600 dark:text-blue-400"
+          />
+          <StatCard
+            title="Avg. Days to Hire"
+            value={stats?.averageTimeToHire || 0}
+            icon={Clock}
+            iconBgColor="bg-amber-100 dark:bg-amber-900/20"
+            iconColor="text-amber-600 dark:text-amber-400"
+          />
         </div>
 
         {/* Job Postings */}
@@ -414,7 +267,7 @@ export function HiringDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-6 mt-4">
-                        <StatusBadge status={job.status} />
+                        <StatusBadge status={job.status ?? "draft"} />
                         <span className="text-sm text-card-foreground">
                           <strong>{job.applicants}</strong> applicants
                         </span>

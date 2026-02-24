@@ -24,18 +24,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
-
-const GUILDS = [
-  { id: "484305be-3acc-4135-acac-c0e572d5553f", name: "Design Guild" },
-  { id: "e5854418-f2ba-4150-b3fa-4f14013d4e65", name: "Engineering Guild" },
-  { id: "ea2b7374-9268-43ec-ada4-9231d63493c6", name: "Finance, Legal & Compliance Guild" },
-  { id: "2d5bac64-dffc-4d83-82d3-6dbaba46739b", name: "Marketing & Growth Guild" },
-  { id: "7f87b692-ce62-4016-a25a-d5636e6ba7a6", name: "Operations & Strategy Guild" },
-  { id: "306973a6-3776-412b-b464-d55548f613cf", name: "People, HR & Recruitment Guild" },
-  { id: "9f13bb4a-2760-4699-baf2-51a92cc17ba2", name: "Product Guild" },
-  { id: "09e92ec4-c2e1-428e-b77d-c91dff4d869e", name: "Sales & Success Guild" },
-];
+import { useGuilds } from "@/lib/hooks/useGuilds";
 
 const PROPOSAL_TYPES = [
   { value: "general", label: "General Proposal" },
@@ -54,6 +43,7 @@ const VOTING_DURATIONS = [
 export default function CreateGovernanceProposalPage() {
   const router = useRouter();
   const { address } = useAccount();
+  const { guilds: guildRecords } = useGuilds();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -111,12 +101,10 @@ export default function CreateGovernanceProposalPage() {
         if (guildId) data.guildId = guildId;
       }
 
-      const response: any = await governanceApi.createProposal(data, address);
+      await governanceApi.createProposal(data, address);
 
-      if (response.success) {
-        toast.success("Governance proposal created!");
-        router.push("/expert/governance");
-      }
+      toast.success("Governance proposal created!");
+      router.push("/expert/governance");
     } catch (error: any) {
       console.error("Error creating proposal:", error);
       toast.error(error.message || "Failed to create proposal");
@@ -126,8 +114,7 @@ export default function CreateGovernanceProposalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
+    <div className="min-h-full">
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">
@@ -240,7 +227,7 @@ export default function CreateGovernanceProposalPage() {
                       <SelectValue placeholder="Select a guild" />
                     </SelectTrigger>
                     <SelectContent>
-                      {GUILDS.map((guild) => (
+                      {guildRecords.map((guild) => (
                         <SelectItem key={guild.id} value={guild.id}>
                           {guild.name}
                         </SelectItem>

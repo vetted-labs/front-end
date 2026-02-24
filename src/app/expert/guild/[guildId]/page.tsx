@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { GuildDetailView } from "@/components/GuildDetailView";
 
 interface GuildPageProps {
@@ -9,5 +10,9 @@ interface GuildPageProps {
 export default async function GuildPage({ params }: GuildPageProps) {
   const { guildId } = await params;
 
-  return <GuildDetailView guildId={guildId} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading guild...</div>}>
+      <GuildDetailView guildId={guildId} />
+    </Suspense>
+  );
 }

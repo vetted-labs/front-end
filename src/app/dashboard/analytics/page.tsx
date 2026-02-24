@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   TrendingUp,
   TrendingDown,
@@ -12,34 +11,12 @@ import {
   Clock,
   Calendar,
   ArrowLeft,
-  DollarSign,
-  User,
-  LogOut,
   BarChart3,
   Filter,
 } from "lucide-react";
-import { useDisconnect } from "wagmi";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { jobsApi } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
-
-interface JobPosting {
-  id: string;
-  title: string;
-  department: string | null;
-  location: string;
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
-  salary: { min: number | null; max: number | null; currency: string };
-  status: "draft" | "active" | "paused" | "closed";
-  applicants: number;
-  views: number;
-  createdAt: string;
-  updatedAt: string;
-  description: string;
-  requirements: string[];
-  guild: string;
-  companyId: string;
-}
+import { useAuthContext } from "@/hooks/useAuthContext";
+import type { Job } from "@/types";
 
 interface AnalyticsData {
   totalApplications: number;
@@ -64,13 +41,11 @@ interface AnalyticsData {
 
 export default function AnalyticsPage() {
   const router = useRouter();
+  const auth = useAuthContext();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
-  const [companyEmail, setCompanyEmail] = useState<string>("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     // Check authentication
@@ -79,9 +54,6 @@ export default function AnalyticsPage() {
       router.push("/auth/login?type=company");
       return;
     }
-    const email = localStorage.getItem("companyEmail");
-    if (email) setCompanyEmail(email);
-
     fetchAnalytics();
   }, [router, filterStatus]);
 
@@ -92,10 +64,11 @@ export default function AnalyticsPage() {
       if (!companyId) return;
 
       // Fetch jobs for this company
-      const jobsData = await jobsApi.getAll({
+      const jobsResponse: any = await jobsApi.getAll({
         status: filterStatus !== "all" ? filterStatus : undefined,
         companyId: companyId,
       });
+      const jobsData = Array.isArray(jobsResponse) ? jobsResponse : [];
 
       if (Array.isArray(jobsData)) {
         setJobs(jobsData);
@@ -138,15 +111,9 @@ export default function AnalyticsPage() {
     }
   };
 
-  const handleLogout = () => {
-    clearAllAuthState();
-    disconnect();
-    router.push("/?section=employers");
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading analytics...</p>
       </div>
     );
@@ -154,7 +121,7 @@ export default function AnalyticsPage() {
 
   if (!analytics) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <p className="text-muted-foreground">Failed to load analytics</p>
       </div>
     );
@@ -165,96 +132,7 @@ export default function AnalyticsPage() {
     : 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push("/")}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <Image src="/Vetted-orange.png" alt="Vetted Logo" width={32} height={32} className="w-8 h-8 rounded-lg" />
-                <span className="text-xl font-bold text-foreground">Vetted</span>
-              </button>
-              <nav className="hidden md:flex items-center space-x-6 ml-8">
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/candidates")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Candidates
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/analytics")}
-                  className="text-foreground font-medium hover:text-primary transition-colors"
-                >
-                  Analytics
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/settings")}
-                  className="text-card-foreground hover:text-foreground transition-colors"
-                >
-                  Settings
-                </button>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground hidden sm:block">
-                    {companyEmail || "Company"}
-                  </span>
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border py-1 z-50">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">
-                        {companyEmail}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Company Account</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        router.push("/company/profile");
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      Company Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -483,7 +361,7 @@ export default function AnalyticsPage() {
                     <div className="text-left">
                       <p className="font-semibold text-foreground">{job.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {job.applicants} applicants • {job.views} views
+                        {job.applicants ?? 0} applicants • {job.views ?? 0} views
                       </p>
                     </div>
                   </div>
@@ -492,7 +370,7 @@ export default function AnalyticsPage() {
                     <div className="text-right hidden sm:block">
                       <p className="text-sm text-muted-foreground">Conversion</p>
                       <p className="font-semibold text-foreground">
-                        {job.views > 0 ? ((job.applicants / job.views) * 100).toFixed(1) : "0.0"}%
+                        {(job.views ?? 0) > 0 ? (((job.applicants ?? 0) / (job.views ?? 1)) * 100).toFixed(1) : "0.0"}%
                       </p>
                     </div>
                     <div>

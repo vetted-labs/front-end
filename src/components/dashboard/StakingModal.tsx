@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther, keccak256, toBytes } from "viem";
+import { formatEther } from "viem";
 import { sepolia } from "wagmi/chains";
 import { X, Coins, AlertTriangle, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
-import { blockchainApi } from "@/lib/api";
+import { blockchainApi, guildsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -63,55 +63,35 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     });
   };
 
-  // Fetch user's guild memberships
+  // Whether guild is locked (opened from a specific guild page)
+  const isGuildLocked = !!preselectedGuildId;
+
+  // Fetch guilds for selection
   useEffect(() => {
     if (!isOpen || !address) return;
 
     const fetchGuilds = async () => {
       setIsLoadingGuilds(true);
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        // Fetch guilds the expert is a member of
-        const response = await fetch(`${apiUrl}/api/blockchain/staking/guilds/${address}`);
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-            const guildOptions: GuildOption[] = data.data.map((g: any) => ({
-              id: g.guildId,
-              name: g.guildName,
-              blockchainGuildId: g.blockchainGuildId as `0x${string}`,
-            }));
-            setGuilds(guildOptions);
-
-            // If we have a preselected guild, select it
-            if (preselectedGuildId) {
-              const preselected = guildOptions.find(g => g.id === preselectedGuildId);
-              if (preselected) setSelectedGuild(preselected);
-            }
-            return;
-          }
-        }
-
-        // Fallback: fetch all guilds and let user pick
-        const allGuildsResponse = await fetch(`${apiUrl}/api/guilds`);
-        if (allGuildsResponse.ok) {
-          const allData = await allGuildsResponse.json();
-          const allGuilds = Array.isArray(allData) ? allData : (allData.data || []);
-          const guildOptions: GuildOption[] = allGuilds.map((g: any) => ({
+        // Always fetch all guilds so the full list is available
+        const allData: any = await guildsApi.getAll();
+        const allGuilds = Array.isArray(allData) ? allData : [];
+        const guildOptions: GuildOption[] = allGuilds
+          .filter((g: any) => g.blockchainGuildId)
+          .map((g: any) => ({
             id: g.id,
             name: g.name,
-            blockchainGuildId: keccak256(toBytes(g.id)) as `0x${string}`,
+            blockchainGuildId: g.blockchainGuildId as `0x${string}`,
           }));
-          setGuilds(guildOptions);
+        setGuilds(guildOptions);
 
-          if (preselectedGuildId) {
-            const preselected = guildOptions.find(g => g.id === preselectedGuildId);
-            if (preselected) setSelectedGuild(preselected);
-          }
+        // Auto-select preselected guild
+        if (preselectedGuildId) {
+          const preselected = guildOptions.find(g => g.id === preselectedGuildId);
+          if (preselected) setSelectedGuild(preselected);
         }
       } catch (error) {
-        console.error('Failed to fetch guilds:', error);
+        // Silently fail - user can still manually select guilds
       } finally {
         setIsLoadingGuilds(false);
       }
@@ -160,9 +140,15 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         refetchStake();
         // Sync stake to database so dashboard reflects the update
         if (address && selectedGuild) {
-          blockchainApi.syncStake(address, selectedGuild.blockchainGuildId).catch(() => {});
+          blockchainApi.syncStake(address, selectedGuild.blockchainGuildId)
+            .then(() => onSuccess?.())
+            .catch((err) => {
+              console.error("Failed to sync stake to database:", err);
+              onSuccess?.();
+            });
+        } else {
+          onSuccess?.();
         }
-        onSuccess?.();
         setStep("input");
         setStakeAmount("");
       }
@@ -453,9 +439,14 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
               {/* Guild Selector */}
               <div>
                 <label className="text-sm font-semibold text-foreground mb-2 block">
-                  Select Guild
+                  {isGuildLocked ? "Guild" : "Select Guild"}
                 </label>
                 <div className="relative">
+                  {isGuildLocked ? (
+                    <div className="w-full flex items-center px-4 py-3 rounded-xl border border-border/50 bg-muted/30 text-foreground font-medium">
+                      {selectedGuild?.name || "Loading..."}
+                    </div>
+                  ) : (
                   <button
                     onClick={() => setShowGuildDropdown(!showGuildDropdown)}
                     disabled={isLoadingGuilds || step !== "input"}
@@ -470,8 +461,9 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                     </span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </button>
+                  )}
 
-                  {showGuildDropdown && guilds.length > 0 && (
+                  {!isGuildLocked && showGuildDropdown && guilds.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 bg-card border border-border/60 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                       {guilds.map((guild) => (
                         <button
@@ -490,7 +482,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                     </div>
                   )}
                 </div>
-                {guilds.length === 0 && !isLoadingGuilds && (
+                {!isGuildLocked && guilds.length === 0 && !isLoadingGuilds && (
                   <p className="text-xs text-muted-foreground mt-1.5">
                     No guilds available. Join a guild first to stake.
                   </p>

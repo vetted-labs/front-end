@@ -1,16 +1,6 @@
 // API Configuration
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-export const GUILDS = [
-  { value: "frontend", label: "Frontend Guild" },
-  { value: "backend", label: "Backend Guild" },
-  { value: "fullstack", label: "Full Stack Guild" },
-  { value: "mobile", label: "Mobile Guild" },
-  { value: "devops", label: "DevOps Guild" },
-  { value: "security", label: "Security Guild" },
-  { value: "blockchain", label: "Blockchain Guild" },
-];
-
 export const EXPERIENCE_LEVELS = [
   { value: "entry", label: "Entry Level (0-2 years)" },
   { value: "mid", label: "Mid Level (2-5 years)" },

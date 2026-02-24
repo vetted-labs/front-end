@@ -2,20 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useConnect, useAccount, useDisconnect, useChainId } from "wagmi";
+import { useConnect, useAccount, useDisconnect } from "wagmi";
 import { expertApi, jobsApi, guildsApi } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
-import { HomeNavbar } from "./home/HomeNavbar";
+import { clearTokenAuthState } from "@/lib/auth";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { WalletConnectModal } from "./home/WalletConnectModal";
 import { HeroSection } from "./home/HeroSection";
 import { JobBrowser } from "./home/JobBrowser";
-
-interface Guild {
-  id: string;
-  name: string;
-  description?: string;
-  memberCount?: number;
-}
+import type { Guild } from "@/types";
 
 interface Job {
   id: string;
@@ -40,16 +34,12 @@ export function HomePage() {
   const router = useRouter();
   const { connectors, connect } = useConnect();
   const { address, isConnected } = useAccount();
-  const chainId = useChainId();
   const { disconnect } = useDisconnect();
 
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const auth = useAuthContext();
 
   // Data state
   const [guilds, setGuilds] = useState<Guild[]>([]);
@@ -60,33 +50,10 @@ export function HomePage() {
   useEffect(() => {
     setMounted(true);
 
-    // Check authentication status
-    if (typeof window !== "undefined") {
-      const token =
-        localStorage.getItem("authToken") ||
-        localStorage.getItem("companyAuthToken");
-      const storedUserType = localStorage.getItem("userType");
-      const storedEmail =
-        localStorage.getItem("candidateEmail") ||
-        localStorage.getItem("companyEmail");
-
-      // Check if user is authenticated via token OR wallet connection
-      const isTokenAuth = !!token;
-      const isWalletAuth = !!(isConnected && address);
-
-      // Safety net: if both token auth AND wallet are present, disconnect wallet
-      // Token auth wins since the user explicitly logged in
-      if (isTokenAuth && isWalletAuth) {
-        disconnect();
-        setIsAuthenticated(true);
-        setUserType(storedUserType);
-        setUserEmail(storedEmail);
-        return;
-      }
-
-      setIsAuthenticated(isTokenAuth || isWalletAuth);
-      setUserType(storedUserType || (isWalletAuth ? "expert" : null));
-      setUserEmail(storedEmail || (isWalletAuth ? address : null));
+    // Safety net: if token-based auth (candidate/company) AND wallet are present, disconnect wallet
+    // Don't disconnect for experts — they authenticate via wallet
+    if (auth.isAuthenticated && auth.userType !== 'expert' && isConnected && address) {
+      disconnect();
     }
   }, [isConnected, address]);
 
@@ -95,7 +62,7 @@ export function HomePage() {
     const fetchGuilds = async () => {
       try {
         const data: any = await guildsApi.getAll();
-        setGuilds(data.guilds || data || []);
+        setGuilds(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch guilds:", error);
         setGuilds([]);
@@ -112,7 +79,8 @@ export function HomePage() {
     const fetchJobs = async () => {
       try {
         const data: any = await jobsApi.getAll({ status: "active" });
-        const normalizedJobs = (Array.isArray(data) ? data : []).map(
+        const jobsList = Array.isArray(data) ? data : [];
+        const normalizedJobs = jobsList.map(
           (job: any) => ({
             ...job,
             title: job.title || "Untitled Position",
@@ -135,38 +103,6 @@ export function HomePage() {
     fetchJobs();
   }, []);
 
-  const handleLogout = () => {
-    // Clear all auth data using centralized function
-    clearAllAuthState();
-
-    // Always disconnect wallet - it can linger regardless of stored userType
-    disconnect();
-
-    // Update state immediately
-    setIsAuthenticated(false);
-    setUserEmail(null);
-    setUserType(null);
-    setShowUserMenu(false);
-
-    // Use router navigation to avoid theme flash
-    router.push("/");
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showUserMenu && !target.closest(".user-menu-container")) {
-        setShowUserMenu(false);
-      }
-    };
-
-    if (showUserMenu) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
-    }
-  }, [showUserMenu]);
-
   // Check expert status after wallet connection
   useEffect(() => {
     if (mounted && isConnected && address && shouldCheckStatus) {
@@ -178,12 +114,14 @@ export function HomePage() {
   const checkExpertStatus = async (walletAddress: string) => {
     try {
       const result: any = await expertApi.getProfile(walletAddress);
-      const expert = result.data || result;
-      // Redirect based on status
-      if (expert.status === "approved") {
+      if (result.status === "approved") {
+        auth.login("", "expert", result.id, result.email, walletAddress);
+        localStorage.setItem("expertId", result.id);
         router.push("/expert/dashboard");
         return;
-      } else if (expert.status === "pending") {
+      } else if (result.status === "pending") {
+        localStorage.setItem("expertId", result.id);
+        localStorage.setItem("walletAddress", walletAddress);
         router.push("/expert/application-pending");
         return;
       }
@@ -204,8 +142,8 @@ export function HomePage() {
     const connector = connectors.find((c) => c.id === connectorId);
     if (connector) {
       try {
-        // Clear any existing auth before connecting wallet
-        clearAllAuthState();
+        // Clear token-based auth before connecting wallet — preserve wallet state
+        clearTokenAuthState();
 
         await connect({ connector });
         setShowWalletModal(false);
@@ -219,18 +157,17 @@ export function HomePage() {
 
   const handleExpertJoin = () => {
     if (isConnected && address) {
-      // Clear any token auth before entering expert flow
-      clearAllAuthState();
+      // Clear only token-based auth (candidate/company), preserve wallet state
+      clearTokenAuthState();
       localStorage.setItem("userType", "expert");
       checkExpertStatus(address);
     } else {
-      // Show wallet modal
       setShowWalletModal(true);
     }
   };
 
   const handlePostJob = () => {
-    if (isAuthenticated && userType === "company") {
+    if (auth.isAuthenticated && auth.userType === "company") {
       router.push("/dashboard");
     } else {
       router.push("/auth/signup?type=company");
@@ -238,44 +175,15 @@ export function HomePage() {
   };
 
   const handleJoinAsCandidate = () => {
-    if (isAuthenticated && userType === "candidate") {
+    if (auth.isAuthenticated && auth.userType === "candidate") {
       router.push("/candidate/profile");
     } else {
       router.push("/auth/signup?type=candidate");
     }
   };
 
-  const handleNavigateDashboard = () => {
-    setShowUserMenu(false);
-    if (userType === "expert") {
-      router.push("/expert/dashboard");
-    } else if (userType === "company") {
-      router.push("/dashboard");
-    } else if (userType === "candidate") {
-      router.push("/candidate/profile");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background">
-      {/* Navigation Header */}
-      <HomeNavbar
-        isAuthenticated={isAuthenticated}
-        userType={userType}
-        userEmail={userEmail}
-        address={address}
-        chainId={chainId}
-        showUserMenu={showUserMenu}
-        onToggleMenu={() => setShowUserMenu(!showUserMenu)}
-        onFindJob={() => router.push("/browse/jobs")}
-        onStartVetting={handleExpertJoin}
-        onStartHiring={handlePostJob}
-        onViewGuilds={() => router.push("/guilds")}
-        onNavigateDashboard={handleNavigateDashboard}
-        onLogout={handleLogout}
-        onLogoClick={() => router.push("/")}
-      />
-
+    <div className="bg-gradient-to-b from-background to-background">
       {/* Hero Section with Action Cards */}
       <HeroSection
         guilds={guilds}

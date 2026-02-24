@@ -23,7 +23,6 @@ import {
   User,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { DisputeVoteForm } from "@/components/endorsements/DisputeVoteForm";
 
 interface DisputeDetail {
@@ -89,10 +88,8 @@ export default function DisputeDetailPage() {
     try {
       setLoading(true);
       // Use the hire outcome endpoint to get dispute details
-      const response: any = await endorsementAccountabilityApi.getHireOutcome(disputeId);
-      if (response.success) {
-        setDispute(response.data);
-      }
+      const data: any = await endorsementAccountabilityApi.getHireOutcome(disputeId);
+      setDispute(data);
     } catch (error: any) {
       console.error("Error loading dispute:", error);
       toast.error("Failed to load dispute details");
@@ -110,14 +107,12 @@ export default function DisputeDetailPage() {
       return;
     }
     try {
-      const response: any = await endorsementAccountabilityApi.submitArbitrationVote(
+      await endorsementAccountabilityApi.submitArbitrationVote(
         disputeId,
         { decision, reasoning, wallet: address }
       );
-      if (response.success) {
-        toast.success("Arbitration vote submitted!");
-        loadDispute();
-      }
+      toast.success("Arbitration vote submitted!");
+      loadDispute();
     } catch (error: any) {
       toast.error(error.message || "Failed to submit vote");
     }
@@ -125,8 +120,7 @@ export default function DisputeDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -141,8 +135,7 @@ export default function DisputeDetailPage() {
 
   if (!dispute) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -161,8 +154,7 @@ export default function DisputeDetailPage() {
   const canVote = dispute.isOnPanel && !dispute.hasVoted && dispute.status === "open";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
+    <div className="min-h-full">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">

@@ -16,7 +16,8 @@ import {
   Eye,
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -77,14 +78,12 @@ export default function JobDetailsPage() {
       setIsLoading(false);
       return;
     }
-    console.log("Fetching job details for jobId:", jobId);
     const fetchJob = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data: any = await jobsApi.getById(jobId);
-        console.log("Fetched job data:", data);
-        setJob(data);
+        const result = await jobsApi.getById(jobId);
+        setJob(result as JobDetails);
       } catch (error) {
         setError(
           `Failed to load job details. Details: ${(error as Error).message}`,
@@ -107,7 +106,7 @@ export default function JobDetailsPage() {
           status: statusFilter,
           limit: 50
         });
-        setApplications(data.applications || []);
+        setApplications(data.applications ?? []);
       } catch (error) {
         console.error("Error fetching applications:", error);
       } finally {
@@ -135,7 +134,7 @@ export default function JobDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen min-h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading job details...</p>
@@ -146,7 +145,7 @@ export default function JobDetailsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen min-h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button
@@ -162,7 +161,7 @@ export default function JobDetailsPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen min-h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-foreground mb-4">Job not found.</p>
           <button
@@ -177,7 +176,7 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.push("/dashboard")}
@@ -399,8 +398,8 @@ export default function JobDetailsPage() {
                     Salary Range
                   </p>
                   <p className="text-foreground">
-                    {job.salary.min && job.salary.max
-                      ? `$${job.salary.min / 1000}k - $${job.salary.max / 1000}k ${job.salary.currency}`
+                    {job.salary?.min && job.salary?.max
+                      ? `$${job.salary.min / 1000}k - $${job.salary.max / 1000}k ${job.salary?.currency}`
                       : "Not specified"}
                   </p>
                 </div>
@@ -558,15 +557,14 @@ export default function JobDetailsPage() {
                 {selectedApplication.resumeUrl && (
                   <div>
                     <h4 className="font-semibold mb-2">Resume</h4>
-                    <Button variant="outline" asChild>
-                      <a
-                        href={selectedApplication.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View Resume
-                      </a>
-                    </Button>
+                    <a
+                      href={selectedApplication.resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(buttonVariants({ variant: "outline" }))}
+                    >
+                      View Resume
+                    </a>
                   </div>
                 )}
 

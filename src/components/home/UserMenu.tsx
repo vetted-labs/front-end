@@ -1,7 +1,16 @@
 "use client";
 
+import { useRef, ReactNode } from "react";
 import { User, LogOut, ChevronDown, Wallet } from "lucide-react";
 import { getNetworkName } from "@/lib/web3Utils";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
+
+export interface UserMenuItem {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  variant?: "default" | "destructive";
+}
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -13,6 +22,7 @@ interface UserMenuProps {
   onToggleMenu: () => void;
   onNavigateDashboard: () => void;
   onLogout: () => void;
+  extraMenuItems?: UserMenuItem[];
 }
 
 export function UserMenu({
@@ -25,11 +35,15 @@ export function UserMenu({
   onToggleMenu,
   onNavigateDashboard,
   onLogout,
+  extraMenuItems,
 }: UserMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  useClickOutside(menuRef, () => { if (showUserMenu) onToggleMenu(); }, showUserMenu);
+
   if (!isAuthenticated) return null;
 
   return (
-    <div className="relative user-menu-container">
+    <div className="relative user-menu-container" ref={menuRef}>
       {/* Trigger Button */}
       {userType === "expert" && address ? (
         // Expert wallet dropdown button
@@ -102,6 +116,20 @@ export function UserMenu({
                 <User className="w-4 h-4 mr-2" />
                 Expert Dashboard
               </button>
+              {extraMenuItems?.map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`w-full flex items-center px-4 py-3 text-sm transition-all ${
+                    item.variant === "destructive"
+                      ? "text-destructive hover:bg-destructive/10"
+                      : "text-card-foreground hover:bg-muted"
+                  }`}
+                >
+                  <span className="w-4 h-4 mr-2">{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
               <button
                 onClick={onLogout}
                 className="w-full flex items-center px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-all"
@@ -132,6 +160,20 @@ export function UserMenu({
                 <User className="w-4 h-4" />
                 {userType === "company" ? "Dashboard" : "My Profile"}
               </button>
+              {extraMenuItems?.map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
+                    item.variant === "destructive"
+                      ? "text-destructive hover:bg-destructive/10"
+                      : "text-card-foreground hover:bg-muted"
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
               <button
                 onClick={onLogout}
                 className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"

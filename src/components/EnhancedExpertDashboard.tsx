@@ -18,51 +18,17 @@ import {
 } from "lucide-react";
 import { Alert } from "./ui/alert";
 import { LoadingState } from "./ui/loadingstate";
-import { expertApi, calculateTotalPoints } from "@/lib/api";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
+import { expertApi } from "@/lib/api";
+import { calculateTotalPoints } from "@/lib/utils";
+
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { GuildCard } from "@/components/GuildCard";
+import { WalletVerificationModal } from "@/components/WalletVerificationModal";
+import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { blockchainApi } from "@/lib/api";
 import { keccak256, toBytes } from "viem";
-
-interface Guild {
-  id: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  expertRole: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
-  reputation: number;
-  totalEarnings: number;
-  pendingProposals: number;
-  pendingApplications?: number;
-  ongoingProposals: number;
-  closedProposals: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: "proposal_vote" | "endorsement" | "earning" | "reputation_gain";
-  description: string;
-  timestamp: string;
-  guildName: string;
-  amount?: number;
-}
-
-interface ExpertProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  walletAddress: string;
-  reputation: number;
-  totalEarnings: number;
-  guilds: Guild[];
-  recentActivity: RecentActivity[];
-  pendingTasks: {
-    pendingProposalsCount: number;
-    unreviewedApplicationsCount: number;
-  };
-}
+import type { ExpertProfile, ExpertActivity, ExpertGuild } from "@/types";
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
@@ -74,6 +40,14 @@ export function EnhancedExpertDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const {
+    isVerified: walletVerified,
+    isSigning,
+    error: verificationError,
+    checkVerification,
+    requestVerification,
+  } = useWalletVerification();
 
   useEffect(() => {
     setMounted(true);
@@ -97,8 +71,7 @@ export function EnhancedExpertDashboard() {
 
     try {
       // Fetch profile first
-      const profileResponse = await expertApi.getProfile(address);
-      const data: any = (profileResponse as any).data || profileResponse;
+      const data: any = await expertApi.getProfile(address);
 
       if (!data) {
         throw new Error("Failed to load profile data");
@@ -107,12 +80,12 @@ export function EnhancedExpertDashboard() {
       // Read stake balances from blockchain for each guild
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];
       if (guilds.length > 0) {
-        const stakePromises = guilds.map((guild: Guild) => {
+        const stakePromises = guilds.map((guild: ExpertGuild) => {
           const blockchainGuildId = keccak256(toBytes(guild.id));
           return blockchainApi.getStakeBalance(address, blockchainGuildId)
             .then((result: any) => ({
               guildId: guild.id,
-              stakedAmount: (result.data || result).stakedAmount || "0",
+              stakedAmount: result.stakedAmount || "0",
             }))
             .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
         });
@@ -136,6 +109,8 @@ export function EnhancedExpertDashboard() {
 
       // Add mock recent activity and pending tasks for now
       // TODO: These should come from the backend
+      const firstGuildName = guilds[0]?.name ?? "Guild";
+      const secondGuildName = guilds[1]?.name ?? guilds[0]?.name ?? "Guild";
       const enhancedData = {
         ...data,
         guilds: guilds,
@@ -145,35 +120,49 @@ export function EnhancedExpertDashboard() {
             type: "proposal_vote",
             description: "Voted on candidate proposal for Senior Engineer",
             timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            guildName: "Engineering Guild",
+            guildName: firstGuildName,
           },
           {
             id: "2",
             type: "endorsement",
             description: "Endorsed candidate for Product Manager role",
             timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-            guildName: "Product Guild",
+            guildName: secondGuildName,
           },
           {
             id: "3",
             type: "earning",
             description: "Earned 50 points from aligned proposal vote",
             timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            guildName: "Engineering Guild",
+            guildName: firstGuildName,
             amount: 50,
           },
         ],
         pendingTasks: {
-          pendingProposalsCount: guilds.reduce((sum: number, g: Guild) => sum + g.pendingProposals, 0),
+          pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
           unreviewedApplicationsCount: 0, // TODO: Add to backend
         },
       };
 
       setProfile(enhancedData);
+
+      // Check wallet verification and show modal if not verified
+      const verified = await checkVerification(address);
+      if (!verified) {
+        setShowVerificationModal(true);
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyWallet = async () => {
+    if (!address) return;
+    const success = await requestVerification(address);
+    if (success) {
+      setShowVerificationModal(false);
     }
   };
 
@@ -227,7 +216,7 @@ export function EnhancedExpertDashboard() {
 
   if (!isConnected || !address) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center">
         <Alert variant="warning">
           Please connect your wallet to access the expert dashboard.
         </Alert>
@@ -241,7 +230,7 @@ export function EnhancedExpertDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4">
         <div className="max-w-md w-full">
           <Alert variant="error" className="mb-4">
             {error}
@@ -259,7 +248,7 @@ export function EnhancedExpertDashboard() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center">
         <Alert variant="error">No profile data available</Alert>
       </div>
     );
@@ -267,12 +256,18 @@ export function EnhancedExpertDashboard() {
 
   const totalPendingProposals = (profile.guilds || []).reduce((sum, g) => sum + (g.pendingProposals || 0), 0);
   const totalOngoingProposals = (profile.guilds || []).reduce((sum, g) => sum + (g.ongoingProposals || 0), 0);
-  const totalPoints = calculateTotalPoints(profile);
+  const totalPoints = calculateTotalPoints({ reputation: profile.reputation, totalEarnings: profile.totalEarnings ?? 0 });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
+      <WalletVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        onVerify={handleVerifyWallet}
+        isSigning={isSigning}
+        error={verificationError}
+        walletAddress={address}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -308,7 +303,7 @@ export function EnhancedExpertDashboard() {
           />
           <StatCard
             title="Total Earnings"
-            value={`$${profile.totalEarnings.toLocaleString()}`}
+            value={`$${(profile.totalEarnings ?? 0).toLocaleString()}`}
             icon={DollarSign}
             iconBgColor="bg-green-500/10"
             iconColor="text-green-600 dark:text-green-400"
@@ -336,7 +331,7 @@ export function EnhancedExpertDashboard() {
           {/* Left Column - Main Content */}
           <div className="space-y-6">
             {/* Guilds Section */}
-            <div className="bg-card rounded-2xl p-6 shadow-md border border-border">
+            <div className="bg-card rounded-2xl p-6 shadow-md border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-foreground font-serif">Your Guilds</h2>
                 <button
@@ -379,7 +374,7 @@ export function EnhancedExpertDashboard() {
           {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Pending Actions - Enhanced with all action types */}
-            <div className="bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10 border border-yellow-500/20 rounded-2xl p-6 shadow-md">
+            <div className="bg-gradient-to-br from-yellow-500/10 via-orange-500/10 to-red-500/10 border border-yellow-500/20 rounded-2xl p-6 shadow-md dark:backdrop-blur-xl dark:border-yellow-500/10 dark:shadow-lg dark:shadow-black/20">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
@@ -387,7 +382,7 @@ export function EnhancedExpertDashboard() {
                     Pending Actions
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {totalPendingProposals + profile.pendingTasks.unreviewedApplicationsCount} action{(totalPendingProposals + profile.pendingTasks.unreviewedApplicationsCount) !== 1 ? 's' : ''} need review
+                    {totalPendingProposals + (profile.pendingTasks?.unreviewedApplicationsCount ?? 0)} action{(totalPendingProposals + (profile.pendingTasks?.unreviewedApplicationsCount ?? 0)) !== 1 ? 's' : ''} need review
                   </p>
                 </div>
               </div>
@@ -415,7 +410,7 @@ export function EnhancedExpertDashboard() {
                 )}
 
                 {/* Job Applications */}
-                {profile.pendingTasks.unreviewedApplicationsCount > 0 && (
+                {(profile.pendingTasks?.unreviewedApplicationsCount ?? 0) > 0 && (
                   <button
                     onClick={() => router.push('/expert/endorsements')}
                     className="w-full flex items-start gap-3 p-4 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all group"
@@ -428,7 +423,7 @@ export function EnhancedExpertDashboard() {
                         Job Applications
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {profile.pendingTasks.unreviewedApplicationsCount} application{profile.pendingTasks.unreviewedApplicationsCount !== 1 ? 's' : ''} to review
+                        {(profile.pendingTasks?.unreviewedApplicationsCount ?? 0)} application{(profile.pendingTasks?.unreviewedApplicationsCount ?? 0) !== 1 ? 's' : ''} to review
                       </p>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
@@ -455,7 +450,7 @@ export function EnhancedExpertDashboard() {
                 </button>
 
                 {/* Empty state when no pending actions */}
-                {totalPendingProposals === 0 && profile.pendingTasks.unreviewedApplicationsCount === 0 && (
+                {totalPendingProposals === 0 && (profile.pendingTasks?.unreviewedApplicationsCount ?? 0) === 0 && (
                   <div className="text-center py-6">
                     <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
                     <p className="text-sm font-medium text-foreground mb-1">All Caught Up!</p>
@@ -468,19 +463,19 @@ export function EnhancedExpertDashboard() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-card rounded-2xl p-6 shadow-md border border-border">
+            <div className="bg-card rounded-2xl p-6 shadow-md border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
                 <Activity className="w-5 h-5 text-muted-foreground" />
               </div>
 
-              {profile.recentActivity.length === 0 ? (
+              {(profile.recentActivity ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
                   No recent activity
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {profile.recentActivity.slice(0, 5).map((activity) => (
+                  {(profile.recentActivity ?? []).slice(0, 5).map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-start gap-3 pb-3 border-b border-border last:border-0"
@@ -508,7 +503,7 @@ export function EnhancedExpertDashboard() {
             </div>
 
             {/* Performance Metrics */}
-            <div className="bg-card rounded-2xl p-6 shadow-md border border-border">
+            <div className="bg-card rounded-2xl p-6 shadow-md border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20">
               <h3 className="text-lg font-semibold text-foreground mb-4">Performance</h3>
 
               <div className="space-y-4">

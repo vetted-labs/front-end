@@ -4,22 +4,10 @@ import { getGuildIcon } from "@/lib/guildHelpers";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Badge, getRankBadgeVariant } from "./ui/badge";
 import { Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
-
-interface Guild {
-  id: string;
-  name: string;
-  expertRole: "recruit" | "craftsman" | "master";
-  reputation: number;
-  totalEarnings: number;
-  joinedAt?: string;
-  memberCount: number;
-  pendingProposals: number;
-  ongoingProposals: number;
-  closedProposals: number;
-}
+import type { ExpertGuild } from "@/types";
 
 interface GuildMembershipCardProps {
-  guild: Guild;
+  guild: ExpertGuild;
   variant?: "default" | "compact";
 }
 

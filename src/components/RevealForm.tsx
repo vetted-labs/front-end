@@ -55,19 +55,17 @@ export function RevealForm({
     try {
       setIsSubmitting(true);
 
-      const response: any = await commitRevealApi.revealVote(proposalId, {
+      await commitRevealApi.revealVote(proposalId, {
         expertId,
         score: parseInt(score),
         nonce,
         comment,
       });
 
-      if (response.success) {
-        // Clear localStorage after successful reveal
-        localStorage.removeItem(localStorageKey);
-        toast.success("Vote revealed successfully!");
-        onSubmit();
-      }
+      // Clear localStorage after successful reveal
+      localStorage.removeItem(localStorageKey);
+      toast.success("Vote revealed successfully!");
+      onSubmit();
     } catch (error: any) {
       console.error("Reveal error:", error);
       if (error.message?.includes("hash") || error.data?.message?.includes("hash")) {

@@ -11,32 +11,15 @@ import {
   Timer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface Proposal {
-  id: string;
-  candidateName: string;
-  candidateEmail: string;
-  submittedAt: string;
-  status: "pending" | "ongoing" | "closed";
-  requiredStake: number;
-  participantCount: number;
-  votesFor: number;
-  votesAgainst: number;
-  expertHasStaked: boolean;
-  votingDeadline?: string;
-  reviewersAssigned?: number;
-  reviewsCompleted?: number;
-  expertiseLevel?: string;
-  yearsOfExperience?: number;
-}
+import type { GuildProposal } from "@/types";
 
 interface GuildProposalsTabProps {
   proposals: {
-    pending: Proposal[];
-    ongoing: Proposal[];
-    closed: Proposal[];
+    pending: GuildProposal[];
+    ongoing: GuildProposal[];
+    closed: GuildProposal[];
   };
-  onStakeProposal: (proposal: Proposal) => void;
+  onStakeProposal: (proposal: GuildProposal) => void;
 }
 
 function getTimeRemaining(deadline?: string) {
@@ -61,39 +44,39 @@ export function GuildProposalsTab({
       {/* Proposal Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 rounded-2xl border border-amber-400/20 bg-amber-500/[0.06]">
-          <p className="text-2xl font-bold text-amber-200">
+          <p className="text-2xl font-bold text-primary">
             {proposals.pending.length}
           </p>
-          <p className="text-xs text-slate-400 mt-1">Pending</p>
+          <p className="text-xs text-muted-foreground mt-1">Pending</p>
         </div>
         <div className="text-center p-4 rounded-2xl border border-orange-400/20 bg-orange-500/[0.06]">
           <p className="text-2xl font-bold text-orange-200">
             {proposals.ongoing.length}
           </p>
-          <p className="text-xs text-slate-400 mt-1">Ongoing</p>
+          <p className="text-xs text-muted-foreground mt-1">Ongoing</p>
         </div>
-        <div className="text-center p-4 rounded-2xl border border-white/10 bg-white/[0.03]">
-          <p className="text-2xl font-bold text-slate-300">
+        <div className="text-center p-4 rounded-2xl border border-border bg-muted/50">
+          <p className="text-2xl font-bold text-foreground">
             {proposals.closed.length}
           </p>
-          <p className="text-xs text-slate-400 mt-1">Closed</p>
+          <p className="text-xs text-muted-foreground mt-1">Closed</p>
         </div>
       </div>
 
       {/* Pending Proposals */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
           Pending Reviews
         </h3>
         {proposals.pending.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-12 text-center">
-            <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-8 h-8 text-slate-500" />
+          <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+            <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-200 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               No Pending Reviews
             </h3>
-            <p className="text-sm text-slate-400 max-w-md mx-auto">
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
               There are no candidate reviews waiting for your stake. Check back
               later or explore the leaderboard.
             </p>
@@ -108,34 +91,34 @@ export function GuildProposalsTab({
               return (
                 <div
                   key={proposal.id}
-                  className="rounded-2xl border border-white/10 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40 hover:bg-white/[0.05]"
+                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                        <h4 className="font-semibold text-foreground text-base truncate">
                           {proposal.candidateName}
                         </h4>
                         {proposal.expertiseLevel && (
-                          <span className="shrink-0 px-2.5 py-0.5 bg-amber-500/15 text-amber-200 border border-amber-400/30 text-xs font-semibold rounded-full">
+                          <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                             {proposal.expertiseLevel}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-400 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         {proposal.candidateEmail}
                       </p>
                       <div className="flex items-center flex-wrap gap-4 text-xs">
-                        <span className="flex items-center text-slate-400">
+                        <span className="flex items-center text-muted-foreground">
                           <Clock className="w-3.5 h-3.5 mr-1.5" />
                           {new Date(proposal.submittedAt).toLocaleDateString()}
                         </span>
                         {proposal.yearsOfExperience && (
-                          <span className="text-slate-400">
+                          <span className="text-muted-foreground">
                             {proposal.yearsOfExperience}y exp
                           </span>
                         )}
-                        <span className="flex items-center text-slate-400">
+                        <span className="flex items-center text-muted-foreground">
                           <Lock className="w-3.5 h-3.5 mr-1.5" />
                           {proposal.requiredStake} tokens
                         </span>
@@ -150,11 +133,11 @@ export function GuildProposalsTab({
                       {/* Progress bar */}
                       {totalReviewers > 0 && (
                         <div className="mt-3">
-                          <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                             <span>{completed} / {totalReviewers} reviews</span>
                             <span>{Math.round((completed / totalReviewers) * 100)}%</span>
                           </div>
-                          <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
                               style={{ width: `${Math.round((completed / totalReviewers) * 100)}%` }}
@@ -189,10 +172,10 @@ export function GuildProposalsTab({
 
       {/* Ongoing Reviews */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-4">Ongoing Reviews</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Ongoing Reviews</h3>
         {proposals.ongoing.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
-            <p className="text-sm text-slate-400">
+          <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+            <p className="text-sm text-muted-foreground">
               No ongoing reviews at the moment
             </p>
           </div>
@@ -202,28 +185,28 @@ export function GuildProposalsTab({
               const timeInfo = getTimeRemaining(proposal.votingDeadline);
               const totalReviewers = proposal.reviewersAssigned || 0;
               const completed = proposal.reviewsCompleted || 0;
-              const totalVotes = proposal.votesFor + proposal.votesAgainst;
+              const totalVotes = (proposal.votesFor ?? 0) + (proposal.votesAgainst ?? 0);
 
               return (
                 <div
                   key={proposal.id}
-                  className="rounded-2xl border border-orange-400/20 bg-gradient-to-b from-[#151824]/90 via-[#101420]/95 to-[#0b0f1b]/95 p-5 transition-all hover:-translate-y-0.5 hover:border-orange-400/40"
+                  className="rounded-2xl border border-primary/20 bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-slate-100 text-base truncate">
+                        <h4 className="font-semibold text-foreground text-base truncate">
                           {proposal.candidateName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-orange-500/15 text-orange-300 border border-orange-400/30 text-xs font-semibold rounded-full">
+                        <span className="shrink-0 px-2.5 py-0.5 bg-orange-500/15 text-orange-300 dark:text-orange-300 border border-orange-400/30 text-xs font-semibold rounded-full">
                           Under Review
                         </span>
                       </div>
-                      <p className="text-sm text-slate-400 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         {proposal.candidateEmail}
                       </p>
                       <div className="flex items-center flex-wrap gap-4 text-xs">
-                        <span className="flex items-center text-slate-400">
+                        <span className="flex items-center text-muted-foreground">
                           <Users className="w-3.5 h-3.5 mr-1.5" />
                           {proposal.participantCount} participants
                         </span>
@@ -250,11 +233,11 @@ export function GuildProposalsTab({
                       {/* Progress bar */}
                       {totalReviewers > 0 && (
                         <div className="mt-3">
-                          <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                             <span>{completed} / {totalReviewers} reviews</span>
                             <span>{Math.round((completed / totalReviewers) * 100)}%</span>
                           </div>
-                          <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
                               style={{ width: `${Math.round((completed / totalReviewers) * 100)}%` }}

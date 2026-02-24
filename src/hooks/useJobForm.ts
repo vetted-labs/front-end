@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { jobsApi, guildsApi } from "@/lib/api";
+import { useAuthContext } from "@/hooks/useAuthContext";
+import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
+import type { Guild } from "@/types";
 
 export interface JobFormData {
   title: string;
@@ -21,12 +24,6 @@ export interface JobFormData {
   status: "draft" | "active" | "paused" | "closed";
   screeningQuestions?: string[];
   companyId?: string;
-}
-
-interface Guild {
-  id: string;
-  name: string;
-  description: string;
 }
 
 export function useJobForm(jobId?: string) {
@@ -55,7 +52,7 @@ export function useJobForm(jobId?: string) {
     const fetchGuilds = async () => {
       try {
         const guildsData: any = await guildsApi.getAll();
-        setGuilds(guildsData);
+        setGuilds(Array.isArray(guildsData) ? guildsData : []);
       } catch (error) {
         console.error("Failed to fetch guilds:", error);
       }
@@ -63,13 +60,13 @@ export function useJobForm(jobId?: string) {
     fetchGuilds();
   }, []);
 
-  // Set companyId from localStorage
+  // Set companyId from auth context
+  const auth = useAuthContext();
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    if (companyId) {
-      setFormData((prev) => ({ ...prev, companyId }));
+    if (auth.userId && auth.userType === "company") {
+      setFormData((prev) => ({ ...prev, companyId: auth.userId! }));
     }
-  }, []);
+  }, [auth.userId, auth.userType]);
 
   // Fetch job data if editing
   useEffect(() => {
@@ -89,9 +86,9 @@ export function useJobForm(jobId?: string) {
             locationType: data.locationType || "remote",
             jobType: data.type || "Full-time",
             experienceLevel: data.experienceLevel || undefined,
-            salaryMin: data.salary.min || undefined,
-            salaryMax: data.salary.max || undefined,
-            salaryCurrency: data.salary.currency || "USD",
+            salaryMin: data.salary?.min || undefined,
+            salaryMax: data.salary?.max || undefined,
+            salaryCurrency: data.salary?.currency || "USD",
             guild: data.guild || "",
             status: data.status || "draft",
             screeningQuestions: data.screeningQuestions || [],
@@ -113,20 +110,15 @@ export function useJobForm(jobId?: string) {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    // Required fields
-    if (!formData.title.trim()) {
-      errors.title = "Job title is required";
-    }
+    // Required fields with minimum lengths
+    const titleErr = validateMinLength(formData.title, 3, "Job title");
+    if (titleErr) errors.title = titleErr;
 
-    if (!formData.description.trim()) {
-      errors.description = "Job description is required";
-    } else if (formData.description.length < 50) {
-      errors.description = "Description must be at least 50 characters";
-    }
+    const descErr = validateMinLength(formData.description, 50, "Description");
+    if (descErr) errors.description = descErr;
 
-    if (!formData.location.trim()) {
-      errors.location = "Location is required";
-    }
+    const locErr = validateMinLength(formData.location, 2, "Location");
+    if (locErr) errors.location = locErr;
 
     if (!formData.guild) {
       errors.guild = "Please select a guild";
@@ -135,6 +127,22 @@ export function useJobForm(jobId?: string) {
     if (!formData.companyId) {
       errors.companyId = "Company ID is missing. Please log in again.";
     }
+
+    // Per-line fields — each entry must be meaningful
+    const reqErr = validateMinLengthPerLine(
+      formData.requirements?.join("\n") || "", 3, "Requirement"
+    );
+    if (reqErr) errors.requirements = reqErr;
+
+    const skillErr = validateMinLengthPerLine(
+      formData.skills?.join("\n") || "", 2, "Skill"
+    );
+    if (skillErr) errors.skills = skillErr;
+
+    const sqErr = validateMinLengthPerLine(
+      formData.screeningQuestions?.join("\n") || "", 10, "Screening question"
+    );
+    if (sqErr) errors.screeningQuestions = sqErr;
 
     // Optional but validated if provided
     if (

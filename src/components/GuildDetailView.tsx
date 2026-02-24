@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
+
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { Briefcase, Coins, Trophy, UserPlus, Activity, Users, Eye, Loader2 } from "lucide-react";
@@ -20,31 +20,7 @@ import { GuildJobsTab } from "./guild/GuildJobsTab";
 import { StakeModal } from "./guild/StakeModal";
 import { ReviewGuildApplicationModal } from "./guild/ReviewGuildApplicationModal";
 import { StakingModal } from "./dashboard/StakingModal";
-
-interface Proposal {
-  id: string;
-  candidateName: string;
-  candidateEmail: string;
-  submittedAt: string;
-  status: "pending" | "ongoing" | "closed";
-  requiredStake: number;
-  participantCount: number;
-  votesFor: number;
-  votesAgainst: number;
-  expertHasStaked: boolean;
-}
-
-interface JobApplication {
-  id: string;
-  jobTitle: string;
-  candidateName: string;
-  candidateEmail: string;
-  appliedAt: string;
-  matchScore: number;
-  reviewedByRecruiter: boolean;
-  endorsementCount: number;
-  applicationSummary: string;
-}
+import type { Job, GuildProposal, GuildJobApplication, ExpertMember, CandidateMember } from "@/types";
 
 interface Earnings {
   totalPoints: number;
@@ -102,44 +78,6 @@ interface Activity {
   details: string;
 }
 
-interface ExpertMember {
-  id: string;
-  fullName: string;
-  email: string;
-  walletAddress: string;
-  role: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
-  reputation: number;
-  expertise: string[];
-  totalReviews: number;
-  successRate: number;
-  joinedAt: string;
-}
-
-interface CandidateMember {
-  id: string;
-  fullName: string;
-  email: string;
-  headline: string;
-  experienceLevel: string;
-  reputation: number;
-  endorsements: number;
-  joinedAt: string;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  location: string;
-  type: string;
-  salary: {
-    min: number | null;
-    max: number | null;
-    currency: string;
-  };
-  applicants: number;
-  createdAt: string;
-}
-
 interface GuildDetail {
   id: string;
   name: string;
@@ -148,11 +86,11 @@ interface GuildDetail {
   expertRole: string;
   reputation: number;
   proposals: {
-    pending: Proposal[];
-    ongoing: Proposal[];
-    closed: Proposal[];
+    pending: GuildProposal[];
+    ongoing: GuildProposal[];
+    closed: GuildProposal[];
   };
-  applications: JobApplication[];
+  applications: GuildJobApplication[];
   guildApplications: GuildApplication[];
   earnings: Earnings;
   recentActivity: Activity[];
@@ -177,13 +115,19 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [guild, setGuild] = useState<GuildDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    "activity" | "members" | "jobs" | "leaderboard" | "membershipApplications" | "earnings"
-  >("members");
+  const validTabs = ["activity", "members", "jobs", "leaderboard", "membershipApplications", "earnings"] as const;
+  type TabType = (typeof validTabs)[number];
+  const initialTab = (() => {
+    const tabParam = searchParams?.get("tab");
+    if (tabParam && validTabs.includes(tabParam as TabType)) return tabParam as TabType;
+    if (searchParams?.get("applicationId")) return "membershipApplications" as TabType;
+    return "members" as TabType;
+  })();
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
   // Stake modal state
   const [showStakeModal, setShowStakeModal] = useState(false);
-  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<GuildProposal | null>(null);
   const [stakeAmount, setStakeAmount] = useState("");
   const [isStaking, setIsStaking] = useState(false);
 
@@ -228,13 +172,28 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setError(null);
 
     try {
-      const result: any = await expertApi.getGuildDetails(guildId, address);
-      const data = result.data || result;
+      const data: any = await expertApi.getGuildDetails(guildId, address);
+      // Find the current user's expert entry to extract personal stats
+      const currentExpert = Array.isArray(data.experts)
+        ? data.experts.find((e: any) => e.walletAddress?.toLowerCase() === address.toLowerCase())
+        : null;
+
       const normalized = {
         ...data,
         experts: Array.isArray(data.experts) ? data.experts : [],
         candidates: Array.isArray(data.candidates) ? data.candidates : [],
         recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
+        memberCount: data.memberCount ?? data.totalMembers ?? 0,
+        expertRole: data.expertRole ?? currentExpert?.role ?? "member",
+        reputation: data.reputation ?? currentExpert?.reputation ?? 0,
+        earnings: data.earnings ?? {
+          totalPoints: currentExpert?.reputation ?? 0,
+          totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
+          recentEarnings: [],
+        },
+        totalProposalsReviewed: data.totalProposalsReviewed ?? data.statistics?.vettedProposals ?? 0,
+        averageApprovalTime: data.averageApprovalTime ?? "—",
+        totalVetdStaked: data.totalVetdStaked ?? data.statistics?.totalVetdStaked ?? 0,
       };
 
       const needsPublicFallback =
@@ -244,8 +203,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       if (needsPublicFallback) {
         try {
-          const publicResult: any = await guildsApi.getPublicDetail(guildId);
-          const publicData = publicResult.data || publicResult;
+          const publicData: any = await guildsApi.getPublicDetail(guildId);
 
           normalized.experts =
             normalized.experts.length > 0
@@ -285,21 +243,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           normalized.averageApprovalTime =
             normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "—";
         } catch (publicError) {
-          console.warn("Public guild fallback failed:", publicError);
         }
       }
-      console.log("Guild details received:", data);
-      console.log("Experts count:", data.experts?.length || 0);
-      console.log("Candidates count:", data.candidates?.length || 0);
       setGuild(normalized);
 
       // Fetch candidate guild applications
       try {
-        const candidateAppsResult: any = await guildsApi.getCandidateApplications(guildId, address);
-        const candidateApps = candidateAppsResult?.data || candidateAppsResult || [];
+        const candidateApps: any = await guildsApi.getCandidateApplications(guildId, address) || [];
         setCandidateApplications(Array.isArray(candidateApps) ? candidateApps : []);
       } catch (candidateErr) {
-        console.warn("Failed to fetch candidate applications:", candidateErr);
         setCandidateApplications([]);
       }
     } catch (err: any) {
@@ -317,6 +269,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (target) {
       setSelectedGuildApplication(target);
       setShowReviewModal(true);
+      setActiveTab("membershipApplications");
       setAutoOpenedReview(true);
     }
   }, [guild, autoOpenedReview, searchParams]);
@@ -331,7 +284,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         limit: 50
       });
 
-      const leaderboardEntries = result.data || [];
+      const leaderboardEntries = Array.isArray(result) ? result : [];
 
       // Transform backend data to frontend structure
       const topExperts: LeaderboardExpert[] = leaderboardEntries.map((entry: any, index: number) => {
@@ -402,7 +355,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     }
   };
 
-  const handleStakeOnProposal = (proposal: Proposal) => {
+  const handleStakeOnProposal = (proposal: GuildProposal) => {
     setSelectedProposal(proposal);
     setStakeAmount(proposal.requiredStake.toString());
     setShowStakeModal(true);
@@ -539,7 +492,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       setShowReviewModal(false);
       setSelectedGuildApplication(null);
-      toast.success(response?.data?.message || "Review submitted. Thanks for voting.");
+      toast.success(response?.message || "Review submitted. Thanks for voting.");
       fetchGuildDetails();
     } catch (err: any) {
       setError(err.message || "Failed to submit review");
@@ -555,7 +508,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   if (error || !guild) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4">
         <Alert variant="error">{error || "Failed to load guild details"}</Alert>
       </div>
     );
@@ -567,24 +520,22 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   );
 
   return (
-    <div className="relative min-h-screen bg-[#07080c] text-slate-100 overflow-x-hidden">
+    <div className="relative bg-background text-foreground overflow-x-hidden">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
-        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/15 blur-3xl" />
-        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-amber-500/12 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#07080c] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
+        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />
+        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-amber-500/6 dark:bg-amber-500/12 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10">
-        <ExpertNavbar />
-
         <GuildHeader guild={guild} onStakeClick={() => setShowVetdStakingModal(true)} />
 
       {/* Navigation Link to Public View */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={() => router.push(`/guilds/${guildId}`)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-200 bg-white/5 border border-white/10 rounded-lg hover:border-orange-400/40 hover:bg-white/10 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-muted/50 border border-border rounded-lg hover:border-primary/40 hover:bg-muted transition-all"
         >
           <Eye className="w-4 h-4" />
           View Public Guild Page
@@ -593,14 +544,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {/* Tabs */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_60px_rgba(0,0,0,0.55)] mb-6 overflow-hidden">
-          <div className="flex border-b border-white/10 overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg mb-6 overflow-hidden">
+          <div className="flex border-b border-border overflow-x-auto">
             <button
               onClick={() => setActiveTab("activity")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "activity"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Activity className="w-4 h-4 inline mr-2" />
@@ -610,8 +561,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("members")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "members"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Users className="w-4 h-4 inline mr-2" />
@@ -621,8 +572,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("jobs")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "jobs"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Briefcase className="w-4 h-4 inline mr-2" />
@@ -632,8 +583,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("leaderboard")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "leaderboard"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Trophy className="w-4 h-4 inline mr-2" />
@@ -643,8 +594,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("membershipApplications")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "membershipApplications"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <UserPlus className="w-4 h-4 inline mr-2" />
@@ -654,7 +605,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                 const candidateCount = candidateApplications?.length || 0;
                 const total = expertCount + candidateCount;
                 return total > 0 ? (
-                  <span className="ml-2 px-2 py-0.5 bg-orange-500/20 text-amber-200 border border-orange-400/40 text-xs font-semibold rounded-full">
+                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                     {total}
                   </span>
                 ) : null;
@@ -664,8 +615,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               onClick={() => setActiveTab("earnings")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === "earnings"
-                  ? "text-amber-200 border-b-2 border-amber-400 bg-white/5"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Coins className="w-4 h-4 inline mr-2" />

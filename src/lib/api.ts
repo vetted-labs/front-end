@@ -162,7 +162,20 @@ export async function apiRequest<T = unknown>(
     }
 
     const data = await response.json();
-    return data;
+
+    // Auto-unwrap { success: true, data: T } envelope from backend
+    if (
+      data !== null &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      "success" in data &&
+      "data" in data &&
+      data.success === true
+    ) {
+      return data.data as T;
+    }
+
+    return data as T;
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -288,56 +301,33 @@ export const companyApi = {
       body: JSON.stringify({ email, password }),
     }),
 
-  getProfile: () => {
-    const token = localStorage.getItem("companyAuthToken");
-    return fetch(`${API_BASE_URL}/api/companies/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then(async (res) => {
-      if (!res.ok) throw new ApiError(res.status, res.statusText);
-      return res.json();
-    });
-  },
+  getProfile: () =>
+    apiRequest("/api/companies/me", { requiresAuth: true }),
 
-  updateProfile: (data: Record<string, unknown>) => {
-    const token = localStorage.getItem("companyAuthToken");
-    return fetch(`${API_BASE_URL}/api/companies/me`, {
+  updateProfile: (data: Record<string, unknown>) =>
+    apiRequest("/api/companies/me", {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(data),
-    }).then(async (res) => {
-      if (!res.ok) throw new ApiError(res.status, res.statusText);
-      return res.json();
-    });
-  },
+      requiresAuth: true,
+    }),
 
   uploadLogo: (file: File) => {
     const formData = new FormData();
     formData.append("logo", file);
-    const token = localStorage.getItem("companyAuthToken");
-    return fetch(`${API_BASE_URL}/api/companies/me/logo`, {
+    return apiRequest("/api/companies/me/logo", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: formData,
-    }).then((res) => {
-      if (!res.ok) throw new ApiError(res.status, res.statusText);
-      return res.json();
+      requiresAuth: true,
     });
   },
 
   getApplications: (params?: {
     status?: string;
     page?: number;
-    limit?: number
+    limit?: number;
   }) => {
     const queryParams = new URLSearchParams();
-    if (params?.status && params.status !== 'all') {
+    if (params?.status && params.status !== "all") {
       queryParams.append("status", params.status);
     }
     if (params?.page) {
@@ -346,17 +336,11 @@ export const companyApi = {
     if (params?.limit) {
       queryParams.append("limit", params.limit.toString());
     }
-
     const queryString = queryParams.toString();
-    const token = localStorage.getItem("companyAuthToken");
-    return fetch(`${API_BASE_URL}/api/companies/applications${queryString ? `?${queryString}` : ''}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then(async (res) => {
-      if (!res.ok) throw new ApiError(res.status, res.statusText);
-      return res.json();
-    });
+    return apiRequest(
+      `/api/companies/applications${queryString ? `?${queryString}` : ""}`,
+      { requiresAuth: true }
+    );
   },
 };
 
@@ -456,9 +440,6 @@ export const candidateApi = {
 // Expert API
 export const expertApi = {
   getProfile: (walletAddress: string) =>
-    apiRequest(`/api/experts/profile?wallet=${walletAddress}`),
-
-  getExpertByWallet: (walletAddress: string) =>
     apiRequest(`/api/experts/profile?wallet=${walletAddress}`),
 
   apply: (data: Record<string, unknown>) =>
@@ -627,6 +608,14 @@ export const guildsApi = {
     const query = queryParams.toString();
     return apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/leaderboard${query ? `?${query}` : ""}`);
   },
+
+  // Get guild averages (for comparison stats)
+  getAverages: (guildId: string) =>
+    apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/averages`),
+
+  // Get a member's recent activity in a guild
+  getMemberActivity: (guildId: string, memberId: string) =>
+    apiRequest(`/api/guilds/${encodeURIComponent(guildId)}/members/${encodeURIComponent(memberId)}/activity`),
 };
 
 // Blockchain API
@@ -679,6 +668,14 @@ export const blockchainApi = {
   getApplicationsForEndorsement: (guildId: string) =>
     apiRequest(`/api/blockchain/endorsements/applications/${guildId}`),
 
+  getExpertEndorsements: (walletAddress: string, params?: { status?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    return apiRequest(`/api/blockchain/endorsements/expert/${walletAddress}${query ? `?${query}` : ""}`);
+  },
+
   // Reputation endpoints
   getReputation: (walletAddress: string) =>
     apiRequest(`/api/blockchain/reputation/${walletAddress}`),
@@ -700,6 +697,22 @@ export const blockchainApi = {
   // System endpoints
   getBlockchainConfig: () =>
     apiRequest("/api/blockchain/config"),
+
+  // Wallet verification (SIWE)
+  getWalletChallenge: (address: string) =>
+    apiRequest("/api/blockchain/wallet/challenge", {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    }),
+
+  verifyWallet: (address: string, signature: string, message: string) =>
+    apiRequest("/api/blockchain/wallet/verify", {
+      method: "POST",
+      body: JSON.stringify({ address, signature, message }),
+    }),
+
+  isWalletVerified: (walletAddress: string) =>
+    apiRequest(`/api/blockchain/wallet/verified/${walletAddress}`),
 };
 
 // Proposals API
@@ -765,6 +778,10 @@ export const proposalsApi = {
       body: JSON.stringify({ approved }),
     }),
 
+  // Get all votes for a proposal
+  getVotes: (proposalId: string) =>
+    apiRequest(`/api/proposals/${proposalId}/votes`),
+
   // Get expert's vote on a proposal
   getExpertVote: (proposalId: string, expertId: string) =>
     apiRequest(`/api/proposals/${proposalId}/vote/${expertId}`),
@@ -784,58 +801,6 @@ export const proposalsApi = {
 export const getAssetUrl = (path: string) => {
   if (!path) return "";
   return path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
-};
-
-// Helper functions for Expert Dashboard redesign
-
-/**
- * Calculate total points (reputation + earnings)
- */
-export const calculateTotalPoints = (profile: {
-  reputation: number;
-  totalEarnings: number;
-}): number => {
-  return profile.reputation + profile.totalEarnings;
-};
-
-/**
- * Get notification count from profile data
- * Aggregates pending proposals, unreviewed applications, and guilds with pending proposals
- */
-export const getNotificationCount = (profile: {
-  pendingTasks: {
-    pendingProposalsCount: number;
-    unreviewedApplicationsCount: number;
-  };
-  guilds: Array<{ pendingProposals: number }>;
-}): number => {
-  const pendingProposalsCount = profile.pendingTasks?.pendingProposalsCount || 0;
-  const unreviewedApplicationsCount = profile.pendingTasks?.unreviewedApplicationsCount || 0;
-  const guildsWithPendingCount = profile.guilds?.filter(g => g.pendingProposals > 0).length || 0;
-
-  return pendingProposalsCount + unreviewedApplicationsCount + guildsWithPendingCount;
-};
-
-/**
- * Check if expert meets staking minimum
- */
-export const meetsStakingMinimum = (stakingStatus: {
-  meetsMinimum?: boolean;
-  stakedAmount?: string;
-  minimumRequired?: string;
-}): boolean => {
-  if (typeof stakingStatus.meetsMinimum === "boolean") {
-    return stakingStatus.meetsMinimum;
-  }
-
-  // Fallback: compare stakedAmount with minimumRequired
-  if (stakingStatus.stakedAmount && stakingStatus.minimumRequired) {
-    const staked = parseFloat(stakingStatus.stakedAmount);
-    const minimum = parseFloat(stakingStatus.minimumRequired);
-    return staked >= minimum;
-  }
-
-  return false;
 };
 
 // Governance API

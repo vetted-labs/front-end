@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -162,39 +163,31 @@ export function EndorsementModal({
 
                 <div className="flex flex-wrap gap-2">
                   {application.linkedin && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={application.linkedin} target="_blank" rel="noopener">
-                        <Linkedin className="w-4 h-4 mr-2" />
-                        LinkedIn
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </Button>
+                    <a href={application.linkedin} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                      <Linkedin className="w-4 h-4 mr-2" />
+                      LinkedIn
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
                   )}
                   {application.github && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={application.github} target="_blank" rel="noopener">
-                        <Github className="w-4 h-4 mr-2" />
-                        GitHub
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </Button>
+                    <a href={application.github} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                      <Github className="w-4 h-4 mr-2" />
+                      GitHub
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
                   )}
                   {application.resume_url && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`/api/candidates/${application.candidate_id}/resume`} target="_blank">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Resume
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </Button>
+                    <a href={`/api/candidates/${application.candidate_id}/resume`} target="_blank" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Resume
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
                   )}
                 </div>
 
-                <Button variant="link" asChild className="p-0 h-auto">
-                  <Link href={`/candidates/${application.candidate_id}`} target="_blank">
-                    View Full Profile →
-                  </Link>
-                </Button>
+                <Link href={`/candidates/${application.candidate_id}`} target="_blank" className={cn(buttonVariants({ variant: "link" }), "p-0 h-auto")}>
+                  View Full Profile →
+                </Link>
               </CardContent>
             </Card>
           </TabsContent>

@@ -24,7 +24,6 @@ import {
   Crown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { GovernanceVoteForm } from "@/components/governance/GovernanceVoteForm";
 import { GovernanceResultsBanner } from "@/components/governance/GovernanceResultsBanner";
 import { VotingPowerBar } from "@/components/governance/VotingPowerBar";
@@ -115,12 +114,8 @@ export default function GovernanceProposalDetailPage() {
   const loadProposal = async () => {
     try {
       setLoading(true);
-      const response: any = await governanceApi.getProposal(proposalId);
-      if (response.success) {
-        setProposal(response.data);
-      } else {
-        toast.error("Failed to load proposal");
-      }
+      const response = await governanceApi.getProposal(proposalId);
+      setProposal(response);
     } catch (error: any) {
       console.error("Error loading proposal:", error);
       toast.error("Failed to load proposal");
@@ -131,10 +126,8 @@ export default function GovernanceProposalDetailPage() {
 
   const loadVotingPower = async () => {
     try {
-      const response: any = await blockchainApi.getStakeBalance(address as string);
-      if (response.success) {
-        setVotingPower(parseFloat(response.data?.stakedAmount || "0"));
-      }
+      const response = await blockchainApi.getStakeBalance(address as string);
+      setVotingPower(parseFloat(response?.stakedAmount || "0"));
     } catch (error) {
       console.error("Error loading voting power:", error);
     }
@@ -146,15 +139,13 @@ export default function GovernanceProposalDetailPage() {
       return;
     }
     try {
-      const response: any = await governanceApi.vote(
+      await governanceApi.vote(
         proposalId,
         { vote, reason },
         address
       );
-      if (response.success) {
-        toast.success("Vote submitted successfully!");
-        loadProposal();
-      }
+      toast.success("Vote submitted successfully!");
+      loadProposal();
     } catch (error: any) {
       toast.error(error.message || "Failed to submit vote");
     }
@@ -162,8 +153,7 @@ export default function GovernanceProposalDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -178,8 +168,7 @@ export default function GovernanceProposalDetailPage() {
 
   if (!proposal) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card>
             <CardContent className="p-12 text-center">
@@ -205,8 +194,7 @@ export default function GovernanceProposalDetailPage() {
   const canVote = proposal.status === "active" && !proposal.has_voted && !!address;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
+    <div className="min-h-full">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">

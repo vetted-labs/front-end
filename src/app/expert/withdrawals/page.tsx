@@ -3,8 +3,9 @@ import { WithdrawalManager } from '@/components/WithdrawalManager';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
 import { toast } from 'sonner';
@@ -28,16 +29,17 @@ export default function WithdrawalsPage() {
   const loadStakeInfo = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest(
+      const data = await apiRequest(
         `/api/blockchain/staking/balance/${address}`
       );
 
-      if (response.success) {
-        setStakeInfo(response.data);
+      setStakeInfo(data);
+    } catch (error: any) {
+      // 404 is expected when no staking data exists yet
+      if (error?.status !== 404) {
+        console.error('Failed to load stake info:', error);
+        toast.error('Failed to load staking information');
       }
-    } catch (error) {
-      console.error('Failed to load stake info:', error);
-      toast.error('Failed to load staking information');
     } finally {
       setLoading(false);
     }
@@ -57,9 +59,9 @@ export default function WithdrawalsPage() {
           <p className="text-muted-foreground mb-4">
             Please connect your wallet to manage withdrawals
           </p>
-          <Button asChild>
-            <Link href="/expert/dashboard">Go to Dashboard</Link>
-          </Button>
+          <Link href="/expert/dashboard" className={cn(buttonVariants())}>
+            Go to Dashboard
+          </Link>
         </div>
       </div>
     );
@@ -77,12 +79,10 @@ export default function WithdrawalsPage() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4">
-          <Link href="/expert/dashboard">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
-        </Button>
+        <Link href="/expert/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "mb-4")}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Link>
 
         <h1 className="text-3xl font-bold mb-2">Withdrawals</h1>
         <p className="text-muted-foreground">

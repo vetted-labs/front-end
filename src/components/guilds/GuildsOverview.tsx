@@ -9,29 +9,7 @@ import { Alert } from "../ui/alert";
 import { GuildCard } from "../GuildCard";
 import { ReputationLeaderboard } from "../ReputationLeaderboard";
 import { getGuildDetailedInfo } from "@/lib/guildHelpers";
-
-interface Guild {
-  id: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  expertRole: "recruit" | "craftsman" | "master";
-  reputation: number;
-  totalEarnings: number;
-  pendingProposals: number;
-  ongoingProposals: number;
-  closedProposals: number;
-}
-
-interface ExpertProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  walletAddress: string;
-  reputation: number;
-  totalEarnings: number;
-  guilds: Guild[];
-}
+import type { ExpertProfile } from "@/types";
 
 type TabType = "guilds" | "leaderboard";
 
@@ -57,8 +35,7 @@ export function GuildsOverview() {
     setError(null);
 
     try {
-      const result: any = await expertApi.getProfile(address);
-      const data = result.data || result;
+      const data: any = await expertApi.getProfile(address);
 
       // Ensure guilds is an array
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];

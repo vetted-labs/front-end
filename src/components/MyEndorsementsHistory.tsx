@@ -66,7 +66,7 @@ export function MyEndorsementsHistory() {
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
+        <Card padding="md" className="border-border bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
               <Award className="h-6 w-6 text-primary" />
@@ -78,7 +78,7 @@ export function MyEndorsementsHistory() {
           </div>
         </Card>
 
-        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
+        <Card padding="md" className="border-border bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
               <Trophy className="h-6 w-6 text-amber-400" />
@@ -90,7 +90,7 @@ export function MyEndorsementsHistory() {
           </div>
         </Card>
 
-        <Card padding="md" className="border-white/10 bg-gradient-to-br from-card to-secondary/40">
+        <Card padding="md" className="border-border bg-gradient-to-br from-card to-secondary/40">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-emerald-300" />
@@ -131,7 +131,7 @@ export function MyEndorsementsHistory() {
               onClick={toggle}
               role="button"
               tabIndex={0}
-              className="cursor-pointer border-white/10 bg-gradient-to-br from-card to-secondary/30"
+              className="cursor-pointer border-border bg-gradient-to-br from-card to-secondary/30"
             >
               <div className="space-y-4">
                 {/* Header */}
@@ -161,7 +161,7 @@ export function MyEndorsementsHistory() {
                           Rank #{endorsement.blockchainData.rank}
                         </span>
                       )}
-                    <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full border border-border flex items-center justify-center">
                       {isExpanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground" />
                       ) : (
@@ -172,7 +172,7 @@ export function MyEndorsementsHistory() {
                 </div>
 
                 {/* Candidate + key metrics */}
-                <div className="rounded-xl border border-white/10 bg-background/60 px-4 py-3">
+                <div className="rounded-xl border border-border bg-background/60 px-4 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-primary" />
@@ -209,7 +209,7 @@ export function MyEndorsementsHistory() {
                 {isExpanded && (
                   <div className="space-y-3">
                     {endorsement.application?.coverLetter && (
-                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                      <div className="rounded-xl border border-border bg-card/80 px-4 py-3">
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
                           Candidate Summary
                         </p>
@@ -220,14 +220,14 @@ export function MyEndorsementsHistory() {
                     )}
 
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                      <div className="rounded-xl border border-border bg-card/80 px-4 py-3">
                         <p className="text-xs text-muted-foreground">Endorsed On</p>
                         <p className="text-sm font-medium text-foreground">
                           {new Date(endorsement.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       {endorsement.blockchainData?.bidAmount && (
-                        <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                        <div className="rounded-xl border border-border bg-card/80 px-4 py-3">
                           <p className="text-xs text-muted-foreground">Blockchain Bid</p>
                           <p className="text-sm font-semibold text-primary">
                             {parseFloat(endorsement.blockchainData.bidAmount).toFixed(2)} VTD
@@ -237,7 +237,7 @@ export function MyEndorsementsHistory() {
                     </div>
 
                     {endorsement.notes && (
-                      <div className="rounded-xl border border-white/10 bg-card/80 px-4 py-3">
+                      <div className="rounded-xl border border-border bg-card/80 px-4 py-3">
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
                           Your Notes
                         </p>

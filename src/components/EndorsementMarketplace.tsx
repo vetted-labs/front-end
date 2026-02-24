@@ -1,15 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther, parseEther, keccak256, toBytes } from "viem";
+import { formatEther, keccak256, toBytes } from "viem";
 import { sepolia } from "wagmi/chains";
-import Link from "next/link";
 import {
   useVettedToken,
   useEndorsementBidding,
   useGuildStaking,
   useTransactionConfirmation,
-  useUserEndorsements,
   useMyActiveEndorsements,
 } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
@@ -22,26 +20,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Coins,
-  TrendingUp,
   Users,
-  Award,
   Loader2,
   AlertCircle,
-  ArrowRight,
-  AlertTriangle,
   RefreshCw,
-  Wallet,
-  Network,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
 import { CandidateDetailsModal } from "./endorsements/CandidateDetailsModal";
 import { EndorsementTransactionModal } from "./endorsements/EndorsementTransactionModal";
+import { WalletStatusBanner } from "./endorsements/WalletStatusBanner";
+import { EndorsementStatsGrid } from "./endorsements/EndorsementStatsGrid";
+import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 
 interface Application {
   application_id: string;
@@ -118,10 +111,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   // Debug logging for balance
   useEffect(() => {
     if (address) {
-      console.log('[Balance Debug] Wallet Address:', address);
-      console.log('[Balance Debug] Raw Balance:', balance);
-      console.log('[Balance Debug] Formatted Balance:', balance ? formatEther(balance) : 'N/A');
-      console.log('[Balance Debug] Token Contract:', CONTRACT_ADDRESSES.TOKEN);
     }
   }, [balance, address]);
 
@@ -130,17 +119,14 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
     const abortController = new AbortController();
 
     if (guildId && address) {
-      console.log('[useEffect] Triggering loadApplications with:', { guildId, address });
       loadApplications(abortController.signal);
     } else {
-      console.warn('[useEffect] Missing guildId or address:', { guildId, address });
       setLoading(false);
       // Clear applications when wallet disconnects
       setApplications([]);
     }
 
     return () => {
-      console.log('[useEffect] Cleanup: Aborting pending requests');
       abortController.abort();
     };
   }, [guildId, address]);
@@ -167,11 +153,9 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   // Handle transaction success
   useEffect(() => {
     if (txSuccess && txReceipt) {
-      console.log("Transaction confirmed!", { approving, endorsing, txHash });
 
       if (approving && selectedApp) {
         // Approval confirmed, now place the bid
-        console.log("Approval confirmed, now placing bid...");
         setApproving(false);
         refetchEndorsementAllowance();
 
@@ -181,7 +165,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
         }, 1000);
       } else if (endorsing) {
         // Bid confirmed successfully
-        console.log('Bid transaction confirmed!');
         setTxStep('success');
         toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
 
@@ -193,7 +176,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
         // Reload data with delay to ensure blockchain state is updated
         setTimeout(() => {
-          console.log('Reloading data after successful bid...');
           loadApplications();
           refetchEndorsements();
           refetchBalance();
@@ -208,17 +190,12 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       setLoading(true);
 
       // Enhanced logging
-      console.log('[loadApplications] Starting load...');
-      console.log('[loadApplications] Guild ID:', guildId);
-      console.log('[loadApplications] Expert Address:', address);
 
       if (!guildId || !address) {
-        console.warn('[loadApplications] Missing required params:', { guildId, address });
         setLoading(false);
         return;
       }
 
-      console.log('[loadApplications] Making API request...');
       const response: any = await apiRequest(
         `/api/blockchain/endorsements/applications/${guildId}?expert_address=${address}`,
         { signal }
@@ -226,48 +203,18 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
       // Check if request was aborted
       if (signal?.aborted) {
-        console.log('[loadApplications] Request was aborted, skipping state update');
         return;
       }
 
-      // Detailed response inspection
-      console.log('[loadApplications] Response type:', typeof response);
-      console.log('[loadApplications] Response keys:', Object.keys(response || {}));
-      console.log('[loadApplications] Full response:', response);
-      console.log('[loadApplications] response.success:', response?.success);
-      console.log('[loadApplications] response.data:', response?.data);
-      console.log('[loadApplications] response.data length:', response?.data?.length);
+      // apiRequest auto-unwraps { success, data } envelopes,
+      // so response IS the data directly (an array of applications).
+      const applicationsData = Array.isArray(response) ? response : [];
 
-      // Handle different response formats
-      let applicationsData = [];
-
-      if (response?.success && response?.data) {
-        // Standard format: { success: true, data: [...] }
-        applicationsData = response.data;
-        console.log('[loadApplications] ✅ Using response.data format');
-      } else if (Array.isArray(response)) {
-        // Direct array format
-        applicationsData = response;
-        console.log('[loadApplications] ✅ Using direct array format');
-      } else if (response?.data && Array.isArray(response.data)) {
-        // Nested data without success flag
-        applicationsData = response.data;
-        console.log('[loadApplications] ✅ Using nested data format');
-      } else {
-        console.error('[loadApplications] ❌ Unexpected response format');
-        console.error('[loadApplications] Response:', JSON.stringify(response, null, 2));
-        toast.error("Invalid response format from server");
-        setLoading(false);
-        return;
-      }
-
-      console.log('[loadApplications] Setting', applicationsData.length, 'applications');
       setApplications(applicationsData);
 
     } catch (error: any) {
       // Don't show errors for aborted requests
       if (error.name === 'AbortError' || signal?.aborted) {
-        console.log('[loadApplications] Request aborted');
         return;
       }
 
@@ -314,13 +261,11 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       setEndorsing(true);
       setTxError(null);
 
-      console.log("Placing bid...", { jobId: app.job_id, candidateId: app.candidate_id, amount });
 
       const hash = await placeBid(app.job_id, app.candidate_id, amount);
       setBidTxHash(hash); // Track bid hash separately
       setTxHash(hash); // For useTransactionConfirmation hook
 
-      console.log("Bid placed, transaction hash:", hash);
       toast.success("Endorsement submitted! Waiting for confirmation...");
     } catch (error: any) {
       console.error("Endorsement error:", error);
@@ -359,7 +304,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   };
 
   const handleEndorse = async (app: Application) => {
-    console.log("handleEndorse called", { bidAmount, app });
 
     if (!bidAmount || parseFloat(bidAmount) <= 0) {
       toast.error("Please enter a valid bid amount");
@@ -373,7 +317,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
     }
 
     const minBid = minimumBid ? formatEther(minimumBid) : "1";
-    console.log("Minimum bid check:", { bidAmount, minBid });
 
     if (!app.current_bid && parseFloat(bidAmount) < parseFloat(minBid)) {
       toast.error(`Minimum bid is ${minBid} VETD`);
@@ -382,7 +325,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
     // Check balance
     const currentBalance = balance ? formatEther(balance) : "0";
-    console.log("Balance check:", { currentBalance, bidAmount });
 
     if (parseFloat(currentBalance) < parseFloat(bidAmount)) {
       toast.error(`Insufficient VETD balance. You have ${parseFloat(currentBalance).toFixed(2)} VETD but need ${bidAmount} VETD`);
@@ -394,10 +336,8 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
       // Check allowance
       const currentAllowance = endorsementAllowance ? formatEther(endorsementAllowance) : "0";
-      console.log("Allowance check:", { currentAllowance, bidAmount });
 
       if (parseFloat(currentAllowance) < parseFloat(bidAmount)) {
-        console.log("Need approval, starting approval transaction...");
         toast.info("Step 1/2: Approving tokens for endorsement...");
         await handleApprove(bidAmount);
         // After approval, the useEffect will automatically call handlePlaceBid
@@ -556,7 +496,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   // Handler for refresh button
   const handleRefresh = () => {
-    console.log('Manually refreshing data...');
     loadApplications(); // No signal needed for manual refresh
     refetchEndorsements();
     refetchBalance();
@@ -566,88 +505,16 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   return (
     <div className="space-y-6">
-      {/* Backend Wallet Test Mode Indicator */}
-      {isBackendWallet && (
-        <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
-          <CardContent className="p-4 flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
-                Test Mode
-              </h3>
-              <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                You're connected with the backend test wallet ({BACKEND_WALLET.substring(0, 6)}...{BACKEND_WALLET.substring(38)}). Use this for development testing only.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Wrong Network Warning */}
-      {!isOnSepolia && (
-        <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
-          <CardContent className="p-4 flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200 mb-2">
-                Wrong Network Detected
-              </h3>
-              <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
-                Your wallet is connected to <strong>{chain?.name || "Unknown Network"}</strong>.
-                Please switch to <strong>Sepolia Testnet</strong> to endorse applications.
-              </p>
-              <Button
-                onClick={() => switchChain({ chainId: sepolia.id })}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                Switch to Sepolia Testnet
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Connected Wallet Info */}
-      {address && (
-        <Card className="border-border/60 bg-card shadow-sm dark:bg-gradient-to-r dark:from-slate-950/85 dark:via-slate-900/80 dark:to-slate-950/85 dark:shadow-[0_25px_70px_-45px_rgba(14,116,144,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/30 bg-orange-500/10">
-                  <Wallet className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connected Wallet</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-lg font-semibold text-foreground">{shortAddress}</code>
-                    <Badge className="border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300">
-                      Vault
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formattedBalance ? `${formattedBalance} VETD available` : 'Balance loading...'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="rounded-xl border border-border/60 bg-background/60 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Network</p>
-                  <div className="mt-1 flex items-center gap-2 text-sm font-semibold">
-                    <Network className="h-4 w-4 text-sky-400" />
-                    <span>{chain?.name || 'Unknown Network'}</span>
-                  </div>
-                  <p className={`mt-1 text-xs ${isOnSepolia ? 'text-orange-600 dark:text-orange-400' : 'text-yellow-500'}`}>
-                    {isOnSepolia ? 'Sepolia ready' : 'Switch required'}
-                  </p>
-                </div>
-                <Badge className={`${isOnSepolia ? 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300' : 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'}`}>
-                  {isOnSepolia ? 'Sepolia' : 'Wrong network'}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <WalletStatusBanner
+        isBackendWallet={isBackendWallet}
+        backendWalletAddress={BACKEND_WALLET}
+        isOnSepolia={isOnSepolia}
+        chainName={chain?.name}
+        address={address!}
+        shortAddress={shortAddress}
+        formattedBalance={formattedBalance}
+        onSwitchToSepolia={() => switchChain({ chainId: sepolia.id })}
+      />
 
       {/* Header Stats */}
       <div className="flex items-center justify-between mb-4">
@@ -666,257 +533,28 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-cyan-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(255,106,0,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10">
-                <Coins className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-sm text-muted-foreground">Your VETD Balance</p>
-                <button
-                  onClick={() => {
-                    console.log('Manually refreshing balance...');
-                    refetchBalance();
-                    toast.success('Balance refreshed');
-                  }}
-                  className="p-1 hover:bg-muted rounded"
-                  title="Refresh balance"
-                >
-                    <RefreshCw className="w-3 h-3 text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400" />
-                </button>
-              </div>
-              {!address ? (
-                <p className="text-lg text-muted-foreground">Connect Wallet</p>
-              ) : balance === undefined ? (
-                <p className="text-lg text-muted-foreground">Loading...</p>
-              ) : (
-                <>
-                  <p className="text-2xl font-bold break-all">
-                    {parseFloat(formatEther(balance)).toLocaleString('en-US', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2
-                    })}
-                  </p>
-                  {parseFloat(formatEther(balance)) > 0 && (
-                    <p className="text-xs text-muted-foreground font-mono break-all">
-                      {formatEther(balance)} VETD
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <EndorsementStatsGrid
+        formattedBalance={balance !== undefined ? parseFloat(formatEther(balance)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : null}
+        rawBalance={balance !== undefined ? formatEther(balance) : null}
+        showRawBalance={balance !== undefined && parseFloat(formatEther(balance)) > 0}
+        hasAddress={!!address}
+        balanceLoading={balance === undefined}
+        userStake={userStake}
+        userEndorsementsCount={userEndorsements.length}
+        applicationsCount={applications.length}
+        minimumBid={minimumBid ? formatEther(minimumBid) : "1"}
+        onRefreshBalance={refetchBalance}
+      />
 
-        <Card className="border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-slate-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(56,189,248,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-sky-500/20 bg-sky-500/10">
-                <TrendingUp className="w-6 h-6 text-sky-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">Staked Amount</p>
-              <p className="text-2xl font-bold">{userStake}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(245,158,11,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10">
-                <Award className="w-6 h-6 text-amber-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">My Endorsements</p>
-              <p className="text-2xl font-bold">{userEndorsements.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(99,102,241,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
-                <Users className="w-6 h-6 text-indigo-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">Available Applications</p>
-              <p className="text-2xl font-bold">{applications.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent shadow-[0_20px_60px_-45px_rgba(249,115,22,0.6)]">
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10">
-                <Award className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">Minimum Bid</p>
-              <p className="text-2xl font-bold">
-                {minimumBid ? formatEther(minimumBid) : "1"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* My Endorsements Section */}
-      <Card className="border-border/60 bg-gradient-to-r from-orange-500/10 via-cyan-500/5 to-transparent shadow-[0_30px_80px_-60px_rgba(255,106,0,0.7)]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                My Active Endorsements
-              </CardTitle>
-              <CardDescription>
-                {userEndorsements.length > 0
-                  ? `You have ${userEndorsements.length} active endorsement${userEndorsements.length !== 1 ? 's' : ''} in ${guildName}`
-                  : allUserEndorsements.length > 0
-                  ? `You have ${allUserEndorsements.length} endorsement${allUserEndorsements.length !== 1 ? 's' : ''} in other guilds`
-                  : `No active endorsements yet. Endorse candidates below to get started.`
-                }
-              </CardDescription>
-            </div>
-            {allUserEndorsements.length > 0 && (
-              <Link href="/expert/endorsements/history">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  View All ({allUserEndorsements.length})
-                </Button>
-              </Link>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {userEndorsements.length === 0 ? (
-            <div className="text-center py-8">
-              <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-2">
-                You haven't endorsed any candidates in {guildName} yet
-              </p>
-              {allUserEndorsements.length > 0 ? (
-                <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {Array.from(new Set(allUserEndorsements.map((e: any) => e.guild?.name).filter(Boolean))).map((guildName: any) => (
-                      <span key={guildName} className="text-xs px-2 py-1 bg-orange-500/10 rounded-full">
-                        {guildName}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Browse applications below and endorse candidates you believe will succeed
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {userEndorsements.map((endorsement: any) => (
-                <div
-                  key={endorsement.application?.id || endorsement.endorsementId}
-                  onClick={() => {
-                    // Build application object from endorsement data
-                    // The modal expects snake_case flat structure
-                    const applicationForModal = {
-                      // IDs
-                      application_id: endorsement.application?.id,
-                      candidate_id: endorsement.candidate?.id,
-                      job_id: endorsement.job?.id,
-                      company_id: endorsement.job?.companyId,
-
-                      // Candidate info (flat snake_case from nested camelCase)
-                      candidate_name: endorsement.candidate?.name,
-                      candidate_email: endorsement.candidate?.email,
-                      candidate_headline: endorsement.candidate?.headline,
-                      candidate_profile_picture_url: endorsement.candidate?.profilePicture,
-                      candidate_bio: endorsement.candidate?.bio || '',
-                      candidate_wallet: endorsement.candidate?.walletAddress,
-
-                      // Job info
-                      job_title: endorsement.job?.title,
-                      job_description: endorsement.job?.description,
-                      company_name: endorsement.job?.companyName,
-                      company_logo: endorsement.job?.companyLogo,
-                      location: endorsement.job?.location,
-                      job_type: endorsement.job?.jobType,
-                      salary_min: endorsement.job?.salaryMin,
-                      salary_max: endorsement.job?.salaryMax,
-                      salary_currency: endorsement.job?.salaryCurrency,
-
-                      // Application details
-                      status: endorsement.application?.status,
-                      applied_at: endorsement.application?.appliedAt,
-                      cover_letter: endorsement.application?.coverLetter,
-                      screening_answers: endorsement.application?.screeningAnswers,
-
-                      // Guild info
-                      guild_score: endorsement.guildScore,
-
-                      // Current bid and rank info
-                      current_bid: endorsement.stakeAmount,
-                      rank: endorsement.blockchainData?.rank || 0,
-
-                      // Additional fields that might be used
-                      requirements: endorsement.job?.requirements || [],
-                      job_skills: endorsement.job?.skills || [],
-                      experience_level: endorsement.candidate?.experienceLevel,
-                      linkedin: endorsement.candidate?.linkedin,
-                      github: endorsement.candidate?.github,
-                      resume_url: endorsement.candidate?.resumeUrl,
-                    };
-
-                    setSelectedApp(applicationForModal);
-                    setDetailsModalOpen(true);
-                  }}
-                  className="flex items-center justify-between p-4 bg-card/80 rounded-lg border border-border/60 hover:border-orange-500/40 hover:shadow-[0_20px_50px_-35px_rgba(255,106,0,0.6)] cursor-pointer transition-all group"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors">
-                        {endorsement.candidate?.name}
-                      </h4>
-                      {endorsement.blockchainData?.rank > 0 && endorsement.blockchainData?.rank <= 3 && (
-                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
-                          🏆 Rank #{endorsement.blockchainData.rank}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {endorsement.job?.title} at {endorsement.job?.companyName}
-                    </p>
-                    <p className="text-sm font-medium text-orange-700 dark:text-orange-400 mt-1">
-                      Your Bid: {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VETD
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right text-sm text-muted-foreground">
-                      {endorsement.blockchainData?.rank > 0 && (
-                        <p>Rank #{endorsement.blockchainData.rank}</p>
-                      )}
-                      <p className="text-xs mt-1">
-                        {endorsement.createdAt
-                          ? new Date(endorsement.createdAt).toLocaleDateString()
-                          : 'N/A'
-                        }
-                      </p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-600 dark:group-hover:text-orange-300 group-hover:translate-x-1 transition-all" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <MyActiveEndorsements
+        userEndorsements={userEndorsements}
+        allUserEndorsements={allUserEndorsements}
+        guildName={guildName}
+        onSelectEndorsement={(applicationForModal) => {
+          setSelectedApp(applicationForModal);
+          setDetailsModalOpen(true);
+        }}
+      />
 
       {/* Applications List */}
       <Card className="border-border/60 bg-card/80">

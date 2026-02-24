@@ -51,24 +51,18 @@ export function CommitmentForm({
 
       // Generate hash via backend
       const hashResponse: any = await commitRevealApi.generateHash(score, nonce);
-      if (!hashResponse.success) {
-        toast.error("Failed to generate commitment hash");
-        return;
-      }
 
       // Submit commitment
-      const response: any = await commitRevealApi.submitCommitment(proposalId, {
+      await commitRevealApi.submitCommitment(proposalId, {
         expertId,
-        commitmentHash: hashResponse.data.hash,
+        commitmentHash: hashResponse.hash,
         stakeAmount: parseFloat(stakeAmount),
       });
 
-      if (response.success) {
-        // Save score and nonce to localStorage for reveal phase
-        localStorage.setItem(localStorageKey, JSON.stringify({ score, nonce }));
-        toast.success("Commitment submitted! Save your nonce for the reveal phase.");
-        onSubmit();
-      }
+      // Save score and nonce to localStorage for reveal phase
+      localStorage.setItem(localStorageKey, JSON.stringify({ score, nonce }));
+      toast.success("Commitment submitted! Save your nonce for the reveal phase.");
+      onSubmit();
     } catch (error: any) {
       console.error("Commitment error:", error);
       toast.error(error.message || "Failed to submit commitment");

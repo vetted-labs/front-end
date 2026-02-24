@@ -5,18 +5,12 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-
-interface Proposal {
-  id: string;
-  candidateName: string;
-  candidateEmail: string;
-  requiredStake: number;
-}
+import type { GuildProposal } from "@/types";
 
 interface StakeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  proposal: Proposal | null;
+  proposal: GuildProposal | null;
   stakeAmount: string;
   onStakeAmountChange: (amount: string) => void;
   onConfirmStake: () => void;

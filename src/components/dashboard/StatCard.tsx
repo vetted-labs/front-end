@@ -38,7 +38,7 @@ export function StatCard({
   };
 
   return (
-    <div className="bg-card rounded-2xl p-6 shadow-md border border-border hover:shadow-lg transition-all">
+    <div className="bg-card rounded-2xl p-6 shadow-md border border-border hover:shadow-lg transition-all dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20 dark:hover:border-white/[0.1]">
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 ${iconBgColor} rounded-lg flex items-center justify-center`}>
           <Icon className={`w-6 h-6 ${iconColor}`} />

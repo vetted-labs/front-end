@@ -20,17 +20,13 @@ export default function CandidateProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest(
+      const data: any = await apiRequest(
         `/api/candidates/${candidateId}/profile`,
         { method: 'GET', requiresAuth: true }
       );
 
-      if (response.success) {
-        setProfile(response.data);
-        setViewerType(response.viewerType);
-      } else {
-        toast.error('Failed to load profile');
-      }
+      setProfile(data);
+      setViewerType(data.viewerType || '');
     } catch (error: any) {
       console.error('Failed to load profile:', error);
 

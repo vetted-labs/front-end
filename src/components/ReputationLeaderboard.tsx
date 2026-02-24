@@ -63,8 +63,8 @@ export function ReputationLeaderboard({
         ? { guildId, limit: 50 }
         : { limit: 50 };
 
-      const result: any = await expertApi.getLeaderboard(params);
-      setLeaderboard(result.data || []);
+      const result = await expertApi.getLeaderboard(params);
+      setLeaderboard(Array.isArray(result) ? result : []);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -146,7 +146,7 @@ export function ReputationLeaderboard({
 
       {/* Stats Overview */}
       <div className="grid md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl p-4 border border-border">
+        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-primary" />
@@ -156,7 +156,7 @@ export function ReputationLeaderboard({
           <p className="text-2xl font-bold text-foreground">{leaderboard.length}</p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border">
+        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
               <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -172,7 +172,7 @@ export function ReputationLeaderboard({
           </p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border">
+        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
               <Coins className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -184,7 +184,7 @@ export function ReputationLeaderboard({
           </p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border">
+        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -202,10 +202,10 @@ export function ReputationLeaderboard({
       </div>
 
       {/* Leaderboard Table */}
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted border-b border-border">
+            <thead className="bg-muted border-b border-border dark:bg-white/[0.03]">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Rank

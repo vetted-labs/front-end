@@ -14,8 +14,8 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
 import { candidateApi, companyApi, sanitizeErrorMessage } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
-import { useDisconnect } from "wagmi";
+import { clearTokenAuthState } from "@/lib/auth";
+import { useAuthContext } from "@/hooks/useAuthContext";
 
 type UserType = "candidate" | "company";
 
@@ -27,17 +27,16 @@ function LoginForm() {
 
   // Derive userType from URL parameter (default to candidate)
   const userType: UserType = typeParam === "company" ? "company" : "candidate";
-  const { disconnect } = useDisconnect();
+  const auth = useAuthContext();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Clear any existing auth on mount
+  // Clear token-based auth on mount — don't disconnect wallet (experts may be browsing)
   useEffect(() => {
-    clearAllAuthState();
-    disconnect();
+    clearTokenAuthState();
   }, []);
 
   // Function to update userType by updating the URL
@@ -64,18 +63,12 @@ function LoginForm() {
       if (userType === "candidate") {
         // Login as candidate
         const data: any = await candidateApi.login(email, password);
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("candidateId", data.id);
-        localStorage.setItem("candidateEmail", data.email);
-        localStorage.setItem("userType", "candidate");
+        auth.login(data.token, "candidate", data.id, data.email);
         router.push(redirectUrl || "/candidate/profile");
       } else {
         // Login as company
         const data: any = await companyApi.login(email, password);
-        localStorage.setItem("companyAuthToken", data.token);
-        localStorage.setItem("companyId", data.company.id);
-        localStorage.setItem("companyEmail", data.company.email);
-        localStorage.setItem("userType", "company");
+        auth.login(data.token, "company", data.company.id, data.company.email);
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: any) {

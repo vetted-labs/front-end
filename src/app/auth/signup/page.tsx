@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { candidateApi, companyApi } from "@/lib/api";
-import { clearAllAuthState } from "@/lib/auth";
-import { useDisconnect } from "wagmi";
+import { candidateApi, companyApi, ApiError } from "@/lib/api";
+import { clearTokenAuthState } from "@/lib/auth";
+import { useAuthContext } from "@/hooks/useAuthContext";
 
 type UserType = "candidate" | "company";
 
@@ -30,15 +30,14 @@ function SignupForm() {
 
   // Derive userType from URL parameter (default to candidate)
   const userType: UserType = typeParam === "company" ? "company" : "candidate";
-  const { disconnect } = useDisconnect();
+  const auth = useAuthContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Clear any existing auth on mount
+  // Clear token-based auth on mount — don't disconnect wallet (experts may be browsing)
   useEffect(() => {
-    clearAllAuthState();
-    disconnect();
+    clearTokenAuthState();
   }, []);
 
   // Function to update userType by updating the URL
@@ -119,9 +118,7 @@ function SignupForm() {
           experienceLevel: "mid",
         });
 
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("candidateId", data.id);
-        localStorage.setItem("userType", "candidate");
+        auth.login(data.token, "candidate", data.id, email);
         router.push(redirectUrl || "/candidate/profile");
       } else {
         // Create company account
@@ -132,42 +129,31 @@ function SignupForm() {
           website,
         });
 
-        localStorage.setItem("companyAuthToken", data.token);
-        localStorage.setItem("companyId", data.company.id);
-        localStorage.setItem("companyEmail", data.company.email);
-        localStorage.setItem("userType", "company");
+        auth.login(data.token, "company", data.company.id, data.company.email);
         router.push(redirectUrl || "/dashboard");
       }
-    } catch (error: any) {
-      console.error("Signup error:", error);
-
-      // Handle different types of errors
+    } catch (error: unknown) {
       let errorMessage = "Something went wrong. Please try again.";
 
-      if (error.response) {
-        // HTTP error response from server
-        const status = error.response.status;
-        const data = error.response.data;
+      if (error instanceof ApiError) {
+        const { status, data } = error.response;
 
-        if (status === 400) {
-          // Extract specific field errors if available
-          if (data.errors && Array.isArray(data.errors)) {
-            errorMessage = data.errors.map((e: any) => e.msg).join(", ");
+        if (status === 409) {
+          errorMessage = "This email is already registered. Please try logging in instead.";
+        } else if (status === 400) {
+          // Backend returns { error: "...", details: [...] }
+          if (data?.details && Array.isArray(data.details)) {
+            errorMessage = data.details.map((d: any) => d.message).join(". ");
           } else {
-            errorMessage = data.message || data.error || "Invalid input. Please check your information.";
+            errorMessage = data?.error || data?.message || "Invalid input. Please check your information.";
           }
-        } else if (status === 401) {
-          errorMessage = data.message || data.error || "Authentication failed. This email may already be registered.";
-        } else if (status === 409 || status === 422) {
-          errorMessage = data.message || data.error || "This email is already registered. Please try logging in instead.";
         } else if (status === 500) {
-          errorMessage = data.message || data.error || "Server error. Please try again later.";
+          errorMessage = "Server error. Please try again later.";
         } else {
-          errorMessage = data.message || data.error || errorMessage;
+          errorMessage = data?.error || data?.message || errorMessage;
         }
-      } else if (error.message) {
-        // Network or other errors
-        if (error.message.includes("Network Error") || error.message.includes("fetch")) {
+      } else if (error instanceof Error) {
+        if (error.message.includes("Network error") || error.message.includes("fetch")) {
           errorMessage = "Cannot connect to server. Please check your internet connection.";
         } else {
           errorMessage = error.message;
@@ -418,6 +404,15 @@ function SignupForm() {
             {errors.submit && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                 <p className="text-destructive text-sm">{errors.submit}</p>
+                {errors.submit.includes("already registered") && (
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/auth/login?type=${userType}`)}
+                    className="text-primary hover:text-primary/80 text-sm font-medium mt-2 underline"
+                  >
+                    Go to login
+                  </button>
+                )}
               </div>
             )}
 

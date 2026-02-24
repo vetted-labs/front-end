@@ -1,6 +1,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent, useReadContracts, usePublicClient } from 'wagmi';
 import { parseEther, keccak256, toBytes, formatEther } from 'viem';
 import { useState, useEffect, useMemo } from 'react';
+import { blockchainApi } from '@/lib/api';
 import {
   VETTED_TOKEN_ABI,
   EXPERT_STAKING_ABI,
@@ -221,14 +222,6 @@ export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
 }
 
 /**
- * Legacy hook for staking operations (wraps useGuildStaking for backward compatibility)
- * @deprecated Use useGuildStaking instead
- */
-export function useExpertStaking() {
-  return useGuildStaking();
-}
-
-/**
  * Hook for endorsement operations
  */
 export function useEndorsementBidding() {
@@ -393,7 +386,6 @@ export function useUserEndorsements(applications: Array<{
     [applications]
   );
 
-  console.log(`[useUserEndorsements] Optimized query: ${applicationsWithBids.length}/${applications.length} apps with bids`);
 
   // Build contract calls for getBidInfo and getTopEndorsers
   // Only for applications where user has a bid
@@ -430,18 +422,12 @@ export function useUserEndorsements(applications: Array<{
   // Process contract results to build endorsements list
   useEffect(() => {
     if (!contractResults || !address || applicationsWithBids.length === 0) {
-      console.log('[useUserEndorsements] No data to process:', {
-        hasResults: !!contractResults,
-        hasAddress: !!address,
-        appsWithBidsCount: applicationsWithBids.length
-      });
       setEndorsements([]);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    console.log('[useUserEndorsements] Processing contract results for', applicationsWithBids.length, 'applications');
 
     const userEndorsements: typeof endorsements = [];
 
@@ -454,21 +440,11 @@ export function useUserEndorsements(applications: Array<{
       const bidInfoResult = contractResults[bidInfoIndex];
       const topEndorsersResult = contractResults[topEndorsersIndex];
 
-      console.log(`[useUserEndorsements] App ${i} (${app.candidate_name}):`, {
-        bidInfoStatus: bidInfoResult?.status,
-        bidInfoResult: bidInfoResult?.result,
-        topEndorsersStatus: topEndorsersResult?.status,
-      });
 
       // Check if bid info is valid
       if (bidInfoResult?.status === 'success' && bidInfoResult.result) {
         const [amount, isActive] = bidInfoResult.result as [bigint, boolean];
 
-        console.log(`[useUserEndorsements] Bid info for ${app.candidate_name}:`, {
-          amount: amount.toString(),
-          isActive,
-          amountInETH: formatEther(amount),
-        });
 
         if (isActive && amount > 0n) {
           // User has an active bid on this application
@@ -490,11 +466,6 @@ export function useUserEndorsements(applications: Array<{
               rank = userIndex + 1; // Convert to 1-indexed rank
             }
 
-            console.log(`[useUserEndorsements] Top endorsers for ${app.candidate_name}:`, {
-              experts: experts.map((e, idx) => ({ address: e, amount: formatEther(amounts[idx]) })),
-              userRank: rank,
-              totalEndorsers,
-            });
           }
 
           const endorsement = {
@@ -510,7 +481,6 @@ export function useUserEndorsements(applications: Array<{
             created_at: new Date().toISOString(), // We don't have exact timestamp from chain
           };
 
-          console.log('[useUserEndorsements] Adding endorsement:', endorsement);
           userEndorsements.push(endorsement);
         }
       } else if (bidInfoResult?.status === 'failure') {
@@ -518,7 +488,6 @@ export function useUserEndorsements(applications: Array<{
       }
     }
 
-    console.log('[useUserEndorsements] Final endorsements:', userEndorsements);
     setEndorsements(userEndorsements);
     setIsLoading(false);
   }, [contractResults, address, applicationsWithBids.length, refreshTrigger]); // Use length to avoid deep comparison
@@ -554,7 +523,6 @@ export function useMyActiveEndorsements() {
     const fetchActiveEndorsements = async () => {
       // Wait for connection before trying to fetch
       if (!isConnected || !address) {
-        console.log('[useMyActiveEndorsements] Waiting for wallet connection...', { isConnected, address });
         if (isMounted) {
           setIsLoading(false);
           setEndorsements([]);
@@ -568,26 +536,12 @@ export function useMyActiveEndorsements() {
       }
 
       try {
-        console.log('[useMyActiveEndorsements] Fetching active endorsements for address:', address);
-
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const url = `${apiUrl}/api/blockchain/endorsements/expert/${address}?status=active&limit=50`;
-        console.log('[useMyActiveEndorsements] Fetching from:', url);
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log('[useMyActiveEndorsements] Response:', { success: data.success, count: data.data?.length });
+        const data: any = await blockchainApi.getExpertEndorsements(address, { status: 'active', limit: 50 });
 
         if (!isMounted) return; // Don't update if unmounted
 
-        if (data.success && Array.isArray(data.data)) {
-          console.log('[useMyActiveEndorsements] ✅ Fetched', data.data.length, 'active endorsements');
-          setEndorsements(data.data);
+        if (Array.isArray(data)) {
+          setEndorsements(data);
         } else {
           throw new Error('Invalid response format from API');
         }
@@ -644,7 +598,6 @@ export function useMyEndorsementHistory() {
   useEffect(() => {
     const fetchEndorsementHistory = async () => {
       if (!address || !publicClient) {
-        console.log('[useMyEndorsementHistory] No address or client available');
         setEndorsements([]);
         return;
       }
@@ -653,11 +606,9 @@ export function useMyEndorsementHistory() {
       setError(null);
 
       try {
-        console.log('[useMyEndorsementHistory] Fetching BidPlaced events for address:', address);
 
         // Get current block number
         const currentBlock = await publicClient.getBlockNumber();
-        console.log('[useMyEndorsementHistory] Current block:', currentBlock);
 
         // Define chunk size (stay well under 10k limit for free-tier RPCs)
         const CHUNK_SIZE = 5000n;
@@ -665,14 +616,12 @@ export function useMyEndorsementHistory() {
         // Query last 100k blocks or from block 0, whichever is more recent
         const startBlock = currentBlock > 100000n ? currentBlock - 100000n : 0n;
 
-        console.log('[useMyEndorsementHistory] Querying from block', startBlock, 'to', currentBlock);
 
         // Query in chunks to avoid RPC limits
         const allLogs: any[] = [];
         for (let fromBlock = startBlock; fromBlock <= currentBlock; fromBlock += CHUNK_SIZE) {
           const toBlock = fromBlock + CHUNK_SIZE - 1n > currentBlock ? currentBlock : fromBlock + CHUNK_SIZE - 1n;
 
-          console.log(`[useMyEndorsementHistory] Fetching chunk: ${fromBlock} to ${toBlock}`);
 
           const chunkLogs = await publicClient.getLogs({
             address: CONTRACT_ADDRESSES.ENDORSEMENT,
@@ -698,7 +647,6 @@ export function useMyEndorsementHistory() {
           allLogs.push(...chunkLogs);
         }
 
-        console.log('[useMyEndorsementHistory] Found', allLogs.length, 'BidPlaced events');
 
         const logs = allLogs;
 
@@ -725,7 +673,6 @@ export function useMyEndorsementHistory() {
         // Sort by block number (most recent first)
         endorsementHistory.sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber));
 
-        console.log('[useMyEndorsementHistory] Processed endorsements:', endorsementHistory);
         setEndorsements(endorsementHistory);
       } catch (err) {
         console.error('[useMyEndorsementHistory] Error fetching endorsement history:', err);

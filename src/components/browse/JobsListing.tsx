@@ -1,0 +1,594 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Search,
+  Filter,
+  MapPin,
+  DollarSign,
+  Briefcase,
+  Building2,
+  X,
+  CheckCircle2,
+  Star,
+} from "lucide-react";
+import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
+import { Modal } from "@/components/ui/modal";
+import { Pagination } from "@/components/ui/pagination";
+import { useAuthContext } from "@/hooks/useAuthContext";
+import { getTimeAgo } from "@/lib/utils";
+import type { Job } from "@/types";
+import { useGuilds } from "@/lib/hooks/useGuilds";
+
+export default function JobsListing() {
+  const router = useRouter();
+  const { resolveGuildId } = useGuilds();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGuilds, setSelectedGuilds] = useState<string[]>([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
+  const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>(
+    [],
+  );
+  const auth = useAuthContext();
+  const isCandidate = auth.isAuthenticated && auth.userType === 'candidate';
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const JOBS_PER_PAGE = 5;
+
+  // Get unique guilds from actual jobs data
+  const allGuilds = Array.from(
+    new Set(
+      jobs
+        .map((job) => job.guild?.replace(/ Guild$/i, ''))
+        .filter((g): g is string => Boolean(g))
+    )
+  ).sort();
+
+  const visibleGuilds = allGuilds.slice(0, 6);
+
+  const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
+  const locationTypes = ["Remote", "Onsite", "Hybrid"];
+
+  const [locationQuery, setLocationQuery] = useState("");
+  const [showGuildModal, setShowGuildModal] = useState(false);
+  const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
+
+  // Fetch candidate's applications if authenticated as candidate
+  useEffect(() => {
+    if (!isCandidate) return;
+
+    const fetchApplications = async () => {
+      try {
+        const data: any = await applicationsApi.getAll();
+        const applications = data?.applications || [];
+        const jobIds = new Set<string>(applications.map((app: { jobId: string }) => app.jobId));
+        setAppliedJobIds(jobIds);
+      } catch (error) {
+        console.error("Failed to fetch applications:", error);
+      }
+    };
+
+    fetchApplications();
+  }, [isCandidate]);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setIsLoading(true);
+      try {
+        const data: any = await jobsApi.getAll({ status: 'active' });
+        // Ensure all jobs have required fields with defaults
+        const jobsList = Array.isArray(data) ? data : [];
+        const normalizedJobs = jobsList.map((job: Record<string, unknown>) => ({
+          ...job,
+          title: job.title || 'Untitled Position',
+          description: job.description || '',
+          guild: job.guild || '',
+          department: job.department || null,
+          requirements: job.requirements || [],
+          skills: job.skills || [],
+          screeningQuestions: job.screeningQuestions || [],
+        }));
+        setJobs(normalizedJobs);
+        setFilteredJobs(normalizedJobs);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  useEffect(() => {
+    let filtered = jobs;
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (job) =>
+          (job.title && job.title.toLowerCase().includes(query)) ||
+          (job.description && job.description.toLowerCase().includes(query)) ||
+          (job.guild && job.guild.toLowerCase().includes(query)) ||
+          (job.department && job.department.toLowerCase().includes(query)) ||
+          (job.companyName && job.companyName.toLowerCase().includes(query)),
+      );
+    }
+
+    // Filter by location
+    if (locationQuery) {
+      const query = locationQuery.toLowerCase();
+      filtered = filtered.filter(
+        (job) =>
+          (job.location && job.location.toLowerCase().includes(query)) ||
+          (job.locationType && job.locationType.toLowerCase().includes(query)),
+      );
+    }
+
+    // Filter by guilds
+    if (selectedGuilds.length > 0) {
+      filtered = filtered.filter((job) => {
+        if (!job.guild) return false;
+        // Match guild name with or without " Guild" suffix
+        const jobGuild = job.guild.replace(/ Guild$/i, '');
+        return selectedGuilds.some(selectedGuild => {
+          const cleanSelected = selectedGuild.replace(/ Guild$/i, '');
+          return jobGuild.toLowerCase() === cleanSelected.toLowerCase();
+        });
+      });
+    }
+
+    // Filter by job types
+    if (selectedJobTypes.length > 0) {
+      filtered = filtered.filter((job) => job.type && selectedJobTypes.includes(job.type));
+    }
+
+    // Filter by location types (case-insensitive)
+    if (selectedLocationTypes.length > 0) {
+      filtered = filtered.filter((job) =>
+        job.locationType && selectedLocationTypes.some(
+          type => type.toLowerCase() === job.locationType!.toLowerCase()
+        ),
+      );
+    }
+
+    setFilteredJobs(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchQuery, locationQuery, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
+
+  const toggleFilter = (
+    filterArray: string[],
+    setFilter: (filters: string[]) => void,
+    value: string,
+  ) => {
+    if (filterArray.includes(value)) {
+      setFilter(filterArray.filter((item) => item !== value));
+    } else {
+      setFilter([...filterArray, value]);
+    }
+  };
+
+  const clearAllFilters = () => {
+    setSelectedGuilds([]);
+    setSelectedJobTypes([]);
+    setSelectedLocationTypes([]);
+    setSearchQuery("");
+    setLocationQuery("");
+  };
+
+  const activeFilterCount =
+    selectedGuilds.length +
+    selectedJobTypes.length +
+    selectedLocationTypes.length;
+
+  const toggleGuild = (guild: string) => {
+    if (selectedGuilds.includes(guild)) {
+      setSelectedGuilds(selectedGuilds.filter((g) => g !== guild));
+    } else {
+      setSelectedGuilds([...selectedGuilds, guild]);
+    }
+  };
+
+  const toggleJobType = (type: string) => {
+    if (selectedJobTypes.includes(type)) {
+      setSelectedJobTypes(selectedJobTypes.filter((t) => t !== type));
+    } else {
+      setSelectedJobTypes([...selectedJobTypes, type]);
+    }
+  };
+
+  const toggleLocationType = (type: string) => {
+    if (selectedLocationTypes.includes(type)) {
+      setSelectedLocationTypes(selectedLocationTypes.filter((t) => t !== type));
+    } else {
+      setSelectedLocationTypes([...selectedLocationTypes, type]);
+    }
+  };
+
+  const selectAllGuilds = () => {
+    setSelectedGuilds([...allGuilds]);
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredJobs.length / JOBS_PER_PAGE);
+  const startIndex = (currentPage - 1) * JOBS_PER_PAGE;
+  const endIndex = startIndex + JOBS_PER_PAGE;
+  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div className="min-h-full">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Two-Column Search Bar */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Role/Keywords Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Role, company, or keywords"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            {/* Location Search */}
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Where?"
+                value={locationQuery}
+                onChange={(e) => setLocationQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Guild Filter Chips */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 items-center">
+            {visibleGuilds.map((guild) => (
+              <button
+                key={guild}
+                onClick={() => toggleGuild(guild)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedGuilds.includes(guild)
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                {guild}
+              </button>
+            ))}
+            <button
+              onClick={() => setShowAllGuildsModal(true)}
+              className="px-4 py-2 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-all flex items-center gap-1"
+            >
+              <Filter className="w-4 h-4" />
+              Filter
+            </button>
+            {(selectedGuilds.length > 0 || selectedJobTypes.length > 0 || selectedLocationTypes.length > 0) && (
+              <button
+                onClick={() => {
+                  setSelectedGuilds([]);
+                  setSelectedJobTypes([]);
+                  setSelectedLocationTypes([]);
+                }}
+                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-destructive transition-all flex items-center gap-1"
+              >
+                <X className="w-4 h-4" />
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Jobs List - Full Width */}
+        <div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading jobs...</p>
+            </div>
+          ) : filteredJobs.length > 0 ? (
+            <>
+              <div className="space-y-3">
+                {currentJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => router.push(`/browse/jobs/${job.id}`)}
+                    className="bg-card rounded-lg p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-border hover:border-primary/30 group relative"
+                  >
+                    {/* Posted Date - Top Right Corner */}
+                    <div className="absolute top-4 right-5 text-xs text-muted-foreground">
+                      {getTimeAgo(job.createdAt)}
+                    </div>
+
+                    <div className="flex gap-5">
+                      {/* Company Logo - Left Side */}
+                      <div className="flex-shrink-0">
+                        {job.companyLogo ? (
+                          <img
+                            src={getAssetUrl(job.companyLogo)}
+                            alt={job.companyName || "Company"}
+                            className="w-16 h-16 rounded-lg object-cover border border-border"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
+                        >
+                          <Building2 className="w-8 h-8 text-primary" />
+                        </div>
+                      </div>
+
+                      {/* Job Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Job Title and Featured Badge */}
+                        <div className="flex items-start gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                {job.title}
+                              </h3>
+                              {job.featured && (
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded text-xs font-bold">
+                                  <Star className="w-3 h-3 fill-white" />
+                                  FEATURED
+                                </span>
+                              )}
+                              {isCandidate && appliedJobIds.has(job.id) && (
+                                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Applied
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Company Name and Location on same line */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mb-3">
+                          {job.companyName && (
+                            <span className="font-medium text-foreground">
+                              {job.companyName}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5" />
+                            {job.location}
+                            {job.locationType && job.locationType.toLowerCase() !== job.location.toLowerCase() && (
+                              <span className="capitalize"> • {job.locationType}</span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Tags: Guild, Job Type, Salary */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {job.guild && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const guildUuid = resolveGuildId(job.guild!);
+                                if (guildUuid) router.push(`/guilds/${guildUuid}`);
+                              }}
+                              className="px-2.5 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded text-xs font-medium hover:bg-primary/20 transition-colors"
+                            >
+                              {job.guild}
+                            </button>
+                          )}
+                          <span className="px-2.5 py-1 bg-muted text-card-foreground rounded text-xs font-medium">
+                            {job.type}
+                          </span>
+                          {job.salary.min && job.salary.max && (
+                            <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">
+                              ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
+                            </span>
+                          )}
+                          {job.experienceLevel && (
+                            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium capitalize">
+                              {job.experienceLevel}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Skills */}
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <div className="flex flex-wrap gap-1.5">
+                              {job.skills.slice(0, 5).map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-0.5 bg-muted/50 text-card-foreground rounded text-xs"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.skills.length > 5 && (
+                                <span className="px-2 py-0.5 text-muted-foreground text-xs">
+                                  +{job.skills.length - 5} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          ) : (
+            <div className="text-center py-12 bg-card rounded-xl">
+              <Briefcase className="w-16 h-16 text-muted-foreground/60 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No jobs found
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your filters or search query
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-primary hover:text-primary font-medium"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Guild Selection Modal (Other button) */}
+      <Modal
+        isOpen={showGuildModal}
+        onClose={() => setShowGuildModal(false)}
+        title="Select Additional Guilds"
+      >
+        <p className="text-muted-foreground mb-4">
+          Choose additional guild categories to filter jobs
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+          {allGuilds
+            .filter((guild) => !visibleGuilds.includes(guild))
+            .map((guild) => (
+              <button
+                key={guild}
+                onClick={() => {
+                  toggleGuild(guild);
+                }}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                  selectedGuilds.includes(guild)
+                    ? "bg-primary text-white"
+                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                {guild}
+              </button>
+            ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-border">
+          <button
+            onClick={() => setShowGuildModal(false)}
+            className="w-full px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
+
+      {/* Filter Modal */}
+      <Modal
+        isOpen={showAllGuildsModal}
+        onClose={() => setShowAllGuildsModal(false)}
+        title="Filter Jobs"
+      >
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Guilds Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Guilds</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {allGuilds.map((guild) => (
+                <button
+                  key={guild}
+                  onClick={() => toggleGuild(guild)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedGuilds.includes(guild)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {guild}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Types Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Job Type</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {jobTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleJobType(type)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedJobTypes.includes(type)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Location Types Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Work Location</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {locationTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleLocationType(type)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                    selectedLocationTypes.includes(type)
+                      ? "bg-primary text-white"
+                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={() => {
+              setSelectedGuilds([]);
+              setSelectedJobTypes([]);
+              setSelectedLocationTypes([]);
+            }}
+            className="flex-1 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Clear All
+          </button>
+          <button
+            onClick={() => setShowAllGuildsModal(false)}
+            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </Modal>
+    </div>
+  );
+}

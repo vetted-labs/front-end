@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -175,75 +176,47 @@ export function CandidateDetailsModal({
           {/* Quick Links */}
           <div className="relative mt-6 flex flex-wrap gap-3">
             {application.linkedin && (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
-              >
-                <a
-                  href={ensureHttps(application.linkedin)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Linkedin className="w-4 h-4" />
-                  <span>LinkedIn</span>
-                </a>
-              </Button>
-            )}
-            {application.github && (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
-              >
-                <a
-                  href={ensureHttps(application.github)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Github className="w-4 h-4" />
-                  <span>GitHub</span>
-                </a>
-              </Button>
-            )}
-            {application.resume_url && (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-                className="h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300"
-              >
-                <a
-                  href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Resume</span>
-                </a>
-              </Button>
-            )}
-            <Button
-              variant="default"
-              size="lg"
-              asChild
-              className="h-11 px-6 font-bold text-sm bg-gradient-to-r from-orange-500 to-orange-400 text-slate-900 hover:from-orange-400 hover:to-orange-300 shadow-md hover:shadow-xl transition-all duration-300"
-            >
               <a
-                href={`/candidates/${application.candidate_id}`}
+                href={ensureHttps(application.linkedin)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300 flex items-center gap-2")}
               >
-                <span>View Full Profile</span>
-                <ExternalLink className="w-4 h-4" />
+                <Linkedin className="w-4 h-4" />
+                <span>LinkedIn</span>
               </a>
-            </Button>
+            )}
+            {application.github && (
+              <a
+                href={ensureHttps(application.github)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-600 dark:hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300 flex items-center gap-2")}
+              >
+                <Github className="w-4 h-4" />
+                <span>GitHub</span>
+              </a>
+            )}
+            {application.resume_url && (
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 px-5 font-semibold text-sm border-border/60 bg-background/60 hover:border-orange-500/40 hover:text-orange-200 shadow-sm hover:shadow-lg transition-all duration-300 flex items-center gap-2")}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Resume</span>
+              </a>
+            )}
+            <a
+              href={`/candidates/${application.candidate_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: "default", size: "lg" }), "h-11 px-6 font-bold text-sm bg-gradient-to-r from-orange-500 to-orange-400 text-slate-900 hover:from-orange-400 hover:to-orange-300 shadow-md hover:shadow-xl transition-all duration-300 flex items-center gap-2")}
+            >
+              <span>View Full Profile</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
         </div>
 

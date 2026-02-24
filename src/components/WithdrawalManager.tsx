@@ -81,15 +81,16 @@ export function WithdrawalManager({
   const loadUnstakeRequest = async () => {
     try {
       setLoadingRequest(true);
-      const response = await apiRequest(
+      const data = await apiRequest(
         `/api/blockchain/staking/unstake-request-detailed/${walletAddress}`
       );
 
-      if (response.success) {
-        setUnstakeRequest(response.data);
+      setUnstakeRequest(data);
+    } catch (error: any) {
+      // 404 is expected when no unstake request exists
+      if (error?.status !== 404) {
+        console.error('Failed to load unstake request:', error);
       }
-    } catch (error) {
-      console.error('Failed to load unstake request:', error);
     } finally {
       setLoadingRequest(false);
     }

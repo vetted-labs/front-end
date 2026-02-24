@@ -18,7 +18,6 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { ExpertNavbar } from "@/components/ExpertNavbar";
 import { proposalsApi, expertApi } from "@/lib/api";
 import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
@@ -96,10 +95,9 @@ export default function ProposalDetailPage({ params }: ProposalPageProps) {
     setError(null);
 
     try {
-      const result: any = await proposalsApi.getProposalDetails(proposalId);
-      const data = result.data || result;
+      const result = await proposalsApi.getProposalDetails(proposalId);
 
-      setProposal(data);
+      setProposal(result as ProposalDetails);
     } catch (err) {
       console.error("Error fetching proposal details:", err);
       setError((err as Error).message);
@@ -112,9 +110,8 @@ export default function ProposalDetailPage({ params }: ProposalPageProps) {
     if (!address) return;
 
     try {
-      const result: any = await expertApi.getProfile(address);
-      const data = result.data || result;
-      setExpertProfile(data);
+      const result = await expertApi.getProfile(address);
+      setExpertProfile(result);
     } catch (err) {
       console.error("Error fetching expert profile:", err);
     }
@@ -196,8 +193,7 @@ export default function ProposalDetailPage({ params }: ProposalPageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <LoadingState message="Loading proposal details..." />
       </div>
     );
@@ -205,8 +201,7 @@ export default function ProposalDetailPage({ params }: ProposalPageProps) {
 
   if (error || !proposal) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-        <ExpertNavbar />
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <Alert variant="error">{error || "Proposal not found"}</Alert>
         </div>
@@ -221,9 +216,7 @@ export default function ProposalDetailPage({ params }: ProposalPageProps) {
   const expertVote = proposal.votes.find((v) => v.expertWallet.toLowerCase() === address?.toLowerCase());
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <ExpertNavbar />
-
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button

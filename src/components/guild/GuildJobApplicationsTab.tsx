@@ -2,21 +2,10 @@
 
 import { Briefcase, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface JobApplication {
-  id: string;
-  jobTitle: string;
-  candidateName: string;
-  candidateEmail: string;
-  appliedAt: string;
-  matchScore: number;
-  reviewedByRecruiter: boolean;
-  endorsementCount: number;
-  applicationSummary: string;
-}
+import type { GuildJobApplication } from "@/types";
 
 interface GuildJobApplicationsTabProps {
-  applications: JobApplication[];
+  applications: GuildJobApplication[];
   onEndorseCandidate: (applicationId: string, endorse: boolean) => void;
 }
 

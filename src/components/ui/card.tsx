@@ -26,8 +26,9 @@ export function Card({
     <div
       className={cn(
         "bg-card rounded-xl shadow-sm border border-border",
+        "dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20",
         paddingStyles[padding],
-        hover ? "transition-all hover:shadow-md hover:border-primary/20" : "",
+        hover ? "transition-all hover:shadow-md hover:border-primary/20 dark:hover:border-white/[0.12] dark:hover:shadow-xl dark:hover:shadow-black/30" : "",
         className
       )}
       {...props}
