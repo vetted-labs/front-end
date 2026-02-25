@@ -374,11 +374,16 @@ export default function JobDetailView() {
     setIsSubmitting(true);
     try {
       const candidateId = auth.userId;
+      if (!candidateId) {
+        setApplicationError("Unable to identify your account. Please log in again.");
+        setIsSubmitting(false);
+        return;
+      }
       let resumeUrl = profileResume?.resumeUrl;
 
       // If uploading new resume, upload it first
       if (!useProfileResume && resumeFile) {
-        const resumeData: any = await candidateApi.uploadResume(candidateId as string, resumeFile);
+        const resumeData: any = await candidateApi.uploadResume(candidateId, resumeFile);
         resumeUrl = resumeData.resumeUrl;
       }
 

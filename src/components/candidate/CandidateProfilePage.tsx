@@ -128,6 +128,12 @@ export default function CandidateProfilePage() {
     if (!resumeFile || !profile) return;
     if (!auth.token) return;
 
+    const candidateId = auth.userId || profile.id;
+    if (!candidateId) {
+      setErrors({ resume: "Unable to identify your account. Please log in again." });
+      return;
+    }
+
     setIsSaving(true);
     setUploadProgress(0);
 
@@ -139,7 +145,7 @@ export default function CandidateProfilePage() {
         setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 200);
 
-      const data: any = await candidateApi.uploadResume(profile.id, resumeFile);
+      const data: any = await candidateApi.uploadResume(candidateId, resumeFile);
 
       clearInterval(progressInterval);
 
@@ -164,9 +170,15 @@ export default function CandidateProfilePage() {
     if (!profile) return;
     if (!auth.token) return;
 
+    const candidateId = auth.userId || profile.id;
+    if (!candidateId) {
+      setErrors({ submit: "Unable to identify your account. Please log in again." });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await candidateApi.updateProfile(profile.id, profile as unknown as Record<string, unknown>);
+      await candidateApi.updateProfile(candidateId, profile as unknown as Record<string, unknown>);
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
