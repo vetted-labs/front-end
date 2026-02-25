@@ -10,7 +10,6 @@ import {
   Coins,
 } from "lucide-react";
 import { Alert } from "./ui/alert";
-import { LoadingState } from "./ui/loadingstate";
 import { expertApi } from "@/lib/api";
 import { calculateTotalPoints } from "@/lib/utils";
 
@@ -30,6 +29,7 @@ export function EnhancedExpertDashboard() {
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [stakingStatus, setStakingStatus] = useState<{ stakedAmount: string; meetsMinimum: boolean } | null>(null);
   const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
+  const [stakesLoaded, setStakesLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -64,9 +64,10 @@ export function EnhancedExpertDashboard() {
 
     setIsLoading(true);
     setError(null);
+    setStakesLoaded(false);
 
     try {
-      // Fetch profile and earnings summary in parallel
+      // Phase 1: Fetch profile and earnings — render immediately after
       const [data, earningsResult] = await Promise.all([
         expertApi.getProfile(address),
         expertApi.getEarningsBreakdown(address, { limit: 1 }).catch(() => null),
@@ -76,17 +77,32 @@ export function EnhancedExpertDashboard() {
         throw new Error("Failed to load profile data");
       }
 
-      // Use earnings summary as the source of truth for total earnings
       const earningsData = earningsResult?.data ?? earningsResult;
       if (earningsData?.summary?.totalVetd != null) {
         data.totalEarnings = earningsData.summary.totalVetd;
       }
 
-      // Read stake balances — use batch endpoint if available, fall back to per-guild
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];
+      const enhancedData = {
+        ...data,
+        guilds: guilds,
+        pendingTasks: {
+          pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
+          unreviewedApplicationsCount: 0,
+        },
+      };
+
+      setProfile(enhancedData);
+      setIsLoading(false); // Show the page immediately
+
+      // Check wallet verification in background
+      checkVerification(address).then((verified) => {
+        if (!verified) setShowVerificationModal(true);
+      });
+
+      // Phase 2: Load guild stakes progressively (page already visible)
       if (guilds.length > 0) {
         try {
-          // Batch fetch all guild stakes in a single API call
           const batchResult = await blockchainApi.getExpertGuildStakes(address);
           const stakesMap: Record<string, string> = {};
           let totalStaked = 0;
@@ -97,7 +113,6 @@ export function EnhancedExpertDashboard() {
               totalStaked += parseFloat(entry.stakedAmount || "0");
             }
           } else if (batchResult && typeof batchResult === "object") {
-            // Handle object-keyed response format
             for (const [guildId, amount] of Object.entries(batchResult)) {
               const amountStr = String(amount || "0");
               stakesMap[guildId] = amountStr;
@@ -108,7 +123,6 @@ export function EnhancedExpertDashboard() {
           setGuildStakes(stakesMap);
           setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
         } catch {
-          // Fall back to per-guild fetching in batches of 3
           const stakesMap: Record<string, string> = {};
           let totalStaked = 0;
 
@@ -142,25 +156,9 @@ export function EnhancedExpertDashboard() {
         }
       }
 
-      const enhancedData = {
-        ...data,
-        guilds: guilds,
-        pendingTasks: {
-          pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
-          unreviewedApplicationsCount: 0,
-        },
-      };
-
-      setProfile(enhancedData);
-
-      // Check wallet verification and show modal if not verified
-      const verified = await checkVerification(address);
-      if (!verified) {
-        setShowVerificationModal(true);
-      }
+      setStakesLoaded(true);
     } catch (err) {
       setError((err as Error).message);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -193,7 +191,7 @@ export function EnhancedExpertDashboard() {
   }
 
   if (isLoading) {
-    return <LoadingState message="Loading your expert dashboard..." />;
+    return null;
   }
 
   if (error) {
@@ -225,7 +223,7 @@ export function EnhancedExpertDashboard() {
   const totalPoints = calculateTotalPoints({ reputation: profile.reputation, totalEarnings: profile.totalEarnings ?? 0 });
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <WalletVerificationModal
         isOpen={showVerificationModal}
         onClose={() => setShowVerificationModal(false)}
@@ -285,7 +283,7 @@ export function EnhancedExpertDashboard() {
           />
           <StatCard
             title="Staked VETD"
-            value={stakingStatus?.stakedAmount ? `${parseFloat(stakingStatus.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "0"}
+            value={!stakesLoaded ? "—" : stakingStatus?.stakedAmount ? `${parseFloat(stakingStatus.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "0"}
             icon={Coins}
             iconBgColor="bg-orange-500/10"
             iconColor="text-orange-600 dark:text-orange-400"

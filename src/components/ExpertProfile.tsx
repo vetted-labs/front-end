@@ -22,7 +22,6 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
-import { LoadingState } from "./ui/loadingstate";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
 import { GuildMembershipCard } from "./GuildMembershipCard";
@@ -203,7 +202,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
   // Loading state
   if (isLoading) {
-    return <LoadingState message="Loading expert profile..." />;
+    return null;
   }
 
   // Error state
@@ -278,7 +277,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
   // Main profile view
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen text-foreground animate-page-enter">
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Back button (public mode only) */}
         {mode === "public" && showBackButton && (

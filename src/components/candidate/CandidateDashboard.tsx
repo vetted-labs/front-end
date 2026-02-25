@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  Loader2,
   Clock,
   Eye,
   TrendingUp,
@@ -26,6 +25,7 @@ import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
+
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
   pending:     Clock,
@@ -84,7 +84,6 @@ async function fetchDashboardData(): Promise<DashboardData> {
 }
 
 export default function CandidateDashboard() {
-  const router = useRouter();
   const { ready } = useRequireAuth("candidate");
 
   const { data, isLoading } = useFetch(
@@ -101,14 +100,7 @@ export default function CandidateDashboard() {
   if (!ready) return null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!profile) {
@@ -116,9 +108,9 @@ export default function CandidateDashboard() {
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Profile not found</p>
-          <button onClick={() => router.push("/auth/login?type=candidate")} className="text-primary hover:underline">
+          <Link href="/auth/login?type=candidate" className="text-primary hover:underline">
             Create Account
-          </button>
+          </Link>
         </div>
       </div>
     );
@@ -142,7 +134,7 @@ export default function CandidateDashboard() {
   ];
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
@@ -159,13 +151,13 @@ export default function CandidateDashboard() {
               <p className="text-sm text-muted-foreground mt-1">{profile.headline}</p>
             )}
           </div>
-          <button
-            onClick={() => router.push("/candidate/profile")}
+          <Link
+            href="/candidate/profile"
             className="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg border border-border bg-card/60 backdrop-blur text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
           >
             <UserPen className="w-3.5 h-3.5" />
             Edit Profile
-          </button>
+          </Link>
         </div>
 
         {/* Stats row — compact, glassy */}
@@ -190,12 +182,12 @@ export default function CandidateDashboard() {
                 Recent Applications
               </h2>
               {applications.length > 5 && (
-                <button
-                  onClick={() => router.push("/candidate/applications")}
+                <Link
+                  href="/candidate/applications"
                   className="text-xs text-primary hover:underline flex items-center gap-1"
                 >
                   View all <ArrowRight className="w-3 h-3" />
-                </button>
+                </Link>
               )}
             </div>
             {recentApplications.length === 0 ? (
@@ -204,13 +196,13 @@ export default function CandidateDashboard() {
                   <Search className="w-7 h-7 text-muted-foreground/40" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">No applications yet — start exploring</p>
-                <button
-                  onClick={() => router.push("/browse/jobs")}
+                <Link
+                  href="/browse/jobs"
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
                 >
                   <Briefcase className="w-4 h-4" />
                   Browse Jobs
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="divide-y divide-border/30">
@@ -218,9 +210,9 @@ export default function CandidateDashboard() {
                   const statusStyle = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG.pending;
                   const Icon = STATUS_ICONS[app.status] || Clock;
                   return (
-                    <button
+                    <Link
                       key={app.id}
-                      onClick={() => router.push(`/browse/jobs/${app.job.id}`)}
+                      href={`/browse/jobs/${app.job.id}`}
                       className="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-muted/30 transition-colors group"
                     >
                       <div className={`flex-shrink-0 w-9 h-9 rounded-lg ${statusStyle.className} border flex items-center justify-center`}>
@@ -247,7 +239,7 @@ export default function CandidateDashboard() {
                         {statusStyle.label}
                       </span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />
-                    </button>
+                    </Link>
                   );
                 })}
               </div>
@@ -263,12 +255,12 @@ export default function CandidateDashboard() {
                   Guild Applications
                 </h2>
                 {guildApplications.length > 3 && (
-                  <button
-                    onClick={() => router.push("/candidate/guilds")}
+                  <Link
+                    href="/candidate/guilds"
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     View all <ArrowRight className="w-3 h-3" />
-                  </button>
+                  </Link>
                 )}
               </div>
               {recentGuildApps.length === 0 ? (
@@ -277,12 +269,12 @@ export default function CandidateDashboard() {
                     <Users className="w-6 h-6 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">No guild applications</p>
-                  <button
-                    onClick={() => router.push("/guilds")}
+                  <Link
+                    href="/guilds"
                     className="text-xs text-primary hover:underline"
                   >
                     Explore Guilds
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 <div className="divide-y divide-border/30">
@@ -332,12 +324,12 @@ export default function CandidateDashboard() {
                   )}
                 </div>
                 {conversations.length > 0 && (
-                  <button
-                    onClick={() => router.push("/candidate/messages")}
+                  <Link
+                    href="/candidate/messages"
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     View all <ArrowRight className="w-3 h-3" />
-                  </button>
+                  </Link>
                 )}
               </div>
               {recentConversations.length === 0 ? (
@@ -350,9 +342,9 @@ export default function CandidateDashboard() {
               ) : (
                 <div className="divide-y divide-border/30">
                   {recentConversations.map((convo) => (
-                    <button
+                    <Link
                       key={convo.id}
-                      onClick={() => router.push(`/candidate/messages?conversation=${convo.id}`)}
+                      href={`/candidate/messages?conversation=${convo.id}`}
                       className="flex items-start gap-3 w-full px-5 py-3.5 text-left hover:bg-muted/30 transition-colors group"
                     >
                       <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
@@ -385,7 +377,7 @@ export default function CandidateDashboard() {
                           {formatTimeAgo(convo.lastMessage?.createdAt || convo.updatedAt)}
                         </p>
                       </div>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -405,15 +397,15 @@ export default function CandidateDashboard() {
                   { label: "Explore Guilds", icon: Users,          href: "/guilds" },
                   { label: "Edit Profile",   icon: UserPen,        href: "/candidate/profile" },
                 ].map(({ label, icon: QIcon, href }) => (
-                  <button
+                  <Link
                     key={href}
-                    onClick={() => router.push(href)}
+                    href={href}
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors group"
                   >
                     <QIcon className="w-4 h-4 text-primary" />
                     <span className="flex-1 text-left">{label}</span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>

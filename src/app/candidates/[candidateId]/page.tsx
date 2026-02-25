@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { apiRequest } from '@/lib/api';
 import { CandidateProfileView } from '@/components/CandidateProfileView';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+
 
 export default function CandidateProfilePage() {
   const { candidateId } = useParams();
@@ -22,7 +22,7 @@ export default function CandidateProfilePage() {
       setLoading(true);
       const data: any = await apiRequest(
         `/api/candidates/${candidateId}/profile`,
-        { method: 'GET', requiresAuth: true }
+        { method: 'GET' }
       );
 
       setProfile(data);
@@ -30,10 +30,7 @@ export default function CandidateProfilePage() {
     } catch (error: any) {
       console.error('Failed to load profile:', error);
 
-      if (error.status === 401) {
-        toast.error('Please log in to view profiles');
-        router.push('/auth/login');
-      } else if (error.status === 404) {
+      if (error.status === 404) {
         toast.error('Candidate not found');
         router.push('/');
       } else {
@@ -45,11 +42,7 @@ export default function CandidateProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   if (!profile) {
@@ -67,7 +60,7 @@ export default function CandidateProfilePage() {
     localStorage.getItem('candidateId') === candidateId;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-page-enter">
       <CandidateProfileView
         profile={profile}
         isOwner={isOwner}

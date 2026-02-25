@@ -12,7 +12,6 @@ import {
   ChevronUp,
   ChevronDown,
   Filter,
-  Loader2,
   DollarSign,
   Coins,
 } from "lucide-react";
@@ -81,11 +80,7 @@ export function ReputationLeaderboard({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
+    return null;
   }
 
   if (error) {
@@ -100,7 +95,7 @@ export function ReputationLeaderboard({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

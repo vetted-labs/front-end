@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { Briefcase, Coins, Trophy, UserPlus, Activity, Users, Eye, Loader2 } from "lucide-react";
-import { LoadingState } from "./ui/loadingstate";
 import { Alert } from "./ui/alert";
 import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, blockchainApi } from "@/lib/api";
@@ -17,9 +16,17 @@ import { GuildEarningsTab } from "./guild/GuildEarningsTab";
 import { GuildActivityFeed } from "./guild/GuildActivityTab";
 import { GuildMembersTab } from "./guild/GuildMembersTab";
 import { GuildJobsTab } from "./guild/GuildJobsTab";
+import dynamic from "next/dynamic";
 import { StakeModal } from "./guild/StakeModal";
-import { ReviewGuildApplicationModal } from "./guild/ReviewGuildApplicationModal";
-import { StakingModal } from "./dashboard/StakingModal";
+
+const ReviewGuildApplicationModal = dynamic(
+  () => import("./guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
+  { ssr: false }
+);
+const StakingModal = dynamic(
+  () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
+  { ssr: false }
+);
 import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember } from "@/types";
 
 interface Earnings {
@@ -556,7 +563,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading guild details..." />;
+    return null;
   }
 
   if (error || !guild) {
@@ -573,7 +580,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   );
 
   return (
-    <div className="relative bg-background text-foreground overflow-x-hidden">
+    <div className="relative bg-background text-foreground overflow-x-hidden animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
         <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />

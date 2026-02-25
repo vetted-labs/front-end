@@ -5,10 +5,10 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
-import { Suspense, useEffect } from "react";
-import { RouteChangeOverlay } from "@/components/RouteChangeOverlay";
+import { Suspense } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,11 +67,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <RainbowKitProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
             <AuthProvider>
+              <Suspense>
+                <NavigationProgress />
+              </Suspense>
               {children}
             </AuthProvider>
-            <Suspense fallback={null}>
-              <RouteChangeOverlay />
-            </Suspense>
           </ThemeProvider>
         </RainbowKitProvider>
       </QueryClientProvider>

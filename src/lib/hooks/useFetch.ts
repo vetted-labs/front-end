@@ -14,10 +14,10 @@ export function useFetch<T = unknown>(
   options: UseFetchOptions<T> = {}
 ) {
   const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const { onSuccess, onError, skip = false } = options;
+
+  const [isLoading, setIsLoading] = useState(!skip);
+  const [error, setError] = useState<string | null>(null);
 
   // Store latest function references in refs to avoid re-render loops
   // when callers pass inline functions

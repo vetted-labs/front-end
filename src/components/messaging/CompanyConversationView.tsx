@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Calendar } from "lucide-react";
+
 import { toast } from "sonner";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
@@ -90,14 +91,7 @@ export default function CompanyConversationView() {
   if (!ready) return null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading conversation...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!conversation) {
@@ -117,7 +111,7 @@ export default function CompanyConversationView() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] flex flex-col animate-page-enter">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] flex items-center justify-between gap-3 bg-card/30 dark:bg-card/15">
         <div className="flex items-center gap-3 min-w-0">

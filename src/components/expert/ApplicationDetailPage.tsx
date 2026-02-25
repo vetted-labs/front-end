@@ -22,7 +22,6 @@ import {
 import { guildApplicationsApi, expertApi } from "@/lib/api";
 import { formatDeadline } from "@/lib/utils";
 import { toast } from "sonner";
-import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -150,11 +149,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-full">
-        <LoadingState message="Loading application details..." />
-      </div>
-    );
+    return null;
   }
 
   if (error || !application) {
@@ -174,7 +169,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
   const expertVote = application.votes.find((v) => v.expertWallet.toLowerCase() === address?.toLowerCase());
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button

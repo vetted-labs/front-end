@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { guildApplicationsApi, expertApi, blockchainApi, commitRevealApi } from "@/lib/api";
 import { formatDeadline } from "@/lib/utils";
+
 import {
   Card,
   CardContent,
@@ -189,18 +190,7 @@ export default function VotingApplicationPage({ applicationId }: VotingApplicati
   };
 
   if (loading) {
-    return (
-      <div className="min-h-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading application...</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!application) {
@@ -222,7 +212,7 @@ export default function VotingApplicationPage({ applicationId }: VotingApplicati
   }
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">

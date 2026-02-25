@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation } from "@/types";
@@ -39,18 +40,11 @@ export default function CandidateMessagesInbox() {
   if (!ready) return null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading messages...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

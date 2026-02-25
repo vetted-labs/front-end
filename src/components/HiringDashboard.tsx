@@ -18,7 +18,7 @@ import {
   Building2,
   Shield,
 } from "lucide-react";
-import { Button, LoadingState, Alert, StatusBadge } from "./ui";
+import { Button, Alert, StatusBadge } from "./ui";
 import { Pagination } from "./ui/pagination";
 import { GuildSelector } from "./ui/guild-selector";
 import { jobsApi, dashboardApi } from "@/lib/api";
@@ -139,11 +139,11 @@ export function HiringDashboard() {
   if (!ready) return null;
 
   if (isLoading) {
-    return <LoadingState message="Loading dashboard..." />;
+    return null;
   }
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 

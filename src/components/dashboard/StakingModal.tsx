@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain, usePublicClient } from "wagmi";
 import { formatEther, maxUint256 } from "viem";
 import { sepolia } from "wagmi/chains";
-import { X, Coins, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
+import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
+import Image from "next/image";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
@@ -317,36 +318,44 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         className="relative max-w-[460px] w-full mx-4 max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Gradient header hero ── */}
-        <div className="relative overflow-hidden px-6 pt-8 pb-6">
+        {/* ── Header ── */}
+        <div className="relative overflow-hidden px-6 pt-5 pb-6">
           {/* Decorative background glow */}
           <div className="absolute -top-20 -left-20 w-60 h-60 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-600/10 rounded-full blur-[60px] pointer-events-none" />
 
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            disabled={step === "transaction"}
-            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          {/* Icon + Title */}
-          <div className="relative flex flex-col items-center text-center">
-            <div className="relative mb-4">
-              <div className="absolute -inset-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full opacity-25 blur-xl animate-pulse" />
-              <div className="relative w-14 h-14 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/30 rotate-3">
-                <Coins className="w-7 h-7 text-white -rotate-3" />
+          {/* Top row: logo + title left, close button right */}
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute -inset-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full opacity-20 blur-lg" />
+                <div className="relative w-10 h-10 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
+                  <Image
+                    src="/Vetted-orange.png"
+                    alt="Vetted"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground leading-tight">Manage Staking</h2>
+                <p className="text-xs text-muted-foreground">Stake VETD per guild to unlock reviewing</p>
               </div>
             </div>
-            <h2 className="text-xl font-bold text-foreground">Manage Staking</h2>
-            <p className="text-sm text-muted-foreground mt-1">Stake VETD per guild to unlock reviewing</p>
+            <button
+              onClick={handleClose}
+              disabled={step === "transaction"}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
         </div>
 
         {/* ── Content ── */}
-        <div className="px-6 pb-6 space-y-4">
+        <div className="px-6 pt-6 pb-6 space-y-4">
           {/* Wrong Network Warning */}
           {!isOnSepolia && (
             <div className="p-3.5 bg-yellow-500/[0.08] border border-yellow-500/20 rounded-2xl flex items-center gap-3">

@@ -4,7 +4,6 @@ export { Textarea } from "./textarea";
 export { Select } from "./select";
 export { NativeSelect } from "./native-select";
 export { FormField } from "./form-field";
-export { LoadingState } from "./loadingstate";
 export { Alert } from "./alert";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./card";
 export { Modal } from "./modal";

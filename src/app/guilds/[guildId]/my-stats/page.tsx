@@ -20,7 +20,8 @@ import {
   Trophy,
   User,
 } from "lucide-react";
-import { LoadingState, Alert } from "@/components/ui";
+import { Alert } from "@/components/ui";
+
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
@@ -158,7 +159,7 @@ export default function MyGuildStatsPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading your guild statistics..." />;
+    return null;
   }
 
   if (error || !stats) {
@@ -172,7 +173,7 @@ export default function MyGuildStatsPage() {
   const isExpert = ["recruit", "craftsman", "master"].includes(stats.role);
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       {/* Hero Section - Personal Overview */}
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

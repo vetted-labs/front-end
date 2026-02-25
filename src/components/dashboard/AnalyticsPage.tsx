@@ -132,11 +132,7 @@ export default function AnalyticsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Loading analytics...</p>
-      </div>
-    );
+    return null;
   }
 
   if (!analytics) {
@@ -158,7 +154,7 @@ export default function AnalyticsPage() {
     : 1;
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

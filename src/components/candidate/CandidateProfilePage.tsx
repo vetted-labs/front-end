@@ -188,14 +188,7 @@ export default function CandidateProfilePage() {
   if (!ready) return null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading your profile...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!profile) {
@@ -217,7 +210,7 @@ export default function CandidateProfilePage() {
   const filledSocialLinks = socialLinks.filter((l) => l.url.trim());
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Message */}
         {successMessage && (

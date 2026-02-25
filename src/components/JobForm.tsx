@@ -26,7 +26,7 @@ export function JobForm() {
   } = useJobForm(jobId);
 
   return (
-    <div className="min-h-screen min-h-full">
+    <div className="min-h-screen min-h-full animate-page-enter">
       {/* Header */}
       <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

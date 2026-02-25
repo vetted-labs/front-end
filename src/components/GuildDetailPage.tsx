@@ -22,7 +22,7 @@ import {
   Activity,
   CheckCircle,
 } from "lucide-react";
-import { LoadingState, Alert, Button, PillTabs } from "@/components/ui";
+import { Alert, Button, PillTabs } from "@/components/ui";
 import { guildsApi, guildApplicationsApi } from "@/lib/api";
 import { getGuildIcon, getGuildColor, getGuildBgColor, getRoleBadgeColor } from "@/lib/guildHelpers";
 import { formatSalaryRange } from "@/lib/utils";
@@ -335,7 +335,7 @@ export default function GuildDetailPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading guild details..." />;
+    return null;
   }
 
   if (error || !guild) {
@@ -351,7 +351,7 @@ export default function GuildDetailPage() {
   const showMemberBadge = membership?.isMember;
 
   return (
-    <div className="relative bg-gradient-to-b from-background via-background to-muted overflow-x-hidden">
+    <div className="relative bg-gradient-to-b from-background via-background to-muted overflow-x-hidden animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
         <div className="absolute -top-20 right-[-10%] h-[360px] w-[360px] rounded-full bg-orange-500/15 blur-3xl" />

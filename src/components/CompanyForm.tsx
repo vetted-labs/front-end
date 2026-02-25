@@ -118,7 +118,7 @@ export function CompanyForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted flex items-center justify-center p-4 animate-page-enter">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-6">

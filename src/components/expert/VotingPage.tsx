@@ -190,7 +190,7 @@ export default function VotingPage() {
   };
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -288,12 +288,15 @@ export default function VotingPage() {
 
         {/* Proposals List */}
         {loading ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading applications...</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border/60 bg-card/40 p-6 space-y-3 animate-pulse">
+                <div className="h-5 w-2/3 rounded bg-muted/60" />
+                <div className="h-3 w-1/2 rounded bg-muted/60" />
+                <div className="flex gap-2"><div className="h-6 w-20 rounded-md bg-muted/60" /><div className="h-6 w-16 rounded-md bg-muted/60" /></div>
+              </div>
+            ))}
+          </div>
         ) : applications.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">

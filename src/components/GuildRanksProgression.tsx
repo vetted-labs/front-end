@@ -103,7 +103,7 @@ export function GuildRanksProgression({
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 animate-page-enter">
       {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary/5 to-primary/10 rounded-full mb-4">

@@ -529,7 +529,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   }
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           <div className="mb-8">

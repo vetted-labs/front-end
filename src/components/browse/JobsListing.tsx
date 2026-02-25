@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Search,
@@ -20,6 +21,7 @@ import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
+
 import { useGuilds } from "@/lib/hooks/useGuilds";
 
 export default function JobsListing() {
@@ -229,7 +231,7 @@ export default function JobsListing() {
   };
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Two-Column Search Bar */}
         <div className="mb-6">
@@ -303,17 +305,15 @@ export default function JobsListing() {
         <div>
 
           {isLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading jobs...</p>
-            </div>
+            null
           ) : filteredJobs.length > 0 ? (
             <>
               <div className="space-y-3">
                 {currentJobs.map((job) => (
-                  <div
+                  <Link
                     key={job.id}
-                    onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                    className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group relative"
+                    href={`/browse/jobs/${job.id}`}
+                    className="block bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group relative"
                   >
                     {/* Posted Date - Top Right Corner */}
                     <div className="absolute top-4 right-5 text-xs text-muted-foreground">
@@ -435,7 +435,7 @@ export default function JobsListing() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
 

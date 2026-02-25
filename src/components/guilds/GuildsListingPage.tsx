@@ -11,7 +11,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { LoadingState, Alert } from "@/components/ui";
+import { Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
 import { GuildCard } from "@/components/GuildCard";
 import { getGuildDetailedInfo, getGuildIcon } from "@/lib/guildHelpers";
@@ -64,11 +64,11 @@ export default function GlobalGuildsPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading guilds..." />;
+    return null;
   }
 
   return (
-    <div className="relative overflow-x-hidden bg-background text-foreground">
+    <div className="relative overflow-x-hidden bg-background text-foreground animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
         <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />

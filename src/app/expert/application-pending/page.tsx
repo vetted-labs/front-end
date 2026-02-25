@@ -13,7 +13,7 @@ import {
   Shield,
   Swords,
 } from "lucide-react";
-import { LoadingState } from "@/components/ui/loadingstate";
+
 import { Alert } from "@/components/ui/alert";
 import { expertApi } from "@/lib/api";
 
@@ -95,7 +95,7 @@ export default function ApplicationPendingPage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading application status..." />;
+    return null;
   }
 
   if (error || !expert) {
@@ -128,7 +128,7 @@ export default function ApplicationPendingPage() {
   const approvedApps = guildApplications.filter((g) => g.status === "approved");
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Main Card */}
         <div className="bg-card rounded-2xl shadow-lg border border-border p-8 md:p-12 mb-6">

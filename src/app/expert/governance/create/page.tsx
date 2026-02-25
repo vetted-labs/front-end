@@ -114,7 +114,7 @@ export default function CreateGovernanceProposalPage() {
   };
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">

@@ -54,14 +54,7 @@ export default function CandidateGuilds() {
   if (!ready) return null;
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading your guilds...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const filtered = filter === "all"
@@ -76,7 +69,7 @@ export default function CandidateGuilds() {
   };
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       {/* Background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/8 blur-3xl" />

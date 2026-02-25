@@ -12,6 +12,7 @@ import {
 } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { apiRequest } from "@/lib/api";
+
 import {
   Card,
   CardContent,
@@ -29,9 +30,17 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
-import { CandidateDetailsModal } from "./endorsements/CandidateDetailsModal";
-import { EndorsementTransactionModal } from "./endorsements/EndorsementTransactionModal";
+
+const CandidateDetailsModal = dynamic(
+  () => import("./endorsements/CandidateDetailsModal").then(m => ({ default: m.CandidateDetailsModal })),
+  { ssr: false }
+);
+const EndorsementTransactionModal = dynamic(
+  () => import("./endorsements/EndorsementTransactionModal").then(m => ({ default: m.EndorsementTransactionModal })),
+  { ssr: false }
+);
 import { WalletStatusBanner } from "./endorsements/WalletStatusBanner";
 import { EndorsementStatsGrid } from "./endorsements/EndorsementStatsGrid";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
@@ -434,7 +443,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   if (!isConnected) {
     return (
-      <Card className="border-border">
+      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
         <CardContent className="p-12 text-center">
           <Coins className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
@@ -459,9 +468,9 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   if (!meetsMinimumStake) {
     return (
-      <Card className="border-border">
+      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
         <CardContent className="p-12 text-center">
-          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-amber-500" />
           <h3 className="text-lg font-semibold mb-2">Insufficient Stake</h3>
           <p className="text-muted-foreground mb-2">
             You need to stake at least {requiredStake} VETD tokens before you can endorse applications
@@ -477,15 +486,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   // Only show loading if we have an address and are actually loading
   // This prevents infinite spinner when wallet is not connected
   if ((loading || endorsementsLoading) && address) {
-    return (
-      <Card className="border-border">
-        <CardContent className="p-12 text-center">
-          <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
-          <p className="text-muted-foreground mb-2">Loading applications for {guildName}...</p>
-          <p className="text-xs text-muted-foreground">This may take a few seconds</p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   const isOnSepolia = chain?.id === sepolia.id;
@@ -504,7 +505,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       <WalletStatusBanner
         isBackendWallet={isBackendWallet}
         backendWalletAddress={BACKEND_WALLET}
@@ -518,8 +519,8 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
       {/* Header Stats */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold font-display flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
           Endorsement Dashboard
         </h2>
         <Button
@@ -534,16 +535,10 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       </div>
 
       <EndorsementStatsGrid
-        formattedBalance={balance !== undefined ? parseFloat(formatEther(balance)).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : null}
-        rawBalance={balance !== undefined ? formatEther(balance) : null}
-        showRawBalance={balance !== undefined && parseFloat(formatEther(balance)) > 0}
-        hasAddress={!!address}
-        balanceLoading={balance === undefined}
         userStake={userStake}
         userEndorsementsCount={userEndorsements.length}
         applicationsCount={applications.length}
         minimumBid={minimumBid ? formatEther(minimumBid) : "1"}
-        onRefreshBalance={refetchBalance}
       />
 
       <MyActiveEndorsements
@@ -557,10 +552,10 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       />
 
       {/* Applications List */}
-      <Card className="border-border/60 bg-card/80">
+      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Users className="w-4 h-4" />
             Applications in {guildName}
           </CardTitle>
           <CardDescription>

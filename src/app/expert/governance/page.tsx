@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 import { governanceApi } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
@@ -66,7 +66,7 @@ export default function GovernancePage() {
   ];
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -96,14 +96,7 @@ export default function GovernancePage() {
         </div>
 
         {/* Proposals List */}
-        {loading ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading proposals...</p>
-            </CardContent>
-          </Card>
-        ) : proposals.length === 0 ? (
+        {loading ? null : proposals.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />

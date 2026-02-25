@@ -81,62 +81,56 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
   const guildScore = application.guild_score ? (parseFloat(application.guild_score.toString()) * 10).toFixed(0) : null;
 
   return (
-    <Card className="relative overflow-hidden border border-border/60 bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/50 dark:border-orange-500/25 dark:bg-gradient-to-b dark:from-slate-950/90 dark:via-slate-900/85 dark:to-slate-950/95 dark:shadow-[0_20px_60px_-40px_rgba(255,106,0,0.45)] dark:hover:shadow-[0_30px_80px_-45px_rgba(255,106,0,0.6)]">
-      <CardContent className="relative p-6">
-        <div className="pointer-events-none absolute -right-20 -top-16 h-40 w-40 rounded-full bg-orange-500/12 blur-3xl" />
-        <div className="pointer-events-none absolute -left-24 -bottom-24 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+    <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden transition-all hover:border-primary/40 hover:shadow-sm h-full flex flex-col">
+      <CardContent className="p-6 flex flex-col flex-1">
+        {/* Header with Avatar and Basic Info */}
+        <div className="flex items-start gap-4 mb-4">
+          <Avatar className="w-16 h-16 border-2 border-border">
+            {application.candidate_profile_picture_url && (
+              <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
+            )}
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+              {candidateInitials}
+            </AvatarFallback>
+          </Avatar>
 
-        <div className="relative z-10">
-          {/* Header with Avatar and Basic Info */}
-          <div className="flex items-start gap-4 mb-4">
-            <div className="relative">
-              <Avatar className="w-16 h-16 border-2 border-orange-500/30 shadow-md">
-                {application.candidate_profile_picture_url && (
-                  <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
-                )}
-                <AvatarFallback className="bg-orange-500/10 text-orange-600 dark:text-orange-300 font-semibold text-lg">
-                  {candidateInitials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg truncate">{application.candidate_name}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
+              {application.candidate_headline}
+            </p>
 
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg truncate">{application.candidate_name}</h3>
-              <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                {application.candidate_headline}
-              </p>
-
-              {/* Badges Row */}
-              <div className="flex flex-wrap gap-2">
-                {application.experience_level && (
-                  <Badge variant="secondary" className="text-xs">
-                    {application.experience_level}
-                  </Badge>
-                )}
-                {skillMatch !== null && (
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${
-                      skillMatch >= 70
-                        ? 'bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20'
-                        : skillMatch >= 40
-                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/20'
-                    }`}
-                  >
-                    <Star className="w-3 h-3 mr-1" />
-                    {skillMatch}% Match
-                  </Badge>
-                )}
+            {/* Badges Row */}
+            <div className="flex flex-wrap gap-2">
+              {application.experience_level && (
+                <Badge variant="secondary" className="text-xs">
+                  {application.experience_level}
+                </Badge>
+              )}
+              {skillMatch !== null && (
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${
+                    skillMatch >= 70
+                      ? 'bg-primary/10 text-primary border-primary/20'
+                      : skillMatch >= 40
+                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/20'
+                  }`}
+                >
+                  <Star className="w-3 h-3 mr-1" />
+                  {skillMatch}% Match
+                </Badge>
+              )}
               {guildScore && (
-                <Badge variant="outline" className="bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 text-xs">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
                   <Award className="w-3 h-3 mr-1" />
                   {guildScore}/100
                 </Badge>
               )}
-              </div>
             </div>
           </div>
+        </div>
 
         {/* Bio Preview */}
         {application.candidate_bio && (
@@ -227,19 +221,19 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
             {application.location && (
               <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-orange-500 dark:text-orange-400" />
+                <MapPin className="w-3 h-3 text-primary" />
                 {application.location}
               </span>
             )}
             {application.job_type && (
               <span className="flex items-center gap-1">
-                <Briefcase className="w-3 h-3 text-orange-500 dark:text-orange-400" />
+                <Briefcase className="w-3 h-3 text-primary" />
                 {application.job_type}
               </span>
             )}
             {(application.salary_min || application.salary_max) && (
               <span className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-orange-500 dark:text-orange-400" />
+                <DollarSign className="w-3 h-3 text-primary" />
                 {formatSalary(application.salary_min, application.salary_max, application.salary_currency)}
               </span>
             )}
@@ -254,10 +248,10 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mt-auto">
           <Button
             variant="outline"
-            className="w-full border-orange-500/30 text-orange-700 dark:text-orange-200 hover:bg-orange-500/10 hover:border-orange-500/50"
+            className="w-full"
             onClick={(e) => {
               e.stopPropagation();
               onViewDetails(application);
@@ -267,7 +261,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
             View Details
           </Button>
           <Button
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-400 text-slate-900 hover:from-orange-400 hover:to-orange-300"
+            className="w-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
             onClick={(e) => {
               e.stopPropagation();
               onQuickEndorse(application);
@@ -276,7 +270,6 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
             <Zap className="w-4 h-4 mr-2" />
             Endorse Now
           </Button>
-        </div>
         </div>
       </CardContent>
     </Card>

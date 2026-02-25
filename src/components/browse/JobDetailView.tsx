@@ -24,7 +24,7 @@ import {
   Star,
   AlertCircle,
 } from "lucide-react";
-import { Modal, Button, Alert, LoadingState, Textarea, StatusBadge } from "@/components/ui";
+import { Modal, Button, Alert, Textarea, StatusBadge } from "@/components/ui";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { formatSalaryRange } from "@/lib/utils";
@@ -415,7 +415,7 @@ export default function JobDetailView() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading job details..." />;
+    return null;
   }
 
   if (error) {
@@ -442,7 +442,7 @@ export default function JobDetailView() {
   const hasAlreadyApplied = !!existingApplication;
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button

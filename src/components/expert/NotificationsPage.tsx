@@ -20,7 +20,6 @@ import {
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
-import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
 
 type FilterType = "all" | "unread" | "vetting_reviews" | "applications" | "reward_earned";
@@ -142,11 +141,7 @@ export default function NotificationsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-full">
-        <LoadingState message="Loading notifications..." />
-      </div>
-    );
+    return null;
   }
 
   if (error) {
@@ -178,7 +173,7 @@ export default function NotificationsPage() {
       : allNotifications.filter((n) => n.type === activeFilter);
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

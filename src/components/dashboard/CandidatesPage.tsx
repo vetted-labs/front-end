@@ -10,7 +10,12 @@ import {
 import { companyApi, applicationsApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { cn } from "@/lib/utils";
-import { CandidateDetailModal } from "@/components/dashboard/CandidateDetailModal";
+import dynamic from "next/dynamic";
+
+const CandidateDetailModal = dynamic(
+  () => import("@/components/dashboard/CandidateDetailModal").then(m => ({ default: m.CandidateDetailModal })),
+  { ssr: false }
+);
 import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
@@ -141,7 +146,7 @@ export default function CandidatesPage() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-full relative">
+    <div className="min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

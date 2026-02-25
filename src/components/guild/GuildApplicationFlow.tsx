@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, Shield, Send } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { LoadingState, Alert, Button } from "@/components/ui";
+import { Alert, Button } from "@/components/ui";
 import { guildsApi, candidateApi, jobsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import type { GuildApplicationTemplate, SocialLink } from "@/types";
@@ -513,7 +513,7 @@ export default function GuildApplicationFlow() {
 
   // --- Render ---
   if (isLoading) {
-    return <LoadingState message="Loading application form..." />;
+    return null;
   }
 
   if (error && !template) {
@@ -556,7 +556,7 @@ export default function GuildApplicationFlow() {
   const stepType = getStepType(currentStep);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-page-enter">
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

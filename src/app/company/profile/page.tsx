@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { Button, Input, Textarea, Select, Alert, LoadingState } from "@/components/ui";
+import { Button, Input, Textarea, Select, Alert } from "@/components/ui";
+
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { companyApi, getAssetUrl } from "@/lib/api";
 
@@ -176,7 +177,7 @@ export default function CompanyProfilePage() {
   };
 
   if (isLoading) {
-    return <LoadingState message="Loading profile..." />;
+    return null;
   }
 
   if (!profile) {
@@ -188,7 +189,7 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted animate-page-enter">
       {/* Header */}
       <div className="bg-card shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">

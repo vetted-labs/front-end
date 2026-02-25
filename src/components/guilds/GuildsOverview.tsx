@@ -5,7 +5,6 @@ import { useAccount } from "wagmi";
 import { Shield, Search, ArrowRight, Zap, AlertCircle, Plus, Users, Loader2, X } from "lucide-react";
 import { expertApi, guildsApi } from "@/lib/api";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { LoadingState } from "../ui/loadingstate";
 import { Alert } from "../ui/alert";
 import { GuildCard } from "../GuildCard";
 import { ReputationLeaderboard } from "../ReputationLeaderboard";
@@ -121,7 +120,7 @@ export function GuildsOverview() {
   );
 
   if (isLoading) {
-    return <LoadingState message="Loading guilds..." />;
+    return null;
   }
 
   if (error) {
@@ -141,7 +140,7 @@ export function GuildsOverview() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-page-enter">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>

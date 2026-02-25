@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Loader2,
   Briefcase,
   MapPin,
   DollarSign,
@@ -20,6 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+
 import {
   Dialog,
   DialogContent,
@@ -134,14 +134,7 @@ export default function JobDetailsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen min-h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading job details...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (error) {
@@ -177,7 +170,7 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-full relative">
+    <div className="min-h-screen min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button

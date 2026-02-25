@@ -40,7 +40,7 @@ export default function EndorsementsPage() {
   }, [guildRecords, guildIdParam, selectedGuild]);
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -60,7 +60,7 @@ export default function EndorsementsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push("/expert/endorsements/rewards")}
+                onClick={() => router.push("/expert/earnings")}
                 className="mt-2"
               >
                 <Award className="w-4 h-4 mr-2" />
@@ -69,7 +69,7 @@ export default function EndorsementsPage() {
             </div>
 
             <div className="w-full lg:max-w-sm">
-              <div className="rounded-2xl border border-border/60 bg-card/80 p-4 shadow-[0_20px_60px_-30px_rgba(255,106,0,0.35)] backdrop-blur">
+              <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <ShieldCheck className="h-4 w-4 text-orange-400" />

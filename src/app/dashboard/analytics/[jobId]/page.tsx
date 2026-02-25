@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { jobsApi } from "@/lib/api";
 
+
 interface JobPosting {
   id: string;
   title: string;
@@ -65,11 +66,7 @@ export default function JobAnalyticsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Loading job analytics...</p>
-      </div>
-    );
+    return null;
   }
 
   if (!job) {
@@ -91,7 +88,7 @@ export default function JobAnalyticsPage() {
   const conversionRate = job.views > 0 ? ((job.applicants / job.views) * 100).toFixed(1) : "0.0";
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

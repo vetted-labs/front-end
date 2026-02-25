@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { endorsementAccountabilityApi } from "@/lib/api";
+
 import {
   Card,
   CardContent,
@@ -119,18 +120,7 @@ export default function DisputeDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading dispute...</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!dispute) {
@@ -154,7 +144,7 @@ export default function DisputeDetailPage() {
   const canVote = dispute.isOnPanel && !dispute.hasVoted && dispute.status === "open";
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={() => router.back()} className="mb-6">

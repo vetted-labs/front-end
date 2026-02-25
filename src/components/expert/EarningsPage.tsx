@@ -5,6 +5,7 @@ import { useAccount, useWaitForTransactionReceipt } from "wagmi";
 import { formatEther } from "viem";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+
 import { useRewardClaiming } from "@/lib/hooks/useVettedContracts";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -169,11 +170,7 @@ export default function EarningsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   const votingTotal = summary?.byType?.find((t) => t.type === "voting_reward")?.total ?? 0;
@@ -181,7 +178,7 @@ export default function EarningsPage() {
   const grouped = groupByDate(items);
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Header */}
         <div>

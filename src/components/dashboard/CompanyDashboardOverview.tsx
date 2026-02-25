@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Briefcase,
   Users,
@@ -18,8 +18,8 @@ import { companyApi, dashboardApi, jobsApi, messagingApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatusBadge } from "@/components/ui/statusbadge";
-import { LoadingState } from "@/components/ui/loadingstate";
 import { Alert } from "@/components/ui/alert";
+
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import type { Job, DashboardStats, CompanyApplication, Conversation, MeetingDetails } from "@/types";
 
@@ -168,7 +168,6 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
 }
 
 export function CompanyDashboardOverview() {
-  const router = useRouter();
   const { userId } = useAuthContext();
 
   const { data, isLoading, error } = useFetch(
@@ -184,7 +183,7 @@ export function CompanyDashboardOverview() {
   const activityFeed = data?.activityFeed ?? [];
 
   if (isLoading) {
-    return <LoadingState message="Loading your dashboard..." />;
+    return null;
   }
 
   if (error) {
@@ -198,7 +197,7 @@ export function CompanyDashboardOverview() {
   }
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-6">
@@ -253,12 +252,12 @@ export function CompanyDashboardOverview() {
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Recent Job Postings
                 </h2>
-                <button
-                  onClick={() => router.push("/dashboard/jobs")}
+                <Link
+                  href="/dashboard/jobs"
                   className="text-xs text-primary hover:underline"
                 >
                   View All
-                </button>
+                </Link>
               </div>
               <div className="p-5">
                 {recentJobs.length === 0 ? (
@@ -268,20 +267,20 @@ export function CompanyDashboardOverview() {
                     <p className="text-xs text-muted-foreground mb-4">
                       Post your first job to start receiving applications
                     </p>
-                    <button
-                      onClick={() => router.push("/jobs/new")}
+                    <Link
+                      href="/jobs/new"
                       className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                     >
                       <PlusCircle className="w-4 h-4" />
                       Post a Job
-                    </button>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {recentJobs.map((job) => (
-                      <button
+                      <Link
                         key={job.id}
-                        onClick={() => router.push(`/jobs/${job.id}`)}
+                        href={`/jobs/${job.id}`}
                         className="w-full flex items-center justify-between p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
                       >
                         <div className="flex-1 min-w-0">
@@ -296,7 +295,7 @@ export function CompanyDashboardOverview() {
                           <StatusBadge status={job.status ?? "active"} size="sm" />
                           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -309,12 +308,12 @@ export function CompanyDashboardOverview() {
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Recent Applications
                 </h2>
-                <button
-                  onClick={() => router.push("/dashboard/candidates")}
+                <Link
+                  href="/dashboard/candidates"
                   className="text-xs text-primary hover:underline"
                 >
                   View All
-                </button>
+                </Link>
               </div>
               <div className="p-5">
                 {recentApplications.length === 0 ? (
@@ -328,9 +327,9 @@ export function CompanyDashboardOverview() {
                 ) : (
                   <div className="space-y-3">
                     {recentApplications.map((app) => (
-                      <button
+                      <Link
                         key={app.id}
-                        onClick={() => router.push("/dashboard/candidates")}
+                        href="/dashboard/candidates"
                         className="w-full flex items-center justify-between p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
                       >
                         <div className="flex-1 min-w-0">
@@ -345,7 +344,7 @@ export function CompanyDashboardOverview() {
                           <StatusBadge status={app.status} size="sm" />
                           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -365,8 +364,8 @@ export function CompanyDashboardOverview() {
               </div>
               <div className="p-4 space-y-2">
                 {unreadCount > 0 && (
-                  <button
-                    onClick={() => router.push("/dashboard/messages")}
+                  <Link
+                    href="/dashboard/messages"
                     className="w-full flex items-start gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group"
                   >
                     <div className="w-9 h-9 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
@@ -381,12 +380,12 @@ export function CompanyDashboardOverview() {
                       </p>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
-                  </button>
+                  </Link>
                 )}
 
                 {recentApplications.some((a) => a.status === "pending") && (
-                  <button
-                    onClick={() => router.push("/dashboard/candidates")}
+                  <Link
+                    href="/dashboard/candidates"
                     className="w-full flex items-start gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group"
                   >
                     <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
@@ -401,7 +400,7 @@ export function CompanyDashboardOverview() {
                       </p>
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
-                  </button>
+                  </Link>
                 )}
 
                 {unreadCount === 0 && !recentApplications.some((a) => a.status === "pending") && (
@@ -488,9 +487,9 @@ export function CompanyDashboardOverview() {
             <div className="p-5">
               <div className="space-y-3">
                 {activityFeed.slice(0, 10).map((item) => (
-                  <button
+                  <Link
                     key={item.id}
-                    onClick={() => router.push(item.href)}
+                    href={item.href}
                     className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
                   >
                     <div
@@ -517,7 +516,7 @@ export function CompanyDashboardOverview() {
                     <span className="text-xs text-muted-foreground flex-shrink-0">
                       {formatTimeAgo(item.timestamp)}
                     </span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>

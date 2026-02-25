@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -32,7 +32,6 @@ interface TalentMetrics {
 }
 
 export default function BrowsePage() {
-  const router = useRouter();
   const [featuredJobs, setFeaturedJobs] = useState<FeaturedJob[]>([]);
   const [metrics, setMetrics] = useState<TalentMetrics>({
     totalHired: 0,
@@ -79,7 +78,7 @@ export default function BrowsePage() {
   }, []);
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full animate-page-enter">
       {/* Hero Section with Metrics */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -93,13 +92,13 @@ export default function BrowsePage() {
             Join a decentralized talent marketplace where expertise is validated
             by guilds and opportunities are vetted by the community.
           </p>
-          <button
-            onClick={() => router.push("/browse/jobs")}
+          <Link
+            href="/browse/jobs"
             className="inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-primary via-accent to-primary/80 rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Find the Job for You
             <ArrowRight className="ml-2 w-5 h-5" />
-          </button>
+          </Link>
         </div>
 
         {/* Metrics Grid */}
@@ -173,26 +172,22 @@ export default function BrowsePage() {
                 Top opportunities from leading Web3 organizations
               </p>
             </div>
-            <button
-              onClick={() => router.push("/browse/jobs")}
+            <Link
+              href="/browse/jobs"
               className="text-primary hover:text-primary font-medium flex items-center gap-2"
             >
               View All Jobs
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
 
-          {isLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Loading featured jobs...</p>
-            </div>
-          ) : featuredJobs.length > 0 ? (
+          {isLoading ? null : featuredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.map((job) => (
-                <div
+                <Link
                   key={job.id}
-                  onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                  className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group"
+                  href={`/browse/jobs/${job.id}`}
+                  className="block bg-card/70 backdrop-blur-sm rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-2 bg-muted/50 border border-border/60 rounded-lg">
@@ -241,7 +236,7 @@ export default function BrowsePage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
@@ -249,12 +244,12 @@ export default function BrowsePage() {
               <p className="text-muted-foreground mb-4">
                 No featured jobs available at the moment
               </p>
-              <button
-                onClick={() => router.push("/browse/jobs")}
+              <Link
+                href="/browse/jobs"
                 className="text-primary hover:text-primary font-medium"
               >
                 Browse All Jobs →
-              </button>
+              </Link>
             </div>
           )}
         </div>
@@ -270,12 +265,12 @@ export default function BrowsePage() {
             Join thousands of professionals who have found their dream jobs
             through our guild-validated talent marketplace.
           </p>
-          <button
-            onClick={() => router.push("/browse/jobs")}
-            className="px-8 py-4 bg-card text-primary rounded-xl hover:bg-muted transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          <Link
+            href="/browse/jobs"
+            className="inline-block px-8 py-4 bg-card text-primary rounded-xl hover:bg-muted transition-all font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Explore All Opportunities
-          </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -2,7 +2,8 @@
 import { WithdrawalManager } from '@/components/WithdrawalManager';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+
 import { buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -68,15 +69,11 @@ export default function WithdrawalsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 animate-page-enter">
       {/* Header */}
       <div className="mb-8">
         <Link href="/expert/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "mb-4")}>

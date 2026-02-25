@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Coins, Award } from "lucide-react";
-import { StakingModal } from "./StakingModal";
+
+const StakingModal = dynamic(
+  () => import("./StakingModal").then(m => ({ default: m.StakingModal })),
+  { ssr: false }
+);
 
 interface ActionButtonPanelProps {
   stakingStatus?: {

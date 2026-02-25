@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -109,7 +110,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-background to-background">
+    <div className="bg-gradient-to-b from-background to-background animate-page-enter">
       {/* Hero Section with Action Cards */}
       <HeroSection
         guilds={guilds}
@@ -145,20 +146,20 @@ export function HomePage() {
               </h4>
               <ul className="space-y-2.5">
                 <li>
-                  <button
-                    onClick={() => router.push("/browse/jobs")}
+                  <Link
+                    href="/browse/jobs"
                     className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
                     Browse Jobs
-                  </button>
+                  </Link>
                 </li>
                 <li>
-                  <button
-                    onClick={() => router.push("/guilds")}
+                  <Link
+                    href="/guilds"
                     className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
                     Explore Guilds
-                  </button>
+                  </Link>
                 </li>
               </ul>
             </div>

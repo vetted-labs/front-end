@@ -1,13 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, ArrowRight } from "lucide-react";
@@ -84,37 +77,38 @@ export function MyActiveEndorsements({
   };
 
   return (
-    <Card className="border-border/60 bg-gradient-to-r from-orange-500/10 via-cyan-500/5 to-transparent shadow-[0_30px_80px_-60px_rgba(255,106,0,0.7)]">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              My Active Endorsements
-            </CardTitle>
-            <CardDescription>
-              {userEndorsements.length > 0
-                ? `You have ${userEndorsements.length} active endorsement${userEndorsements.length !== 1 ? 's' : ''} in ${guildName}`
-                : allUserEndorsements.length > 0
-                ? `You have ${allUserEndorsements.length} endorsement${allUserEndorsements.length !== 1 ? 's' : ''} in other guilds`
-                : `No active endorsements yet. Endorse candidates below to get started.`
-              }
-            </CardDescription>
-          </div>
-          {allUserEndorsements.length > 0 && (
-            <Link href="/expert/endorsements/history">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                View All ({allUserEndorsements.length})
-              </Button>
-            </Link>
-          )}
+    <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Award className="w-4 h-4" />
+            My Active Endorsements
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {userEndorsements.length > 0
+              ? `${userEndorsements.length} active endorsement${userEndorsements.length !== 1 ? 's' : ''} in ${guildName}`
+              : allUserEndorsements.length > 0
+              ? `${allUserEndorsements.length} endorsement${allUserEndorsements.length !== 1 ? 's' : ''} in other guilds`
+              : `No active endorsements yet. Endorse candidates below to get started.`
+            }
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
+        {allUserEndorsements.length > 0 && (
+          <Link href="/expert/endorsements/history">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              View All ({allUserEndorsements.length})
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
         {userEndorsements.length === 0 ? (
           <div className="text-center py-8">
             <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
@@ -122,13 +116,13 @@ export function MyActiveEndorsements({
               You haven't endorsed any candidates in {guildName} yet
             </p>
             {allUserEndorsements.length > 0 ? (
-              <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
+              <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
                 <p className="text-xs text-muted-foreground mb-2">
                   You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {Array.from(new Set(allUserEndorsements.map((e: any) => e.guild?.name).filter(Boolean))).map((guildName: any) => (
-                    <span key={guildName} className="text-xs px-2 py-1 bg-orange-500/10 rounded-full">
+                    <span key={guildName} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
                       {guildName}
                     </span>
                   ))}
@@ -141,28 +135,28 @@ export function MyActiveEndorsements({
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-border/30">
             {userEndorsements.map((endorsement: any) => (
               <div
                 key={endorsement.application?.id || endorsement.endorsementId}
                 onClick={() => handleEndorsementClick(endorsement)}
-                className="flex items-center justify-between p-4 bg-card/80 rounded-lg border border-border/60 hover:border-orange-500/40 hover:shadow-[0_20px_50px_-35px_rgba(255,106,0,0.6)] cursor-pointer transition-all group"
+                className="px-1 py-3.5 hover:bg-muted/30 cursor-pointer transition-colors group flex items-center justify-between first:pt-0 last:pb-0"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-300 transition-colors">
+                    <h4 className="font-semibold group-hover:text-primary transition-colors">
                       {endorsement.candidate?.name}
                     </h4>
                     {endorsement.blockchainData?.rank > 0 && endorsement.blockchainData?.rank <= 3 && (
                       <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
-                        🏆 Rank #{endorsement.blockchainData.rank}
+                        Rank #{endorsement.blockchainData.rank}
                       </Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {endorsement.job?.title} at {endorsement.job?.companyName}
                   </p>
-                  <p className="text-sm font-medium text-orange-700 dark:text-orange-400 mt-1">
+                  <p className="text-sm font-medium text-primary mt-1">
                     Your Bid: {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VETD
                   </p>
                 </div>
@@ -178,13 +172,13 @@ export function MyActiveEndorsements({
                       }
                     </p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-600 dark:group-hover:text-orange-300 group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
