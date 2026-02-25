@@ -3,6 +3,7 @@
 import { RefObject } from "react";
 import { User, Upload, Paperclip, X } from "lucide-react";
 import { Input } from "../ui/input";
+import type { FieldErrors } from "../ExpertApplicationForm";
 
 export interface PersonalInfoSectionProps {
   fullName: string;
@@ -15,6 +16,8 @@ export interface PersonalInfoSectionProps {
   onResumeChange: (file: File | null) => void;
   onError: (message: string) => void;
   clearError: () => void;
+  fieldErrors?: FieldErrors;
+  onBlur?: (field: string) => void;
 }
 
 export function PersonalInfoSection({
@@ -28,6 +31,8 @@ export function PersonalInfoSection({
   onResumeChange,
   onError,
   clearError,
+  fieldErrors = {},
+  onBlur,
 }: PersonalInfoSectionProps) {
   return (
     <div className="p-8 space-y-6">
@@ -41,49 +46,65 @@ export function PersonalInfoSection({
         </div>
       </div>
 
-      <Input
-        label="Full Name"
-        type="text"
-        value={fullName}
-        onChange={(e) => onChange("fullName", e.target.value)}
-        placeholder="John Doe"
-        description="Your legal name as it appears on official documents"
-        required
-      />
+      <div data-field-error={fieldErrors.fullName ? "" : undefined}>
+        <Input
+          label="Full Name"
+          type="text"
+          value={fullName}
+          onChange={(e) => onChange("fullName", e.target.value)}
+          onBlur={() => onBlur?.("fullName")}
+          placeholder="John Doe"
+          description="Your legal name as it appears on official documents"
+          error={fieldErrors.fullName}
+          required
+        />
+      </div>
 
-      <Input
-        label="Email"
-        type="email"
-        value={email}
-        onChange={(e) => onChange("email", e.target.value)}
-        placeholder="john@example.com"
-        description="We'll use this to send you important updates about your application"
-        required
-      />
+      <div data-field-error={fieldErrors.email ? "" : undefined}>
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => onChange("email", e.target.value)}
+          onBlur={() => onBlur?.("email")}
+          placeholder="john@example.com"
+          description="We'll use this to send you important updates about your application"
+          error={fieldErrors.email}
+          required
+        />
+      </div>
 
-      <Input
-        label="LinkedIn Profile URL"
-        type="url"
-        value={linkedinUrl}
-        onChange={(e) => onChange("linkedinUrl", e.target.value)}
-        placeholder="https://linkedin.com/in/johndoe"
-        description="Link to your LinkedIn profile for verification"
-        required
-      />
+      <div data-field-error={fieldErrors.linkedinUrl ? "" : undefined}>
+        <Input
+          label="LinkedIn Profile URL"
+          type="url"
+          value={linkedinUrl}
+          onChange={(e) => onChange("linkedinUrl", e.target.value)}
+          onBlur={() => onBlur?.("linkedinUrl")}
+          placeholder="https://linkedin.com/in/johndoe"
+          description="Link to your LinkedIn profile for verification"
+          error={fieldErrors.linkedinUrl}
+          required
+        />
+      </div>
 
-      <Input
-        label="Portfolio / Website URL (Optional)"
-        type="url"
-        value={portfolioUrl}
-        onChange={(e) => onChange("portfolioUrl", e.target.value)}
-        placeholder="https://johndoe.com"
-        description="Optional: Link to your personal website, GitHub, or portfolio"
-      />
+      <div data-field-error={fieldErrors.portfolioUrl ? "" : undefined}>
+        <Input
+          label="Portfolio / Website URL (Optional)"
+          type="url"
+          value={portfolioUrl}
+          onChange={(e) => onChange("portfolioUrl", e.target.value)}
+          onBlur={() => onBlur?.("portfolioUrl")}
+          placeholder="https://johndoe.com"
+          description="Optional: Link to your personal website, GitHub, or portfolio"
+          error={fieldErrors.portfolioUrl}
+        />
+      </div>
 
       {/* Resume Upload */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground">
-          Resume / CV <span className="text-muted-foreground text-xs">(optional)</span>
+          Resume / CV <span className="text-destructive">*</span>
         </label>
         <input
           ref={resumeInputRef}

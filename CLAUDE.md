@@ -70,7 +70,11 @@ src/
 
 **API calls:** Always use `apiRequest()` or the domain-specific API namespaces from `lib/api.ts` (`authApi`, `jobsApi`, `expertApi`, `guildsApi`, `candidateApi`, `companyApi`, `applicationsApi`, `proposalsApi`, `governanceApi`, `endorsementAccountabilityApi`, `commitRevealApi`, etc.). Never use raw `fetch`.
 
-**Data fetching in components:** Use `useFetch` or `useApi` hooks from `lib/hooks/useFetch.ts` for loading/error state management. Avoid manual `useState(isLoading)` + try/catch patterns.
+**Data fetching in components:** Use `useFetch` or `useApi` hooks from `lib/hooks/useFetch.ts` for loading/error state management. Never write manual `useState(isLoading)` + try/catch patterns. For paginated data, use `usePaginatedFetch` from `lib/hooks/usePaginatedFetch.ts`.
+
+**Auth guards:** Use `useRequireAuth(userType)` from `lib/hooks/useRequireAuth.ts` instead of manual `useEffect` + auth check + redirect patterns.
+
+**Client-side pagination:** Use `useClientPagination(items, perPage)` from `lib/hooks/useClientPagination.ts` instead of manual `currentPage` state + `.slice()` math.
 
 **Auth:** Three user types — `candidate`, `company`, `expert`. Candidates/companies use JWT tokens. Experts use wallet-only auth (no token). Access via `useAuthContext()` from `src/hooks/useAuthContext.ts`.
 
@@ -113,12 +117,24 @@ src/
 ### Don't
 
 - Put data-fetching logic directly in `page.tsx` files
-- Use `any` — use proper type narrowing
+- Use `any` — use proper type narrowing. Never cast API responses to `any` — use the generic types from `lib/api.ts`
+- Use `as unknown as X` double-casts — fix the API namespace return type instead
 - Create wrapper components that just pass props through
 - Add abstractions until the third use (YAGNI)
 - Modify shared UI components for page-specific needs — extend via props or compose
 - Mutate props or reach upward in the component tree
 - Use uncontrolled form inputs unless performance requires it
+- Duplicate utility functions — check `@/lib/utils` first (`formatTimeAgo`, `formatDate`, `truncateAddress`, `formatSalaryRange`, `formatDeadline`)
+- Write manual `useState(isLoading) + useEffect + try/catch` — always use `useFetch`/`useApi` hooks
+- Write manual auth guards — use `useRequireAuth` hook from `@/lib/hooks/useRequireAuth`
+- Write manual pagination math — use `useClientPagination` from `@/lib/hooks/useClientPagination`
+- Write manual debounce logic — use `useDebounce` from `@/lib/hooks/useDebounce`
+- Catch errors with only `console.error` — always show user feedback via `Alert` or `toast`
+- Define inline types that exist in `@/types` — use `Pick<>` if you need a subset
+- Build custom modal overlays — use `Modal` from `@/components/ui/modal`
+- Define local `statusConfig` objects — use the shared config from `@/config/constants`
+- Write inline empty states — use `EmptyState` from `@/components/ui/empty-state`
+- Manually handle 401 in components — `apiRequest` handles token refresh automatically
 
 ## Common Tasks
 

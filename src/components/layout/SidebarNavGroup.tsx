@@ -4,12 +4,18 @@ import { useSidebar } from "./SidebarProvider";
 import { SidebarNavItem } from "./SidebarNavItem";
 import type { NavGroup } from "./sidebar-config";
 
+/** Hrefs that remain enabled even when the expert's application is pending */
+const EXPERT_PENDING_ALLOWED_HREFS = new Set([
+  "/expert/application-pending",
+]);
+
 interface SidebarNavGroupProps {
   group: NavGroup;
   badgeCounts?: Record<string, number>;
+  isExpertPending?: boolean;
 }
 
-export function SidebarNavGroup({ group, badgeCounts }: SidebarNavGroupProps) {
+export function SidebarNavGroup({ group, badgeCounts, isExpertPending }: SidebarNavGroupProps) {
   const { isCollapsed } = useSidebar();
 
   return (
@@ -26,7 +32,9 @@ export function SidebarNavGroup({ group, badgeCounts }: SidebarNavGroupProps) {
           href={item.href}
           icon={item.icon}
           label={item.label}
-          badge={item.badge === "notifications" ? badgeCounts?.notifications : undefined}
+          badge={item.badge ? badgeCounts?.[item.badge] : undefined}
+          disabled={isExpertPending && !EXPERT_PENDING_ALLOWED_HREFS.has(item.href)}
+          exact={item.exact}
         />
       ))}
     </div>

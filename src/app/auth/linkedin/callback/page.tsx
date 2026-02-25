@@ -111,8 +111,8 @@ function LinkedInCallbackContent() {
 
         // 🔐 SECURITY: Validate redirect URL against whitelist of internal paths
         // Prevents open redirect attacks via manipulated sessionStorage
-        const rawRedirect = stateData.redirect || "/candidate/profile";
-        const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/profile";
+        const rawRedirect = stateData.redirect || "/candidate/dashboard";
+        const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/dashboard";
         setTimeout(() => router.push(safeRedirect), 1500);
       } catch (error: any) {
         console.error("LinkedIn OAuth error:", error);

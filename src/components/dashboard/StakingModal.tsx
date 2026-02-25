@@ -1,14 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther } from "viem";
+import { useAccount, useSwitchChain, usePublicClient } from "wagmi";
+import { formatEther, maxUint256 } from "viem";
 import { sepolia } from "wagmi/chains";
-import { X, Coins, AlertTriangle, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
+import { X, Coins, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
 
@@ -30,11 +29,11 @@ type ActionMode = "stake" | "withdraw";
 export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }: StakingModalProps) {
   const { address, chain } = useAccount();
   const { switchChain } = useSwitchChain();
+  const publicClient = usePublicClient();
   const [actionMode, setActionMode] = useState<ActionMode>("stake");
   const [stakeAmount, setStakeAmount] = useState("");
-  const [isApproving, setIsApproving] = useState(false);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const [step, setStep] = useState<"input" | "approving" | "transaction">("input");
+  const [step, setStep] = useState<"input" | "transaction">("input");
 
   // Guild selection
   const [guilds, setGuilds] = useState<GuildOption[]>([]);
@@ -106,7 +105,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       setStakeAmount("");
       setStep("input");
       setTxHash(null);
-      setIsApproving(false);
       setActionMode("stake");
       setShowTxModal(false);
       setTxStatus("pending");
@@ -126,87 +124,44 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
 
   // Handle transaction confirmation
   useEffect(() => {
-    if (txConfirmed && txHash) {
-      if (step === "approving") {
-        toast.success("Approval confirmed! Starting transaction...");
-        setIsApproving(false);
-        setTxHash(null);
-        setShowTxModal(false);
-        refetchAllowance();
-        handleStakeAfterApproval();
-      } else if (step === "transaction") {
-        setTxStatus("success");
-        refetchBalance();
-        refetchStake();
-        // Sync stake to database so dashboard reflects the update
-        if (address && selectedGuild) {
-          blockchainApi.syncStake(address, selectedGuild.blockchainGuildId)
-            .then(() => onSuccess?.())
-            .catch((err) => {
-              console.error("Failed to sync stake to database:", err);
-              onSuccess?.();
-            });
-        } else {
-          onSuccess?.();
-        }
-        setStep("input");
-        setStakeAmount("");
+    if (txConfirmed && txHash && step === "transaction") {
+      setTxStatus("success");
+      refetchBalance();
+      refetchStake();
+      refetchAllowance();
+      // Sync stake to database in the background — don't call onSuccess yet.
+      // onSuccess (which refreshes the parent page) is deferred to when the
+      // user dismisses the success screen so they can see the confirmation.
+      if (address && selectedGuild) {
+        blockchainApi.syncStake(address, selectedGuild.blockchainGuildId)
+          .catch((err) => {
+            console.error("Failed to sync stake to database:", err);
+          });
       }
     }
   }, [txConfirmed, txHash, step]);
 
   // Handle transaction errors
   useEffect(() => {
-    if (txError && txHash) {
+    if (txError && txHash && step === "transaction") {
       const errorMessage = (txErrorDetails as any)?.shortMessage ||
                           (txErrorDetails as any)?.message ||
                           "Transaction failed on blockchain";
 
-      if (step === "approving") {
-        toast.error(`Approval failed: ${errorMessage}`);
-        setIsApproving(false);
-        setShowTxModal(false);
-        setStep("input");
-        setTxHash(null);
-      } else if (step === "transaction") {
-        setTxStatus("error");
-        setTxErrorMessage(errorMessage);
-      }
-
+      setTxStatus("error");
+      setTxErrorMessage(errorMessage);
       console.error("Transaction error:", txErrorDetails);
     }
   }, [txError, txHash, step, txErrorDetails]);
 
-  const handleStakeAfterApproval = async () => {
-    if (!stakeAmount || parseFloat(stakeAmount) <= 0 || !selectedGuild) return;
+  const isUserRejection = (error: any) =>
+    error?.message?.includes("User rejected") || error?.message?.includes("User denied");
 
-    try {
-      setStep("transaction");
-      setCurrentTxAmount(stakeAmount);
-      setCurrentTxAction(actionMode);
-      setShowTxModal(true);
-      setTxStatus("pending");
-
-      const hash = actionMode === "stake"
-        ? await stake(selectedGuild.blockchainGuildId, stakeAmount)
-        : await requestUnstake(selectedGuild.blockchainGuildId, stakeAmount);
-
-      setTxHash(hash);
-    } catch (error: any) {
-      console.error("Transaction error:", error);
-
-      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
-        toast.error("Transaction rejected by user");
-        setShowTxModal(false);
-      } else {
-        setTxStatus("error");
-        setTxErrorMessage(error.shortMessage || error.message || "Transaction failed");
-      }
-
-      setStep("input");
-    }
-  };
-
+  /**
+   * Unified stake handler — if approval is needed, approves with MaxUint256
+   * first (one-time unlimited), waits for confirmation, then stakes.
+   * The user sees a single TransactionModal the whole time.
+   */
   const handleStake = async () => {
     if (!selectedGuild) {
       toast.error("Please select a guild to stake for");
@@ -218,61 +173,45 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       return;
     }
 
-    const currentBalance = balance ? parseFloat(formatEther(balance)) : 0;
-    if (currentBalance < parseFloat(stakeAmount)) {
-      toast.error(`Insufficient balance. You have ${formatTokenAmount(currentBalance)} VETD`);
+    const walletBalance = balance !== undefined ? parseFloat(formatEther(balance)) : 0;
+    if (walletBalance < parseFloat(stakeAmount)) {
+      toast.error(`Insufficient balance. You have ${formatTokenAmount(walletBalance)} VETD`);
       return;
     }
 
-    const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
-
-    if (currentAllowance < parseFloat(stakeAmount)) {
-      try {
-        setIsApproving(true);
-        setStep("approving");
-        setShowTxModal(true);
-        setTxStatus("pending");
-        setCurrentTxAmount(stakeAmount);
-        setCurrentTxAction("stake");
-
-        const hash = await approve(CONTRACT_ADDRESSES.STAKING as `0x${string}`, stakeAmount);
-        setTxHash(hash);
-      } catch (error: any) {
-        console.error("Approval error:", error);
-
-        if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
-          toast.error("Transaction rejected by user");
-          setShowTxModal(false);
-        } else {
-          toast.error(error.shortMessage || error.message || "Failed to approve tokens");
-          setShowTxModal(false);
-        }
-
-        setIsApproving(false);
-        setStep("input");
-        setTxHash(null);
-      }
-      return;
-    }
+    // Show the transaction modal immediately
+    setStep("transaction");
+    setCurrentTxAmount(stakeAmount);
+    setCurrentTxAction("stake");
+    setShowTxModal(true);
+    setTxStatus("pending");
 
     try {
-      setStep("transaction");
-      setCurrentTxAmount(stakeAmount);
-      setCurrentTxAction("stake");
-      setShowTxModal(true);
-      setTxStatus("pending");
+      const currentAllowanceVal = allowance !== undefined ? parseFloat(formatEther(allowance)) : 0;
 
+      // If approval needed, approve for MaxUint256 (one-time unlimited)
+      if (currentAllowanceVal < parseFloat(stakeAmount)) {
+        const approveHash = await approve(CONTRACT_ADDRESSES.STAKING as `0x${string}`, formatEther(maxUint256));
+
+        // Wait for approval to confirm on-chain before staking
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        }
+        refetchAllowance();
+      }
+
+      // Now stake
       const hash = await stake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
     } catch (error: any) {
       console.error("Staking error:", error);
 
-      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
-        toast.error("Transaction rejected by user");
+      if (isUserRejection(error)) {
+        toast.error("Transaction rejected");
         setShowTxModal(false);
       } else {
         setTxStatus("error");
-        setTxErrorMessage(error.shortMessage || error.message || "Failed to stake tokens");
+        setTxErrorMessage(error.shortMessage || error.message || "Transaction failed");
       }
 
       setStep("input");
@@ -331,7 +270,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   };
 
   const handleClose = () => {
-    if (step !== "approving" && step !== "transaction") {
+    if (step !== "transaction") {
       onClose();
     }
   };
@@ -343,8 +282,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     setTxStatus("pending");
     setTxErrorMessage("");
 
-    // On success, close the entire staking modal and return to the page
     if (wasSuccess) {
+      // Reset input state, notify the parent to refresh, then close
+      setStep("input");
+      setStakeAmount("");
+      onSuccess?.();
       onClose();
     }
   };
@@ -352,11 +294,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   if (!isOpen) return null;
 
   const currentBalance =
-    balance && isOnSepolia ? parseFloat(formatEther(balance)) : null;
+    balance !== undefined && isOnSepolia ? parseFloat(formatEther(balance)) : null;
   const currentStake =
-    stakeInfo && isOnSepolia ? parseFloat(formatEther(stakeInfo[0])) : null;
+    stakeInfo !== undefined && isOnSepolia ? parseFloat(formatEther(stakeInfo[0])) : null;
   const minStake = minimumStake ? parseFloat(formatEther(minimumStake)) : 10;
-  const currentAllowance = allowance ? parseFloat(formatEther(allowance)) : 0;
+  const currentAllowance = allowance !== undefined ? parseFloat(formatEther(allowance)) : 0;
   const needsApproval = currentAllowance < parseFloat(stakeAmount || "0");
   const balanceLabel = !isOnSepolia
     ? "Switch to Sepolia"
@@ -370,133 +312,84 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     : "VETD";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-      <div className="bg-card/95 rounded-3xl shadow-2xl border border-border/60 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto backdrop-blur-sm">
-        {/* Header */}
-        <div className="relative flex items-center justify-between p-6 border-b border-border/60">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Coins className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-foreground bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Manage Staking
-              </h2>
-              <p className="text-xs text-muted-foreground">Stake VETD per guild to unlock reviewing</p>
-            </div>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
+      <div
+        className="relative max-w-[460px] w-full mx-4 max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ── Gradient header hero ── */}
+        <div className="relative overflow-hidden px-6 pt-8 pb-6">
+          {/* Decorative background glow */}
+          <div className="absolute -top-20 -left-20 w-60 h-60 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-600/10 rounded-full blur-[60px] pointer-events-none" />
+
+          {/* Close button */}
           <button
             onClick={handleClose}
-            disabled={step === "approving" || step === "transaction"}
-            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={step === "transaction"}
+            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X className="w-5 h-5 text-muted-foreground" />
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
+
+          {/* Icon + Title */}
+          <div className="relative flex flex-col items-center text-center">
+            <div className="relative mb-4">
+              <div className="absolute -inset-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full opacity-25 blur-xl animate-pulse" />
+              <div className="relative w-14 h-14 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/30 rotate-3">
+                <Coins className="w-7 h-7 text-white -rotate-3" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Manage Staking</h2>
+            <p className="text-sm text-muted-foreground mt-1">Stake VETD per guild to unlock reviewing</p>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-5">
+        {/* ── Content ── */}
+        <div className="px-6 pb-6 space-y-4">
           {/* Wrong Network Warning */}
           {!isOnSepolia && (
-            <div className="p-4 bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-yellow-500/10 border border-yellow-500/30 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
-                  Wrong Network
-                </p>
-                <p className="text-xs text-yellow-800 dark:text-yellow-300 mb-3">
-                  Please switch to Sepolia Testnet to stake tokens.
-                </p>
-                <Button
-                  onClick={() => switchChain({ chainId: sepolia.id })}
-                  size="sm"
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg"
-                >
-                  Switch to Sepolia
-                </Button>
+            <div className="p-3.5 bg-yellow-500/[0.08] border border-yellow-500/20 rounded-2xl flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4.5 h-4.5 text-yellow-500" />
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-yellow-200">Wrong Network</p>
+                <p className="text-xs text-yellow-300/60 mt-0.5">Switch to Sepolia Testnet to continue.</p>
+              </div>
+              <Button
+                onClick={() => switchChain({ chainId: sepolia.id })}
+                size="sm"
+                className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs rounded-lg shadow-sm flex-shrink-0"
+              >
+                Switch
+              </Button>
             </div>
           )}
 
           {/* Contract Paused Warning */}
           {isPaused && isOnSepolia && (
-            <div className="p-4 bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 border border-red-500/30 rounded-2xl flex items-start gap-3 backdrop-blur-sm">
-              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
-                  Staking Paused
-                </p>
-                <p className="text-xs text-red-800 dark:text-red-300">
-                  The staking contract is currently paused. Please try again later or contact support.
-                </p>
+            <div className="p-3.5 bg-red-500/[0.08] border border-red-500/20 rounded-2xl flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-red-200">Staking Paused</p>
+                <p className="text-xs text-red-300/60 mt-0.5">Contract is paused. Try again later.</p>
               </div>
             </div>
           )}
 
-          {/* Input State */}
           {(
             <>
-              {/* Guild Selector */}
-              <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block">
-                  {isGuildLocked ? "Guild" : "Select Guild"}
-                </label>
-                <div className="relative">
-                  {isGuildLocked ? (
-                    <div className="w-full flex items-center px-4 py-3 rounded-xl border border-border/50 bg-muted/30 text-foreground font-medium">
-                      {selectedGuild?.name || "Loading..."}
-                    </div>
-                  ) : (
-                  <button
-                    onClick={() => setShowGuildDropdown(!showGuildDropdown)}
-                    disabled={isLoadingGuilds || step !== "input"}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className={selectedGuild ? "text-foreground" : "text-muted-foreground"}>
-                      {isLoadingGuilds
-                        ? "Loading guilds..."
-                        : selectedGuild
-                        ? selectedGuild.name
-                        : "Choose a guild to stake for..."}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  )}
-
-                  {!isGuildLocked && showGuildDropdown && guilds.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-card border border-border/60 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                      {guilds.map((guild) => (
-                        <button
-                          key={guild.id}
-                          onClick={() => {
-                            setSelectedGuild(guild);
-                            setShowGuildDropdown(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm first:rounded-t-xl last:rounded-b-xl ${
-                            selectedGuild?.id === guild.id ? "bg-orange-500/10 text-orange-600 font-medium" : "text-foreground"
-                          }`}
-                        >
-                          {guild.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {!isGuildLocked && guilds.length === 0 && !isLoadingGuilds && (
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    No guilds available. Join a guild first to stake.
-                  </p>
-                )}
-              </div>
-
-              {/* Action Mode Tabs */}
-              <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-2xl">
+              {/* ── Action Mode Toggle ── */}
+              <div className="flex p-1 bg-white/[0.04] dark:bg-white/[0.03] rounded-2xl border border-white/[0.06]">
                 <button
                   onClick={() => setActionMode("stake")}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     actionMode === "stake"
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/30"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <TrendingUp className="w-4 h-4" />
@@ -505,10 +398,10 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                 <button
                   onClick={() => setActionMode("withdraw")}
                   disabled={!currentStake || currentStake === 0}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     actionMode === "withdraw"
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/30"
+                      : "text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                   }`}
                 >
                   <TrendingDown className="w-4 h-4" />
@@ -516,75 +409,153 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                 </button>
               </div>
 
-              {/* Current Status */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative p-5 bg-muted/40 rounded-2xl border border-border/60 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Wallet Balance</p>
-                  <p className="text-2xl font-semibold text-foreground">
-                    {formatTokenAmount(currentBalance)}
+              {/* ── Guild Selector ── */}
+              <div className="relative">
+                {isGuildLocked ? (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-4 h-4 text-orange-400" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{selectedGuild?.name || "Loading..."}</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowGuildDropdown(!showGuildDropdown)}
+                    disabled={isLoadingGuilds || step !== "input"}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.06] transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+                      <ChevronDown className={`w-4 h-4 text-orange-400 transition-transform duration-200 ${showGuildDropdown ? "rotate-180" : ""}`} />
+                    </div>
+                    <span className={`text-sm flex-1 ${selectedGuild ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {isLoadingGuilds
+                        ? "Loading guilds..."
+                        : selectedGuild
+                        ? selectedGuild.name
+                        : "Choose a guild..."}
+                    </span>
+                  </button>
+                )}
+
+                {!isGuildLocked && showGuildDropdown && guilds.length > 0 && (
+                  <div className="absolute z-10 w-full mt-2 rounded-2xl shadow-2xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto">
+                    {guilds.map((guild) => (
+                      <button
+                        key={guild.id}
+                        onClick={() => {
+                          setSelectedGuild(guild);
+                          setShowGuildDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 transition-all text-sm first:rounded-t-2xl last:rounded-b-2xl ${
+                          selectedGuild?.id === guild.id
+                            ? "bg-orange-500/15 text-orange-400 font-medium"
+                            : "text-foreground hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {guild.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!isGuildLocked && guilds.length === 0 && !isLoadingGuilds && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    No guilds available. Join a guild first.
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">{balanceLabel}</p>
-                </div>
-                <div className="relative p-5 bg-orange-500/10 rounded-2xl border border-orange-500/25 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2">
-                    {selectedGuild ? `Staked in ${selectedGuild.name}` : "Staked Balance"}
-                  </p>
-                  <p className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
-                    {selectedGuild ? formatTokenAmount(currentStake) : "—"}
-                  </p>
-                  <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">
-                    {selectedGuild ? stakeLabel : "Select a guild"}
-                  </p>
-                </div>
+                )}
               </div>
 
-              {/* Amount Input */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-semibold text-foreground">
-                    Amount to {actionMode === "stake" ? "Stake" : "Withdraw"}
-                  </label>
-                  <button
-                    onClick={handleMaxClick}
-                    className="px-3 py-1 text-xs font-medium text-orange-600 hover:text-orange-700 bg-orange-500/10 hover:bg-orange-500/20 rounded-lg transition-colors"
-                  >
-                    Max
-                  </button>
+              {/* ── Amount Input Panel ── */}
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-4">
+                {/* Amount input */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-muted-foreground">
+                      {actionMode === "stake" ? "You stake" : "You withdraw"}
+                    </span>
+                    <button
+                      onClick={handleMaxClick}
+                      className="text-xs font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={stakeAmount}
+                      onChange={(e) => setStakeAmount(e.target.value)}
+                      disabled={step === "transaction"}
+                      className="flex-1 bg-transparent text-3xl font-bold text-foreground placeholder:text-muted-foreground/30 outline-none tabular-nums min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] flex-shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-white">V</span>
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">VETD</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground/60 mt-2">
+                    {actionMode === "stake"
+                      ? `Min. ${formatTokenAmount(minStake)} VETD`
+                      : `Available: ${formatTokenAmount(currentStake)} VETD`}
+                  </p>
                 </div>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={stakeAmount}
-                    onChange={(e) => setStakeAmount(e.target.value)}
-                    disabled={step === "approving" || step === "transaction"}
-                    className="text-lg h-14 pr-16 rounded-xl border-border/50 focus:border-orange-500/50 focus:ring-orange-500/20"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                    VETD
+
+                {/* Divider */}
+                <div className="h-px bg-white/[0.06]" />
+
+                {/* Balance row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Wallet</p>
+                      <p className="text-sm font-semibold text-foreground tabular-nums">
+                        {formatTokenAmount(currentBalance)} <span className="text-muted-foreground font-normal">{balanceLabel}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div>
+                      <p className="text-xs text-orange-400/70 text-right">
+                        {selectedGuild ? `Staked` : "Staked"}
+                      </p>
+                      <p className="text-sm font-semibold text-orange-400 tabular-nums text-right">
+                        {selectedGuild ? formatTokenAmount(currentStake) : "—"} <span className="text-orange-400/50 font-normal">{selectedGuild ? stakeLabel : ""}</span>
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                      <Lock className="w-4 h-4 text-orange-400" />
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {actionMode === "stake"
-                    ? `Minimum: ${formatTokenAmount(minStake)} VETD per guild`
-                    : `Available: ${formatTokenAmount(currentStake)} VETD`}
-                </p>
               </div>
 
-              {/* Action Button */}
+              {/* ── Approval notice ── */}
+              {actionMode === "stake" && needsApproval && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/[0.06] border border-orange-500/10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+                  <p className="text-xs text-orange-300/70">
+                    Token approval required (one-time, automatic)
+                  </p>
+                </div>
+              )}
+
+              {/* ── Action Button ── */}
               <Button
                 onClick={actionMode === "stake" ? handleStake : handleWithdraw}
                 disabled={
                   !isOnSepolia ||
                   isPaused ||
-                  isApproving ||
-                  step === "approving" ||
                   step === "transaction" ||
                   !stakeAmount ||
                   parseFloat(stakeAmount) <= 0 ||
                   !selectedGuild
                 }
-                className="w-full h-12 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all rounded-xl font-semibold"
+                className="w-full h-[3.25rem] bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 hover:from-orange-500 hover:via-orange-400 hover:to-orange-500 text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-400/35 transition-all duration-300 rounded-2xl font-bold text-[15px]"
               >
                 {actionMode === "stake" ? (
                   <>
@@ -599,19 +570,12 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                 )}
               </Button>
 
-              {/* Help Text */}
-              <div className="text-center space-y-1">
-                {actionMode === "stake" && needsApproval && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    You need to approve tokens before staking. This is a one-time approval and will happen automatically.
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {actionMode === "stake"
-                    ? "Stake per guild to join reviewer pools and earn rewards."
-                    : "Withdraw your staked tokens back to your wallet."}
-                </p>
-              </div>
+              {/* ── Footer hint ── */}
+              <p className="text-center text-xs text-muted-foreground/50">
+                {actionMode === "stake"
+                  ? "Stake per guild to join reviewer pools and earn rewards."
+                  : "Withdraw your staked tokens back to your wallet."}
+              </p>
             </>
           )}
         </div>
@@ -626,6 +590,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         actionType={currentTxAction}
         amount={currentTxAmount}
         errorMessage={txErrorMessage}
+        guildName={selectedGuild?.name}
       />
     </div>
   );

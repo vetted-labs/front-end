@@ -98,7 +98,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
                 <Target className="w-4 h-4" />
                 <p className="text-xl font-semibold text-foreground">{guild.totalProposalsReviewed || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground">Proposals Reviewed</p>
+              <p className="text-xs text-muted-foreground">Applications Reviewed</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2 text-primary">

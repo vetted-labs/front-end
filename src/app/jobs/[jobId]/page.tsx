@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -120,15 +121,15 @@ export default function JobDetailsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-700";
+        return "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400";
       case "paused":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400";
       case "closed":
-        return "bg-muted text-card-foreground";
+        return "bg-muted border border-border text-muted-foreground";
       case "draft":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400";
       default:
-        return "bg-muted text-card-foreground";
+        return "bg-muted border border-border text-muted-foreground";
     }
   };
 
@@ -176,8 +177,9 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen min-h-full relative">
+      <div className="pointer-events-none absolute inset-0 content-gradient" />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.push("/dashboard")}
           className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
@@ -187,43 +189,45 @@ export default function JobDetailsPage() {
         </button>
 
         {/* Header */}
-        <div className="bg-card rounded-xl shadow-sm p-8 mb-6">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-foreground">
-                  {job.title}
-                </h1>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    job.status,
-                  )}`}
-                >
-                  {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                </span>
+        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] mb-6">
+          <div className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl font-bold text-foreground">
+                    {job.title}
+                  </h1>
+                  <span
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${getStatusColor(
+                      job.status,
+                    )}`}
+                  >
+                    {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    {job.views} views
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {job.applicants} applicants
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Posted {new Date(job.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  {job.views} views
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {job.applicants} applicants
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Posted {new Date(job.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+              <button
+                onClick={() => router.push(`/jobs/${job.id}/edit`)}
+                className="px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90 transition-all text-sm font-medium flex items-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
             </div>
-            <button
-              onClick={() => router.push(`/jobs/${job.id}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </button>
           </div>
         </div>
 
@@ -231,45 +235,42 @@ export default function JobDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Applicants */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl shadow-sm p-6 sticky top-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Applicants</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {applications.length}{" "}
-                    {applications.length === 1 ? "applicant" : "applicants"}
-                  </p>
-                </div>
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] sticky top-6">
+              <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Applicants</h2>
+                <span className="text-xs text-muted-foreground">{applications.length}</span>
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full mb-4">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="reviewing">Reviewing</SelectItem>
-                  <SelectItem value="interviewed">Interviewed</SelectItem>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="px-5 py-3 border-b border-border/40">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="reviewing">Reviewing</SelectItem>
+                    <SelectItem value="interviewed">Interviewed</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               {applicationsLoading ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground">Loading...</p>
                 </div>
               ) : applications.length === 0 ? (
-                <div className="text-center py-8 bg-muted rounded-lg">
+                <div className="text-center py-8">
                   <p className="text-sm text-muted-foreground">No applicants yet</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                <div className="divide-y divide-border/30 max-h-[calc(100vh-300px)] overflow-y-auto">
                   {applications.map((application: any) => (
                     <div
                       key={application.id}
-                      className="border rounded-lg p-3 hover:bg-muted transition-colors cursor-pointer"
+                      className="px-5 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => {
                         setSelectedApplication(application);
                         setShowApplicationModal(true);
@@ -327,187 +328,205 @@ export default function JobDetailsPage() {
 
           {/* Right Column - Job Details */}
           <div className="lg:col-span-2">
-            <div className="bg-card rounded-xl shadow-sm p-8 space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Briefcase className="w-5 h-5" />
-                Basic Information
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Department
-                  </p>
-                  <p className="text-foreground">{job.department || "N/A"}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-card-foreground mb-1">
-                  Description
-                </p>
-                <p className="text-foreground whitespace-pre-wrap">
-                  {job.description}
-                </p>
-              </div>
-            </div>
-
-            {/* Location & Type */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Location & Type
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Location
-                  </p>
-                  <p className="text-foreground">{job.location}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Location Type
-                  </p>
-                  <p className="text-foreground capitalize">{job.locationType}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Job Type
-                  </p>
-                  <p className="text-foreground">{job.type}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Compensation & Experience */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Compensation & Experience
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Salary Range
-                  </p>
-                  <p className="text-foreground">
-                    {job.salary?.min && job.salary?.max
-                      ? `$${job.salary.min / 1000}k - $${job.salary.max / 1000}k ${job.salary?.currency}`
-                      : "Not specified"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Equity
-                  </p>
-                  <p className="text-foreground">
-                    {job.equityOffered
-                      ? job.equityRange || "Offered"
-                      : "Not offered"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-card-foreground mb-1">
-                    Experience Level
-                  </p>
-                  <p className="text-foreground capitalize">
-                    {job.experienceLevel || "Not specified"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Guild Assignment */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Guild Assignment
-              </h2>
-
-              <div className="bg-primary/10 rounded-lg p-4">
-                <p className="text-foreground font-medium">{job.guild}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  This guild will review and evaluate candidates for this
-                  position
-                </p>
-              </div>
-            </div>
-
-            {/* Requirements */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Requirements
-              </h2>
-
-              <ul className="space-y-2">
-                {job.requirements.map((req, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-foreground">{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Skills */}
-            {job.skills.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-foreground">Skills</h2>
-
-                <div className="flex flex-wrap gap-2">
-                  {job.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-muted text-foreground rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Screening Questions */}
-            {job.screeningQuestions.length > 0 && (
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5" />
-                    Screening Questions
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+              {/* Basic Information */}
+              <div className="border-b border-border/40">
+                <div className="px-5 py-4 border-b border-border/40">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    Basic Information
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Candidates must answer these questions when applying
-                  </p>
                 </div>
-
-                <div className="space-y-3">
-                  {job.screeningQuestions.map((question, index) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-muted rounded-lg border border-border"
-                    >
+                <div className="px-5 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
                       <p className="text-sm font-medium text-card-foreground mb-1">
-                        Question {index + 1}
+                        Department
                       </p>
-                      <p className="text-foreground">{question}</p>
+                      <p className="text-foreground">{job.department || "N/A"}</p>
                     </div>
-                  ))}
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-card-foreground mb-1">
+                      Description
+                    </p>
+                    <p className="text-foreground whitespace-pre-wrap">
+                      {job.description}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* Location & Type */}
+              <div className="border-b border-border/40">
+                <div className="px-5 py-4 border-b border-border/40">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Location & Type
+                  </h2>
+                </div>
+                <div className="px-5 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Location
+                      </p>
+                      <p className="text-foreground">{job.location}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Location Type
+                      </p>
+                      <p className="text-foreground capitalize">{job.locationType}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Job Type
+                      </p>
+                      <p className="text-foreground">{job.type}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compensation & Experience */}
+              <div className="border-b border-border/40">
+                <div className="px-5 py-4 border-b border-border/40">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Compensation & Experience
+                  </h2>
+                </div>
+                <div className="px-5 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Salary Range
+                      </p>
+                      <p className="text-foreground">
+                        {job.salary?.min && job.salary?.max
+                          ? `$${job.salary.min / 1000}k - $${job.salary.max / 1000}k ${job.salary?.currency}`
+                          : "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Equity
+                      </p>
+                      <p className="text-foreground">
+                        {job.equityOffered
+                          ? job.equityRange || "Offered"
+                          : "Not offered"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground mb-1">
+                        Experience Level
+                      </p>
+                      <p className="text-foreground capitalize">
+                        {job.experienceLevel || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Guild Assignment */}
+              <div className="border-b border-border/40">
+                <div className="px-5 py-4 border-b border-border/40">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Guild Assignment
+                  </h2>
+                </div>
+                <div className="px-5 py-4">
+                  <div className="bg-primary/10 rounded-lg p-4">
+                    <p className="text-foreground font-medium">{job.guild}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This guild will review and evaluate candidates for this
+                      position
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirements */}
+              <div className="border-b border-border/40">
+                <div className="px-5 py-4 border-b border-border/40">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Requirements
+                  </h2>
+                </div>
+                <div className="px-5 py-4">
+                  <ul className="space-y-2">
+                    {job.requirements.map((req, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                        <span className="text-foreground">{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Skills */}
+              {job.skills.length > 0 && (
+                <div className="border-b border-border/40">
+                  <div className="px-5 py-4 border-b border-border/40">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Skills</h2>
+                  </div>
+                  <div className="px-5 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Screening Questions */}
+              {job.screeningQuestions.length > 0 && (
+                <div>
+                  <div className="px-5 py-4 border-b border-border/40">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <HelpCircle className="w-4 h-4" />
+                      Screening Questions
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Candidates must answer these questions when applying
+                    </p>
+                  </div>
+
+                  <div className="divide-y divide-border/30">
+                    {job.screeningQuestions.map((question, index) => (
+                      <div
+                        key={index}
+                        className="px-5 py-3.5"
+                      >
+                        <p className="text-sm font-medium text-card-foreground mb-1">
+                          Question {index + 1}
+                        </p>
+                        <p className="text-foreground">{question}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Application Detail Modal */}
       {showApplicationModal && selectedApplication && (
@@ -515,25 +534,41 @@ export default function JobDetailsPage() {
             open={showApplicationModal}
             onOpenChange={setShowApplicationModal}
           >
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
+              <DialogHeader className="px-6 py-5 border-b border-border/40">
                 <DialogTitle>Application Details</DialogTitle>
               </DialogHeader>
 
-              <div className="space-y-4">
-                {/* Candidate Info */}
-                <div className="flex items-start gap-4 p-4 bg-muted rounded-lg">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-2xl font-semibold text-primary">
+              <div>
+                {/* Candidate Info + Status */}
+                <div className="flex items-start gap-4 px-6 py-5 border-b border-border/40">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg font-semibold text-primary">
                       {selectedApplication.candidate.fullName
                         .charAt(0)
                         .toUpperCase()}
                     </span>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">
-                      {selectedApplication.candidate.fullName}
-                    </h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold text-lg">
+                        {selectedApplication.candidate.fullName}
+                      </h3>
+                      <Badge
+                        variant={
+                          selectedApplication.status === "accepted"
+                            ? "default"
+                            : selectedApplication.status === "rejected"
+                              ? "destructive"
+                              : selectedApplication.status === "interviewed"
+                                ? "secondary"
+                                : "outline"
+                        }
+                      >
+                        {selectedApplication.status.charAt(0).toUpperCase() +
+                          selectedApplication.status.slice(1)}
+                      </Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {selectedApplication.candidate.email}
                     </p>
@@ -542,41 +577,81 @@ export default function JobDetailsPage() {
                         {selectedApplication.candidate.headline}
                       </p>
                     )}
+                    <div className="flex items-center gap-3 mt-2">
+                      {selectedApplication.resumeUrl && (
+                        <a
+                          href={selectedApplication.resumeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                        >
+                          View Resume
+                        </a>
+                      )}
+                      <StartConversationButton
+                        applicationId={selectedApplication.id}
+                        candidateName={selectedApplication.candidate.fullName}
+                      />
+                      <Select
+                        value={selectedApplication.status}
+                        onValueChange={async (newStatus) => {
+                          try {
+                            await applicationsApi.updateStatus(
+                              selectedApplication.id,
+                              newStatus
+                            );
+                            setApplications((prev) =>
+                              prev.map((app) =>
+                                app.id === selectedApplication.id
+                                  ? { ...app, status: newStatus }
+                                  : app
+                              )
+                            );
+                            setSelectedApplication({
+                              ...selectedApplication,
+                              status: newStatus,
+                            });
+                          } catch (error) {
+                            console.error("Error updating status:", error);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-[150px] h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="reviewing">Reviewing</SelectItem>
+                          <SelectItem value="interviewed">Interviewed</SelectItem>
+                          <SelectItem value="accepted">Accepted</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
                 {/* Cover Letter */}
-                <div>
-                  <h4 className="font-semibold mb-2">Cover Letter</h4>
-                  <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap">
+                <div className="border-b border-border/40">
+                  <div className="px-5 py-4 border-b border-border/40">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Cover Letter</h4>
+                  </div>
+                  <div className="px-5 py-4 whitespace-pre-wrap text-sm">
                     {selectedApplication.coverLetter}
                   </div>
                 </div>
 
-                {/* Resume */}
-                {selectedApplication.resumeUrl && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Resume</h4>
-                    <a
-                      href={selectedApplication.resumeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(buttonVariants({ variant: "outline" }))}
-                    >
-                      View Resume
-                    </a>
-                  </div>
-                )}
-
                 {/* Screening Answers */}
                 {selectedApplication.screeningAnswers &&
                   selectedApplication.screeningAnswers.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Screening Answers</h4>
-                      <div className="space-y-3">
+                    <div className="border-b border-border/40">
+                      <div className="px-5 py-4 border-b border-border/40">
+                        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Screening Answers</h4>
+                      </div>
+                      <div className="divide-y divide-border/30">
                         {selectedApplication.screeningAnswers.map(
                           (answer: string, idx: number) => (
-                            <div key={idx} className="p-3 bg-muted rounded-lg">
+                            <div key={idx} className="px-5 py-3.5">
                               <p className="text-sm font-medium mb-1">
                                 Question {idx + 1}
                               </p>
@@ -587,49 +662,9 @@ export default function JobDetailsPage() {
                       </div>
                     </div>
                   )}
-
-                {/* Status Update */}
-                <div>
-                  <h4 className="font-semibold mb-2">Application Status</h4>
-                  <Select
-                    value={selectedApplication.status}
-                    onValueChange={async (newStatus) => {
-                      try {
-                        await applicationsApi.updateStatus(
-                          selectedApplication.id,
-                          newStatus
-                        );
-                        setApplications((prev) =>
-                          prev.map((app) =>
-                            app.id === selectedApplication.id
-                              ? { ...app, status: newStatus }
-                              : app
-                          )
-                        );
-                        setSelectedApplication({
-                          ...selectedApplication,
-                          status: newStatus,
-                        });
-                      } catch (error) {
-                        console.error("Error updating status:", error);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="reviewing">Reviewing</SelectItem>
-                      <SelectItem value="interviewed">Interviewed</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="px-6 py-4 border-t border-border/40">
                 <Button
                   variant="outline"
                   onClick={() => setShowApplicationModal(false)}

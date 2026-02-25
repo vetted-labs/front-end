@@ -1,3 +1,9 @@
+export interface SocialLink {
+  platform: string;
+  label: string;
+  url: string;
+}
+
 export interface CandidateProfile {
   id: string;
   fullName: string;
@@ -5,6 +11,7 @@ export interface CandidateProfile {
   phone?: string;
   linkedIn?: string;
   github?: string;
+  socialLinks?: SocialLink[];
   experienceLevel?: string;
   headline?: string;
   bio?: string;

@@ -60,7 +60,7 @@ export function JobForm() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
             {isEditing ? "Edit Job Posting" : "Create New Job Posting"}
           </h1>
           <p className="text-muted-foreground">
@@ -70,7 +70,7 @@ export function JobForm() {
           </p>
         </div>
 
-        <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
+        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
           <form onSubmit={handleSubmit}>
             {/* Basic Information Section */}
             <JobBasicInfo

@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { Job, GuildJobApplication } from "@/types";
+import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
 
 interface GuildJobsTabProps {
   jobs: Job[];
@@ -23,24 +24,6 @@ interface GuildJobsTabProps {
   applications?: GuildJobApplication[];
   onEndorseCandidate?: (applicationId: string, endorse: boolean) => void;
 }
-
-// Helper function to format relative time
-const getRelativeTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays === 0) return "today";
-  if (diffInDays === 1) return "1 day ago";
-  if (diffInDays < 7) return `${diffInDays} days ago`;
-  if (diffInDays < 30) {
-    const weeks = Math.floor(diffInDays / 7);
-    return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
-  }
-  const months = Math.floor(diffInDays / 30);
-  return `${months} ${months === 1 ? "month" : "months"} ago`;
-};
 
 // Helper function to get job type badge color
 const getJobTypeBadge = (type: string) => {
@@ -182,12 +165,11 @@ export function GuildJobsTab({
                     </div>
 
                     {/* Salary Range */}
-                    {job.salary.min && job.salary.max && (
+                    {(job.salary.min || job.salary.max) && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <DollarSign className="w-4 h-4 flex-shrink-0 text-primary" />
                         <span>
-                          {job.salary.currency} {(job.salary.min / 1000).toFixed(0)}k -{" "}
-                          {(job.salary.max / 1000).toFixed(0)}k
+                          {formatSalaryRange(job.salary)}
                         </span>
                       </div>
                     )}
@@ -207,7 +189,7 @@ export function GuildJobsTab({
                   <div className="pt-3 border-t border-border">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="w-3.5 h-3.5 flex-shrink-0 text-primary" />
-                      <span>Posted {getRelativeTime(job.createdAt)}</span>
+                      <span>Posted {formatTimeAgo(job.createdAt)}</span>
                     </div>
                   </div>
                 </div>

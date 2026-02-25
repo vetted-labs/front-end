@@ -23,19 +23,14 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { LoadingState, Alert, Button, PillTabs } from "@/components/ui";
-import { guildsApi } from "@/lib/api";
-import { getGuildIcon, getGuildColor, getGuildBgColor, getRoleBadgeColor, getActivityIcon, getActivityColor } from "@/lib/guildHelpers";
+import { guildsApi, guildApplicationsApi } from "@/lib/api";
+import { getGuildIcon, getGuildColor, getGuildBgColor, getRoleBadgeColor } from "@/lib/guildHelpers";
+import { formatSalaryRange } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { GuildActivityFeed } from "@/components/guild/GuildActivityTab";
+import type { GuildActivity } from "@/components/guild/GuildActivityTab";
 import type { Guild, Job, ExpertMember, CandidateMember } from "@/types";
 
-interface GuildActivity {
-  id: string;
-  type: "proposal_submitted" | "candidate_approved" | "job_posted" | "endorsement_given";
-  actor: string;
-  target?: string;
-  timestamp: string;
-  details: string;
-}
 
 /** Extended guild detail with nested members, jobs, and activity. */
 interface GuildDetail extends Guild {
@@ -90,6 +85,7 @@ export default function GuildDetailPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "experts" | "candidates" | "jobs" | "activity" | "leaderboard">("overview");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
+
   const isAuthenticated = auth.isAuthenticated || isConnected;
 
   useEffect(() => {
@@ -102,7 +98,112 @@ export default function GuildDetailPage() {
 
     try {
       // Fetch public guild details
-      const guildData: any = await guildsApi.getPublicDetail(guildId);
+      const raw: any = await guildsApi.getPublicDetail(guildId);
+      const experts: ExpertMember[] = Array.isArray(raw.experts) ? raw.experts : [];
+      const candidates: CandidateMember[] = Array.isArray(raw.candidates) ? raw.candidates : [];
+      const recentJobs: Job[] = Array.isArray(raw.recentJobs) ? raw.recentJobs : [];
+      let recentActivity: GuildActivity[] = Array.isArray(raw.recentActivity) ? raw.recentActivity : [];
+
+      // Fetch guild applications (candidate + expert proposals) for activity
+      let candidateApps: any[] = [];
+      let guildProposals: any[] = [];
+      try {
+        const [candResult, proposalResult] = await Promise.allSettled([
+          guildsApi.getCandidateApplications(guildId),
+          guildApplicationsApi.getByGuild(guildId),
+        ]);
+        if (candResult.status === "fulfilled") {
+          candidateApps = Array.isArray(candResult.value) ? candResult.value : [];
+        }
+        if (proposalResult.status === "fulfilled") {
+          guildProposals = Array.isArray(proposalResult.value) ? proposalResult.value : [];
+        }
+      } catch {
+        // Non-critical — activity will just lack application events
+      }
+
+      // Derive activity from existing data when backend returns none
+      if (recentActivity.length === 0) {
+        const derived: GuildActivity[] = [];
+        experts.forEach((e) => {
+          if (e.joinedAt) {
+            derived.push({
+              id: `expert-join-${e.id}`,
+              type: "expert_joined",
+              actor: e.fullName,
+              details: `joined as ${e.role || "expert"}`,
+              timestamp: e.joinedAt,
+            });
+          }
+        });
+        candidates.forEach((c) => {
+          if (c.joinedAt) {
+            derived.push({
+              id: `candidate-join-${c.id}`,
+              type: "candidate_joined",
+              actor: c.fullName,
+              details: "joined as a candidate member",
+              timestamp: c.joinedAt,
+            });
+          }
+        });
+        recentJobs.forEach((j) => {
+          if (j.createdAt) {
+            derived.push({
+              id: `job-posted-${j.id}`,
+              type: "job_posted",
+              actor: j.title,
+              details: `new position opened · ${j.location || "Remote"} · ${j.type || "Full-time"}`,
+              timestamp: j.createdAt,
+            });
+          }
+        });
+        // Candidate guild applications (pending/approved/rejected)
+        candidateApps.forEach((app: any) => {
+          const ts = app.submittedAt || app.createdAt;
+          if (!ts) return;
+          const statusLabel = app.status === "approved" ? "approved" : app.status === "rejected" ? "rejected" : "pending review";
+          derived.push({
+            id: `cand-app-${app.id}`,
+            type: "application_submitted",
+            actor: app.candidateName || "A candidate",
+            details: `applied to join${app.jobTitle ? ` for ${app.jobTitle}` : ""} · ${statusLabel}`,
+            timestamp: ts,
+          });
+        });
+        // Expert/legacy guild proposals
+        guildProposals.forEach((p: any) => {
+          const ts = p.createdAt;
+          if (!ts) return;
+          // Skip if we already have this person as a candidate app
+          if (candidateApps.some((a: any) => a.candidateEmail === p.candidateEmail && a.id !== p.id)) return;
+          const statusLabel = p.status === "approved" ? "approved" : p.status === "rejected" ? "rejected" : "pending review";
+          derived.push({
+            id: `proposal-${p.id}`,
+            type: "application_submitted",
+            actor: p.candidateName || "A member",
+            details: `submitted an application · ${statusLabel}`,
+            timestamp: ts,
+          });
+        });
+        derived.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        recentActivity = derived.slice(0, 50);
+      }
+
+      const guildData: GuildDetail = {
+        ...raw,
+        experts,
+        candidates,
+        recentJobs,
+        recentActivity,
+        expertCount: raw.expertCount ?? experts.length,
+        candidateCount: raw.candidateCount ?? candidates.length,
+        totalMembers: raw.totalMembers ?? raw.memberCount ?? 0,
+        openPositions: raw.openPositions ?? recentJobs.length,
+        totalProposalsReviewed: raw.totalProposalsReviewed ?? raw.statistics?.vettedProposals ?? 0,
+        averageApprovalTime: raw.averageApprovalTime ?? "—",
+        establishedDate: raw.establishedDate ?? raw.createdAt ?? "",
+      };
       setGuild(guildData);
 
       // If authenticated, check membership status
@@ -222,7 +323,7 @@ export default function GuildDetailPage() {
 
   const handleApplyToGuild = () => {
     if (!isAuthenticated) {
-      router.push(`/auth/signup?redirect=/guilds/${guildId}/apply`);
+      router.push(`/auth/login?type=candidate&redirect=/guilds/${guildId}/apply`);
       return;
     }
     // Wallet-connected users (experts) go through the expert application flow
@@ -309,7 +410,7 @@ export default function GuildDetailPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 lg:ml-auto">
-                {membership?.isMember && (
+                {membership?.isMember && auth.userType === "expert" && (
                   <button
                     onClick={() => router.push(`/expert/guild/${guildId}`)}
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-card/70 border border-border rounded-full hover:border-primary/50 hover:shadow-md transition-all"
@@ -362,7 +463,7 @@ export default function GuildDetailPage() {
                 <Target className="w-5 h-5 text-primary" />
                 <p className="text-2xl font-bold text-foreground">{guild.totalProposalsReviewed || 0}</p>
               </div>
-              <p className="text-sm text-muted-foreground">Proposals Reviewed</p>
+              <p className="text-sm text-muted-foreground">Applications Reviewed</p>
             </div>
             <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
@@ -374,7 +475,7 @@ export default function GuildDetailPage() {
             <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Trophy className="w-5 h-5 text-amber-500" />
-                <p className="text-2xl font-bold text-foreground">{guild.candidateCount}</p>
+                <p className="text-2xl font-bold text-foreground">{guild.candidates?.length || guild.candidateCount || 0}</p>
               </div>
               <p className="text-sm text-muted-foreground">Active Candidates</p>
             </div>
@@ -401,8 +502,8 @@ export default function GuildDetailPage() {
           <PillTabs
             tabs={[
               { value: "overview" as const, label: "Overview" },
-              { value: "experts" as const, label: `Experts (${guild.expertCount})` },
-              { value: "candidates" as const, label: `Candidates (${guild.candidateCount})` },
+              { value: "experts" as const, label: `Experts (${guild.experts?.length || guild.expertCount || 0})` },
+              { value: "candidates" as const, label: `Candidates (${guild.candidates?.length || guild.candidateCount || 0})` },
               { value: "jobs" as const, label: `Jobs (${guild.recentJobs?.length || 0})` },
               { value: "activity" as const, label: "Activity" },
               { value: "leaderboard" as const, label: "Leaderboard" },
@@ -472,7 +573,7 @@ export default function GuildDetailPage() {
                       onClick={() => setActiveTab("experts")}
                       className="mt-4 text-sm text-primary hover:underline"
                     >
-                      View all {guild.expertCount} experts →
+                      View all {guild.experts?.length || guild.expertCount} experts →
                     </button>
                   )}
                 </div>
@@ -502,10 +603,10 @@ export default function GuildDetailPage() {
                                 <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded">
                                   {job.type}
                                 </span>
-                                {job.salary.min && job.salary.max && (
+                                {(job.salary.min || job.salary.max) && (
                                   <span className="flex items-center gap-1">
                                     <DollarSign className="w-4 h-4" />
-                                    ${job.salary.min / 1000}k - ${job.salary.max / 1000}k
+                                    {formatSalaryRange(job.salary)}
                                   </span>
                                 )}
                                 {(job.applicants ?? 0) > 0 && (
@@ -592,32 +693,13 @@ export default function GuildDetailPage() {
                       <Activity className="w-5 h-5 text-primary" />
                       Recent Activity
                     </h3>
-                    <div className="space-y-3">
-                      {guild.recentActivity.slice(0, 5).map((activity) => (
-                        <div key={activity.id} className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg ${getActivityColor(activity.type)}`}>
-                            {(() => { const Icon = getActivityIcon(activity.type); return <Icon className="w-4 h-4" />; })()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-foreground">
-                              <span className="font-medium">{activity.actor}</span> {activity.details}
-                              {activity.target && (
-                                <span className="font-medium"> {activity.target}</span>
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(activity.timestamp).toRelativeTimeString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setActiveTab("activity")}
-                      className="mt-4 text-sm text-primary hover:underline"
-                    >
-                      View all activity →
-                    </button>
+                    <GuildActivityFeed
+                      activities={guild.recentActivity}
+                      compact
+                      maxItems={8}
+                      maxHeight="320px"
+                      onViewAll={() => setActiveTab("activity")}
+                    />
                   </div>
                 )}
 
@@ -776,10 +858,10 @@ export default function GuildDetailPage() {
                             <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded">
                               {job.type}
                             </span>
-                            {job.salary.min && job.salary.max && (
+                            {(job.salary.min || job.salary.max) && (
                               <span className="flex items-center gap-1 font-semibold text-green-700">
                                 <DollarSign className="w-4 h-4" />
-                                ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
+                                {formatSalaryRange(job.salary)}
                               </span>
                             )}
                             {(job.applicants ?? 0) > 0 && (
@@ -808,41 +890,7 @@ export default function GuildDetailPage() {
 
           {/* Activity Tab */}
           {activeTab === "activity" && (
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Recent Activity</h2>
-              {guild.recentActivity && guild.recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {guild.recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-lg ${getActivityColor(activity.type)}`}>
-                          {(() => { const Icon = getActivityIcon(activity.type); return <Icon className="w-4 h-4" />; })()}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-foreground">
-                            <span className="font-semibold">{activity.actor}</span> {activity.details}
-                            {activity.target && (
-                              <span className="font-semibold"> {activity.target}</span>
-                            )}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {new Date(activity.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No recent activity</p>
-                </div>
-              )}
-            </div>
+            <GuildActivityFeed activities={guild.recentActivity || []} />
           )}
 
           {/* Leaderboard Tab */}
@@ -1026,24 +1074,3 @@ export default function GuildDetailPage() {
     </div>
   );
 }
-
-// Helper to format relative time
-declare global {
-  interface Date {
-    toRelativeTimeString(): string;
-  }
-}
-
-Date.prototype.toRelativeTimeString = function() {
-  const now = new Date();
-  const diffMs = now.getTime() - this.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return this.toLocaleDateString();
-};

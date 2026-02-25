@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -16,60 +16,63 @@ import {
   MapPin,
   DollarSign,
   Building2,
+  Shield,
 } from "lucide-react";
-import { Button, LoadingState, Alert, Card, StatusBadge } from "./ui";
-import { StatCard } from "./dashboard/StatCard";
+import { Button, LoadingState, Alert, StatusBadge } from "./ui";
+import { Pagination } from "./ui/pagination";
+import { GuildSelector } from "./ui/guild-selector";
 import { jobsApi, dashboardApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { formatSalaryRange } from "@/lib/utils";
 import { JOB_STATUSES } from "@/config/constants";
 
-import { useAuthContext } from "@/hooks/useAuthContext";
+import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 
 import type { Job, DashboardStats } from "@/types";
+import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 
 export function HiringDashboard() {
   const router = useRouter();
+  const { auth, ready } = useRequireAuth("company");
   const [jobPostings, setJobPostings] = useState<Job[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterGuild, setFilterGuild] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
+  const hasFetchedOnce = useRef(false);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { execute } = useApi();
-  const auth = useAuthContext();
 
-  // Check authentication on mount
+  // Debounce search input by 400ms
   useEffect(() => {
-    if (auth.userType === "candidate") {
-      router.push("/candidate/profile");
-      return;
-    }
-    if (!auth.isAuthenticated || auth.userType !== "company") {
-      router.push("/auth/login?type=company&redirect=/dashboard");
-    }
-  }, [auth.isAuthenticated, auth.userType, router]);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
+    if (!ready) return;
     fetchDashboardData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, filterStatus]);
+  }, [ready, debouncedSearch, filterStatus]);
 
   const fetchDashboardData = async () => {
-    setIsLoading(true);
+    // Only show full-page loading on initial fetch
+    if (!hasFetchedOnce.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
       const companyId = auth.userId;
-      if (!auth.isAuthenticated) {
-        router.push("/auth/login?type=company&redirect=/dashboard");
-        return;
-      }
 
       const [jobsResponse, statsData] = await Promise.all([
         jobsApi.getAll({
           status: filterStatus !== "all" ? filterStatus : undefined,
-          search: searchQuery || undefined,
+          search: debouncedSearch || undefined,
           companyId: companyId || undefined,
         }),
         dashboardApi.getStats(companyId || undefined),
@@ -91,6 +94,7 @@ export function HiringDashboard() {
       );
     } finally {
       setIsLoading(false);
+      hasFetchedOnce.current = true;
     }
   };
 
@@ -109,13 +113,41 @@ export function HiringDashboard() {
     });
   };
 
+  const guilds = useMemo(() => {
+    const uniqueGuilds = [...new Set(jobPostings.map(j => j.guild).filter((g): g is string => Boolean(g)))];
+    return uniqueGuilds.sort();
+  }, [jobPostings]);
+
+  const filteredJobs = useMemo(() => {
+    if (filterGuild === "all") return jobPostings;
+    return jobPostings.filter(j => j.guild === filterGuild);
+  }, [jobPostings, filterGuild]);
+
+  const {
+    paginatedItems: paginatedJobs,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+    resetPage,
+  } = useClientPagination(filteredJobs, 10);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    resetPage();
+  }, [filterGuild, debouncedSearch, filterStatus, resetPage]);
+
+  if (!ready) return null;
+
   if (isLoading) {
     return <LoadingState message="Loading dashboard..." />;
   }
 
   return (
-    <div className="min-h-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-full relative">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0 content-gradient" />
+
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="mb-6">
             <Alert variant="error" onClose={() => setError(null)}>
@@ -124,56 +156,55 @@ export function HiringDashboard() {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total Jobs"
-            value={stats?.totalJobs || 0}
-            icon={Briefcase}
-          />
-          <StatCard
-            title="Active Postings"
-            value={stats?.activeJobs || 0}
-            icon={TrendingUp}
-            iconBgColor="bg-green-100 dark:bg-green-900/20"
-            iconColor="text-green-600 dark:text-green-400"
-          />
-          <StatCard
-            title="Total Applicants"
-            value={stats?.totalApplicants || 0}
-            icon={Users}
-            iconBgColor="bg-blue-100 dark:bg-blue-900/20"
-            iconColor="text-blue-600 dark:text-blue-400"
-          />
-          <StatCard
-            title="Avg. Days to Hire"
-            value={stats?.averageTimeToHire || 0}
-            icon={Clock}
-            iconBgColor="bg-amber-100 dark:bg-amber-900/20"
-            iconColor="text-amber-600 dark:text-amber-400"
-          />
+        {/* Compact Stat Chips */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+            <Briefcase className="w-4 h-4 text-primary" />
+            <span className="text-xs text-muted-foreground">Total Jobs</span>
+            <span className="text-sm font-semibold text-foreground">{stats?.totalJobs || 0}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+            <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <span className="text-xs text-muted-foreground">Active</span>
+            <span className="text-sm font-semibold text-foreground">{stats?.activeJobs || 0}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-xs text-muted-foreground">Applicants</span>
+            <span className="text-sm font-semibold text-foreground">{stats?.totalApplicants || 0}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-xs text-muted-foreground">Avg. Days</span>
+            <span className="text-sm font-semibold text-foreground">{stats?.averageTimeToHire || 0}</span>
+          </div>
+        </div>
+
+        {/* Upcoming Meetings */}
+        <div className="mb-6">
+          <UpcomingMeetings userType="company" />
         </div>
 
         {/* Job Postings */}
-        <Card padding="none">
-          <div className="p-6 border-b border-border">
+        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+          <div className="px-5 py-4 border-b border-border/40">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-xl font-bold text-foreground">Job Postings</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Job Postings</h2>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search jobs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
+                    className="pl-9 pr-4 py-2 rounded-xl bg-card/40 backdrop-blur-sm border border-border/60 focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
                   />
                 </div>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
+                  className="px-3 py-2 rounded-xl bg-card/40 backdrop-blur-sm border border-border/60 focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
                 >
                   <option value="all">All Status</option>
                   {JOB_STATUSES.map((status) => (
@@ -182,6 +213,12 @@ export function HiringDashboard() {
                     </option>
                   ))}
                 </select>
+                <GuildSelector
+                  guilds={guilds.map((g) => ({ id: g, name: g }))}
+                  value={filterGuild}
+                  onChange={setFilterGuild}
+                  size="sm"
+                />
                 <Button
                   onClick={() => router.push("/jobs/new")}
                   icon={<Plus className="w-5 h-5" />}
@@ -192,19 +229,19 @@ export function HiringDashboard() {
             </div>
           </div>
 
-          <div className="divide-y divide-gray-200">
-            {jobPostings.length > 0 ? (
-              jobPostings.map((job) => (
+          <div className="divide-y divide-border/30">
+            {filteredJobs.length > 0 ? (
+              paginatedJobs.map((job) => (
                 <div
                   key={job.id}
                   onClick={() => router.push(`/jobs/${job.id}`)}
-                  className="p-6 hover:bg-muted hover:border-primary transition-all cursor-pointer border border-transparent"
+                  className="p-5 hover:bg-muted/50 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground mb-1">
+                          <h3 className="text-base font-semibold text-foreground mb-1">
                             {job.title}
                           </h3>
                           <div className="flex items-center gap-4 text-sm text-card-foreground">
@@ -218,8 +255,8 @@ export function HiringDashboard() {
                             </span>
                             <span className="flex items-center gap-1">
                               <DollarSign className="w-4 h-4" />
-                              {job.salary.min && job.salary.max
-                                ? `$${job.salary.min / 1000}k - $${job.salary.max / 1000}k`
+                              {job.salary.min || job.salary.max
+                                ? formatSalaryRange(job.salary)
                                 : "N/A"}
                             </span>
                             <span className="flex items-center gap-1">
@@ -236,12 +273,12 @@ export function HiringDashboard() {
                                 showActionMenu === job.id ? null : job.id
                               );
                             }}
-                            className="p-1 hover:bg-muted rounded"
+                            className="p-1 hover:bg-muted rounded-lg"
                           >
                             <MoreVertical className="w-5 h-5 text-muted-foreground" />
                           </button>
                           {showActionMenu === job.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border py-1 z-10">
+                            <div className="absolute right-0 mt-2 w-48 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg border border-border/60 py-1 z-10 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
                               <button
                                 onClick={() => router.push(`/jobs/${job.id}`)}
                                 className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
@@ -274,8 +311,9 @@ export function HiringDashboard() {
                         <span className="text-sm text-card-foreground">
                           <strong>{job.views}</strong> views
                         </span>
-                        <span className="text-sm text-card-foreground">
-                          Guild: <strong>{job.guild}</strong>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                          <Shield className="w-3 h-3" />
+                          {job.guild}
                         </span>
                         <span className="text-sm text-muted-foreground">
                           Posted {new Date(job.createdAt).toLocaleDateString()}
@@ -287,14 +325,24 @@ export function HiringDashboard() {
               ))
             ) : (
               <div className="p-12 text-center">
-                <p className="text-card-foreground mb-4">No job postings found</p>
+                <p className="text-card-foreground mb-4">
+                  {filterGuild !== "all" || filterStatus !== "all" || searchQuery
+                    ? "No job postings match your filters"
+                    : "No job postings found"}
+                </p>
                 <Button onClick={() => router.push("/jobs/new")}>
                   Create Your First Job Posting
                 </Button>
               </div>
             )}
           </div>
-        </Card>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
     </div>
   );

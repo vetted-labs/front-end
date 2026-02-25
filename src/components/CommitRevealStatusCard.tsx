@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, CheckCircle2, AlertCircle } from "lucide-react";
+import { formatDeadline } from "@/lib/utils";
 
 interface CommitRevealStatusCardProps {
   phase: "commit" | "reveal" | "finalized";
@@ -11,17 +12,6 @@ interface CommitRevealStatusCardProps {
   commitCount: number;
   revealCount: number;
   totalExpected: number;
-}
-
-function getTimeRemaining(deadline: string) {
-  const now = new Date();
-  const end = new Date(deadline);
-  const diff = end.getTime() - now.getTime();
-  if (diff <= 0) return "Ended";
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days}d ${hours}h`;
-  return `${hours}h`;
 }
 
 export function CommitRevealStatusCard({
@@ -62,7 +52,7 @@ export function CommitRevealStatusCard({
               Deadline
             </span>
             <span className="text-sm font-medium">
-              {getTimeRemaining(deadline)}
+              {formatDeadline(deadline, "Ended")}
             </span>
           </div>
         )}

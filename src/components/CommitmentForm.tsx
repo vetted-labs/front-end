@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { commitRevealApi } from "@/lib/api";
 
 interface CommitmentFormProps {
-  proposalId: string;
+  applicationId: string;
   expertId: string;
   requiredStake: number;
   onSubmit: () => void;
@@ -24,7 +24,7 @@ function generateNonce(): string {
 }
 
 export function CommitmentForm({
-  proposalId,
+  applicationId,
   expertId,
   requiredStake,
   onSubmit,
@@ -36,7 +36,7 @@ export function CommitmentForm({
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const localStorageKey = `commitReveal:${proposalId}:${expertId}`;
+  const localStorageKey = `commitReveal:${applicationId}:${expertId}`;
 
   const handleCopyNonce = async () => {
     await navigator.clipboard.writeText(nonce);
@@ -53,7 +53,7 @@ export function CommitmentForm({
       const hashResponse: any = await commitRevealApi.generateHash(score, nonce);
 
       // Submit commitment
-      await commitRevealApi.submitCommitment(proposalId, {
+      await commitRevealApi.submitCommitment(applicationId, {
         expertId,
         commitmentHash: hashResponse.hash,
         stakeAmount: parseFloat(stakeAmount),

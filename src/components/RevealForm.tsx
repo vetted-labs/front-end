@@ -11,14 +11,14 @@ import { toast } from "sonner";
 import { commitRevealApi } from "@/lib/api";
 
 interface RevealFormProps {
-  proposalId: string;
+  applicationId: string;
   expertId: string;
   onSubmit: () => void;
   onCancel: () => void;
 }
 
 export function RevealForm({
-  proposalId,
+  applicationId,
   expertId,
   onSubmit,
   onCancel,
@@ -29,7 +29,7 @@ export function RevealForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localStorageFound, setLocalStorageFound] = useState(false);
 
-  const localStorageKey = `commitReveal:${proposalId}:${expertId}`;
+  const localStorageKey = `commitReveal:${applicationId}:${expertId}`;
 
   useEffect(() => {
     // Try to load saved values from localStorage
@@ -55,7 +55,7 @@ export function RevealForm({
     try {
       setIsSubmitting(true);
 
-      await commitRevealApi.revealVote(proposalId, {
+      await commitRevealApi.revealVote(applicationId, {
         expertId,
         score: parseInt(score),
         nonce,

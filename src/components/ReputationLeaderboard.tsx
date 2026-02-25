@@ -18,21 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { expertApi } from "@/lib/api";
-
-interface LeaderboardEntry {
-  rank: number;
-  expertId: string;
-  fullName: string;
-  walletAddress: string;
-  reputation: number;
-  guildName?: string;
-  role?: string;
-  guildCount?: number;
-  totalEarnings?: number;
-  totalReviews: number;
-  approvals: number;
-  rejections: number;
-}
+import { truncateAddress } from "@/lib/utils";
+import type { LeaderboardEntry } from "@/types";
 
 interface ReputationLeaderboardProps {
   guildId?: string;
@@ -263,7 +250,7 @@ export function ReputationLeaderboard({
                         )}
                       </div>
                       <div className="text-xs font-mono text-muted-foreground">
-                        {entry.walletAddress.slice(0, 6)}...{entry.walletAddress.slice(-4)}
+                        {truncateAddress(entry.walletAddress)}
                       </div>
                       {entry.role && (
                         <div className="text-xs text-muted-foreground capitalize mt-1">

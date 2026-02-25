@@ -19,7 +19,7 @@ const GUILD_RANKS: Rank[] = [
     icon: <Shield className="w-8 h-8" />,
     description: "Entry-level guild member who has passed initial vetting",
     requirements: [
-      "Successfully pass guild proposal review",
+      "Successfully pass guild application review",
       "Receive 1+ approval from guild members",
       "Complete profile verification",
     ],
@@ -32,7 +32,7 @@ const GUILD_RANKS: Rank[] = [
     icon: <Target className="w-8 h-8" />,
     description: "Active participant building reputation through reviews",
     requirements: [
-      "Complete 10+ proposal reviews",
+      "Complete 10+ application reviews",
       "Maintain 70%+ consensus alignment",
       "Build reputation score to 50+",
     ],
@@ -303,7 +303,7 @@ export function GuildRanksProgression({
         <Sparkles className="w-12 h-12 mx-auto mb-4" />
         <h3 className="text-2xl font-bold mb-2">Ready to Advance?</h3>
         <p className="text-white/90 mb-6">
-          Start reviewing proposals, build your reputation, and climb the ranks!
+          Start reviewing applications, build your reputation, and climb the ranks!
         </p>
         <button className="px-8 py-3 bg-card text-primary rounded-lg font-semibold hover:bg-primary/10 transition-all shadow-lg">
           Start Reviewing

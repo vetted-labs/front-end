@@ -16,7 +16,7 @@ export function JobBasicInfo({
 }: JobBasicInfoProps) {
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
           <Briefcase className="w-5 h-5 text-primary" />
         </div>
@@ -48,8 +48,8 @@ export function JobBasicInfo({
             type="text"
             value={formData.title}
             onChange={(e) => onFieldChange("title", e.target.value)}
-            className={`w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.title ? "border-red-500" : "border-border"
+            className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.title ? "border-red-500" : "border-border/60"
             }`}
             placeholder="e.g., Senior Solidity Developer"
           />
@@ -68,7 +68,7 @@ export function JobBasicInfo({
           type="text"
           value={formData.department || ""}
           onChange={(e) => onFieldChange("department", e.target.value)}
-          className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+          className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
           placeholder="e.g., Engineering"
         />
       </div>
@@ -88,8 +88,8 @@ export function JobBasicInfo({
         <textarea
           value={formData.description}
           onChange={(e) => onFieldChange("description", e.target.value)}
-          className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-            fieldErrors.description ? "border-red-500" : "border-border"
+          className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+            fieldErrors.description ? "border-red-500" : "border-border/60"
           }`}
           rows={6}
           placeholder="Describe the job responsibilities..."

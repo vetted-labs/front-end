@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2,
   CheckCircle,
@@ -27,6 +27,7 @@ interface GuildApplication {
   resumeUrl?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  socialLinks?: { platform: string; label: string; url: string }[];
   currentTitle?: string;
   currentCompany?: string;
   yearsOfExperience?: number;
@@ -48,7 +49,7 @@ interface ReviewGuildApplicationModalProps {
   onClose: () => void;
   application: GuildApplication | null;
   guildId: string;
-  onSubmitReview: (payload: ReviewPayload) => void;
+  onSubmitReview: (payload: ReviewPayload) => Promise<any>;
   isReviewing: boolean;
 }
 
@@ -64,30 +65,16 @@ const FALLBACK_GENERAL_QUESTIONS = [
     id: "learning_from_failure",
     title: "Learning from Failure",
     prompt: "Describe a specific professional or academic failure from recent years where you were the primary owner.",
-    parts: [
-      { id: "event", label: "The Event" },
-      { id: "response", label: "The Response" },
-      { id: "pivot", label: "The Pivot/Learning" },
-    ],
   },
   {
     id: "decision_under_uncertainty",
     title: "Decision-Making Under Uncertainty",
     prompt: "Walk us through a complex technical or strategic decision you made without full information.",
-    parts: [
-      { id: "constraints", label: "The Constraints" },
-      { id: "logic", label: "The Logic" },
-      { id: "reflection", label: "The Reflection" },
-    ],
   },
   {
     id: "motivation_and_conflict",
     title: "Motivation and Conflict",
     prompt: "Think about your transition into your current or most recent role.",
-    parts: [
-      { id: "driver", label: "The Driver" },
-      { id: "friction", label: "The Friction" },
-    ],
   },
   {
     id: "guild_improvement",
@@ -147,6 +134,7 @@ const STEPS = [
   { number: 1, label: "Review Profile", icon: Target },
   { number: 2, label: "General Questions", icon: Sparkles },
   { number: 3, label: "Domain Review", icon: Award },
+  { number: 4, label: "Submitted", icon: CheckCircle },
 ] as const;
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
@@ -210,6 +198,7 @@ export function ReviewGuildApplicationModal({
   onSubmitReview,
   isReviewing,
 }: ReviewGuildApplicationModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [feedback, setFeedback] = useState("");
   const [generalScores, setGeneralScores] = useState<Record<string, Record<string, number>>>({});
@@ -222,6 +211,7 @@ export function ReviewGuildApplicationModal({
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [apiResponse, setApiResponse] = useState<any>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -247,6 +237,7 @@ export function ReviewGuildApplicationModal({
     setLevelTemplate(null);
     setTemplateError(null);
     setValidationError(null);
+    setApiResponse(null);
   }, [application, isOpen]);
 
   const responses = application?.applicationResponses || {};
@@ -307,11 +298,11 @@ export function ReviewGuildApplicationModal({
     const responseKey = GENERAL_RESPONSE_KEY_MAP[questionId];
     if (!responseKey) return "";
     const responseValue = generalResponses[responseKey];
+    if (typeof responseValue === "string") {
+      return responseValue;
+    }
     if (partId && responseValue && typeof responseValue === "object") {
       return responseValue[partId] || "";
-    }
-    if (!partId && typeof responseValue === "string") {
-      return responseValue;
     }
     return "";
   };
@@ -404,14 +395,16 @@ export function ReviewGuildApplicationModal({
   const handleNext = () => {
     if (currentStep === 2 && !validateStep2()) return;
     setCurrentStep((prev) => Math.min(prev + 1, 3));
+    contentRef.current?.scrollTo(0, 0);
   };
 
   const handleBack = () => {
     setValidationError(null);
     setCurrentStep((prev) => Math.max(prev - 1, 1));
+    contentRef.current?.scrollTo(0, 0);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!generalTemplate || !levelTemplate) {
       setValidationError("Review templates are still loading. Please try again in a moment.");
       return;
@@ -424,24 +417,29 @@ export function ReviewGuildApplicationModal({
     const domainScoresPayload = { topics: topicScores, total: topicTotal, max: topicMax };
     const domainJustificationsPayload = topicJustifications;
 
-    onSubmitReview({
-      feedback: feedback || undefined,
-      criteriaScores: {
-        general: { ...generalScores, totals: generalTotals, total: generalTotal, max: generalMax },
-        marketing: domainScoresPayload,
-        domain: domainScoresPayload,
-        overallMax: (generalMax || 0) + (topicMax || 0),
+    try {
+      const response = await onSubmitReview({
+        feedback: feedback || undefined,
+        criteriaScores: {
+          general: { ...generalScores, totals: generalTotals, total: generalTotal, max: generalMax },
+          domain: domainScoresPayload,
+          overallMax: (generalMax || 0) + (topicMax || 0),
+          overallScore,
+          redFlagDeductions,
+        },
+        criteriaJustifications: {
+          general: generalJustifications,
+          domain: domainJustificationsPayload,
+        },
         overallScore,
         redFlagDeductions,
-      },
-      criteriaJustifications: {
-        general: generalJustifications,
-        marketing: domainJustificationsPayload,
-        domain: domainJustificationsPayload,
-      },
-      overallScore,
-      redFlagDeductions,
-    });
+      });
+      setApiResponse(response);
+      setCurrentStep(4);
+      contentRef.current?.scrollTo(0, 0);
+    } catch {
+      // Error is handled by the parent via toast
+    }
   };
 
   // ── Step 1: Review Profile ───────────────────────────────────
@@ -493,6 +491,91 @@ export function ReviewGuildApplicationModal({
     />
   );
 
+  // ── Step 4: Review Submitted ────────────────────────────────
+  const overallMax = (generalMax || 0) + (topicMax || 0);
+  const scorePercent = overallMax > 0 ? Math.round((overallScore / overallMax) * 100) : 0;
+
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      {/* Success Banner */}
+      <div className="text-center py-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+          <CheckCircle className="w-8 h-8 text-green-500" />
+        </div>
+        <h3 className="text-xl font-bold text-foreground mb-1">Review Submitted</h3>
+        <p className="text-sm text-muted-foreground">
+          {apiResponse?.message || "Your review has been recorded. Thanks for voting!"}
+        </p>
+      </div>
+
+      {/* Score Summary */}
+      <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
+        <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+          Your Review Summary
+        </h4>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-3 rounded-lg bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">General</p>
+            <p className="text-lg font-bold text-foreground">
+              {generalTotal}<span className="text-sm text-muted-foreground font-normal">/{generalMax || "?"}</span>
+            </p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">Domain</p>
+            <p className="text-lg font-bold text-foreground">
+              {topicTotal}<span className="text-sm text-muted-foreground font-normal">/{topicMax || "?"}</span>
+            </p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-card border border-border">
+            <p className="text-xs text-muted-foreground mb-1">Deductions</p>
+            <p className={`text-lg font-bold ${redFlagDeductions > 0 ? "text-red-400" : "text-foreground"}`}>
+              {redFlagDeductions > 0 ? `-${redFlagDeductions}` : "0"}
+            </p>
+          </div>
+        </div>
+
+        {/* Overall Score */}
+        <div className="pt-4 border-t border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
+            <span className="text-2xl font-bold text-foreground">
+              {overallScore}<span className="text-sm text-muted-foreground font-normal">/{overallMax}</span>
+            </span>
+          </div>
+          <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                scorePercent >= 70
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                  : scorePercent >= 40
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                  : "bg-gradient-to-r from-red-500 to-rose-500"
+              }`}
+              style={{ width: `${Math.min(scorePercent, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 text-right">{scorePercent}%</p>
+        </div>
+      </div>
+
+      {/* What happens next */}
+      <div className="rounded-xl border border-border bg-blue-500/[0.04] p-4">
+        <div className="flex items-start gap-3">
+          <Sparkles className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+          <div className="text-sm text-muted-foreground">
+            <p className="font-medium text-foreground mb-1">What happens next?</p>
+            <p>
+              Once all assigned reviewers submit their scores, the application will be
+              finalized using IQR-based consensus. Your alignment with the consensus
+              will affect your reputation and rewards.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
@@ -504,7 +587,7 @@ export function ReviewGuildApplicationModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg"
+          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-sm dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative gradients */}
@@ -518,14 +601,14 @@ export function ReviewGuildApplicationModal({
             </h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted/50 border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="relative flex-1 overflow-y-auto px-6 py-5">
+          <div ref={contentRef} className="relative flex-1 overflow-y-auto px-6 py-5">
             <StepIndicator currentStep={currentStep} />
 
             {templateError && <Alert variant="error">{templateError}</Alert>}
@@ -539,6 +622,7 @@ export function ReviewGuildApplicationModal({
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
+            {currentStep === 4 && renderStep4()}
 
             {validationError && (
               <div className="mt-4 flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/[0.08] border border-red-500/20">
@@ -583,7 +667,7 @@ export function ReviewGuildApplicationModal({
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </>
-            ) : (
+            ) : currentStep === 3 ? (
               <>
                 <button
                   onClick={handleBack}
@@ -610,6 +694,13 @@ export function ReviewGuildApplicationModal({
                   )}
                 </button>
               </>
+            ) : (
+              <button
+                onClick={onClose}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-sm font-bold text-white shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_28px_rgba(251,146,60,0.45)] hover:from-amber-400 hover:to-orange-400 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                Done
+              </button>
             )}
           </div>
         </div>

@@ -40,6 +40,16 @@ function getInitialAuthState(): AuthState {
                   localStorage.getItem('companyEmail');
     const userId = candidateId || companyId || expertId;
 
+    // Validate stored values — localStorage.setItem(key, undefined) stores the string "undefined"
+    const validUserTypes = ['candidate', 'company', 'expert'];
+    if (userType && !validUserTypes.includes(userType)) {
+      return { isAuthenticated: false, userType: null, userId: null, email: null, token: null };
+    }
+    if (userId === 'undefined' || userId === 'null') {
+      clearAllAuthState();
+      return { isAuthenticated: false, userType: null, userId: null, email: null, token: null };
+    }
+
     if (token && userType && userId) {
       return {
         isAuthenticated: true,
@@ -71,6 +81,16 @@ function getInitialAuthState(): AuthState {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
+  // Re-sync auth state when tokens are refreshed by the API layer
+  useEffect(() => {
+    const handler = () => {
+      const newState = getInitialAuthState();
+      setAuthState(newState);
+    };
+    window.addEventListener('auth-token-refreshed', handler);
+    return () => window.removeEventListener('auth-token-refreshed', handler);
+  }, []);
+
   const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string) => {
     // Store in localStorage — experts may not have a token
     if (token) {
@@ -84,6 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (walletAddress) {
       localStorage.setItem('walletAddress', walletAddress);
+    } else if (userType !== 'expert') {
+      localStorage.removeItem('walletAddress');
+      localStorage.removeItem('expertId');
     }
 
     // Update state
@@ -93,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userId,
       email: email || null,
       token,
-      walletAddress,
+      walletAddress: userType !== 'expert' && !walletAddress ? undefined : walletAddress,
     });
   };
 

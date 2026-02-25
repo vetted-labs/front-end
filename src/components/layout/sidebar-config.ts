@@ -6,11 +6,16 @@ import {
   Landmark,
   TrendingUp,
   Wallet,
+  Bell,
   LayoutDashboard,
   BarChart3,
   Settings,
   Briefcase,
   Building2,
+  FileText,
+  Shield,
+  MessageSquare,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,8 +23,10 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Show notification badge from useNotificationCount */
-  badge?: "notifications";
+  /** Show badge from useNotificationCount or useMessageCount */
+  badge?: "notifications" | "messages";
+  /** When true, only highlight on exact pathname match (no prefix matching) */
+  exact?: boolean;
 }
 
 export interface NavGroup {
@@ -39,6 +46,7 @@ export const expertSidebarConfig: SidebarConfig = {
       label: "Main",
       items: [
         { label: "Dashboard", href: "/expert/dashboard", icon: Home },
+        { label: "Notifications", href: "/expert/notifications", icon: Bell, badge: "notifications" },
       ],
     },
     {
@@ -58,6 +66,8 @@ export const expertSidebarConfig: SidebarConfig = {
     {
       label: "Reputation",
       items: [
+        { label: "Reputation", href: "/expert/reputation", icon: TrendingUp },
+        { label: "Earnings", href: "/expert/earnings", icon: Coins },
         { label: "Leaderboard", href: "/expert/leaderboard", icon: TrendingUp },
         { label: "Withdrawals", href: "/expert/withdrawals", icon: Wallet },
       ],
@@ -71,8 +81,10 @@ export const companySidebarConfig: SidebarConfig = {
     {
       label: "Main",
       items: [
-        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
+        { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
         { label: "Candidates", href: "/dashboard/candidates", icon: Users },
+        { label: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
         { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
@@ -84,17 +96,24 @@ export const candidateSidebarConfig: SidebarConfig = {
   variant: "candidate",
   groups: [
     {
-      label: "Explore",
+      label: "Main",
       items: [
-        { label: "Home", href: "/", icon: Home },
-        { label: "Find Jobs", href: "/browse/jobs", icon: Briefcase },
-        { label: "Guilds", href: "/guilds", icon: Users },
+        { label: "Dashboard", href: "/candidate/dashboard", icon: LayoutDashboard, exact: true },
+        { label: "Messages", href: "/candidate/messages", icon: MessageSquare, badge: "messages" },
       ],
     },
     {
-      label: "Account",
+      label: "Jobs",
       items: [
-        { label: "My Profile", href: "/candidate/profile", icon: Users },
+        { label: "Browse Jobs", href: "/browse/jobs", icon: Briefcase },
+        { label: "My Applications", href: "/candidate/applications", icon: FileText },
+      ],
+    },
+    {
+      label: "Guilds",
+      items: [
+        { label: "Browse Guilds", href: "/guilds", icon: Users },
+        { label: "My Guilds", href: "/candidate/guilds", icon: Shield },
       ],
     },
   ],
@@ -114,15 +133,15 @@ export const browseSidebarConfig: SidebarConfig = {
     {
       label: "Get Started",
       items: [
-        { label: "Vet Talent", href: "/expert/apply", icon: Award },
+        { label: "Vet Talent", href: "/auth/login?type=expert", icon: Award },
         {
           label: "Find Work",
-          href: "/auth/signup?type=candidate",
+          href: "/auth/login?type=candidate",
           icon: Users,
         },
         {
           label: "Start Hiring",
-          href: "/auth/signup?type=company",
+          href: "/auth/login?type=company",
           icon: Building2,
         },
       ],

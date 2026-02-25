@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 interface VotingScoreSliderProps {
-  proposalId: string;
+  applicationId: string;
   requiredStake: number;
   onSubmit: (score: number, stakeAmount: number, comment: string) => Promise<void>;
   onCancel: () => void;
@@ -24,7 +24,7 @@ interface VotingScoreSliderProps {
 }
 
 export function VotingScoreSlider({
-  proposalId,
+  applicationId,
   requiredStake,
   onSubmit,
   onCancel,

@@ -16,10 +16,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { companyApi } from "@/lib/api";
-import { useAuthContext } from "@/hooks/useAuthContext";
+import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { auth, ready } = useRequireAuth("company");
   const [activeTab, setActiveTab] = useState<"company" | "notifications" | "security" | "billing">("company");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -38,18 +39,13 @@ export default function SettingsPage() {
   const [newApplications, setNewApplications] = useState(true);
   const [applicationUpdates, setApplicationUpdates] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
-  const auth = useAuthContext();
 
   useEffect(() => {
-    if (!auth.isAuthenticated || auth.userType !== "company") {
-      router.push("/auth/login?type=company");
-      return;
-    }
+    if (!ready) return;
     if (auth.email) setCompanyEmail(auth.email);
-
     loadSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isAuthenticated, auth.userType, router]);
+  }, [ready]);
 
   const loadSettings = async () => {
     try {
@@ -96,6 +92,8 @@ export default function SettingsPage() {
     }
   };
 
+  if (!ready) return null;
+
   if (isLoading) {
     return (
       <div className="min-h-full flex items-center justify-center">
@@ -105,9 +103,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full relative">
+      <div className="pointer-events-none absolute inset-0 content-gradient" />
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -117,7 +116,7 @@ export default function SettingsPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
           </div>
           <p className="text-muted-foreground">Manage your company profile and preferences</p>
         </div>
@@ -125,13 +124,13 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Settings Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl border border-border p-2 space-y-1">
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden p-2 space-y-1 dark:bg-card/30 dark:border-white/[0.06]">
               <button
                 onClick={() => setActiveTab("company")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === "company"
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Building2 className="w-5 h-5" />
@@ -142,8 +141,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab("notifications")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === "notifications"
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Bell className="w-5 h-5" />
@@ -154,8 +153,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab("security")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === "security"
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-foreground hover:bg-muted/50"
                 }`}
               >
                 <Lock className="w-5 h-5" />
@@ -166,8 +165,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab("billing")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === "billing"
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-foreground hover:bg-muted/50"
                 }`}
               >
                 <CreditCard className="w-5 h-5" />
@@ -178,7 +177,7 @@ export default function SettingsPage() {
 
           {/* Settings Content */}
           <div className="lg:col-span-3">
-            <div className="bg-card rounded-xl border border-border p-6">
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06]">
               {/* Company Settings */}
               {activeTab === "company" && (
                 <div className="space-y-6">
@@ -198,7 +197,7 @@ export default function SettingsPage() {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="Enter your company name"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -211,7 +210,7 @@ export default function SettingsPage() {
                       value={companyEmail}
                       onChange={(e) => setCompanyEmail(e.target.value)}
                       placeholder="contact@company.com"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -224,7 +223,7 @@ export default function SettingsPage() {
                       value={companyPhone}
                       onChange={(e) => setCompanyPhone(e.target.value)}
                       placeholder="+1 (555) 123-4567"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -237,7 +236,7 @@ export default function SettingsPage() {
                       value={companyWebsite}
                       onChange={(e) => setCompanyWebsite(e.target.value)}
                       placeholder="https://yourcompany.com"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -250,7 +249,7 @@ export default function SettingsPage() {
                       value={companyAddress}
                       onChange={(e) => setCompanyAddress(e.target.value)}
                       placeholder="123 Main St, City, State, ZIP"
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
 
@@ -263,7 +262,7 @@ export default function SettingsPage() {
                       onChange={(e) => setCompanyDescription(e.target.value)}
                       rows={4}
                       placeholder="Tell candidates about your company, culture, and mission..."
-                      className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground resize-none placeholder:text-muted-foreground"
+                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground resize-none placeholder:text-muted-foreground"
                     />
                   </div>
                 </div>
@@ -280,7 +279,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
                       <div>
                         <p className="font-medium text-foreground">Email Notifications</p>
                         <p className="text-sm text-muted-foreground">Receive notifications via email</p>
@@ -296,7 +295,7 @@ export default function SettingsPage() {
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
                       <div>
                         <p className="font-medium text-foreground">New Applications</p>
                         <p className="text-sm text-muted-foreground">Get notified when someone applies</p>
@@ -312,7 +311,7 @@ export default function SettingsPage() {
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
                       <div>
                         <p className="font-medium text-foreground">Application Updates</p>
                         <p className="text-sm text-muted-foreground">Status changes and updates</p>
@@ -328,7 +327,7 @@ export default function SettingsPage() {
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
                       <div>
                         <p className="font-medium text-foreground">Weekly Reports</p>
                         <p className="text-sm text-muted-foreground">Summary of your hiring activity</p>
@@ -357,7 +356,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                     <div className="flex gap-3">
                       <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                       <div>
@@ -370,7 +369,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="p-4 rounded-xl border border-border/30">
                       <p className="font-medium text-foreground mb-2">Two-Factor Authentication</p>
                       <p className="text-sm text-muted-foreground mb-3">
                         Add an extra layer of security to your account
@@ -380,7 +379,7 @@ export default function SettingsPage() {
                       </button>
                     </div>
 
-                    <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="p-4 rounded-xl border border-border/30">
                       <p className="font-medium text-foreground mb-2">Active Sessions</p>
                       <p className="text-sm text-muted-foreground mb-3">
                         Manage devices where you're currently logged in
@@ -422,7 +421,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="p-4 rounded-xl border border-border/30">
                       <p className="font-medium text-foreground mb-2">Payment Method</p>
                       <p className="text-sm text-muted-foreground mb-3">
                         •••• •••• •••• 4242
@@ -432,7 +431,7 @@ export default function SettingsPage() {
                       </button>
                     </div>
 
-                    <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="p-4 rounded-xl border border-border/30">
                       <p className="font-medium text-foreground mb-2">Billing History</p>
                       <p className="text-sm text-muted-foreground mb-3">
                         View and download your past invoices

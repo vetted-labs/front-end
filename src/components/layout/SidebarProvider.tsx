@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 interface SidebarContextValue {
   isCollapsed: boolean;
   isMobileOpen: boolean;
+  hasMounted: boolean;
   toggle: () => void;
   setMobileOpen: (open: boolean) => void;
   closeMobile: () => void;
@@ -22,17 +23,24 @@ const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 const STORAGE_KEY = "vetted-sidebar-collapsed";
 
+function readCollapsed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(readCollapsed);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Read collapsed state from localStorage on mount
+  // Mark as mounted so CSS transitions only apply after first paint
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "true") setIsCollapsed(true);
-    } catch {}
+    setHasMounted(true);
   }, []);
 
   // Auto-close mobile drawer on route change
@@ -57,6 +65,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       value={{
         isCollapsed,
         isMobileOpen,
+        hasMounted,
         toggle,
         setMobileOpen: setIsMobileOpen,
         closeMobile,

@@ -43,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className={`relative bg-card rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border border-border`}
+          className={`relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border border-border/60 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

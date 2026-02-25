@@ -38,7 +38,7 @@ export function PageShell({
             </button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
             {description && (
               <p className="text-muted-foreground mt-1">{description}</p>
             )}

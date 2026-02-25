@@ -16,7 +16,9 @@ import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { getTimeAgo } from "@/lib/utils";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 
@@ -35,9 +37,14 @@ export default function JobsListing() {
   const auth = useAuthContext();
   const isCandidate = auth.isAuthenticated && auth.userType === 'candidate';
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const JOBS_PER_PAGE = 5;
+  const {
+    paginatedItems: currentJobs,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+    resetPage,
+  } = useClientPagination(filteredJobs, 5);
 
   // Get unique guilds from actual jobs data
   const allGuilds = Array.from(
@@ -54,6 +61,8 @@ export default function JobsListing() {
   const locationTypes = ["Remote", "Onsite", "Hybrid"];
 
   const [locationQuery, setLocationQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedLocation = useDebounce(locationQuery, 300);
   const [showGuildModal, setShowGuildModal] = useState(false);
   const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
 
@@ -107,9 +116,9 @@ export default function JobsListing() {
   useEffect(() => {
     let filtered = jobs;
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Filter by search query (debounced)
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
         (job) =>
           (job.title && job.title.toLowerCase().includes(query)) ||
@@ -120,9 +129,9 @@ export default function JobsListing() {
       );
     }
 
-    // Filter by location
-    if (locationQuery) {
-      const query = locationQuery.toLowerCase();
+    // Filter by location (debounced)
+    if (debouncedLocation) {
+      const query = debouncedLocation.toLowerCase();
       filtered = filtered.filter(
         (job) =>
           (job.location && job.location.toLowerCase().includes(query)) ||
@@ -158,8 +167,8 @@ export default function JobsListing() {
     }
 
     setFilteredJobs(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [searchQuery, locationQuery, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
+    resetPage();
+  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs, resetPage]);
 
   const toggleFilter = (
     filterArray: string[],
@@ -214,12 +223,6 @@ export default function JobsListing() {
     setSelectedGuilds([...allGuilds]);
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredJobs.length / JOBS_PER_PAGE);
-  const startIndex = (currentPage - 1) * JOBS_PER_PAGE;
-  const endIndex = startIndex + JOBS_PER_PAGE;
-  const currentJobs = filteredJobs.slice(startIndex, endIndex);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -239,7 +242,7 @@ export default function JobsListing() {
                 placeholder="Role, company, or keywords"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+                className="w-full pl-12 pr-4 py-3.5 border border-border/60 rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary/40 bg-card/70 backdrop-blur-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
@@ -251,7 +254,7 @@ export default function JobsListing() {
                 placeholder="Where?"
                 value={locationQuery}
                 onChange={(e) => setLocationQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground placeholder:text-muted-foreground"
+                className="w-full pl-12 pr-4 py-3.5 border border-border/60 rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary/40 bg-card/70 backdrop-blur-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -266,8 +269,8 @@ export default function JobsListing() {
                 onClick={() => toggleGuild(guild)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedGuilds.includes(guild)
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                    ? "bg-foreground text-background shadow-sm"
+                    : "bg-card/70 backdrop-blur-sm text-card-foreground border border-border/60 hover:border-foreground/30"
                 }`}
               >
                 {guild}
@@ -310,7 +313,7 @@ export default function JobsListing() {
                   <div
                     key={job.id}
                     onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                    className="bg-card rounded-lg p-5 shadow-sm hover:shadow-md transition-all cursor-pointer border border-border hover:border-primary/30 group relative"
+                    className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group relative"
                   >
                     {/* Posted Date - Top Right Corner */}
                     <div className="absolute top-4 right-5 text-xs text-muted-foreground">
@@ -334,9 +337,9 @@ export default function JobsListing() {
                           />
                         ) : null}
                         <div
-                          className={`w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
+                          className={`w-16 h-16 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
                         >
-                          <Building2 className="w-8 h-8 text-primary" />
+                          <Building2 className="w-8 h-8 text-muted-foreground" />
                         </div>
                       </div>
 
@@ -390,21 +393,21 @@ export default function JobsListing() {
                                 const guildUuid = resolveGuildId(job.guild!);
                                 if (guildUuid) router.push(`/guilds/${guildUuid}`);
                               }}
-                              className="px-2.5 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded text-xs font-medium hover:bg-primary/20 transition-colors"
+                              className="px-2.5 py-1 bg-muted/50 text-foreground border border-border/60 rounded-md text-xs font-medium hover:bg-muted transition-colors"
                             >
                               {job.guild}
                             </button>
                           )}
-                          <span className="px-2.5 py-1 bg-muted text-card-foreground rounded text-xs font-medium">
+                          <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground rounded-md text-xs font-medium">
                             {job.type}
                           </span>
-                          {job.salary.min && job.salary.max && (
-                            <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">
-                              ${job.salary.min / 1000}k - ${job.salary.max / 1000}k {job.salary.currency}
+                          {(job.salary.min || job.salary.max) && (
+                            <span className="px-2.5 py-1 bg-muted/50 text-foreground rounded-md text-xs font-semibold">
+                              {formatSalaryRange(job.salary)}
                             </span>
                           )}
                           {job.experienceLevel && (
-                            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium capitalize">
+                            <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground rounded-md text-xs font-medium capitalize">
                               {job.experienceLevel}
                             </span>
                           )}
@@ -417,7 +420,7 @@ export default function JobsListing() {
                               {job.skills.slice(0, 5).map((skill, index) => (
                                 <span
                                   key={index}
-                                  className="px-2 py-0.5 bg-muted/50 text-card-foreground rounded text-xs"
+                                  className="px-2 py-0.5 bg-muted/30 text-muted-foreground rounded-md text-xs"
                                 >
                                   {skill}
                                 </span>
@@ -443,7 +446,7 @@ export default function JobsListing() {
               />
             </>
           ) : (
-            <div className="text-center py-12 bg-card rounded-xl">
+            <div className="text-center py-16 glass-card rounded-2xl border border-border/60">
               <Briefcase className="w-16 h-16 text-muted-foreground/60 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 No jobs found
@@ -484,8 +487,8 @@ export default function JobsListing() {
                 }}
                 className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
                   selectedGuilds.includes(guild)
-                    ? "bg-primary text-white"
-                    : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                    ? "bg-foreground text-background"
+                    : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
                 }`}
               >
                 {guild}
@@ -519,8 +522,8 @@ export default function JobsListing() {
                   onClick={() => toggleGuild(guild)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                     selectedGuilds.includes(guild)
-                      ? "bg-primary text-white"
-                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                      ? "bg-foreground text-background"
+                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
                   }`}
                 >
                   {guild}
@@ -539,8 +542,8 @@ export default function JobsListing() {
                   onClick={() => toggleJobType(type)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                     selectedJobTypes.includes(type)
-                      ? "bg-primary text-white"
-                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                      ? "bg-foreground text-background"
+                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
                   }`}
                 >
                   {type}
@@ -559,8 +562,8 @@ export default function JobsListing() {
                   onClick={() => toggleLocationType(type)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                     selectedLocationTypes.includes(type)
-                      ? "bg-primary text-white"
-                      : "bg-card text-card-foreground border border-border hover:border-primary hover:text-primary"
+                      ? "bg-foreground text-background"
+                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
                   }`}
                 >
                   {type}

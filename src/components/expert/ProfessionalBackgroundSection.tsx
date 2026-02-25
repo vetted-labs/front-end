@@ -4,6 +4,7 @@ import { Briefcase, Award, X } from "lucide-react";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { Button } from "../ui/button";
+import type { FieldErrors } from "../ExpertApplicationForm";
 
 interface ExpertiseLevel {
   value: string;
@@ -29,6 +30,8 @@ export interface ProfessionalBackgroundSectionProps {
   onChange: (field: string, value: string) => void;
   onAddExpertiseArea: () => void;
   onRemoveExpertiseArea: (index: number) => void;
+  fieldErrors?: FieldErrors;
+  onBlur?: (field: string) => void;
 }
 
 export function ProfessionalBackgroundSection({
@@ -45,6 +48,8 @@ export function ProfessionalBackgroundSection({
   onChange,
   onAddExpertiseArea,
   onRemoveExpertiseArea,
+  fieldErrors = {},
+  onBlur,
 }: ProfessionalBackgroundSectionProps) {
   return (
     <>
@@ -60,35 +65,43 @@ export function ProfessionalBackgroundSection({
           </div>
         </div>
 
-        <NativeSelect
-          label="Select Guild"
-          value={selectedGuildId}
-          onChange={(e) => onGuildChange(e.target.value)}
-          description="Choose ONE guild that best matches your primary expertise area"
-          required
-        >
-          <option value="" disabled>Choose a guild...</option>
-          {guildOptions.map((guild) => (
-            <option key={guild.id} value={guild.id}>
-              {guild.name}
-            </option>
-          ))}
-        </NativeSelect>
+        <div data-field-error={fieldErrors.guild ? "" : undefined}>
+          <NativeSelect
+            label="Select Guild"
+            value={selectedGuildId}
+            onChange={(e) => onGuildChange(e.target.value)}
+            onBlur={() => onBlur?.("guild")}
+            description="Choose ONE guild that best matches your primary expertise area"
+            error={fieldErrors.guild}
+            required
+          >
+            <option value="" disabled>Choose a guild...</option>
+            {guildOptions.map((guild) => (
+              <option key={guild.id} value={guild.id}>
+                {guild.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
 
-        <NativeSelect
-          label="Expertise Level"
-          value={expertiseLevel}
-          onChange={(e) => onChange("expertiseLevel", e.target.value)}
-          description="Select the level that matches your years of experience"
-          required
-        >
-          <option value="" disabled>Choose your level...</option>
-          {expertiseLevels.map((level) => (
-            <option key={level.value} value={level.value}>
-              {level.label}
-            </option>
-          ))}
-        </NativeSelect>
+        <div data-field-error={fieldErrors.expertiseLevel ? "" : undefined}>
+          <NativeSelect
+            label="Expertise Level"
+            value={expertiseLevel}
+            onChange={(e) => onChange("expertiseLevel", e.target.value)}
+            onBlur={() => onBlur?.("expertiseLevel")}
+            description="Select the level that matches your years of experience"
+            error={fieldErrors.expertiseLevel}
+            required
+          >
+            <option value="" disabled>Choose your level...</option>
+            {expertiseLevels.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
 
         <Input
           label="Years of Experience"
@@ -101,25 +114,33 @@ export function ProfessionalBackgroundSection({
           required
         />
 
-        <Input
-          label="Current Title"
-          type="text"
-          value={currentTitle}
-          onChange={(e) => onChange("currentTitle", e.target.value)}
-          placeholder="Senior Software Engineer"
-          description="Your current job title or most recent position"
-          required
-        />
+        <div data-field-error={fieldErrors.currentTitle ? "" : undefined}>
+          <Input
+            label="Current Title"
+            type="text"
+            value={currentTitle}
+            onChange={(e) => onChange("currentTitle", e.target.value)}
+            onBlur={() => onBlur?.("currentTitle")}
+            placeholder="Senior Software Engineer"
+            description="Your current job title or most recent position"
+            error={fieldErrors.currentTitle}
+            required
+          />
+        </div>
 
-        <Input
-          label="Current Company"
-          type="text"
-          value={currentCompany}
-          onChange={(e) => onChange("currentCompany", e.target.value)}
-          placeholder="Tech Corp"
-          description="Your current employer or most recent company"
-          required
-        />
+        <div data-field-error={fieldErrors.currentCompany ? "" : undefined}>
+          <Input
+            label="Current Company"
+            type="text"
+            value={currentCompany}
+            onChange={(e) => onChange("currentCompany", e.target.value)}
+            onBlur={() => onBlur?.("currentCompany")}
+            placeholder="Tech Corp"
+            description="Your current employer or most recent company"
+            error={fieldErrors.currentCompany}
+            required
+          />
+        </div>
       </div>
 
       {/* Areas of Expertise */}
@@ -164,6 +185,10 @@ export function ProfessionalBackgroundSection({
             Add specific skills, technologies, or domains you can evaluate (e.g., React, Machine Learning, Product Strategy). Press Enter or click Add to include each one.
           </p>
         </div>
+
+        {fieldErrors.expertiseAreas && (
+          <p data-field-error="" className="text-sm text-destructive">{fieldErrors.expertiseAreas}</p>
+        )}
 
         {expertiseAreas.length > 0 && (
           <div className="flex flex-wrap gap-2">

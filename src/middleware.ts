@@ -13,9 +13,11 @@ export function middleware(_request: NextRequest) {
   const isDevelopment = process.env.NODE_ENV === "development";
 
   // Development CSP: More permissive for hot reload and dev tools
+  // Note: 'unsafe-inline' is used instead of nonce in dev to avoid hydration mismatches
+  // and allow wallet SDK inline scripts (Coinbase, MetaMask) to work without nonces
   const devCSP = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-eval' 'nonce-${nonce}'`, // unsafe-eval needed for webpack HMR
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline + unsafe-eval for dev compatibility
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for CSS-in-JS libraries
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",

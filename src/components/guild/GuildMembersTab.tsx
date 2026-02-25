@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Award, TrendingUp, CheckCircle, Star, Wallet } from "lucide-react";
+import { Users, Award, TrendingUp, CheckCircle, Star, Wallet, ChevronDown } from "lucide-react";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import type { ExpertMember, CandidateMember } from "@/types";
+
+const MEMBERS_PER_SECTION = 12;
 
 interface GuildMembersTabProps {
   experts: ExpertMember[];
@@ -21,6 +23,8 @@ export function GuildMembersTab({
 }: GuildMembersTabProps) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<"experts" | "candidates">("experts");
+  const [expertsVisible, setExpertsVisible] = useState(MEMBERS_PER_SECTION);
+  const [candidatesVisible, setCandidatesVisible] = useState(MEMBERS_PER_SECTION);
 
   // Sort members by reputation (highest first)
   const sortedExperts = [...experts].sort((a, b) => b.reputation - a.reputation);
@@ -65,8 +69,9 @@ export function GuildMembersTab({
       {activeSection === "experts" && (
         <div>
           {sortedExperts.length > 0 ? (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedExperts.map((expert) => (
+              {sortedExperts.slice(0, expertsVisible).map((expert) => (
                 <button
                   key={expert.id}
                   onClick={() => router.push(`/experts/${expert.walletAddress}`)}
@@ -139,6 +144,16 @@ export function GuildMembersTab({
                 </button>
               ))}
             </div>
+            {sortedExperts.length > expertsVisible && (
+              <button
+                onClick={() => setExpertsVisible((v) => v + MEMBERS_PER_SECTION)}
+                className="w-full py-3 mt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Show more ({sortedExperts.length - expertsVisible} remaining)
+              </button>
+            )}
+          </>
           ) : (
             <div className="text-center py-16">
               <Award className="w-20 h-20 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -157,8 +172,9 @@ export function GuildMembersTab({
       {activeSection === "candidates" && (
         <div>
           {sortedCandidates.length > 0 ? (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedCandidates.map((candidate) => (
+              {sortedCandidates.slice(0, candidatesVisible).map((candidate) => (
                 <div
                   key={candidate.id}
                   className="rounded-2xl p-6 border border-border bg-card shadow-sm dark:shadow-lg transition-all hover:-translate-y-0.5 hover:border-primary/40"
@@ -206,6 +222,16 @@ export function GuildMembersTab({
                 </div>
               ))}
             </div>
+            {sortedCandidates.length > candidatesVisible && (
+              <button
+                onClick={() => setCandidatesVisible((v) => v + MEMBERS_PER_SECTION)}
+                className="w-full py-3 mt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Show more ({sortedCandidates.length - candidatesVisible} remaining)
+              </button>
+            )}
+            </>
           ) : (
             <div className="text-center py-16">
               <Users className="w-20 h-20 text-muted-foreground mx-auto mb-4 opacity-50" />

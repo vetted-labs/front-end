@@ -8,19 +8,19 @@ import { Briefcase, Coins, Trophy, UserPlus, Activity, Users, Eye, Loader2 } fro
 import { LoadingState } from "./ui/loadingstate";
 import { Alert } from "./ui/alert";
 import { useRouter, useSearchParams } from "next/navigation";
-import { expertApi, guildsApi } from "@/lib/api";
+import { expertApi, guildsApi, blockchainApi } from "@/lib/api";
 import { GuildHeader } from "./guild/GuildHeader";
-// GuildProposalsTab removed - merged into Membership Reviews
+// GuildApplicationSummarysTab removed - merged into Membership Reviews
 import { GuildLeaderboardTab } from "./guild/GuildLeaderboardTab";
 import { GuildMembershipApplicationsTab } from "./guild/GuildMembershipApplicationsTab";
 import { GuildEarningsTab } from "./guild/GuildEarningsTab";
-import { GuildActivityTab } from "./guild/GuildActivityTab";
+import { GuildActivityFeed } from "./guild/GuildActivityTab";
 import { GuildMembersTab } from "./guild/GuildMembersTab";
 import { GuildJobsTab } from "./guild/GuildJobsTab";
 import { StakeModal } from "./guild/StakeModal";
 import { ReviewGuildApplicationModal } from "./guild/ReviewGuildApplicationModal";
 import { StakingModal } from "./dashboard/StakingModal";
-import type { Job, GuildProposal, GuildJobApplication, ExpertMember, CandidateMember } from "@/types";
+import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember } from "@/types";
 
 interface Earnings {
   totalPoints: number;
@@ -34,7 +34,7 @@ interface Earnings {
   }>;
 }
 
-interface GuildApplication {
+interface ExpertMembershipApplication {
   id: string;
   fullName: string;
   email: string;
@@ -71,7 +71,7 @@ interface LeaderboardExpert {
 
 interface Activity {
   id: string;
-  type: "proposal_submitted" | "candidate_approved" | "job_posted" | "endorsement_given";
+  type: "proposal_submitted" | "candidate_approved" | "job_posted" | "endorsement_given" | "expert_applied" | "candidate_applied" | "application_reviewed" | "member_approved" | "member_rejected";
   actor: string;
   target?: string;
   timestamp: string;
@@ -86,12 +86,12 @@ interface GuildDetail {
   expertRole: string;
   reputation: number;
   proposals: {
-    pending: GuildProposal[];
-    ongoing: GuildProposal[];
-    closed: GuildProposal[];
+    pending: GuildApplicationSummary[];
+    ongoing: GuildApplicationSummary[];
+    closed: GuildApplicationSummary[];
   };
   applications: GuildJobApplication[];
-  guildApplications: GuildApplication[];
+  guildApplications: ExpertMembershipApplication[];
   earnings: Earnings;
   recentActivity: Activity[];
   experts: ExpertMember[];
@@ -127,14 +127,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   // Stake modal state
   const [showStakeModal, setShowStakeModal] = useState(false);
-  const [selectedProposal, setSelectedProposal] = useState<GuildProposal | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<GuildApplicationSummary | null>(null);
   const [stakeAmount, setStakeAmount] = useState("");
   const [isStaking, setIsStaking] = useState(false);
 
   // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [selectedGuildApplication, setSelectedGuildApplication] =
-    useState<GuildApplication | null>(null);
+  const [selectedExpertMembershipApplication, setSelectedExpertMembershipApplication] =
+    useState<ExpertMembershipApplication | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [autoOpenedReview, setAutoOpenedReview] = useState(false);
   const [applicationReviewType, setApplicationReviewType] = useState<"expert" | "candidate">("expert");
@@ -145,12 +145,19 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   // VETD Staking modal state
   const [showVetdStakingModal, setShowVetdStakingModal] = useState(false);
 
+  // Staking status
+  const [stakingStatus, setStakingStatus] = useState<{ meetsMinimum: boolean } | null>(null);
+
+  // Guild blockchain ID for staking checks
+  const [guildBlockchainId, setGuildBlockchainId] = useState<string | null>(null);
+
   // Leaderboard state
   const [leaderboardData, setLeaderboardData] = useState<{
     topExperts: LeaderboardExpert[];
     currentUser: LeaderboardExpert | null;
   }>({ topExperts: [], currentUser: null });
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
 
   useEffect(() => {
     if (isConnected && address) {
@@ -159,16 +166,17 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   }, [guildId, isConnected, address]);
 
   useEffect(() => {
-    if (isConnected && address && activeTab === "leaderboard" && guild && leaderboardData.topExperts.length === 0) {
+    if (isConnected && address && activeTab === "leaderboard" && guild &&
+        leaderboardData.topExperts.length === 0 && !isLoadingLeaderboard) {
       fetchLeaderboard();
     }
   }, [activeTab, guildId, isConnected, address, guild]);
   // Note: leaderboardPeriod removed - backend doesn't support period filtering yet
 
-  const fetchGuildDetails = async () => {
+  const fetchGuildDetails = async (silent = false) => {
     if (!address) return;
 
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     setError(null);
 
     try {
@@ -183,6 +191,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         experts: Array.isArray(data.experts) ? data.experts : [],
         candidates: Array.isArray(data.candidates) ? data.candidates : [],
         recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
+        guildApplications: Array.isArray(data.guildApplications) ? data.guildApplications : [],
+        applications: Array.isArray(data.applications) ? data.applications : [],
+        recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : [],
         memberCount: data.memberCount ?? data.totalMembers ?? 0,
         expertRole: data.expertRole ?? currentExpert?.role ?? "member",
         reputation: data.reputation ?? currentExpert?.reputation ?? 0,
@@ -247,12 +258,26 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       }
       setGuild(normalized);
 
+      // Store blockchain guild ID for staking checks
+      const bcGuildId = normalized.blockchainGuildId || data.blockchainGuildId;
+      if (bcGuildId) setGuildBlockchainId(bcGuildId);
+
+      // Fetch staking status (pass guild-specific blockchain ID if available)
+      try {
+        const stakeData: any = await blockchainApi.getStakeBalance(address, bcGuildId || undefined);
+        setStakingStatus({ meetsMinimum: !!stakeData?.meetsMinimum });
+      } catch {
+        setStakingStatus({ meetsMinimum: false });
+        toast.warning("Could not load staking status");
+      }
+
       // Fetch candidate guild applications
       try {
         const candidateApps: any = await guildsApi.getCandidateApplications(guildId, address) || [];
         setCandidateApplications(Array.isArray(candidateApps) ? candidateApps : []);
       } catch (candidateErr) {
         setCandidateApplications([]);
+        toast.warning("Could not load candidate applications");
       }
     } catch (err: any) {
       setError(err.message || "Failed to fetch guild details");
@@ -267,7 +292,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (!applicationId) return;
     const target = guild.guildApplications?.find((app) => app.id === applicationId);
     if (target) {
-      setSelectedGuildApplication(target);
+      setSelectedExpertMembershipApplication(target);
       setShowReviewModal(true);
       setActiveTab("membershipApplications");
       setAutoOpenedReview(true);
@@ -275,8 +300,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   }, [guild, autoOpenedReview, searchParams]);
 
   const fetchLeaderboard = async () => {
-    if (!address) return;
+    if (!address || isLoadingLeaderboard) return;
 
+    setIsLoadingLeaderboard(true);
     try {
       // Call real API with guildId parameter
       const result: any = await expertApi.getLeaderboard({
@@ -352,31 +378,33 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       setLeaderboardData({ topExperts, currentUser });
     } catch (err: any) {
       console.error("Failed to fetch leaderboard:", err);
+    } finally {
+      setIsLoadingLeaderboard(false);
     }
   };
 
-  const handleStakeOnProposal = (proposal: GuildProposal) => {
-    setSelectedProposal(proposal);
-    setStakeAmount(proposal.requiredStake.toString());
+  const handleStakeOnApplication = (application: GuildApplicationSummary) => {
+    setSelectedApplication(application);
+    setStakeAmount(application.requiredStake.toString());
     setShowStakeModal(true);
   };
 
   const handleConfirmStake = async () => {
-    if (!selectedProposal || !address) return;
+    if (!selectedApplication || !address) return;
 
     setIsStaking(true);
 
     try {
-      await expertApi.stakeOnProposal(selectedProposal.id, {
+      await expertApi.stakeOnApplication(selectedApplication.id, {
         walletAddress: address,
         stakeAmount: parseFloat(stakeAmount),
       });
 
       setShowStakeModal(false);
-      setSelectedProposal(null);
+      setSelectedApplication(null);
       fetchGuildDetails();
     } catch (err: any) {
-      setError(err.message || "Failed to stake on proposal");
+      setError(err.message || "Failed to stake on application");
     } finally {
       setIsStaking(false);
     }
@@ -397,13 +425,21 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     }
   };
 
-  const handleReviewApplication = (application: GuildApplication) => {
-    setSelectedGuildApplication(application);
+  const handleReviewApplication = (application: ExpertMembershipApplication) => {
+    if (!stakingStatus?.meetsMinimum) {
+      toast.info("You need to stake VETD tokens first to unlock reviewing.");
+      return;
+    }
+    setSelectedExpertMembershipApplication(application);
     setApplicationReviewType("expert");
     setShowReviewModal(true);
   };
 
   const handleReviewCandidateApplication = (candidateApp: any) => {
+    if (!stakingStatus?.meetsMinimum) {
+      toast.info("You need to stake VETD tokens first to unlock reviewing.");
+      return;
+    }
     // Transform flat answer format to nested format expected by review modal
     // Flat: { "learning_from_failure.event": "...", "domain.topicId": "..." }
     // Nested: { general: { learningFromFailure: { event: "..." } }, domain: { topics: { topicId: "..." } }, level: "..." }
@@ -439,27 +475,27 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       level: candidateApp.expertiseLevel || "",
     };
 
-    const mapped: GuildApplication = {
+    const mapped: ExpertMembershipApplication = {
       id: candidateApp.id,
       fullName: candidateApp.candidateName,
       email: candidateApp.candidateEmail,
       walletAddress: "",
-      linkedinUrl: "",
+      linkedinUrl: candidateApp.linkedinUrl || "",
       resumeUrl: candidateApp.resumeUrl || undefined,
       expertiseLevel: candidateApp.expertiseLevel || "entry",
-      yearsOfExperience: 0,
-      currentTitle: candidateApp.jobTitle ? `Applying for: ${candidateApp.jobTitle}` : "Candidate",
-      currentCompany: "",
-      bio: "",
-      motivation: "",
-      expertiseAreas: [],
+      yearsOfExperience: candidateApp.yearsOfExperience || 0,
+      currentTitle: candidateApp.jobTitle ? `Applying for: ${candidateApp.jobTitle}` : (candidateApp.currentTitle || "Candidate"),
+      currentCompany: candidateApp.currentCompany || "",
+      bio: candidateApp.bio || "",
+      motivation: candidateApp.motivation || "",
+      expertiseAreas: candidateApp.expertiseAreas || [],
       appliedAt: candidateApp.submittedAt,
       reviewCount: candidateApp.reviewCount || 0,
       approvalCount: candidateApp.approvalCount || 0,
       rejectionCount: candidateApp.rejectionCount || 0,
       applicationResponses: structuredResponses,
     };
-    setSelectedGuildApplication(mapped);
+    setSelectedExpertMembershipApplication(mapped);
     setApplicationReviewType("candidate");
     setShowReviewModal(true);
   };
@@ -470,15 +506,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     criteriaJustifications: Record<string, any>;
     overallScore: number;
     redFlagDeductions: number;
-  }) => {
-    if (!selectedGuildApplication || !address) return;
+  }): Promise<any> => {
+    if (!selectedExpertMembershipApplication || !address) return;
 
     setIsReviewing(true);
 
     try {
       const reviewData = {
         walletAddress: address,
-        wallet: address,
         feedback: payload.feedback || undefined,
         criteriaScores: payload.criteriaScores,
         criteriaJustifications: payload.criteriaJustifications,
@@ -487,19 +522,37 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       };
 
       const response: any = applicationReviewType === "candidate"
-        ? await guildsApi.reviewCandidateApplication(selectedGuildApplication.id, reviewData)
-        : await expertApi.reviewGuildApplication(selectedGuildApplication.id, reviewData);
+        ? await guildsApi.reviewCandidateApplication(selectedExpertMembershipApplication.id, reviewData)
+        : await expertApi.reviewGuildApplication(selectedExpertMembershipApplication.id, reviewData);
 
-      setShowReviewModal(false);
-      setSelectedGuildApplication(null);
-      toast.success(response?.message || "Review submitted. Thanks for voting.");
-      fetchGuildDetails();
+      // Optimistic activity entry
+      const newActivity = {
+        id: `temp-${Date.now()}`,
+        type: "candidate_approved" as const,
+        actor: "You",
+        details: `Reviewed ${selectedExpertMembershipApplication?.fullName}'s application`,
+        timestamp: new Date().toISOString(),
+      };
+      setGuild(prev => prev ? {
+        ...prev,
+        recentActivity: [newActivity, ...(prev.recentActivity || [])],
+      } : prev);
+
+      fetchGuildDetails(true);
+      setTimeout(() => fetchGuildDetails(true), 3000);
+
+      return response;
     } catch (err: any) {
-      setError(err.message || "Failed to submit review");
       toast.error(err.message || "Failed to submit review");
+      throw err;
     } finally {
       setIsReviewing(false);
     }
+  };
+
+  const handleReviewModalClose = () => {
+    setShowReviewModal(false);
+    setSelectedExpertMembershipApplication(null);
   };
 
   if (isLoading) {
@@ -626,7 +679,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
           <div className="p-6">
             {activeTab === "activity" && (
-              <GuildActivityTab activities={guild.recentActivity || []} />
+              <GuildActivityFeed activities={guild.recentActivity || []} />
             )}
 
             {activeTab === "members" && (
@@ -664,6 +717,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                 candidateApplications={candidateApplications}
                 onReviewApplication={handleReviewApplication}
                 onReviewCandidateApplication={handleReviewCandidateApplication}
+                isStaked={!!stakingStatus?.meetsMinimum}
+                onStakeClick={() => setShowVetdStakingModal(true)}
               />
             )}
 
@@ -678,7 +733,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       <StakeModal
         isOpen={showStakeModal}
         onClose={() => setShowStakeModal(false)}
-        proposal={selectedProposal}
+        application={selectedApplication}
         stakeAmount={stakeAmount}
         onStakeAmountChange={setStakeAmount}
         onConfirmStake={handleConfirmStake}
@@ -687,8 +742,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       <ReviewGuildApplicationModal
         isOpen={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        application={selectedGuildApplication}
+        onClose={handleReviewModalClose}
+        application={selectedExpertMembershipApplication}
         guildId={guildId}
         onSubmitReview={handleSubmitReview}
         isReviewing={isReviewing}

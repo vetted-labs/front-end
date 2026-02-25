@@ -34,6 +34,7 @@ export interface CompanyApplication {
   coverLetter: string;
   resumeUrl?: string;
   screeningAnswers?: string[];
+  notes?: string;
   candidate: {
     id: string;
     fullName: string;
@@ -44,6 +45,7 @@ export interface CompanyApplication {
     walletAddress?: string;
     linkedIn?: string;
     github?: string;
+    socialLinks?: import("./candidate").SocialLink[];
   };
   job: {
     id: string;

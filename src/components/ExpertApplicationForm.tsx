@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Loader2, Send, Shield, CheckCircle } from "lucide-react";
@@ -7,8 +7,10 @@ import { Button } from "./ui/button";
 import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
-import { ProposalQuestionsSection } from "./expert/ProposalQuestionsSection";
+import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
 import { expertApi, guildsApi } from "@/lib/api";
+
+export type FieldErrors = Record<string, string>;
 
 interface ExpertApplicationFormProps {
   onSuccess?: () => void;
@@ -59,13 +61,33 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     setMounted(true);
   }, []);
 
-  // Redirect approved experts to dashboard instead of showing the apply form
+  // Redirect approved experts to dashboard — unless they're applying to a new guild
+  const guildParam = searchParams.get("guild");
+
   useEffect(() => {
     if (!mounted || !isConnected || !address) return;
     const checkExistingProfile = async () => {
       try {
         const result: any = await expertApi.getProfile(address);
         if (result?.status === "approved") {
+          if (guildParam) {
+            // Expert is applying to a new guild — pre-fill from existing profile
+            setFormData((prev) => ({
+              ...prev,
+              fullName: result.fullName || prev.fullName,
+              email: result.email || prev.email,
+              linkedinUrl: result.linkedinUrl || prev.linkedinUrl,
+              portfolioUrl: result.portfolioUrl || prev.portfolioUrl,
+              currentTitle: result.currentTitle || prev.currentTitle,
+              currentCompany: result.currentCompany || prev.currentCompany,
+              bio: result.bio || prev.bio,
+              motivation: prev.motivation,
+              expertiseAreas: Array.isArray(result.expertiseAreas) && result.expertiseAreas.length > 0
+                ? result.expertiseAreas
+                : prev.expertiseAreas,
+            }));
+            return; // Don't redirect — let them apply to the new guild
+          }
           router.replace("/expert/dashboard");
         } else if (result?.status === "pending") {
           router.replace("/expert/application-pending");
@@ -75,7 +97,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       }
     };
     checkExistingProfile();
-  }, [mounted, isConnected, address, router]);
+  }, [mounted, isConnected, address, router, guildParam]);
 
   useEffect(() => {
     if (!error) return;
@@ -126,14 +148,150 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   }, [selectedGuildId, formData.expertiseLevel]);
 
   const [generalAnswers, setGeneralAnswers] = useState({
-    learningFromFailure: { event: "", response: "", pivot: "" },
-    decisionUnderUncertainty: { constraints: "", logic: "", reflection: "" },
-    motivationAndConflict: { driver: "", friction: "" },
+    learningFromFailure: "",
+    decisionUnderUncertainty: "",
+    motivationAndConflict: "",
     guildImprovement: "",
   });
 
   const [levelAnswers, setLevelAnswers] = useState<Record<string, string>>({});
   const [noAiDeclaration, setNoAiDeclaration] = useState(false);
+
+  // Touched state: tracks which fields have been interacted with
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const handleBlur = useCallback((field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }, []);
+
+  const markAllTouched = useCallback(() => {
+    const allFields: Record<string, boolean> = {
+      fullName: true,
+      email: true,
+      linkedinUrl: true,
+      guild: true,
+      expertiseLevel: true,
+      yearsOfExperience: true,
+      currentTitle: true,
+      currentCompany: true,
+      expertiseAreas: true,
+      bio: true,
+      motivation: true,
+      noAiDeclaration: true,
+      generalAnswers: true,
+      levelAnswers: true,
+    };
+    setTouched(allFields);
+  }, []);
+
+  // Compute field-level errors
+  const fieldErrors = useMemo((): FieldErrors => {
+    const errors: FieldErrors = {};
+
+    // Personal info
+    if (touched.fullName && (!formData.fullName.trim() || formData.fullName.length < 2)) {
+      errors.fullName = "Full name is required (at least 2 characters)";
+    }
+    if (touched.fullName && formData.fullName.length > 255) {
+      errors.fullName = "Full name must not exceed 255 characters";
+    }
+    if (touched.email) {
+      if (!formData.email) {
+        errors.email = "Email is required";
+      } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+        errors.email = "Please enter a valid email address";
+      }
+    }
+    if (touched.linkedinUrl && formData.linkedinUrl && !/^https?:\/\/.+\..+/.test(formData.linkedinUrl)) {
+      errors.linkedinUrl = "Must be a valid URL (starting with http:// or https://)";
+    }
+    if (touched.portfolioUrl && formData.portfolioUrl && !/^https?:\/\/.+\..+/.test(formData.portfolioUrl)) {
+      errors.portfolioUrl = "Must be a valid URL (starting with http:// or https://)";
+    }
+
+    // Professional background
+    if (touched.guild && !selectedGuildId) {
+      errors.guild = "Please select a guild";
+    }
+    if (touched.expertiseLevel && !formData.expertiseLevel) {
+      errors.expertiseLevel = "Please select an expertise level";
+    }
+    if (touched.currentTitle && (!formData.currentTitle.trim() || formData.currentTitle.length < 2)) {
+      errors.currentTitle = "Current title is required (at least 2 characters)";
+    }
+    if (touched.currentCompany && (!formData.currentCompany.trim() || formData.currentCompany.length < 2)) {
+      errors.currentCompany = "Current company is required (at least 2 characters)";
+    }
+    if (touched.expertiseAreas && formData.expertiseAreas.length === 0) {
+      errors.expertiseAreas = "Please add at least one area of expertise";
+    }
+
+    // Bio & motivation (optional but have min length if provided)
+    if (touched.bio && formData.bio.length > 0 && formData.bio.length < 50) {
+      errors.bio = `${50 - formData.bio.length} more characters needed (minimum 50)`;
+    }
+    if (touched.bio && formData.bio.length > 2000) {
+      errors.bio = "Must not exceed 2,000 characters";
+    }
+    if (touched.motivation && formData.motivation.length > 0 && formData.motivation.length < 50) {
+      errors.motivation = `${50 - formData.motivation.length} more characters needed (minimum 50)`;
+    }
+    if (touched.motivation && formData.motivation.length > 2000) {
+      errors.motivation = "Must not exceed 2,000 characters";
+    }
+
+    // General answers
+    if (touched.generalAnswers && generalTemplate) {
+      if (!generalAnswers.learningFromFailure.trim()) errors["general.learningFromFailure"] = "This question is required";
+      if (!generalAnswers.decisionUnderUncertainty.trim()) errors["general.decisionUnderUncertainty"] = "This question is required";
+      if (!generalAnswers.motivationAndConflict.trim()) errors["general.motivationAndConflict"] = "This question is required";
+      if (!generalAnswers.guildImprovement.trim()) errors["general.guildImprovement"] = "This question is required";
+    }
+
+    // Level answers
+    if (touched.levelAnswers && levelTemplate?.topics) {
+      for (const topic of levelTemplate.topics) {
+        if (!levelAnswers[topic.id]?.trim()) {
+          errors[`level.${topic.id}`] = "This question is required";
+        }
+      }
+    }
+
+    // No AI declaration
+    if (touched.noAiDeclaration && !noAiDeclaration) {
+      errors.noAiDeclaration = "You must confirm this declaration to submit";
+    }
+
+    return errors;
+  }, [touched, formData, selectedGuildId, generalAnswers, levelAnswers, noAiDeclaration, generalTemplate, levelTemplate]);
+
+  // Check if form is ready for submission (for disabling button)
+  const isFormComplete = useMemo(() => {
+    if (!formData.fullName.trim() || formData.fullName.length < 2) return false;
+    if (!formData.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) return false;
+    if (!selectedGuildId) return false;
+    if (!formData.expertiseLevel) return false;
+    if (!formData.currentTitle.trim()) return false;
+    if (!formData.currentCompany.trim()) return false;
+    if (formData.expertiseAreas.length === 0) return false;
+    if (!noAiDeclaration) return false;
+    if (formData.bio.length > 0 && formData.bio.length < 50) return false;
+    if (formData.motivation.length > 0 && formData.motivation.length < 50) return false;
+    // General answers
+    if (generalTemplate) {
+      if (!generalAnswers.learningFromFailure.trim() ||
+          !generalAnswers.decisionUnderUncertainty.trim() ||
+          !generalAnswers.motivationAndConflict.trim() ||
+          !generalAnswers.guildImprovement.trim()) return false;
+    }
+    // Level answers
+    if (levelTemplate?.topics) {
+      for (const topic of levelTemplate.topics) {
+        if (!levelAnswers[topic.id]?.trim()) return false;
+      }
+    }
+    return true;
+  }, [formData, selectedGuildId, noAiDeclaration, generalAnswers, levelAnswers, generalTemplate, levelTemplate]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -188,44 +346,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
 
   const updateGeneralAnswer = (
     questionId: string,
-    partId: string | null,
+    _partId: string | null,
     value: string
   ) => {
     setGeneralAnswers((prev) => {
-      if (questionId === "learning_from_failure") {
-        return {
-          ...prev,
-          learningFromFailure: {
-            ...prev.learningFromFailure,
-            [partId || "event"]: value,
-          },
-        };
-      }
-      if (questionId === "decision_under_uncertainty") {
-        return {
-          ...prev,
-          decisionUnderUncertainty: {
-            ...prev.decisionUnderUncertainty,
-            [partId || "constraints"]: value,
-          },
-        };
-      }
-      if (questionId === "motivation_and_conflict") {
-        return {
-          ...prev,
-          motivationAndConflict: {
-            ...prev.motivationAndConflict,
-            [partId || "driver"]: value,
-          },
-        };
-      }
-      if (questionId === "guild_improvement") {
-        return {
-          ...prev,
-          guildImprovement: value,
-        };
-      }
-      return prev;
+      const keyMap: Record<string, keyof typeof prev> = {
+        learning_from_failure: "learningFromFailure",
+        decision_under_uncertainty: "decisionUnderUncertainty",
+        motivation_and_conflict: "motivationAndConflict",
+        guild_improvement: "guildImprovement",
+      };
+      const key = keyMap[questionId];
+      if (!key) return prev;
+      return { ...prev, [key]: value };
     });
   };
 
@@ -260,106 +393,32 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       return;
     }
 
-    // Frontend validation
-    if (!formData.fullName.trim() || formData.fullName.length < 2) {
-      setFormError("Full name must be at least 2 characters");
-      return;
-    }
-    if (formData.fullName.length > 255) {
-      setFormError("Full name must not exceed 255 characters");
-      return;
-    }
-    // 🔐 SECURITY: Robust email validation
-    if (!formData.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
-      setFormError("Please enter a valid email address");
-      return;
-    }
-    // 🔐 SECURITY: URL validation for LinkedIn
-    if (formData.linkedinUrl && !/^https?:\/\/.+\..+/.test(formData.linkedinUrl)) {
-      setFormError("Please enter a valid LinkedIn URL starting with http:// or https://");
-      return;
-    }
-    // URL validation for portfolio
-    if (formData.portfolioUrl && !/^https?:\/\/.+\..+/.test(formData.portfolioUrl)) {
-      setFormError("Please enter a valid portfolio URL starting with http:// or https://");
-      return;
-    }
-    if (!formData.guild.trim() || formData.guild.length < 2) {
-      setFormError("Guild must be at least 2 characters");
-      return;
-    }
-    if (!formData.expertiseLevel.trim()) {
-      setFormError("Please select an expertise level");
-      return;
-    }
-    if (!formData.currentTitle.trim() || formData.currentTitle.length < 2) {
-      setFormError("Current title must be at least 2 characters");
-      return;
-    }
-    if (!formData.currentCompany.trim() || formData.currentCompany.length < 2) {
-      setFormError("Current company must be at least 2 characters");
-      return;
-    }
-    if (formData.bio && formData.bio.length > 0 && formData.bio.length < 50) {
-      setFormError("Bio must be at least 50 characters or left blank");
-      return;
-    }
-    if (formData.bio.length > 2000) {
-      setFormError("Bio must not exceed 2000 characters");
-      return;
-    }
-    if (
-      formData.motivation &&
-      formData.motivation.length > 0 &&
-      formData.motivation.length < 50
-    ) {
-      setFormError("Motivation must be at least 50 characters or left blank");
-      return;
-    }
-    if (formData.motivation.length > 2000) {
-      setFormError("Motivation must not exceed 2000 characters");
-      return;
-    }
-    if (formData.expertiseAreas.length === 0) {
-      setFormError("Please add at least one area of expertise");
-      return;
-    }
-    if (!selectedGuildId) {
-      setFormError("Please select a guild");
-      return;
-    }
-    if (!noAiDeclaration) {
-      setFormError("Please confirm you did not use AI");
+    // Mark all fields as touched so inline errors show everywhere
+    markAllTouched();
+
+    // Check if there are any validation errors
+    // We recompute here since markAllTouched is async via setState
+    const hasErrors = !isFormComplete;
+    if (hasErrors) {
+      setFormError("Please fix the highlighted fields above before submitting");
+
+      // Scroll to the first field with an error
+      requestAnimationFrame(() => {
+        const firstError = document.querySelector("[data-field-error]");
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
       return;
     }
 
-    const generalMissing =
-      !generalAnswers.learningFromFailure.event.trim() ||
-      !generalAnswers.learningFromFailure.response.trim() ||
-      !generalAnswers.learningFromFailure.pivot.trim() ||
-      !generalAnswers.decisionUnderUncertainty.constraints.trim() ||
-      !generalAnswers.decisionUnderUncertainty.logic.trim() ||
-      !generalAnswers.decisionUnderUncertainty.reflection.trim() ||
-      !generalAnswers.motivationAndConflict.driver.trim() ||
-      !generalAnswers.motivationAndConflict.friction.trim() ||
-      !generalAnswers.guildImprovement.trim();
-
-    if (generalMissing) {
-      setFormError("Please complete all general proposal questions");
+    if (!resumeFile) {
+      setFormError("Please upload your resume/CV (PDF, DOC, or DOCX)");
       return;
     }
 
     if (!levelTemplate || !levelTemplate.topics) {
-      setFormError("Please select a level to load the guild questions");
-      return;
-    }
-
-    const missingTopic = levelTemplate.topics.find(
-      (topic: any) => !levelAnswers[topic.id]?.trim()
-    );
-
-    if (missingTopic) {
-      setFormError("Please complete all level-specific questions");
+      setFormError("Please select an expertise level to load the guild questions");
       return;
     }
 
@@ -388,14 +447,10 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       // Upload resume after expert record is created
       const expertId = result?.expertId;
       if (expertId && resumeFile) {
-        try {
-          await expertApi.uploadResume(expertId, resumeFile);
-        } catch (uploadErr) {
-          console.error("Resume upload failed:", uploadErr);
-          // Don't block submission if resume upload fails
-        }
+        await expertApi.uploadResume(expertId, resumeFile);
       }
 
+      localStorage.setItem("expertStatus", "pending");
       setSuccess(true);
       setTimeout(() => {
         onSuccess?.();
@@ -406,17 +461,36 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       const responseData = apiError?.response?.data || apiError?.data;
       const errorsArray = Array.isArray(responseData?.errors) ? responseData.errors : [];
       if (errorsArray.length > 0) {
+        const friendlyFieldNames: Record<string, string> = {
+          fullName: "Full Name",
+          email: "Email",
+          linkedinUrl: "LinkedIn URL",
+          portfolioUrl: "Portfolio URL",
+          guild: "Guild",
+          expertiseLevel: "Expertise Level",
+          currentTitle: "Current Title",
+          currentCompany: "Current Company",
+          bio: "Professional Bio",
+          motivation: "Motivation",
+        };
+
         const detailLines = errorsArray.map((entry: any) => {
           const pathValue = Array.isArray(entry.path)
             ? entry.path.join(".")
             : entry.path || "";
-          return pathValue ? `${pathValue}: ${entry.message}` : entry.message;
+          const fieldLabel = friendlyFieldNames[pathValue] || pathValue;
+          // Make backend messages more readable
+          let msg = entry.message || "";
+          msg = msg.replace(/Too small: expected string to have >=(\d+) characters?/i, (m: string, n: string) => `Must be at least ${n} characters`);
+          msg = msg.replace(/Too big: expected string to have <=(\d+) characters?/i, (m: string, n: string) => `Must not exceed ${n} characters`);
+          msg = msg.replace(/Required/i, "This field is required");
+          return fieldLabel ? `${fieldLabel}: ${msg}` : msg;
         });
-        setFormError("Please fix the fields below.", detailLines);
+        setFormError("Please fix the following issues:", detailLines);
         return;
       }
       const validationMessage = responseData?.message || responseData?.error;
-      setFormError(validationMessage || apiError?.message || "Failed to submit application");
+      setFormError(validationMessage || apiError?.message || "Failed to submit application. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -481,6 +555,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               onResumeChange={setResumeFile}
               onError={(msg) => setFormError(msg)}
               clearError={() => setError(null)}
+              fieldErrors={fieldErrors}
+              onBlur={handleBlur}
             />
 
             <ProfessionalBackgroundSection
@@ -497,9 +573,11 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               onChange={handleChange}
               onAddExpertiseArea={handleAddExpertiseArea}
               onRemoveExpertiseArea={handleRemoveExpertiseArea}
+              fieldErrors={fieldErrors}
+              onBlur={handleBlur}
             />
 
-            <ProposalQuestionsSection
+            <ApplicationQuestionsSection
               generalTemplate={generalTemplate}
               levelTemplate={levelTemplate}
               loadingTemplates={loadingTemplates}
@@ -512,6 +590,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               bio={formData.bio}
               motivation={formData.motivation}
               onChange={handleChange}
+              fieldErrors={fieldErrors}
+              onBlur={handleBlur}
             />
 
             {/* Submit Section */}
@@ -534,6 +614,11 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                   </div>
                 )}
               </div>
+              {!isFormComplete && !isLoading && (
+                <p className="mb-3 text-sm text-muted-foreground text-center">
+                  Please complete all required fields to submit your application.
+                </p>
+              )}
               <Button
                 type="submit"
                 disabled={isLoading}

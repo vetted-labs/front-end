@@ -13,14 +13,15 @@ interface AppShellProps {
 }
 
 function ShellContent({ config, children }: AppShellProps) {
-  const { isCollapsed } = useSidebar();
+  const { isCollapsed, hasMounted } = useSidebar();
 
   return (
     <div className="flex min-h-screen">
       <AppSidebar config={config} />
       <div
         className={cn(
-          "flex flex-1 flex-col transition-[margin-left] duration-300",
+          "flex flex-1 flex-col",
+          hasMounted && "transition-[margin-left] duration-300",
           isCollapsed ? "md:ml-16" : "md:ml-52"
         )}
       >

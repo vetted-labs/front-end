@@ -40,13 +40,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const nonce = headersList.get('x-nonce') || '';
+  // Only use nonce in production — dev uses 'unsafe-inline' CSP to avoid hydration mismatches
+  const nonce = process.env.NODE_ENV === 'production' ? (headersList.get('x-nonce') || '') : '';
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
-          nonce={nonce}
+          {...(nonce ? { nonce } : {})}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

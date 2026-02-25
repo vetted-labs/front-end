@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Clock, Circle } from "lucide-react";
+import { formatDeadline } from "@/lib/utils";
 
 interface CommitRevealPhaseIndicatorProps {
   currentPhase: "direct" | "commit" | "reveal" | "finalized";
@@ -19,18 +20,6 @@ const PHASES = [
   { key: "reveal", label: "Reveal" },
   { key: "finalized", label: "Finalized" },
 ] as const;
-
-function getTimeRemaining(deadline: string) {
-  const now = new Date();
-  const end = new Date(deadline);
-  const diff = end.getTime() - now.getTime();
-  if (diff <= 0) return "Ended";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-}
 
 export function CommitRevealPhaseIndicator({
   currentPhase,
@@ -110,7 +99,7 @@ export function CommitRevealPhaseIndicator({
             <>
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                Commit ends in {getTimeRemaining(commitDeadline)}
+                Commit ends in {formatDeadline(commitDeadline, "Ended")}
               </span>
               <span>
                 {commitCount}/{totalExpected} committed
@@ -121,7 +110,7 @@ export function CommitRevealPhaseIndicator({
             <>
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                Reveal ends in {getTimeRemaining(revealDeadline)}
+                Reveal ends in {formatDeadline(revealDeadline, "Ended")}
               </span>
               <span>
                 {revealCount}/{totalExpected} revealed

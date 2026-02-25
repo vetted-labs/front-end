@@ -1,5 +1,6 @@
 "use client";
-import { X, Loader2, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
+import Image from "next/image";
+import { X, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TransactionModalProps {
@@ -10,6 +11,7 @@ interface TransactionModalProps {
   actionType?: "stake" | "withdraw";
   amount?: string;
   errorMessage?: string;
+  guildName?: string;
 }
 
 export function TransactionModal({
@@ -20,6 +22,7 @@ export function TransactionModal({
   actionType = "stake",
   amount,
   errorMessage,
+  guildName,
 }: TransactionModalProps) {
   if (!isOpen) return null;
 
@@ -27,14 +30,14 @@ export function TransactionModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-gradient-to-br from-card via-card to-card/95 rounded-3xl shadow-2xl border border-border/50 max-w-md w-full mx-4 backdrop-blur-sm animate-in zoom-in-95 duration-200">
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-2xl border border-border/60 max-w-md w-full mx-4 animate-in zoom-in-95 duration-200 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
         {/* Header */}
         <div className="relative flex items-center justify-between p-6 border-b border-border/50">
           <h3 className="text-lg font-semibold text-foreground">Transaction Status</h3>
           {canClose && (
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted/50 transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 transition-all"
             >
               <X className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -46,18 +49,14 @@ export function TransactionModal({
           {/* Pending State */}
           {status === "pending" && (
             <div className="text-center space-y-6">
-              <div className="relative w-24 h-24 mx-auto">
-                {/* Outer spinning ring */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-500 to-orange-600 opacity-20 animate-ping" />
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-orange-500 to-orange-600 opacity-30 animate-spin" style={{ animationDuration: "3s" }} />
-
-                {/* Inner container */}
-                <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 text-white animate-spin" />
-                  </div>
-                </div>
-              </div>
+              <Image
+                src="/Vetted-orange.png"
+                alt="Vetted"
+                width={80}
+                height={80}
+                className="w-20 h-20 rounded-full object-cover mx-auto animate-pulse"
+                style={{ animationDuration: "2s" }}
+              />
 
               <div>
                 <h4 className="text-xl font-bold text-foreground mb-2">
@@ -89,27 +88,42 @@ export function TransactionModal({
 
           {/* Success State */}
           {status === "success" && (
-            <div className="text-center space-y-6">
-              <div className="relative w-24 h-24 mx-auto">
-                {/* Success glow effect */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 opacity-20 animate-pulse" />
+            <div className="text-center space-y-5">
+              <div className="relative w-28 h-28 mx-auto">
+                {/* Outer success glow */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 opacity-15 animate-pulse" />
+                <div className="absolute -inset-3 rounded-full bg-green-500/10 animate-in fade-in zoom-in duration-700" />
 
                 {/* Inner container */}
                 <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
-                    <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={2.5} />
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                    <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={2.5} />
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-xl font-bold text-foreground mb-2">
-                  Transaction Successful!
+              <div className="space-y-2">
+                <h4 className="text-2xl font-bold text-foreground">
+                  {actionType === "stake" ? "Stake Confirmed!" : "Withdrawal Confirmed!"}
                 </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <span className="text-lg font-bold text-green-700 dark:text-green-400">
+                    {amount} VETD
+                  </span>
+                  <span className="text-sm text-green-600/70 dark:text-green-400/70">
+                    {actionType === "stake" ? "staked" : "withdrawn"}
+                  </span>
+                </div>
+                {guildName && (
+                  <p className="text-sm text-muted-foreground">
+                    {actionType === "stake" ? "Staked in" : "Withdrawn from"}{" "}
+                    <span className="font-semibold text-foreground">{guildName}</span>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
                   {actionType === "stake"
-                    ? `Successfully staked ${amount} VETD tokens.`
-                    : `Successfully withdrawn ${amount} VETD tokens.`}
+                    ? "You can now participate in reviewing applications for this guild."
+                    : "Your tokens have been returned to your wallet."}
                 </p>
               </div>
 
@@ -127,7 +141,7 @@ export function TransactionModal({
 
               <Button
                 onClick={onClose}
-                className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/20 transition-all rounded-xl font-semibold"
+                className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/20 transition-all rounded-xl font-semibold text-base"
               >
                 Done
               </Button>

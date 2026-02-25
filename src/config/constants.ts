@@ -73,6 +73,33 @@ export const SALARY_RANGES = [
   { value: "200000+", label: "$200,000+" },
 ];
 
+export const SOCIAL_PLATFORMS = [
+  { value: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
+  { value: "github", label: "GitHub", placeholder: "https://github.com/..." },
+  { value: "twitter", label: "Twitter / X", placeholder: "https://twitter.com/..." },
+  { value: "portfolio", label: "Portfolio / Website", placeholder: "https://..." },
+  { value: "dribbble", label: "Dribbble", placeholder: "https://dribbble.com/..." },
+  { value: "behance", label: "Behance", placeholder: "https://behance.net/..." },
+  { value: "kaggle", label: "Kaggle", placeholder: "https://kaggle.com/..." },
+  { value: "other", label: "Other", placeholder: "https://..." },
+] as const;
+
+/**
+ * Shared application status badge configuration.
+ * Use this everywhere you need status colors/labels instead of defining local statusConfig objects.
+ */
+export const APPLICATION_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  reviewing: { label: "Reviewing", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  interviewed: { label: "Interviewed", className: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
+  interviewing: { label: "Interviewing", className: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
+  accepted: { label: "Accepted", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  offered: { label: "Offered", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  rejected: { label: "Rejected", className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+  hired: { label: "Hired", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  withdrawn: { label: "Withdrawn", className: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400" },
+};
+
 export const SKILLS = [
   "JavaScript",
   "TypeScript",

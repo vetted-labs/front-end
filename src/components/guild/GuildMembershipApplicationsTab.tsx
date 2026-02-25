@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase } from "lucide-react";
+import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface GuildApplication {
+const ITEMS_PER_SECTION = 10;
+
+interface ExpertMembershipApplication {
   id: string;
   fullName: string;
   email: string;
@@ -44,10 +46,12 @@ interface CandidateApplication {
 
 interface GuildMembershipApplicationsTabProps {
   guildName: string;
-  guildApplications: GuildApplication[];
+  guildApplications: ExpertMembershipApplication[];
   candidateApplications: CandidateApplication[];
-  onReviewApplication: (application: GuildApplication) => void;
+  onReviewApplication: (application: ExpertMembershipApplication) => void;
   onReviewCandidateApplication: (application: CandidateApplication) => void;
+  isStaked?: boolean;
+  onStakeClick?: () => void;
 }
 
 export function GuildMembershipApplicationsTab({
@@ -56,14 +60,43 @@ export function GuildMembershipApplicationsTab({
   candidateApplications,
   onReviewApplication,
   onReviewCandidateApplication,
+  isStaked,
+  onStakeClick,
 }: GuildMembershipApplicationsTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<"expert" | "candidate">("expert");
+  const [expertVisible, setExpertVisible] = useState(ITEMS_PER_SECTION);
+  const [candidateVisible, setCandidateVisible] = useState(ITEMS_PER_SECTION);
 
   const expertCount = guildApplications?.length || 0;
   const candidateCount = candidateApplications?.length || 0;
 
   return (
     <div className="space-y-4">
+      {!isStaked && (expertCount > 0 || candidateCount > 0) && (
+        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-amber-500/5 p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-semibold text-foreground mb-1">
+                Stake VETD to Start Reviewing
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                To review applications, you need to stake VETD tokens in this guild. Your stake will be returned after reviews, with bonus rewards if you vote with the majority.
+              </p>
+              <Button
+                onClick={onStakeClick}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0 shadow-lg shadow-amber-500/20"
+              >
+                <Coins className="w-4 h-4 mr-2" />
+                Stake VETD Tokens
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sub-tab toggle */}
       <div className="flex items-center gap-2 p-1 bg-muted/50 rounded-xl border border-border w-fit">
         <button
@@ -132,7 +165,7 @@ export function GuildMembershipApplicationsTab({
             </div>
           ) : (
             <div className="space-y-3">
-              {(guildApplications || []).map((application) => (
+              {(guildApplications || []).slice(0, expertVisible).map((application) => (
                 <div
                   key={application.id}
                   className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
@@ -235,7 +268,11 @@ export function GuildMembershipApplicationsTab({
                       <Button
                         onClick={() => onReviewApplication(application)}
                         size="sm"
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                        disabled={!isStaked}
+                        className={isStaked
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                          : "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50"
+                        }
                       >
                         <Users className="w-3.5 h-3.5 mr-1.5" />
                         Review
@@ -244,6 +281,15 @@ export function GuildMembershipApplicationsTab({
                   </div>
                 </div>
               ))}
+              {(guildApplications || []).length > expertVisible && (
+                <button
+                  onClick={() => setExpertVisible((v) => v + ITEMS_PER_SECTION)}
+                  className="w-full py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Show more ({(guildApplications || []).length - expertVisible} remaining)
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -282,7 +328,7 @@ export function GuildMembershipApplicationsTab({
             </div>
           ) : (
             <div className="space-y-3">
-              {candidateApplications.map((application) => (
+              {candidateApplications.slice(0, candidateVisible).map((application) => (
                 <div
                   key={application.id}
                   className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
@@ -340,7 +386,11 @@ export function GuildMembershipApplicationsTab({
                         <Button
                           onClick={() => onReviewCandidateApplication(application)}
                           size="sm"
-                          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                          disabled={!isStaked}
+                          className={isStaked
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
+                            : "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50"
+                          }
                         >
                           <Users className="w-3.5 h-3.5 mr-1.5" />
                           Review
@@ -350,6 +400,15 @@ export function GuildMembershipApplicationsTab({
                   </div>
                 </div>
               ))}
+              {candidateApplications.length > candidateVisible && (
+                <button
+                  onClick={() => setCandidateVisible((v) => v + ITEMS_PER_SECTION)}
+                  className="w-full py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Show more ({candidateApplications.length - candidateVisible} remaining)
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users } from "lucide-react";
+import { formatDeadline } from "@/lib/utils";
 import { VotingPowerBar } from "./VotingPowerBar";
 
 interface GovernanceProposalCardProps {
@@ -57,21 +58,6 @@ const statusBadgeVariant = (status: string) => {
   }
 };
 
-function getTimeRemaining(deadline: string) {
-  const now = new Date();
-  const end = new Date(deadline);
-  const diff = end.getTime() - now.getTime();
-
-  if (diff <= 0) return "Expired";
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-  if (days > 0) return `${days}d ${hours}h remaining`;
-  if (hours > 0) return `${hours}h remaining`;
-  return "< 1h remaining";
-}
-
 export function GovernanceProposalCard({
   proposal,
   onClick,
@@ -124,7 +110,7 @@ export function GovernanceProposalCard({
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
-              {getTimeRemaining(proposal.voting_deadline)}
+              {formatDeadline(proposal.voting_deadline)}
             </span>
           </div>
           <span className="text-xs">

@@ -27,6 +27,7 @@ import {
 import { Modal, Button, Alert, LoadingState, Textarea, StatusBadge } from "@/components/ui";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { formatSalaryRange } from "@/lib/utils";
 
 interface JobDetails {
   id: string;
@@ -291,7 +292,7 @@ export default function JobDetailView() {
 
     if (!auth.token) {
       const currentUrl = `/browse/jobs/${jobId}`;
-      router.push(`/auth/signup?type=candidate&redirect=${encodeURIComponent(currentUrl)}`);
+      router.push(`/auth/login?type=candidate&redirect=${encodeURIComponent(currentUrl)}`);
       return;
     }
 
@@ -349,6 +350,15 @@ export default function JobDetailView() {
 
     if (coverLetter.length < 50) {
       setApplicationError("Cover letter must be at least 50 characters");
+      return;
+    }
+
+    if (!useProfileResume && !resumeFile) {
+      setApplicationError("Please upload your resume or use your profile resume");
+      return;
+    }
+    if (useProfileResume && !profileResume?.resumeUrl) {
+      setApplicationError("No resume found in your profile. Please upload one.");
       return;
     }
 
@@ -446,7 +456,7 @@ export default function JobDetailView() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-card rounded-xl shadow-sm p-5 sm:p-8">
+            <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 sm:p-8 border border-border/60">
               {/* Job Header */}
               <div className="border-b border-border pb-6 mb-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
@@ -541,7 +551,7 @@ export default function JobDetailView() {
                       {job.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-full text-sm font-medium"
+                          className="px-3 py-1 bg-muted/50 text-foreground border border-border/60 rounded-full text-sm font-medium"
                         >
                           {skill}
                         </span>
@@ -555,7 +565,7 @@ export default function JobDetailView() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24">
+            <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24 border border-border/60">
               {/* Already Applied Warning */}
               {hasAlreadyApplied && (
                 <div className="p-4 bg-green-500/10 border-2 border-green-500/20 rounded-lg">
@@ -573,7 +583,7 @@ export default function JobDetailView() {
                     <StatusBadge status={existingApplication.status} size="sm" />
                   </div>
                   <button
-                    onClick={() => router.push("/candidate/profile")}
+                    onClick={() => router.push("/candidate/applications")}
                     className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
                   >
                     <ClipboardList className="w-4 h-4" />
@@ -682,7 +692,7 @@ export default function JobDetailView() {
                         Salary Range
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        ${job.salary?.min ? job.salary.min / 1000 : 0}k - ${job.salary?.max ? job.salary.max / 1000 : 0}k {job.salary?.currency}
+                        {formatSalaryRange(job.salary)}
                       </p>
                     </div>
                   </div>
@@ -741,7 +751,7 @@ export default function JobDetailView() {
           {/* Resume Selection */}
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-3">
-              Resume / CV <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+              Resume / CV <span className="text-destructive">*</span>
             </label>
 
             {/* Option to use profile resume */}
@@ -947,7 +957,7 @@ export default function JobDetailView() {
               variant="secondary"
               onClick={() => {
                 setShowSuccessModal(false);
-                router.push("/candidate/profile");
+                router.push("/candidate/applications");
               }}
               className="w-full"
               icon={<ClipboardList className="w-5 h-5" />}

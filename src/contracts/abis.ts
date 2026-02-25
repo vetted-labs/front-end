@@ -336,6 +336,44 @@ export const REPUTATION_MANAGER_ABI = [
   },
 ] as const;
 
+export const REWARD_DISTRIBUTOR_ABI = [
+  {
+    inputs: [],
+    name: 'claimRewards',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'pendingRewards',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'expertRewards',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getTreasuryBalance',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalRewardsDistributed',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
 // Contract addresses on Sepolia (updated 2026-01-27)
 export const CONTRACT_ADDRESSES = {
   TOKEN: '0x28bfc34939066d0aba30206b4865855b4f175c31',

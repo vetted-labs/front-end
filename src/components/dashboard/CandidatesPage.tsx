@@ -4,34 +4,17 @@ import { useRouter } from "next/navigation";
 import {
   Users,
   Search,
-  Filter,
-  Mail,
-  Phone,
-  Briefcase,
-  Eye,
-  CheckCircle,
-  Clock,
   ArrowLeft,
+  ChevronRight,
 } from "lucide-react";
 import { companyApi, applicationsApi } from "@/lib/api";
-import { useAuthContext } from "@/hooks/useAuthContext";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CandidateDetailModal } from "@/components/dashboard/CandidateDetailModal";
+import { Pagination } from "@/components/ui/pagination";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { CompanyApplication } from "@/types";
 
 interface GroupedCandidate {
@@ -41,21 +24,19 @@ interface GroupedCandidate {
 
 export default function CandidatesPage() {
   const router = useRouter();
+  const { auth, ready } = useRequireAuth("company");
   const [groupedCandidates, setGroupedCandidates] = useState<GroupedCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
-  const auth = useAuthContext();
 
   useEffect(() => {
-    if (!auth.isAuthenticated || auth.userType !== "company") {
-      router.push("/auth/login?type=company");
-      return;
-    }
+    if (!ready) return;
     fetchApplications();
-  }, [auth.isAuthenticated, auth.userType, router]);
+  }, [ready]);
 
   const fetchApplications = async () => {
     setIsLoading(true);
@@ -63,7 +44,7 @@ export default function CandidatesPage() {
       const data = await companyApi.getApplications({ limit: 500 });
 
       // Group by candidate
-      const grouped = (data.applications || []).reduce((acc: GroupedCandidate[], app: CompanyApplication) => {
+      const grouped = ((data.applications || data || []) as CompanyApplication[]).reduce((acc: GroupedCandidate[], app: CompanyApplication) => {
         const existing = acc.find((g) => g.candidate.id === app.candidateId);
         if (existing) {
           existing.applications.push(app);
@@ -97,10 +78,10 @@ export default function CandidatesPage() {
   const filteredCandidates = useMemo(() => {
     return groupedCandidates.filter((group) => {
       const matchesSearch =
-        group.candidate.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        group.candidate.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.candidate.fullName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        group.candidate.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         group.applications.some((app) =>
-          app.job.title.toLowerCase().includes(searchQuery.toLowerCase())
+          app.job.title.toLowerCase().includes(debouncedSearch.toLowerCase())
         );
 
       const matchesFilter =
@@ -109,340 +90,230 @@ export default function CandidatesPage() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [groupedCandidates, searchQuery, filterStatus]);
+  }, [groupedCandidates, debouncedSearch, filterStatus]);
+
+  const {
+    paginatedItems: paginatedCandidates,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+    resetPage,
+  } = useClientPagination(filteredCandidates, 25);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    resetPage();
+  }, [debouncedSearch, filterStatus, resetPage]);
+
+  const getStatusBadge = (status: string) => {
+    const config = APPLICATION_STATUS_CONFIG[status] || APPLICATION_STATUS_CONFIG.pending;
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${config.className}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const handleStatusChange = async (applicationId: string, newStatus: string) => {
+    try {
+      await applicationsApi.updateStatus(applicationId, newStatus);
+      setGroupedCandidates((prev) =>
+        prev.map((group) => ({
+          ...group,
+          applications: group.applications.map((app) =>
+            app.id === applicationId
+              ? { ...app, status: newStatus as CompanyApplication["status"] }
+              : app
+          ),
+        }))
+      );
+      if (selectedApplication?.id === applicationId) {
+        setSelectedApplication({
+          ...selectedApplication,
+          status: newStatus as CompanyApplication["status"],
+        });
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  if (!ready) return null;
 
   return (
-    <div className="min-h-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-full relative">
+      <div className="pointer-events-none absolute inset-0 content-gradient" />
+
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-3xl font-bold text-foreground">Candidates</h1>
-          </div>
-          <p className="text-muted-foreground">View and manage all candidate applications</p>
+        <div className="mb-10">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Dashboard
+          </button>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Candidates
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            View and manage all candidate applications
+          </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Candidates</p>
-                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-              </div>
-              <Users className="w-10 h-10 text-primary/20" />
-            </div>
+        {/* Stats Row — minimal monospaced counters */}
+        <div className="grid grid-cols-4 gap-px mb-8 rounded-lg overflow-hidden border border-border/60 bg-border/60 dark:bg-white/[0.04] dark:border-white/[0.06]">
+          <div className="bg-card/80 dark:bg-card/40 backdrop-blur-sm px-4 py-3 text-center">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Candidates</p>
+            <p className="text-lg font-semibold tabular-nums text-foreground">{stats.total}</p>
           </div>
-
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Pending Review</p>
-                <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-              </div>
-              <Clock className="w-10 h-10 text-yellow-600/20" />
-            </div>
+          <div className="bg-card/80 dark:bg-card/40 backdrop-blur-sm px-4 py-3 text-center">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Pending</p>
+            <p className="text-lg font-semibold tabular-nums text-amber-600 dark:text-amber-400">{stats.pending}</p>
           </div>
-
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Accepted</p>
-                <p className="text-2xl font-bold text-foreground">{stats.accepted}</p>
-              </div>
-              <CheckCircle className="w-10 h-10 text-green-600/20" />
-            </div>
+          <div className="bg-card/80 dark:bg-card/40 backdrop-blur-sm px-4 py-3 text-center">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Accepted</p>
+            <p className="text-lg font-semibold tabular-nums text-green-600 dark:text-green-400">{stats.accepted}</p>
           </div>
-
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">In Review</p>
-                <p className="text-2xl font-bold text-foreground">{stats.reviewing}</p>
-              </div>
-              <Eye className="w-10 h-10 text-blue-600/20" />
-            </div>
+          <div className="bg-card/80 dark:bg-card/40 backdrop-blur-sm px-4 py-3 text-center">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Reviewing</p>
+            <p className="text-lg font-semibold tabular-nums text-blue-600 dark:text-blue-400">{stats.reviewing}</p>
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="bg-card p-6 rounded-xl border border-border mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search candidates by name, email, or job title..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-muted-foreground" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="reviewing">Reviewing</option>
-                <option value="interviewed">Interviewed</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+        {/* Search + Filter — inline, no card wrapper */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by name, email, or job title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-card/60 dark:bg-card/30 border border-border/60 dark:border-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-foreground placeholder:text-muted-foreground transition-colors"
+            />
           </div>
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg bg-card/60 dark:bg-card/30 border border-border/60 dark:border-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="reviewing">Reviewing</option>
+            <option value="interviewed">Interviewed</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
 
         {/* Candidates List */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading candidates...</p>
+          <div className="text-center py-20">
+            <p className="text-sm text-muted-foreground">Loading candidates...</p>
           </div>
         ) : filteredCandidates.length === 0 ? (
-          <div className="bg-card p-12 rounded-xl border border-border text-center">
-            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-lg text-foreground mb-2">No candidates found</p>
-            <p className="text-muted-foreground">
+          <div className="text-center py-20">
+            <Users className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-foreground mb-1">No candidates found</p>
+            <p className="text-sm text-muted-foreground">
               {searchQuery || filterStatus !== "all"
                 ? "Try adjusting your search or filters"
                 : "Candidates will appear here once they apply to your job postings"}
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredCandidates.map((group) => (
-              <div
-                key={group.candidate.id}
-                className="bg-card p-6 rounded-xl border border-border hover:border-primary/50 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary font-semibold text-lg">
-                        {group.candidate.fullName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-foreground mb-1">
-                        {group.candidate.fullName}
-                      </h3>
-                      {group.candidate.headline && (
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {group.candidate.headline}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
-                          {group.candidate.email}
+          <div className="space-y-6">
+            {paginatedCandidates.map((group) => (
+              <div key={group.candidate.id}>
+                {/* ── Candidate Identity ── */}
+                <div className="rounded-t-xl border border-border/60 dark:border-white/[0.06] bg-card/60 dark:bg-card/30 backdrop-blur-sm px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-semibold text-sm">
+                          {group.candidate.fullName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-[15px] font-medium text-foreground truncate">
+                          {group.candidate.fullName}
+                        </h3>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                          <span className="truncate">{group.candidate.email}</span>
+                          {group.candidate.experienceLevel && (
+                            <>
+                              <span className="text-border dark:text-white/10">|</span>
+                              <span className="capitalize">{group.candidate.experienceLevel}</span>
+                            </>
+                          )}
                         </div>
-                        {group.candidate.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-4 h-4" />
-                            {group.candidate.phone}
-                          </div>
-                        )}
-                        {group.candidate.experienceLevel && (
-                          <div className="flex items-center gap-1">
-                            <Briefcase className="w-4 h-4" />
-                            {group.candidate.experienceLevel}
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <Badge variant="outline">
-                      {group.applications.length}{" "}
-                      {group.applications.length === 1 ? "Application" : "Applications"}
-                    </Badge>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+                      {group.applications.length} {group.applications.length === 1 ? "application" : "applications"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Applications List */}
-                <div className="space-y-2 border-t pt-4">
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Applications:</h4>
-                  {group.applications.map((app) => (
-                    <div
+                {/* ── Applications Table ── */}
+                <div className="rounded-b-xl border border-t-0 border-border/60 dark:border-white/[0.06] bg-card/30 dark:bg-card/15 overflow-hidden">
+                  {/* Column Headers */}
+                  <div className="grid grid-cols-[1fr_140px_100px_80px_20px] gap-2 px-5 py-2 text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border/30 dark:border-white/[0.04]">
+                    <span>Position</span>
+                    <span>Location</span>
+                    <span>Applied</span>
+                    <span>Status</span>
+                    <span />
+                  </div>
+
+                  {/* Application Rows */}
+                  {group.applications.map((app, idx) => (
+                    <button
                       key={app.id}
                       onClick={() => {
                         setSelectedApplication(app);
                         setShowApplicationModal(true);
                       }}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer transition-colors"
+                      className={cn(
+                        "w-full grid grid-cols-[1fr_140px_100px_80px_20px] gap-2 items-center px-5 py-3 text-left transition-colors hover:bg-muted/40 dark:hover:bg-white/[0.03] cursor-pointer group",
+                        idx < group.applications.length - 1 && "border-b border-border/20 dark:border-white/[0.03]"
+                      )}
                     >
-                      <div className="flex-1">
-                        <p className="font-medium">{app.job.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {app.job.location} • {app.job.type}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Applied {new Date(app.appliedAt).toLocaleDateString()}
-                        </p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{app.job.title}</p>
+                        <p className="text-xs text-muted-foreground">{app.job.type}</p>
                       </div>
-                      <Badge
-                        variant={
-                          app.status === "accepted"
-                            ? "default"
-                            : app.status === "rejected"
-                              ? "destructive"
-                              : app.status === "interviewed"
-                                ? "secondary"
-                                : "outline"
-                        }
-                      >
-                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                      </Badge>
-                    </div>
+                      <p className="text-xs text-muted-foreground truncate">{app.job.location}</p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {new Date(app.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </p>
+                      <div>{getStatusBadge(app.status)}</div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                    </button>
                   ))}
                 </div>
               </div>
             ))}
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>
 
-      {/* Application Detail Modal */}
+      {/* ──────── Application Detail Modal ──────── */}
       {showApplicationModal && selectedApplication && (
-        <Dialog open={showApplicationModal} onOpenChange={setShowApplicationModal}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Application Details</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              {/* Candidate Info */}
-              <div className="flex items-start gap-4 p-4 bg-muted rounded-lg">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-semibold text-primary">
-                    {selectedApplication.candidate.fullName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {selectedApplication.candidate.fullName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedApplication.candidate.email}
-                  </p>
-                  {selectedApplication.candidate.headline && (
-                    <p className="text-sm mt-1">{selectedApplication.candidate.headline}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Job Info */}
-              <div className="p-4 bg-muted rounded-lg">
-                <h4 className="font-semibold mb-1">Applied for</h4>
-                <p className="font-medium">{selectedApplication.job.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedApplication.job.location} • {selectedApplication.job.type}
-                </p>
-              </div>
-
-              {/* Cover Letter */}
-              <div>
-                <h4 className="font-semibold mb-2">Cover Letter</h4>
-                <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap">
-                  {selectedApplication.coverLetter}
-                </div>
-              </div>
-
-              {/* Resume */}
-              {selectedApplication.resumeUrl && (
-                <div>
-                  <h4 className="font-semibold mb-2">Resume</h4>
-                  <a
-                    href={selectedApplication.resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(buttonVariants({ variant: "outline" }))}
-                  >
-                    View Resume
-                  </a>
-                </div>
-              )}
-
-              {/* Screening Answers */}
-              {selectedApplication.screeningAnswers &&
-                selectedApplication.screeningAnswers.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Screening Answers</h4>
-                    <div className="space-y-3">
-                      {selectedApplication.screeningAnswers.map((answer: string, idx: number) => (
-                        <div key={idx} className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm font-medium mb-1">Question {idx + 1}</p>
-                          <p className="text-sm">{answer}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Status Update */}
-              <div>
-                <h4 className="font-semibold mb-2">Application Status</h4>
-                <Select
-                  value={selectedApplication.status}
-                  onValueChange={async (newStatus) => {
-                    try {
-                      await applicationsApi.updateStatus(selectedApplication.id, newStatus);
-
-                      // Update the applications in state
-                      setGroupedCandidates((prev) =>
-                        prev.map((group) => ({
-                          ...group,
-                          applications: group.applications.map((app) =>
-                            app.id === selectedApplication.id
-                              ? { ...app, status: newStatus as any }
-                              : app
-                          ),
-                        }))
-                      );
-
-                      setSelectedApplication({
-                        ...selectedApplication,
-                        status: newStatus as any,
-                      });
-                    } catch (error) {
-                      console.error("Error updating status:", error);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="reviewing">Reviewing</SelectItem>
-                    <SelectItem value="interviewed">Interviewed</SelectItem>
-                    <SelectItem value="accepted">Accepted</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowApplicationModal(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <CandidateDetailModal
+          application={selectedApplication}
+          isOpen={showApplicationModal}
+          onClose={() => setShowApplicationModal(false)}
+          onStatusChange={handleStatusChange}
+        />
       )}
     </div>
   );

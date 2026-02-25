@@ -21,7 +21,7 @@ export function JobRequirements({
     <>
       {/* Guild & Publishing Section */}
       <div className="p-8 space-y-6">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
           <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
@@ -47,7 +47,7 @@ export function JobRequirements({
                 e.target.value as "draft" | "active" | "paused" | "closed"
               )
             }
-            className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
           >
             <option value="draft">Draft</option>
             <option value="active">Active</option>
@@ -58,8 +58,8 @@ export function JobRequirements({
       </div>
 
       {/* Requirements Section */}
-      <div className="p-8 space-y-6 bg-muted/30">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+      <div className="p-8 space-y-6">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
           <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
@@ -85,8 +85,8 @@ export function JobRequirements({
                 e.target.value.split("\n").filter(Boolean)
               )
             }
-            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.requirements ? "border-red-500" : "border-border"
+            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.requirements ? "border-red-500" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., 5+ years experience"
@@ -105,8 +105,8 @@ export function JobRequirements({
             onChange={(e) =>
               onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
             }
-            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.skills ? "border-red-500" : "border-border"
+            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.skills ? "border-red-500" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., Solidity, React"
@@ -128,8 +128,8 @@ export function JobRequirements({
                 e.target.value.split("\n").filter(Boolean)
               )
             }
-            className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.screeningQuestions ? "border-red-500" : "border-border"
+            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
+              fieldErrors.screeningQuestions ? "border-red-500" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., Describe your experience with DeFi"

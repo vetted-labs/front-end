@@ -7,6 +7,7 @@ import {
   EXPERT_STAKING_ABI,
   ENDORSEMENT_BIDDING_ABI,
   REPUTATION_MANAGER_ABI,
+  REWARD_DISTRIBUTOR_ABI,
   CONTRACT_ADDRESSES,
 } from '@/contracts/abis';
 
@@ -689,5 +690,63 @@ export function useMyEndorsementHistory() {
     endorsements,
     isLoading,
     error,
+  };
+}
+
+/**
+ * Hook for claiming VETD rewards from RewardDistributor contract
+ */
+export function useRewardClaiming() {
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  const { data: pendingRewards, refetch: refetchPending } = useReadContract({
+    address: CONTRACT_ADDRESSES.REWARD,
+    abi: REWARD_DISTRIBUTOR_ABI,
+    functionName: 'pendingRewards',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  const { data: totalClaimed, refetch: refetchClaimed } = useReadContract({
+    address: CONTRACT_ADDRESSES.REWARD,
+    abi: REWARD_DISTRIBUTOR_ABI,
+    functionName: 'expertRewards',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  const claimRewards = async () => {
+    if (!address) throw new Error('Wallet not connected');
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.REWARD,
+      abi: REWARD_DISTRIBUTOR_ABI,
+      functionName: 'claimRewards',
+      args: [],
+      gas: 150000n,
+    });
+
+    return hash;
+  };
+
+  const refetchAll = () => {
+    refetchPending();
+    refetchClaimed();
+  };
+
+  return {
+    pendingRewards: pendingRewards as bigint | undefined,
+    totalClaimed: totalClaimed as bigint | undefined,
+    claimRewards,
+    refetchAll,
   };
 }

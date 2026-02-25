@@ -77,6 +77,7 @@ export default function ApplicationPendingPage() {
       const result: any = await expertApi.getProfile(address);
 
       if (result.status === "approved") {
+        localStorage.setItem("expertStatus", "approved");
         router.push("/expert/dashboard");
         return;
       }

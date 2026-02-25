@@ -3,75 +3,18 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
-import {
-  Bell,
-  FileText,
-  Award,
-  Coins,
-  Users,
-  Check,
-} from "lucide-react";
+import { Bell, Check } from "lucide-react";
 import { notificationsApi } from "@/lib/api";
-import { useNotificationCount } from "@/lib/hooks/useNotificationCount";
+import { useNotificationCount, NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
+import {
+  type Notification,
+  getNotificationIcon,
+  getNotificationColor,
+  getApplicantTypeTag,
+  formatTimeAgo,
+  buildNotificationUrl,
+} from "@/lib/notification-helpers";
 import { cn } from "@/lib/utils";
-
-interface Notification {
-  id: string;
-  expertId: string;
-  type: string;
-  title: string;
-  message: string;
-  guildId?: string;
-  guildName?: string;
-  proposalId?: string;
-  applicationId?: string;
-  link: string;
-  isRead: boolean;
-  readAt?: string;
-  createdAt: string;
-  expiresAt?: string;
-}
-
-function formatTimeAgo(timestamp: string) {
-  const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
-  if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-  return new Date(timestamp).toLocaleDateString();
-}
-
-function getNotificationIcon(type: string) {
-  switch (type) {
-    case "proposal_new":
-    case "proposal_deadline":
-      return FileText;
-    case "application_status":
-      return Award;
-    case "guild_application":
-      return Users;
-    case "reward_earned":
-      return Coins;
-    default:
-      return Bell;
-  }
-}
-
-function getNotificationColor(type: string) {
-  switch (type) {
-    case "proposal_new":
-    case "proposal_deadline":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400";
-    case "application_status":
-      return "bg-purple-500/10 text-purple-600 dark:text-purple-400";
-    case "guild_application":
-      return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400";
-    case "reward_earned":
-      return "bg-green-500/10 text-green-600 dark:text-green-400";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
-}
 
 export function NotificationBell() {
   const router = useRouter();
@@ -124,24 +67,14 @@ export function NotificationBell() {
             n.id === notification.id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
           )
         );
+        window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
       }
     } catch {
       // Still navigate
     }
 
     setIsOpen(false);
-
-    // Build URL with extra params for guild application notifications
-    const url = new URL(notification.link, window.location.origin);
-    if (notification.type === "guild_application" && notification.applicationId) {
-      if (!url.searchParams.has("applicationId")) {
-        url.searchParams.set("applicationId", notification.applicationId);
-      }
-      if (!url.searchParams.has("tab")) {
-        url.searchParams.set("tab", "membershipApplications");
-      }
-    }
-    router.push(url.pathname + url.search);
+    router.push(buildNotificationUrl(notification));
   };
 
   if (!isConnected || !address) return null;
@@ -187,6 +120,7 @@ export function NotificationBell() {
             ) : (
               notifications.map((notification) => {
                 const Icon = getNotificationIcon(notification.type);
+                const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
                 return (
                   <button
                     key={notification.id}
@@ -206,14 +140,21 @@ export function NotificationBell() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p
-                          className={cn(
-                            "truncate text-sm text-foreground",
-                            !notification.isRead && "font-semibold"
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p
+                            className={cn(
+                              "truncate text-sm text-foreground",
+                              !notification.isRead && "font-semibold"
+                            )}
+                          >
+                            {notification.title}
+                          </p>
+                          {applicantTag && (
+                            <span className={`px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded-full flex-shrink-0 ${applicantTag.className}`}>
+                              {applicantTag.label}
+                            </span>
                           )}
-                        >
-                          {notification.title}
-                        </p>
+                        </div>
                         {!notification.isRead && (
                           <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
                         )}

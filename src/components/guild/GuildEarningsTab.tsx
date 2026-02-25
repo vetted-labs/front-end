@@ -1,6 +1,9 @@
 "use client";
 
-import { Coins, DollarSign, TrendingUp, FileText, Award } from "lucide-react";
+import { useState } from "react";
+import { Coins, DollarSign, TrendingUp, FileText, Award, ChevronDown } from "lucide-react";
+
+const EARNINGS_PER_PAGE = 10;
 
 interface Earnings {
   totalPoints: number;
@@ -19,6 +22,8 @@ interface GuildEarningsTabProps {
 }
 
 export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
+  const [visibleEarnings, setVisibleEarnings] = useState(EARNINGS_PER_PAGE);
+
   return (
     <div className="space-y-6">
       {/* Earnings Summary */}
@@ -33,7 +38,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
             {earnings.totalPoints.toLocaleString()}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            From proposal participation
+            From application participation
           </p>
         </div>
 
@@ -66,14 +71,14 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
               No Earnings Yet
             </h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Start reviewing proposals and endorsing candidates to earn rewards.
+              Start reviewing applications and endorsing candidates to earn rewards.
               Your earnings will appear here once you participate in guild
               activities.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {earnings.recentEarnings.map((earning) => (
+            {earnings.recentEarnings.slice(0, visibleEarnings).map((earning) => (
               <div
                 key={earning.id}
                 className="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
@@ -106,6 +111,15 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
                 </div>
               </div>
             ))}
+            {earnings.recentEarnings.length > visibleEarnings && (
+              <button
+                onClick={() => setVisibleEarnings((v) => v + EARNINGS_PER_PAGE)}
+                className="w-full py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Show more ({earnings.recentEarnings.length - visibleEarnings} remaining)
+              </button>
+            )}
           </div>
         )}
       </div>

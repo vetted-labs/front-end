@@ -9,6 +9,8 @@ import {
   Globe,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
+import { getPlatformIcon } from "@/lib/social-links";
+import type { SocialLink } from "@/types";
 
 interface ReviewProfileStepApplication {
   fullName: string;
@@ -22,6 +24,7 @@ interface ReviewProfileStepApplication {
   resumeUrl?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
+  socialLinks?: SocialLink[];
 }
 
 export interface ReviewProfileStepProps {
@@ -64,7 +67,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                 </div>
               </div>
             )}
-            {application.yearsOfExperience && (
+            {application.yearsOfExperience != null && application.yearsOfExperience > 0 && (
               <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border px-4 py-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                   <Clock className="w-4 h-4 text-amber-300" />
@@ -93,30 +96,54 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
             <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
           </a>
         )}
-        {application.linkedinUrl && (
-          <a
-            href={application.linkedinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 bg-muted/50 text-foreground border border-border rounded-xl text-sm font-medium hover:border-border hover:text-foreground hover:bg-muted transition-all duration-200"
-          >
-            <Linkedin className="w-4 h-4" />
-            LinkedIn
-            <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
-          </a>
-        )}
-        {application.portfolioUrl && (
-          <a
-            href={application.portfolioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 bg-muted/50 text-foreground border border-border rounded-xl text-sm font-medium hover:border-border hover:text-foreground hover:bg-muted transition-all duration-200"
-          >
-            <Globe className="w-4 h-4" />
-            Portfolio
-            <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
-          </a>
-        )}
+        {/* Dynamic social links (with fallback to legacy fields) */}
+        {(application.socialLinks && application.socialLinks.length > 0)
+          ? application.socialLinks
+              .filter((link) => link.url?.trim())
+              .map((link, idx) => {
+                const Icon = getPlatformIcon(link.platform);
+                return (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 px-4 py-2.5 bg-muted/50 text-foreground border border-border rounded-xl text-sm font-medium hover:border-border hover:text-foreground hover:bg-muted transition-all duration-200"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {link.label}
+                    <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+                  </a>
+                );
+              })
+          : (
+            <>
+              {application.linkedinUrl && (
+                <a
+                  href={application.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 px-4 py-2.5 bg-muted/50 text-foreground border border-border rounded-xl text-sm font-medium hover:border-border hover:text-foreground hover:bg-muted transition-all duration-200"
+                >
+                  <Linkedin className="w-4 h-4" />
+                  LinkedIn
+                  <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+                </a>
+              )}
+              {application.portfolioUrl && (
+                <a
+                  href={application.portfolioUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2 px-4 py-2.5 bg-muted/50 text-foreground border border-border rounded-xl text-sm font-medium hover:border-border hover:text-foreground hover:bg-muted transition-all duration-200"
+                >
+                  <Globe className="w-4 h-4" />
+                  Portfolio
+                  <ExternalLink className="w-3 h-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+                </a>
+              )}
+            </>
+          )}
       </div>
 
       {/* Bio & Motivation */}

@@ -69,7 +69,7 @@ export function GeneralReviewStep({
               >
                 {/* Question header with score */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground">{question.title}</p>
+                  <p className="text-sm font-semibold text-foreground">{question.prompt}</p>
                   <div className="flex items-center gap-2.5">
                     <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
@@ -86,25 +86,41 @@ export function GeneralReviewStep({
                 <div className="p-5 space-y-4">
                   {/* Applicant responses */}
                   <div className="space-y-3">
-                    {renderPromptLines(question.prompt)}
-                    {question.parts?.length ? (
-                      <div className="space-y-3">
-                        {question.parts.map((part: any) => (
-                          <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-3.5">
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
+                    {(() => {
+                      // Check for combined (single string) answer — getGeneralResponseValue
+                      // without partId returns the string for combined answers, empty for per-part
+                      const combinedAnswer = getGeneralResponseValue(question.id);
+                      if (combinedAnswer) {
+                        return (
+                          <div className="rounded-lg bg-muted/30 border border-border p-3.5">
                             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                              {getGeneralResponseValue(question.id, part.id) || <span className="text-muted-foreground italic">No response</span>}
+                              {combinedAnswer}
                             </p>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="rounded-lg bg-muted/30 border border-border p-3.5">
-                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                          {getGeneralResponseValue(question.id) || <span className="text-muted-foreground italic">No response</span>}
-                        </p>
-                      </div>
-                    )}
+                        );
+                      }
+                      if (question.parts?.length) {
+                        return (
+                          <div className="space-y-3">
+                            {question.parts.map((part: any) => (
+                              <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-3.5">
+                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
+                                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                                  {getGeneralResponseValue(question.id, part.id) || <span className="text-muted-foreground italic">No response</span>}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="rounded-lg bg-muted/30 border border-border p-3.5">
+                          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                            <span className="text-muted-foreground italic">No response</span>
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Scoring area */}

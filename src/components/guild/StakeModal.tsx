@@ -5,12 +5,12 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { GuildProposal } from "@/types";
+import type { GuildApplicationSummary } from "@/types";
 
 interface StakeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  proposal: GuildProposal | null;
+  application: GuildApplicationSummary | null;
   stakeAmount: string;
   onStakeAmountChange: (amount: string) => void;
   onConfirmStake: () => void;
@@ -20,19 +20,19 @@ interface StakeModalProps {
 export function StakeModal({
   isOpen,
   onClose,
-  proposal,
+  application,
   stakeAmount,
   onStakeAmountChange,
   onConfirmStake,
   isStaking,
 }: StakeModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Stake on Proposal">
-      {proposal && (
+    <Modal isOpen={isOpen} onClose={onClose} title="Stake on Application">
+      {application && (
         <div className="space-y-4">
           <div className="p-4 bg-muted rounded-lg border border-border">
             <p className="text-sm text-muted-foreground mb-1">Candidate</p>
-            <p className="font-semibold text-foreground">{proposal.candidateName}</p>
+            <p className="font-semibold text-foreground">{application.candidateName}</p>
           </div>
 
           <Input
@@ -40,13 +40,13 @@ export function StakeModal({
             type="number"
             value={stakeAmount}
             onChange={(e) => onStakeAmountChange(e.target.value)}
-            min={proposal.requiredStake}
+            min={application.requiredStake}
             required
           />
 
           <Alert variant="info">
             By staking, you&apos;ll be able to participate in reviewing this
-            proposal. Your stake will be returned after the review, with rewards
+            application. Your stake will be returned after the review, with rewards
             if you vote with the majority.
           </Alert>
 
