@@ -342,17 +342,6 @@ export default function JobDetailView() {
       return;
     }
 
-    // Validation
-    if (!useProfileResume && !resumeFile) {
-      setApplicationError("Please upload your resume or use your profile resume");
-      return;
-    }
-
-    if (useProfileResume && !profileResume?.resumeUrl) {
-      setApplicationError("No resume found in your profile. Please upload one.");
-      return;
-    }
-
     if (!coverLetter.trim()) {
       setApplicationError("Please write a cover letter");
       return;
@@ -752,7 +741,7 @@ export default function JobDetailView() {
           {/* Resume Selection */}
           <div>
             <label className="block text-sm font-medium text-card-foreground mb-3">
-              Resume / CV *
+              Resume / CV <span className="text-muted-foreground text-xs font-normal">(optional)</span>
             </label>
 
             {/* Option to use profile resume */}

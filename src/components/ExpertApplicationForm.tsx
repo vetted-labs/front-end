@@ -333,11 +333,6 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       return;
     }
 
-    if (!resumeFile) {
-      setFormError("Please upload your resume/CV (PDF, DOC, or DOCX)");
-      return;
-    }
-
     const generalMissing =
       !generalAnswers.learningFromFailure.event.trim() ||
       !generalAnswers.learningFromFailure.response.trim() ||

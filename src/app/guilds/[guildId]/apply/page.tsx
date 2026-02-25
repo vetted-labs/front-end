@@ -226,12 +226,6 @@ export default function GuildApplicationPage() {
   const validateForm = (): boolean => {
     if (!template) return false;
 
-    // Validate resume
-    if (template.requiresResume && !resumeUrl) {
-      setError("Please upload your resume/CV.");
-      return false;
-    }
-
     // Validate general questions
     for (const q of template.generalQuestions) {
       if (!q.required) continue;
@@ -429,7 +423,7 @@ export default function GuildApplicationPage() {
           {/* Resume Upload */}
           <div className="bg-card rounded-xl shadow-sm border border-border p-8">
             <h2 className="text-xl font-semibold text-foreground mb-1">
-              Resume / CV <span className="text-destructive">*</span>
+              Resume / CV <span className="text-muted-foreground text-xs">(optional)</span>
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
               Upload your resume so reviewers can evaluate your background.

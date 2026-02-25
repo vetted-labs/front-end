@@ -83,7 +83,7 @@ export function PersonalInfoSection({
       {/* Resume Upload */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground">
-          Resume / CV <span className="text-destructive">*</span>
+          Resume / CV <span className="text-muted-foreground text-xs">(optional)</span>
         </label>
         <input
           ref={resumeInputRef}
