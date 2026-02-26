@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Award, TrendingUp, DollarSign, Target, Zap, Trophy, Shield } from "lucide-react";
+import { Users, Award, DollarSign, Target, Zap, Trophy, Shield } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
 
 interface GuildHeaderProps {
@@ -39,9 +39,6 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
                 <GuildIcon className="w-9 h-9 text-primary" />
               </div>
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-muted/50 text-[11px] uppercase tracking-[0.25em] text-primary mb-3">
-                  Guild Protocol
-                </div>
                 <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-2">
                   {guild.name}
                 </h1>
@@ -73,8 +70,10 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
 
             <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
               <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-center">
-                <p className="text-xs text-muted-foreground">Open Roles</p>
-                <p className="text-xl font-semibold text-foreground">{guild.openPositions || 0}</p>
+                <p className="text-xs text-muted-foreground">Earnings</p>
+                <p className="text-xl font-semibold text-foreground">
+                  ${(guild.earnings?.totalEndorsementEarnings ?? 0).toLocaleString()}
+                </p>
               </div>
               <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground">Reputation</p>
@@ -125,57 +124,6 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
               </div>
               <p className="text-xs text-muted-foreground">Total VETD Staked</p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Personal Stats */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-lg font-semibold text-foreground mb-6">Your Performance</h2>
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-lg">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                <Award className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-              Your Role
-            </p>
-            <p className="text-3xl font-semibold text-foreground capitalize mb-1">
-              {guild.expertRole}
-            </p>
-            <p className="text-xs text-muted-foreground">Member of {guild.name}</p>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-lg">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                <TrendingUp className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-              Reputation Score
-            </p>
-            <p className="text-3xl font-semibold text-foreground mb-1">{guild.reputation}</p>
-            <p className="text-xs text-muted-foreground">
-              {guild.earnings?.totalPoints ?? 0} points earned
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-lg">
-            <div className="flex items-start justify-between mb-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                <DollarSign className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-              Total Earnings
-            </p>
-            <p className="text-3xl font-semibold text-foreground mb-1">
-              ${(guild.earnings?.totalEndorsementEarnings ?? 0).toLocaleString()}
-            </p>
-            <p className="text-xs text-muted-foreground">From endorsements</p>
           </div>
         </div>
       </div>

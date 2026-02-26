@@ -230,7 +230,8 @@ export default function GuildDetailPage() {
   const fetchLeaderboard = async () => {
     try {
       const leaderboardData: any = await guildsApi.getLeaderboard(guildId, { limit: 100 });
-      setLeaderboard(leaderboardData.leaderboard || []);
+      const entries = leaderboardData.leaderboard || [];
+      setLeaderboard(entries.filter((e: any) => e.role !== "candidate"));
     } catch (err) {
       // Silently fall back to mock data if backend isn't ready
       // console.error("[Guild Page] Failed to fetch leaderboard:", err);
@@ -288,26 +289,6 @@ export default function GuildDetailPage() {
           contributionScore: 580,
           reputationChange: "-20",
           trend: "down",
-        },
-        {
-          rank: 5,
-          memberId: "candidate-1",
-          fullName: "Alex Johnson",
-          role: "candidate",
-          reputation: 450,
-          contributionScore: 420,
-          reputationChange: "+60",
-          trend: "same",
-        },
-        {
-          rank: 6,
-          memberId: "candidate-2",
-          fullName: "Maria Garcia",
-          role: "candidate",
-          reputation: 320,
-          contributionScore: 350,
-          reputationChange: "+45",
-          trend: "same",
         },
       ];
 
@@ -477,7 +458,7 @@ export default function GuildDetailPage() {
                 <Trophy className="w-5 h-5 text-amber-500" />
                 <p className="text-2xl font-bold text-foreground">{guild.candidates?.length || guild.candidateCount || 0}</p>
               </div>
-              <p className="text-sm text-muted-foreground">Active Candidates</p>
+              <p className="text-sm text-muted-foreground">Vetted Candidates</p>
             </div>
             <div className="rounded-2xl border border-border bg-card/70 backdrop-blur p-4 text-center shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
               <div className="flex items-center justify-center gap-2 mb-2">
@@ -900,7 +881,7 @@ export default function GuildDetailPage() {
                 <h2 className="text-2xl font-bold text-foreground">Guild Leaderboard</h2>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Trophy className="w-4 h-4 text-amber-500" />
-                  <span>Top {leaderboard.length} Members</span>
+                  <span>Top {leaderboard.length} Experts</span>
                 </div>
               </div>
 
@@ -987,7 +968,7 @@ export default function GuildDetailPage() {
                               <Target className="w-4 h-4 text-primary" />
                               <div>
                                 <p className="text-sm font-bold text-foreground">{entry.contributionScore}</p>
-                                <p className="text-xs text-muted-foreground">Contribution</p>
+                                <p className="text-xs text-muted-foreground">Earnings</p>
                               </div>
                             </div>
                             {entry.totalReviews !== undefined && (
@@ -1041,31 +1022,6 @@ export default function GuildDetailPage() {
                 </div>
               )}
 
-              {/* Leaderboard Info */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 rounded-xl border border-primary/20 dark:border-primary/30">
-                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  How Rankings Work
-                </h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Members are ranked by reputation and contribution score</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Complete reviews, earn endorsements, and successfully place candidates to climb</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Top 3 members receive special recognition badges</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Rankings update in real-time as you contribute to the guild</span>
-                  </li>
-                </ul>
-              </div>
             </div>
           )}
         </div>

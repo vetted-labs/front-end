@@ -134,8 +134,7 @@ export function HomePage() {
             <div>
               <Logo size="md" />
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-                Decentralized hiring powered by reputation-staked expert guilds.
-                Transparent, accountable, on-chain.
+                The Credibility Layer for Hiring
               </p>
             </div>
 

@@ -8,9 +8,10 @@ import {
   Star,
   DollarSign,
   Coins,
+  ClipboardList,
 } from "lucide-react";
 import { Alert } from "./ui/alert";
-import { expertApi } from "@/lib/api";
+import { expertApi, guildApplicationsApi } from "@/lib/api";
 import { calculateTotalPoints } from "@/lib/utils";
 
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
@@ -30,6 +31,7 @@ export function EnhancedExpertDashboard() {
   const [stakingStatus, setStakingStatus] = useState<{ stakedAmount: string; meetsMinimum: boolean } | null>(null);
   const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
   const [stakesLoaded, setStakesLoaded] = useState(false);
+  const [assignedApplications, setAssignedApplications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -94,6 +96,13 @@ export function EnhancedExpertDashboard() {
 
       setProfile(enhancedData);
       setIsLoading(false); // Show the page immediately
+
+      // Fetch assigned applications in background
+      if (enhancedData.id) {
+        guildApplicationsApi.getAssigned(enhancedData.id)
+          .then((apps: any) => setAssignedApplications(Array.isArray(apps) ? apps : []))
+          .catch(() => setAssignedApplications([]));
+      }
 
       // Check wallet verification in background
       checkVerification(address).then((verified) => {
@@ -289,6 +298,54 @@ export function EnhancedExpertDashboard() {
             iconColor="text-orange-600 dark:text-orange-400"
           />
         </div>
+
+        {/* Assigned to Me */}
+        {assignedApplications.length > 0 && (
+          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] mb-6">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Assigned to Me</h2>
+                <span className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                  {assignedApplications.length}
+                </span>
+              </div>
+            </div>
+            <div className="p-5">
+              <div className="space-y-3">
+                {assignedApplications.slice(0, 5).map((app: any) => (
+                  <button
+                    key={app.id}
+                    onClick={() => {
+                      const guildId = app.guildId;
+                      if (guildId) {
+                        router.push(`/expert/guild/${guildId}?tab=membershipApplications&applicationId=${app.id}`);
+                      }
+                    }}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50 transition-all text-left"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">
+                        {app.candidateName || app.fullName || "Application"}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {app.guildName || "Guild"} {app.jobTitle ? `· ${app.jobTitle}` : ""}
+                      </p>
+                    </div>
+                    {app.totalStaked != null && (
+                      <div className="flex items-center gap-1.5 ml-4 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                        <Coins className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-sm font-semibold text-primary">
+                          {Number(app.totalStaked).toLocaleString()} VETD
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Your Guilds */}
         <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] mb-6">

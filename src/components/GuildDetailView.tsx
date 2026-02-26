@@ -122,13 +122,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [guild, setGuild] = useState<GuildDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const validTabs = ["activity", "members", "jobs", "leaderboard", "membershipApplications", "earnings"] as const;
+  const validTabs = ["membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
   type TabType = (typeof validTabs)[number];
   const initialTab = (() => {
     const tabParam = searchParams?.get("tab");
     if (tabParam && validTabs.includes(tabParam as TabType)) return tabParam as TabType;
     if (searchParams?.get("applicationId")) return "membershipApplications" as TabType;
-    return "members" as TabType;
+    return "membershipApplications" as TabType;
   })();
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
@@ -607,26 +607,25 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         <div className="rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg mb-6 overflow-hidden">
           <div className="flex border-b border-border overflow-x-auto">
             <button
-              onClick={() => setActiveTab("activity")}
+              onClick={() => setActiveTab("membershipApplications")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "activity"
+                activeTab === "membershipApplications"
                   ? "text-primary border-b-2 border-primary bg-primary/5"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Activity className="w-4 h-4 inline mr-2" />
-              Activity
-            </button>
-            <button
-              onClick={() => setActiveTab("members")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "members"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Users className="w-4 h-4 inline mr-2" />
-              Members
+              <UserPlus className="w-4 h-4 inline mr-2" />
+              Pending Reviews
+              {(() => {
+                const expertCount = guild?.guildApplications?.length || 0;
+                const candidateCount = candidateApplications?.length || 0;
+                const total = expertCount + candidateCount;
+                return total > 0 ? (
+                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                    {total}
+                  </span>
+                ) : null;
+              })()}
             </button>
             <button
               onClick={() => setActiveTab("jobs")}
@@ -640,36 +639,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               Jobs
             </button>
             <button
-              onClick={() => setActiveTab("leaderboard")}
+              onClick={() => setActiveTab("activity")}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "leaderboard"
+                activeTab === "activity"
                   ? "text-primary border-b-2 border-primary bg-primary/5"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Trophy className="w-4 h-4 inline mr-2" />
-              Leaderboard
-            </button>
-            <button
-              onClick={() => setActiveTab("membershipApplications")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "membershipApplications"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <UserPlus className="w-4 h-4 inline mr-2" />
-              Membership Reviews
-              {(() => {
-                const expertCount = guild?.guildApplications?.length || 0;
-                const candidateCount = candidateApplications?.length || 0;
-                const total = expertCount + candidateCount;
-                return total > 0 ? (
-                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
-                    {total}
-                  </span>
-                ) : null;
-              })()}
+              <Activity className="w-4 h-4 inline mr-2" />
+              Activity
             </button>
             <button
               onClick={() => setActiveTab("earnings")}
@@ -681,6 +659,28 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
             >
               <Coins className="w-4 h-4 inline mr-2" />
               Earnings
+            </button>
+            <button
+              onClick={() => setActiveTab("members")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "members"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="w-4 h-4 inline mr-2" />
+              Members
+            </button>
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === "leaderboard"
+                  ? "text-primary border-b-2 border-primary bg-primary/5"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Trophy className="w-4 h-4 inline mr-2" />
+              Leaderboard
             </button>
           </div>
 

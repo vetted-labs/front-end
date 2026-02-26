@@ -22,6 +22,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
+import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
 import { GuildMembershipCard } from "./GuildMembershipCard";
@@ -96,6 +97,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [isTogglingEmail, setIsTogglingEmail] = useState(false);
 
   useEffect(() => {
     if (mode === "private" && !isConnected) {
@@ -152,6 +154,21 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
       navigator.clipboard.writeText(profile.walletAddress);
       setCopiedAddress(true);
       setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  };
+
+  const toggleEmailVisibility = async () => {
+    if (!profile || !effectiveAddress) return;
+    setIsTogglingEmail(true);
+    try {
+      const newValue = !profile.showEmail;
+      await expertApi.updateProfile(effectiveAddress, { showEmail: newValue });
+      setProfile((prev) => prev ? { ...prev, showEmail: newValue } : prev);
+      toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
+    } catch {
+      toast.error("Failed to update email visibility");
+    } finally {
+      setIsTogglingEmail(false);
     }
   };
 
@@ -310,8 +327,26 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               {profile.fullName || "Unknown Expert"}
             </h1>
 
-            {/* Email (private mode only) */}
+            {/* Email */}
             {mode === "private" && profile.email && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+                <Mail className="w-4 h-4 text-primary" />
+                <span>{profile.email}</span>
+                <button
+                  onClick={toggleEmailVisibility}
+                  disabled={isTogglingEmail}
+                  className={`ml-1 px-2.5 py-0.5 text-xs font-medium rounded-full border transition-colors ${
+                    profile.showEmail
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 dark:text-emerald-400"
+                      : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                  }`}
+                  title={profile.showEmail ? "Email visible on public profile" : "Email hidden from public profile"}
+                >
+                  {profile.showEmail ? "Public" : "Hidden"}
+                </button>
+              </div>
+            )}
+            {mode === "public" && profile.showEmail && profile.email && (
               <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-2">
                 <Mail className="w-4 h-4 text-primary" />
                 {profile.email}

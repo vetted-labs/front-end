@@ -518,6 +518,12 @@ export const expertApi = {
     });
   },
 
+  updateProfile: (walletAddress: string, data: Record<string, unknown>) =>
+    apiRequest<import("@/types").ExpertProfile>(`/api/experts/profile?wallet=${walletAddress}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
   getLeaderboard: (params?: { guildId?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.guildId) queryParams.append("guildId", params.guildId);

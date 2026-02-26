@@ -17,6 +17,7 @@ export interface ExpertProfile {
   endorsementCount?: number;
   approvalCount?: number;
   rejectionCount?: number;
+  showEmail?: boolean;
   guilds: ExpertGuild[];
   recentActivity?: ExpertActivity[];
   pendingTasks?: {

@@ -2,7 +2,6 @@ import {
   Home,
   Users,
   Award,
-  Vote,
   Landmark,
   TrendingUp,
   Wallet,
@@ -53,8 +52,6 @@ export const expertSidebarConfig: SidebarConfig = {
       label: "Guilds & Vetting",
       items: [
         { label: "My Guilds", href: "/expert/guilds", icon: Users },
-        { label: "Endorsements", href: "/expert/endorsements", icon: Award },
-        { label: "Voting", href: "/expert/voting", icon: Vote },
       ],
     },
     {

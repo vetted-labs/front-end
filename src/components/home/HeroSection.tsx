@@ -16,7 +16,6 @@ const cards = [
     key: "candidate",
     icon: Users,
     title: "Find Work",
-    description: "Get vetted by guild experts and land roles at top companies.",
     cta: "Get started",
     featured: false,
   },
@@ -24,7 +23,6 @@ const cards = [
     key: "expert",
     icon: Shield,
     title: "Become an Expert",
-    description: "Stake reputation, review candidates, and earn rewards in your guild.",
     cta: "Get started",
     featured: true,
   },
@@ -32,7 +30,6 @@ const cards = [
     key: "company",
     icon: Briefcase,
     title: "Post a Job",
-    description: "Receive expert-reviewed shortlists. Hire confidently, every time.",
     cta: "Get started",
     featured: false,
   },
@@ -69,41 +66,9 @@ export function HeroSection({
           </div>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-center text-5xl sm:text-6xl md:text-7xl font-display font-bold leading-[1.08] mb-6 animate-fade-up animate-delay-100">
-          <span className="text-foreground">Hiring Finally </span>
-          <span className="bg-gradient-to-r from-primary via-accent to-orange-light bg-clip-text text-transparent">
-            Built on Trust
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-center text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 animate-fade-up animate-delay-200 leading-relaxed">
-          Vetted connects companies with expert-reviewed talent through
-          reputation-staked guilds. Transparent, accountable, and fully on-chain.
-        </p>
-
-        {/* CTAs */}
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-8 animate-fade-up animate-delay-300">
-          <button
-            onClick={onJoinAsExpert}
-            className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 transition-all"
-          >
-            Start Vetting
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onJoinAsCandidate}
-            className="inline-flex items-center gap-2 px-7 py-3.5 glass-card rounded-xl border border-border/60 font-semibold text-foreground hover:border-primary/40 transition-all"
-          >
-            Find Work
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
         {/* Active guild pills */}
         {!isLoadingGuilds && guilds.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-12 animate-fade-up animate-delay-300">
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-12 animate-fade-up animate-delay-100">
             <span className="text-sm text-muted-foreground mr-1">Active Guilds:</span>
             {guilds.slice(0, 4).map((g) => (
               <span
@@ -117,7 +82,7 @@ export function HeroSection({
         )}
 
         {/* Value Cards */}
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-5 animate-fade-up animate-delay-400">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-5 animate-fade-up animate-delay-200">
           {cards.map((card) => (
             <button
               key={card.key}
@@ -138,15 +103,11 @@ export function HeroSection({
                 <card.icon className="w-6 h-6 text-primary" />
               </div>
 
-              <h3 className="text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                 {card.title}
               </h3>
 
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                {card.description}
-              </p>
-
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 mt-3">
                 {card.cta}
                 <ArrowRight className="w-3.5 h-3.5" />
               </span>

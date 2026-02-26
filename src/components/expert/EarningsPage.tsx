@@ -307,10 +307,10 @@ export default function EarningsPage() {
               <div className="grid sm:grid-cols-2 gap-6 pt-4">
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    Voting Rewards
+                    Vetting Rewards
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    When your review score aligns closely with the guild consensus, you earn VETD tokens. The closer your score to the consensus, the larger your reward. Rewards are proportional to your stake in the guild.
+                    When your review score aligns closely with the guild consensus after a vetting is finalized, you earn VETD tokens. The closer your score to the consensus, the larger your reward. Rewards are proportional to your stake in the guild.
                   </p>
                 </div>
                 <div>
@@ -318,7 +318,7 @@ export default function EarningsPage() {
                     Endorsement Rewards
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    When a candidate you endorsed gets hired, you receive a share of the endorsement reward pool. Higher reputation experts receive a larger share.
+                    When a candidate you endorsed gets hired, you receive a share of the endorsement reward pool. Endorsement rewards can be paid in stablecoins or $VETD tokens depending on the guild configuration.
                   </p>
                 </div>
                 <div>

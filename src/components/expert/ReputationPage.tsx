@@ -224,50 +224,50 @@ export default function ReputationPage() {
                     What is Reputation?
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Reputation measures how consistently your reviews align with expert consensus. It determines your rank within guilds, your eligibility for higher-tier reviews, and your share of VETD rewards.
+                    Reputation measures your standing as an expert within the Vetted protocol. It determines your rank within guilds, your eligibility for higher-tier reviews, and your share of VETD rewards.
                   </p>
                 </div>
 
                 {/* How You Earn It */}
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    How You Earn (or Lose) It
+                    How You Earn Reputation
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    After a review is finalized, your score is compared to the guild consensus. The closer your score, the more reputation you earn. Large deviations result in reputation penalties (slashing).
+                    Reputation is gained through three activities: Vetting (reviewing candidates), Endorsements (staking on candidates you believe in), and Governance participation (voting on proposals). Deviating from consensus can result in reputation penalties.
                   </p>
                 </div>
 
-                {/* Event Types */}
+                {/* Reputation Sources */}
                 <div className="sm:col-span-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                    Event Types
+                    Reputation Sources
                   </h4>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     <div className="flex items-start gap-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 px-3 py-2.5">
                       <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Aligned</p>
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Vetting</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Your scored vote was close to the consensus after a full application review with finalization. Earns reputation + VETD rewards.
+                          Review candidates and align with guild consensus. The closer your score to the consensus after finalization, the more reputation you earn.
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/5 border border-blue-500/10 px-3 py-2.5">
                       <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">Majority Vote</p>
+                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">Endorsement</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Your approve/reject vote on a guild application matched the majority outcome. Earns a flat reputation bonus.
+                          Stake on candidates you believe in. Successful endorsements (candidate gets hired) earn reputation and rewards.
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10 px-3 py-2.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10 px-3 py-2.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Mild / Moderate / Severe Deviation</p>
+                        <p className="text-xs font-semibold text-purple-600 dark:text-purple-400">Governance Participation</p>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Your score deviated from consensus. The further away, the larger the reputation penalty. Severe deviations also reduce staked VETD.
+                          Participate in guild governance by voting on proposals. Active governance participation earns reputation over time.
                         </p>
                       </div>
                     </div>
@@ -280,7 +280,7 @@ export default function ReputationPage() {
                     Alignment Scoring
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    After a review, the consensus score is calculated using IQR-based filtering (statistical outlier removal). Your &quot;distance&quot; is how far your score was from this consensus. Lower distance = better alignment.
+                    After a vetting is finalized, the consensus score is calculated using IQR-based filtering (statistical outlier removal). Your &quot;distance&quot; is how far your score was from this consensus. Lower distance = better alignment.
                   </p>
                 </div>
 
@@ -315,7 +315,7 @@ export default function ReputationPage() {
                 <Activity className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">No reputation changes yet.</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">
-                  Your history will appear here after proposals are finalized.
+                  Your history will appear here after vettings are finalized.
                 </p>
               </div>
             </Card>
