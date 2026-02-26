@@ -75,7 +75,7 @@ export function useJobForm(jobId?: string) {
         setIsLoading(true);
         setError(null);
         try {
-          const data: any = await jobsApi.getById(jobId);
+          const data = await jobsApi.getById(jobId);
           setFormData({
             title: data.title || "",
             department: data.department || "",
@@ -85,7 +85,7 @@ export function useJobForm(jobId?: string) {
             location: data.location || "",
             locationType: data.locationType || "remote",
             jobType: data.type || "Full-time",
-            experienceLevel: data.experienceLevel || undefined,
+            experienceLevel: (data.experienceLevel as JobFormData["experienceLevel"]) || undefined,
             salaryMin: data.salary?.min || undefined,
             salaryMax: data.salary?.max || undefined,
             salaryCurrency: data.salary?.currency || "USD",
@@ -94,7 +94,7 @@ export function useJobForm(jobId?: string) {
             screeningQuestions: data.screeningQuestions || [],
             companyId: data.companyId || "00000000-0000-0000-0000-000000000000",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           setError(
             `Failed to load job data. Details: ${(error as Error).message}`
           );
@@ -200,8 +200,8 @@ export function useJobForm(jobId?: string) {
       }
 
       router.push("/dashboard");
-    } catch (error: any) {
-      setError(error.message || `Something went wrong. Details: ${error}`);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

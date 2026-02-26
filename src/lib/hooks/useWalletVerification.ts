@@ -22,7 +22,7 @@ export function useWalletVerification(): UseWalletVerificationReturn {
     setIsChecking(true);
     setError(null);
     try {
-      const result: any = await blockchainApi.isWalletVerified(address);
+      const result = await blockchainApi.isWalletVerified(address);
       const verified = result?.verified === true;
       setIsVerified(verified);
       return verified;
@@ -39,7 +39,7 @@ export function useWalletVerification(): UseWalletVerificationReturn {
     setError(null);
     try {
       // Step 1: Get challenge from backend
-      const challenge: any = await blockchainApi.getWalletChallenge(address);
+      const challenge = await blockchainApi.getWalletChallenge(address);
       if (!challenge?.message) {
         throw new Error("Failed to get verification challenge");
       }
@@ -52,12 +52,13 @@ export function useWalletVerification(): UseWalletVerificationReturn {
 
       setIsVerified(true);
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // User rejected the signature request
-      if (err?.code === 4001 || err?.message?.includes("User rejected")) {
+      const walletErr = err as { code?: number; message?: string };
+      if (walletErr?.code === 4001 || walletErr?.message?.includes("User rejected")) {
         setError("Wallet signature was rejected. You can verify later from your dashboard.");
       } else {
-        setError(err?.message || "Wallet verification failed");
+        setError(walletErr?.message || "Wallet verification failed");
       }
       return false;
     } finally {
