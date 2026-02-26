@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
+import { toast } from "sonner";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation } from "@/types";
 import { ConversationList } from "./ConversationList";
@@ -27,7 +29,8 @@ export default function CandidateMessagesInbox() {
       const data = await messagingApi.getCandidateConversations();
       setConversations(Array.isArray(data) ? data : data?.conversations || []);
     } catch (error) {
-      console.error("Error fetching conversations:", error);
+      logger.error("Error fetching conversations", error, { silent: true });
+      toast.error("Failed to load conversations");
     } finally {
       setIsLoading(false);
     }

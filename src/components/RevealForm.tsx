@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { commitRevealApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 interface RevealFormProps {
   applicationId: string;
@@ -64,7 +65,7 @@ export function RevealForm({
       toast.success("Vote revealed successfully!");
       onSubmit();
     } catch (error: unknown) {
-      console.error("Reveal error:", error);
+      logger.error("Reveal error", error, { silent: true });
       const msg = error instanceof Error ? error.message : "";
       const dataMsg = (error as { data?: { message?: string } })?.data?.message ?? "";
       if (msg.includes("hash") || dataMsg.includes("hash")) {

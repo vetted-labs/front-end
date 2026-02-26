@@ -17,6 +17,7 @@ import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
 import { candidateApi, companyApi, expertApi, sanitizeErrorMessage, ApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
@@ -102,7 +103,7 @@ function LoginForm() {
         await connect({ connector });
         setShouldCheckStatus(true);
       } catch (error) {
-        console.error("Failed to connect:", error);
+        logger.error("Failed to connect wallet", error, { silent: true });
         setError("Failed to connect wallet. Please try again.");
       }
     }
@@ -129,7 +130,7 @@ function LoginForm() {
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: unknown) {
-      console.error("Login error:", error);
+      logger.error("Login failed", error, { silent: true });
 
       let errorMessage = "Something went wrong. Please try again.";
 

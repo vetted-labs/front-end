@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, MessageSquare } from "lucide-react";
 
+import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation, Message } from "@/types";
@@ -48,7 +49,7 @@ export default function CompanyMessagesInbox() {
       const data = await messagingApi.getCompanyConversations();
       setConversations(Array.isArray(data) ? data : data?.conversations || []);
     } catch (error) {
-      console.error("Error fetching conversations:", error);
+      logger.error("Error fetching conversations", error, { silent: true });
       toast.error("Failed to load conversations");
     } finally {
       setIsLoading(false);
@@ -68,7 +69,7 @@ export default function CompanyMessagesInbox() {
         prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
       );
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      logger.error("Error fetching messages", error, { silent: true });
       toast.error("Failed to load messages");
     } finally {
       setMessagesLoading(false);
@@ -109,7 +110,7 @@ export default function CompanyMessagesInbox() {
         )
       );
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message", error, { silent: true });
       toast.error("Failed to send message");
     }
   };
@@ -128,7 +129,7 @@ export default function CompanyMessagesInbox() {
       if (result) setMessages((prev) => [...prev, result]);
       setShowScheduleModal(false);
     } catch (error) {
-      console.error("Error scheduling meeting:", error);
+      logger.error("Error scheduling meeting", error, { silent: true });
       toast.error("Failed to schedule meeting");
     } finally {
       setIsScheduling(false);

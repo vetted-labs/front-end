@@ -7,8 +7,10 @@ import {
   ArrowLeft,
   ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import { companyApi, applicationsApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 
@@ -29,23 +31,16 @@ interface GroupedCandidate {
 
 export default function CandidatesPage() {
   const router = useRouter();
-  const { auth, ready } = useRequireAuth("company");
+  const { ready } = useRequireAuth("company");
   const [groupedCandidates, setGroupedCandidates] = useState<GroupedCandidate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
-  useEffect(() => {
-    if (!ready) return;
-    fetchApplications();
-  }, [ready]);
-
-  const fetchApplications = async () => {
-    setIsLoading(true);
-    try {
+  const { isLoading } = useFetch(
+    async () => {
       const data = await companyApi.getApplications({ limit: 500 });
 
       // Group by candidate
@@ -62,13 +57,16 @@ export default function CandidatesPage() {
         return acc;
       }, []);
 
-      setGroupedCandidates(grouped);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-    } finally {
-      setIsLoading(false);
+      return grouped;
+    },
+    {
+      skip: !ready,
+      onSuccess: (grouped) => setGroupedCandidates(grouped),
+      onError: () => toast.error("Failed to load candidates"),
     }
-  };
+  );
+
+  const { execute: executeStatusUpdate } = useApi();
 
   const stats = useMemo(() => {
     const allApps = groupedCandidates.flatMap((g) => g.applications);
@@ -120,27 +118,30 @@ export default function CandidatesPage() {
   };
 
   const handleStatusChange = async (applicationId: string, newStatus: string) => {
-    try {
-      await applicationsApi.updateStatus(applicationId, newStatus);
-      setGroupedCandidates((prev) =>
-        prev.map((group) => ({
-          ...group,
-          applications: group.applications.map((app) =>
-            app.id === applicationId
-              ? { ...app, status: newStatus as CompanyApplication["status"] }
-              : app
-          ),
-        }))
-      );
-      if (selectedApplication?.id === applicationId) {
-        setSelectedApplication({
-          ...selectedApplication,
-          status: newStatus as CompanyApplication["status"],
-        });
+    await executeStatusUpdate(
+      () => applicationsApi.updateStatus(applicationId, newStatus),
+      {
+        onSuccess: () => {
+          setGroupedCandidates((prev) =>
+            prev.map((group) => ({
+              ...group,
+              applications: group.applications.map((app) =>
+                app.id === applicationId
+                  ? { ...app, status: newStatus as CompanyApplication["status"] }
+                  : app
+              ),
+            }))
+          );
+          if (selectedApplication?.id === applicationId) {
+            setSelectedApplication({
+              ...selectedApplication,
+              status: newStatus as CompanyApplication["status"],
+            });
+          }
+        },
+        onError: () => toast.error("Failed to update application status"),
       }
-    } catch (error) {
-      console.error("Error updating status:", error);
-    }
+    );
   };
 
   if (!ready) return null;

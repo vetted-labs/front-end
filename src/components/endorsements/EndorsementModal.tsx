@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import type { EndorsementApplication } from "@/types";
 
@@ -63,7 +64,7 @@ export function EndorsementModal({
 
       setSkillMatch(Math.round((matchedSkills.length / jobSkills.length) * 100));
     } catch (error) {
-      console.error('Error calculating skill match:', error);
+      logger.error("Failed to calculate skill match", error);
       setSkillMatch(0);
     }
   };
@@ -89,7 +90,7 @@ export function EndorsementModal({
       onEndorsementPlaced();
       onClose();
     } catch (error: unknown) {
-      console.error('Endorsement error:', error);
+      logger.error("Endorsement failed", error, { silent: true });
       // Error is already handled by parent component
     } finally {
       setIsSubmitting(false);

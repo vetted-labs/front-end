@@ -21,7 +21,7 @@ import {
   Activity,
   LucideIcon,
 } from "lucide-react";
-import { expertApi, ApiError } from "@/lib/api";
+import { expertApi } from "@/lib/api";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
@@ -32,6 +32,7 @@ import {
   getActivityIconBgColor,
   getActivityIconColor,
 } from "@/lib/activityHelpers";
+import { useFetch } from "@/lib/hooks/useFetch";
 import type { ExpertProfile as ExpertProfileData, ExpertActivity, ExpertGuild } from "@/types";
 
 interface ExpertProfileProps {
@@ -93,38 +94,21 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const mode = walletAddress ? "public" : "private";
   const effectiveAddress = mode === "public" ? walletAddress : connectedAddress;
 
-  const [profile, setProfile] = useState<ExpertProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [isTogglingEmail, setIsTogglingEmail] = useState(false);
 
-  useEffect(() => {
-    if (mode === "private" && !isConnected) {
-      setIsLoading(false);
-      return;
-    }
+  // Validate wallet address format for public mode upfront
+  const isInvalidPublicAddress =
+    mode === "public" && effectiveAddress && !/^0x[a-fA-F0-9]{40}$/.test(effectiveAddress);
 
-    if (effectiveAddress) {
-      fetchProfile();
-    }
-  }, [effectiveAddress, isConnected, mode]);
+  const shouldSkip =
+    !effectiveAddress ||
+    (mode === "private" && !isConnected) ||
+    !!isInvalidPublicAddress;
 
-  const fetchProfile = async () => {
-    if (!effectiveAddress) return;
-
-    // Validate wallet address format for public mode
-    if (mode === "public" && !/^0x[a-fA-F0-9]{40}$/.test(effectiveAddress)) {
-      setError("Invalid wallet address format");
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const profileData = await expertApi.getProfile(effectiveAddress);
+  const { data: profile, isLoading, error: fetchError, refetch } = useFetch(
+    async () => {
+      const profileData = await expertApi.getProfile(effectiveAddress!);
 
       if (!profileData || typeof profileData !== "object") {
         throw new Error("Invalid profile data structure");
@@ -133,21 +117,27 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
       // Ensure guilds is an array
       const guilds = Array.isArray(profileData.guilds) ? profileData.guilds : [];
 
-      setProfile({
-        ...profileData,
-        guilds,
-      });
-    } catch (err: unknown) {
-      console.error("Error fetching expert profile:", err);
-      if (err instanceof ApiError && err.status === 404) {
-        setError("Expert profile not found");
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to fetch profile");
-      }
-    } finally {
-      setIsLoading(false);
+      return { ...profileData, guilds } as ExpertProfileData;
+    },
+    {
+      skip: shouldSkip,
+      onError: (message) => {
+        toast.error(message);
+      },
     }
-  };
+  );
+
+  // Refetch when the effective address changes (useFetch only runs on mount/skip change)
+  useEffect(() => {
+    if (!shouldSkip) {
+      refetch();
+    }
+  }, [effectiveAddress]);
+
+  // Map fetch error, with special handling for invalid address and 404
+  const error = isInvalidPublicAddress
+    ? "Invalid wallet address format"
+    : fetchError;
 
   const copyAddress = () => {
     if (profile?.walletAddress) {
@@ -163,7 +153,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     try {
       const newValue = !profile.showEmail;
       await expertApi.updateProfile(effectiveAddress, { showEmail: newValue });
-      setProfile((prev) => prev ? { ...prev, showEmail: newValue } : prev);
+      refetch();
       toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
     } catch {
       toast.error("Failed to update email visibility");

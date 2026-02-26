@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -22,6 +22,7 @@ import {
 import { guildApplicationsApi, expertApi } from "@/lib/api";
 import { formatDeadline } from "@/lib/utils";
 import { toast } from "sonner";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -41,78 +42,53 @@ interface ApplicationDetailPageProps {
 export default function ApplicationDetailPage({ guildId, applicationId }: ApplicationDetailPageProps) {
   const router = useRouter();
   const { address } = useAccount();
-  const [application, setApplication] = useState<GuildApplicationDetail | null>(null);
-  const [expertProfile, setExpertProfile] = useState<ExpertProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showVoteModal, setShowVoteModal] = useState(false);
   const [voteType, setVoteType] = useState<"for" | "against" | "abstain">("for");
   const [stakeAmount, setStakeAmount] = useState("");
   const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (applicationId && address) {
-      fetchApplicationDetails();
-      fetchExpertProfile();
-    }
-  }, [applicationId, address]);
-
-  const fetchApplicationDetails = async () => {
-    if (!applicationId) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const { data: application, isLoading, error, refetch: refetchApplication } = useFetch<GuildApplicationDetail>(
+    async () => {
       const result = await guildApplicationsApi.getDetails(applicationId);
+      return result as unknown as GuildApplicationDetail;
+    },
+    { skip: !applicationId || !address }
+  );
 
-      setApplication(result as unknown as GuildApplicationDetail);
-    } catch (err) {
-      console.error("Error fetching application details:", err);
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
+  const { data: expertProfile } = useFetch<ExpertProfile>(
+    async () => {
+      const result = await expertApi.getProfile(address!);
+      return result as ExpertProfile;
+    },
+    {
+      skip: !address,
+      onError: (err) => toast.error(err),
     }
-  };
+  );
 
-  const fetchExpertProfile = async () => {
-    if (!address) return;
-
-    try {
-      const result = await expertApi.getProfile(address);
-      setExpertProfile(result as ExpertProfile);
-    } catch (err) {
-      console.error("Error fetching expert profile:", err);
-    }
-  };
+  const submitVoteApi = useApi();
 
   const handleVoteSubmit = async () => {
     if (!address || !expertProfile || !application) return;
 
-    setIsSubmitting(true);
-
-    try {
-      await guildApplicationsApi.vote(application.id, {
+    await submitVoteApi.execute(
+      () => guildApplicationsApi.vote(application.id, {
         expertId: expertProfile.id,
         vote: voteType,
         stakeAmount: parseFloat(stakeAmount),
         comment: comment || undefined,
-      });
-
-      // Refresh application details
-      await fetchApplicationDetails();
-
-      setShowVoteModal(false);
-      setStakeAmount("");
-      setComment("");
-      toast.success("Vote submitted successfully!");
-    } catch (err) {
-      console.error("Error submitting vote:", err);
-      toast.error("Failed to submit vote. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          refetchApplication();
+          setShowVoteModal(false);
+          setStakeAmount("");
+          setComment("");
+          toast.success("Vote submitted successfully!");
+        },
+        onError: () => toast.error("Failed to submit vote. Please try again."),
+      }
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -428,10 +404,10 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
             </Button>
             <Button
               onClick={handleVoteSubmit}
-              disabled={isSubmitting || !stakeAmount || parseFloat(stakeAmount) < application.requiredStake}
+              disabled={submitVoteApi.isLoading || !stakeAmount || parseFloat(stakeAmount) < application.requiredStake}
               className="flex-1"
             >
-              {isSubmitting ? (
+              {submitVoteApi.isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Submitting...

@@ -20,7 +20,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public statusText: string,
-    public data?: any,
+    public data?: Record<string, unknown>,
     message?: string
   ) {
     super(message || `${status} - ${statusText}`);
@@ -32,7 +32,7 @@ export class ApiError extends Error {
   response: {
     status: number;
     statusText: string;
-    data: any;
+    data: Record<string, unknown> | undefined;
   };
 }
 
@@ -131,7 +131,7 @@ export async function apiRequest<T = unknown>(
   const url = `${API_BASE_URL}${endpoint}`;
 
   // Prepare body based on type
-  let processedBody: any = body;
+  let processedBody: BodyInit | null | undefined = body;
   if (body && !(body instanceof FormData) && typeof body === 'object') {
     processedBody = JSON.stringify(body);
   }
@@ -154,7 +154,7 @@ export async function apiRequest<T = unknown>(
       }
 
       // Try to parse error response body
-      let errorData: any = {};
+      let errorData: Record<string, unknown> = {};
       try {
         const text = await response.text();
         errorData = text ? JSON.parse(text) : {};
@@ -1149,7 +1149,7 @@ export const endorsementAccountabilityApi = {
     }),
 
   getHireOutcome: (applicationId: string) =>
-    apiRequest<Record<string, unknown>>(`/api/endorsements/hire-outcome/${applicationId}`),
+    apiRequest<import("@/types").DisputeDetail>(`/api/endorsements/hire-outcome/${applicationId}`),
 
   getExpertRewards: (expertId: string) =>
     apiRequest<Record<string, unknown>>(`/api/endorsements/rewards/${expertId}`),

@@ -3,6 +3,7 @@ import { parseEther, keccak256, toBytes, formatEther } from 'viem';
 import { useState, useEffect, useMemo } from 'react';
 import { blockchainApi } from '@/lib/api';
 import { useFetch } from '@/lib/hooks/useFetch';
+import { logger } from '@/lib/logger';
 import type { ActiveEndorsement } from '@/types';
 import {
   VETTED_TOKEN_ABI,
@@ -557,7 +558,7 @@ export function useUserEndorsements(applications: Array<{
           userEndorsements.push(endorsement);
         }
       } else if (bidInfoResult?.status === 'failure') {
-        console.error(`[useUserEndorsements] Failed to get bid info for ${app.candidate_name}:`, bidInfoResult.error);
+        logger.debug(`[useUserEndorsements] Failed to get bid info for ${app.candidate_name}:`, bidInfoResult.error);
       }
     }
 
@@ -701,7 +702,7 @@ export function useMyEndorsementHistory() {
 
         setEndorsements(endorsementHistory);
       } catch (err) {
-        console.error('[useMyEndorsementHistory] Error fetching endorsement history:', err);
+        logger.error('[useMyEndorsementHistory] Error fetching endorsement history', err, { silent: true });
         setError(err instanceof Error ? err.message : 'Failed to fetch endorsement history');
       } finally {
         setIsLoading(false);

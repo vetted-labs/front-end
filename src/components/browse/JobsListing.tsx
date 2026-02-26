@@ -19,7 +19,10 @@ import { Pagination } from "@/components/ui/pagination";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import type { Job } from "@/types";
 
 import { useGuilds } from "@/lib/hooks/useGuilds";
@@ -27,9 +30,7 @@ import { useGuilds } from "@/lib/hooks/useGuilds";
 export default function JobsListing() {
   const router = useRouter();
   const { resolveGuildId } = useGuilds();
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuilds, setSelectedGuilds] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -48,10 +49,59 @@ export default function JobsListing() {
     resetPage,
   } = useClientPagination(filteredJobs, 5);
 
+  const [locationQuery, setLocationQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedLocation = useDebounce(locationQuery, 300);
+  const [showGuildModal, setShowGuildModal] = useState(false);
+  const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
+
+  // Fetch candidate's applications if authenticated as candidate
+  useFetch(
+    () => applicationsApi.getAll(),
+    {
+      skip: !isCandidate,
+      onSuccess: (data) => {
+        const applications = data?.applications || [];
+        const jobIds = new Set<string>(applications.map((app) => app.jobId));
+        setAppliedJobIds(jobIds);
+      },
+      onError: (err) => {
+        toast.error("Failed to fetch applications");
+        logger.error("Failed to fetch applications", err, { silent: true });
+      },
+    }
+  );
+
+  // Fetch jobs listing
+  const { data: jobs, isLoading } = useFetch<Job[]>(
+    () => jobsApi.getAll({ status: 'active' }).then((data) => {
+      const jobsList = Array.isArray(data) ? data : [];
+      return jobsList.map((job) => ({
+        ...job,
+        title: job.title || 'Untitled Position',
+        description: job.description || '',
+        guild: job.guild || '',
+        department: job.department || null,
+        requirements: job.requirements || [],
+        skills: job.skills || [],
+        screeningQuestions: job.screeningQuestions || [],
+      }));
+    }),
+    {
+      onSuccess: (normalizedJobs) => {
+        setFilteredJobs(normalizedJobs);
+      },
+      onError: (err) => {
+        toast.error("Failed to load jobs");
+        logger.error("Failed to load jobs", err, { silent: true });
+      },
+    }
+  );
+
   // Get unique guilds from actual jobs data
   const allGuilds = Array.from(
     new Set(
-      jobs
+      (jobs || [])
         .map((job) => job.guild?.replace(/ Guild$/i, ''))
         .filter((g): g is string => Boolean(g))
     )
@@ -62,61 +112,8 @@ export default function JobsListing() {
   const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
   const locationTypes = ["Remote", "Onsite", "Hybrid"];
 
-  const [locationQuery, setLocationQuery] = useState("");
-  const debouncedSearch = useDebounce(searchQuery, 300);
-  const debouncedLocation = useDebounce(locationQuery, 300);
-  const [showGuildModal, setShowGuildModal] = useState(false);
-  const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
-
-  // Fetch candidate's applications if authenticated as candidate
   useEffect(() => {
-    if (!isCandidate) return;
-
-    const fetchApplications = async () => {
-      try {
-        const data = await applicationsApi.getAll();
-        const applications = data?.applications || [];
-        const jobIds = new Set<string>(applications.map((app) => app.jobId));
-        setAppliedJobIds(jobIds);
-      } catch (error) {
-        console.error("Failed to fetch applications:", error);
-      }
-    };
-
-    fetchApplications();
-  }, [isCandidate]);
-
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setIsLoading(true);
-      try {
-        const data = await jobsApi.getAll({ status: 'active' });
-        // Ensure all jobs have required fields with defaults
-        const jobsList = Array.isArray(data) ? data : [];
-        const normalizedJobs: Job[] = jobsList.map((job) => ({
-          ...job,
-          title: job.title || 'Untitled Position',
-          description: job.description || '',
-          guild: job.guild || '',
-          department: job.department || null,
-          requirements: job.requirements || [],
-          skills: job.skills || [],
-          screeningQuestions: job.screeningQuestions || [],
-        }));
-        setJobs(normalizedJobs);
-        setFilteredJobs(normalizedJobs);
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchJobs();
-  }, []);
-
-  useEffect(() => {
-    let filtered = jobs;
+    let filtered = jobs || [];
 
     // Filter by search query (debounced)
     if (debouncedSearch) {

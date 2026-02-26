@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { governanceApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
@@ -32,7 +33,7 @@ export default function GovernancePage() {
       const response = await governanceApi.getProposals(params);
       setProposals(Array.isArray(response) ? response : []);
     } catch (error: unknown) {
-      console.error("Error loading governance proposals:", error);
+      logger.error("Error loading governance proposals", error, { silent: true });
       toast.error("Failed to load proposals");
     } finally {
       setLoading(false);

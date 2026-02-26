@@ -10,6 +10,7 @@ import {
   Coins,
   ClipboardList,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { expertApi, guildApplicationsApi } from "@/lib/api";
 import { calculateTotalPoints } from "@/lib/utils";
@@ -21,19 +22,17 @@ import { WalletVerificationModal } from "@/components/WalletVerificationModal";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { DashboardNotificationsFeed } from "@/components/dashboard/DashboardNotificationsFeed";
 import { blockchainApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { keccak256, toBytes } from "viem";
 import type { ExpertProfile, ExpertGuild } from "@/types";
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [stakingStatus, setStakingStatus] = useState<{ stakedAmount: string; meetsMinimum: boolean } | null>(null);
   const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
   const [stakesLoaded, setStakesLoaded] = useState(false);
   const [assignedApplications, setAssignedApplications] = useState<import("@/types").GuildApplicationSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -49,27 +48,78 @@ export function EnhancedExpertDashboard() {
     setMounted(true);
   }, []);
 
+  // Redirect when disconnected (with debounce for chain switching)
   useEffect(() => {
     if (!mounted) return;
-    if (isConnected && address) {
-      fetchExpertProfile();
-      return;
-    }
+    if (isConnected && address) return;
     if (isDisconnecting) return;
-    // Debounce redirect — brief disconnects during chain switching shouldn't redirect
     const timer = setTimeout(() => router.push("/"), 2000);
     return () => clearTimeout(timer);
   }, [mounted, isConnected, address, isDisconnecting]);
 
-  const fetchExpertProfile = async () => {
-    if (!address) return;
-
-    setIsLoading(true);
-    setError(null);
+  const loadGuildStakes = async (guilds: ExpertGuild[], walletAddress: string) => {
     setStakesLoaded(false);
-
     try {
-      // Phase 1: Fetch profile and earnings — render immediately after
+      const batchResult = await blockchainApi.getExpertGuildStakes(walletAddress);
+      const stakesMap: Record<string, string> = {};
+      let totalStaked = 0;
+
+      if (Array.isArray(batchResult)) {
+        for (const entry of batchResult) {
+          stakesMap[entry.guildId] = entry.stakedAmount || "0";
+          totalStaked += parseFloat(entry.stakedAmount || "0");
+        }
+      } else if (batchResult && typeof batchResult === "object") {
+        for (const [guildId, amount] of Object.entries(batchResult)) {
+          const amountStr = String(amount || "0");
+          stakesMap[guildId] = amountStr;
+          totalStaked += parseFloat(amountStr);
+        }
+      }
+
+      setGuildStakes(stakesMap);
+      setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
+    } catch {
+      const stakesMap: Record<string, string> = {};
+      let totalStaked = 0;
+
+      for (let i = 0; i < guilds.length; i += 3) {
+        const batch = guilds.slice(i, i + 3);
+        const results = await Promise.all(
+          batch.map((guild: ExpertGuild) => {
+            const blockchainGuildId = keccak256(toBytes(guild.id));
+            return blockchainApi.getStakeBalance(walletAddress, blockchainGuildId)
+              .then((result) => ({
+                guildId: guild.id,
+                stakedAmount: result.stakedAmount || "0",
+              }))
+              .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
+          })
+        );
+        for (const result of results) {
+          stakesMap[result.guildId] = result.stakedAmount;
+          totalStaked += parseFloat(result.stakedAmount);
+        }
+      }
+
+      setGuildStakes(stakesMap);
+      setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
+    }
+
+    // Sync stakes to database in background (fire-and-forget)
+    for (const guild of guilds) {
+      const blockchainGuildId = keccak256(toBytes(guild.id));
+      blockchainApi.syncStake(walletAddress, blockchainGuildId).catch(() => {});
+    }
+
+    setStakesLoaded(true);
+  };
+
+  const { data: profile, isLoading, error, refetch } = useFetch(
+    async () => {
+      if (!address) throw new Error("No wallet address");
+
+      // Phase 1: Fetch profile and earnings
       const [data, earningsResult] = await Promise.all([
         expertApi.getProfile(address),
         expertApi.getEarningsBreakdown(address, { limit: 1 }).catch(() => null),
@@ -85,92 +135,52 @@ export function EnhancedExpertDashboard() {
       }
 
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];
-      const enhancedData = {
+      return {
         ...data,
-        guilds: guilds,
+        guilds,
         pendingTasks: {
           pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
           unreviewedApplicationsCount: 0,
         },
-      };
+      } as ExpertProfile;
+    },
+    {
+      skip: !mounted || !isConnected || !address,
+      onSuccess: (enhancedData) => {
+        if (!address) return;
 
-      setProfile(enhancedData);
-      setIsLoading(false); // Show the page immediately
-
-      // Fetch assigned applications in background
-      if (enhancedData.id) {
-        guildApplicationsApi.getAssigned(enhancedData.id)
-          .then((apps) => setAssignedApplications(Array.isArray(apps) ? apps : []))
-          .catch(() => setAssignedApplications([]));
-      }
-
-      // Check wallet verification in background
-      checkVerification(address).then((verified) => {
-        if (!verified) setShowVerificationModal(true);
-      });
-
-      // Phase 2: Load guild stakes progressively (page already visible)
-      if (guilds.length > 0) {
-        try {
-          const batchResult = await blockchainApi.getExpertGuildStakes(address);
-          const stakesMap: Record<string, string> = {};
-          let totalStaked = 0;
-
-          if (Array.isArray(batchResult)) {
-            for (const entry of batchResult) {
-              stakesMap[entry.guildId] = entry.stakedAmount || "0";
-              totalStaked += parseFloat(entry.stakedAmount || "0");
-            }
-          } else if (batchResult && typeof batchResult === "object") {
-            for (const [guildId, amount] of Object.entries(batchResult)) {
-              const amountStr = String(amount || "0");
-              stakesMap[guildId] = amountStr;
-              totalStaked += parseFloat(amountStr);
-            }
-          }
-
-          setGuildStakes(stakesMap);
-          setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
-        } catch {
-          const stakesMap: Record<string, string> = {};
-          let totalStaked = 0;
-
-          for (let i = 0; i < guilds.length; i += 3) {
-            const batch = guilds.slice(i, i + 3);
-            const results = await Promise.all(
-              batch.map((guild: ExpertGuild) => {
-                const blockchainGuildId = keccak256(toBytes(guild.id));
-                return blockchainApi.getStakeBalance(address, blockchainGuildId)
-                  .then((result) => ({
-                    guildId: guild.id,
-                    stakedAmount: result.stakedAmount || "0",
-                  }))
-                  .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
-              })
-            );
-            for (const result of results) {
-              stakesMap[result.guildId] = result.stakedAmount;
-              totalStaked += parseFloat(result.stakedAmount);
-            }
-          }
-
-          setGuildStakes(stakesMap);
-          setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
+        // Fetch assigned applications in background
+        if (enhancedData.id) {
+          guildApplicationsApi.getAssigned(enhancedData.id)
+            .then((apps) => setAssignedApplications(Array.isArray(apps) ? apps : []))
+            .catch(() => setAssignedApplications([]));
         }
 
-        // Sync stakes to database in background (fire-and-forget)
-        for (const guild of guilds) {
-          const blockchainGuildId = keccak256(toBytes(guild.id));
-          blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
-        }
-      }
+        // Check wallet verification in background
+        checkVerification(address).then((verified) => {
+          if (!verified) setShowVerificationModal(true);
+        });
 
-      setStakesLoaded(true);
-    } catch (err) {
-      setError((err as Error).message);
-      setIsLoading(false);
+        // Phase 2: Load guild stakes progressively (page already visible)
+        const guilds = Array.isArray(enhancedData.guilds) ? enhancedData.guilds : [];
+        if (guilds.length > 0) {
+          loadGuildStakes(guilds, address);
+        } else {
+          setStakesLoaded(true);
+        }
+      },
+      onError: (message) => {
+        toast.error(message);
+      },
     }
-  };
+  );
+
+  // Refetch when address changes
+  useEffect(() => {
+    if (mounted && isConnected && address) {
+      refetch();
+    }
+  }, [address]);
 
   const handleVerifyWallet = async () => {
     if (!address) return;
@@ -263,7 +273,7 @@ export function EnhancedExpertDashboard() {
           <ActionButtonPanel
             stakingStatus={stakingStatus ?? undefined}
             hasGuilds={profile.guilds.length > 0}
-            onRefresh={fetchExpertProfile}
+            onRefresh={refetch}
           />
         </div>
 

@@ -9,6 +9,7 @@ import { Alert } from "./ui/alert";
 import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, blockchainApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { GuildHeader } from "./guild/GuildHeader";
 // GuildApplicationSummarysTab removed - merged into Membership Reviews
 import { GuildLeaderboardTab } from "./guild/GuildLeaderboardTab";
@@ -178,8 +179,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [guild, setGuild] = useState<GuildDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const validTabs = ["feed", "membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
   type TabType = (typeof validTabs)[number];
   const initialTab = (() => {
@@ -224,124 +223,112 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
 
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchGuildDetails();
-    }
-  }, [guildId, isConnected, address]);
+  const fetchGuildData = async (walletAddress: string) => {
+    const data = await expertApi.getGuildDetails(guildId, walletAddress) as ExpertGuildDetailResponse;
+    // Find the current user's expert entry to extract personal stats
+    const currentExpert = Array.isArray(data.experts)
+      ? data.experts.find((e: ExpertMember) => e.walletAddress?.toLowerCase() === walletAddress.toLowerCase())
+      : null;
 
-  useEffect(() => {
-    if (isConnected && address && activeTab === "leaderboard" && guild &&
-        leaderboardData.topExperts.length === 0 && !isLoadingLeaderboard) {
-      fetchLeaderboard();
-    }
-  }, [activeTab, guildId, isConnected, address, guild]);
-  // Note: leaderboardPeriod removed - backend doesn't support period filtering yet
+    const earningsRaw = data.earnings ?? {
+      totalPoints: currentExpert?.reputation ?? 0,
+      totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
+      recentEarnings: [] as Earnings["recentEarnings"],
+    };
+    const earningsItems: Earnings["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
+      ? earningsRaw.recentEarnings as Earnings["recentEarnings"]
+      : [];
+    const earnings: Earnings = {
+      totalPoints: earningsRaw.totalPoints || earningsItems.filter(e => e.type === "proposal").reduce((s, e) => s + e.amount, 0),
+      totalEndorsementEarnings: earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0),
+      recentEarnings: earningsItems,
+    };
 
-  const fetchGuildDetails = async (silent = false) => {
-    if (!address) return;
+    const normalized: GuildDetail & { blockchainGuildId?: string } = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      experts: Array.isArray(data.experts) ? data.experts : [],
+      candidates: Array.isArray(data.candidates) ? data.candidates : [],
+      recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
+      guildApplications: Array.isArray(data.guildApplications) ? data.guildApplications : [],
+      applications: Array.isArray(data.applications) ? data.applications : [],
+      recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : [],
+      memberCount: data.memberCount ?? data.totalMembers ?? 0,
+      expertRole: data.expertRole ?? currentExpert?.role ?? "member",
+      reputation: data.reputation ?? currentExpert?.reputation ?? 0,
+      earnings,
+      proposals: { pending: [], ongoing: [], closed: [] },
+      totalProposalsReviewed: data.totalProposalsReviewed ?? data.statistics?.vettedProposals ?? 0,
+      averageApprovalTime: data.averageApprovalTime ?? "—",
+      candidateCount: data.candidateCount ?? 0,
+      openPositions: data.openPositions ?? 0,
+      totalVetdStaked: data.totalVetdStaked ?? data.statistics?.totalVetdStaked ?? 0,
+      blockchainGuildId: data.blockchainGuildId,
+    };
 
-    if (!silent) setIsLoading(true);
-    setError(null);
+    const needsPublicFallback =
+      normalized.experts.length === 0 ||
+      normalized.candidates.length === 0 ||
+      normalized.recentJobs.length === 0;
 
-    try {
-      const data = await expertApi.getGuildDetails(guildId, address) as ExpertGuildDetailResponse;
-      // Find the current user's expert entry to extract personal stats
-      const currentExpert = Array.isArray(data.experts)
-        ? data.experts.find((e: ExpertMember) => e.walletAddress?.toLowerCase() === address.toLowerCase())
-        : null;
+    if (needsPublicFallback) {
+      try {
+        const publicData = await guildsApi.getPublicDetail(guildId);
 
-      const earningsRaw = data.earnings ?? {
-        totalPoints: currentExpert?.reputation ?? 0,
-        totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
-        recentEarnings: [] as Earnings["recentEarnings"],
-      };
-      const earningsItems: Earnings["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
-        ? earningsRaw.recentEarnings as Earnings["recentEarnings"]
-        : [];
-      const earnings: Earnings = {
-        totalPoints: earningsRaw.totalPoints || earningsItems.filter(e => e.type === "proposal").reduce((s, e) => s + e.amount, 0),
-        totalEndorsementEarnings: earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0),
-        recentEarnings: earningsItems,
-      };
+        normalized.experts =
+          normalized.experts.length > 0
+            ? normalized.experts
+            : Array.isArray(publicData.experts)
+              ? publicData.experts
+              : normalized.experts;
+        normalized.candidates =
+          normalized.candidates.length > 0
+            ? normalized.candidates
+            : Array.isArray(publicData.candidates)
+              ? publicData.candidates
+              : normalized.candidates;
+        normalized.recentJobs =
+          normalized.recentJobs.length > 0
+            ? normalized.recentJobs
+            : Array.isArray(publicData.recentJobs)
+              ? publicData.recentJobs
+              : normalized.recentJobs;
 
-      const normalized: GuildDetail & { blockchainGuildId?: string } = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        experts: Array.isArray(data.experts) ? data.experts : [],
-        candidates: Array.isArray(data.candidates) ? data.candidates : [],
-        recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
-        guildApplications: Array.isArray(data.guildApplications) ? data.guildApplications : [],
-        applications: Array.isArray(data.applications) ? data.applications : [],
-        recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : [],
-        memberCount: data.memberCount ?? data.totalMembers ?? 0,
-        expertRole: data.expertRole ?? currentExpert?.role ?? "member",
-        reputation: data.reputation ?? currentExpert?.reputation ?? 0,
-        earnings,
-        proposals: { pending: [], ongoing: [], closed: [] },
-        totalProposalsReviewed: data.totalProposalsReviewed ?? data.statistics?.vettedProposals ?? 0,
-        averageApprovalTime: data.averageApprovalTime ?? "—",
-        candidateCount: data.candidateCount ?? 0,
-        openPositions: data.openPositions ?? 0,
-        totalVetdStaked: data.totalVetdStaked ?? data.statistics?.totalVetdStaked ?? 0,
-        blockchainGuildId: data.blockchainGuildId,
-      };
-
-      const needsPublicFallback =
-        normalized.experts.length === 0 ||
-        normalized.candidates.length === 0 ||
-        normalized.recentJobs.length === 0;
-
-      if (needsPublicFallback) {
-        try {
-          const publicData = await guildsApi.getPublicDetail(guildId);
-
-          normalized.experts =
-            normalized.experts.length > 0
-              ? normalized.experts
-              : Array.isArray(publicData.experts)
-                ? publicData.experts
-                : normalized.experts;
-          normalized.candidates =
-            normalized.candidates.length > 0
-              ? normalized.candidates
-              : Array.isArray(publicData.candidates)
-                ? publicData.candidates
-                : normalized.candidates;
-          normalized.recentJobs =
-            normalized.recentJobs.length > 0
-              ? normalized.recentJobs
-              : Array.isArray(publicData.recentJobs)
-                ? publicData.recentJobs
-                : normalized.recentJobs;
-
-          normalized.description = normalized.description || publicData.description;
-          normalized.memberCount =
-            normalized.memberCount ??
-            publicData.totalMembers ??
-            publicData.memberCount ??
-            (normalized.experts.length + normalized.candidates.length);
-          normalized.candidateCount =
-            normalized.candidateCount ??
-            publicData.candidateCount ??
-            normalized.candidates.length;
-          normalized.openPositions =
-            normalized.openPositions ??
-            publicData.openPositions ??
-            normalized.recentJobs.length;
-          normalized.totalProposalsReviewed =
-            normalized.totalProposalsReviewed ?? publicData.totalProposalsReviewed ?? 0;
-          normalized.averageApprovalTime =
-            normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "—";
-        } catch {
-          // Non-critical — public stats won't show but page is still usable
-        }
+        normalized.description = normalized.description || publicData.description;
+        normalized.memberCount =
+          normalized.memberCount ??
+          publicData.totalMembers ??
+          publicData.memberCount ??
+          (normalized.experts.length + normalized.candidates.length);
+        normalized.candidateCount =
+          normalized.candidateCount ??
+          publicData.candidateCount ??
+          normalized.candidates.length;
+        normalized.openPositions =
+          normalized.openPositions ??
+          publicData.openPositions ??
+          normalized.recentJobs.length;
+        normalized.totalProposalsReviewed =
+          normalized.totalProposalsReviewed ?? publicData.totalProposalsReviewed ?? 0;
+        normalized.averageApprovalTime =
+          normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "—";
+      } catch {
+        // Non-critical — public stats won't show but page is still usable
       }
+    }
+
+    return { normalized, bcGuildId: normalized.blockchainGuildId || data.blockchainGuildId };
+  };
+
+  const { isLoading, error, refetch } = useFetch(
+    async () => {
+      if (!address) throw new Error("No wallet address");
+
+      const { normalized, bcGuildId } = await fetchGuildData(address);
       setGuild(normalized);
 
       // Store blockchain guild ID for staking checks
-      const bcGuildId = normalized.blockchainGuildId || data.blockchainGuildId;
       if (bcGuildId) setGuildBlockchainId(bcGuildId);
 
       // Fetch staking status (pass guild-specific blockchain ID if available)
@@ -357,17 +344,35 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       try {
         const candidateApps = await guildsApi.getCandidateApplications(guildId, address) as CandidateApplicationForReview[] ?? [];
         setCandidateApplications(Array.isArray(candidateApps) ? candidateApps : []);
-      } catch (candidateErr) {
+      } catch {
         setCandidateApplications([]);
         toast.warning("Could not load candidate applications");
       }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to fetch guild details";
-      setError(message);
-    } finally {
-      setIsLoading(false);
+
+      return normalized;
+    },
+    {
+      skip: !isConnected || !address,
+      onError: (message) => {
+        toast.error(message);
+      },
     }
-  };
+  );
+
+  // Refetch when guildId or address changes
+  useEffect(() => {
+    if (isConnected && address) {
+      refetch();
+    }
+  }, [guildId, address]);
+
+  useEffect(() => {
+    if (isConnected && address && activeTab === "leaderboard" && guild &&
+        leaderboardData.topExperts.length === 0 && !isLoadingLeaderboard) {
+      fetchLeaderboard();
+    }
+  }, [activeTab, guildId, isConnected, address, guild]);
+  // Note: leaderboardPeriod removed - backend doesn't support period filtering yet
 
   useEffect(() => {
     if (!guild || autoOpenedReview) return;
@@ -486,10 +491,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       setShowStakeModal(false);
       setSelectedApplication(null);
-      fetchGuildDetails();
+      refetch();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to stake on application";
-      setError(message);
+      toast.error(message);
     } finally {
       setIsStaking(false);
     }
@@ -504,10 +509,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         endorse,
       });
 
-      fetchGuildDetails();
+      refetch();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to endorse candidate";
-      setError(message);
+      toast.error(message);
     }
   };
 
@@ -624,8 +629,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         recentActivity: [newActivity, ...(prev.recentActivity || [])],
       } : prev);
 
-      fetchGuildDetails(true);
-      setTimeout(() => fetchGuildDetails(true), 3000);
+      refetch();
+      setTimeout(() => refetch(), 3000);
 
       return response;
     } catch (err: unknown) {
@@ -642,11 +647,19 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setSelectedExpertMembershipApplication(null);
   };
 
-  if (isLoading) {
+  if (isLoading && !guild) {
     return null;
   }
 
-  if (error || !guild) {
+  if (error && !guild) {
+    return (
+      <div className="flex items-center justify-center px-4">
+        <Alert variant="error">{error}</Alert>
+      </div>
+    );
+  }
+
+  if (!guild) {
     return (
       <div className="flex items-center justify-center px-4">
         <Alert variant="error">{error || "Failed to load guild details"}</Alert>
@@ -801,7 +814,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       <StakingModal
         isOpen={showVetdStakingModal}
         onClose={() => setShowVetdStakingModal(false)}
-        onSuccess={() => fetchGuildDetails()}
+        onSuccess={() => refetch()}
         preselectedGuildId={guildId}
       />
       </div>

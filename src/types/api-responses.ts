@@ -227,6 +227,39 @@ export interface ActiveEndorsement {
   };
 }
 
+// --- Endorsement Disputes ---
+export interface DisputePanelMember {
+  id: string;
+  expertWallet: string;
+  expertName?: string;
+  hasVoted: boolean;
+  vote?: "uphold" | "dismiss";
+}
+
+export interface DisputeDetail {
+  id: string;
+  status: string;
+  reason: string;
+  evidence?: string;
+  filed_by: string;
+  filed_at: string;
+  deadline: string;
+  candidateName?: string;
+  jobTitle?: string;
+  guildName?: string;
+  hireDate?: string;
+  panelMembers: DisputePanelMember[];
+  totalPanelSize: number;
+  votesSubmitted: number;
+  upholdCount: number;
+  dismissCount: number;
+  isOnPanel?: boolean;
+  hasVoted?: boolean;
+  myVote?: string;
+  resolution?: "upheld" | "dismissed";
+  resolvedAt?: string;
+}
+
 // --- Expert Earnings / Reputation ---
 export interface EarningsBreakdown {
   entries: Array<{

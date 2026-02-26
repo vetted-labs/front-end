@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  TrendingUp,
-  TrendingDown,
   Users,
   Briefcase,
   Eye,
@@ -14,8 +12,10 @@ import {
   BarChart3,
   Filter,
 } from "lucide-react";
+import { toast } from "sonner";
 import { jobsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { Pagination } from "@/components/ui/pagination";
 import type { Job } from "@/types";
 
@@ -60,76 +60,73 @@ function JobStatusBadge({ status }: { status: string }) {
 export default function AnalyticsPage() {
   const router = useRouter();
   const auth = useAuthContext();
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [jobsPage, setJobsPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check authentication
-    const companyId = localStorage.getItem("companyId");
-    if (!companyId) {
-      router.push("/auth/login?type=company");
-      return;
-    }
-    setJobsPage(1);
-    fetchAnalytics();
-  }, [router, filterStatus]);
+  const companyId = auth.userId;
 
-  const fetchAnalytics = async () => {
-    setIsLoading(true);
-    try {
-      const companyId = localStorage.getItem("companyId");
-      if (!companyId) return;
+  const { data: fetchResult, isLoading, refetch } = useFetch<{ jobs: Job[]; analytics: AnalyticsData }>(
+    async () => {
+      if (!companyId) throw new Error("Not authenticated");
 
-      // Fetch jobs for this company
       const jobsResponse = await jobsApi.getAll({
         status: filterStatus !== "all" ? filterStatus : undefined,
         companyId: companyId,
       });
       const jobsData = Array.isArray(jobsResponse) ? jobsResponse : [];
 
-      if (Array.isArray(jobsData)) {
-        setJobs(jobsData);
+      // Calculate real analytics from jobs data
+      const totalApplications = jobsData.reduce((sum, job) => sum + (job.applicants || 0), 0);
+      const activeJobsCount = jobsData.filter(job => job.status === "active").length;
 
-        // Calculate real analytics from jobs data
-        const totalApplications = jobsData.reduce((sum, job) => sum + (job.applicants || 0), 0);
-        const activeJobsCount = jobsData.filter(job => job.status === "active").length;
-        const totalViews = jobsData.reduce((sum, job) => sum + (job.views || 0), 0);
+      // Estimate application distribution (40% pending, 30% reviewing, 15% accepted, 15% rejected)
+      const estimatedStats = {
+        pending: Math.floor(totalApplications * 0.4),
+        reviewing: Math.floor(totalApplications * 0.3),
+        accepted: Math.floor(totalApplications * 0.15),
+        rejected: Math.floor(totalApplications * 0.15),
+      };
 
-        // Estimate application distribution (40% pending, 30% reviewing, 15% accepted, 15% rejected)
-        const estimatedStats = {
-          pending: Math.floor(totalApplications * 0.4),
-          reviewing: Math.floor(totalApplications * 0.3),
-          accepted: Math.floor(totalApplications * 0.15),
-          rejected: Math.floor(totalApplications * 0.15),
-        };
+      const realAnalytics: AnalyticsData = {
+        totalApplications,
+        applicationsChange: 0,
+        totalHires: estimatedStats.accepted,
+        hiresChange: 0,
+        activeJobs: activeJobsCount,
+        jobsChange: 0,
+        avgTimeToHire: 14, // TODO: Get from backend dashboard stats
+        timeToHireChange: 0,
+        applicationsByMonth: [
+          // TODO: Calculate from actual application dates when available
+          { month: "This month", applications: totalApplications },
+        ],
+        applicationsByStatus: estimatedStats,
+      };
 
-        const realAnalytics: AnalyticsData = {
-          totalApplications: totalApplications,
-          applicationsChange: 0, // We don't have historical data yet
-          totalHires: estimatedStats.accepted,
-          hiresChange: 0,
-          activeJobs: activeJobsCount,
-          jobsChange: 0,
-          avgTimeToHire: 14, // TODO: Get from backend dashboard stats
-          timeToHireChange: 0,
-          applicationsByMonth: [
-            // TODO: Calculate from actual application dates when available
-            { month: "This month", applications: totalApplications },
-          ],
-          applicationsByStatus: estimatedStats,
-        };
-
-        setAnalytics(realAnalytics);
-      }
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setIsLoading(false);
+      return { jobs: jobsData, analytics: realAnalytics };
+    },
+    {
+      skip: !companyId,
+      onError: () => toast.error("Failed to load analytics"),
     }
-  };
+  );
+
+  // Refetch when filterStatus changes
+  useEffect(() => {
+    setJobsPage(1);
+    refetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!companyId) {
+      router.push("/auth/login?type=company");
+    }
+  }, [companyId, router]);
+
+  const jobs = fetchResult?.jobs ?? [];
+  const analytics = fetchResult?.analytics ?? null;
 
   if (isLoading) {
     return null;

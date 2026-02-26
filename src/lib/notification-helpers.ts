@@ -7,6 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Notification } from "@/types";
+import { logger } from "@/lib/logger";
 
 export type { Notification };
 
@@ -77,7 +78,7 @@ export function buildNotificationUrl(notification: Notification): string {
     }
     return url.pathname + url.search;
   } catch {
-    console.warn("Invalid notification link:", notification.link);
+    logger.warn("Invalid notification link", notification.link, { silent: true });
     return NOTIFICATION_FALLBACK_URL;
   }
 }

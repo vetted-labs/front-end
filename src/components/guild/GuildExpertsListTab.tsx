@@ -1,6 +1,7 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Star, Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
 import type { ExpertMember } from "@/types";
 
@@ -70,7 +71,12 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
         ))}
       </div>
       {(experts || []).length === 0 && (
-        <p className="text-center text-muted-foreground py-12">No experts in this guild yet</p>
+        <EmptyState
+          icon={Users}
+          title="No experts in this guild yet"
+          description="Be the first to join this guild as an expert."
+          className="py-12"
+        />
       )}
     </div>
   );

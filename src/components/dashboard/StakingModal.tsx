@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
@@ -136,7 +137,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       if (address && selectedGuild) {
         blockchainApi.syncStake(address, selectedGuild.blockchainGuildId)
           .catch((err) => {
-            console.error("Failed to sync stake to database:", err);
+            logger.error("Failed to sync stake to database", err);
           });
       }
     }
@@ -151,7 +152,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
 
       setTxStatus("error");
       setTxErrorMessage(errorMessage);
-      console.error("Transaction error:", txErrorDetails);
+      logger.error("Transaction error", txErrorDetails, { silent: true });
     }
   }, [txError, txHash, step, txErrorDetails]);
 
@@ -207,7 +208,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       const hash = await stake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
     } catch (error: unknown) {
-      console.error("Staking error:", error);
+      logger.error("Staking error", error, { silent: true });
 
       if (isUserRejection(error)) {
         toast.error("Transaction rejected");
@@ -259,7 +260,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       const hash = await requestUnstake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
     } catch (error: unknown) {
-      console.error("Withdrawal error:", error);
+      logger.error("Withdrawal error", error, { silent: true });
 
       if (isUserRejection(error)) {
         toast.error("Transaction rejected by user");

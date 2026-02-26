@@ -15,6 +15,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { applicationsApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { truncateAddress, ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -95,7 +96,7 @@ export function CandidateDetailModal({
       setNotesSaved(true);
       setTimeout(() => setNotesSaved(false), 2000);
     } catch (error) {
-      console.error("Error saving notes:", error);
+      logger.error("Error saving notes", error, { silent: true });
       toast.error("Failed to save notes");
     } finally {
       setIsSavingNotes(false);

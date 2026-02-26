@@ -14,6 +14,7 @@ import {
   ArrowRight,
   X
 } from 'lucide-react';
+import { logger } from "@/lib/logger";
 import type { EndorsementApplication } from "@/types";
 
 type TransactionStep = 'input' | 'approving' | 'bidding' | 'success' | 'error';
@@ -103,7 +104,7 @@ export function EndorsementTransactionModal({
       setErrorMessage('');
       await onPlaceEndorsement(application, bidAmount);
     } catch (error: unknown) {
-      console.error('[Modal] Error:', error);
+      logger.error("Failed to place endorsement", error, { silent: true });
       setErrorMessage(error instanceof Error ? error.message : "Failed to place endorsement");
     }
   };

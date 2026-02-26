@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
   Users,
@@ -11,6 +11,9 @@ import {
   Building2,
 } from "lucide-react";
 import { jobsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface FeaturedJob {
   id: string;
@@ -32,51 +35,37 @@ interface TalentMetrics {
 }
 
 export default function BrowsePage() {
-  const [featuredJobs, setFeaturedJobs] = useState<FeaturedJob[]>([]);
-  const [metrics, setMetrics] = useState<TalentMetrics>({
-    totalHired: 0,
-    activeJobs: 0,
-    totalCandidates: 0,
-    averageSalary: 0,
+  const [metrics] = useState<TalentMetrics>({
+    // Mock metrics - in production, fetch from API
+    totalHired: 1247,
+    activeJobs: 89,
+    totalCandidates: 3542,
+    averageSalary: 125000,
   });
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch featured jobs (active jobs)
-        const response = await jobsApi.getAll({ status: 'active' });
-        const jobs = Array.isArray(response) ? response : [];
-        // Ensure all jobs have required fields with defaults
-        const normalizedJobs: FeaturedJob[] = jobs.map((job) => ({
-          id: job.id,
-          title: job.title || 'Untitled Position',
-          description: job.description || '',
-          guild: job.guild || '',
-          department: job.department || null,
-          location: job.location,
-          type: job.type,
-          salary: job.salary,
-          companyName: job.companyName,
-        }));
-        setFeaturedJobs(normalizedJobs.slice(0, 6)); // Show top 6 featured jobs
-
-        // Mock metrics - in production, fetch from API
-        setMetrics({
-          totalHired: 1247,
-          activeJobs: 89,
-          totalCandidates: 3542,
-          averageSalary: 125000,
-        });
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { data: featuredJobs, isLoading } = useFetch<FeaturedJob[]>(
+    () => jobsApi.getAll({ status: 'active' }).then((response) => {
+      const jobs = Array.isArray(response) ? response : [];
+      const normalizedJobs: FeaturedJob[] = jobs.map((job) => ({
+        id: job.id,
+        title: job.title || 'Untitled Position',
+        description: job.description || '',
+        guild: job.guild || '',
+        department: job.department || null,
+        location: job.location,
+        type: job.type,
+        salary: job.salary,
+        companyName: job.companyName,
+      }));
+      return normalizedJobs.slice(0, 6); // Show top 6 featured jobs
+    }),
+    {
+      onError: (err) => {
+        toast.error("Failed to load data");
+        logger.error("Failed to load featured jobs", err, { silent: true });
+      },
+    }
+  );
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -182,7 +171,7 @@ export default function BrowsePage() {
             </Link>
           </div>
 
-          {isLoading ? null : featuredJobs.length > 0 ? (
+          {isLoading ? null : featuredJobs && featuredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.map((job) => (
                 <Link

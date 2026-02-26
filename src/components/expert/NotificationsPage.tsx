@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -9,6 +9,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { notificationsApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { toast } from "sonner";
 
 const NOTIFICATIONS_PER_PAGE = 20;
 import { NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
@@ -29,40 +32,22 @@ export default function NotificationsPage() {
   const { address, isConnected } = useAccount();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchNotifications();
+  const { isLoading, error } = useFetch(
+    () => notificationsApi.getNotifications(address!, { limit: NOTIFICATIONS_PER_PAGE, offset: 0 }),
+    {
+      skip: !isConnected || !address,
+      onSuccess: (result) => {
+        const notificationsData = Array.isArray(result) ? result : (result?.notifications ?? []);
+        setAllNotifications(notificationsData);
+        setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
+      },
     }
-  }, [isConnected, address]); // Removed activeFilter from dependencies
-
-  const fetchNotifications = async () => {
-    if (!address) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const filters: { limit: number; offset: number } = { limit: NOTIFICATIONS_PER_PAGE, offset: 0 };
-
-      const result = await notificationsApi.getNotifications(address, filters);
-
-      const notificationsData = Array.isArray(result) ? result : (result?.notifications ?? []);
-      setAllNotifications(notificationsData);
-      setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  );
 
   const loadMore = useCallback(async () => {
     if (!address || isLoadingMore || !hasMore) return;
@@ -82,7 +67,8 @@ export default function NotificationsPage() {
         setHasMore(moreData.length >= NOTIFICATIONS_PER_PAGE);
       }
     } catch (err) {
-      console.error("Error loading more notifications:", err);
+      logger.error("Error loading more notifications", err, { silent: true });
+      toast.error(err instanceof Error ? err.message : "Failed to load more notifications");
     } finally {
       setIsLoadingMore(false);
     }
@@ -111,7 +97,8 @@ export default function NotificationsPage() {
       const navUrl = buildNotificationUrl(notification);
       router.push(navUrl);
     } catch (err) {
-      console.error("Error marking notification as read:", err);
+      logger.error("Error marking notification as read", err, { silent: true });
+      toast.error(err instanceof Error ? err.message : "Failed to mark notification as read");
       setClickedNotificationId(null);
       // Still navigate even if marking as read fails
       const navUrl = buildNotificationUrl(notification);
@@ -133,8 +120,8 @@ export default function NotificationsPage() {
       setAllNotifications((prev) => prev.map(updateFn));
       window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
     } catch (err) {
-      console.error("Error marking all as read:", err);
-      setError("Failed to mark all notifications as read");
+      logger.error("Error marking all as read", err, { silent: true });
+      toast.error(err instanceof Error ? err.message : "Failed to mark all notifications as read");
     } finally {
       setIsMarkingAllRead(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Star, Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { CandidateMember } from "@/types";
 
 interface GuildCandidatesListTabProps {
@@ -52,7 +53,12 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
         ))}
       </div>
       {(!candidates || candidates.length === 0) && (
-        <p className="text-center text-muted-foreground py-12">No candidates in this guild yet</p>
+        <EmptyState
+          icon={Users}
+          title="No candidates in this guild yet"
+          description="Candidates will appear here once they join the guild."
+          className="py-12"
+        />
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { apiRequest, ApiError } from '@/lib/api';
 import { CandidateProfileView } from '@/components/CandidateProfileView';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import type { CandidateProfile } from '@/types';
 
 
@@ -29,7 +30,7 @@ export default function CandidateProfilePage() {
       setProfile(data);
       setViewerType(data.viewerType || '');
     } catch (error: unknown) {
-      console.error('Failed to load profile:', error);
+      logger.error('Failed to load profile', error, { silent: true });
 
       if (error instanceof ApiError && error.status === 404) {
         toast.error('Candidate not found');

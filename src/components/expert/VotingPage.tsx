@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { guildApplicationsApi, expertApi, blockchainApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { formatDeadline } from "@/lib/utils";
 import { Pagination } from "@/components/ui/pagination";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import {
   Card,
   CardContent,
@@ -46,15 +48,31 @@ export default function VotingPage() {
   const router = useRouter();
   const { address } = useAccount();
   const { guilds: guildRecords } = useGuilds();
-  const [expertData, setExpertData] = useState<ExpertProfile | null>(null);
-  const [stakingStatus, setStakingStatus] = useState<StakeBalance | null>(null);
   const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string } | null>(null);
   const [applications, setApplications] = useState<GuildApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<string | null>(null);
-  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [filterMode, setFilterMode] = useState<"assigned" | "all">("assigned");
+
+  // Data fetches via useFetch
+  const { data: expertData } = useFetch<ExpertProfile>(
+    () => expertApi.getProfile(address as string),
+    {
+      skip: !address,
+      onError: (err) => toast.error(err),
+    }
+  );
+
+  const { data: stakingStatus } = useFetch<StakeBalance>(
+    () => blockchainApi.getStakeBalance(address as string),
+    { skip: !address }
+    // Endpoint may not be available yet — staking check is non-blocking
+  );
+
+  // Mutations via useApi
+  const voteApi = useApi();
+  const createApi = useApi();
 
   const {
     paginatedItems: paginatedApplications,
@@ -64,8 +82,6 @@ export default function VotingPage() {
     resetPage,
   } = useClientPagination(applications, 10);
 
-  // Remove old simple form state (now handled by StructuredProposalForm)
-
   // Auto-select first guild once loaded
   useEffect(() => {
     if (guildRecords.length > 0 && !selectedGuild) {
@@ -74,36 +90,11 @@ export default function VotingPage() {
   }, [guildRecords, selectedGuild]);
 
   useEffect(() => {
-    if (address) {
-      loadExpertData();
-      loadStakingStatus();
-    }
-  }, [address]);
-
-  useEffect(() => {
     if (selectedGuild) {
       resetPage();
       loadApplications();
     }
   }, [selectedGuild, filterMode, expertData]);
-
-  const loadExpertData = async () => {
-    try {
-      const response = await expertApi.getProfile(address as string);
-      setExpertData(response);
-    } catch (error) {
-      console.error("Error loading expert data:", error);
-    }
-  };
-
-  const loadStakingStatus = async () => {
-    try {
-      const response = await blockchainApi.getStakeBalance(address as string);
-      setStakingStatus(response);
-    } catch {
-      // Endpoint may not be available yet — staking check is non-blocking
-    }
-  };
 
   const loadApplications = async () => {
     if (!selectedGuild) return;
@@ -120,7 +111,7 @@ export default function VotingPage() {
         setApplications(response);
       }
     } catch (error) {
-      console.error("Error loading proposals:", error);
+      logger.error("Error loading proposals", error, { silent: true });
       toast.error(error instanceof Error ? error.message : "Failed to load applications");
     } finally {
       setLoading(false);
@@ -139,24 +130,22 @@ export default function VotingPage() {
       return;
     }
 
-    try {
-      setIsSubmittingVote(true);
-      await guildApplicationsApi.vote(proposalId, {
+    await voteApi.execute(
+      () => guildApplicationsApi.vote(proposalId, {
         expertId: expertData.id,
-        score, // New: numeric score instead of vote
+        score,
         stakeAmount,
         comment,
-      });
-
-      toast.success("Score submitted successfully!");
-      setVoting(null);
-      loadApplications();
-    } catch (error) {
-      console.error("Vote error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to submit score");
-    } finally {
-      setIsSubmittingVote(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          toast.success("Score submitted successfully!");
+          setVoting(null);
+          loadApplications();
+        },
+        onError: (err) => toast.error(err),
+      }
+    );
   };
 
   const meetsStakingRequirement = (): boolean => {
@@ -165,8 +154,9 @@ export default function VotingPage() {
 
   const handleCreateProposal = async (data: StructuredProposalData) => {
     if (!selectedGuild) return;
-    try {
-      await guildApplicationsApi.create({
+
+    await createApi.execute(
+      () => guildApplicationsApi.create({
         guildId: selectedGuild.id,
         candidateName: data.candidateName,
         candidateEmail: data.candidateEmail,
@@ -178,15 +168,16 @@ export default function VotingPage() {
         achievements: data.achievements,
         requiredStake: data.requiredStake,
         votingDurationDays: data.votingDurationDays,
-      });
-
-      toast.success("Application created successfully!");
-      setShowCreateForm(false);
-      loadApplications();
-    } catch (error) {
-      console.error("Create application error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create application");
-    }
+      }),
+      {
+        onSuccess: () => {
+          toast.success("Application created successfully!");
+          setShowCreateForm(false);
+          loadApplications();
+        },
+        onError: (err) => toast.error(err),
+      }
+    );
   };
 
   return (
@@ -430,7 +421,7 @@ export default function VotingPage() {
                               handleVote(proposal.id, score, stakeAmount, comment)
                             }
                             onCancel={() => setVoting(null)}
-                            isSubmitting={isSubmittingVote}
+                            isSubmitting={voteApi.isLoading}
                           />
                         </div>
                       )}

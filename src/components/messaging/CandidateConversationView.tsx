@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation, Message } from "@/types";
@@ -33,7 +34,7 @@ export default function CandidateConversationView() {
       await messagingApi.markAsRead(conversationId).catch(() => {});
       window.dispatchEvent(new Event(MESSAGE_READ_EVENT));
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+      logger.error("Error fetching conversation", error, { silent: true });
       toast.error("Failed to load conversation");
     } finally {
       setIsLoading(false);
@@ -51,7 +52,7 @@ export default function CandidateConversationView() {
       const newMsg = await messagingApi.sendMessage(conversationId, content);
       setMessages((prev) => [...prev, newMsg]);
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message", error, { silent: true });
       toast.error("Failed to send message");
     }
   };
@@ -73,7 +74,7 @@ export default function CandidateConversationView() {
       // Refetch to get updated meeting statuses
       await fetchConversation();
     } catch (error) {
-      console.error("Error responding to meeting:", error);
+      logger.error("Error responding to meeting", error, { silent: true });
       toast.error("Failed to respond to meeting. Please try again.");
     }
   };
@@ -97,7 +98,7 @@ export default function CandidateConversationView() {
       setProposeModalMeetingId(null);
       await fetchConversation();
     } catch (error) {
-      console.error("Error proposing new time:", error);
+      logger.error("Error proposing new time", error, { silent: true });
       toast.error("Failed to propose new time. Please try again.");
     } finally {
       setIsProposing(false);

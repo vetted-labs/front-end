@@ -9,6 +9,8 @@ import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
 import { expertApi, guildsApi, ApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 import type { GuildApplicationTemplate, GuildDomainLevel, GuildDomainTopic } from "@/types";
 
 export type FieldErrors = Record<string, string>;
@@ -131,7 +133,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
           }
         }
       } catch (err) {
-        console.error("Failed to load guilds:", err);
+        logger.error("Failed to load guilds", err, { silent: true });
+        toast.error("Failed to load guilds. Please refresh the page.");
       }
     };
 
@@ -316,7 +319,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       );
       setGeneralTemplate(data);
     } catch (err) {
-      console.error("Failed to load general template:", err);
+      logger.error("Failed to load general template", err, { silent: true });
+      toast.error("Failed to load application template.");
     } finally {
       setLoadingTemplates(false);
     }
@@ -341,7 +345,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
         setLevelAnswers(initAnswers);
       }
     } catch (err) {
-      console.error("Failed to load level template:", err);
+      logger.error("Failed to load level template", err, { silent: true });
+      toast.error("Failed to load level template.");
     } finally {
       setLoadingTemplates(false);
     }

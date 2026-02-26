@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Users, Award, TrendingUp, CheckCircle, Star, Wallet, ChevronDown } from "lucide-react";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ExpertMember, CandidateMember } from "@/types";
 
 const MEMBERS_PER_SECTION = 12;
@@ -155,15 +156,14 @@ export function GuildMembersTab({
             )}
           </>
           ) : (
-            <div className="text-center py-16">
-              <Award className="w-20 h-20 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-lg text-muted-foreground mb-2">No experts listed yet</p>
-              <p className="text-sm text-muted-foreground">
-                {displayExpertsCount > 0
-                  ? "Member roster is syncing. Check back shortly."
-                  : "Be the first to join this guild as an expert."}
-              </p>
-            </div>
+            <EmptyState
+              icon={Award}
+              title="No experts listed yet"
+              description={displayExpertsCount > 0
+                ? "Member roster is syncing. Check back shortly."
+                : "Be the first to join this guild as an expert."}
+              className="py-16"
+            />
           )}
         </div>
       )}
@@ -233,15 +233,14 @@ export function GuildMembersTab({
             )}
             </>
           ) : (
-            <div className="text-center py-16">
-              <Users className="w-20 h-20 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-lg text-muted-foreground mb-2">No candidates listed yet</p>
-              <p className="text-sm text-muted-foreground">
-                {displayCandidatesCount > 0
-                  ? "Member roster is syncing. Check back shortly."
-                  : "Be the first to join this guild as a candidate."}
-              </p>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="No candidates listed yet"
+              description={displayCandidatesCount > 0
+                ? "Member roster is syncing. Check back shortly."
+                : "Be the first to join this guild as a candidate."}
+              className="py-16"
+            />
           )}
         </div>
       )}

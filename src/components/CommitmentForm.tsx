@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Check, Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { commitRevealApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 interface CommitmentFormProps {
   applicationId: string;
@@ -63,7 +64,7 @@ export function CommitmentForm({
       toast.success("Commitment submitted! Save your nonce for the reveal phase.");
       onSubmit();
     } catch (error: unknown) {
-      console.error("Commitment error:", error);
+      logger.error("Commitment error", error, { silent: true });
       toast.error(error instanceof Error ? error.message : "Failed to submit commitment");
     } finally {
       setIsSubmitting(false);

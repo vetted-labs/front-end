@@ -7,6 +7,7 @@ import {
 } from "@/lib/hooks/useVettedContracts";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 /** Shape expected by the hook for the application being endorsed. */
 export interface EndorsableApplication {
@@ -125,7 +126,7 @@ export function useEndorsementTransaction(
         setTxHash(hash);
         toast.success("Approval submitted! Waiting for confirmation...");
       } catch (error: unknown) {
-        console.error("Approval error:", error);
+        logger.error("Approval error", error, { silent: true });
         setTxStep("error");
         const msg = error instanceof Error ? error.message : "Failed to approve tokens";
         setTxError(msg);
@@ -150,7 +151,7 @@ export function useEndorsementTransaction(
         setTxHash(hash);
         toast.success("Endorsement submitted! Waiting for confirmation...");
       } catch (error: unknown) {
-        console.error("Endorsement error:", error);
+        logger.error("Endorsement error", error, { silent: true });
         setTxStep("error");
 
         const errMsg = error instanceof Error ? error.message : "";

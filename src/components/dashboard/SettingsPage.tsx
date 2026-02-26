@@ -1,30 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
   Bell,
   Lock,
   CreditCard,
-  Users,
   Save,
   ArrowLeft,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { companyApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { auth, ready } = useRequireAuth("company");
   const [activeTab, setActiveTab] = useState<"company" | "notifications" | "security" | "billing">("company");
-  const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   // Company Settings
   const [companyName, setCompanyName] = useState("");
@@ -40,56 +35,51 @@ export default function SettingsPage() {
   const [applicationUpdates, setApplicationUpdates] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
 
-  useEffect(() => {
-    if (!ready) return;
-    if (auth.email) setCompanyEmail(auth.email);
-    loadSettings();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
-
-  const loadSettings = async () => {
-    try {
-      setIsLoading(true);
-      const profile = await companyApi.getProfile();
-
-      // Set company data from API
-      setCompanyName(profile.company_name || "");
-      setCompanyEmail(profile.email || auth.email || "");
-      setCompanyPhone(profile.phone || "");
-      setCompanyWebsite(profile.website || "");
-      setCompanyAddress(profile.address || "");
-      setCompanyDescription(profile.description || "");
-    } catch (error) {
-      console.error("Error loading settings:", error);
-      // If error, at least set the email from auth context
-      if (auth.email) setCompanyEmail(auth.email);
-    } finally {
-      setIsLoading(false);
+  const { isLoading } = useFetch(
+    () => companyApi.getProfile(),
+    {
+      skip: !ready,
+      onSuccess: (profile) => {
+        setCompanyName(profile.company_name || "");
+        setCompanyEmail(profile.email || auth.email || "");
+        setCompanyPhone(profile.phone || "");
+        setCompanyWebsite(profile.website || "");
+        setCompanyAddress(profile.address || "");
+        setCompanyDescription(profile.description || "");
+      },
+      onError: () => {
+        toast.error("Failed to load settings");
+        // If error, at least set the email from auth context
+        if (auth.email) setCompanyEmail(auth.email);
+      },
     }
-  };
+  );
+
+  const { execute: executeSave, isLoading: isSaving } = useApi();
 
   const handleSaveSettings = async () => {
-    setIsSaving(true);
     setSaveMessage("");
 
-    try {
-      await companyApi.updateProfile({
+    await executeSave(
+      () => companyApi.updateProfile({
         company_name: companyName,
         email: companyEmail,
         phone: companyPhone || null,
         website: companyWebsite || null,
         address: companyAddress || null,
         description: companyDescription || null,
-      });
-
-      setSaveMessage("Settings saved successfully!");
-      setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error: unknown) {
-      console.error("Error saving settings:", error);
-      setSaveMessage(error instanceof Error ? error.message : "Failed to save settings. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          setSaveMessage("Settings saved successfully!");
+          setTimeout(() => setSaveMessage(""), 3000);
+        },
+        onError: (errorMessage) => {
+          toast.error("Failed to save settings");
+          setSaveMessage(errorMessage || "Failed to save settings. Please try again.");
+        },
+      }
+    );
   };
 
   if (!ready) return null;

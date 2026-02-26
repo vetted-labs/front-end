@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2, Calendar } from "lucide-react";
 
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation, Message } from "@/types";
@@ -34,7 +35,7 @@ export default function CompanyConversationView() {
       await messagingApi.markAsRead(conversationId).catch(() => {});
       window.dispatchEvent(new Event(MESSAGE_READ_EVENT));
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+      logger.error("Error fetching conversation", error, { silent: true });
       toast.error("Failed to load conversation");
     } finally {
       setIsLoading(false);
@@ -52,7 +53,7 @@ export default function CompanyConversationView() {
       const newMsg = await messagingApi.sendMessage(conversationId, content);
       setMessages((prev) => [...prev, newMsg]);
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message", error, { silent: true });
       toast.error("Failed to send message");
     }
   };
@@ -63,7 +64,7 @@ export default function CompanyConversationView() {
       if (result) setMessages((prev) => [...prev, result]);
       fetchConversation(); // Refresh to get updated meeting status
     } catch (error) {
-      console.error("Error responding to meeting:", error);
+      logger.error("Error responding to meeting", error, { silent: true });
       toast.error("Failed to respond to meeting");
     }
   };
@@ -81,7 +82,7 @@ export default function CompanyConversationView() {
       if (result) setMessages((prev) => [...prev, result]);
       setShowScheduleModal(false);
     } catch (error) {
-      console.error("Error scheduling meeting:", error);
+      logger.error("Error scheduling meeting", error, { silent: true });
       toast.error("Failed to schedule meeting");
     } finally {
       setIsScheduling(false);

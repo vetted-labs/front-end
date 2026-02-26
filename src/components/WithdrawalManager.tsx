@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { Loader2, AlertCircle, Clock, CheckCircle2, TrendingUp, Coins } from 'lucide-react';
 import { apiRequest, ApiError } from '@/lib/api';
+import { logger } from "@/lib/logger";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { CONTRACT_ADDRESSES, EXPERT_STAKING_ABI } from '@/contracts/abis';
@@ -89,7 +90,7 @@ export function WithdrawalManager({
     } catch (error: unknown) {
       // 404 is expected when no unstake request exists
       if (!(error instanceof ApiError && error.status === 404)) {
-        console.error('Failed to load unstake request:', error);
+        logger.error('Failed to load unstake request', error);
       }
     } finally {
       setLoadingRequest(false);
@@ -117,7 +118,7 @@ export function WithdrawalManager({
 
       setUnstakeAmount('');
     } catch (error: unknown) {
-      console.error('Request unstake error:', error);
+      logger.error('Request unstake error', error, { silent: true });
       toast.error(error instanceof Error ? error.message : 'Failed to request unstake');
     }
   };
@@ -130,7 +131,7 @@ export function WithdrawalManager({
         functionName: 'completeUnstake'
       });
     } catch (error: unknown) {
-      console.error('Complete unstake error:', error);
+      logger.error('Complete unstake error', error, { silent: true });
       toast.error(error instanceof Error ? error.message : 'Failed to complete unstake');
     }
   };
@@ -143,7 +144,7 @@ export function WithdrawalManager({
         functionName: 'cancelUnstake'
       });
     } catch (error: unknown) {
-      console.error('Cancel unstake error:', error);
+      logger.error('Cancel unstake error', error, { silent: true });
       toast.error(error instanceof Error ? error.message : 'Failed to cancel unstake');
     }
   };

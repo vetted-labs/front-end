@@ -16,6 +16,7 @@ import {
   Coins,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { EmptyState } from "./ui/empty-state";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { truncateAddress } from "@/lib/utils";
@@ -305,10 +306,12 @@ export function ReputationLeaderboard({
         </div>
 
         {entries.length === 0 && (
-          <div className="text-center py-12">
-            <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No experts found</p>
-          </div>
+          <EmptyState
+            icon={Trophy}
+            title="No experts found"
+            description="Check back later for leaderboard entries."
+            className="py-12"
+          />
         )}
       </div>
     </div>

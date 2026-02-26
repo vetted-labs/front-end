@@ -3,6 +3,7 @@ import { ReputationLeaderboard } from "@/components/ReputationLeaderboard";
 import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import { expertApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 export default function LeaderboardPage() {
   const { address } = useAccount();
@@ -17,7 +18,7 @@ export default function LeaderboardPage() {
         const result = await expertApi.getProfile(address);
         setExpertId(result.id);
       } catch (error) {
-        console.error("Failed to fetch expert ID:", error);
+        logger.error("Failed to fetch expert ID", error);
       }
     };
 

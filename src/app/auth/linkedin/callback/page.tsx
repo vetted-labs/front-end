@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { candidateApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { useDisconnect } from "wagmi";
 
 /**
@@ -115,7 +116,7 @@ function LinkedInCallbackContent() {
         const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/dashboard";
         setTimeout(() => router.push(safeRedirect), 1500);
       } catch (error: unknown) {
-        console.error("LinkedIn OAuth error:", error);
+        logger.error("LinkedIn OAuth error", error, { silent: true });
         setStatus("error");
         setMessage(error instanceof Error ? error.message : "Failed to authenticate with LinkedIn");
         setTimeout(() => router.push("/auth/login"), 3000);

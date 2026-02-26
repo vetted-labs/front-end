@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { candidateApi, jobsApi, applicationsApi, guildsApi, getAssetUrl } from "@/lib/api";
 import {
@@ -27,7 +27,10 @@ import {
 import { Modal, Button, Alert, Textarea, StatusBadge } from "@/components/ui";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { formatSalaryRange } from "@/lib/utils";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import type { CandidateApplication } from "@/types";
 
 interface JobDetails {
@@ -69,107 +72,110 @@ export default function JobDetailView() {
   const auth = useAuthContext();
   const { resolveGuildId } = useGuilds();
   const jobId = params.jobId as string | undefined;
-  const [job, setJob] = useState<JobDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [useProfileResume, setUseProfileResume] = useState(true);
-  const [profileResume, setProfileResume] = useState<UserProfile | null>(null);
   const [screeningAnswers, setScreeningAnswers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationError, setApplicationError] = useState("");
   const [existingApplication, setExistingApplication] = useState<CandidateApplication | null>(null);
-  const [checkingApplication, setCheckingApplication] = useState(false);
   const [isGuildMember, setIsGuildMember] = useState(false);
-  const [checkingGuildMembership, setCheckingGuildMembership] = useState(false);
   const [guildMembershipStatus, setGuildMembershipStatus] = useState<"approved" | "pending" | "not_member">("not_member");
 
   const isAuthenticated = auth.isAuthenticated;
 
-  // Fetch user profile to get existing resume
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchProfile = async () => {
-      try {
-        const candidateId = auth.userId;
-        const data = await candidateApi.getById(candidateId as string);
-        setProfileResume({
-          resumeUrl: data.resumeUrl,
-          resumeFileName: data.resumeFileName || "Your Profile Resume",
-        });
-      } catch (err) {
-        console.error("Failed to fetch profile:", err);
+  // Fetch job details
+  const { data: job, isLoading, error } = useFetch<JobDetails>(
+    () => jobsApi.getById(jobId!).then((data) => {
+      // Track session views
+      const viewedJobsKey = 'viewedJobs';
+      const viewedJobsStr = sessionStorage.getItem(viewedJobsKey) || '[]';
+      const viewedJobs = JSON.parse(viewedJobsStr) as string[];
+      if (!viewedJobs.includes(jobId!)) {
+        sessionStorage.setItem(viewedJobsKey, JSON.stringify([...viewedJobs, jobId!]));
       }
-    };
-    fetchProfile();
-  }, [isAuthenticated, auth.userId]);
+
+      return {
+        id: data.id,
+        title: data.title || 'Untitled Position',
+        description: data.description || '',
+        requirements: data.requirements || [],
+        skills: data.skills || [],
+        screeningQuestions: data.screeningQuestions || [],
+        department: data.department || null,
+        location: data.location,
+        locationType: (data.locationType || "remote") as JobDetails["locationType"],
+        type: data.type,
+        experienceLevel: (data.experienceLevel || null) as JobDetails["experienceLevel"],
+        salary: data.salary || { min: null, max: null, currency: 'USD' },
+        equityOffered: data.equityOffered || null,
+        equityRange: data.equityRange || null,
+        status: (data.status || "active") as JobDetails["status"],
+        guild: data.guild || '',
+        applicants: data.applicants || 0,
+        views: data.views || 0,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt || data.createdAt,
+        publishedAt: data.publishedAt || null,
+        companyId: data.companyId || '',
+        companyName: data.companyName,
+        companyLogo: data.companyLogo,
+        featured: data.featured,
+      };
+    }),
+    { skip: !jobId }
+  );
+
+  // Fetch user profile to get existing resume
+  const { data: profileResume } = useFetch<UserProfile | null>(
+    () => candidateApi.getById(auth.userId as string).then((data) => ({
+      resumeUrl: data.resumeUrl,
+      resumeFileName: data.resumeFileName || "Your Profile Resume",
+    })),
+    {
+      skip: !isAuthenticated,
+      onError: (err) => {
+        toast.error("Failed to fetch profile");
+        logger.error("Failed to fetch profile", err, { silent: true });
+      },
+    }
+  );
 
   // Check if user has already applied to this job
-  useEffect(() => {
-    if (!isAuthenticated || !jobId) return;
-
-    const checkExistingApplication = async () => {
-      setCheckingApplication(true);
-      try {
-        const data = await applicationsApi.getAll();
-
-        // Handle paginated response from backend: { applications: [...], pagination: {...} }
+  const { isLoading: checkingApplication } = useFetch(
+    () => applicationsApi.getAll(),
+    {
+      skip: !isAuthenticated || !jobId,
+      onSuccess: (data) => {
         const applications = data?.applications || [];
-
-        // Check if user has already applied to this job
         if (Array.isArray(applications) && applications.length > 0) {
-          const existingApp = applications.find(app => {
-            return String(app.jobId) === String(jobId);
-          });
-
+          const existingApp = applications.find(app =>
+            String(app.jobId) === String(jobId)
+          );
           if (existingApp) {
             setExistingApplication(existingApp);
           }
         }
-      } catch (err) {
-        console.error("Failed to check applications:", err);
-      } finally {
-        setCheckingApplication(false);
-      }
-    };
-
-    checkExistingApplication();
-  }, [isAuthenticated, jobId]);
+      },
+      onError: (err) => {
+        toast.error("Failed to check applications");
+        logger.error("Failed to check applications", err, { silent: true });
+      },
+    }
+  );
 
   // Check guild membership after job is loaded
-  useEffect(() => {
-    if (!isAuthenticated || !job || !job.guild) {
-      if (job && !job.guild) {
-      }
-      return;
-    }
+  const guildId = job?.guild?.trim();
+  const isInvalidGuild = !guildId || guildId.length < 2 || !!guildId.match(/^[0-9]+Guild$/);
+  const shouldCheckGuild = isAuthenticated && !!job && !!job.guild && !isInvalidGuild && !!auth.userId;
 
-    // Validate guild ID looks reasonable
-    const guildId = job.guild.trim();
-    if (!guildId || guildId.length < 2 || guildId.match(/^[0-9]+Guild$/)) {
-      // For invalid guilds, assume not a member but don't make API call
-      setIsGuildMember(false);
-      setGuildMembershipStatus("not_member");
-      setCheckingGuildMembership(false);
-      return;
-    }
-
-    const checkGuildMembership = async () => {
-      setCheckingGuildMembership(true);
-      try {
-        const candidateId = auth.userId;
-        if (!candidateId) {
-          setGuildMembershipStatus("not_member");
-          setIsGuildMember(false);
-          return;
-        }
-
-        const membershipData = await guildsApi.checkMembership(candidateId, guildId);
-
+  const { isLoading: checkingGuildMembership } = useFetch(
+    () => guildsApi.checkMembership(auth.userId as string, guildId!),
+    {
+      skip: !shouldCheckGuild,
+      onSuccess: (membershipData) => {
         if (membershipData.isMember || membershipData.status === "approved") {
           setIsGuildMember(true);
           setGuildMembershipStatus("approved");
@@ -180,101 +186,15 @@ export default function JobDetailView() {
           setIsGuildMember(false);
           setGuildMembershipStatus("not_member");
         }
-      } catch (err: unknown) {
-        const apiErr = err instanceof Error ? err : null;
-        const status = (err as { status?: number })?.status;
-        console.error("[Guild Check] Error checking membership:", {
-          guildId,
-          status,
-          message: apiErr?.message
-        });
-
-        // If 404, user is not a member - this is expected
-        if (status === 404) {
-          setIsGuildMember(false);
-          setGuildMembershipStatus("not_member");
-        } else {
-          // For other errors, log but assume not a member for safety
-          console.error("[Guild Check] Unexpected error, assuming not a member");
-          setIsGuildMember(false);
-          setGuildMembershipStatus("not_member");
-        }
-      } finally {
-        setCheckingGuildMembership(false);
-      }
-    };
-
-    checkGuildMembership();
-  }, [isAuthenticated, job]);
-
-  useEffect(() => {
-    if (!jobId) {
-      setError("Invalid job ID.");
-      setIsLoading(false);
-      return;
+      },
+      onError: (err) => {
+        // For any error, assume not a member for safety
+        logger.error("Error checking guild membership", err, { silent: true });
+        setIsGuildMember(false);
+        setGuildMembershipStatus("not_member");
+      },
     }
-
-    const fetchJob = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Check if this job was already viewed in this session
-        const viewedJobsKey = 'viewedJobs';
-        const viewedJobsStr = sessionStorage.getItem(viewedJobsKey) || '[]';
-        const viewedJobs = JSON.parse(viewedJobsStr) as string[];
-        const alreadyViewed = viewedJobs.includes(jobId);
-
-        // Only increment view if not already viewed in this session
-        const shouldIncrementView = !alreadyViewed;
-
-
-        const data = await jobsApi.getById(jobId);
-        const normalizedJob: JobDetails = {
-          id: data.id,
-          title: data.title || 'Untitled Position',
-          description: data.description || '',
-          requirements: data.requirements || [],
-          skills: data.skills || [],
-          screeningQuestions: data.screeningQuestions || [],
-          department: data.department || null,
-          location: data.location,
-          locationType: (data.locationType || "remote") as JobDetails["locationType"],
-          type: data.type,
-          experienceLevel: (data.experienceLevel || null) as JobDetails["experienceLevel"],
-          salary: data.salary || { min: null, max: null, currency: 'USD' },
-          equityOffered: data.equityOffered || null,
-          equityRange: data.equityRange || null,
-          status: (data.status || "active") as JobDetails["status"],
-          guild: data.guild || '',
-          applicants: data.applicants || 0,
-          views: data.views || 0,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt || data.createdAt,
-          publishedAt: data.publishedAt || null,
-          companyId: data.companyId || '',
-          companyName: data.companyName,
-          companyLogo: data.companyLogo,
-          featured: data.featured,
-        };
-        setJob(normalizedJob);
-
-        // Mark this job as viewed in this session
-        if (shouldIncrementView) {
-          const updatedViewedJobs = [...viewedJobs, jobId];
-          sessionStorage.setItem(viewedJobsKey, JSON.stringify(updatedViewedJobs));
-        }
-      } catch (error: unknown) {
-        setError(
-          `Failed to load job details. Details: ${error instanceof Error ? error.message : "An error occurred"}`,
-        );
-        console.error("Fetch error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchJob();
-  }, [jobId]);
+  );
 
   const handleApply = () => {
     // Check if already applied
@@ -423,10 +343,10 @@ export default function JobDetailView() {
     return null;
   }
 
-  if (error) {
+  if (error && !job) {
     return (
       <div className="min-h-screen min-h-full flex items-center justify-center">
-        <Alert variant="error">{error}</Alert>
+        <Alert variant="error">Failed to load job details. {error}</Alert>
       </div>
     );
   }

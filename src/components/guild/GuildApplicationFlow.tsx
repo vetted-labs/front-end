@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Shield, Send } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Alert, Button } from "@/components/ui";
 import { guildsApi, candidateApi, jobsApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import type { GuildApplicationTemplate, SocialLink } from "@/types";
 
@@ -253,7 +254,7 @@ export default function GuildApplicationFlow() {
         // 404 = not a member, which is fine
       }
     } catch (err) {
-      console.error("[Guild Application] Error loading data:", err);
+      logger.error("Failed to load guild application data", err, { silent: true });
       setError(
         (err as Error).message || "Failed to load application form. Please try again."
       );
@@ -322,7 +323,7 @@ export default function GuildApplicationFlow() {
       };
       setResumeUrl(result.resumeUrl);
     } catch (err) {
-      console.error("Resume upload error:", err);
+      logger.error("Failed to upload resume", err, { silent: true });
       setError("Failed to upload resume. Please try again.");
       setResumeFile(null);
     } finally {
@@ -502,7 +503,7 @@ export default function GuildApplicationFlow() {
       await guildsApi.submitApplication(guildId, payload);
       setSuccess(true);
     } catch (err: unknown) {
-      console.error("[Guild Application] Error submitting:", err);
+      logger.error("Failed to submit guild application", err, { silent: true });
       const apiErr = err as { data?: { details?: string; error?: string }; message?: string };
       const message =
         apiErr?.data?.details ||

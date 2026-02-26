@@ -137,6 +137,8 @@ function SignupForm() {
 
       if (error instanceof ApiError) {
         const { status, data } = error.response;
+        const errMsg = typeof data?.error === "string" ? data.error : undefined;
+        const dataMsg = typeof data?.message === "string" ? data.message : undefined;
 
         if (status === 409) {
           errorMessage = "This email is already registered. Please try logging in instead.";
@@ -144,12 +146,12 @@ function SignupForm() {
           if (data?.details && Array.isArray(data.details)) {
             errorMessage = data.details.map((d: { message: string }) => d.message).join(". ");
           } else {
-            errorMessage = data?.error || data?.message || "Invalid input. Please check your information.";
+            errorMessage = errMsg || dataMsg || "Invalid input. Please check your information.";
           }
         } else if (status === 500) {
           errorMessage = "Server error. Please try again later.";
         } else {
-          errorMessage = data?.error || data?.message || errorMessage;
+          errorMessage = errMsg || dataMsg || errorMessage;
         }
       } else if (error instanceof Error) {
         if (error.message.includes("Network error") || error.message.includes("fetch")) {

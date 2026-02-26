@@ -6,6 +6,7 @@ import { jobsApi, guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
 import type { Guild } from "@/types";
+import { logger } from "@/lib/logger";
 
 export interface JobFormData {
   title: string;
@@ -54,7 +55,7 @@ export function useJobForm(jobId?: string) {
         const guildsData = await guildsApi.getAll();
         setGuilds(Array.isArray(guildsData) ? guildsData : []);
       } catch (error) {
-        console.error("Failed to fetch guilds:", error);
+        logger.error("Failed to fetch guilds", error, { silent: true });
       }
     };
     fetchGuilds();
@@ -98,7 +99,7 @@ export function useJobForm(jobId?: string) {
           setError(
             `Failed to load job data. Details: ${(error as Error).message}`
           );
-          console.error("Fetch error:", error);
+          logger.error("Failed to load job data", error, { silent: true });
         } finally {
           setIsLoading(false);
         }

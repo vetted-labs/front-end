@@ -2,6 +2,19 @@ import type { ExpertGuild } from "./guild";
 
 export type ExpertStatus = "pending" | "approved" | "rejected";
 
+/** Guild application info returned for pending experts. */
+export interface PendingGuildInfo {
+  id: string;
+  name: string;
+  description?: string;
+  status: "pending" | "approved";
+  role?: string;
+  joinedAt?: string;
+  reviewCount?: number;
+  approvalCount?: number;
+  rejectionCount?: number;
+}
+
 /** Expert profile — returned by expertApi.getProfile. */
 export interface ExpertProfile {
   id: string;
@@ -17,6 +30,7 @@ export interface ExpertProfile {
   endorsementCount?: number;
   approvalCount?: number;
   rejectionCount?: number;
+  reviewCount?: number;
   showEmail?: boolean;
   guilds: ExpertGuild[];
   recentActivity?: ExpertActivity[];
@@ -24,6 +38,14 @@ export interface ExpertProfile {
     pendingProposalsCount: number;
     unreviewedApplicationsCount: number;
   };
+  /** Present when expert has a pending application to a single guild (legacy). */
+  appliedToGuild?: {
+    id: string;
+    name: string;
+    description: string;
+  } | null;
+  /** Present when expert has applied to multiple guilds. */
+  guildApplications?: PendingGuildInfo[];
 }
 
 export interface ExpertActivity {
