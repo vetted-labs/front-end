@@ -17,13 +17,25 @@ import { expertApi } from "@/lib/api";
 import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
+import type {
+  GeneralReviewTemplate,
+  GeneralReviewQuestion,
+  LevelReviewTemplate,
+  ReviewDomainTopic,
+  RubricQuestionEntry,
+  RubricRedFlag,
+  RubricInterpretationGuideItem,
+  ApplicationResponses,
+  ReviewSubmitPayload,
+  ReviewSubmitResponse,
+} from "@/types";
 
 interface GuildApplication {
   id: string;
   fullName: string;
   email: string;
   expertiseLevel?: string;
-  applicationResponses?: any;
+  applicationResponses?: ApplicationResponses;
   resumeUrl?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
@@ -36,20 +48,12 @@ interface GuildApplication {
   expertiseAreas?: string[];
 }
 
-interface ReviewPayload {
-  feedback?: string;
-  criteriaScores: Record<string, any>;
-  criteriaJustifications: Record<string, any>;
-  overallScore: number;
-  redFlagDeductions: number;
-}
-
 interface ReviewGuildApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   application: GuildApplication | null;
   guildId: string;
-  onSubmitReview: (payload: ReviewPayload) => Promise<any>;
+  onSubmitReview: (payload: ReviewSubmitPayload) => Promise<ReviewSubmitResponse | void>;
   isReviewing: boolean;
 }
 
@@ -206,12 +210,12 @@ export function ReviewGuildApplicationModal({
   const [topicScores, setTopicScores] = useState<Record<string, number>>({});
   const [topicJustifications, setTopicJustifications] = useState<Record<string, string>>({});
   const [redFlags, setRedFlags] = useState<Record<string, boolean>>({});
-  const [generalTemplate, setGeneralTemplate] = useState<any>(null);
-  const [levelTemplate, setLevelTemplate] = useState<any>(null);
+  const [generalTemplate, setGeneralTemplate] = useState<GeneralReviewTemplate | null>(null);
+  const [levelTemplate, setLevelTemplate] = useState<LevelReviewTemplate | null>(null);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [apiResponse, setApiResponse] = useState<any>(null);
+  const [apiResponse, setApiResponse] = useState<ReviewSubmitResponse | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -254,24 +258,23 @@ export function ReviewGuildApplicationModal({
       setTemplateError(null);
 
       try {
-        const generalResponse: any = await expertApi.getGuildApplicationTemplate(
+        const generalData = await expertApi.getGuildApplicationTemplate(
           guildId,
           "general"
         );
-        const generalData = generalResponse?.data || generalResponse;
-        setGeneralTemplate(generalResponse?.success ? generalData : generalData);
+        setGeneralTemplate(generalData as GeneralReviewTemplate);
 
         if (level) {
-          const levelResponse: any = await expertApi.getGuildApplicationTemplate(
+          const levelData = await expertApi.getGuildApplicationTemplate(
             guildId,
             "level",
             level
           );
-          const levelData = levelResponse?.data || levelResponse;
-          setLevelTemplate(levelResponse?.success ? levelData : levelData);
+          setLevelTemplate(levelData as LevelReviewTemplate);
         }
-      } catch (err: any) {
-        setTemplateError(err?.message || "Failed to load review templates");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load review templates";
+        setTemplateError(message);
       } finally {
         setLoadingTemplates(false);
       }
@@ -280,17 +283,17 @@ export function ReviewGuildApplicationModal({
     loadTemplates();
   }, [application?.id, guildId, isOpen, level]);
 
-  const generalQuestions = generalTemplate?.questions?.length
+  const generalQuestions: GeneralReviewQuestion[] = generalTemplate?.questions?.length
     ? generalTemplate.questions
     : FALLBACK_GENERAL_QUESTIONS;
-  const generalRubric = generalTemplate?.rubric || {};
-  const generalRubricQuestions = generalRubric?.questions || {};
-  const generalRedFlags = Array.isArray(generalRubric?.redFlags) ? generalRubric.redFlags : [];
-  const interpretationGuide = Array.isArray(generalRubric?.interpretationGuide)
+  const generalRubric = generalTemplate?.rubric;
+  const generalRubricQuestions: Record<string, RubricQuestionEntry> = generalRubric?.questions || {};
+  const generalRedFlags: RubricRedFlag[] = Array.isArray(generalRubric?.redFlags) ? generalRubric.redFlags : [];
+  const interpretationGuide: RubricInterpretationGuideItem[] = Array.isArray(generalRubric?.interpretationGuide)
     ? generalRubric.interpretationGuide
     : [];
 
-  const topicList = levelTemplate?.topics?.length
+  const topicList: ReviewDomainTopic[] = levelTemplate?.topics?.length
     ? levelTemplate.topics
     : Object.keys(topicAnswers).map((topicId) => ({ id: topicId, title: topicId }));
 
@@ -319,10 +322,10 @@ export function ReviewGuildApplicationModal({
       return totals;
     }
 
-    rubricEntries.forEach(([questionId, questionRubric]: any) => {
+    rubricEntries.forEach(([questionId, questionRubric]) => {
       const criteria = questionRubric?.criteria || [];
       const sum = criteria.reduce(
-        (acc: number, c: any) => acc + (generalScores[questionId]?.[c.id] || 0),
+        (acc: number, c) => acc + (generalScores[questionId]?.[c.id] || 0),
         0
       );
       totals[questionId] = sum;
@@ -333,17 +336,17 @@ export function ReviewGuildApplicationModal({
   const generalTotal = Object.values(generalTotals).reduce((a, b) => a + b, 0);
   const generalMax =
     generalRubric?.totalPoints ||
-    Object.values(generalRubricQuestions).reduce((sum: number, question: any) => {
+    Object.values(generalRubricQuestions).reduce((sum: number, question) => {
       if (question?.maxPoints) return sum + question.maxPoints;
       const criteria = question?.criteria || [];
       return (
         sum +
-        criteria.reduce((acc: number, c: any) => acc + (c.maxPoints || c.max || 0), 0)
+        criteria.reduce((acc: number, c) => acc + (c.maxPoints || c.max || 0), 0)
       );
     }, 0);
 
   const topicTotal = topicList.reduce(
-    (acc: number, topic: any) => acc + (topicScores[topic.id] || 0),
+    (acc: number, topic) => acc + (topicScores[topic.id] || 0),
     0
   );
   const topicMax = levelTemplate?.totalPoints || topicList.length * 5;
@@ -351,7 +354,7 @@ export function ReviewGuildApplicationModal({
   const redFlagDeductions = Object.keys(redFlags)
     .filter((key) => redFlags[key])
     .reduce((sum, key) => {
-      const flag = generalRedFlags.find((f: any) => f.id === key);
+      const flag = generalRedFlags.find((f) => f.id === key);
       const points = typeof flag?.points === "number" ? Math.abs(flag.points) : 0;
       return sum + points;
     }, 0);
@@ -362,8 +365,8 @@ export function ReviewGuildApplicationModal({
 
   const validateStep2 = () => {
     const scoredGeneralQuestionIds = generalQuestions
-      .filter((question: any) => question.scored !== false && question.id !== "guild_improvement")
-      .map((question: any) => question.id);
+      .filter((question) => question.scored !== false && question.id !== "guild_improvement")
+      .map((question) => question.id);
 
     const missingGeneralJustifications = scoredGeneralQuestionIds.filter(
       (questionId: string) =>
@@ -379,7 +382,7 @@ export function ReviewGuildApplicationModal({
   };
 
   const validateStep3 = () => {
-    const scoredTopicIds = topicList.map((topic: any) => topic.id);
+    const scoredTopicIds = topicList.map((topic) => topic.id);
     const missingTopicJustifications = scoredTopicIds.filter(
       (topicId: string) => !topicJustifications[topicId]?.trim()
     );
@@ -434,7 +437,7 @@ export function ReviewGuildApplicationModal({
         overallScore,
         redFlagDeductions,
       });
-      setApiResponse(response);
+      setApiResponse(response || null);
       setCurrentStep(4);
       contentRef.current?.scrollTo(0, 0);
     } catch {

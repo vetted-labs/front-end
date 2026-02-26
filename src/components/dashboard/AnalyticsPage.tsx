@@ -84,7 +84,7 @@ export default function AnalyticsPage() {
       if (!companyId) return;
 
       // Fetch jobs for this company
-      const jobsResponse: any = await jobsApi.getAll({
+      const jobsResponse = await jobsApi.getAll({
         status: filterStatus !== "all" ? filterStatus : undefined,
         companyId: companyId,
       });
@@ -336,7 +336,7 @@ export default function AnalyticsPage() {
                         </p>
                       </div>
                       <div>
-                        <JobStatusBadge status={job.status} />
+                        <JobStatusBadge status={job.status || "draft"} />
                       </div>
                     </div>
                   </button>

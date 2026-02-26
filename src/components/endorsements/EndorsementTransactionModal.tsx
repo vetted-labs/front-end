@@ -14,6 +14,7 @@ import {
   ArrowRight,
   X
 } from 'lucide-react';
+import type { EndorsementApplication } from "@/types";
 
 type TransactionStep = 'input' | 'approving' | 'bidding' | 'success' | 'error';
 
@@ -24,13 +25,13 @@ interface TopBid {
 }
 
 interface EndorsementTransactionModalProps {
-  application: any | null;
+  application: EndorsementApplication | null;
   isOpen: boolean;
   onClose: () => void;
   userBalance: string;
   userStake: string;
   minimumBid: string;
-  onPlaceEndorsement: (application: any, bidAmount: string) => Promise<void>;
+  onPlaceEndorsement: (application: EndorsementApplication, bidAmount: string) => Promise<void>;
   topBids?: TopBid[];
   txStep: 'idle' | 'approving' | 'bidding' | 'success' | 'error';
   txError: string | null;
@@ -101,9 +102,9 @@ export function EndorsementTransactionModal({
     try {
       setErrorMessage('');
       await onPlaceEndorsement(application, bidAmount);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[Modal] Error:', error);
-      setErrorMessage(error.message || "Failed to place endorsement");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to place endorsement");
     }
   };
 

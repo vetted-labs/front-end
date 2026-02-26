@@ -45,18 +45,19 @@ export default function BrowsePage() {
     const fetchData = async () => {
       try {
         // Fetch featured jobs (active jobs)
-        const response: any = await jobsApi.getAll({ status: 'active' });
+        const response = await jobsApi.getAll({ status: 'active' });
         const jobs = Array.isArray(response) ? response : [];
         // Ensure all jobs have required fields with defaults
-        const normalizedJobs = jobs.map((job: Record<string, unknown>) => ({
-          ...job,
+        const normalizedJobs: FeaturedJob[] = jobs.map((job) => ({
+          id: job.id,
           title: job.title || 'Untitled Position',
           description: job.description || '',
           guild: job.guild || '',
           department: job.department || null,
-          requirements: job.requirements || [],
-          skills: job.skills || [],
-          screeningQuestions: job.screeningQuestions || [],
+          location: job.location,
+          type: job.type,
+          salary: job.salary,
+          companyName: job.companyName,
         }));
         setFeaturedJobs(normalizedJobs.slice(0, 6)); // Show top 6 featured jobs
 

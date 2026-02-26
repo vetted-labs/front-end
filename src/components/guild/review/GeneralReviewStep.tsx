@@ -2,16 +2,24 @@
 
 import { Loader2, Sparkles } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/ReviewGuildApplicationModal";
+import type {
+  GeneralReviewTemplate,
+  GeneralReviewQuestion,
+  RubricQuestionEntry,
+  RubricInterpretationGuideItem,
+  QuestionPart,
+  RubricCriterion,
+} from "@/types";
 
 export interface GeneralReviewStepProps {
   loadingTemplates: boolean;
-  generalTemplate: any;
-  generalRubricQuestions: Record<string, any>;
-  generalQuestions: any[];
+  generalTemplate: GeneralReviewTemplate | null;
+  generalRubricQuestions: Record<string, RubricQuestionEntry>;
+  generalQuestions: GeneralReviewQuestion[];
   generalTotals: Record<string, number>;
   generalScores: Record<string, Record<string, number>>;
   generalJustifications: Record<string, string>;
-  interpretationGuide: any[];
+  interpretationGuide: RubricInterpretationGuideItem[];
   generalTotal: number;
   generalMax: number;
   getGeneralResponseValue: (questionId: string, partId?: string) => string;
@@ -52,13 +60,13 @@ export function GeneralReviewStep({
         <p className="text-sm text-muted-foreground">No general scoring rubric available for this guild.</p>
       ) : (
         generalQuestions
-          .filter((question: any) => generalRubricQuestions[question.id])
-          .map((question: any) => {
-            const rubric = generalRubricQuestions[question.id] || {};
-            const criteria = rubric.criteria || [];
+          .filter((question) => generalRubricQuestions[question.id])
+          .map((question) => {
+            const rubric = generalRubricQuestions[question.id];
+            const criteria: RubricCriterion[] = rubric?.criteria || [];
             const maxPoints =
-              rubric.maxPoints ||
-              criteria.reduce((acc: number, c: any) => acc + (c.maxPoints || c.max || 0), 0);
+              rubric?.maxPoints ||
+              criteria.reduce((acc: number, c) => acc + (c.maxPoints || c.max || 0), 0);
             const score = generalTotals[question.id] || 0;
             const pct = maxPoints > 0 ? (score / maxPoints) * 100 : 0;
 
@@ -102,7 +110,7 @@ export function GeneralReviewStep({
                       if (question.parts?.length) {
                         return (
                           <div className="space-y-3">
-                            {question.parts.map((part: any) => (
+                            {question.parts.map((part: QuestionPart) => (
                               <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-3.5">
                                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
                                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
@@ -126,7 +134,7 @@ export function GeneralReviewStep({
                   {/* Scoring area */}
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                     <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-bold">Scoring</p>
-                    {criteria.map((criterion: any) => (
+                    {criteria.map((criterion) => (
                       <div key={criterion.id} className="space-y-2">
                         <p className="text-xs text-muted-foreground">
                           {criterion.label}{" "}
@@ -176,7 +184,7 @@ export function GeneralReviewStep({
           </div>
           <div className="p-5">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {interpretationGuide.map((item: any) => (
+              {interpretationGuide.map((item) => (
                 <div
                   key={item.range}
                   className="rounded-xl bg-muted/50 border border-border p-3.5 space-y-2"

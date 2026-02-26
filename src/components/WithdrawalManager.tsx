@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { Loader2, AlertCircle, Clock, CheckCircle2, TrendingUp, Coins } from 'lucide-react';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, ApiError } from '@/lib/api';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { CONTRACT_ADDRESSES, EXPERT_STAKING_ABI } from '@/contracts/abis';
@@ -28,7 +28,7 @@ export function WithdrawalManager({
 }: WithdrawalManagerProps) {
   const { address } = useAccount();
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  const [unstakeRequest, setUnstakeRequest] = useState<any>(null);
+  const [unstakeRequest, setUnstakeRequest] = useState<{ hasRequest: boolean; unlockTime?: string; amount?: string } | null>(null);
   const [loadingRequest, setLoadingRequest] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
@@ -81,14 +81,14 @@ export function WithdrawalManager({
   const loadUnstakeRequest = async () => {
     try {
       setLoadingRequest(true);
-      const data = await apiRequest(
+      const data = await apiRequest<{ hasRequest: boolean; unlockTime?: string; amount?: string }>(
         `/api/blockchain/staking/unstake-request-detailed/${walletAddress}`
       );
 
       setUnstakeRequest(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 404 is expected when no unstake request exists
-      if (error?.status !== 404) {
+      if (!(error instanceof ApiError && error.status === 404)) {
         console.error('Failed to load unstake request:', error);
       }
     } finally {
@@ -116,9 +116,9 @@ export function WithdrawalManager({
       });
 
       setUnstakeAmount('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Request unstake error:', error);
-      toast.error(error.message || 'Failed to request unstake');
+      toast.error(error instanceof Error ? error.message : 'Failed to request unstake');
     }
   };
 
@@ -129,9 +129,9 @@ export function WithdrawalManager({
         abi: EXPERT_STAKING_ABI,
         functionName: 'completeUnstake'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Complete unstake error:', error);
-      toast.error(error.message || 'Failed to complete unstake');
+      toast.error(error instanceof Error ? error.message : 'Failed to complete unstake');
     }
   };
 
@@ -142,9 +142,9 @@ export function WithdrawalManager({
         abi: EXPERT_STAKING_ABI,
         functionName: 'cancelUnstake'
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Cancel unstake error:', error);
-      toast.error(error.message || 'Failed to cancel unstake');
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel unstake');
     }
   };
 

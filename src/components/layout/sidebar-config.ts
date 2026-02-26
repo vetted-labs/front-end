@@ -15,6 +15,8 @@ import {
   Shield,
   MessageSquare,
   Coins,
+  Handshake,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,16 +44,24 @@ export const expertSidebarConfig: SidebarConfig = {
   variant: "expert",
   groups: [
     {
-      label: "Main",
+      label: "Home",
       items: [
         { label: "Dashboard", href: "/expert/dashboard", icon: Home },
         { label: "Notifications", href: "/expert/notifications", icon: Bell, badge: "notifications" },
       ],
     },
     {
-      label: "Guilds & Vetting",
+      label: "Vetting",
+      items: [
+        { label: "Applications", href: "/expert/voting", icon: FileText },
+        { label: "Endorsements", href: "/expert/endorsements", icon: Handshake },
+      ],
+    },
+    {
+      label: "Guilds",
       items: [
         { label: "My Guilds", href: "/expert/guilds", icon: Users },
+        { label: "Guild Ranks", href: "/expert/guild-ranks", icon: Shield },
       ],
     },
     {
@@ -61,11 +71,11 @@ export const expertSidebarConfig: SidebarConfig = {
       ],
     },
     {
-      label: "Reputation",
+      label: "Rewards",
       items: [
-        { label: "Reputation", href: "/expert/reputation", icon: TrendingUp },
         { label: "Earnings", href: "/expert/earnings", icon: Coins },
-        { label: "Leaderboard", href: "/expert/leaderboard", icon: TrendingUp },
+        { label: "Reputation", href: "/expert/reputation", icon: TrendingUp },
+        { label: "Leaderboard", href: "/expert/leaderboard", icon: Trophy },
         { label: "Withdrawals", href: "/expert/withdrawals", icon: Wallet },
       ],
     },

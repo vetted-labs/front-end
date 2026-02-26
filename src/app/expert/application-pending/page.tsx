@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
-import { expertApi } from "@/lib/api";
+import { expertApi, ApiError } from "@/lib/api";
 
 interface GuildApplication {
   id: string;
@@ -74,7 +74,7 @@ export default function ApplicationPendingPage() {
     setError(null);
 
     try {
-      const result: any = await expertApi.getProfile(address);
+      const result = await expertApi.getProfile(address);
 
       if (result.status === "approved") {
         localStorage.setItem("expertStatus", "approved");
@@ -82,13 +82,13 @@ export default function ApplicationPendingPage() {
         return;
       }
 
-      setExpert(result);
-    } catch (err: any) {
-      if (err.status === 404) {
+      setExpert(result as unknown as PendingExpert);
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 404) {
         router.push("/expert/apply");
         return;
       }
-      setError(err.message || "Failed to fetch application status");
+      setError(err instanceof Error ? err.message : "Failed to fetch application status");
     } finally {
       setIsLoading(false);
     }

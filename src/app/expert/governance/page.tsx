@@ -10,28 +10,14 @@ import { FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
+import type { GovernanceProposalDetail } from "@/types";
 
 type FilterStatus = "active" | "passed" | "rejected" | "all";
-
-interface GovernanceProposal {
-  id: string;
-  title: string;
-  description: string;
-  proposal_type: string;
-  status: string;
-  voting_deadline: string;
-  votes_for: number;
-  votes_against: number;
-  votes_abstain: number;
-  total_voting_power: number;
-  quorum_required: number;
-  voter_count?: number;
-}
 
 export default function GovernancePage() {
   const router = useRouter();
   const { address } = useAccount();
-  const [proposals, setProposals] = useState<GovernanceProposal[]>([]);
+  const [proposals, setProposals] = useState<GovernanceProposalDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>("active");
 
@@ -44,13 +30,8 @@ export default function GovernancePage() {
       setLoading(true);
       const params = filter !== "all" ? { status: filter } : undefined;
       const response = await governanceApi.getProposals(params);
-      const list = Array.isArray(response)
-        ? response
-        : Array.isArray((response as any)?.proposals)
-          ? (response as any).proposals
-          : [];
-      setProposals(list);
-    } catch (error: any) {
+      setProposals(Array.isArray(response) ? response : []);
+    } catch (error: unknown) {
       console.error("Error loading governance proposals:", error);
       toast.error("Failed to load proposals");
     } finally {

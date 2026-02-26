@@ -31,7 +31,7 @@ export function EnhancedExpertDashboard() {
   const [stakingStatus, setStakingStatus] = useState<{ stakedAmount: string; meetsMinimum: boolean } | null>(null);
   const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
   const [stakesLoaded, setStakesLoaded] = useState(false);
-  const [assignedApplications, setAssignedApplications] = useState<any[]>([]);
+  const [assignedApplications, setAssignedApplications] = useState<import("@/types").GuildApplicationSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -100,7 +100,7 @@ export function EnhancedExpertDashboard() {
       // Fetch assigned applications in background
       if (enhancedData.id) {
         guildApplicationsApi.getAssigned(enhancedData.id)
-          .then((apps: any) => setAssignedApplications(Array.isArray(apps) ? apps : []))
+          .then((apps) => setAssignedApplications(Array.isArray(apps) ? apps : []))
           .catch(() => setAssignedApplications([]));
       }
 
@@ -313,7 +313,7 @@ export function EnhancedExpertDashboard() {
             </div>
             <div className="p-5">
               <div className="space-y-3">
-                {assignedApplications.slice(0, 5).map((app: any) => (
+                {assignedApplications.slice(0, 5).map((app) => (
                   <button
                     key={app.id}
                     onClick={() => {

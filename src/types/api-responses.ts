@@ -135,6 +135,41 @@ export interface EndorsementStats {
   averageAmount?: string;
 }
 
+/** Application shape used in the endorsement marketplace components (flat, snake_case). */
+export interface EndorsementApplication {
+  application_id: string;
+  candidate_id: string;
+  candidate_name: string;
+  candidate_headline: string;
+  candidate_wallet: string;
+  candidate_bio?: string;
+  candidate_profile_picture_url?: string;
+  job_id: string;
+  job_title: string;
+  job_description?: string;
+  company_id?: string;
+  company_name: string;
+  company_logo?: string;
+  guild_score: number;
+  location: string;
+  job_type: string;
+  salary_min: number;
+  salary_max: number;
+  salary_currency?: string;
+  applied_at: string;
+  current_bid?: string;
+  rank?: number;
+  status?: string;
+  cover_letter?: string;
+  screening_answers?: Record<string, string>;
+  experience_level?: string;
+  job_skills?: string | string[];
+  requirements?: string[];
+  linkedin?: string;
+  github?: string;
+  resume_url?: string;
+}
+
 /** Enriched endorsement as returned by getExpertEndorsements — includes nested job/candidate/guild data. */
 export interface ActiveEndorsement {
   endorsementId?: string;
@@ -146,22 +181,45 @@ export interface ActiveEndorsement {
   endorsedAt: string;
   createdAt?: string;
   notes?: string;
+  guildScore?: number;
   job?: {
     id: string;
     title: string;
+    companyId?: string;
     companyName?: string;
+    companyLogo?: string;
+    description?: string;
     location?: string;
+    jobType?: string;
+    salaryMin?: number;
+    salaryMax?: number;
+    salaryCurrency?: string;
+    requirements?: string[];
+    skills?: string[];
   };
   candidate?: {
+    id?: string;
     name: string;
+    email?: string;
     headline?: string;
+    profilePicture?: string;
+    bio?: string;
+    walletAddress?: string;
+    experienceLevel?: string;
+    linkedin?: string;
+    github?: string;
+    resumeUrl?: string;
   };
   guild?: {
+    id?: string;
     name: string;
   };
   application?: {
+    id?: string;
     status?: string;
+    appliedAt?: string;
     coverLetter?: string;
+    screeningAnswers?: Record<string, string>;
   };
   blockchainData?: {
     rank?: number;
@@ -265,6 +323,7 @@ export interface CompanyProfile {
 // --- Guild Membership ---
 export interface GuildMembershipCheck {
   isMember: boolean;
+  status?: "approved" | "pending" | "not_member";
   role?: string;
   joinedAt?: string;
 }

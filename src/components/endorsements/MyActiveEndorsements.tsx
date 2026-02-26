@@ -4,16 +4,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, ArrowRight } from "lucide-react";
+import type { ActiveEndorsement, EndorsementApplication } from "@/types";
 
 interface MyActiveEndorsementsProps {
   /** Endorsements filtered for the current guild */
-  userEndorsements: any[];
+  userEndorsements: ActiveEndorsement[];
   /** All endorsements across all guilds */
-  allUserEndorsements: any[];
+  allUserEndorsements: ActiveEndorsement[];
   /** Name of the current guild */
   guildName: string;
   /** Callback when a user clicks on an endorsement to view details */
-  onSelectEndorsement: (applicationForModal: any) => void;
+  onSelectEndorsement: (applicationForModal: EndorsementApplication) => void;
 }
 
 export function MyActiveEndorsements({
@@ -22,51 +23,50 @@ export function MyActiveEndorsements({
   guildName,
   onSelectEndorsement,
 }: MyActiveEndorsementsProps) {
-  const handleEndorsementClick = (endorsement: any) => {
+  const handleEndorsementClick = (endorsement: ActiveEndorsement) => {
     // Build application object from endorsement data
-    // The modal expects snake_case flat structure
-    const applicationForModal = {
+    // The modal expects snake_case flat structure (EndorsementApplication)
+    const applicationForModal: EndorsementApplication = {
       // IDs
-      application_id: endorsement.application?.id,
-      candidate_id: endorsement.candidate?.id,
-      job_id: endorsement.job?.id,
+      application_id: endorsement.application?.id ?? endorsement.applicationId ?? "",
+      candidate_id: endorsement.candidate?.id ?? "",
+      job_id: endorsement.job?.id ?? "",
       company_id: endorsement.job?.companyId,
 
       // Candidate info (flat snake_case from nested camelCase)
-      candidate_name: endorsement.candidate?.name,
-      candidate_email: endorsement.candidate?.email,
-      candidate_headline: endorsement.candidate?.headline,
+      candidate_name: endorsement.candidate?.name ?? "",
+      candidate_headline: endorsement.candidate?.headline ?? "",
       candidate_profile_picture_url: endorsement.candidate?.profilePicture,
-      candidate_bio: endorsement.candidate?.bio || '',
-      candidate_wallet: endorsement.candidate?.walletAddress,
+      candidate_bio: endorsement.candidate?.bio ?? "",
+      candidate_wallet: endorsement.candidate?.walletAddress ?? "",
 
       // Job info
-      job_title: endorsement.job?.title,
+      job_title: endorsement.job?.title ?? "",
       job_description: endorsement.job?.description,
-      company_name: endorsement.job?.companyName,
+      company_name: endorsement.job?.companyName ?? "",
       company_logo: endorsement.job?.companyLogo,
-      location: endorsement.job?.location,
-      job_type: endorsement.job?.jobType,
-      salary_min: endorsement.job?.salaryMin,
-      salary_max: endorsement.job?.salaryMax,
+      location: endorsement.job?.location ?? "",
+      job_type: endorsement.job?.jobType ?? "",
+      salary_min: endorsement.job?.salaryMin ?? 0,
+      salary_max: endorsement.job?.salaryMax ?? 0,
       salary_currency: endorsement.job?.salaryCurrency,
 
       // Application details
       status: endorsement.application?.status,
-      applied_at: endorsement.application?.appliedAt,
+      applied_at: endorsement.application?.appliedAt ?? endorsement.endorsedAt,
       cover_letter: endorsement.application?.coverLetter,
       screening_answers: endorsement.application?.screeningAnswers,
 
       // Guild info
-      guild_score: endorsement.guildScore,
+      guild_score: endorsement.guildScore ?? 0,
 
       // Current bid and rank info
       current_bid: endorsement.stakeAmount,
-      rank: endorsement.blockchainData?.rank || 0,
+      rank: endorsement.blockchainData?.rank ?? 0,
 
       // Additional fields that might be used
-      requirements: endorsement.job?.requirements || [],
-      job_skills: endorsement.job?.skills || [],
+      requirements: endorsement.job?.requirements ?? [],
+      job_skills: endorsement.job?.skills ?? [],
       experience_level: endorsement.candidate?.experienceLevel,
       linkedin: endorsement.candidate?.linkedin,
       github: endorsement.candidate?.github,
@@ -121,9 +121,9 @@ export function MyActiveEndorsements({
                   You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {Array.from(new Set(allUserEndorsements.map((e: any) => e.guild?.name).filter(Boolean))).map((guildName: any) => (
-                    <span key={guildName} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
-                      {guildName}
+                  {Array.from(new Set(allUserEndorsements.map((e) => e.guild?.name).filter(Boolean))).map((name) => (
+                    <span key={name} className="text-xs px-2 py-1 bg-primary/10 rounded-full">
+                      {name}
                     </span>
                   ))}
                 </div>
@@ -136,7 +136,7 @@ export function MyActiveEndorsements({
           </div>
         ) : (
           <div className="divide-y divide-border/30">
-            {userEndorsements.map((endorsement: any) => (
+            {userEndorsements.map((endorsement) => (
               <div
                 key={endorsement.application?.id || endorsement.endorsementId}
                 onClick={() => handleEndorsementClick(endorsement)}
@@ -147,7 +147,7 @@ export function MyActiveEndorsements({
                     <h4 className="font-semibold group-hover:text-primary transition-colors">
                       {endorsement.candidate?.name}
                     </h4>
-                    {endorsement.blockchainData?.rank > 0 && endorsement.blockchainData?.rank <= 3 && (
+                    {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && endorsement.blockchainData.rank <= 3 && (
                       <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
                         Rank #{endorsement.blockchainData.rank}
                       </Badge>
@@ -162,7 +162,7 @@ export function MyActiveEndorsements({
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right text-sm text-muted-foreground">
-                    {endorsement.blockchainData?.rank > 0 && (
+                    {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && (
                       <p>Rank #{endorsement.blockchainData.rank}</p>
                     )}
                     <p className="text-xs mt-1">

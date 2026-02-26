@@ -1,16 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Briefcase,
-  GraduationCap,
-  Heart,
-  Link as LinkIcon,
-  Award,
-  Calendar
-} from "lucide-react";
-
 interface StructuredApplicationDisplayProps {
   application: {
     candidate_name: string;
@@ -25,9 +14,14 @@ interface StructuredApplicationDisplayProps {
     proposal_text?: string;
   };
   compact?: boolean;
+  showHeader?: boolean;
 }
 
-export function StructuredApplicationDisplay({ application, compact = false }: StructuredApplicationDisplayProps) {
+export function StructuredApplicationDisplay({
+  application,
+  compact = false,
+  showHeader = true,
+}: StructuredApplicationDisplayProps) {
   const hasStructuredData =
     application.skills_summary ||
     application.experience_summary ||
@@ -37,7 +31,7 @@ export function StructuredApplicationDisplay({ application, compact = false }: S
   if (!hasStructuredData && application.proposal_text) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-base text-muted-foreground leading-relaxed">
           {application.proposal_text}
         </p>
       </div>
@@ -49,19 +43,13 @@ export function StructuredApplicationDisplay({ application, compact = false }: S
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {application.years_of_experience !== undefined && application.years_of_experience > 0 && (
-            <>
-              <Calendar className="w-4 h-4" />
-              <span>{application.years_of_experience} years experience</span>
-            </>
+            <span>{application.years_of_experience} years experience</span>
           )}
         </div>
 
         {application.skills_summary && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Skills</span>
-            </div>
+            <span className="text-sm font-medium">Skills</span>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {application.skills_summary}
             </p>
@@ -70,10 +58,7 @@ export function StructuredApplicationDisplay({ application, compact = false }: S
 
         {application.motivation_statement && (
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Heart className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Motivation</span>
-            </div>
+            <span className="text-sm font-medium">Motivation</span>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {application.motivation_statement}
             </p>
@@ -84,119 +69,105 @@ export function StructuredApplicationDisplay({ application, compact = false }: S
   }
 
   return (
-    <div className="space-y-6">
-      {/* Candidate Info Header */}
-      <div className="flex items-center gap-4 pb-4 border-b border-border">
-        <div className="flex-1">
+    <div className="space-y-10">
+      {/* Candidate Info Header — only shown when parent doesn't handle identity */}
+      {showHeader && (
+        <div className="pb-4 border-b border-border">
           <h3 className="text-lg font-semibold">{application.candidate_name}</h3>
-          <p className="text-sm text-muted-foreground">{application.candidate_email}</p>
+          <p className="text-sm text-muted-foreground">
+            {application.candidate_email}
+            {application.years_of_experience !== undefined && application.years_of_experience > 0 && (
+              <> &middot; {application.years_of_experience} years experience</>
+            )}
+          </p>
         </div>
-        {application.years_of_experience !== undefined && application.years_of_experience > 0 && (
-          <Badge variant="secondary" className="text-base px-3 py-1">
-            <Calendar className="w-4 h-4 mr-2" />
-            {application.years_of_experience} years
-          </Badge>
-        )}
-      </div>
+      )}
 
       {/* Skills Summary */}
       {application.skills_summary && (
-        <Card className="border-l-4 border-l-primary/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="w-5 h-5 text-primary" />
-              <h4 className="font-semibold">Skills & Technical Competencies</h4>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {application.skills_summary}
-            </p>
-          </CardContent>
-        </Card>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Skills &amp; Technical Competencies
+          </h3>
+          <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+            {application.skills_summary}
+          </p>
+        </div>
       )}
 
       {/* Experience Summary */}
       {application.experience_summary && (
-        <Card className="border-l-4 border-l-blue-500/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Briefcase className="w-5 h-5 text-blue-500" />
-              <h4 className="font-semibold">Professional Experience</h4>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {application.experience_summary}
-            </p>
-          </CardContent>
-        </Card>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Professional Experience
+          </h3>
+          <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+            {application.experience_summary}
+          </p>
+        </div>
       )}
 
       {/* Motivation Statement */}
       {application.motivation_statement && (
-        <Card className="border-l-4 border-l-purple-500/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Heart className="w-5 h-5 text-purple-500" />
-              <h4 className="font-semibold">Motivation & Guild Alignment</h4>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {application.motivation_statement}
-            </p>
-          </CardContent>
-        </Card>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Motivation &amp; Guild Alignment
+          </h3>
+          <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+            {application.motivation_statement}
+          </p>
+        </div>
       )}
 
       {/* Credibility Evidence */}
       {application.credibility_evidence && (
-        <Card className="border-l-4 border-l-green-500/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <LinkIcon className="w-5 h-5 text-green-500" />
-              <h4 className="font-semibold">Portfolio & Credibility</h4>
-            </div>
-            <div className="text-sm text-muted-foreground leading-relaxed space-y-1">
-              {application.credibility_evidence.split('\n').map((line, index) => {
-                const trimmedLine = line.trim();
-                if (!trimmedLine) return null;
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Portfolio &amp; Credibility
+          </h3>
+          <div className="text-base text-foreground leading-relaxed space-y-1">
+            {application.credibility_evidence.split('\n').map((line, index) => {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) return null;
 
-                // Check if line is a URL
-                const isUrl = trimmedLine.startsWith('http://') || trimmedLine.startsWith('https://');
+              const isUrl = trimmedLine.startsWith('http://') || trimmedLine.startsWith('https://');
 
-                return isUrl ? (
-                  <a
-                    key={index}
-                    href={trimmedLine}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block text-primary hover:underline break-all"
-                  >
-                    {trimmedLine}
-                  </a>
-                ) : (
-                  <p key={index}>{trimmedLine}</p>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+              return isUrl ? (
+                <a
+                  key={index}
+                  href={trimmedLine}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-primary hover:underline break-all"
+                >
+                  {trimmedLine}
+                </a>
+              ) : (
+                <p key={index}>{trimmedLine}</p>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Key Achievements */}
       {application.achievements && application.achievements.length > 0 && (
-        <Card className="border-l-4 border-l-amber-500/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Award className="w-5 h-5 text-amber-500" />
-              <h4 className="font-semibold">Key Achievements</h4>
-            </div>
-            <ul className="space-y-2">
-              {application.achievements.map((achievement, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="text-amber-500 mt-0.5">•</span>
-                  <span className="flex-1">{achievement}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Key Achievements
+          </h3>
+          <ul className="list-disc pl-4 space-y-1.5">
+            {application.achievements.map((achievement, index) => (
+              <li key={index} className="text-base text-foreground leading-relaxed">
+                {typeof achievement === "string"
+                  ? achievement
+                  : typeof achievement === "object" && achievement !== null
+                  ? `${(achievement as { year?: number; title?: string }).year ? `(${(achievement as { year?: number; title?: string }).year}) ` : ""}${(achievement as { year?: number; title?: string }).title ?? JSON.stringify(achievement)}`
+                  : String(achievement)}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

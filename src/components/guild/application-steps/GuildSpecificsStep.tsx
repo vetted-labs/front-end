@@ -147,6 +147,11 @@ export default function GuildSpecificsStep({
                       className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                       rows={8}
                     />
+                    <div className="flex justify-end">
+                      <span className={`text-xs ${answerValue.trim().length < 50 ? "text-muted-foreground" : "text-green-600"}`}>
+                        {answerValue.trim().length}/50 min characters
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

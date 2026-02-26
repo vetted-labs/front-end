@@ -21,7 +21,7 @@ import {
   Activity,
   LucideIcon,
 } from "lucide-react";
-import { expertApi } from "@/lib/api";
+import { expertApi, ApiError } from "@/lib/api";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
@@ -124,7 +124,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     setError(null);
 
     try {
-      const profileData: any = await expertApi.getProfile(effectiveAddress);
+      const profileData = await expertApi.getProfile(effectiveAddress);
 
       if (!profileData || typeof profileData !== "object") {
         throw new Error("Invalid profile data structure");
@@ -137,12 +137,12 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         ...profileData,
         guilds,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching expert profile:", err);
-      if (err.status === 404) {
+      if (err instanceof ApiError && err.status === 404) {
         setError("Expert profile not found");
       } else {
-        setError(err.message || "Failed to fetch profile");
+        setError(err instanceof Error ? err.message : "Failed to fetch profile");
       }
     } finally {
       setIsLoading(false);

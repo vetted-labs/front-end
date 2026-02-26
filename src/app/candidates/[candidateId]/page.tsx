@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, ApiError } from '@/lib/api';
 import { CandidateProfileView } from '@/components/CandidateProfileView';
 import { toast } from 'sonner';
+import type { CandidateProfile } from '@/types';
 
 
 export default function CandidateProfilePage() {
   const { candidateId } = useParams();
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<CandidateProfile & { viewerType?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewerType, setViewerType] = useState<string>('');
 
@@ -20,17 +21,17 @@ export default function CandidateProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const data: any = await apiRequest(
+      const data = await apiRequest<CandidateProfile & { viewerType?: string }>(
         `/api/candidates/${candidateId}/profile`,
         { method: 'GET' }
       );
 
       setProfile(data);
       setViewerType(data.viewerType || '');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load profile:', error);
 
-      if (error.status === 404) {
+      if (error instanceof ApiError && error.status === 404) {
         toast.error('Candidate not found');
         router.push('/');
       } else {

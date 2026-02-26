@@ -2,16 +2,17 @@
 
 import { AlertTriangle, Award, Loader2 } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/ReviewGuildApplicationModal";
+import type { LevelReviewTemplate, ReviewDomainTopic, RubricRedFlag } from "@/types";
 
 export interface DomainReviewStepProps {
   loadingTemplates: boolean;
-  levelTemplate: any;
-  topicList: any[];
+  levelTemplate: LevelReviewTemplate | null;
+  topicList: ReviewDomainTopic[];
   topicAnswers: Record<string, string>;
   topicScores: Record<string, number>;
   topicJustifications: Record<string, string>;
   redFlags: Record<string, boolean>;
-  generalRedFlags: any[];
+  generalRedFlags: RubricRedFlag[];
   redFlagDeductions: number;
   generalTotal: number;
   generalMax: number;
@@ -65,7 +66,7 @@ export function DomainReviewStep({
         ) : topicList.length === 0 ? (
           <p className="text-sm text-muted-foreground">No level-specific rubric available for this guild.</p>
         ) : (
-          topicList.map((topic: any) => {
+          topicList.map((topic) => {
             const score = topicScores[topic.id] || 0;
             const pct = (score / 5) * 100;
 
@@ -103,7 +104,7 @@ export function DomainReviewStep({
 
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                     <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-bold">Scoring</p>
-                    {topic.whatToLookFor?.length > 0 && (
+                    {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
                       <div className="space-y-1.5">
                         <p className="text-xs font-semibold text-foreground">What to look for</p>
                         <ul className="space-y-1">
@@ -175,7 +176,7 @@ export function DomainReviewStep({
             <p className="text-sm text-muted-foreground">No red flags defined for this rubric.</p>
           ) : (
             <div className="space-y-2.5">
-              {generalRedFlags.map((flag: any) => (
+              {generalRedFlags.map((flag) => (
                 <label
                   key={flag.id}
                   className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${

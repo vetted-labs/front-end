@@ -110,7 +110,7 @@ function SignupForm() {
     setIsLoading(true);
     try {
       if (userType === "candidate") {
-        const data: any = await candidateApi.signup({
+        const data = await candidateApi.signup({
           fullName,
           email,
           password,
@@ -119,17 +119,17 @@ function SignupForm() {
           experienceLevel: "mid",
         });
 
-        auth.login(data.token, "candidate", data.candidate.id, data.candidate.email);
+        auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "");
         router.push(redirectUrl || "/candidate/dashboard");
       } else {
-        const data: any = await companyApi.create({
+        const data = await companyApi.create({
           companyName,
           email,
           password,
           website,
         });
 
-        auth.login(data.token, "company", data.company.id, data.company.email);
+        auth.login(data.token, "company", data.company?.id || "", data.company?.email || "");
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: unknown) {
@@ -142,7 +142,7 @@ function SignupForm() {
           errorMessage = "This email is already registered. Please try logging in instead.";
         } else if (status === 400) {
           if (data?.details && Array.isArray(data.details)) {
-            errorMessage = data.details.map((d: any) => d.message).join(". ");
+            errorMessage = data.details.map((d: { message: string }) => d.message).join(". ");
           } else {
             errorMessage = data?.error || data?.message || "Invalid input. Please check your information.";
           }

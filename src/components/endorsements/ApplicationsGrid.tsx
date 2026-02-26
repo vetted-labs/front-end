@@ -1,11 +1,12 @@
 import { ApplicationCard } from './ApplicationCard';
 import { Loader2 } from 'lucide-react';
+import type { EndorsementApplication } from "@/types";
 
 interface ApplicationsGridProps {
-  applications: any[];
+  applications: EndorsementApplication[];
   loading: boolean;
-  onSelectApplication: (app: any) => void;
-  onQuickEndorse: (app: any) => void;
+  onSelectApplication: (app: EndorsementApplication) => void;
+  onQuickEndorse: (app: EndorsementApplication) => void;
 }
 
 export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse }: ApplicationsGridProps) {

@@ -22,12 +22,13 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
+import type { EndorsementApplication } from "@/types";
 
 interface CandidateDetailsModalProps {
-  application: any | null;
+  application: EndorsementApplication | null;
   isOpen: boolean;
   onClose: () => void;
-  onEndorseCandidate: (application: any) => void;
+  onEndorseCandidate: (application: EndorsementApplication) => void;
 }
 
 export function CandidateDetailsModal({
@@ -251,7 +252,7 @@ export function CandidateDetailsModal({
                 <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Screening Questions</p>
                   <div className="space-y-3">
-                    {Object.entries(application.screening_answers).map(([question, answer]: [string, any], idx) => (
+                    {Object.entries(application.screening_answers).map(([question, answer], idx) => (
                       <div key={idx} className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-4">
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">Q: {question}</p>
                         <p className="text-sm">{answer}</p>

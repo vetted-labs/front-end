@@ -60,7 +60,7 @@ function LinkedInCallbackContent() {
         }
 
         // 🔐 SECURITY: Safely parse sessionStorage data
-        let stateData: any;
+        let stateData: { token: string; redirect?: string; timestamp: number };
         try {
           stateData = JSON.parse(savedStateData);
         } catch {
@@ -98,12 +98,12 @@ function LinkedInCallbackContent() {
 
         // Exchange code for user data via backend
         setMessage("Exchanging authorization code...");
-        const data: any = await candidateApi.linkedinAuth(code);
+        const data = await candidateApi.linkedinAuth(code);
 
         // Store authentication data
         localStorage.setItem("authToken", data.token);
-        localStorage.setItem("candidateId", data.id);
-        localStorage.setItem("candidateEmail", data.email);
+        localStorage.setItem("candidateId", data.candidate?.id || "");
+        localStorage.setItem("candidateEmail", data.candidate?.email || "");
         localStorage.setItem("userType", "candidate");
 
         setStatus("success");
@@ -114,10 +114,10 @@ function LinkedInCallbackContent() {
         const rawRedirect = stateData.redirect || "/candidate/dashboard";
         const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/dashboard";
         setTimeout(() => router.push(safeRedirect), 1500);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("LinkedIn OAuth error:", error);
         setStatus("error");
-        setMessage(error.message || "Failed to authenticate with LinkedIn");
+        setMessage(error instanceof Error ? error.message : "Failed to authenticate with LinkedIn");
         setTimeout(() => router.push("/auth/login"), 3000);
       }
     };

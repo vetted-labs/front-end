@@ -128,7 +128,7 @@ export default function CandidateProfilePage() {
         setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 200);
 
-      const data: any = await candidateApi.uploadResume(candidateId, resumeFile);
+      const data = await candidateApi.uploadResume(candidateId, resumeFile);
 
       clearInterval(progressInterval);
 
@@ -136,7 +136,7 @@ export default function CandidateProfilePage() {
       setProfile({
         ...profile,
         resumeUrl: data.resumeUrl,
-        resumeFileName: data.fileName,
+        resumeFileName: (data as { resumeUrl: string; fileName?: string }).fileName,
       });
       setSuccessMessage("Resume uploaded successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);

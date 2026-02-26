@@ -106,6 +106,7 @@ export type {
   EndorsementStatus,
   EndorsementInfo,
   EndorsementStats,
+  EndorsementApplication,
   ActiveEndorsement,
   EarningsBreakdown,
   ReputationTimeline,
@@ -119,3 +120,19 @@ export type {
   GuildAverages,
   GuildMaster,
 } from "./api-responses";
+export type {
+  RubricCriterion,
+  RubricQuestionEntry,
+  RubricRedFlag,
+  RubricInterpretationGuideItem,
+  GeneralTemplateRubric,
+  TopicScoringGuide,
+  QuestionPart,
+  GeneralReviewTemplate,
+  GeneralReviewQuestion,
+  LevelReviewTemplate,
+  ReviewDomainTopic,
+  ApplicationResponses,
+  ReviewSubmitPayload,
+  ReviewSubmitResponse,
+} from "./rubric";

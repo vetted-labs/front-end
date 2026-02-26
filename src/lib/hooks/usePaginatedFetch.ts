@@ -116,6 +116,16 @@ export function usePaginatedFetch<T>(
     }
   }, [skip, limit]);
 
+  // Re-fetch when fetchFn identity changes (sort/filter changed) — reset to page 1
+  const prevFetchFnRef = useRef(fetchFn);
+  useEffect(() => {
+    if (prevFetchFnRef.current !== fetchFn) {
+      prevFetchFnRef.current = fetchFn;
+      setPage(1);
+      execute(1);
+    }
+  }, [fetchFn, execute]);
+
   // Fetch on mount and when page changes (for server-side mode)
   useEffect(() => {
     execute(page);

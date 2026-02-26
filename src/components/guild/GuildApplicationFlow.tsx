@@ -406,6 +406,10 @@ export default function GuildApplicationFlow() {
             setError(`Please answer the domain question: ${topic.title}`);
             return false;
           }
+          if (val.trim().length < 50) {
+            setError(`Your answer for "${topic.title}" must be at least 50 characters.`);
+            return false;
+          }
         }
       }
 

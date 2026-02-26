@@ -51,7 +51,7 @@ export function useJobForm(jobId?: string) {
   useEffect(() => {
     const fetchGuilds = async () => {
       try {
-        const guildsData: any = await guildsApi.getAll();
+        const guildsData = await guildsApi.getAll();
         setGuilds(Array.isArray(guildsData) ? guildsData : []);
       } catch (error) {
         console.error("Failed to fetch guilds:", error);

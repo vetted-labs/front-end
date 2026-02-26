@@ -84,9 +84,9 @@ export default function SettingsPage() {
 
       setSaveMessage("Settings saved successfully!");
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving settings:", error);
-      setSaveMessage(error.message || "Failed to save settings. Please try again.");
+      setSaveMessage(error instanceof Error ? error.message : "Failed to save settings. Please try again.");
     } finally {
       setIsSaving(false);
     }

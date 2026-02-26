@@ -35,7 +35,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
     if (variant !== "expert" || !isConnected || !address) return;
     expertApi
       .getProfile(address)
-      .then((data: any) => setTotalPoints(calculateTotalPoints(data)))
+      .then((data) => setTotalPoints(calculateTotalPoints(data)))
       .catch(() => {});
   }, [variant, isConnected, address]);
 

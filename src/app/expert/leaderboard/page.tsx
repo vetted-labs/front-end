@@ -14,8 +14,8 @@ export default function LeaderboardPage() {
       if (!address) return;
 
       try {
-        const result: any = await expertApi.getProfile(address);
-        setExpertId(result.data?.id);
+        const result = await expertApi.getProfile(address);
+        setExpertId(result.id);
       } catch (error) {
         console.error("Failed to fetch expert ID:", error);
       }

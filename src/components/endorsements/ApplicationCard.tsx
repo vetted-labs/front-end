@@ -6,11 +6,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { MapPin, Briefcase, DollarSign, Award, Star, Linkedin, Github, FileText, ExternalLink, Eye, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
+import type { EndorsementApplication } from "@/types";
 
 interface ApplicationCardProps {
-  application: any;
-  onViewDetails: (application: any) => void;
-  onQuickEndorse: (application: any) => void;
+  application: EndorsementApplication;
+  onViewDetails: (application: EndorsementApplication) => void;
+  onQuickEndorse: (application: EndorsementApplication) => void;
 }
 
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
@@ -129,7 +130,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
                 className="h-8 px-2 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(ensureHttps(application.linkedin), '_blank', 'noopener,noreferrer');
+                  window.open(ensureHttps(application.linkedin!), '_blank', 'noopener,noreferrer');
                 }}
               >
                 <Linkedin className="w-3 h-3 mr-1" />
@@ -144,7 +145,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
                 className="h-8 px-2 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(ensureHttps(application.github), '_blank', 'noopener,noreferrer');
+                  window.open(ensureHttps(application.github!), '_blank', 'noopener,noreferrer');
                 }}
               >
                 <Github className="w-3 h-3 mr-1" />

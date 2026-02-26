@@ -3,6 +3,13 @@
 import { Shield, FileText, Briefcase } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import type { FieldErrors } from "../ExpertApplicationForm";
+import type {
+  GeneralReviewTemplate,
+  GeneralReviewQuestion,
+  LevelReviewTemplate,
+  ReviewDomainTopic,
+  QuestionPart,
+} from "@/types";
 
 export interface GeneralAnswers {
   learningFromFailure: string;
@@ -12,8 +19,8 @@ export interface GeneralAnswers {
 }
 
 export interface ApplicationQuestionsSectionProps {
-  generalTemplate: any;
-  levelTemplate: any;
+  generalTemplate: GeneralReviewTemplate | null;
+  levelTemplate: LevelReviewTemplate | null;
   loadingTemplates: boolean;
   generalAnswers: GeneralAnswers;
   levelAnswers: Record<string, string>;
@@ -109,7 +116,7 @@ export function ApplicationQuestionsSection({
         ) : !generalTemplate ? (
           <p className="text-sm text-muted-foreground">Select a guild to load the questions.</p>
         ) : (
-          (generalTemplate.questions || []).map((question: any, index: number) => {
+          (generalTemplate.questions || []).map((question: GeneralReviewQuestion, index: number) => {
             const answerKey =
               question.id === "learning_from_failure" ? "learningFromFailure"
               : question.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"
@@ -139,11 +146,11 @@ export function ApplicationQuestionsSection({
                         ))}
                     </div>
                   )}
-                  {question.parts?.length > 0 && (
+                  {question.parts && question.parts.length > 0 && (
                     <div className="mt-3 text-sm text-muted-foreground space-y-1">
                       <p className="font-medium">Address the following in your answer:</p>
                       <ul className="list-disc pl-5 space-y-0.5">
-                        {question.parts.map((part: any) => (
+                        {question.parts.map((part: QuestionPart) => (
                           <li key={part.id}>{part.label}</li>
                         ))}
                       </ul>
@@ -157,7 +164,7 @@ export function ApplicationQuestionsSection({
                     value={generalAnswers[answerKey as keyof typeof generalAnswers]}
                     onChange={(e) => onUpdateGeneralAnswer(question.id, null, e.target.value)}
                     onBlur={() => onBlur?.("generalAnswers")}
-                    placeholder={question.parts?.length ? `Address all parts: ${question.parts.map((p: any) => p.label).join(", ")}` : "Be specific about what you'd improve and why."}
+                    placeholder={question.parts?.length ? `Address all parts: ${question.parts.map((p: QuestionPart) => p.label).join(", ")}` : "Be specific about what you'd improve and why."}
                     rows={5}
                     error={fieldErrors[`general.${answerKey}`]}
                     required
@@ -186,7 +193,7 @@ export function ApplicationQuestionsSection({
         {loadingTemplates && !levelTemplate ? (
           <p className="text-sm text-muted-foreground">Loading level questions...</p>
         ) : levelTemplate?.topics?.length ? (
-          levelTemplate.topics.map((topic: any) => (
+          levelTemplate.topics.map((topic: ReviewDomainTopic) => (
             <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
               <div>
                 <h3 className="text-base font-semibold text-foreground">{topic.title}</h3>

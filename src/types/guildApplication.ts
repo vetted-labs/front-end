@@ -25,6 +25,7 @@ export interface GuildApplicationQuestion {
   required: boolean;
   scored: boolean;
   maxPoints: number | null;
+  parts?: import("./rubric").QuestionPart[];
 }
 
 export interface GuildApplicationLevel {
@@ -44,6 +45,8 @@ export interface GuildDomainTopic {
   id: string;
   title: string;
   prompt: string;
+  whatToLookFor?: string[];
+  scoring?: import("./rubric").TopicScoringGuide;
 }
 
 // --- Guild Application voting/status types ---
@@ -122,6 +125,9 @@ export interface GuildApplicationSummary {
   createdAt?: string;
   reviewCount?: number;
   approvalCount?: number;
+  // Additional fields from proposal mapping
+  fullName?: string;
+  totalStaked?: number;
 }
 
 export interface VoteHistoryItem {

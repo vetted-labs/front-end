@@ -51,9 +51,9 @@ export default function NotificationsPage() {
     try {
       const filters: { limit: number; offset: number } = { limit: NOTIFICATIONS_PER_PAGE, offset: 0 };
 
-      const result: any = await notificationsApi.getNotifications(address, filters);
+      const result = await notificationsApi.getNotifications(address, filters);
 
-      const notificationsData = Array.isArray(result) ? result : [];
+      const notificationsData = Array.isArray(result) ? result : (result?.notifications ?? []);
       setAllNotifications(notificationsData);
       setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
     } catch (err) {
@@ -69,12 +69,12 @@ export default function NotificationsPage() {
 
     setIsLoadingMore(true);
     try {
-      const result: any = await notificationsApi.getNotifications(address, {
+      const result = await notificationsApi.getNotifications(address, {
         limit: NOTIFICATIONS_PER_PAGE,
         offset: allNotifications.length,
       });
 
-      const moreData = Array.isArray(result) ? result : [];
+      const moreData = Array.isArray(result) ? result : (result?.notifications ?? []);
       if (moreData.length === 0) {
         setHasMore(false);
       } else {

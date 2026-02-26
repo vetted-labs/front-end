@@ -30,7 +30,11 @@ export interface Job {
   companyLogo?: string;
   createdAt: string;
   updatedAt?: string;
+  publishedAt?: string | null;
   featured?: boolean;
+  screeningQuestions?: string[];
+  equityOffered?: boolean | null;
+  equityRange?: string | null;
 }
 
 export interface DashboardStats {

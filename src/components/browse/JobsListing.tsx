@@ -74,9 +74,9 @@ export default function JobsListing() {
 
     const fetchApplications = async () => {
       try {
-        const data: any = await applicationsApi.getAll();
+        const data = await applicationsApi.getAll();
         const applications = data?.applications || [];
-        const jobIds = new Set<string>(applications.map((app: { jobId: string }) => app.jobId));
+        const jobIds = new Set<string>(applications.map((app) => app.jobId));
         setAppliedJobIds(jobIds);
       } catch (error) {
         console.error("Failed to fetch applications:", error);
@@ -90,10 +90,10 @@ export default function JobsListing() {
     const fetchJobs = async () => {
       setIsLoading(true);
       try {
-        const data: any = await jobsApi.getAll({ status: 'active' });
+        const data = await jobsApi.getAll({ status: 'active' });
         // Ensure all jobs have required fields with defaults
         const jobsList = Array.isArray(data) ? data : [];
-        const normalizedJobs = jobsList.map((job: Record<string, unknown>) => ({
+        const normalizedJobs: Job[] = jobsList.map((job) => ({
           ...job,
           title: job.title || 'Untitled Position',
           description: job.description || '',

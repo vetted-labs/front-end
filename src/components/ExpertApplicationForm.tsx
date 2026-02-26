@@ -8,7 +8,8 @@ import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
-import { expertApi, guildsApi } from "@/lib/api";
+import { expertApi, guildsApi, ApiError } from "@/lib/api";
+import type { GuildApplicationTemplate, GuildDomainLevel, GuildDomainTopic } from "@/types";
 
 export type FieldErrors = Record<string, string>;
 
@@ -32,8 +33,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   const [mounted, setMounted] = useState(false);
   const [guildOptions, setGuildOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedGuildId, setSelectedGuildId] = useState("");
-  const [generalTemplate, setGeneralTemplate] = useState<any>(null);
-  const [levelTemplate, setLevelTemplate] = useState<any>(null);
+  const [generalTemplate, setGeneralTemplate] = useState<GuildApplicationTemplate | null>(null);
+  const [levelTemplate, setLevelTemplate] = useState<GuildDomainLevel | null>(null);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string[]>([]);
   const errorRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +69,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     if (!mounted || !isConnected || !address) return;
     const checkExistingProfile = async () => {
       try {
-        const result: any = await expertApi.getProfile(address);
+        const result = await expertApi.getProfile(address);
         if (result?.status === "approved") {
           if (guildParam) {
             // Expert is applying to a new guild — pre-fill from existing profile
@@ -114,7 +115,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   useEffect(() => {
     const loadGuilds = async () => {
       try {
-        const response: any = await guildsApi.getAll();
+        const response = await guildsApi.getAll();
         if (Array.isArray(response)) {
           const guilds = response.map((g) => ({ id: g.id, name: g.name }));
           setGuildOptions(guilds);
@@ -309,7 +310,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   const loadGeneralTemplate = async (guildId: string) => {
     setLoadingTemplates(true);
     try {
-      const data: any = await expertApi.getGuildApplicationTemplate(
+      const data = await expertApi.getGuildApplicationTemplate(
         guildId,
         "general"
       );
@@ -324,15 +325,17 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   const loadLevelTemplate = async (guildId: string, level: string) => {
     setLoadingTemplates(true);
     try {
-      const data: any = await expertApi.getGuildApplicationTemplate(
+      const data = await expertApi.getGuildApplicationTemplate(
         guildId,
         "level",
         level
       );
-      setLevelTemplate(data);
-      if (data?.topics) {
+      // The level template endpoint returns the domain level data
+      const domainLevel = (data as GuildApplicationTemplate).domainQuestions?.[level as keyof GuildApplicationTemplate["domainQuestions"]] ?? data as unknown as GuildDomainLevel;
+      setLevelTemplate(domainLevel);
+      if (domainLevel?.topics) {
         const initAnswers: Record<string, string> = {};
-        data.topics.forEach((topic: any) => {
+        domainLevel.topics.forEach((topic: GuildDomainTopic) => {
           initAnswers[topic.id] = "";
         });
         setLevelAnswers(initAnswers);
@@ -425,7 +428,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     setIsLoading(true);
 
     try {
-      const result: any = await expertApi.apply({
+      const result = await expertApi.apply({
         ...formData,
         yearsOfExperience: parseInt(formData.yearsOfExperience),
         walletAddress: address,
@@ -445,7 +448,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       });
 
       // Upload resume after expert record is created
-      const expertId = result?.expertId;
+      const expertId = (result as { id?: string; expertId?: string })?.expertId ?? (result as { id?: string })?.id;
       if (expertId && resumeFile) {
         await expertApi.uploadResume(expertId, resumeFile);
       }
@@ -456,9 +459,9 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
         onSuccess?.();
         router.push("/expert/application-pending");
       }, 4000);
-    } catch (err: any) {
-      const apiError = err as any;
-      const responseData = apiError?.response?.data || apiError?.data;
+    } catch (err: unknown) {
+      const apiError = err instanceof ApiError ? err : null;
+      const responseData = apiError?.data as Record<string, unknown> | undefined;
       const errorsArray = Array.isArray(responseData?.errors) ? responseData.errors : [];
       if (errorsArray.length > 0) {
         const friendlyFieldNames: Record<string, string> = {
@@ -474,23 +477,23 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
           motivation: "Motivation",
         };
 
-        const detailLines = errorsArray.map((entry: any) => {
+        const detailLines = errorsArray.map((entry: { path?: string | string[]; message?: string }) => {
           const pathValue = Array.isArray(entry.path)
             ? entry.path.join(".")
             : entry.path || "";
           const fieldLabel = friendlyFieldNames[pathValue] || pathValue;
           // Make backend messages more readable
           let msg = entry.message || "";
-          msg = msg.replace(/Too small: expected string to have >=(\d+) characters?/i, (m: string, n: string) => `Must be at least ${n} characters`);
-          msg = msg.replace(/Too big: expected string to have <=(\d+) characters?/i, (m: string, n: string) => `Must not exceed ${n} characters`);
+          msg = msg.replace(/Too small: expected string to have >=(\d+) characters?/i, (_m: string, n: string) => `Must be at least ${n} characters`);
+          msg = msg.replace(/Too big: expected string to have <=(\d+) characters?/i, (_m: string, n: string) => `Must not exceed ${n} characters`);
           msg = msg.replace(/Required/i, "This field is required");
           return fieldLabel ? `${fieldLabel}: ${msg}` : msg;
         });
         setFormError("Please fix the following issues:", detailLines);
         return;
       }
-      const validationMessage = responseData?.message || responseData?.error;
-      setFormError(validationMessage || apiError?.message || "Failed to submit application. Please try again.");
+      const validationMessage = (responseData?.message || responseData?.error) as string | undefined;
+      setFormError(validationMessage || (err instanceof Error ? err.message : "Failed to submit application. Please try again."));
     } finally {
       setIsLoading(false);
     }

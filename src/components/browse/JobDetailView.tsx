@@ -28,6 +28,7 @@ import { Modal, Button, Alert, Textarea, StatusBadge } from "@/components/ui";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { formatSalaryRange } from "@/lib/utils";
+import type { CandidateApplication } from "@/types";
 
 interface JobDetails {
   id: string;
@@ -62,28 +63,6 @@ interface UserProfile {
   resumeFileName?: string;
 }
 
-interface Application {
-  id: string;
-  jobId: string; // Backend returns this in camelCase
-  candidateId?: string;
-  status: "pending" | "interviewing" | "offered" | "rejected" | "accepted";
-  appliedAt: string;
-  coverLetter?: string;
-  resumeUrl?: string;
-  job?: {
-    id: string;
-    title: string;
-    companyName: string;
-    location: string;
-    type: string;
-    salary: {
-      min: number | null;
-      max: number | null;
-      currency: string;
-    };
-  };
-}
-
 export default function JobDetailView() {
   const params = useParams();
   const router = useRouter();
@@ -102,7 +81,7 @@ export default function JobDetailView() {
   const [screeningAnswers, setScreeningAnswers] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationError, setApplicationError] = useState("");
-  const [existingApplication, setExistingApplication] = useState<Application | null>(null);
+  const [existingApplication, setExistingApplication] = useState<CandidateApplication | null>(null);
   const [checkingApplication, setCheckingApplication] = useState(false);
   const [isGuildMember, setIsGuildMember] = useState(false);
   const [checkingGuildMembership, setCheckingGuildMembership] = useState(false);
@@ -117,7 +96,7 @@ export default function JobDetailView() {
     const fetchProfile = async () => {
       try {
         const candidateId = auth.userId;
-        const data: any = await candidateApi.getById(candidateId as string);
+        const data = await candidateApi.getById(candidateId as string);
         setProfileResume({
           resumeUrl: data.resumeUrl,
           resumeFileName: data.resumeFileName || "Your Profile Resume",
@@ -136,12 +115,10 @@ export default function JobDetailView() {
     const checkExistingApplication = async () => {
       setCheckingApplication(true);
       try {
-        const data: any = await applicationsApi.getAll();
+        const data = await applicationsApi.getAll();
 
         // Handle paginated response from backend: { applications: [...], pagination: {...} }
-        const applications: Application[] = Array.isArray(data)
-          ? data
-          : (data?.applications || []);
+        const applications = data?.applications || [];
 
         // Check if user has already applied to this job
         if (Array.isArray(applications) && applications.length > 0) {
@@ -191,7 +168,7 @@ export default function JobDetailView() {
           return;
         }
 
-        const membershipData: any = await guildsApi.checkMembership(candidateId, guildId);
+        const membershipData = await guildsApi.checkMembership(candidateId, guildId);
 
         if (membershipData.isMember || membershipData.status === "approved") {
           setIsGuildMember(true);
@@ -203,15 +180,17 @@ export default function JobDetailView() {
           setIsGuildMember(false);
           setGuildMembershipStatus("not_member");
         }
-      } catch (err: any) {
-        console.error("[Guild Check] ❌ Error checking membership:", {
+      } catch (err: unknown) {
+        const apiErr = err instanceof Error ? err : null;
+        const status = (err as { status?: number })?.status;
+        console.error("[Guild Check] Error checking membership:", {
           guildId,
-          status: err.status,
-          message: err.message
+          status,
+          message: apiErr?.message
         });
 
         // If 404, user is not a member - this is expected
-        if (err.status === 404) {
+        if (status === 404) {
           setIsGuildMember(false);
           setGuildMembershipStatus("not_member");
         } else {
@@ -249,20 +228,33 @@ export default function JobDetailView() {
         const shouldIncrementView = !alreadyViewed;
 
 
-        const data: any = await jobsApi.getById(jobId);
-        const normalizedJob = {
-          ...data,
+        const data = await jobsApi.getById(jobId);
+        const normalizedJob: JobDetails = {
+          id: data.id,
           title: data.title || 'Untitled Position',
           description: data.description || '',
           requirements: data.requirements || [],
           skills: data.skills || [],
           screeningQuestions: data.screeningQuestions || [],
           department: data.department || null,
-          experienceLevel: data.experienceLevel || null,
+          location: data.location,
+          locationType: (data.locationType || "remote") as JobDetails["locationType"],
+          type: data.type,
+          experienceLevel: (data.experienceLevel || null) as JobDetails["experienceLevel"],
+          salary: data.salary || { min: null, max: null, currency: 'USD' },
           equityOffered: data.equityOffered || null,
           equityRange: data.equityRange || null,
+          status: (data.status || "active") as JobDetails["status"],
+          guild: data.guild || '',
+          applicants: data.applicants || 0,
+          views: data.views || 0,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt || data.createdAt,
           publishedAt: data.publishedAt || null,
-          salary: data.salary || { min: null, max: null, currency: 'USD' },
+          companyId: data.companyId || '',
+          companyName: data.companyName,
+          companyLogo: data.companyLogo,
+          featured: data.featured,
         };
         setJob(normalizedJob);
 
@@ -271,9 +263,9 @@ export default function JobDetailView() {
           const updatedViewedJobs = [...viewedJobs, jobId];
           sessionStorage.setItem(viewedJobsKey, JSON.stringify(updatedViewedJobs));
         }
-      } catch (error) {
+      } catch (error: unknown) {
         setError(
-          `Failed to load job details. Details: ${(error as Error).message}`,
+          `Failed to load job details. Details: ${error instanceof Error ? error.message : "An error occurred"}`,
         );
         console.error("Fetch error:", error);
       } finally {
@@ -382,12 +374,12 @@ export default function JobDetailView() {
 
       // If uploading new resume, upload it first
       if (!useProfileResume && resumeFile) {
-        const resumeData: any = await candidateApi.uploadResume(candidateId, resumeFile);
+        const resumeData = await candidateApi.uploadResume(candidateId, resumeFile);
         resumeUrl = resumeData.resumeUrl;
       }
 
       // Submit the application
-      const newApplication: any = await applicationsApi.create({
+      const newApplication = await applicationsApi.create({
         jobId: job?.id,
         candidateId,
         coverLetter,
@@ -396,7 +388,20 @@ export default function JobDetailView() {
       });
 
       // Update state to show user has applied
-      setExistingApplication(newApplication);
+      setExistingApplication({
+        id: newApplication.id,
+        jobId: job?.id || "",
+        status: "pending",
+        coverLetter,
+        appliedAt: new Date().toISOString(),
+        job: {
+          id: job?.id || "",
+          title: job?.title || "",
+          companyName: job?.companyName,
+          location: job?.location || "",
+          type: job?.type || "Full-time",
+        },
+      });
 
       // Success!
       setShowApplyModal(false);
@@ -405,9 +410,9 @@ export default function JobDetailView() {
       setResumeFile(null);
       setUseProfileResume(true);
       setScreeningAnswers([]);
-    } catch (error) {
+    } catch (error: unknown) {
       setApplicationError(
-        `Failed to submit application: ${(error as Error).message}`
+        `Failed to submit application: ${error instanceof Error ? error.message : "An error occurred"}`
       );
     } finally {
       setIsSubmitting(false);

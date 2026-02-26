@@ -74,11 +74,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       setIsLoadingGuilds(true);
       try {
         // Always fetch all guilds so the full list is available
-        const allData: any = await guildsApi.getAll();
+        const allData = await guildsApi.getAll();
         const allGuilds = Array.isArray(allData) ? allData : [];
         const guildOptions: GuildOption[] = allGuilds
-          .filter((g: any) => g.blockchainGuildId)
-          .map((g: any) => ({
+          .filter((g) => g.blockchainGuildId)
+          .map((g) => ({
             id: g.id,
             name: g.name,
             blockchainGuildId: g.blockchainGuildId as `0x${string}`,
@@ -145,8 +145,8 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   // Handle transaction errors
   useEffect(() => {
     if (txError && txHash && step === "transaction") {
-      const errorMessage = (txErrorDetails as any)?.shortMessage ||
-                          (txErrorDetails as any)?.message ||
+      const errorMessage = (txErrorDetails as { shortMessage?: string })?.shortMessage ||
+                          (txErrorDetails instanceof Error ? txErrorDetails.message : null) ||
                           "Transaction failed on blockchain";
 
       setTxStatus("error");
@@ -155,8 +155,10 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     }
   }, [txError, txHash, step, txErrorDetails]);
 
-  const isUserRejection = (error: any) =>
-    error?.message?.includes("User rejected") || error?.message?.includes("User denied");
+  const isUserRejection = (error: unknown): boolean => {
+    const message = error instanceof Error ? error.message : "";
+    return message.includes("User rejected") || message.includes("User denied");
+  };
 
   /**
    * Unified stake handler — if approval is needed, approves with MaxUint256
@@ -204,15 +206,16 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       // Now stake
       const hash = await stake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Staking error:", error);
 
       if (isUserRejection(error)) {
         toast.error("Transaction rejected");
         setShowTxModal(false);
       } else {
+        const shortMessage = (error as { shortMessage?: string })?.shortMessage;
         setTxStatus("error");
-        setTxErrorMessage(error.shortMessage || error.message || "Transaction failed");
+        setTxErrorMessage(shortMessage || (error instanceof Error ? error.message : "Transaction failed"));
       }
 
       setStep("input");
@@ -255,15 +258,16 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
 
       const hash = await requestUnstake(selectedGuild.blockchainGuildId, stakeAmount);
       setTxHash(hash);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Withdrawal error:", error);
 
-      if (error.message?.includes("User rejected") || error.message?.includes("User denied")) {
+      if (isUserRejection(error)) {
         toast.error("Transaction rejected by user");
         setShowTxModal(false);
       } else {
+        const shortMessage = (error as { shortMessage?: string })?.shortMessage;
         setTxStatus("error");
-        setTxErrorMessage(error.shortMessage || error.message || "Failed to withdraw tokens");
+        setTxErrorMessage(shortMessage || (error instanceof Error ? error.message : "Failed to withdraw tokens"));
       }
 
       setStep("input");

@@ -19,6 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import type { CompanyApplication } from "@/types";
 
 import {
   Dialog,
@@ -67,10 +68,10 @@ export default function JobDetailsPage() {
   const [job, setJob] = useState<JobDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<CompanyApplication[]>([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function JobDetailsPage() {
 
       try {
         setApplicationsLoading(true);
-        const data: any = await applicationsApi.getJobApplications(jobId, {
+        const data = await applicationsApi.getJobApplications(jobId, {
           status: statusFilter,
           limit: 50
         });
@@ -260,7 +261,7 @@ export default function JobDetailsPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-border/30 max-h-[calc(100vh-300px)] overflow-y-auto">
-                  {applications.map((application: any) => (
+                  {applications.map((application) => (
                     <div
                       key={application.id}
                       className="px-5 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer"

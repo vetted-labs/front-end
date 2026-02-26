@@ -11,7 +11,7 @@ import { useEndorsementTransaction } from "@/lib/hooks/useEndorsementTransaction
 import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransaction";
 import { apiRequest } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import type { EndorsementInfo } from "@/types";
+import type { EndorsementApplication } from "@/types";
 
 import {
   Card,
@@ -44,25 +44,6 @@ import { WalletStatusBanner } from "./endorsements/WalletStatusBanner";
 import { EndorsementStatsGrid } from "./endorsements/EndorsementStatsGrid";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 
-interface Application {
-  application_id: string;
-  candidate_id: string;
-  candidate_name: string;
-  candidate_headline: string;
-  candidate_wallet: string;
-  job_id: string;
-  job_title: string;
-  company_name: string;
-  guild_score: number;
-  location: string;
-  job_type: string;
-  salary_min: number;
-  salary_max: number;
-  applied_at: string;
-  current_bid?: string;
-  rank?: number;
-}
-
 interface EndorsementMarketplaceProps {
   guildId: string;
   guildName: string;
@@ -72,7 +53,7 @@ interface EndorsementMarketplaceProps {
 export function EndorsementMarketplace({ guildId, guildName, initialApplicationId }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
 
@@ -83,10 +64,10 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   const { endorsements: allUserEndorsements, isLoading: endorsementsLoading, refetch: refetchEndorsements } = useMyActiveEndorsements();
 
   // Load applications via useFetch
-  const { data: applications, isLoading: loading, refetch: reloadApplications } = useFetch<Application[]>(
+  const { data: applications, isLoading: loading, refetch: reloadApplications } = useFetch<EndorsementApplication[]>(
     async () => {
       if (!guildId || !address) return [];
-      const response = await apiRequest<Application[]>(
+      const response = await apiRequest<EndorsementApplication[]>(
         `/api/blockchain/endorsements/applications/${guildId}?expert_address=${address}`
       );
       return Array.isArray(response) ? response : [];
@@ -119,8 +100,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
 
   // Filter endorsements for current guild
-  // Note: API returns more fields than EndorsementInfo type defines, including guild info
-  const userEndorsements = allUserEndorsements.filter((e) => (e as EndorsementInfo & { guild?: { id: string } }).guild?.id === guildId);
+  const userEndorsements = allUserEndorsements.filter((e) => e.guild?.id === guildId);
 
   // Auto-open endorsement modal when navigated with ?applicationId=
   useEffect(() => {
@@ -143,17 +123,17 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
 
   // ── Modal handlers ──
 
-  const handleViewDetails = (application: Application) => {
+  const handleViewDetails = (application: EndorsementApplication) => {
     setSelectedApp(application);
     setDetailsModalOpen(true);
   };
 
-  const handleQuickEndorse = (application: Application) => {
+  const handleQuickEndorse = (application: EndorsementApplication) => {
     setSelectedApp(application);
     setTransactionModalOpen(true);
   };
 
-  const handleEndorseFromDetails = (application: Application) => {
+  const handleEndorseFromDetails = (application: EndorsementApplication) => {
     setDetailsModalOpen(false);
     setSelectedApp(application);
     setTransactionModalOpen(true);

@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
 // Handle WalletConnect errors globally
 if (typeof window !== "undefined") {
   // Check if handlers are already installed (store on window to persist across hot reloads)
-  if (!(window as any).__walletConnectErrorHandlersInstalled) {
+  if (!(window as unknown as Record<string, boolean>).__walletConnectErrorHandlersInstalled) {
     // Suppress unhandled promise rejections from WalletConnect
     window.addEventListener('unhandledrejection', (event) => {
       const errorMessage = event.reason?.message || String(event.reason);
@@ -43,8 +43,8 @@ if (typeof window !== "undefined") {
 
     // Suppress console errors from WalletConnect
     const originalError = console.error;
-    console.error = (...args: any[]) => {
-      const errorStr = args.join(' ');
+    console.error = (...args: unknown[]) => {
+      const errorStr = args.map(String).join(' ');
       if (
         errorStr.includes("Connection interrupted") ||
         errorStr.includes("WebSocket") ||
@@ -56,7 +56,7 @@ if (typeof window !== "undefined") {
     };
 
     // Mark as installed
-    (window as any).__walletConnectErrorHandlersInstalled = true;
+    (window as unknown as Record<string, boolean>).__walletConnectErrorHandlersInstalled = true;
   }
 }
 

@@ -89,9 +89,9 @@ export default function DisputeDetailPage() {
     try {
       setLoading(true);
       // Use the hire outcome endpoint to get dispute details
-      const data: any = await endorsementAccountabilityApi.getHireOutcome(disputeId);
-      setDispute(data);
-    } catch (error: any) {
+      const data = await endorsementAccountabilityApi.getHireOutcome(disputeId);
+      setDispute(data as unknown as DisputeDetail);
+    } catch (error: unknown) {
       console.error("Error loading dispute:", error);
       toast.error("Failed to load dispute details");
     } finally {
@@ -114,8 +114,8 @@ export default function DisputeDetailPage() {
       );
       toast.success("Arbitration vote submitted!");
       loadDispute();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to submit vote");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to submit vote");
     }
   };
 

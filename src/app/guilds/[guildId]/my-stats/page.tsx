@@ -109,15 +109,15 @@ export default function MyGuildStatsPage() {
       }
 
       // Fetch personal stats
-      const [statsData, averagesData, activityData]: any[] = await Promise.all([
+      const [statsData, averagesData, activityData] = await Promise.all([
         guildsApi.checkMembership(candidateId, guildId),
         guildsApi.getAverages(guildId),
         guildsApi.getMemberActivity(guildId, candidateId),
       ]);
 
-      setStats(statsData);
-      setGuildAverages(averagesData);
-      setRecentActivity(activityData.activities || []);
+      setStats(statsData as unknown as PersonalStats);
+      setGuildAverages(averagesData as unknown as GuildAverages);
+      setRecentActivity((activityData as unknown as RecentActivity[]) || []);
     } catch (err) {
       console.error("[My Stats] Error:", err);
       setError((err as Error).message || "Failed to load your guild statistics");

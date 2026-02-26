@@ -11,16 +11,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
+import type { EndorsementApplication } from "@/types";
 
 interface EndorsementModalProps {
-  application: any | null;
+  application: EndorsementApplication | null;
   isOpen: boolean;
   onClose: () => void;
   onEndorsementPlaced: () => void;
   userBalance: string;
   userStake: string;
   minimumBid: string;
-  onPlaceEndorsement: (application: any, bidAmount: string) => Promise<void>;
+  onPlaceEndorsement: (application: EndorsementApplication, bidAmount: string) => Promise<void>;
 }
 
 export function EndorsementModal({
@@ -87,7 +88,7 @@ export function EndorsementModal({
       setBidAmount('');
       onEndorsementPlaced();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Endorsement error:', error);
       // Error is already handled by parent component
     } finally {
@@ -201,7 +202,7 @@ export function EndorsementModal({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {Object.entries(application.screening_answers).map(([question, answer]: [string, any]) => (
+                    {Object.entries(application.screening_answers).map(([question, answer]) => (
                       <div key={question}>
                         <p className="font-medium text-sm mb-1">{question}</p>
                         <p className="text-sm text-muted-foreground">{answer}</p>

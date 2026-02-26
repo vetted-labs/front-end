@@ -3,10 +3,16 @@
 import { ArrowRight } from "lucide-react";
 import { Modal } from "../ui/modal";
 
+interface WalletConnector {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
 interface WalletConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  connectors: any[];
+  connectors: WalletConnector[];
   onConnect: (connectorId: string) => void;
   mounted: boolean;
 }

@@ -20,7 +20,7 @@ import {
 import { Button, Input, Textarea, Select, Alert } from "@/components/ui";
 
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
-import { companyApi, getAssetUrl } from "@/lib/api";
+import { companyApi, getAssetUrl, ApiError } from "@/lib/api";
 
 interface CompanyProfile {
   id: string;
@@ -78,8 +78,8 @@ export default function CompanyProfilePage() {
         return;
       }
 
-      const data: any = await companyApi.getProfile();
-      setProfile(data);
+      const data = await companyApi.getProfile();
+      setProfile(data as CompanyProfile);
       setFormData({
         name: data.name || "",
         website: data.website || "",
@@ -88,8 +88,8 @@ export default function CompanyProfilePage() {
         industry: data.industry || "",
         description: data.description || "",
       });
-    } catch (error: any) {
-      if (error.status === 401) {
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 401) {
         localStorage.removeItem("companyAuthToken");
         router.push("/auth/login?type=company");
         return;
@@ -111,16 +111,16 @@ export default function CompanyProfilePage() {
     setSuccessMessage("");
 
     try {
-      const updatedProfile: any = await companyApi.updateProfile(formData);
-      setProfile(updatedProfile);
+      const updatedProfile = await companyApi.updateProfile(formData);
+      setProfile(updatedProfile as CompanyProfile);
       setIsEditing(false);
       setSuccessMessage("Profile updated successfully!");
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating profile:", error);
-      setError(error.message || "Failed to update profile");
+      setError(error instanceof Error ? error.message : "Failed to update profile");
     } finally {
       setIsSaving(false);
     }
@@ -147,15 +147,15 @@ export default function CompanyProfilePage() {
     setSuccessMessage("");
 
     try {
-      const data: any = await companyApi.uploadLogo(file);
+      const data = await companyApi.uploadLogo(file);
       setProfile((prev) => (prev ? { ...prev, logoUrl: data.logoUrl } : null));
       setSuccessMessage("Logo uploaded successfully!");
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading logo:", error);
-      setError(error.message || "Failed to upload logo");
+      setError(error instanceof Error ? error.message : "Failed to upload logo");
     } finally {
       setIsUploadingLogo(false);
     }

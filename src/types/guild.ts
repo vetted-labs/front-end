@@ -14,6 +14,7 @@ export interface Guild {
   jobCount?: number;
   icon?: string;
   color?: string;
+  blockchainGuildId?: string;
 }
 
 /** Extended guild detail returned by guildsApi.getPublicDetail — includes members, jobs, stats. */
