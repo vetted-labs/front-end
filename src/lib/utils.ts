@@ -146,3 +146,27 @@ export function formatSalaryRange(
   if (salary.max) return `Up to ${fmtK(salary.max)}`;
   return "Salary not specified";
 }
+
+/**
+ * Ensure a URL has a protocol prefix (defaults to https://)
+ */
+export function ensureHttps(url: string): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
+/**
+ * Strip markdown syntax for plain-text previews
+ */
+export function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")     // bold
+    .replace(/\*(.*?)\*/g, "$1")          // italic
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")   // code
+    .replace(/^#+\s+/gm, "")             // headings
+    .replace(/^[-*]\s+/gm, "")           // list items
+    .replace(/^\d+\.\s+/gm, "")          // numbered lists
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // links
+    .replace(/\n{2,}/g, " ");             // collapse newlines
+}

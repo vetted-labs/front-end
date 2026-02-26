@@ -13,6 +13,7 @@ const API_BASE_URL = getApiBaseUrl();
 interface ApiRequestOptions extends RequestInit {
   requiresAuth?: boolean;
   _isRetry?: boolean; // Internal flag to prevent infinite refresh loops
+  rawEnvelope?: boolean;
 }
 
 export class ApiError extends Error {
@@ -183,6 +184,7 @@ export async function apiRequest<T = unknown>(
 
     // Auto-unwrap { success: true, data: T } envelope from backend
     if (
+      !options.rawEnvelope &&
       data !== null &&
       typeof data === "object" &&
       !Array.isArray(data) &&
@@ -600,7 +602,7 @@ export const guildsApi = {
 
   // Get public guild details with members overview
   getPublicDetail: (guildId: string) =>
-    apiRequest<import("@/types").Guild>(`/api/guilds/${encodeURIComponent(guildId)}`),
+    apiRequest<import("@/types").GuildPublicDetail>(`/api/guilds/${encodeURIComponent(guildId)}`),
 
   // Get guild's application template
   getApplicationTemplate: (guildId: string, jobId?: string) => {
@@ -659,7 +661,7 @@ export const guildsApi = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.period) queryParams.append("period", params.period);
     const query = queryParams.toString();
-    return apiRequest<import("@/types").LeaderboardEntry[]>(`/api/guilds/${encodeURIComponent(guildId)}/leaderboard${query ? `?${query}` : ""}`);
+    return apiRequest<import("@/types").GuildLeaderboardEntry[]>(`/api/guilds/${encodeURIComponent(guildId)}/leaderboard${query ? `?${query}` : ""}`);
   },
 
   // Get guild averages (for comparison stats)
@@ -669,6 +671,165 @@ export const guildsApi = {
   // Get a member's recent activity in a guild
   getMemberActivity: (guildId: string, memberId: string) =>
     apiRequest<import("@/types").ExpertActivity[]>(`/api/guilds/${encodeURIComponent(guildId)}/members/${encodeURIComponent(memberId)}/activity`),
+};
+
+// Helper: build auth headers for feed endpoints.
+// Experts use wallet-based auth (no JWT), so we pass wallet/expertId via headers.
+// Candidates/companies use the standard Bearer token.
+function getFeedAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined"
+    ? localStorage.getItem("authToken") || localStorage.getItem("companyAuthToken")
+    : null;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  if (typeof window !== "undefined") {
+    const walletAddress = localStorage.getItem("walletAddress");
+    const expertId = localStorage.getItem("expertId");
+    if (walletAddress) headers["X-Wallet-Address"] = walletAddress;
+    if (expertId) headers["X-Expert-Id"] = expertId;
+  }
+  return headers;
+}
+
+// Guild Feed API (discussion posts, replies, votes)
+export const guildFeedApi = {
+  // Get posts for a guild (paginated, with sort/filter)
+  getPosts: async (
+    guildId: string,
+    params?: {
+      sort?: import("@/types").PostSortMode;
+      tag?: import("@/types").PostTag | "all";
+      timeWindow?: import("@/types").TopTimeWindow;
+      page?: number;
+      limit?: number;
+    }
+  ) => {
+    const queryParams = new URLSearchParams();
+    if (params?.sort) queryParams.append("sort", params.sort);
+    if (params?.tag && params.tag !== "all") queryParams.append("tag", params.tag);
+    if (params?.timeWindow) queryParams.append("timeWindow", params.timeWindow);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    // Backend returns { success, data: Post[], total }. We use rawEnvelope to
+    // skip auto-unwrap so we can access `total` for server-side pagination.
+    const endpoint = `/api/guilds/${encodeURIComponent(guildId)}/posts${query ? `?${query}` : ""}`;
+    const json = await apiRequest<{ success?: boolean; data?: import("@/types").GuildPost[]; total?: number }>(endpoint, {
+      headers: getFeedAuthHeaders(),
+      rawEnvelope: true,
+    });
+    const posts = json.data ?? [];
+    const total = json.total ?? posts.length;
+    return { data: posts, total } as import("@/types").GuildFeedResponse;
+  },
+
+  // Get a single post by ID
+  getPost: (guildId: string, postId: string) =>
+    apiRequest<import("@/types").GuildPost>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
+      { headers: getFeedAuthHeaders() }
+    ),
+
+  // Create a new post (auth required, member only)
+  createPost: (guildId: string, data: import("@/types").CreatePostPayload) =>
+    apiRequest<import("@/types").GuildPost>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Update a post (author only)
+  updatePost: (guildId: string, postId: string, data: Partial<import("@/types").CreatePostPayload>) =>
+    apiRequest<import("@/types").GuildPost>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
+      { method: "PUT", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Delete a post (author or guild lead)
+  deletePost: (guildId: string, postId: string) =>
+    apiRequest<{ success: boolean }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}`,
+      { method: "DELETE", headers: getFeedAuthHeaders() }
+    ),
+
+  // Get replies for a post
+  getReplies: async (
+    guildId: string,
+    postId: string,
+    params?: { sort?: "new" | "top"; page?: number; limit?: number; parentReplyId?: string }
+  ) => {
+    const queryParams = new URLSearchParams();
+    if (params?.sort) queryParams.append("sort", params.sort);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.parentReplyId) queryParams.append("parentReplyId", params.parentReplyId);
+    const query = queryParams.toString();
+    const endpoint = `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies${query ? `?${query}` : ""}`;
+    const json = await apiRequest<{ success?: boolean; data?: import("@/types").GuildPostReply[]; total?: number }>(endpoint, {
+      headers: getFeedAuthHeaders(),
+      rawEnvelope: true,
+    });
+    const replies = json.data ?? [];
+    const total = json.total ?? replies.length;
+    return { data: replies, total } as { data: import("@/types").GuildPostReply[]; total: number };
+  },
+
+  // Create a reply (auth required, member only)
+  createReply: (guildId: string, postId: string, data: import("@/types").CreateReplyPayload) =>
+    apiRequest<import("@/types").GuildPostReply>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Delete a reply (author or guild lead)
+  deleteReply: (guildId: string, postId: string, replyId: string) =>
+    apiRequest<{ success: boolean }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/replies/${encodeURIComponent(replyId)}`,
+      { method: "DELETE", headers: getFeedAuthHeaders() }
+    ),
+
+  // Toggle vote on a post or reply
+  vote: (guildId: string, data: import("@/types").VotePayload) =>
+    apiRequest<{ voted: boolean; newCount: number }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/votes`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Toggle reaction on a post or reply
+  toggleReaction: (guildId: string, data: import("@/types").ToggleReactionPayload) =>
+    apiRequest<import("@/types").ToggleReactionResponse>(
+      `/api/guilds/${encodeURIComponent(guildId)}/reactions`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Accept a reply as the answer
+  acceptAnswer: (guildId: string, postId: string, data: { replyId: string }) =>
+    apiRequest<{ acceptedReplyId: string }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/accept`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Remove accepted answer
+  removeAcceptedAnswer: (guildId: string, postId: string) =>
+    apiRequest<{ success: boolean }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/accept`,
+      { method: "DELETE", headers: getFeedAuthHeaders() }
+    ),
+
+  // Cast a vote on a poll
+  castPollVote: (guildId: string, postId: string, data: import("@/types").CastPollVotePayload) =>
+    apiRequest<import("@/types").CastPollVoteResponse>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/poll/vote`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
+
+  // Moderate a post (pin, close, delete, etc.)
+  moderatePost: (guildId: string, postId: string, data: import("@/types").ModerationPayload) =>
+    apiRequest<{ success: boolean }>(
+      `/api/guilds/${encodeURIComponent(guildId)}/posts/${encodeURIComponent(postId)}/moderate`,
+      { method: "POST", body: JSON.stringify(data), headers: getFeedAuthHeaders() }
+    ),
 };
 
 // Blockchain API
@@ -726,7 +887,7 @@ export const blockchainApi = {
     if (params?.status) queryParams.append("status", params.status);
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     const query = queryParams.toString();
-    return apiRequest<import("@/types").EndorsementInfo[]>(`/api/blockchain/endorsements/expert/${walletAddress}${query ? `?${query}` : ""}`);
+    return apiRequest<import("@/types").ActiveEndorsement[]>(`/api/blockchain/endorsements/expert/${walletAddress}${query ? `?${query}` : ""}`);
   },
 
   // Reputation endpoints
@@ -768,6 +929,57 @@ export const blockchainApi = {
     apiRequest<import("@/types").WalletVerification>(`/api/blockchain/wallet/verified/${walletAddress}`),
 };
 
+// Maps camelCase API response to snake_case GuildApplication type
+function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/types").GuildApplication {
+  return {
+    id: raw.id as string,
+    candidate_name: (raw.candidateName ?? raw.candidate_name ?? "") as string,
+    candidate_email: (raw.candidateEmail ?? raw.candidate_email ?? "") as string,
+    candidate_id: (raw.candidateId ?? raw.candidate_id) as string | undefined,
+    years_of_experience: raw.yearsOfExperience != null || raw.years_of_experience != null
+      ? Number(raw.yearsOfExperience ?? raw.years_of_experience) : undefined,
+    skills_summary: (raw.skillsSummary ?? raw.skills_summary) as string | undefined,
+    experience_summary: (raw.experienceSummary ?? raw.experience_summary) as string | undefined,
+    motivation_statement: (raw.motivationStatement ?? raw.motivation_statement) as string | undefined,
+    credibility_evidence: (raw.credibilityEvidence ?? raw.credibility_evidence) as string | undefined,
+    achievements: (raw.achievements ?? []) as string[],
+    proposal_text: (raw.proposalText ?? raw.proposal_text) as string | undefined,
+    guild_id: (raw.guildId ?? raw.guild_id ?? "") as string,
+    guild_name: (raw.guildName ?? raw.guild_name ?? "") as string,
+    required_stake: Number(raw.requiredStake ?? raw.required_stake ?? 0),
+    status: (raw.status ?? "") as string,
+    created_at: (raw.createdAt ?? raw.created_at ?? "") as string,
+    voting_deadline: (raw.votingDeadline ?? raw.voting_deadline ?? "") as string,
+    vote_count: Number(raw.voteCount ?? raw.vote_count ?? 0),
+    votes_for_count: Number(raw.votesForCount ?? raw.votes_for_count ?? 0),
+    votes_against_count: Number(raw.votesAgainstCount ?? raw.votes_against_count ?? 0),
+    total_stake_for: raw.totalStakeFor != null || raw.total_stake_for != null
+      ? Number(raw.totalStakeFor ?? raw.total_stake_for) : undefined,
+    total_stake_against: raw.totalStakeAgainst != null || raw.total_stake_against != null
+      ? Number(raw.totalStakeAgainst ?? raw.total_stake_against) : undefined,
+    assigned_reviewer_count: raw.assignedReviewerCount != null || raw.assigned_reviewer_count != null
+      ? Number(raw.assignedReviewerCount ?? raw.assigned_reviewer_count) : undefined,
+    voting_phase: (raw.votingPhase ?? raw.voting_phase) as string | undefined,
+    consensus_score: raw.consensusScore != null || raw.consensus_score != null
+      ? Number(raw.consensusScore ?? raw.consensus_score) : undefined,
+    finalized: Boolean(raw.finalized),
+    outcome: (raw.outcome ?? (raw.status === "approved" ? "approved" : raw.status === "rejected" ? "rejected" : undefined)) as import("@/types").GuildApplicationOutcome | undefined,
+    finalized_at: (raw.finalizedAt ?? raw.finalized_at) as string | undefined,
+    total_rewards_distributed: raw.totalRewardsDistributed != null || raw.total_rewards_distributed != null
+      ? Number(raw.totalRewardsDistributed ?? raw.total_rewards_distributed) : undefined,
+    is_assigned_reviewer: Boolean(raw.isAssignedReviewer ?? raw.is_assigned_reviewer ?? false),
+    has_voted: Boolean(raw.hasVoted ?? raw.has_voted ?? false),
+    my_vote_score: raw.myVoteScore != null || raw.my_vote_score != null
+      ? Number(raw.myVoteScore ?? raw.my_vote_score) : undefined,
+    alignment_distance: raw.alignmentDistance != null || raw.alignment_distance != null
+      ? Number(raw.alignmentDistance ?? raw.alignment_distance) : undefined,
+    my_reputation_change: raw.myReputationChange != null || raw.my_reputation_change != null
+      ? Number(raw.myReputationChange ?? raw.my_reputation_change) : undefined,
+    my_reward_amount: raw.myRewardAmount != null || raw.my_reward_amount != null
+      ? Number(raw.myRewardAmount ?? raw.my_reward_amount) : undefined,
+  };
+}
+
 // Guild Applications API (candidate/expert vetting)
 export const guildApplicationsApi = {
   // Create a new guild application (supports both legacy and structured format)
@@ -794,15 +1006,17 @@ export const guildApplicationsApi = {
     }),
 
   // Get guild applications for a guild
-  getByGuild: (guildId: string, status?: string) => {
+  getByGuild: async (guildId: string, status?: string) => {
     const query = status ? `?status=${status}` : "";
-    return apiRequest<import("@/types").GuildApplication[]>(`/api/proposals/guild/${guildId}${query}`);
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/guild/${guildId}${query}`);
+    return data.map(mapProposalToGuildApplication);
   },
 
   // Get guild application details
-  getDetails: (applicationId: string, expertId?: string) => {
+  getDetails: async (applicationId: string, expertId?: string) => {
     const query = expertId ? `?expertId=${expertId}` : "";
-    return apiRequest<import("@/types").GuildApplication>(`/api/proposals/${applicationId}${query}`);
+    const data = await apiRequest<Record<string, unknown>>(`/api/proposals/${applicationId}${query}`);
+    return mapProposalToGuildApplication(data);
   },
 
   // Vote on a guild application (supports both legacy vote and new score)
@@ -832,17 +1046,33 @@ export const guildApplicationsApi = {
     }),
 
   // Get all votes for a guild application
-  getVotes: (applicationId: string) =>
-    apiRequest<import("@/types").VoteHistoryItem[]>(`/api/proposals/${applicationId}/votes`),
+  getVotes: async (applicationId: string) => {
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`);
+    return data.map((v): import("@/types").VoteHistoryItem => ({
+      id: v.id as string,
+      expert_id: (v.expertId ?? v.expert_id) as string,
+      expert_name: (v.expertName ?? v.expert_name) as string | undefined,
+      score: Number(v.score ?? 0),
+      alignment_distance: v.alignmentDistance != null || v.alignment_distance != null
+        ? Number(v.alignmentDistance ?? v.alignment_distance) : undefined,
+      reputation_change: v.reputationChange != null || v.reputation_change != null
+        ? Number(v.reputationChange ?? v.reputation_change) : undefined,
+      reward_amount: v.rewardAmount != null || v.reward_amount != null
+        ? Number(v.rewardAmount ?? v.reward_amount) : undefined,
+      comment: (v.comment) as string | undefined,
+      created_at: (v.createdAt ?? v.created_at ?? "") as string,
+    }));
+  },
 
   // Get expert's vote on a guild application
   getExpertVote: (applicationId: string, expertId: string) =>
     apiRequest<import("@/types").VoteHistoryItem | null>(`/api/proposals/${applicationId}/vote/${expertId}`),
 
   // Get guild applications assigned to a specific expert
-  getAssigned: (expertId: string, guildId?: string) => {
+  getAssigned: async (expertId: string, guildId?: string) => {
     const query = guildId ? `?guildId=${guildId}` : "";
-    return apiRequest<import("@/types").GuildApplication[]>(`/api/proposals/assigned/${expertId}${query}`);
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/assigned/${expertId}${query}`);
+    return data.map(mapProposalToGuildApplication);
   },
 
   // Check if expert is eligible to vote on a guild application
@@ -878,16 +1108,16 @@ export const governanceApi = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
     const query = queryParams.toString();
-    return apiRequest<Record<string, unknown>[]>(`/api/governance/proposals${query ? `?${query}` : ""}`);
+    return apiRequest<import("@/types").GovernanceProposalDetail[]>(`/api/governance/proposals${query ? `?${query}` : ""}`);
   },
 
   getActiveProposals: () =>
-    apiRequest<Record<string, unknown>[]>("/api/governance/proposals/active"),
+    apiRequest<import("@/types").GovernanceProposalDetail[]>("/api/governance/proposals/active"),
 
   getProposal: (id: string) =>
-    apiRequest<Record<string, unknown>>(`/api/governance/proposals/${id}`),
+    apiRequest<import("@/types").GovernanceProposalDetail>(`/api/governance/proposals/${id}`),
 
-  vote: (id: string, data: Record<string, unknown>, wallet: string) =>
+  vote: (id: string, data: { vote: "for" | "against" | "abstain"; votingPower?: number; reason?: string }, wallet: string) =>
     apiRequest<{ success: boolean }>(`/api/governance/proposals/${id}/vote?wallet=${encodeURIComponent(wallet)}`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -1094,4 +1324,90 @@ export const commitRevealApi = {
       method: "POST",
       body: JSON.stringify({ score, nonce }),
     }),
+};
+
+// Guild Application Appeal API (Stage 2b: Decentralized Arbitration)
+export const guildAppealApi = {
+  /** File an appeal for a rejected guild application */
+  fileAppeal: (data: {
+    applicationId: string;
+    applicationType: "expert" | "candidate" | "proposal";
+    wallet: string;
+    appealReason: string;
+    evidence?: string;
+    stakeAmount: number;
+    txHash?: string;
+  }) =>
+    apiRequest<{ id: string }>(
+      `/api/guilds/appeals`,
+      {
+        method: "POST",
+        headers: { "X-Wallet-Address": data.wallet },
+        body: JSON.stringify({
+          applicationId: data.applicationId,
+          applicationType: data.applicationType,
+          appealReason: data.appealReason,
+          evidence: data.evidence,
+          stakeAmount: data.stakeAmount,
+          txHash: data.txHash,
+        }),
+      }
+    ),
+
+  /** Get the most recent appeal for a specific application */
+  getAppealByApplication: async (applicationId: string) => {
+    const { mapAppealResponse } = await import("@/types");
+    const raw = await apiRequest<unknown>(
+      `/api/guilds/appeals/by-application/${applicationId}`
+    );
+    return raw ? mapAppealResponse(raw) : null;
+  },
+
+  /** Get appeal details by appeal ID */
+  getAppeal: async (appealId: string) => {
+    const { mapAppealResponse } = await import("@/types");
+    const raw = await apiRequest<unknown>(`/api/guilds/appeals/${appealId}`);
+    return mapAppealResponse(raw);
+  },
+
+  /** Get all appeals for a guild (for Officers/Masters) */
+  getGuildAppeals: async (guildId: string, status?: string) => {
+    const { mapAppealResponse } = await import("@/types");
+    const query = status ? `?status=${status}` : "";
+    const raw = await apiRequest<unknown[]>(
+      `/api/guilds/${guildId}/appeals${query}`
+    );
+    return raw.map(mapAppealResponse);
+  },
+
+  /** Vote on an appeal (Officers/Masters only) */
+  voteOnAppeal: (
+    appealId: string,
+    data: {
+      wallet: string;
+      decision: "uphold" | "overturn";
+      reasoning: string;
+    }
+  ) => {
+    const backendVote =
+      data.decision === "uphold" ? "uphold_rejection" : "approve_appeal";
+    return apiRequest<{ success: boolean }>(
+      `/api/guilds/appeals/${appealId}/vote`,
+      {
+        method: "POST",
+        headers: { "X-Wallet-Address": data.wallet },
+        body: JSON.stringify({
+          vote: backendVote,
+          reasoning: data.reasoning,
+        }),
+      }
+    );
+  },
+
+  /** Check if expert is eligible to file an appeal */
+  checkAppealEligibility: (applicationId: string, wallet: string) =>
+    apiRequest<{ eligible: boolean; reason?: string; minimumStake: number }>(
+      `/api/guilds/appeals/by-application/${applicationId}/eligibility`,
+      { headers: { "X-Wallet-Address": wallet } }
+    ),
 };

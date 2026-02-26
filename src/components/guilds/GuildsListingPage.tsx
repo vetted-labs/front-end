@@ -1,34 +1,35 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
 import {
   Shield,
   Users,
   Award,
   Briefcase,
-  ChevronLeft,
-  ChevronRight,
   X,
 } from "lucide-react";
 import { Alert } from "@/components/ui";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { guildsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { GuildCard } from "@/components/GuildCard";
 import { getGuildDetailedInfo, getGuildIcon } from "@/lib/guildHelpers";
 import type { Guild } from "@/types";
 
 export default function GlobalGuildsPage() {
   const router = useRouter();
-  const { isConnected } = useAccount();
-  const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
-  const guildsPerPage = 6;
 
+  const { data: guilds, isLoading, error } = useFetch<Guild[]>(
+    () => guildsApi.getAll(),
+  );
+
+  const { paginatedItems: currentGuilds, currentPage, totalPages, setCurrentPage } = useClientPagination(guilds ?? [], 6);
+
+  // Restore scroll position when coming back to this page
   useEffect(() => {
-    // Restore scroll position when coming back to this page
     const savedScrollPosition = sessionStorage.getItem('guildsScrollPosition');
     if (savedScrollPosition) {
       setTimeout(() => {
@@ -36,24 +37,7 @@ export default function GlobalGuildsPage() {
         sessionStorage.removeItem('guildsScrollPosition');
       }, 100);
     }
-
-    fetchGuilds();
-  }, [isConnected]);
-
-  const fetchGuilds = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const guildsData: any = await guildsApi.getAll();
-      setGuilds(guildsData);
-    } catch (err) {
-      console.error("[Guilds Page] Error:", err);
-      setError("Unable to load guilds. Please check that the backend is running and try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, []);
 
   const handleInfoClick = (guildId: string) => {
     setOpenTooltipId(openTooltipId === guildId ? null : guildId);
@@ -68,7 +52,7 @@ export default function GlobalGuildsPage() {
   }
 
   return (
-    <div className="relative overflow-x-hidden bg-background text-foreground animate-page-enter">
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
         <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />
@@ -106,7 +90,7 @@ export default function GlobalGuildsPage() {
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <p className="text-3xl font-semibold text-foreground mb-1">
-              {guilds.length}
+              {(guilds ?? []).length}
             </p>
             <p className="text-sm text-muted-foreground font-medium">Active Guilds</p>
           </div>
@@ -116,7 +100,7 @@ export default function GlobalGuildsPage() {
               <Award className="w-6 h-6 text-primary" />
             </div>
             <p className="text-3xl font-semibold text-foreground mb-1">
-              {guilds.reduce((sum, g) => sum + (g.expertCount || 0), 0)}
+              {(guilds ?? []).reduce((sum, g) => sum + (g.expertCount || 0), 0)}
             </p>
             <p className="text-sm text-muted-foreground font-medium">Expert Reviewers</p>
           </div>
@@ -126,7 +110,7 @@ export default function GlobalGuildsPage() {
               <Users className="w-6 h-6 text-primary" />
             </div>
             <p className="text-3xl font-semibold text-foreground mb-1">
-              {guilds.reduce((sum, g) => sum + (g.totalMembers || 0), 0)}
+              {(guilds ?? []).reduce((sum, g) => sum + (g.totalMembers || 0), 0)}
             </p>
             <p className="text-sm text-muted-foreground font-medium">Total Members</p>
           </div>
@@ -136,7 +120,7 @@ export default function GlobalGuildsPage() {
               <Briefcase className="w-6 h-6 text-primary" />
             </div>
             <p className="text-3xl font-semibold text-foreground mb-1">
-              {guilds.reduce((sum, g) => sum + (g.openPositions || 0), 0)}
+              {(guilds ?? []).reduce((sum, g) => sum + (g.openPositions || 0), 0)}
             </p>
             <p className="text-sm text-muted-foreground font-medium">Open Positions</p>
           </div>
@@ -152,84 +136,46 @@ export default function GlobalGuildsPage() {
             <Alert variant="error" className="mb-6">{error}</Alert>
           )}
 
-          {guilds.length > 0 ? (
+          {(guilds ?? []).length > 0 ? (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(() => {
-                  const indexOfLastGuild = currentPage * guildsPerPage;
-                  const indexOfFirstGuild = indexOfLastGuild - guildsPerPage;
-                  const currentGuilds = guilds.slice(indexOfFirstGuild, indexOfLastGuild);
-
-                  return currentGuilds.map((guild) => {
-                    return (
-                      <GuildCard
-                        key={guild.id}
-                        guild={{
-                          id: guild.id,
-                          name: guild.name,
-                          description: guild.description,
-                          memberCount: guild.totalMembers || guild.candidateCount || 0,
-                          expertCount: guild.expertCount,
-                          jobCount: guild.openPositions,
-                          totalProposalsReviewed: guild.totalProposalsReviewed,
-                        }}
-                        variant="browse"
-                        onViewDetails={(guildId) => {
-                          sessionStorage.setItem('guildsScrollPosition', window.scrollY.toString());
-                          router.push(`/guilds/${guildId}`);
-                        }}
-                        showDescription={true}
-                      />
-                    );
-                  });
-                })()}
+                {currentGuilds.map((guild) => (
+                  <GuildCard
+                    key={guild.id}
+                    guild={{
+                      id: guild.id,
+                      name: guild.name,
+                      description: guild.description,
+                      memberCount: guild.totalMembers || guild.candidateCount || 0,
+                      expertCount: guild.expertCount,
+                      jobCount: guild.openPositions,
+                      totalProposalsReviewed: guild.totalProposalsReviewed,
+                    }}
+                    variant="browse"
+                    onViewDetails={(guildId) => {
+                      sessionStorage.setItem('guildsScrollPosition', window.scrollY.toString());
+                      router.push(`/guilds/${guildId}`);
+                    }}
+                    showDescription={true}
+                  />
+                ))}
               </div>
 
               {/* Pagination Controls */}
-              {guilds.length > guildsPerPage && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: Math.ceil(guilds.length / guildsPerPage) }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg font-medium transition-all ${
-                          currentPage === page
-                            ? 'bg-gradient-to-r from-amber-300 via-orange-300 to-amber-200 text-slate-900 shadow-sm dark:shadow-[0_12px_30px_rgba(251,146,60,0.25)]'
-                            : 'border border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-muted'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(guilds.length / guildsPerPage)))}
-                    disabled={currentPage === Math.ceil(guilds.length / guildsPerPage)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+              <PaginationNav
+                page={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                className="mt-8"
+              />
             </>
           ) : (
-            <div className="text-center py-16 rounded-2xl border border-border bg-card">
-              <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-              <p className="text-lg text-muted-foreground mb-2">No guilds available yet</p>
-              <p className="text-sm text-muted-foreground">Check back soon for new professional communities</p>
-            </div>
+            <EmptyState
+              icon={Shield}
+              title="No guilds available yet"
+              description="Check back soon for new professional communities"
+              className="py-16 rounded-2xl border border-border bg-card"
+            />
           )}
         </div>
 
@@ -242,7 +188,7 @@ export default function GlobalGuildsPage() {
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
               {(() => {
-                const guild = guilds.find(g => g.id === openTooltipId);
+                const guild = (guilds ?? []).find(g => g.id === openTooltipId);
                 if (!guild) return null;
                 const GuildIcon = getGuildIcon(guild.name);
                 const detailedInfo = getGuildDetailedInfo(guild.name);

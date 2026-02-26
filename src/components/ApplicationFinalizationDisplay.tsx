@@ -1,27 +1,23 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  CheckCircle2,
-  XCircle,
-  TrendingUp,
-  TrendingDown,
-  Award,
-  AlertCircle,
-  Users,
-  Target,
-} from "lucide-react";
+import { guildAppealApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { AppealSubmissionForm } from "@/components/guild/AppealSubmissionForm";
+import { AppealStatusBanner } from "@/components/guild/AppealStatusBanner";
+import type { GuildApplicationAppeal } from "@/types";
 
 interface ApplicationFinalizationDisplayProps {
   application: {
     id: string;
     finalized: boolean;
     outcome?: "approved" | "rejected";
+    status?: string;
     consensus_score?: number;
-    vote_count: number;
+    vote_count?: number;
     assigned_reviewer_count?: number;
-    // IQR data
+    guild_id?: string;
+    guild_name?: string;
+    candidate_name?: string;
     iqr?: {
       median: number;
       q1: number;
@@ -39,345 +35,184 @@ interface ApplicationFinalizationDisplayProps {
     slashing_tier?: string;
     slash_percent?: number;
   };
+  /** Wallet address of the expert viewing (enables appeal functionality) */
+  wallet?: string;
   compact?: boolean;
 }
 
 export function ApplicationFinalizationDisplay({
   application,
   myVote,
+  wallet,
   compact = false,
 }: ApplicationFinalizationDisplayProps) {
+  // Derive outcome from status if outcome isn't set explicitly
+  const outcome = application.outcome
+    ?? (application.status === "approved" ? "approved" : application.status === "rejected" ? "rejected" : undefined);
+
+  const { data: appeal, isLoading: appealLoading, refetch: refetchAppeal } = useFetch<GuildApplicationAppeal | null>(
+    () => guildAppealApi.getAppealByApplication(application.id),
+    { skip: !application.finalized || outcome !== "rejected" }
+  );
+  const appealLoaded = !appealLoading;
+
   if (!application.finalized) {
     return null;
   }
 
-  const isApproved = application.outcome === "approved";
+  const isApproved = outcome === "approved";
   const consensusScore = application.consensus_score || 0;
-  const participationRate =
-    application.assigned_reviewer_count
-      ? (application.vote_count / application.assigned_reviewer_count) * 100
-      : 0;
+  const voteCount = application.vote_count || 0;
 
   if (compact) {
     return (
-      <Card className={`border-l-4 ${isApproved ? "border-l-green-500" : "border-l-red-500"}`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isApproved ? (
-                <CheckCircle2 className="w-6 h-6 text-green-500" />
-              ) : (
-                <XCircle className="w-6 h-6 text-red-500" />
-              )}
-              <div>
-                <Badge
-                  variant={isApproved ? "default" : "destructive"}
-                  className="text-base px-3 py-1"
-                >
-                  {isApproved ? "APPROVED" : "REJECTED"}
-                </Badge>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Consensus: {consensusScore.toFixed(1)}/100
-                </p>
-              </div>
-            </div>
-
-            {myVote && myVote.alignment_distance !== undefined && (
-              <div className="text-right">
-                <Badge
-                  variant={myVote.alignment_distance < 10 ? "default" : "destructive"}
-                  className="mb-1"
-                >
-                  {myVote.alignment_distance < 10 ? "High" : "Low"} Alignment
-                </Badge>
-                {myVote.reputation_change !== undefined && (
-                  <p className="text-sm font-medium">
-                    {myVote.reputation_change > 0 ? "+" : ""}
-                    {myVote.reputation_change} Rep
-                  </p>
-                )}
-              </div>
-            )}
+      <div className={`border-l-4 ${isApproved ? "border-l-green-500" : "border-l-red-500"} bg-card border border-border rounded-xl p-4`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`font-bold ${isApproved ? "text-green-500" : "text-red-500"}`}>
+              {isApproved ? "Approved" : "Rejected"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Consensus: {consensusScore.toFixed(1)}/100
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          {myVote && myVote.alignment_distance !== undefined && (
+            <div className="text-right">
+              <p className={`text-sm font-medium ${myVote.alignment_distance < 10 ? "text-green-500" : "text-red-500"}`}>
+                {myVote.alignment_distance < 10 ? "High" : "Low"} Alignment
+              </p>
+              {myVote.reputation_change !== undefined && (
+                <p className="text-sm text-muted-foreground">
+                  {myVote.reputation_change > 0 ? "+" : ""}{myVote.reputation_change} Rep
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 
+  const alignmentColor = myVote?.alignment_distance !== undefined
+    ? myVote.alignment_distance < 10
+      ? "text-green-500"
+      : myVote.alignment_distance > 20
+      ? "text-red-500"
+      : "text-amber-500"
+    : "";
+
+  const alignmentText = myVote?.alignment_distance !== undefined
+    ? myVote.alignment_distance < 10
+      ? "High alignment \u2014 your score was close to the consensus. You\u2019ve earned reputation and VETD rewards."
+      : myVote.alignment_distance > 20
+      ? "Low alignment \u2014 your score diverged significantly from the consensus. This may result in a reputation penalty."
+      : "Moderate alignment \u2014 your score was somewhat close to the consensus. Minor reputation impact."
+    : "";
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Outcome Banner */}
-      <Card
-        className={`border-2 ${
-          isApproved
-            ? "border-green-500 bg-green-500/5"
-            : "border-red-500 bg-red-500/5"
-        }`}
-      >
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4 mb-4">
-            {isApproved ? (
-              <CheckCircle2 className="w-12 h-12 text-green-500" />
-            ) : (
-              <XCircle className="w-12 h-12 text-red-500" />
-            )}
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold mb-1">
-                Application {isApproved ? "Approved" : "Rejected"}
-              </h3>
-              <p className="text-muted-foreground">
-                Voting has concluded and the outcome has been determined
+      <div className={`border-l-4 ${isApproved ? "border-l-green-500" : "border-l-red-500"} bg-card border border-border rounded-xl p-6`}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold mb-1">
+              Application {isApproved ? "Approved" : "Rejected"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Voting concluded &middot; {voteCount} reviewers
+            </p>
+            {application.iqr && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Median {application.iqr.median.toFixed(1)} &middot; Q1&ndash;Q3 {application.iqr.q1.toFixed(1)}&ndash;{application.iqr.q3.toFixed(1)} &middot; IQR {application.iqr.iqr.toFixed(1)}
               </p>
-            </div>
-            <Badge
-              variant={isApproved ? "default" : "destructive"}
-              className="text-xl px-6 py-2"
-            >
-              {isApproved ? "APPROVED" : "REJECTED"}
-            </Badge>
+            )}
           </div>
-
-          {/* Consensus Score */}
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Target className="w-5 h-5 text-primary" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Consensus Score
-                </p>
-              </div>
-              <p className="text-3xl font-bold">{consensusScore.toFixed(1)}</p>
-              <p className="text-xs text-muted-foreground">out of 100</p>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Users className="w-5 h-5 text-blue-500" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Participation
-                </p>
-              </div>
-              <p className="text-3xl font-bold">{application.vote_count}</p>
-              <p className="text-xs text-muted-foreground">
-                of {application.assigned_reviewer_count || "?"} reviewers (
-                {participationRate.toFixed(0)}%)
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <AlertCircle className="w-5 h-5 text-amber-500" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Threshold
-                </p>
-              </div>
-              <p className="text-3xl font-bold">60</p>
-              <p className="text-xs text-muted-foreground">
-                {consensusScore >= 60 ? "Met" : "Not met"}
-              </p>
-            </div>
+          <div className="text-right shrink-0">
+            <p className="text-4xl font-bold tabular-nums">{consensusScore.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">/ 100</p>
           </div>
+        </div>
+      </div>
 
-          {/* IQR Statistics */}
-          {application.iqr && (
-            <div className="pt-4 border-t border-border">
-              <p className="text-sm font-medium text-muted-foreground mb-3 text-center">
-                IQR-Based Scoring Statistics
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="text-center p-2 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground">Median</p>
-                  <p className="text-lg font-bold">{application.iqr.median.toFixed(1)}</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground">Q1 - Q3</p>
-                  <p className="text-lg font-bold">
-                    {application.iqr.q1.toFixed(1)} - {application.iqr.q3.toFixed(1)}
-                  </p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground">IQR</p>
-                  <p className="text-lg font-bold">{application.iqr.iqr.toFixed(1)}</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground">Included / Excluded</p>
-                  <p className="text-lg font-bold">
-                    {application.iqr.includedCount} / {application.iqr.excludedCount}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* My Performance (if I voted) */}
-      {myVote && (
-        <Card className="border-primary/50">
-          <CardContent className="p-6">
-            <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-primary" />
-              Your Performance
-            </h4>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Your Score */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Your Score</p>
-                <p className="text-2xl font-bold">{myVote.score}/100</p>
-              </div>
-
-              {/* Alignment */}
-              {myVote.alignment_distance !== undefined && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Alignment Distance
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-bold">
-                      {myVote.alignment_distance.toFixed(1)}
-                    </p>
-                    <Badge
-                      variant={
-                        myVote.alignment_distance < 10 ? "default" : "destructive"
-                      }
-                    >
-                      {myVote.alignment_distance < 10 ? "High" : "Low"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    |{myVote.score} - {consensusScore.toFixed(1)}|
-                  </p>
-                </div>
-              )}
-
-              {/* Reputation Change */}
-              {myVote.reputation_change !== undefined && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Reputation Change
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {myVote.reputation_change > 0 ? (
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                    ) : myVote.reputation_change < 0 ? (
-                      <TrendingDown className="w-5 h-5 text-red-500" />
-                    ) : null}
-                    <p
-                      className={`text-2xl font-bold ${
-                        myVote.reputation_change > 0
-                          ? "text-green-500"
-                          : myVote.reputation_change < 0
-                          ? "text-red-500"
-                          : ""
-                      }`}
-                    >
-                      {myVote.reputation_change > 0 ? "+" : ""}
-                      {myVote.reputation_change}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* VETD Reward */}
-              {myVote.reward_amount !== undefined && myVote.reward_amount > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    VETD Reward
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-500" />
-                    <p className="text-2xl font-bold text-amber-500">
-                      {myVote.reward_amount.toFixed(2)}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">VETD</p>
-                </div>
-              )}
-            </div>
-
-            {/* Slashing Tier Info */}
-            {myVote.slashing_tier && (
-              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Slashing Tier:</span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      myVote.slashing_tier === "aligned"
-                        ? "border-green-500/30 text-green-500"
-                        : myVote.slashing_tier === "mild"
-                        ? "border-amber-500/30 text-amber-500"
-                        : myVote.slashing_tier === "moderate"
-                        ? "border-orange-500/30 text-orange-500"
-                        : "border-red-500/30 text-red-500"
-                    }
-                  >
-                    {myVote.slashing_tier}
-                  </Badge>
-                </div>
-                {myVote.slash_percent !== undefined && myVote.slash_percent > 0 && (
-                  <span className="text-sm text-red-500 font-medium">
-                    -{myVote.slash_percent}% slashed
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Alignment Explanation */}
-            {myVote.alignment_distance !== undefined && (
-              <Card className="mt-4 bg-muted/30 border-border">
-                <CardContent className="p-3">
-                  <p className="text-sm text-muted-foreground">
-                    {myVote.alignment_distance < 10 ? (
-                      <>
-                        <strong className="text-green-500">
-                          High alignment!
-                        </strong>{" "}
-                        Your score was close to the consensus. You've earned
-                        reputation and VETD rewards for accurate evaluation.
-                      </>
-                    ) : myVote.alignment_distance > 20 ? (
-                      <>
-                        <strong className="text-red-500">Low alignment.</strong>{" "}
-                        Your score diverged significantly from the consensus. This
-                        may result in a reputation penalty.
-                      </>
-                    ) : (
-                      <>
-                        <strong className="text-amber-500">
-                          Moderate alignment.
-                        </strong>{" "}
-                        Your score was somewhat close to the consensus. Minor
-                        reputation impact.
-                      </>
-                    )}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </CardContent>
-        </Card>
+      {/* Appeal Section (rejected applications) */}
+      {!isApproved && appealLoaded && (
+        <>
+          {appeal ? (
+            <AppealStatusBanner appeal={appeal} />
+          ) : wallet ? (
+            <AppealSubmissionForm
+              applicationId={application.id}
+              applicationType="proposal"
+              applicationName={application.candidate_name ?? "Unknown Candidate"}
+              guildName={application.guild_name ?? ""}
+              guildId={application.guild_id}
+              wallet={wallet}
+              onSuccess={() => {
+                refetchAppeal();
+              }}
+            />
+          ) : null}
+        </>
       )}
 
-      {/* Next Steps */}
-      {isApproved && (
-        <Card className="bg-blue-500/5 border-blue-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-2">
-              <CheckCircle2 className="w-5 h-5 text-blue-500 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-foreground mb-1">
-                  Candidate Approved
-                </p>
-                <p className="text-muted-foreground">
-                  The candidate has been approved and added to the guild. They can
-                  now apply to jobs within this guild and access guild benefits.
-                </p>
-              </div>
+      {/* My Performance */}
+      {myVote && (
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            Your Performance
+          </h3>
+          <dl className="space-y-3">
+            <div className="flex justify-between items-baseline">
+              <dt className="text-sm text-muted-foreground">Score</dt>
+              <dd className="text-base font-semibold tabular-nums">{myVote.score}/100</dd>
             </div>
-          </CardContent>
-        </Card>
+            {myVote.alignment_distance !== undefined && (
+              <div className="flex justify-between items-baseline">
+                <dt className="text-sm text-muted-foreground">Alignment</dt>
+                <dd className="text-base font-semibold tabular-nums">
+                  {myVote.alignment_distance.toFixed(1)}
+                  {myVote.alignment_distance < 10 ? " \u2713" : myVote.alignment_distance > 20 ? " \u2717" : ""}
+                </dd>
+              </div>
+            )}
+            {myVote.reputation_change !== undefined && (
+              <div className="flex justify-between items-baseline">
+                <dt className="text-sm text-muted-foreground">Rep Change</dt>
+                <dd className={`text-base font-semibold tabular-nums ${
+                  myVote.reputation_change > 0 ? "text-green-500" : myVote.reputation_change < 0 ? "text-red-500" : ""
+                }`}>
+                  {myVote.reputation_change > 0 ? "+" : ""}{myVote.reputation_change}
+                </dd>
+              </div>
+            )}
+            {myVote.reward_amount !== undefined && myVote.reward_amount > 0 && (
+              <div className="flex justify-between items-baseline">
+                <dt className="text-sm text-muted-foreground">Reward</dt>
+                <dd className="text-base font-semibold tabular-nums">{myVote.reward_amount.toFixed(2)} VETD</dd>
+              </div>
+            )}
+            {myVote.slashing_tier && (
+              <div className="flex justify-between items-baseline">
+                <dt className="text-sm text-muted-foreground">Tier</dt>
+                <dd className={`text-base font-semibold ${
+                  myVote.slashing_tier === "aligned" ? "text-green-500"
+                    : myVote.slashing_tier === "mild" ? "text-amber-500"
+                    : myVote.slashing_tier === "moderate" ? "text-orange-500"
+                    : "text-red-500"
+                }`}>
+                  {myVote.slashing_tier}
+                  {myVote.slash_percent !== undefined && myVote.slash_percent > 0 && (
+                    <span className="text-sm text-red-500 ml-2">-{myVote.slash_percent}%</span>
+                  )}
+                </dd>
+              </div>
+            )}
+          </dl>
+          {/* Alignment explanation */}
+          {myVote.alignment_distance !== undefined && (
+            <p className={`text-sm mt-4 ${alignmentColor}`}>{alignmentText}</p>
+          )}
+        </div>
       )}
     </div>
   );

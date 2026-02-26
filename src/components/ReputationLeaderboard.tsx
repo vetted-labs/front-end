@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { expertApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { truncateAddress } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/types";
 
@@ -29,34 +30,25 @@ export function ReputationLeaderboard({
   guildId,
   currentExpertId,
 }: ReputationLeaderboardProps) {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"global" | "guild">(
     guildId ? "guild" : "global"
   );
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [viewMode, guildId]);
-
-  const fetchLeaderboard = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const { data: leaderboard, isLoading, error, refetch } = useFetch<LeaderboardEntry[]>(
+    () => {
       const params = guildId && viewMode === "guild"
         ? { guildId, limit: 50 }
         : { limit: 50 };
+      return expertApi.getLeaderboard(params);
+    },
+  );
 
-      const result = await expertApi.getLeaderboard(params);
-      setLeaderboard(Array.isArray(result) ? result : []);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Re-fetch when viewMode changes (useFetch only auto-runs on mount)
+  useEffect(() => {
+    refetch();
+  }, [viewMode]);
+
+  const entries = leaderboard ?? [];
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-500" />;
@@ -87,7 +79,7 @@ export function ReputationLeaderboard({
     return (
       <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
         <p className="text-destructive">{error}</p>
-        <Button onClick={fetchLeaderboard} className="mt-4">
+        <Button onClick={refetch} className="mt-4">
           Retry
         </Button>
       </div>
@@ -95,7 +87,7 @@ export function ReputationLeaderboard({
   }
 
   return (
-    <div className="space-y-6 animate-page-enter">
+    <div className="min-h-screen space-y-6 animate-page-enter">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -135,7 +127,7 @@ export function ReputationLeaderboard({
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Experts</p>
-          <p className="text-2xl font-bold text-foreground">{leaderboard.length}</p>
+          <p className="text-2xl font-bold text-foreground">{entries.length}</p>
         </div>
 
         <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
@@ -146,9 +138,9 @@ export function ReputationLeaderboard({
           </div>
           <p className="text-sm text-muted-foreground mb-1">Avg Reviews</p>
           <p className="text-2xl font-bold text-foreground">
-            {leaderboard.length > 0
+            {entries.length > 0
               ? Math.round(
-                  leaderboard.reduce((sum, e) => sum + e.totalReviews, 0) / leaderboard.length
+                  entries.reduce((sum, e) => sum + e.totalReviews, 0) / entries.length
                 )
               : 0}
           </p>
@@ -162,7 +154,7 @@ export function ReputationLeaderboard({
           </div>
           <p className="text-sm text-muted-foreground mb-1">Top Earnings</p>
           <p className="text-2xl font-bold text-foreground">
-            ${(leaderboard[0]?.totalEarnings || 0).toLocaleString()}
+            ${(entries[0]?.totalEarnings || 0).toLocaleString()}
           </p>
         </div>
 
@@ -174,9 +166,9 @@ export function ReputationLeaderboard({
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
           <p className="text-2xl font-bold text-foreground">
-            ${leaderboard.length > 0
+            ${entries.length > 0
               ? Math.round(
-                  leaderboard.reduce((sum, e) => sum + (e.totalEarnings || 0), 0)
+                  entries.reduce((sum, e) => sum + (e.totalEarnings || 0), 0)
                 ).toLocaleString()
               : 0}
           </p>
@@ -212,7 +204,7 @@ export function ReputationLeaderboard({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {leaderboard.map((entry) => (
+              {entries.map((entry) => (
                 <tr
                   key={entry.expertId}
                   className={`hover:bg-muted transition-colors ${
@@ -312,7 +304,7 @@ export function ReputationLeaderboard({
           </table>
         </div>
 
-        {leaderboard.length === 0 && (
+        {entries.length === 0 && (
           <div className="text-center py-12">
             <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No experts found</p>

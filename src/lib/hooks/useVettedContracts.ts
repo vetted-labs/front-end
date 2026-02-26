@@ -1,7 +1,9 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent, useReadContracts, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts, usePublicClient } from 'wagmi';
 import { parseEther, keccak256, toBytes, formatEther } from 'viem';
 import { useState, useEffect, useMemo } from 'react';
 import { blockchainApi } from '@/lib/api';
+import { useFetch } from '@/lib/hooks/useFetch';
+import type { ActiveEndorsement } from '@/types';
 import {
   VETTED_TOKEN_ABI,
   EXPERT_STAKING_ABI,
@@ -223,6 +225,75 @@ export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
 }
 
 /**
+ * Hook for on-chain appeal staking
+ * Reuses the ExpertStaking contract to stake VETD as part of the appeal process
+ */
+export function useAppealStaking(guildId?: string) {
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  // Convert guild UUID to bytes32 for the blockchain contract
+  const blockchainGuildId = guildId ? keccak256(toBytes(guildId)) as `0x${string}` : undefined;
+
+  // Check current allowance for staking contract
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: CONTRACT_ADDRESSES.TOKEN,
+    abi: VETTED_TOKEN_ABI,
+    functionName: 'allowance',
+    args: address ? [address, CONTRACT_ADDRESSES.STAKING] : undefined,
+    query: {
+      enabled: !!address,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  // Approve token transfer to staking contract
+  const approveTokens = async (amount: string) => {
+    if (!address) throw new Error('Wallet not connected');
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.TOKEN,
+      abi: VETTED_TOKEN_ABI,
+      functionName: 'approve',
+      args: [CONTRACT_ADDRESSES.STAKING, parseEther(amount)],
+      gas: 100000n,
+    });
+
+    return hash;
+  };
+
+  // Stake tokens for the appeal (via guild staking)
+  const stakeForAppeal = async (amount: string) => {
+    if (!address) throw new Error('Wallet not connected');
+    if (!blockchainGuildId) throw new Error('Guild ID required for appeal staking');
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.STAKING,
+      abi: EXPERT_STAKING_ABI,
+      functionName: 'stake',
+      args: [blockchainGuildId, parseEther(amount)],
+      gas: 300000n,
+    });
+
+    return hash;
+  };
+
+  // Check if approval is needed for a given amount
+  const needsApproval = (amount: string): boolean => {
+    if (!allowance) return true;
+    return (allowance as bigint) < parseEther(amount);
+  };
+
+  return {
+    approveTokens,
+    stakeForAppeal,
+    needsApproval,
+    refetchAllowance,
+  };
+}
+
+/**
  * Hook for endorsement operations
  */
 export function useEndorsementBidding() {
@@ -412,6 +483,7 @@ export function useUserEndorsements(applications: Array<{
   }), [applicationsWithBids, address]);
 
   const { data: contractResults, isLoading: isLoadingContracts, refetch } = useReadContracts({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi's useReadContracts has strict generic constraints that don't accept dynamically-built contract arrays
     contracts: contracts as any,
     query: {
       enabled: applicationsWithBids.length > 0 && !!address, // Only run if there are apps with bids
@@ -513,67 +585,21 @@ export function useUserEndorsements(applications: Array<{
  */
 export function useMyActiveEndorsements() {
   const { address, isConnected } = useAccount();
-  const [endorsements, setEndorsements] = useState<Array<any>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  useEffect(() => {
-    let isMounted = true; // Prevent state updates after unmount
-
-    const fetchActiveEndorsements = async () => {
-      // Wait for connection before trying to fetch
-      if (!isConnected || !address) {
-        if (isMounted) {
-          setIsLoading(false);
-          setEndorsements([]);
-        }
-        return;
-      }
-
-      if (isMounted) {
-        setIsLoading(true);
-        setError(null);
-      }
-
-      try {
-        const data: any = await blockchainApi.getExpertEndorsements(address, { status: 'active', limit: 50 });
-
-        if (!isMounted) return; // Don't update if unmounted
-
-        if (Array.isArray(data)) {
-          setEndorsements(data);
-        } else {
-          throw new Error('Invalid response format from API');
-        }
-      } catch (err) {
-        console.error('[useMyActiveEndorsements] ❌ Error:', err);
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch active endorsements');
-          setEndorsements([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchActiveEndorsements();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [address, isConnected, refetchTrigger]); // Added isConnected to dependencies
+  const { data: endorsements, isLoading, error, refetch } = useFetch<ActiveEndorsement[]>(
+    async () => {
+      const data = await blockchainApi.getExpertEndorsements(address!, { status: 'active', limit: 50 });
+      if (!Array.isArray(data)) throw new Error('Invalid response format from API');
+      return data;
+    },
+    { skip: !isConnected || !address }
+  );
 
   return {
-    endorsements,
+    endorsements: endorsements ?? [],
     isLoading,
     error,
-    refetch: () => {
-      // Trigger a refetch by incrementing the trigger
-      setRefetchTrigger(prev => prev + 1);
-    },
+    refetch,
   };
 }
 
@@ -619,7 +645,8 @@ export function useMyEndorsementHistory() {
 
 
         // Query in chunks to avoid RPC limits
-        const allLogs: any[] = [];
+        interface BidPlacedArgs { jobId: `0x${string}`; candidateId: `0x${string}`; expert: `0x${string}`; bidAmount: bigint; rank: bigint }
+        const allLogs: Array<{ args: BidPlacedArgs; blockNumber: bigint | null; transactionHash: `0x${string}` | null }> = [];
         for (let fromBlock = startBlock; fromBlock <= currentBlock; fromBlock += CHUNK_SIZE) {
           const toBlock = fromBlock + CHUNK_SIZE - 1n > currentBlock ? currentBlock : fromBlock + CHUNK_SIZE - 1n;
 
@@ -645,7 +672,10 @@ export function useMyEndorsementHistory() {
             toBlock,
           });
 
-          allLogs.push(...chunkLogs);
+          // chunkLogs has the full viem Log type; narrow to just the fields we use
+          for (const cl of chunkLogs) {
+            allLogs.push({ args: cl.args as BidPlacedArgs, blockNumber: cl.blockNumber, transactionHash: cl.transactionHash });
+          }
         }
 
 
@@ -653,12 +683,7 @@ export function useMyEndorsementHistory() {
 
         // Process logs to extract endorsement data
         const endorsementHistory = logs.map((log) => {
-          const { jobId, candidateId, bidAmount, rank } = log.args as {
-            jobId: `0x${string}`;
-            candidateId: `0x${string}`;
-            bidAmount: bigint;
-            rank: bigint;
-          };
+          const { jobId, candidateId, bidAmount, rank } = log.args;
 
           return {
             jobId: jobId,

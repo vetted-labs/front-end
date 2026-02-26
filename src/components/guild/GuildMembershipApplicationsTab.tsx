@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { guildApplicationsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { toast } from "sonner";
+import type { GuildApplication } from "@/types";
 
 const ITEMS_PER_SECTION = 10;
 
@@ -33,7 +39,7 @@ interface CandidateApplication {
   candidateEmail: string;
   status: string;
   expertiseLevel: string;
-  applicationResponses: any;
+  applicationResponses: Record<string, unknown>;
   resumeUrl?: string | null;
   submittedAt: string;
   reviewCount: number;
@@ -45,6 +51,7 @@ interface CandidateApplication {
 }
 
 interface GuildMembershipApplicationsTabProps {
+  guildId: string;
   guildName: string;
   guildApplications: ExpertMembershipApplication[];
   candidateApplications: CandidateApplication[];
@@ -55,6 +62,7 @@ interface GuildMembershipApplicationsTabProps {
 }
 
 export function GuildMembershipApplicationsTab({
+  guildId,
   guildName,
   guildApplications,
   candidateApplications,
@@ -63,9 +71,20 @@ export function GuildMembershipApplicationsTab({
   isStaked,
   onStakeClick,
 }: GuildMembershipApplicationsTabProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"expert" | "candidate">("expert");
+  const router = useRouter();
+  const [activeSubTab, setActiveSubTab] = useState<"expert" | "candidate" | "proposals">("expert");
   const [expertVisible, setExpertVisible] = useState(ITEMS_PER_SECTION);
   const [candidateVisible, setCandidateVisible] = useState(ITEMS_PER_SECTION);
+
+  const { data: proposals, isLoading: proposalsLoading } = useFetch<GuildApplication[]>(
+    () => guildApplicationsApi.getByGuild(guildId),
+    {
+      skip: activeSubTab !== "proposals",
+      onError: (error) => {
+        toast.error(error || "Failed to load proposals");
+      },
+    }
+  );
 
   const expertCount = guildApplications?.length || 0;
   const candidateCount = candidateApplications?.length || 0;
@@ -128,6 +147,16 @@ export function GuildMembershipApplicationsTab({
               {candidateCount}
             </span>
           )}
+        </button>
+        <button
+          onClick={() => setActiveSubTab("proposals")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            activeSubTab === "proposals"
+              ? "bg-muted text-primary border border-border"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Candidate Proposals
         </button>
       </div>
 
@@ -409,6 +438,108 @@ export function GuildMembershipApplicationsTab({
                   Show more ({candidateApplications.length - candidateVisible} remaining)
                 </button>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Candidate Proposals (Schelling-point voting) */}
+      {activeSubTab === "proposals" && (
+        <div className="space-y-4">
+          <div className="mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              Candidate Proposals
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Candidate vetting proposals with scored voting for {guildName}.
+            </p>
+          </div>
+
+          {proposalsLoading ? (
+            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+              <p className="text-sm text-muted-foreground">Loading proposals...</p>
+            </div>
+          ) : (proposals ?? []).length === 0 ? (
+            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Vote className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Candidate Proposals
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                There are no candidate proposals for {guildName} yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {(proposals ?? []).map((proposal) => (
+                <div
+                  key={proposal.id}
+                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer"
+                  onClick={() => router.push(`/expert/voting/applications/${proposal.id}`)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h4 className="font-semibold text-foreground text-base truncate">
+                          {proposal.candidate_name}
+                        </h4>
+                        <Badge
+                          variant={
+                            proposal.status === "approved" || proposal.outcome === "approved"
+                              ? "default"
+                              : proposal.status === "rejected" || proposal.outcome === "rejected"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {proposal.status === "approved" || proposal.outcome === "approved"
+                            ? "Approved"
+                            : proposal.status === "rejected" || proposal.outcome === "rejected"
+                            ? "Rejected"
+                            : "Ongoing"}
+                        </Badge>
+                        {proposal.finalized && (
+                          <Badge variant="outline" className="text-xs">Finalized</Badge>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {proposal.candidate_email}
+                      </p>
+
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                        <span className="flex items-center text-muted-foreground">
+                          <Clock className="w-3.5 h-3.5 mr-1" />
+                          {proposal.created_at ? new Date(proposal.created_at).toLocaleDateString() : "—"}
+                        </span>
+                        <span className="flex items-center text-muted-foreground">
+                          <Users className="w-3.5 h-3.5 mr-1" />
+                          {proposal.vote_count} votes
+                        </span>
+                        {proposal.consensus_score != null && (
+                          <span className="flex items-center text-muted-foreground">
+                            Score: {proposal.consensus_score.toFixed(1)}/100
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/expert/voting/applications/${proposal.id}`);
+                      }}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                      View
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

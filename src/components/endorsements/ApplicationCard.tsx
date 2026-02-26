@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { MapPin, Briefcase, DollarSign, Award, Star, Linkedin, Github, FileText, ExternalLink, Eye, Zap } from 'lucide-react';
 import { useMemo } from 'react';
+import { ensureHttps, formatSalaryRange } from "@/lib/utils";
 
 interface ApplicationCardProps {
   application: any;
@@ -13,15 +14,6 @@ interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
-  // Helper function to ensure URL has protocol
-  const ensureHttps = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return `https://${url}`;
-  };
-
   const candidateInitials = application.candidate_name
     .split(' ')
     .map((n: string) => n[0])
@@ -63,20 +55,6 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       return [];
     }
   }, [application.job_skills]);
-
-  const formatSalary = (min?: number, max?: number, currency = 'USD') => {
-    if (!min) return null;
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0
-    });
-
-    if (max) {
-      return `${formatter.format(min)} - ${formatter.format(max)}`;
-    }
-    return formatter.format(min);
-  };
 
   const guildScore = application.guild_score ? (parseFloat(application.guild_score.toString()) * 10).toFixed(0) : null;
 
@@ -234,7 +212,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
             {(application.salary_min || application.salary_max) && (
               <span className="flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-primary" />
-                {formatSalary(application.salary_min, application.salary_max, application.salary_currency)}
+                {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
               </span>
             )}
           </div>

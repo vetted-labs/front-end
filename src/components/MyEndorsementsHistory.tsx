@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { useMyActiveEndorsements } from "@/lib/hooks/useVettedContracts";
 import { Badge } from "@/components/ui/badge";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 
 import {
   Award,
@@ -18,8 +19,8 @@ import {
   Clock,
   Coins,
   Shield,
-  Wallet,
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function MyEndorsementsHistory() {
   const { address, isConnected } = useAccount();
@@ -28,12 +29,10 @@ export function MyEndorsementsHistory() {
 
   if (!isConnected || !address) {
     return (
-      <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-12 text-center">
-        <Wallet className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-        <p className="text-muted-foreground">
-          Please connect your wallet to view your active endorsements
-        </p>
-      </div>
+      <WalletRequiredState
+        className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md"
+        message="Please connect your wallet to view your active endorsements"
+      />
     );
   }
 
@@ -53,16 +52,12 @@ export function MyEndorsementsHistory() {
 
   if (endorsements.length === 0) {
     return (
-      <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-16 text-center">
-        <Award className="h-14 w-14 mx-auto text-primary/30 mb-5" />
-        <h3 className="text-xl font-semibold text-foreground mb-2">
-          No Active Endorsements
-        </h3>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          You haven't placed any active endorsements yet. Browse available
-          applications to start endorsing candidates.
-        </p>
-      </div>
+      <EmptyState
+        icon={Award}
+        title="No Active Endorsements"
+        description="You haven't placed any active endorsements yet. Browse available applications to start endorsing candidates."
+        className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-16"
+      />
     );
   }
 
@@ -71,11 +66,11 @@ export function MyEndorsementsHistory() {
     0
   );
   const top3Rankings = endorsements.filter(
-    (e) => e.blockchainData?.rank > 0 && e.blockchainData?.rank <= 3
+    (e) => (e.blockchainData?.rank ?? 0) > 0 && (e.blockchainData?.rank ?? 0) <= 3
   ).length;
 
   return (
-    <div className="space-y-8 animate-page-enter">
+    <div className="min-h-screen space-y-8 animate-page-enter">
       {/* ── Stats Row ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
@@ -158,7 +153,7 @@ export function MyEndorsementsHistory() {
 
       {/* ── Endorsement List ── */}
       <div className="space-y-3">
-        {endorsements.map((endorsement: any, index: number) => {
+        {endorsements.map((endorsement, index) => {
           const endorsementId =
             endorsement.endorsementId ||
             endorsement.applicationId ||
@@ -233,13 +228,13 @@ export function MyEndorsementsHistory() {
 
                 {/* Status + Rank */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {endorsement.blockchainData?.rank > 0 &&
-                    endorsement.blockchainData?.rank <= 3 && (
+                  {(endorsement.blockchainData?.rank ?? 0) > 0 &&
+                    (endorsement.blockchainData?.rank ?? 0) <= 3 && (
                       <Badge
                         variant="outline"
                         className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px] px-2"
                       >
-                        <Trophy className="w-3 h-3 mr-1" />#{endorsement.blockchainData.rank}
+                        <Trophy className="w-3 h-3 mr-1" />#{endorsement.blockchainData!.rank}
                       </Badge>
                     )}
                   <Badge className={`text-[10px] ${statusConfig.className}`}>
@@ -287,7 +282,7 @@ export function MyEndorsementsHistory() {
                           Endorsed
                         </p>
                         <p className="text-sm font-medium text-foreground">
-                          {new Date(endorsement.createdAt).toLocaleDateString()}
+                          {new Date(endorsement.createdAt || endorsement.endorsedAt).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex-1 min-w-[100px] border-l border-border/30 pl-6">

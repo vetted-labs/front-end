@@ -21,6 +21,7 @@ import {
   Target
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { ensureHttps, formatSalaryRange } from "@/lib/utils";
 
 interface CandidateDetailsModalProps {
   application: any | null;
@@ -36,12 +37,6 @@ export function CandidateDetailsModal({
   onEndorseCandidate
 }: CandidateDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'application' | 'job' | 'skills'>('overview');
-
-  const ensureHttps = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `https://${url}`;
-  };
 
   const skillMatchData = useMemo(() => {
     if (!application?.job_skills || !application?.candidate_bio) {
@@ -68,12 +63,6 @@ export function CandidateDetailsModal({
     .join('')
     .toUpperCase()
     .substring(0, 2);
-
-  const formatSalary = (min?: number, max?: number, currency = 'USD') => {
-    if (!min) return 'Not specified';
-    const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 });
-    return max ? `${formatter.format(min)} - ${formatter.format(max)}` : formatter.format(min);
-  };
 
   const guildScore = application.guild_score ? (parseFloat(application.guild_score.toString()) * 10).toFixed(0) : null;
 
@@ -303,7 +292,7 @@ export function CandidateDetailsModal({
                 {(application.salary_min || application.salary_max) && (
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <DollarSign className="w-3.5 h-3.5" />
-                    {formatSalary(application.salary_min, application.salary_max, application.salary_currency)}
+                    {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
                   </span>
                 )}
               </div>

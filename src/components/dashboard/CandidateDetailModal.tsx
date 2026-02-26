@@ -15,7 +15,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { applicationsApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
-import { truncateAddress } from "@/lib/utils";
+import { truncateAddress, ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -38,12 +38,6 @@ const tabs: { value: TabValue; label: string }[] = [
   { value: "application", label: "Application" },
   { value: "notes", label: "Notes" },
 ];
-
-function ensureHttps(url: string): string {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `https://${url}`;
-}
 
 interface CandidateDetailModalProps {
   application: CompanyApplication;
@@ -111,18 +105,6 @@ export function CandidateDetailModal({
   const resumeUrl = application.resumeUrl
     ? getAssetUrl(application.resumeUrl)
     : null;
-
-  const formatSalary = (salary: typeof job.salary) => {
-    if (!salary || (!salary.min && !salary.max)) return null;
-    const fmt = (n: number | null) =>
-      n != null
-        ? `${salary.currency === "USD" ? "$" : salary.currency}${n.toLocaleString()}`
-        : null;
-    const min = fmt(salary.min);
-    const max = fmt(salary.max);
-    if (min && max) return `${min} – ${max}`;
-    return min ?? max;
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -396,10 +378,10 @@ export function CandidateDetailModal({
                   <span>{job.location}</span>
                   <span className="text-border dark:text-white/10">&middot;</span>
                   <span>{job.type}</span>
-                  {formatSalary(job.salary) && (
+                  {job.salary && formatSalaryRange(job.salary) !== "Salary not specified" && (
                     <>
                       <span className="text-border dark:text-white/10">&middot;</span>
-                      <span>{formatSalary(job.salary)}</span>
+                      <span>{formatSalaryRange(job.salary)}</span>
                     </>
                   )}
                 </div>

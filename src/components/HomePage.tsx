@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
 import { jobsApi, guildsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { Logo } from "@/components/Logo";
 import { HeroSection } from "./home/HeroSection";
@@ -20,11 +21,17 @@ export function HomePage() {
   const [mounted, setMounted] = useState(false);
   const auth = useAuthContext();
 
-  // Data state
-  const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  // Fetch guilds on mount
+  const { data: guilds, isLoading: isLoadingGuilds } = useFetch<Guild[]>(
+    () => guildsApi.getAll(),
+    { onError: () => {} }
+  );
+
+  // Fetch active jobs on mount
+  const { data: jobs, isLoading: isLoadingJobs } = useFetch<Job[]>(
+    () => jobsApi.getAll({ status: "active" }),
+    { onError: () => {} }
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -38,52 +45,6 @@ export function HomePage() {
       disconnect();
     }
   }, [mounted, isConnected, address, auth.isAuthenticated, auth.userType]);
-
-  // Fetch guilds on mount
-  useEffect(() => {
-    const fetchGuilds = async () => {
-      try {
-        const data: any = await guildsApi.getAll();
-        setGuilds(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch guilds:", error);
-        setGuilds([]);
-      } finally {
-        setIsLoadingGuilds(false);
-      }
-    };
-
-    fetchGuilds();
-  }, []);
-
-  // Fetch active jobs on mount
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const data: any = await jobsApi.getAll({ status: "active" });
-        const jobsList = Array.isArray(data) ? data : [];
-        const normalizedJobs = jobsList.map(
-          (job: any) => ({
-            ...job,
-            title: job.title || "Untitled Position",
-            description: job.description || "",
-            guild: job.guild || "",
-            department: job.department || null,
-            requirements: job.requirements || [],
-            skills: job.skills || [],
-          })
-        );
-        setJobs(normalizedJobs);
-      } catch (error) {
-        console.error("Failed to fetch jobs:", error);
-        setJobs([]);
-      } finally {
-        setIsLoadingJobs(false);
-      }
-    };
-
-    fetchJobs();
-  }, []);
 
   const handleExpertJoin = () => {
     if (auth.isAuthenticated && auth.userType === "expert") {
@@ -110,10 +71,10 @@ export function HomePage() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-background to-background animate-page-enter">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background animate-page-enter">
       {/* Hero Section with Action Cards */}
       <HeroSection
-        guilds={guilds}
+        guilds={guilds ?? []}
         isLoadingGuilds={isLoadingGuilds}
         onJoinAsCandidate={handleJoinAsCandidate}
         onJoinAsExpert={handleExpertJoin}
@@ -121,10 +82,10 @@ export function HomePage() {
       />
 
       {/* Stats Bar */}
-      <StatsBar guilds={guilds} jobs={jobs} />
+      <StatsBar guilds={guilds ?? []} jobs={jobs ?? []} />
 
       {/* Job Browser */}
-      <JobBrowser jobs={jobs} isLoadingJobs={isLoadingJobs} />
+      <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
 
       {/* Footer */}
       <footer className="bg-card/30 backdrop-blur-sm border-t border-border/40 mt-16">

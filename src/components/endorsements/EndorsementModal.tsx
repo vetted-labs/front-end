@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatSalaryRange } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -103,19 +103,6 @@ export function EndorsementModal({
     .join('')
     .toUpperCase()
     .substring(0, 2);
-
-  const formatSalary = (min?: number, max?: number, currency = 'USD') => {
-    if (!min) return 'Not specified';
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0
-    });
-    if (max) {
-      return `${formatter.format(min)} - ${formatter.format(max)}`;
-    }
-    return formatter.format(min);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -310,7 +297,7 @@ export function EndorsementModal({
                   {(application.salary_min || application.salary_max) && (
                     <span className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />
-                      {formatSalary(application.salary_min, application.salary_max, application.salary_currency)}
+                      {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
                     </span>
                   )}
                 </div>
