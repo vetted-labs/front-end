@@ -16,6 +16,35 @@ export interface Guild {
   color?: string;
 }
 
+/** Extended guild detail returned by guildsApi.getPublicDetail — includes members, jobs, stats. */
+export interface GuildPublicDetail extends Guild {
+  experts?: import("./expert").ExpertMember[];
+  candidates?: import("./candidate").CandidateMember[];
+  recentJobs?: import("./job").Job[];
+  recentActivity?: Array<{ id: string; type: string; actor: string; details: string; timestamp: string }>;
+  averageApprovalTime?: string;
+  establishedDate?: string;
+  createdAt?: string;
+  statistics?: { vettedProposals?: number; totalVetdStaked?: number };
+  totalVetdStaked?: number;
+}
+
+/** Leaderboard entry from guild context — extends the shared LeaderboardEntry. */
+export interface GuildLeaderboardEntry {
+  rank: number;
+  previousRank?: number;
+  memberId: string;
+  walletAddress?: string;
+  fullName: string;
+  role: string;
+  reputation: number;
+  totalReviews?: number;
+  successRate?: number;
+  contributionScore: number;
+  reputationChange?: string;
+  trend?: "up" | "down" | "same";
+}
+
 /** Guild as seen on an expert's dashboard — includes role & stats within that guild. */
 export interface ExpertGuild {
   id: string;

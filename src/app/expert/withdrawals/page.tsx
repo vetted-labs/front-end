@@ -7,48 +7,34 @@ import { ArrowLeft } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
-import { apiRequest } from '@/lib/api';
+import { blockchainApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { useFetch } from '@/lib/hooks/useFetch';
 
 // Import hooks for getting balances
 import { useVettedToken } from '@/lib/hooks/useVettedContracts';
 
 export default function WithdrawalsPage() {
   const { address } = useAccount();
-  const [stakeInfo, setStakeInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   const { balance, refetchBalance } = useVettedToken();
 
-  useEffect(() => {
-    if (address) {
-      loadStakeInfo();
+  const { data: stakeInfo, isLoading: loading, refetch } = useFetch(
+    () => blockchainApi.getStakeBalance(address!),
+    {
+      skip: !address,
+      onError: (error) => {
+        // 404 is expected when no staking data exists yet
+        if (!error.includes("404")) {
+          toast.error('Failed to load staking information');
+        }
+      },
     }
-  }, [address]);
-
-  const loadStakeInfo = async () => {
-    try {
-      setLoading(true);
-      const data = await apiRequest(
-        `/api/blockchain/staking/balance/${address}`
-      );
-
-      setStakeInfo(data);
-    } catch (error: any) {
-      // 404 is expected when no staking data exists yet
-      if (error?.status !== 404) {
-        console.error('Failed to load stake info:', error);
-        toast.error('Failed to load staking information');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  );
 
   const handleWithdrawalComplete = () => {
     // Reload data after withdrawal
-    loadStakeInfo();
+    refetch();
     refetchBalance();
   };
 
@@ -73,7 +59,7 @@ export default function WithdrawalsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 animate-page-enter">
+    <div className="min-h-screen max-w-3xl mx-auto px-4 py-8 animate-page-enter">
       {/* Header */}
       <div className="mb-8">
         <Link href="/expert/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "mb-4")}>

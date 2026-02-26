@@ -1,8 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 interface PillTab<T extends string> {
   value: T;
-  label: string;
+  label: ReactNode;
 }
 
 interface PillTabsProps<T extends string> {

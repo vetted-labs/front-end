@@ -1,5 +1,5 @@
 export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
-export type { Guild, ExpertGuild, GuildRecord, ExpertRole } from "./guild";
+export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, GuildRecord, ExpertRole } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus } from "./expert";
 export type { CandidateProfile, CandidateMember, SocialLink } from "./candidate";
 export type {
@@ -22,7 +22,12 @@ export type {
   VoteHistoryItem,
   GuildApplicationStatus,
   GuildApplicationOutcome,
+  GuildApplicationAppeal,
+  AppealVote,
+  AppealOutcome,
+  AppealStatus,
 } from "./guildApplication";
+export { mapAppealResponse } from "./guildApplication";
 export type {
   Conversation,
   Message,
@@ -45,7 +50,41 @@ export type {
 export type {
   ReputationTimelineEntry,
   ReputationTierConfig,
+  RewardTierName,
+  RewardTier,
 } from "./reputation";
+export { REWARD_TIERS, getRewardTier, getRewardTierProgress } from "./reputation";
+export type {
+  PostTag,
+  PostSortMode,
+  TopTimeWindow,
+  ReactionType,
+  ReactionSummary,
+  PollChoiceMode,
+  ModerationAction,
+  PostAuthor,
+  GuildPost,
+  GuildPostReply,
+  CreatePostPayload,
+  CreateReplyPayload,
+  VotePayload,
+  GuildFeedResponse,
+  ToggleReactionPayload,
+  ToggleReactionResponse,
+  PollOption,
+  PostPoll,
+  CreatePollPayload,
+  CastPollVotePayload,
+  CastPollVoteResponse,
+  ModerationPayload,
+  FeedPrivileges,
+} from "./guild-feed";
+export type {
+  GovernanceVote,
+  GovernanceProposalDetail,
+  GovernanceOutcome,
+} from "./governance";
+export { PROPOSAL_TYPE_LABELS } from "./governance";
 export type {
   AuthResponse,
   Notification,
@@ -67,6 +106,7 @@ export type {
   EndorsementStatus,
   EndorsementInfo,
   EndorsementStats,
+  ActiveEndorsement,
   EarningsBreakdown,
   ReputationTimeline,
   RewardDetail,

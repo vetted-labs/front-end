@@ -135,6 +135,40 @@ export interface EndorsementStats {
   averageAmount?: string;
 }
 
+/** Enriched endorsement as returned by getExpertEndorsements — includes nested job/candidate/guild data. */
+export interface ActiveEndorsement {
+  endorsementId?: string;
+  applicationId?: string;
+  expertAddress: string;
+  expertName?: string;
+  amount: string;
+  stakeAmount?: string;
+  endorsedAt: string;
+  createdAt?: string;
+  notes?: string;
+  job?: {
+    id: string;
+    title: string;
+    companyName?: string;
+    location?: string;
+  };
+  candidate?: {
+    name: string;
+    headline?: string;
+  };
+  guild?: {
+    name: string;
+  };
+  application?: {
+    status?: string;
+    coverLetter?: string;
+  };
+  blockchainData?: {
+    rank?: number;
+    bidAmount?: string;
+  };
+}
+
 // --- Expert Earnings / Reputation ---
 export interface EarningsBreakdown {
   entries: Array<{

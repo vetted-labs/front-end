@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
-import { Briefcase, Coins, Trophy, UserPlus, Activity, Users, Eye, Loader2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Alert } from "./ui/alert";
+import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, blockchainApi } from "@/lib/api";
 import { GuildHeader } from "./guild/GuildHeader";
@@ -16,6 +17,7 @@ import { GuildEarningsTab } from "./guild/GuildEarningsTab";
 import { GuildActivityFeed } from "./guild/GuildActivityTab";
 import { GuildMembersTab } from "./guild/GuildMembersTab";
 import { GuildJobsTab } from "./guild/GuildJobsTab";
+import { GuildFeedTab } from "./guild/GuildFeedTab";
 import dynamic from "next/dynamic";
 import { StakeModal } from "./guild/StakeModal";
 
@@ -27,7 +29,36 @@ const StakingModal = dynamic(
   () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
   { ssr: false }
 );
-import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember } from "@/types";
+import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, LeaderboardEntry } from "@/types";
+
+/** Extended guild detail response from expertApi.getGuildDetails — the backend returns more fields than the ExpertGuild type declares. */
+interface ExpertGuildDetailResponse {
+  id: string;
+  name: string;
+  description: string;
+  memberCount?: number;
+  totalMembers?: number;
+  expertRole?: string;
+  reputation?: number;
+  experts?: ExpertMember[];
+  candidates?: CandidateMember[];
+  recentJobs?: Job[];
+  guildApplications?: ExpertMembershipApplication[];
+  applications?: GuildJobApplication[];
+  recentActivity?: Activity[];
+  earnings?: Partial<Earnings>;
+  statistics?: {
+    vettedProposals?: number;
+    totalVetdStaked?: number;
+    totalEarningsFromEndorsements?: number;
+  };
+  totalProposalsReviewed?: number;
+  averageApprovalTime?: string;
+  totalVetdStaked?: number;
+  blockchainGuildId?: string;
+  candidateCount?: number;
+  openPositions?: number;
+}
 
 interface Earnings {
   totalPoints: number;
@@ -60,7 +91,7 @@ interface ExpertMembershipApplication {
   reviewCount: number;
   approvalCount: number;
   rejectionCount: number;
-  applicationResponses?: any;
+  applicationResponses?: Record<string, unknown>;
 }
 
 interface LeaderboardExpert {
@@ -83,6 +114,33 @@ interface Activity {
   target?: string;
   timestamp: string;
   details: string;
+}
+
+/** Candidate application shape returned by the candidate-applications endpoint — includes both review and listing fields. */
+interface CandidateApplicationForReview {
+  id: string;
+  candidateName: string;
+  candidateEmail: string;
+  status: string;
+  expertiseLevel: string;
+  applicationResponses: Record<string, unknown>;
+  resumeUrl?: string | null;
+  submittedAt: string;
+  reviewCount: number;
+  approvalCount: number;
+  rejectionCount: number;
+  jobTitle: string | null;
+  jobId: string | null;
+  expertHasReviewed: boolean;
+  // Additional fields used for review mapping
+  linkedinUrl?: string;
+  currentTitle?: string;
+  currentCompany?: string;
+  bio?: string;
+  motivation?: string;
+  expertiseAreas?: string[];
+  yearsOfExperience?: number;
+  requiredStake?: number;
 }
 
 interface GuildDetail {
@@ -122,13 +180,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [guild, setGuild] = useState<GuildDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const validTabs = ["membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
+  const validTabs = ["feed", "membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
   type TabType = (typeof validTabs)[number];
   const initialTab = (() => {
     const tabParam = searchParams?.get("tab");
     if (tabParam && validTabs.includes(tabParam as TabType)) return tabParam as TabType;
     if (searchParams?.get("applicationId")) return "membershipApplications" as TabType;
-    return "membershipApplications" as TabType;
+    return "feed" as TabType;
   })();
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
 
@@ -147,7 +205,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [applicationReviewType, setApplicationReviewType] = useState<"expert" | "candidate">("expert");
 
   // Candidate applications state
-  const [candidateApplications, setCandidateApplications] = useState<any[]>([]);
+  const [candidateApplications, setCandidateApplications] = useState<CandidateApplicationForReview[]>([]);
 
   // VETD Staking modal state
   const [showVetdStakingModal, setShowVetdStakingModal] = useState(false);
@@ -187,14 +245,30 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setError(null);
 
     try {
-      const data: any = await expertApi.getGuildDetails(guildId, address);
+      const data = await expertApi.getGuildDetails(guildId, address) as ExpertGuildDetailResponse;
       // Find the current user's expert entry to extract personal stats
       const currentExpert = Array.isArray(data.experts)
-        ? data.experts.find((e: any) => e.walletAddress?.toLowerCase() === address.toLowerCase())
+        ? data.experts.find((e: ExpertMember) => e.walletAddress?.toLowerCase() === address.toLowerCase())
         : null;
 
-      const normalized = {
-        ...data,
+      const earningsRaw = data.earnings ?? {
+        totalPoints: currentExpert?.reputation ?? 0,
+        totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
+        recentEarnings: [] as Earnings["recentEarnings"],
+      };
+      const earningsItems: Earnings["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
+        ? earningsRaw.recentEarnings as Earnings["recentEarnings"]
+        : [];
+      const earnings: Earnings = {
+        totalPoints: earningsRaw.totalPoints || earningsItems.filter(e => e.type === "proposal").reduce((s, e) => s + e.amount, 0),
+        totalEndorsementEarnings: earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0),
+        recentEarnings: earningsItems,
+      };
+
+      const normalized: GuildDetail & { blockchainGuildId?: string } = {
+        id: data.id,
+        name: data.name,
+        description: data.description,
         experts: Array.isArray(data.experts) ? data.experts : [],
         candidates: Array.isArray(data.candidates) ? data.candidates : [],
         recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
@@ -204,14 +278,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         memberCount: data.memberCount ?? data.totalMembers ?? 0,
         expertRole: data.expertRole ?? currentExpert?.role ?? "member",
         reputation: data.reputation ?? currentExpert?.reputation ?? 0,
-        earnings: data.earnings ?? {
-          totalPoints: currentExpert?.reputation ?? 0,
-          totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
-          recentEarnings: [],
-        },
+        earnings,
+        proposals: { pending: [], ongoing: [], closed: [] },
         totalProposalsReviewed: data.totalProposalsReviewed ?? data.statistics?.vettedProposals ?? 0,
         averageApprovalTime: data.averageApprovalTime ?? "—",
+        candidateCount: data.candidateCount ?? 0,
+        openPositions: data.openPositions ?? 0,
         totalVetdStaked: data.totalVetdStaked ?? data.statistics?.totalVetdStaked ?? 0,
+        blockchainGuildId: data.blockchainGuildId,
       };
 
       const needsPublicFallback =
@@ -221,7 +295,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       if (needsPublicFallback) {
         try {
-          const publicData: any = await guildsApi.getPublicDetail(guildId);
+          const publicData = await guildsApi.getPublicDetail(guildId);
 
           normalized.experts =
             normalized.experts.length > 0
@@ -260,7 +334,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
             normalized.totalProposalsReviewed ?? publicData.totalProposalsReviewed ?? 0;
           normalized.averageApprovalTime =
             normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "—";
-        } catch (publicError) {
+        } catch {
+          // Non-critical — public stats won't show but page is still usable
         }
       }
       setGuild(normalized);
@@ -271,7 +346,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       // Fetch staking status (pass guild-specific blockchain ID if available)
       try {
-        const stakeData: any = await blockchainApi.getStakeBalance(address, bcGuildId || undefined);
+        const stakeData = await blockchainApi.getStakeBalance(address, bcGuildId || undefined);
         setStakingStatus({ meetsMinimum: !!stakeData?.meetsMinimum });
       } catch {
         setStakingStatus({ meetsMinimum: false });
@@ -280,14 +355,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       // Fetch candidate guild applications
       try {
-        const candidateApps: any = await guildsApi.getCandidateApplications(guildId, address) || [];
+        const candidateApps = await guildsApi.getCandidateApplications(guildId, address) as CandidateApplicationForReview[] ?? [];
         setCandidateApplications(Array.isArray(candidateApps) ? candidateApps : []);
       } catch (candidateErr) {
         setCandidateApplications([]);
         toast.warning("Could not load candidate applications");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch guild details");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to fetch guild details";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -312,15 +388,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setIsLoadingLeaderboard(true);
     try {
       // Call real API with guildId parameter
-      const result: any = await expertApi.getLeaderboard({
+      const result = await expertApi.getLeaderboard({
         guildId: guildId,
         limit: 50
       });
 
-      const leaderboardEntries = Array.isArray(result) ? result : [];
+      const leaderboardEntries: LeaderboardEntry[] = Array.isArray(result) ? result : [];
 
       // Transform backend data to frontend structure
-      const topExperts: LeaderboardExpert[] = leaderboardEntries.map((entry: any, index: number) => {
+      const topExperts: LeaderboardExpert[] = leaderboardEntries.map((entry, index) => {
         const totalReviews = entry.totalReviews || 0;
         const approvals = entry.approvals || 0;
         const accuracy = totalReviews > 0
@@ -329,7 +405,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
         return {
           id: entry.expertId,
-          name: entry.fullName,
+          name: entry.fullName ?? entry.expertName ?? "Unknown",
           role: entry.role as "recruit" | "apprentice" | "craftsman" | "officer" | "master",
           reputation: entry.reputation || 0,
           totalReviews: totalReviews,
@@ -343,7 +419,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       // Find current user in the leaderboard
       const currentUserEntry = leaderboardEntries.find(
-        (entry: any) => entry.walletAddress?.toLowerCase() === address.toLowerCase()
+        (entry) => entry.walletAddress?.toLowerCase() === address.toLowerCase()
       );
 
       let currentUser: LeaderboardExpert | null = null;
@@ -383,8 +459,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       }
 
       setLeaderboardData({ topExperts, currentUser });
-    } catch (err: any) {
-      console.error("Failed to fetch leaderboard:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Failed to fetch leaderboard: ${message}`);
     } finally {
       setIsLoadingLeaderboard(false);
     }
@@ -410,8 +487,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       setShowStakeModal(false);
       setSelectedApplication(null);
       fetchGuildDetails();
-    } catch (err: any) {
-      setError(err.message || "Failed to stake on application");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to stake on application";
+      setError(message);
     } finally {
       setIsStaking(false);
     }
@@ -427,8 +505,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       });
 
       fetchGuildDetails();
-    } catch (err: any) {
-      setError(err.message || "Failed to endorse candidate");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to endorse candidate";
+      setError(message);
     }
   };
 
@@ -442,7 +521,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setShowReviewModal(true);
   };
 
-  const handleReviewCandidateApplication = (candidateApp: any) => {
+  const handleReviewCandidateApplication = (candidateApp: CandidateApplicationForReview) => {
     if (!stakingStatus?.meetsMinimum) {
       toast.info("You need to stake VETD tokens first to unlock reviewing.");
       return;
@@ -458,7 +537,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       guild_improvement: "guildImprovement",
     };
 
-    const general: Record<string, any> = {};
+    const general: Record<string, string | Record<string, string>> = {};
     const domainTopics: Record<string, string> = {};
 
     Object.entries(flatAnswers).forEach(([key, value]) => {
@@ -468,11 +547,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       } else if (key.includes(".")) {
         const [questionId, partId] = key.split(".");
         const camelKey = generalKeyMap[questionId] || questionId;
-        if (!general[camelKey]) general[camelKey] = {};
-        general[camelKey][partId] = value;
+        if (!general[camelKey] || typeof general[camelKey] === "string") general[camelKey] = {};
+        (general[camelKey] as Record<string, string>)[partId] = value as string;
       } else {
         const camelKey = generalKeyMap[key] || key;
-        general[camelKey] = value;
+        general[camelKey] = value as string;
       }
     });
 
@@ -509,11 +588,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   const handleSubmitReview = async (payload: {
     feedback?: string;
-    criteriaScores: Record<string, any>;
-    criteriaJustifications: Record<string, any>;
+    criteriaScores: Record<string, unknown>;
+    criteriaJustifications: Record<string, unknown>;
     overallScore: number;
     redFlagDeductions: number;
-  }): Promise<any> => {
+  }): Promise<{ message?: string } | void> => {
     if (!selectedExpertMembershipApplication || !address) return;
 
     setIsReviewing(true);
@@ -528,7 +607,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         redFlagDeductions: payload.redFlagDeductions,
       };
 
-      const response: any = applicationReviewType === "candidate"
+      const response = applicationReviewType === "candidate"
         ? await guildsApi.reviewCandidateApplication(selectedExpertMembershipApplication.id, reviewData)
         : await expertApi.reviewGuildApplication(selectedExpertMembershipApplication.id, reviewData);
 
@@ -549,8 +628,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       setTimeout(() => fetchGuildDetails(true), 3000);
 
       return response;
-    } catch (err: any) {
-      toast.error(err.message || "Failed to submit review");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to submit review";
+      toast.error(message);
       throw err;
     } finally {
       setIsReviewing(false);
@@ -580,7 +660,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   );
 
   return (
-    <div className="relative bg-background text-foreground overflow-x-hidden animate-page-enter">
+    <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
         <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />
@@ -605,86 +685,47 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {/* Tabs */}
         <div className="rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg mb-6 overflow-hidden">
-          <div className="flex border-b border-border overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("membershipApplications")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "membershipApplications"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <UserPlus className="w-4 h-4 inline mr-2" />
-              Pending Reviews
-              {(() => {
-                const expertCount = guild?.guildApplications?.length || 0;
-                const candidateCount = candidateApplications?.length || 0;
-                const total = expertCount + candidateCount;
-                return total > 0 ? (
-                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
-                    {total}
-                  </span>
-                ) : null;
+          <div className="border-b border-border px-6 py-4">
+            <PillTabs
+              tabs={(() => {
+                const pendingCount = (guild?.guildApplications?.length || 0) + (candidateApplications?.length || 0);
+                return [
+                  { value: "feed" as const, label: "Feed" },
+                  {
+                    value: "membershipApplications" as const,
+                    label: (
+                      <>
+                        Pending Reviews
+                        {pendingCount > 0 && (
+                          <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </>
+                    ),
+                  },
+                  { value: "jobs" as const, label: "Jobs" },
+                  { value: "activity" as const, label: "Activity" },
+                  { value: "earnings" as const, label: "Earnings" },
+                  { value: "members" as const, label: "Members" },
+                  { value: "leaderboard" as const, label: "Leaderboard" },
+                ];
               })()}
-            </button>
-            <button
-              onClick={() => setActiveTab("jobs")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "jobs"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Briefcase className="w-4 h-4 inline mr-2" />
-              Jobs
-            </button>
-            <button
-              onClick={() => setActiveTab("activity")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "activity"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Activity className="w-4 h-4 inline mr-2" />
-              Activity
-            </button>
-            <button
-              onClick={() => setActiveTab("earnings")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "earnings"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Coins className="w-4 h-4 inline mr-2" />
-              Earnings
-            </button>
-            <button
-              onClick={() => setActiveTab("members")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "members"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Users className="w-4 h-4 inline mr-2" />
-              Members
-            </button>
-            <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === "leaderboard"
-                  ? "text-primary border-b-2 border-primary bg-primary/5"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Trophy className="w-4 h-4 inline mr-2" />
-              Leaderboard
-            </button>
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
 
           <div className="p-6">
+            {activeTab === "feed" && (
+              <GuildFeedTab
+                guildId={guildId}
+                isMember={true}
+                membershipRole={guild.expertRole as ExpertRole}
+                userType="expert"
+              />
+            )}
+
             {activeTab === "activity" && (
               <GuildActivityFeed activities={guild.recentActivity || []} />
             )}
@@ -719,6 +760,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
             {activeTab === "membershipApplications" && (
               <GuildMembershipApplicationsTab
+                guildId={guildId}
                 guildName={guild.name}
                 guildApplications={guild.guildApplications}
                 candidateApplications={candidateApplications}
