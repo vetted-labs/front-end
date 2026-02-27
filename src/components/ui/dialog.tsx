@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface DialogContextValue {
@@ -51,10 +51,17 @@ interface DialogContentProps {
 
 export function DialogContent({ children, className }: DialogContentProps) {
   const { open, onOpenChange } = useDialog();
+  const [mounted, setMounted] = React.useState(false);
 
-  if (!open) return null;
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
+  if (!open || !mounted) return null;
+
+  // Portal to document.body so parent transforms (e.g. animate-page-enter)
+  // don't break fixed positioning
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
@@ -67,7 +74,7 @@ export function DialogContent({ children, className }: DialogContentProps) {
         <div
           className={cn(
             "relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full max-w-2xl border border-border/60",
-            "dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]",
+            "dark:bg-card/95 dark:backdrop-blur-xl dark:border-white/[0.08]",
             className
           )}
           onClick={(e) => e.stopPropagation()}
@@ -75,7 +82,8 @@ export function DialogContent({ children, className }: DialogContentProps) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

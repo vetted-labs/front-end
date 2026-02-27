@@ -75,11 +75,19 @@ export function CandidateDetailModal({
       setMessage("");
       router.push(`/dashboard/messages/${result.id}`);
     } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? "Messaging is not available yet"
-          : "Failed to send message";
-      toast.error(msg);
+      // 409 = conversation already exists — find it and navigate there
+      if (err instanceof ApiError && err.status === 409) {
+        try {
+          const existing = await messagingApi.getConversationByApplication(application.id);
+          if (existing) {
+            router.push(`/dashboard/messages/${existing.id}`);
+            return;
+          }
+        } catch {
+          // fall through to generic error
+        }
+      }
+      toast.error("Failed to send message");
     } finally {
       setIsSendingMessage(false);
     }

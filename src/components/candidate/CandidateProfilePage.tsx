@@ -18,7 +18,7 @@ import {
   Briefcase,
   Award,
 } from "lucide-react";
-import { candidateApi } from "@/lib/api";
+import { candidateApi, getAssetUrl } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
@@ -268,7 +268,7 @@ export default function CandidateProfilePage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <a
-                      href={profile.resumeUrl}
+                      href={getAssetUrl(profile.resumeUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"

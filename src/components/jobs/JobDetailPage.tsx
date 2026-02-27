@@ -14,7 +14,7 @@ import {
   Calendar,
   Eye,
 } from "lucide-react";
-import { jobsApi, applicationsApi } from "@/lib/api";
+import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
@@ -569,7 +569,7 @@ export default function JobDetailPage() {
                     <div className="flex items-center gap-3 mt-2">
                       {selectedApplication.resumeUrl && (
                         <a
-                          href={selectedApplication.resumeUrl}
+                          href={getAssetUrl(selectedApplication.resumeUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={cn(

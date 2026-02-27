@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { FileText, Linkedin, Github, ExternalLink, MapPin, Briefcase, TrendingUp } from 'lucide-react';
+import { getAssetUrl } from '@/lib/api';
 
 interface CandidateProfileViewProps {
   profile: {
@@ -146,7 +147,7 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
               </a>
             )}
             {profile.resumeUrl && (
-              <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
+              <a href={getAssetUrl(profile.resumeUrl)} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
                 <FileText className="w-4 h-4 mr-2" />
                 View Resume
                 <ExternalLink className="w-3 h-3 ml-1" />

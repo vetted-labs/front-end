@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
+import { getAssetUrl } from "@/lib/api";
 import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import type { EndorsementApplication } from "@/types";
 
@@ -166,7 +167,7 @@ export function EndorsementModal({
                     </a>
                   )}
                   {application.resume_url && (
-                    <a href={`/api/candidates/${application.candidate_id}/resume`} target="_blank" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                    <a href={getAssetUrl(`/api/candidates/${application.candidate_id}/resume`)} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
                       <FileText className="w-4 h-4 mr-2" />
                       Resume
                       <ExternalLink className="w-3 h-3 ml-1" />

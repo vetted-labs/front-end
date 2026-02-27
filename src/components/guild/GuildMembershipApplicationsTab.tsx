@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { guildApplicationsApi } from "@/lib/api";
+import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import type { GuildApplication } from "@/types";
@@ -247,7 +247,7 @@ export function GuildMembershipApplicationsTab({
                         )}
                         {application.resumeUrl && (
                           <a
-                            href={application.resumeUrl}
+                            href={getAssetUrl(application.resumeUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center text-primary/80 hover:text-primary transition-colors"
