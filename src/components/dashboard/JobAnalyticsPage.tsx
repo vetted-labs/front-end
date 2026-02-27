@@ -1,69 +1,21 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Briefcase,
+  BarChart3,
   Users,
   Eye,
   TrendingUp,
   CheckCircle,
-  XCircle,
   Clock,
-  Calendar,
-  MapPin,
-  DollarSign,
 } from "lucide-react";
-import { toast } from "sonner";
-import { jobsApi } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
-import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import type { Job } from "@/types";
 
 export default function JobAnalyticsPage() {
   const router = useRouter();
-  const params = useParams();
-  const jobId = params.jobId as string;
-  const { ready } = useRequireAuth("company");
-
-  const { data: job, isLoading } = useFetch<Job>(
-    () => jobsApi.getById(jobId),
-    {
-      skip: !ready,
-      onError: (error) => {
-        toast.error(error || "Failed to load job details");
-      },
-    }
-  );
-
-  if (!ready || isLoading) {
-    return null;
-  }
-
-  if (!job) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Job not found</p>
-      </div>
-    );
-  }
-
-  // Mock application data - TODO: fetch from API
-  const applicants = job.applicants ?? 0;
-  const views = job.views ?? 0;
-  const mockApplicationStats = {
-    pending: Math.floor(applicants * 0.4),
-    reviewing: Math.floor(applicants * 0.3),
-    accepted: Math.floor(applicants * 0.15),
-    rejected: Math.floor(applicants * 0.15),
-  };
-
-  const conversionRate =
-    views > 0 ? ((applicants / views) * 100).toFixed(1) : "0.0";
 
   return (
     <div className="min-h-full animate-page-enter">
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -74,253 +26,86 @@ export default function JobAnalyticsPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-3xl font-bold text-foreground">{job.title}</h1>
-            <span
-              className={`px-3 py-1 text-sm font-medium rounded-full ${
-                job.status === "active"
-                  ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                  : job.status === "paused"
-                    ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"
-                    : job.status === "closed"
-                      ? "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
-              }`}
-            >
-              {job.status}
-            </span>
-          </div>
-
-          {/* Job Details */}
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" />
-              {job.location}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Briefcase className="w-4 h-4" />
-              {job.type}
-            </div>
-            {job.salary.min && job.salary.max && (
-              <div className="flex items-center gap-1.5">
-                <DollarSign className="w-4 h-4" />
-                {job.salary.currency}{" "}
-                {(job.salary.min / 100).toLocaleString()} -{" "}
-                {(job.salary.max / 100).toLocaleString()}
-              </div>
-            )}
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              Posted {new Date(job.createdAt).toLocaleDateString()}
-            </div>
+            <h1 className="text-3xl font-bold text-foreground">Job Analytics</h1>
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Total Views
-                </p>
-                <p className="text-3xl font-bold text-foreground">{views}</p>
-              </div>
-              <Eye className="w-10 h-10 text-blue-600/20" />
+        {/* Blurred content with "Coming Soon" overlay */}
+        <div className="relative">
+          {/* Coming Soon Overlay */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
+            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-8 py-6 text-center shadow-lg dark:bg-card/60">
+              <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">Coming Soon</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
+                Per-job analytics with detailed conversion metrics are on the way.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">Job page visits</p>
           </div>
 
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Total Applicants
-                </p>
-                <p className="text-3xl font-bold text-foreground">
-                  {applicants}
-                </p>
-              </div>
-              <Users className="w-10 h-10 text-primary/20" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Applications received
-            </p>
-          </div>
-
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Conversion Rate
-                </p>
-                <p className="text-3xl font-bold text-foreground">
-                  {conversionRate}%
-                </p>
-              </div>
-              <TrendingUp className="w-10 h-10 text-green-600/20" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              View to application rate
-            </p>
-          </div>
-
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Accepted</p>
-                <p className="text-3xl font-bold text-foreground">
-                  {mockApplicationStats.accepted}
-                </p>
-              </div>
-              <CheckCircle className="w-10 h-10 text-green-600/20" />
-            </div>
-            <p className="text-xs text-muted-foreground">Successful hires</p>
-          </div>
-        </div>
-
-        {/* Application Status Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground">
-                Application Status
-              </h3>
-              <Users className="w-5 h-5 text-muted-foreground" />
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                  <div>
-                    <p className="font-medium text-foreground">
-                      Pending Review
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Awaiting initial screening
-                    </p>
+          {/* Blurred placeholder content */}
+          <div className="blur-[6px] pointer-events-none select-none" aria-hidden="true">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[
+                { label: "Total Views", value: "342", icon: Eye },
+                { label: "Total Applicants", value: "28", icon: Users },
+                { label: "Conversion Rate", value: "8.2%", icon: TrendingUp },
+                { label: "Accepted", value: "4", icon: CheckCircle },
+              ].map((metric) => (
+                <div key={metric.label} className="bg-card p-6 rounded-xl border border-border">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{metric.label}</p>
+                      <p className="text-3xl font-bold text-foreground">{metric.value}</p>
+                    </div>
+                    <metric.icon className="w-10 h-10 text-primary/20" />
                   </div>
                 </div>
-                <span className="text-2xl font-bold text-foreground">
-                  {mockApplicationStats.pending}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Eye className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium text-foreground">Under Review</p>
-                    <p className="text-xs text-muted-foreground">
-                      Currently being evaluated
-                    </p>
-                  </div>
-                </div>
-                <span className="text-2xl font-bold text-foreground">
-                  {mockApplicationStats.reviewing}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <div>
-                    <p className="font-medium text-foreground">Accepted</p>
-                    <p className="text-xs text-muted-foreground">
-                      Moved forward in process
-                    </p>
-                  </div>
-                </div>
-                <span className="text-2xl font-bold text-foreground">
-                  {mockApplicationStats.accepted}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <XCircle className="w-5 h-5 text-red-600" />
-                  <div>
-                    <p className="font-medium text-foreground">Rejected</p>
-                    <p className="text-xs text-muted-foreground">
-                      Not a good fit
-                    </p>
-                  </div>
-                </div>
-                <span className="text-2xl font-bold text-foreground">
-                  {mockApplicationStats.rejected}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Job Information */}
-          <div className="bg-card p-6 rounded-xl border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground">
-                Job Information
-              </h3>
-              <Briefcase className="w-5 h-5 text-muted-foreground" />
+              ))}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Description
-                </p>
-                <p className="text-foreground text-sm leading-relaxed line-clamp-4">
-                  {job.description}
-                </p>
+            {/* Status Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-card p-6 rounded-xl border border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-6">Application Status</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Pending Review", value: 12, bg: "bg-yellow-50 dark:bg-yellow-900/20", icon: Clock },
+                    { label: "Under Review", value: 8, bg: "bg-blue-50 dark:bg-blue-900/20", icon: Eye },
+                    { label: "Accepted", value: 4, bg: "bg-green-50 dark:bg-green-900/20", icon: CheckCircle },
+                    { label: "Rejected", value: 4, bg: "bg-red-50 dark:bg-red-900/20", icon: Users },
+                  ].map((s) => (
+                    <div key={s.label} className={`flex items-center justify-between p-4 ${s.bg} rounded-lg`}>
+                      <div className="flex items-center gap-3">
+                        <s.icon className="w-5 h-5 text-muted-foreground" />
+                        <span className="font-medium text-foreground">{s.label}</span>
+                      </div>
+                      <span className="text-2xl font-bold text-foreground">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {job.requirements && job.requirements.length > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Requirements
-                  </p>
-                  <ul className="space-y-1">
-                    {job.requirements.slice(0, 4).map((req, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-foreground flex items-start gap-2"
-                      >
-                        <span className="text-primary mt-1">&#8226;</span>
-                        <span className="line-clamp-1">{req}</span>
-                      </li>
-                    ))}
-                    {job.requirements.length > 4 && (
-                      <li className="text-sm text-muted-foreground">
-                        +{job.requirements.length - 4} more requirements
-                      </li>
-                    )}
-                  </ul>
+              <div className="bg-card p-6 rounded-xl border border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-6">Job Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Description</p>
+                    <p className="text-foreground text-sm leading-relaxed line-clamp-4">
+                      We are looking for a senior software engineer to join our team...
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Department</p>
+                    <p className="text-foreground font-medium">Engineering</p>
+                  </div>
+                  <div className="pt-4 border-t border-border">
+                    <div className="w-full px-4 py-2 bg-primary/20 text-primary rounded-lg text-center font-medium">
+                      Edit Job Posting
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              {job.department && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Department
-                  </p>
-                  <p className="text-foreground font-medium">
-                    {job.department}
-                  </p>
-                </div>
-              )}
-
-              {job.guild && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Guild</p>
-                  <p className="text-foreground font-medium">{job.guild}</p>
-                </div>
-              )}
-
-              <div className="pt-4 border-t border-border">
-                <button
-                  onClick={() => router.push(`/jobs/${job.id}/edit`)}
-                  className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
-                >
-                  Edit Job Posting
-                </button>
               </div>
             </div>
           </div>

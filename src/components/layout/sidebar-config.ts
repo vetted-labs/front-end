@@ -89,6 +89,7 @@ export const companySidebarConfig: SidebarConfig = {
       label: "Main",
       items: [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
+        { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
         { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
         { label: "Candidates", href: "/dashboard/candidates", icon: Users },
         { label: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },

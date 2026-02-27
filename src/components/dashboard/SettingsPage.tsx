@@ -6,28 +6,15 @@ import {
   Bell,
   Lock,
   CreditCard,
-  Save,
   ArrowLeft,
   AlertCircle,
 } from "lucide-react";
-import { toast } from "sonner";
-import { companyApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { useFetch, useApi } from "@/lib/hooks/useFetch";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { auth, ready } = useRequireAuth("company");
-  const [activeTab, setActiveTab] = useState<"company" | "notifications" | "security" | "billing">("company");
-  const [saveMessage, setSaveMessage] = useState("");
-
-  // Company Settings
-  const [companyName, setCompanyName] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [companyPhone, setCompanyPhone] = useState("");
-  const [companyWebsite, setCompanyWebsite] = useState("");
-  const [companyAddress, setCompanyAddress] = useState("");
-  const [companyDescription, setCompanyDescription] = useState("");
+  const { ready } = useRequireAuth("company");
+  const [activeTab, setActiveTab] = useState<"notifications" | "security" | "billing">("notifications");
 
   // Notification Settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -35,58 +22,7 @@ export default function SettingsPage() {
   const [applicationUpdates, setApplicationUpdates] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(false);
 
-  const { isLoading } = useFetch(
-    () => companyApi.getProfile(),
-    {
-      skip: !ready,
-      onSuccess: (profile) => {
-        setCompanyName(profile.company_name || "");
-        setCompanyEmail(profile.email || auth.email || "");
-        setCompanyPhone(profile.phone || "");
-        setCompanyWebsite(profile.website || "");
-        setCompanyAddress(profile.address || "");
-        setCompanyDescription(profile.description || "");
-      },
-      onError: () => {
-        toast.error("Failed to load settings");
-        // If error, at least set the email from auth context
-        if (auth.email) setCompanyEmail(auth.email);
-      },
-    }
-  );
-
-  const { execute: executeSave, isLoading: isSaving } = useApi();
-
-  const handleSaveSettings = async () => {
-    setSaveMessage("");
-
-    await executeSave(
-      () => companyApi.updateProfile({
-        company_name: companyName,
-        email: companyEmail,
-        phone: companyPhone || null,
-        website: companyWebsite || null,
-        address: companyAddress || null,
-        description: companyDescription || null,
-      }),
-      {
-        onSuccess: () => {
-          setSaveMessage("Settings saved successfully!");
-          setTimeout(() => setSaveMessage(""), 3000);
-        },
-        onError: (errorMessage) => {
-          toast.error("Failed to save settings");
-          setSaveMessage(errorMessage || "Failed to save settings. Please try again.");
-        },
-      }
-    );
-  };
-
   if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -112,15 +48,11 @@ export default function SettingsPage() {
           <div className="lg:col-span-1">
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden p-2 space-y-1 dark:bg-card/30 dark:border-white/[0.06]">
               <button
-                onClick={() => setActiveTab("company")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === "company"
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "text-foreground hover:bg-muted/50"
-                }`}
+                onClick={() => router.push("/dashboard/company-profile")}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted/50"
               >
                 <Building2 className="w-5 h-5" />
-                <span className="font-medium">Company</span>
+                <span className="font-medium">Company Profile</span>
               </button>
 
               <button
@@ -164,96 +96,6 @@ export default function SettingsPage() {
           {/* Settings Content */}
           <div className="lg:col-span-3">
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06]">
-              {/* Company Settings */}
-              {activeTab === "company" && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">Company Profile</h2>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Update your company information that will be visible to candidates
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Company Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="Enter your company name"
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Company Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={companyEmail}
-                      onChange={(e) => setCompanyEmail(e.target.value)}
-                      placeholder="contact@company.com"
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Phone Number (Optional)
-                    </label>
-                    <input
-                      type="tel"
-                      value={companyPhone}
-                      onChange={(e) => setCompanyPhone(e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Website (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={companyWebsite}
-                      onChange={(e) => setCompanyWebsite(e.target.value)}
-                      placeholder="https://yourcompany.com"
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Address (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={companyAddress}
-                      onChange={(e) => setCompanyAddress(e.target.value)}
-                      placeholder="123 Main St, City, State, ZIP"
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Company Description (Optional)
-                    </label>
-                    <textarea
-                      value={companyDescription}
-                      onChange={(e) => setCompanyDescription(e.target.value)}
-                      rows={4}
-                      placeholder="Tell candidates about your company, culture, and mission..."
-                      className="w-full px-4 py-2 bg-background border border-border/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground resize-none placeholder:text-muted-foreground"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Notification Settings */}
               {activeTab === "notifications" && (
                 <div className="space-y-6">
@@ -368,7 +210,7 @@ export default function SettingsPage() {
                     <div className="p-4 rounded-xl border border-border/30">
                       <p className="font-medium text-foreground mb-2">Active Sessions</p>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Manage devices where you're currently logged in
+                        Manage devices where you&apos;re currently logged in
                       </p>
                       <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
                         View Sessions
@@ -430,28 +272,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Save Button */}
-              {(activeTab === "company" || activeTab === "notifications") && (
-                <div className="mt-8 pt-6 border-t border-border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {saveMessage && (
-                        <p className={`text-sm ${saveMessage.includes("success") ? "text-green-600" : "text-red-600"}`}>
-                          {saveMessage}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={handleSaveSettings}
-                      disabled={isSaving}
-                      className="px-6 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-all font-medium flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <Save className="w-4 h-4" />
-                      {isSaving ? "Saving..." : "Save Changes"}
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Note: Save functionality will be connected when notification preferences API is available */}
             </div>
           </div>
         </div>

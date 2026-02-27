@@ -36,6 +36,46 @@ export interface NotificationsResponse {
   total: number;
 }
 
+// --- Guild Report (visible to recruiter) ---
+export interface CandidateGuildReport {
+  guildApplication: {
+    id: string;
+    guildId: string;
+    guildName: string;
+    status: string;
+    reviewCount: number;
+    approvalCount: number;
+    rejectionCount: number;
+    guildApproved: boolean;
+    guildApprovedAt: string | null;
+    expertiseLevel: string;
+    createdAt: string;
+  } | null;
+  reviews: GuildReportReview[];
+}
+
+export interface GuildReportReview {
+  id: string;
+  vote: "approve" | "reject";
+  confidenceLevel: number;
+  feedback: string | null;
+  criteriaScores: Record<string, number> | null;
+  overallScore: number;
+  reviewerName: string;
+  createdAt: string;
+}
+
+// --- Company Activity ---
+export interface CompanyActivityItem {
+  id: string;
+  companyId: string;
+  actionType: string;
+  title: string;
+  subtitle: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
 // --- Blockchain / Staking ---
 export interface StakeBalance {
   balance: string;

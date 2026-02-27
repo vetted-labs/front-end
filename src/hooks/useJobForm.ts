@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
@@ -165,6 +166,43 @@ export function useJobForm(jobId?: string) {
     return true;
   };
 
+  const validateDraft = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    const titleErr = validateMinLength(formData.title, 3, "Job title");
+    if (titleErr) errors.title = titleErr;
+
+    if (!formData.companyId) {
+      errors.companyId = "Company ID is missing. Please log in again.";
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setError("Please fix the errors above before saving");
+      return false;
+    }
+
+    return true;
+  };
+
+  const buildJobPayload = (statusOverride?: "draft" | "active") => ({
+    ...formData,
+    status: statusOverride ?? formData.status,
+    department: formData.department || undefined,
+    requirements: formData.requirements?.length
+      ? formData.requirements
+      : undefined,
+    skills: formData.skills?.length ? formData.skills : undefined,
+    experienceLevel: formData.experienceLevel || undefined,
+    salaryMin: formData.salaryMin || undefined,
+    salaryMax: formData.salaryMax || undefined,
+    screeningQuestions: formData.screeningQuestions?.length
+      ? formData.screeningQuestions
+      : undefined,
+    companyId: formData.companyId,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -178,21 +216,8 @@ export function useJobForm(jobId?: string) {
     }
 
     try {
-      const jobData = {
-        ...formData,
-        department: formData.department || undefined,
-        requirements: formData.requirements?.length
-          ? formData.requirements
-          : undefined,
-        skills: formData.skills?.length ? formData.skills : undefined,
-        experienceLevel: formData.experienceLevel || undefined,
-        salaryMin: formData.salaryMin || undefined,
-        salaryMax: formData.salaryMax || undefined,
-        screeningQuestions: formData.screeningQuestions?.length
-          ? formData.screeningQuestions
-          : undefined,
-        companyId: formData.companyId,
-      };
+      // Force "active" for new jobs (publish action); keep current status for edits
+      const jobData = buildJobPayload(isEditing ? undefined : "active");
 
       if (isEditing && jobId) {
         await jobsApi.update(jobId, jobData);
@@ -200,7 +225,30 @@ export function useJobForm(jobId?: string) {
         await jobsApi.create(jobData);
       }
 
-      router.push("/dashboard");
+      toast.success(isEditing ? "Job updated successfully" : "Job published successfully");
+      router.push("/dashboard/jobs");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setIsLoading(true);
+    setError(null);
+    setFieldErrors({});
+
+    if (!validateDraft()) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const jobData = buildJobPayload("draft");
+      await jobsApi.create(jobData);
+      toast.success("Draft saved successfully");
+      router.push("/dashboard/jobs");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
@@ -233,5 +281,6 @@ export function useJobForm(jobId?: string) {
     isEditing,
     updateField,
     handleSubmit,
+    handleSaveDraft,
   };
 }

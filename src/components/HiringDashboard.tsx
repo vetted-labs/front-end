@@ -234,7 +234,7 @@ export function HiringDashboard() {
               paginatedJobs.map((job) => (
                 <div
                   key={job.id}
-                  onClick={() => router.push(`/jobs/${job.id}`)}
+                  onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
                   className="p-5 hover:bg-muted/50 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
@@ -280,14 +280,14 @@ export function HiringDashboard() {
                           {showActionMenu === job.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg border border-border/60 py-1 z-10 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
                               <button
-                                onClick={() => router.push(`/jobs/${job.id}`)}
+                                onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
                                 className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                               >
                                 <Eye className="w-4 h-4" /> View Details
                               </button>
                               <button
                                 onClick={() =>
-                                  router.push(`/jobs/${job.id}/edit`)
+                                  router.push(`/dashboard/jobs/${job.id}/edit`)
                                 }
                                 className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"
                               >

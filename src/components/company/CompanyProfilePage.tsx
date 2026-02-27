@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { Button, Input, Textarea, Select, Alert } from "@/components/ui";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { companyApi, getAssetUrl } from "@/lib/api";
+import { TeamManagement } from "./TeamManagement";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { CompanyProfile } from "@/types";
@@ -432,6 +433,11 @@ export default function CompanyProfilePage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Team Management */}
+        <div className="mt-6">
+          <TeamManagement />
         </div>
 
         {/* Account Info */}

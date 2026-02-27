@@ -23,6 +23,7 @@ export function JobForm() {
     isEditing,
     updateField,
     handleSubmit,
+    handleSaveDraft,
   } = useJobForm(jobId);
 
   return (
@@ -93,6 +94,7 @@ export function JobForm() {
               fieldErrors={fieldErrors}
               guilds={guilds}
               onFieldChange={updateField}
+              isEditing={isEditing}
             />
 
             {/* Submit Section */}
@@ -104,23 +106,35 @@ export function JobForm() {
                   </p>
                 </div>
               )}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 px-6 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
-              >
-                {isEditing ? (
-                  isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    "Update Job"
-                  )
-                ) : isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  "Create Job"
+              <div className="flex gap-3">
+                {!isEditing && (
+                  <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={handleSaveDraft}
+                    className="flex-1 py-3.5 px-6 border border-border/60 text-foreground font-semibold rounded-xl hover:bg-muted/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      "Save as Draft"
+                    )}
+                  </button>
                 )}
-              </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 py-3.5 px-6 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : isEditing ? (
+                    "Update Job"
+                  ) : (
+                    "Publish Job"
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>

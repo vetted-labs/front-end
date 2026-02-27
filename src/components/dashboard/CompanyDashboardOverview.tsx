@@ -12,9 +12,12 @@ import {
   Video,
   ExternalLink,
   Calendar,
+  FileText,
+  Edit,
 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { companyApi, dashboardApi, jobsApi, messagingApi } from "@/lib/api";
+import type { CompanyActivityItem } from "@/types/api-responses";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatusBadge } from "@/components/ui/statusbadge";
@@ -22,20 +25,29 @@ import { Alert } from "@/components/ui/alert";
 
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import type { Job, DashboardStats, CompanyApplication, Conversation, MeetingDetails } from "@/types";
+import type { LucideIcon } from "lucide-react";
+
+function getActivityIcon(actionType: string): { icon: LucideIcon; bg: string; color: string } {
+  switch (actionType) {
+    case "job_created":
+      return { icon: Briefcase, bg: "bg-green-500/10", color: "text-green-600 dark:text-green-400" };
+    case "job_updated":
+      return { icon: Edit, bg: "bg-blue-500/10", color: "text-blue-600 dark:text-blue-400" };
+    case "status_changed":
+      return { icon: FileText, bg: "bg-amber-500/10", color: "text-amber-600 dark:text-amber-400" };
+    case "message_sent":
+      return { icon: MessageSquare, bg: "bg-green-500/10", color: "text-green-600 dark:text-green-400" };
+    case "meeting_scheduled":
+      return { icon: Video, bg: "bg-purple-500/10", color: "text-purple-600 dark:text-purple-400" };
+    default:
+      return { icon: Zap, bg: "bg-gray-500/10", color: "text-gray-600 dark:text-gray-400" };
+  }
+}
 
 interface UpcomingMeeting {
   conversationId: string;
   candidateName: string;
   details: MeetingDetails;
-}
-
-interface ActivityItem {
-  id: string;
-  type: "application" | "message";
-  title: string;
-  subtitle: string;
-  timestamp: string;
-  href: string;
 }
 
 interface CompanyDashboardData {
@@ -45,7 +57,7 @@ interface CompanyDashboardData {
   recentApplications: CompanyApplication[];
   unreadCount: number;
   meetings: UpcomingMeeting[];
-  activityFeed: ActivityItem[];
+  activityFeed: CompanyActivityItem[];
 }
 
 async function loadDashboardData(userId: string | null): Promise<CompanyDashboardData> {
@@ -63,7 +75,7 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
   const recentJobs = allJobs.slice(0, 5);
 
   // Non-critical data -- individual try/catch so failures don't block the dashboard
-  const activity: ActivityItem[] = [];
+  let activityFeed: CompanyActivityItem[] = [];
   let recentApplications: CompanyApplication[] = [];
   let unreadCount = 0;
   let meetings: UpcomingMeeting[] = [];
@@ -72,19 +84,14 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
     const appsResult = await companyApi.getApplications({ limit: 5 });
     const appsList = Array.isArray(appsResult) ? appsResult : (appsResult?.applications ?? []);
     recentApplications = appsList;
-
-    for (const app of appsList) {
-      activity.push({
-        id: `app-${app.id}`,
-        type: "application",
-        title: `${app.candidate.fullName} applied`,
-        subtitle: app.job.title,
-        timestamp: app.appliedAt,
-        href: "/dashboard/candidates",
-      });
-    }
   } catch {
     // Applications failed -- proceed without them
+  }
+
+  try {
+    activityFeed = await companyApi.getActivity(10);
+  } catch {
+    // Activity feed failed -- proceed without it
   }
 
   try {
@@ -92,24 +99,6 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
     unreadCount = counts.total ?? 0;
   } catch {
     // Unread counts failed -- default 0
-  }
-
-  try {
-    const conversations = (await messagingApi.getCompanyConversations({ unreadOnly: true })) as Conversation[];
-    const convList = Array.isArray(conversations) ? conversations : [];
-
-    for (const conv of convList) {
-      activity.push({
-        id: `msg-${conv.id}`,
-        type: "message",
-        title: `New message from ${conv.candidateName}`,
-        subtitle: conv.jobTitle,
-        timestamp: conv.lastMessage?.createdAt ?? conv.updatedAt,
-        href: `/dashboard/messages?conversation=${conv.id}`,
-      });
-    }
-  } catch {
-    // Conversations failed -- proceed without them
   }
 
   // Upcoming meetings -- scan recent conversations for meeting_scheduled messages
@@ -153,9 +142,6 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
     // Meetings failed -- proceed without them
   }
 
-  // Sort activity feed by time descending
-  activity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
   return {
     companyName,
     stats,
@@ -163,7 +149,7 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
     recentApplications,
     unreadCount,
     meetings,
-    activityFeed: activity,
+    activityFeed,
   };
 }
 
@@ -280,7 +266,7 @@ export function CompanyDashboardOverview() {
                     {recentJobs.map((job) => (
                       <Link
                         key={job.id}
-                        href={`/jobs/${job.id}`}
+                        href={`/dashboard/jobs/${job.id}`}
                         className="w-full flex items-center justify-between p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
                       >
                         <div className="flex-1 min-w-0">
@@ -486,38 +472,32 @@ export function CompanyDashboardOverview() {
             </div>
             <div className="p-5">
               <div className="space-y-3">
-                {activityFeed.slice(0, 10).map((item) => (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
-                  >
+                {activityFeed.slice(0, 10).map((item) => {
+                  const iconConfig = getActivityIcon(item.actionType);
+                  return (
                     <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        item.type === "application"
-                          ? "bg-blue-500/10"
-                          : "bg-green-500/10"
-                      }`}
+                      key={item.id}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/40 text-left"
                     >
-                      {item.type === "application" ? (
-                        <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      ) : (
-                        <MessageSquare className="w-4 h-4 text-green-600 dark:text-green-400" />
-                      )}
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${iconConfig.bg}`}>
+                        <iconConfig.icon className={`w-4 h-4 ${iconConfig.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {item.title}
+                        </p>
+                        {item.subtitle && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {item.subtitle}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        {formatTimeAgo(item.createdAt)}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {item.subtitle}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      {formatTimeAgo(item.timestamp)}
-                    </span>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

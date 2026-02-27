@@ -121,6 +121,9 @@ export type {
   GuildMembershipCheck,
   GuildAverages,
   GuildMaster,
+  CompanyActivityItem,
+  CandidateGuildReport,
+  GuildReportReview,
 } from "./api-responses";
 export type {
   RubricCriterion,
@@ -138,3 +141,4 @@ export type {
   ReviewSubmitPayload,
   ReviewSubmitResponse,
 } from "./rubric";
+export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";

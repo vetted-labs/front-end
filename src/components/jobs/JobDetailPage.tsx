@@ -53,7 +53,11 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function JobDetailPage() {
+interface JobDetailPageProps {
+  dashboardContext?: boolean;
+}
+
+export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) {
   const params = useParams();
   const router = useRouter();
   const jobId = params.jobId as string | undefined;
@@ -63,6 +67,12 @@ export default function JobDetailPage() {
     useState<CompanyApplication | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
+  const backHref = dashboardContext ? "/dashboard/jobs" : "/dashboard";
+  const backLabel = dashboardContext ? "Back to Jobs" : "Back to Dashboard";
+  const editHref = dashboardContext
+    ? `/dashboard/jobs/${jobId}/edit`
+    : `/jobs/${jobId}/edit`;
+
   // Fetch job details
   const {
     data: job,
@@ -70,7 +80,7 @@ export default function JobDetailPage() {
     error,
   } = useFetch(() => jobsApi.getById(jobId!), { skip: !jobId });
 
-  // Fetch applications
+  // Fetch applications (skip in dashboard context — candidates page handles this)
   const {
     data: applicationsData,
     isLoading: applicationsLoading,
@@ -81,7 +91,7 @@ export default function JobDetailPage() {
         status: statusFilter,
         limit: 50,
       }),
-    { skip: !jobId }
+    { skip: !jobId || dashboardContext }
   );
 
   const applications = applicationsData?.applications ?? [];
@@ -127,10 +137,10 @@ export default function JobDetailPage() {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(backHref)}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary"
           >
-            Back to Dashboard
+            {backLabel}
           </button>
         </div>
       </div>
@@ -143,10 +153,10 @@ export default function JobDetailPage() {
         <div className="text-center">
           <p className="text-foreground mb-4">Job not found.</p>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(backHref)}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary"
           >
-            Back to Dashboard
+            {backLabel}
           </button>
         </div>
       </div>
@@ -158,11 +168,11 @@ export default function JobDetailPage() {
       <div className="pointer-events-none absolute inset-0 content-gradient" />
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push(backHref)}
           className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Dashboard
+          {backLabel}
         </button>
 
         {/* Header */}
@@ -199,7 +209,7 @@ export default function JobDetailPage() {
                 </div>
               </div>
               <button
-                onClick={() => router.push(`/jobs/${job.id}/edit`)}
+                onClick={() => router.push(editHref)}
                 className="px-4 py-2 rounded-xl bg-primary text-white hover:opacity-90 transition-all text-sm font-medium flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
@@ -210,9 +220,9 @@ export default function JobDetailPage() {
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Applicants */}
-          <div className="lg:col-span-1">
+        <div className={`grid grid-cols-1 ${dashboardContext ? "" : "lg:grid-cols-3"} gap-6`}>
+          {/* Left Column - Applicants (hidden in dashboard context) */}
+          {!dashboardContext && <div className="lg:col-span-1">
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] sticky top-6">
               <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -308,10 +318,10 @@ export default function JobDetailPage() {
                 </div>
               )}
             </div>
-          </div>
+          </div>}
 
           {/* Right Column - Job Details */}
-          <div className="lg:col-span-2">
+          <div className={dashboardContext ? "" : "lg:col-span-2"}>
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
               {/* Basic Information */}
               <div className="border-b border-border/40">

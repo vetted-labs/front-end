@@ -9,6 +9,7 @@ interface JobRequirementsProps {
   fieldErrors: Record<string, string>;
   guilds: Guild[];
   onFieldChange: (field: keyof JobFormData, value: string | string[]) => void;
+  isEditing?: boolean;
 }
 
 export function JobRequirements({
@@ -16,6 +17,7 @@ export function JobRequirements({
   fieldErrors,
   guilds,
   onFieldChange,
+  isEditing,
 }: JobRequirementsProps) {
   return (
     <>
@@ -35,26 +37,29 @@ export function JobRequirements({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Status
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) =>
-              onFieldChange(
-                "status",
-                e.target.value as "draft" | "active" | "paused" | "closed"
-              )
-            }
-            className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-          >
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
+        {/* Only show status dropdown when editing — new jobs use Draft/Publish buttons */}
+        {isEditing && (
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) =>
+                onFieldChange(
+                  "status",
+                  e.target.value as "draft" | "active" | "paused" | "closed"
+                )
+              }
+              className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            >
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Requirements Section */}

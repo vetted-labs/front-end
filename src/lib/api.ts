@@ -362,6 +362,56 @@ export const companyApi = {
       { requiresAuth: true }
     );
   },
+
+  getActivity: (limit = 20) =>
+    apiRequest<import("@/types").CompanyActivityItem[]>(
+      `/api/companies/me/activity?limit=${limit}`,
+      { requiresAuth: true }
+    ),
+
+  getCandidateGuildReport: (candidateId: string, jobId: string) =>
+    apiRequest<import("@/types").CandidateGuildReport>(
+      `/api/companies/candidates/${candidateId}/guild-report?jobId=${jobId}`,
+      { requiresAuth: true }
+    ),
+
+  getPublicProfile: (companyId: string) =>
+    apiRequest<import("@/types").CompanyProfile>(
+      `/api/companies/${companyId}/profile`
+    ),
+
+  getPublicJobs: (companyId: string) =>
+    apiRequest<import("@/types").Job[]>(
+      `/api/companies/${companyId}/jobs`
+    ),
+};
+
+// Team API
+export const teamApi = {
+  list: () =>
+    apiRequest<import("@/types").TeamMember[]>("/api/companies/me/team", {
+      requiresAuth: true,
+    }),
+
+  invite: (data: { email: string; fullName: string; role: import("@/types").TeamMemberRole }) =>
+    apiRequest<import("@/types").TeamMember>("/api/companies/me/team", {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  update: (memberId: string, data: { role?: import("@/types").TeamMemberRole; status?: import("@/types").TeamMemberStatus }) =>
+    apiRequest<import("@/types").TeamMember>(`/api/companies/me/team/${memberId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
+
+  remove: (memberId: string) =>
+    apiRequest<{ message: string }>(`/api/companies/me/team/${memberId}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    }),
 };
 
 // Applications API
