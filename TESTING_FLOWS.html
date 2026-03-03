@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Vetted Platform — QA Testing Checklist</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; color: #222; }
+  h1 { font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  h2 { font-size: 20px; margin-top: 40px; color: #1a1a1a; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 16px; margin-top: 24px; color: #444; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; }
+  th, td { border: 1px solid #bbb; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; font-weight: bold; }
+  .pass-col { width: 50px; text-align: center; }
+  .notes-col { width: 120px; }
+  .section-note { font-style: italic; color: #555; margin: 4px 0 12px; }
+  .highlight { background: #fff3cd; }
+  pre { background: #f5f5f5; padding: 16px; border-radius: 4px; font-size: 13px; overflow-x: auto; }
+  .info-box { background: #e8f4f8; border-left: 4px solid #2196F3; padding: 12px 16px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<h1>Vetted Platform — QA Testing Checklist</h1>
+
+<table>
+  <tr><td><strong>Test Date:</strong></td><td style="width:200px"></td><td><strong>Environment:</strong></td><td style="width:200px"></td><td><strong>Build/Branch:</strong></td><td style="width:200px"></td></tr>
+</table>
+
+<h2>Testers</h2>
+<table>
+  <tr><th></th><th>Name</th><th>Role</th><th>Wallet / Account</th></tr>
+  <tr><td><strong>Tester 1</strong></td><td></td><td></td><td></td></tr>
+  <tr><td><strong>Tester 2</strong></td><td></td><td></td><td></td></tr>
+  <tr><td><strong>Tester 3</strong></td><td></td><td></td><td></td></tr>
+</table>
+
+<h2>Prerequisites</h2>
+<table>
+  <tr><th>#</th><th>Item</th><th class="pass-col">Done</th><th>Who Set It Up</th><th class="notes-col">Notes</th></tr>
+  <tr><td>1</td><td>Backend API running</td><td class="pass-col">☐</td><td></td><td></td></tr>
+  <tr><td>2</td><td>Contracts deployed (VettedToken, ExpertStaking)</td><td class="pass-col">☐</td><td></td><td></td></tr>
+  <tr><td>3</td><td>Guild exists with application template</td><td class="pass-col">☐</td><td></td><td>Guild name:</td></tr>
+  <tr><td>4</td><td>Job posted by company, linked to guild</td><td class="pass-col">☐</td><td></td><td>Job title:</td></tr>
+  <tr><td>5</td><td>3 expert wallets funded with ETH + VETD</td><td class="pass-col">☐</td><td></td><td></td></tr>
+  <tr><td>6</td><td>Candidate account created</td><td class="pass-col">☐</td><td></td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>1. Candidate Registration & Profile</h2>
+<!-- ============================================ -->
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>1.1</td><td>Go to /auth/signup?type=candidate</td><td>Signup form loads</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>1.2</td><td>Fill name, email, password and submit</td><td>Redirect to candidate dashboard</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>1.3</td><td>Go to profile, add headline + bio + experience</td><td>Profile saved</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>1.4</td><td>Upload resume (PDF)</td><td>File uploads, filename shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>1.5</td><td>Add LinkedIn and GitHub URLs</td><td>URLs saved and validated</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>1.6</td><td>Log out and log back in</td><td>All profile data persisted</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>2. Candidate Guild Application (Vetting)</h2>
+<!-- ============================================ -->
+<p class="section-note">Route: /guilds/[guildId]/apply?jobId=[jobId]</p>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>2.1</td><td>Navigate to guild, click "Apply" on a job</td><td>3-step application form loads</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.2</td><td><strong>Step 1:</strong> Upload resume, answer 4 general questions</td><td>All fields filled, "Next" enabled</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.3</td><td><strong>Step 2:</strong> Answer job screening questions + cover letter</td><td>Fields validate min lengths</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.4</td><td><strong>Step 3:</strong> Select level, answer domain questions, No-AI declaration</td><td>All required fields completed</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.5</td><td>Submit application</td><td>Success toast, redirect to tracking</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.6</td><td>Go to /candidate/guilds</td><td>Application shows "Active" with voting deadline</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>2.7</td><td>Verify application in expert voting queue</td><td>Visible to assigned experts</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>3. Candidate Application Tracking</h2>
+<!-- ============================================ -->
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>3.1</td><td>Go to /candidate/applications</td><td>Lists job applications with statuses</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>3.2</td><td>Go to /candidate/guilds</td><td>Lists guild applications with approval progress</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>3.3</td><td>See approval/rejection vote counts</td><td>Counts update as experts vote</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>3.4</td><td>After finalization, check outcome</td><td>Shows "Approved" or "Rejected"</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>4. Expert Wallet Registration</h2>
+<!-- ============================================ -->
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>4.1</td><td>Go to /auth/login?type=expert</td><td>Wallet connect prompt shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>4.2</td><td>Connect MetaMask or Coinbase Wallet</td><td>Wallet detected, sign-in challenge shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>4.3</td><td>Sign the challenge message</td><td>Wallet verified, expert profile created</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>4.4</td><td>Refresh page</td><td>Expert stays logged in</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>5. Expert Guild Application</h2>
+<!-- ============================================ -->
+<p class="section-note">Route: /expert/apply</p>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>5.1</td><td>Select a guild to join</td><td>Application form loads</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>5.2</td><td><strong>Step 1:</strong> Answer 4 general questions (Failure, Uncertainty, Motivation, Improvement)</td><td>Each meets minimum length</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>5.3</td><td><strong>Step 2:</strong> Choose level (Entry / Experienced / Expert)</td><td>Level selected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>5.4</td><td><strong>Step 3:</strong> Answer domain-specific questions</td><td>Fields completed</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>5.5</td><td>Submit application</td><td>Success, redirect to /expert/application-pending</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>5.6</td><td>Verify application visible to guild members</td><td>Shows in their voting queue</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>6. Expert Dashboard</h2>
+<!-- ============================================ -->
+<table>
+  <tr>
+    <th>#</th><th>Page</th><th>What to Verify</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>6.1</td><td>/expert/voting</td><td>Lists applications assigned for review</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>6.2</td><td>/expert/reputation</td><td>Shows reputation timeline</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>6.3</td><td>/expert/earnings</td><td>Shows earnings breakdown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>7. Staking VETD in a Guild</h2>
+<!-- ============================================ -->
+<p class="section-note">Prerequisite: Expert has VETD tokens in wallet.</p>
+
+<h3>7a. Stake</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>7.1</td><td>Navigate to voting page for a guild application</td><td>Staking requirement shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.2</td><td>Check minimum stake amount</td><td>Reads minimumStake from contract</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.3</td><td>Approve VETD token spend</td><td>MetaMask: ERC20 approve() prompt</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.4</td><td>Confirm approval transaction</td><td>Transaction mined, allowance set</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.5</td><td>Stake tokens</td><td>MetaMask: stake(guildId, amount) prompt</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.6</td><td>Confirm staking transaction</td><td>Tokens locked, balance updated in UI</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.7</td><td>Verify guild total staked increased</td><td>On-chain value matches UI</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.8</td><td>Expert can now vote</td><td>Voting interface enabled</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>7b. Unstake</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>7.9</td><td>Request unstake</td><td>requestUnstake() transaction sent</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.10</td><td>7-day lockup countdown shown</td><td>Cannot complete before lockup</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.11</td><td>Try to complete unstake early</td><td>Transaction fails / prevented</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.12</td><td>Complete unstake after lockup</td><td>Tokens returned to wallet</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>7c. Staking — Negative Tests</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test</th><th>Expected</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>7.13</td><td>Stake below guild minimum</td><td>Rejected / error shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.14</td><td>Stake with insufficient VETD balance</td><td>Error: insufficient balance</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.15</td><td>Unstake while active votes pending</td><td>Prevented or warned</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>7.16</td><td>Stake when contract is paused</td><td>Transaction rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>8. Voting — Standard (Schelling Point)</h2>
+<!-- ============================================ -->
+<p class="section-note">Route: /expert/voting/applications/[applicationId] — Prerequisite: Expert staked in guild + eligible to vote.</p>
+
+<h3>8a. Single Expert Vote</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>8.1</td><td>Open application from voting queue</td><td>Full candidate profile loads</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.2</td><td>Check eligibility</td><td>API returns eligible</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.3</td><td><strong>Review Step 1 — Profile:</strong> View resume, LinkedIn, GitHub, bio</td><td>All data displayed</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.4</td><td><strong>Review Step 2 — General Questions:</strong> Score each 0–5 (Depth, Specificity, Clarity)</td><td>Scores saved, red flag deductions work</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.5</td><td><strong>Review Step 3 — Domain Questions:</strong> Score domain expertise 0–5</td><td>Domain scores saved</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.6</td><td><strong>Review Step 4 — Submit:</strong> Enter score (0–100), stake, optional comment</td><td>Vote submitted</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.7</td><td>Check response</td><td>Shows reward amount, alignment distance, reputation change</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>8b. Multi-Expert Consensus (ALL 3 TESTERS)</h3>
+<div class="info-box"><strong>CRITICAL TEST:</strong> All 3 testers vote on the same application. Record your scores below.</div>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr class="highlight"><td>8.8</td><td><strong>Tester 1</strong> votes: score ____, stake ____ VETD</td><td>Vote recorded</td><td class="pass-col">☐</td><td>Score:</td><td></td><td>—</td><td></td><td>—</td></tr>
+  <tr class="highlight"><td>8.9</td><td><strong>Tester 2</strong> votes: score ____, stake ____ VETD</td><td>Vote recorded</td><td></td><td>—</td><td class="pass-col">☐</td><td>Score:</td><td></td><td>—</td></tr>
+  <tr class="highlight"><td>8.10</td><td><strong>Tester 3</strong> votes: score ____, stake ____ VETD</td><td>Vote recorded</td><td></td><td>—</td><td></td><td>—</td><td class="pass-col">☐</td><td>Score:</td></tr>
+  <tr><td>8.11</td><td>Finalize application after deadline</td><td>Consensus calculated (stake-weighted)</td><td class="pass-col">☐</td><td>Consensus:</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr class="highlight"><td>8.12</td><td>Check T1 reputation change</td><td>Change based on alignment distance</td><td class="pass-col">☐</td><td>Rep +/-:</td><td></td><td>—</td><td></td><td>—</td></tr>
+  <tr class="highlight"><td>8.13</td><td>Check T2 reputation change</td><td>Change based on alignment distance</td><td></td><td>—</td><td class="pass-col">☐</td><td>Rep +/-:</td><td></td><td>—</td></tr>
+  <tr class="highlight"><td>8.14</td><td>Check T3 reputation change</td><td>Change based on alignment distance</td><td></td><td>—</td><td></td><td>—</td><td class="pass-col">☐</td><td>Rep +/-:</td></tr>
+  <tr><td>8.15</td><td>Experts close to consensus got rewards</td><td>Reputation increased</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.16</td><td>Experts far from consensus got slashed</td><td>Reputation decreased</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.17</td><td>Candidate outcome correct</td><td>Approved if above threshold, else rejected</td><td class="pass-col">☐</td><td>Outcome:</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.18</td><td>Total rewards distributed correct</td><td>Reward pool matches expected</td><td class="pass-col">☐</td><td>Total:</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>8c. Voting — Negative Tests</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test</th><th>Expected</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>8.19</td><td>Vote on unassigned application</td><td>Eligibility check fails</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.20</td><td>Vote after deadline passed</td><td>Vote rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.21</td><td>Score outside 0–100 range</td><td>Validation error</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.22</td><td>Vote without minimum stake</td><td>Error shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>8.23</td><td>Double-vote on same application</td><td>Rejected or updates first</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>9. Commit-Reveal Voting</h2>
+<!-- ============================================ -->
+
+<h3>9a. Commit Phase</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>9.1</td><td>Enable commit-reveal for an application</td><td>Phase status = "commit"</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.2</td><td>Phase indicator renders</td><td>Shows "Commit Phase" with deadline</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.3</td><td>Decide score, generate nonce locally</td><td>Nonce stored (must remember!)</td><td class="pass-col">☐</td><td>Nonce:</td><td class="pass-col">☐</td><td>Nonce:</td><td class="pass-col">☐</td><td>Nonce:</td></tr>
+  <tr><td>9.4</td><td>Generate hash via API</td><td>generateHash() returns hash</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.5</td><td>Submit commitment</td><td>Commitment recorded</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.6</td><td>Cannot see other experts' votes</td><td>Hidden during commit phase</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>9b. Reveal Phase</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>9.7</td><td>Phase transitions to "reveal" after commit deadline</td><td>Phase status = "reveal"</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.8</td><td>Reveal vote with correct score + nonce</td><td>Hash verified, vote accepted</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.9</td><td>All experts reveal (or deadline passes)</td><td>Phase transitions to "finalized"</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.10</td><td>Consensus calculated from revealed votes</td><td>Same Schelling math as standard voting</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>9c. Commit-Reveal — Negative Tests</h3>
+<table>
+  <tr>
+    <th>#</th><th>Test</th><th>Expected</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>9.11</td><td>Reveal with wrong nonce</td><td>Hash mismatch, rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.12</td><td>Reveal during commit phase</td><td>Rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.13</td><td>Commit during reveal phase</td><td>Rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.14</td><td>Don't reveal before deadline</td><td>Abstain, stake at risk</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>9.15</td><td>Commit with 0 stake</td><td>Rejected</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>10. Slashing & Reputation</h2>
+<!-- ============================================ -->
+
+<h3>10a. Reputation Timeline</h3>
+<p class="section-note">Route: /expert/reputation</p>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>10.1</td><td>Reputation page loads</td><td>Timeline with entries shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.2</td><td>After accurate vote: change_amount</td><td>Positive (reward)</td><td class="pass-col">☐</td><td>Amount:</td><td class="pass-col">☐</td><td>Amount:</td><td class="pass-col">☐</td><td>Amount:</td></tr>
+  <tr><td>10.3</td><td>After inaccurate vote: change_amount</td><td>Negative (slash)</td><td class="pass-col">☐</td><td>Amount:</td><td class="pass-col">☐</td><td>Amount:</td><td class="pass-col">☐</td><td>Amount:</td></tr>
+  <tr><td>10.4</td><td>"reason" field correct</td><td>voting_accuracy_reward or _slash</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.5</td><td>"slash_percent" displayed</td><td>Shows % of rep lost</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.6</td><td>"consensus_score" displayed</td><td>Matches finalized consensus</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.7</td><td>"alignment_distance" displayed</td><td>Distance from consensus shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>10b. Tier Transitions</h3>
+<table>
+  <tr><th>Tier</th><th>Rep Range</th><th>Reward Weight</th></tr>
+  <tr><td>Foundation</td><td>0–999</td><td>1.0x</td></tr>
+  <tr><td>Established</td><td>1,000–1,999</td><td>1.25x</td></tr>
+  <tr><td>Authority</td><td>2,000+</td><td>1.5x</td></tr>
+</table>
+<table>
+  <tr>
+    <th>#</th><th>Test</th><th>Expected</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>10.8</td><td>Expert crosses Foundation to Established</td><td>Tier label updates in UI</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.9</td><td>Expert slashed below tier threshold</td><td>Tier drops, label updates</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.10</td><td>Authority expert vs Foundation expert reward</td><td>1.5x vs 1.0x multiplier confirmed</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<h3>10c. Earnings</h3>
+<p class="section-note">Route: /expert/earnings</p>
+<table>
+  <tr>
+    <th>#</th><th>Test Step</th><th>Expected Result</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>10.11</td><td>Earnings page loads</td><td>Earnings breakdown shown</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.12</td><td>vetting_reward entry present</td><td>Matches accurate vote reward</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>10.13</td><td>Breakdown by guild correct</td><td>Right guild attribution</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>Auth Edge Cases</h2>
+<!-- ============================================ -->
+<table>
+  <tr>
+    <th>#</th><th>Test</th><th>Expected</th>
+    <th class="pass-col">T1</th><th class="notes-col">T1 Notes</th>
+    <th class="pass-col">T2</th><th class="notes-col">T2 Notes</th>
+    <th class="pass-col">T3</th><th class="notes-col">T3 Notes</th>
+  </tr>
+  <tr><td>11.1</td><td>Expert accesses candidate routes</td><td>Redirected / forbidden</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>11.2</td><td>Candidate accesses expert voting</td><td>Redirected / forbidden</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>11.3</td><td>Expired JWT on candidate request</td><td>Auto-refresh, retry transparent</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+  <tr><td>11.4</td><td>Expert disconnects wallet mid-transaction</td><td>Graceful error, can reconnect</td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td><td class="pass-col">☐</td><td></td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2>Happy Path Summary</h2>
+<!-- ============================================ -->
+<pre>
+1. CANDIDATE signs up → profile → resume
+                    |
+2. CANDIDATE applies to guild (3-step form)
+                    |
+3. EXPERTS connect wallet → stake VETD in guild
+                    |
+4. EXPERTS review candidate (4-step review)
+   - Standard: score → submit
+   - Commit-reveal: commit hash → reveal score
+                    |
+5. Application FINALIZED after deadline
+   - Approved → candidate joins guild
+   - Rejected → candidate notified
+                    |
+6. REPUTATION updated for each expert
+   - Close to consensus → reward (rep UP)
+   - Far from consensus → slash (rep DOWN)
+   - Tier transitions at 1000 / 2000 rep
+</pre>
+
+<!-- ============================================ -->
+<h2>Sign-Off</h2>
+<!-- ============================================ -->
+<table>
+  <tr><th>Tester</th><th>All Tests Passed</th><th>Blockers Found</th><th>Signature</th><th>Date</th></tr>
+  <tr><td>Tester 1</td><td>☐ Yes&nbsp;&nbsp;☐ No</td><td></td><td></td><td></td></tr>
+  <tr><td>Tester 2</td><td>☐ Yes&nbsp;&nbsp;☐ No</td><td></td><td></td><td></td></tr>
+  <tr><td>Tester 3</td><td>☐ Yes&nbsp;&nbsp;☐ No</td><td></td><td></td><td></td></tr>
+</table>
+
+<p><strong>Overall Status:</strong> ☐ PASS&nbsp;&nbsp;☐ FAIL&nbsp;&nbsp;☐ BLOCKED</p>
+
+<p><strong>Blocker Details:</strong></p>
+<br>
+<p><strong>General Notes:</strong></p>
+<br><br><br>
+
+</body>
+</html>
