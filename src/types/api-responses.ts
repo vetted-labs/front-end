@@ -217,7 +217,8 @@ export interface ActiveEndorsement {
   expertAddress: string;
   expertName?: string;
   amount: string;
-  stakeAmount?: string;
+  /** Always populated after API normalization — prefer this over `amount`. */
+  stakeAmount: string;
   endorsedAt: string;
   createdAt?: string;
   notes?: string;

@@ -1,6 +1,7 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -15,9 +16,8 @@ import {
   X
 } from 'lucide-react';
 import { logger } from "@/lib/logger";
+import { getExplorerTxUrl } from "@/lib/blockchain";
 import type { EndorsementApplication } from "@/types";
-
-type TransactionStep = 'input' | 'approving' | 'bidding' | 'success' | 'error';
 
 interface TopBid {
   expert: string;
@@ -34,7 +34,7 @@ interface EndorsementTransactionModalProps {
   minimumBid: string;
   onPlaceEndorsement: (application: EndorsementApplication, bidAmount: string) => Promise<void>;
   topBids?: TopBid[];
-  txStep: 'idle' | 'approving' | 'bidding' | 'success' | 'error';
+  txStep: 'idle' | 'signing' | 'approving' | 'bidding' | 'success' | 'error';
   txError: string | null;
   approvalTxHash?: `0x${string}`;
   bidTxHash?: `0x${string}`;
@@ -118,8 +118,9 @@ export function EndorsementTransactionModal({
     .toUpperCase()
     .substring(0, 2);
 
-  const progressSteps = ['Approve', 'Endorse', 'Done'];
-  const currentStepIndex = txStep === 'idle' ? 0 : txStep === 'approving' ? 0 : txStep === 'bidding' ? 1 : 2;
+  const isPermitPath = txStep === 'signing' || (txStep === 'bidding' && !approvalTxHash);
+  const progressSteps = isPermitPath ? ['Sign', 'Confirm', 'Done'] : ['Approve', 'Endorse', 'Done'];
+  const currentStepIndex = txStep === 'idle' ? 0 : txStep === 'signing' ? 0 : txStep === 'approving' ? 0 : txStep === 'bidding' ? 1 : 2;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
@@ -145,7 +146,7 @@ export function EndorsementTransactionModal({
             </div>
             <button
               onClick={onClose}
-              disabled={txStep === 'approving' || txStep === 'bidding'}
+              disabled={txStep === 'signing' || txStep === 'approving' || txStep === 'bidding'}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             >
               <X className="w-4 h-4 text-muted-foreground" />
@@ -157,7 +158,7 @@ export function EndorsementTransactionModal({
         <div className="px-6 pb-6 space-y-4">
 
           {/* Progress Steps */}
-          {(txStep === 'approving' || txStep === 'bidding' || txStep === 'success') && (
+          {(txStep === 'signing' || txStep === 'approving' || txStep === 'bidding' || txStep === 'success') && (
             <div className="flex items-center gap-2">
               {progressSteps.map((stepName, idx) => (
                 <div key={idx} className="flex items-center gap-2 flex-1">
@@ -352,7 +353,28 @@ export function EndorsementTransactionModal({
             </>
           )}
 
-          {/* ── Approving ── */}
+          {/* ── Signing Permit ── */}
+          {txStep === 'signing' && (
+            <div className="text-center py-10">
+              <div className="relative w-20 h-20 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Wallet className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Sign Permit...</h3>
+              <p className="text-sm text-muted-foreground mb-4">Sign the message in your wallet</p>
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 max-w-xs mx-auto">
+                <p className="text-xs text-muted-foreground">
+                  Authorizing <span className="text-primary font-semibold">{bidAmount} VETD</span> for endorsement
+                </p>
+                <p className="text-xs text-primary/60 mt-2 font-medium">No gas required</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Approving (fallback path) ── */}
           {txStep === 'approving' && (
             <div className="text-center py-10">
               <div className="relative w-20 h-20 mx-auto mb-6">
@@ -369,7 +391,7 @@ export function EndorsementTransactionModal({
                   Step 1/2: Approving <span className="text-primary font-semibold">{bidAmount} VETD</span>
                 </p>
                 {approvalTxHash && (
-                  <a href={`https://sepolia.etherscan.io/tx/${approvalTxHash}`} target="_blank" rel="noopener noreferrer"
+                  <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline flex items-center justify-center gap-1 mt-2">
                     View on Etherscan <ExternalLink className="w-3 h-3" />
                   </a>
@@ -392,10 +414,10 @@ export function EndorsementTransactionModal({
               <p className="text-sm text-muted-foreground mb-4">Confirm the transaction in your wallet</p>
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 max-w-xs mx-auto">
                 <p className="text-xs text-muted-foreground">
-                  Step 2/2: Endorsing with <span className="text-primary font-semibold">{bidAmount} VETD</span>
+                  {isPermitPath ? 'Endorsing' : 'Step 2/2: Endorsing'} with <span className="text-primary font-semibold">{bidAmount} VETD</span>
                 </p>
                 {bidTxHash && (
-                  <a href={`https://sepolia.etherscan.io/tx/${bidTxHash}`} target="_blank" rel="noopener noreferrer"
+                  <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline flex items-center justify-center gap-1 mt-2">
                     View on Etherscan <ExternalLink className="w-3 h-3" />
                   </a>
@@ -438,7 +460,7 @@ export function EndorsementTransactionModal({
                       {approvalTxHash && (
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Approval</span>
-                          <a href={`https://sepolia.etherscan.io/tx/${approvalTxHash}`} target="_blank" rel="noopener noreferrer"
+                          <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1">
                             {approvalTxHash.slice(0, 6)}...{approvalTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
                           </a>
@@ -447,7 +469,7 @@ export function EndorsementTransactionModal({
                       {bidTxHash && (
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Endorsement</span>
-                          <a href={`https://sepolia.etherscan.io/tx/${bidTxHash}`} target="_blank" rel="noopener noreferrer"
+                          <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1">
                             {bidTxHash.slice(0, 6)}...{bidTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
                           </a>
@@ -490,7 +512,7 @@ export function EndorsementTransactionModal({
                     {approvalTxHash && (
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">Approval</span>
-                        <a href={`https://sepolia.etherscan.io/tx/${approvalTxHash}`} target="_blank" rel="noopener noreferrer"
+                        <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
                           className="text-primary hover:underline flex items-center gap-1">
                           {approvalTxHash.slice(0, 6)}...{approvalTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
                         </a>
@@ -499,7 +521,7 @@ export function EndorsementTransactionModal({
                     {bidTxHash && (
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">Endorsement</span>
-                        <a href={`https://sepolia.etherscan.io/tx/${bidTxHash}`} target="_blank" rel="noopener noreferrer"
+                        <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
                           className="text-primary hover:underline flex items-center gap-1">
                           {bidTxHash.slice(0, 6)}...{bidTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
                         </a>

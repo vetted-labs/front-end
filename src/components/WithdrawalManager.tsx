@@ -4,12 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
 import { Loader2, AlertCircle, Clock, CheckCircle2, TrendingUp, Coins } from 'lucide-react';
 import { apiRequest, ApiError } from '@/lib/api';
+import { useFetch } from '@/lib/hooks/useFetch';
 import { logger } from "@/lib/logger";
+import { getTransactionErrorMessage } from '@/lib/blockchain';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { CONTRACT_ADDRESSES, EXPERT_STAKING_ABI } from '@/contracts/abis';
@@ -18,6 +18,8 @@ interface WithdrawalManagerProps {
   walletAddress: string;
   currentStake: string;
   currentBalance: string;
+  guildId: `0x${string}`;
+  guildName?: string;
   onWithdrawalComplete?: () => void;
 }
 
@@ -25,13 +27,33 @@ export function WithdrawalManager({
   walletAddress,
   currentStake,
   currentBalance,
+  guildId,
+  guildName,
   onWithdrawalComplete
 }: WithdrawalManagerProps) {
-  const { address } = useAccount();
   const [unstakeAmount, setUnstakeAmount] = useState('');
-  const [unstakeRequest, setUnstakeRequest] = useState<{ hasRequest: boolean; unlockTime?: string; amount?: string } | null>(null);
-  const [loadingRequest, setLoadingRequest] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
+  // Unstake request data via useFetch
+  const { data: unstakeRequest, isLoading: loadingRequest, refetch: refetchUnstakeRequest } = useFetch(
+    async () => {
+      try {
+        return await apiRequest<{ hasRequest: boolean; unlockTime?: string; amount?: string }>(
+          `/api/blockchain/staking/unstake-request-detailed/${walletAddress}`
+        );
+      } catch (error: unknown) {
+        // 404 is expected when no unstake request exists
+        if (error instanceof ApiError && error.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    {
+      skip: !walletAddress,
+      onError: (msg) => logger.error('Failed to load unstake request', msg),
+    }
+  );
 
   // Contract interactions
   const { writeContract: requestUnstake, data: requestTxHash, isPending: isRequesting } = useWriteContract();
@@ -39,14 +61,9 @@ export function WithdrawalManager({
   const { writeContract: cancelUnstake, data: cancelTxHash, isPending: isCanceling } = useWriteContract();
 
   // Transaction confirmations
-  const { isSuccess: requestSuccess } = useWaitForTransactionReceipt({ hash: requestTxHash });
-  const { isSuccess: completeSuccess } = useWaitForTransactionReceipt({ hash: completeTxHash });
-  const { isSuccess: cancelSuccess } = useWaitForTransactionReceipt({ hash: cancelTxHash });
-
-  // Load unstake request
-  useEffect(() => {
-    loadUnstakeRequest();
-  }, [walletAddress]);
+  const { isSuccess: requestSuccess, isError: requestFailed, error: requestError } = useWaitForTransactionReceipt({ hash: requestTxHash });
+  const { isSuccess: completeSuccess, isError: completeFailed, error: completeError } = useWaitForTransactionReceipt({ hash: completeTxHash });
+  const { isSuccess: cancelSuccess, isError: cancelFailed, error: cancelError } = useWaitForTransactionReceipt({ hash: cancelTxHash });
 
   // Update time remaining
   useEffect(() => {
@@ -64,38 +81,33 @@ export function WithdrawalManager({
   useEffect(() => {
     if (requestSuccess) {
       toast.success('Unstake requested! 7-day cooldown started.');
-      loadUnstakeRequest();
+      refetchUnstakeRequest();
       onWithdrawalComplete?.();
     }
     if (completeSuccess) {
       toast.success('Unstake completed! Tokens returned to wallet.');
-      loadUnstakeRequest();
+      refetchUnstakeRequest();
       onWithdrawalComplete?.();
     }
     if (cancelSuccess) {
       toast.success('Unstake request cancelled');
-      loadUnstakeRequest();
+      refetchUnstakeRequest();
       onWithdrawalComplete?.();
     }
   }, [requestSuccess, completeSuccess, cancelSuccess]);
 
-  const loadUnstakeRequest = async () => {
-    try {
-      setLoadingRequest(true);
-      const data = await apiRequest<{ hasRequest: boolean; unlockTime?: string; amount?: string }>(
-        `/api/blockchain/staking/unstake-request-detailed/${walletAddress}`
-      );
-
-      setUnstakeRequest(data);
-    } catch (error: unknown) {
-      // 404 is expected when no unstake request exists
-      if (!(error instanceof ApiError && error.status === 404)) {
-        logger.error('Failed to load unstake request', error);
-      }
-    } finally {
-      setLoadingRequest(false);
+  // Handle transaction failures
+  useEffect(() => {
+    if (requestFailed) {
+      toast.error(getTransactionErrorMessage(requestError, 'Unstake request failed on-chain'));
     }
-  };
+    if (completeFailed) {
+      toast.error(getTransactionErrorMessage(completeError, 'Unstake completion failed on-chain'));
+    }
+    if (cancelFailed) {
+      toast.error(getTransactionErrorMessage(cancelError, 'Unstake cancellation failed on-chain'));
+    }
+  }, [requestFailed, completeFailed, cancelFailed, requestError, completeError, cancelError]);
 
   const handleRequestUnstake = async () => {
     if (!unstakeAmount || parseFloat(unstakeAmount) <= 0) {
@@ -110,10 +122,10 @@ export function WithdrawalManager({
 
     try {
       await requestUnstake({
-        address: CONTRACT_ADDRESSES.STAKING as `0x${string}`,
+        address: CONTRACT_ADDRESSES.STAKING,
         abi: EXPERT_STAKING_ABI,
         functionName: 'requestUnstake',
-        args: [parseEther(unstakeAmount)]
+        args: [guildId, parseEther(unstakeAmount)]
       });
 
       setUnstakeAmount('');
@@ -126,9 +138,10 @@ export function WithdrawalManager({
   const handleCompleteUnstake = async () => {
     try {
       await completeUnstake({
-        address: CONTRACT_ADDRESSES.STAKING as `0x${string}`,
+        address: CONTRACT_ADDRESSES.STAKING,
         abi: EXPERT_STAKING_ABI,
-        functionName: 'completeUnstake'
+        functionName: 'completeUnstake',
+        args: [guildId]
       });
     } catch (error: unknown) {
       logger.error('Complete unstake error', error, { silent: true });
@@ -139,9 +152,10 @@ export function WithdrawalManager({
   const handleCancelUnstake = async () => {
     try {
       await cancelUnstake({
-        address: CONTRACT_ADDRESSES.STAKING as `0x${string}`,
+        address: CONTRACT_ADDRESSES.STAKING,
         abi: EXPERT_STAKING_ABI,
-        functionName: 'cancelUnstake'
+        functionName: 'cancelUnstake',
+        args: [guildId]
       });
     } catch (error: unknown) {
       logger.error('Cancel unstake error', error, { silent: true });
@@ -201,7 +215,7 @@ export function WithdrawalManager({
                 <div className="flex-1">
                   <h4 className="font-semibold">Unstake Request Pending</h4>
                   <p className="text-sm text-muted-foreground">
-                    Amount: {parseFloat(unstakeRequest.amount).toFixed(2)} VETD
+                    Amount: {parseFloat(unstakeRequest.amount ?? "0").toFixed(2)} VETD
                   </p>
                 </div>
               </div>

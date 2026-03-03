@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { X, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getExplorerTxUrl } from "@/lib/blockchain";
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export function TransactionModal({
 
               {txHash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                  href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 transition-colors"
@@ -129,7 +130,7 @@ export function TransactionModal({
 
               {txHash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                  href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-green-700 dark:text-green-400 bg-green-500/10 hover:bg-green-500/20 transition-colors"
@@ -183,7 +184,7 @@ export function TransactionModal({
 
               {txHash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                  href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-700 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"

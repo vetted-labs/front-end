@@ -19,36 +19,33 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { applicationsApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
-import { logger } from "@/lib/logger";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { truncateAddress, ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PillTabs } from "@/components/ui/pill-tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { CompanyApplication, CandidateGuildReport } from "@/types";
+import { StatusActions } from "./StatusActions";
+import { PipelineStepper } from "./PipelineStepper";
+import { StatusTimeline } from "./StatusTimeline";
+import type { CompanyApplication, CandidateGuildReport, ApplicationStatus, StatusTransition } from "@/types";
 import { getPlatformIcon } from "@/lib/social-links";
 
-type TabValue = "profile" | "application" | "guild-report" | "notes";
+type TabValue = "profile" | "application" | "guild-report" | "history" | "notes";
 
 const tabs: { value: TabValue; label: string }[] = [
   { value: "profile", label: "Profile" },
   { value: "application", label: "Application" },
   { value: "guild-report", label: "Guild Report" },
+  { value: "history", label: "History" },
   { value: "notes", label: "Notes" },
 ];
 
 interface CandidateDetailPanelProps {
   application: CompanyApplication;
-  onStatusChange: (applicationId: string, newStatus: string) => void;
+  onStatusChange: (applicationId: string, newStatus: ApplicationStatus, note?: string) => void;
+  isUpdatingStatus?: boolean;
   onBack?: () => void;
   showBackButton?: boolean;
 }
@@ -56,16 +53,17 @@ interface CandidateDetailPanelProps {
 export function CandidateDetailPanel({
   application,
   onStatusChange,
+  isUpdatingStatus,
   onBack,
   showBackButton,
 }: CandidateDetailPanelProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>("profile");
   const [notes, setNotes] = useState(application.notes ?? "");
-  const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
   const [message, setMessage] = useState("");
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const { execute: executeSaveNotes, isLoading: isSavingNotes } = useApi();
+  const { execute: executeSendMessage, isLoading: isSendingMessage } = useApi();
 
   // Sync notes when the selected application changes
   useEffect(() => {
@@ -79,153 +77,278 @@ export function CandidateDetailPanel({
     () => companyApi.getCandidateGuildReport(application.candidateId, application.jobId),
   );
 
+  const { data: statusHistory, isLoading: historyLoading, refetch: refetchHistory } = useFetch<StatusTransition[]>(
+    () => applicationsApi.getStatusHistory(application.id),
+  );
+
+  const handleStatusAdvance = (newStatus: ApplicationStatus, note?: string) => {
+    onStatusChange(application.id, newStatus, note);
+    // Refetch history after a short delay to allow backend to process
+    setTimeout(() => refetchHistory(), 500);
+  };
+
   const resumeUrl = application.resumeUrl ? getAssetUrl(application.resumeUrl) : null;
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
-    setIsSendingMessage(true);
-    try {
-      const result = await messagingApi.startConversation({
-        applicationId: application.id,
-        message: message.trim(),
-      });
-      toast.success("Message sent!");
-      setMessage("");
-      router.push(`/dashboard/messages/${result.id}`);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 409) {
+
+    // 409 handling requires access to the original ApiError, so we wrap
+    // the API call to handle that case before useApi's error path.
+    await executeSendMessage(
+      async () => {
         try {
-          const existing = await messagingApi.getConversationByApplication(application.id);
-          if (existing) {
-            router.push(`/dashboard/messages/${existing.id}`);
-            return;
+          return await messagingApi.startConversation({
+            applicationId: application.id,
+            message: message.trim(),
+          });
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 409) {
+            const existing = await messagingApi.getConversationByApplication(application.id);
+            if (existing) {
+              router.push(`/dashboard/messages/${existing.id}`);
+              return existing;
+            }
           }
-        } catch {
-          // fall through
+          throw err;
         }
+      },
+      {
+        onSuccess: (data) => {
+          toast.success("Message sent!");
+          setMessage("");
+          router.push(`/dashboard/messages/${data.id}`);
+        },
+        onError: () => toast.error("Failed to send message"),
       }
-      toast.error("Failed to send message");
-    } finally {
-      setIsSendingMessage(false);
-    }
+    );
   };
 
   const handleSaveNotes = async () => {
-    setIsSavingNotes(true);
-    try {
-      await applicationsApi.updateStatus(application.id, application.status, notes);
-      setNotesSaved(true);
-      setTimeout(() => setNotesSaved(false), 2000);
-    } catch (error) {
-      logger.error("Error saving notes", error, { silent: true });
-      toast.error("Failed to save notes");
-    } finally {
-      setIsSavingNotes(false);
-    }
+    await executeSaveNotes(
+      () => applicationsApi.updateNotes(application.id, notes),
+      {
+        onSuccess: () => {
+          setNotesSaved(true);
+          setTimeout(() => setNotesSaved(false), 2000);
+        },
+        onError: () => toast.error("Failed to save notes"),
+      }
+    );
   };
 
+  const firstName = candidate.fullName.split(" ")[0];
+  const appliedDate = new Date(application.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  // Collect all contact/social links for icon-only header buttons
+  const contactLinks: { href: string; icon: typeof Mail; title: string }[] = [
+    { href: `mailto:${candidate.email}`, icon: Mail, title: candidate.email },
+  ];
+  if (candidate.phone) {
+    contactLinks.push({ href: `tel:${candidate.phone}`, icon: Phone, title: candidate.phone });
+  }
+  if (candidate.socialLinks?.length) {
+    for (const link of candidate.socialLinks.filter((l) => l.url?.trim())) {
+      contactLinks.push({
+        href: ensureHttps(link.url),
+        icon: getPlatformIcon(link.platform),
+        title: link.label || link.platform,
+      });
+    }
+  } else {
+    if (candidate.linkedIn) {
+      contactLinks.push({ href: ensureHttps(candidate.linkedIn), icon: Linkedin, title: "LinkedIn" });
+    }
+    if (candidate.github) {
+      contactLinks.push({ href: ensureHttps(candidate.github), icon: Github, title: "GitHub" });
+    }
+  }
+
   return (
-    <div className="flex flex-col h-full rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+    <div className="flex flex-col w-full h-full rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-border/40 px-5 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="flex-shrink-0 border-b border-border/40 px-6 pt-5 pb-4">
+        {/* Row 1 — Back + status actions */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
             {showBackButton && (
               <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors lg:hidden">
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-semibold text-sm">
-                {candidate.fullName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-[15px] font-medium text-foreground truncate">{candidate.fullName}</h3>
-              <p className="text-xs text-muted-foreground truncate">
-                {candidate.headline || candidate.email}
-                {candidate.experienceLevel && ` · ${candidate.experienceLevel}`}
-              </p>
-            </div>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Applied {appliedDate}
+            </span>
           </div>
-          <Select
-            value={application.status}
-            onValueChange={(newStatus) => onStatusChange(application.id, newStatus)}
-          >
-            <SelectTrigger className="h-7 w-[120px] text-xs flex-shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="reviewing">Reviewing</SelectItem>
-              <SelectItem value="interviewed">Interviewed</SelectItem>
-              <SelectItem value="accepted">Accepted</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
+          <StatusActions
+            currentStatus={application.status}
+            isUpdating={!!isUpdatingStatus}
+            onAdvance={handleStatusAdvance}
+          />
         </div>
 
-        {/* Contact links */}
-        <div className="flex items-center gap-3 mt-3 flex-wrap">
-          <a href={`mailto:${candidate.email}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            <Mail className="w-3 h-3" />{candidate.email}
-          </a>
-          {candidate.phone && (
-            <a href={`tel:${candidate.phone}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              <Phone className="w-3 h-3" />{candidate.phone}
-            </a>
-          )}
-          {candidate.socialLinks?.filter((l) => l.url?.trim()).map((link, idx) => {
-            const Icon = getPlatformIcon(link.platform);
-            return (
-              <a key={idx} href={ensureHttps(link.url)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                <Icon className="w-3 h-3" />{link.label}
-              </a>
-            );
-          })}
-          {!candidate.socialLinks?.length && candidate.linkedIn && (
-            <a href={ensureHttps(candidate.linkedIn)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              <Linkedin className="w-3 h-3" />LinkedIn
-            </a>
-          )}
-          {!candidate.socialLinks?.length && candidate.github && (
-            <a href={ensureHttps(candidate.github)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              <Github className="w-3 h-3" />GitHub
-            </a>
-          )}
+        {/* Row 2 — Avatar + name + contacts */}
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
+            <span className="text-primary font-display font-bold text-xl">
+              {candidate.fullName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-2xl font-bold text-foreground truncate tracking-tight">{candidate.fullName}</h3>
+            {candidate.headline && (
+              <p className="text-sm text-muted-foreground truncate mt-0.5">{candidate.headline}</p>
+            )}
+            {/* Inline contact links */}
+            <div className="flex items-center gap-1 mt-2">
+              {contactLinks.map((link, idx) => {
+                const Icon = link.icon;
+                const isExternal = !link.href.startsWith("mailto:") && !link.href.startsWith("tel:");
+                return (
+                  <a
+                    key={idx}
+                    href={link.href}
+                    {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    title={link.title}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3 — Pipeline stepper */}
+        <div className="mt-5">
+          <PipelineStepper
+            currentStatus={application.status}
+            history={statusHistory ?? []}
+          />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 px-5 py-3 border-b border-border/30 dark:border-white/[0.04]">
+      <div className="flex-shrink-0 px-6 py-3 border-b border-border/30 dark:border-white/[0.04]">
         <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       {/* Tab Content (scrollable) */}
-      <div className="flex-1 overflow-y-auto px-5 py-5">
+      <div className="flex-1 overflow-y-auto px-6 py-6">
         {activeTab === "profile" && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Resume</p>
-              {resumeUrl ? (
-                <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-                  <FileText className="w-4 h-4" />View / Download Resume<ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              ) : (
-                <p className="text-sm text-muted-foreground">No resume uploaded</p>
-              )}
+            {/* Applied For — hero card */}
+            <div className="rounded-xl border border-border/40 dark:border-white/[0.06] bg-gradient-to-br from-muted/40 via-transparent to-primary/[0.03] p-5">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
+              <p className="text-base font-semibold text-foreground">{job.title}</p>
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
+                <span>{job.location}</span>
+                {job.type && (
+                  <>
+                    <span className="text-border dark:text-white/10">&middot;</span>
+                    <span>{job.type}</span>
+                  </>
+                )}
+                {job.guild && (
+                  <>
+                    <span className="text-border dark:text-white/10">&middot;</span>
+                    <span>{job.guild}</span>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            {/* Info grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Resume card */}
+              <div className="col-span-2">
+                {resumeUrl ? (
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 p-4 rounded-xl border border-border/40 dark:border-white/[0.06] hover:border-primary/20 hover:bg-primary/[0.02] transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">View Resume</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">PDF document</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border/40 dark:border-white/[0.06]">
+                    <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No resume uploaded</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Experience */}
               {candidate.experienceLevel && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/40 dark:border-white/[0.06] text-xs font-medium text-foreground/80 capitalize">
-                  {candidate.experienceLevel} level
-                </span>
+                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Experience</p>
+                  <p className="text-sm font-semibold text-foreground capitalize">{candidate.experienceLevel} Level</p>
+                </div>
               )}
+
+              {/* Wallet */}
               {candidate.walletAddress && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/40 dark:border-white/[0.06] text-xs font-mono text-muted-foreground">
-                  <Wallet className="w-3 h-3" />{truncateAddress(candidate.walletAddress)}
-                </span>
+                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Wallet</p>
+                  <div className="flex items-center gap-1.5">
+                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <p className="text-sm font-mono text-foreground">{truncateAddress(candidate.walletAddress)}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Contact card */}
+              <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2.5">Contact</p>
+                <div className="space-y-2">
+                  <a href={`mailto:${candidate.email}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                    <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate">{candidate.email}</span>
+                  </a>
+                  {candidate.phone && (
+                    <a href={`tel:${candidate.phone}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                      <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />{candidate.phone}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Links card */}
+              {(candidate.socialLinks?.filter((l) => l.url?.trim()).length || candidate.linkedIn || candidate.github) && (
+                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2.5">Links</p>
+                  <div className="space-y-2">
+                    {candidate.socialLinks?.filter((l) => l.url?.trim()).map((link, idx) => {
+                      const Icon = getPlatformIcon(link.platform);
+                      return (
+                        <a key={idx} href={ensureHttps(link.url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                          <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />{link.label || link.platform}
+                        </a>
+                      );
+                    })}
+                    {!candidate.socialLinks?.length && candidate.linkedIn && (
+                      <a href={ensureHttps(candidate.linkedIn)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                        <Linkedin className="w-4 h-4 text-muted-foreground flex-shrink-0" />LinkedIn
+                      </a>
+                    )}
+                    {!candidate.socialLinks?.length && candidate.github && (
+                      <a href={ensureHttps(candidate.github)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                        <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />GitHub
+                      </a>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -364,6 +487,18 @@ export function CandidateDetailPanel({
           </div>
         )}
 
+        {activeTab === "history" && (
+          <div>
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <StatusTimeline history={statusHistory ?? []} />
+            )}
+          </div>
+        )}
+
         {activeTab === "notes" && (
           <div className="space-y-4">
             <div>
@@ -384,35 +519,29 @@ export function CandidateDetailPanel({
       </div>
 
       {/* Footer — Message compose */}
-      <div className="flex-shrink-0 border-t border-border/40 px-5 py-3 space-y-2">
-        <div className="flex items-end gap-2">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder={`Message ${candidate.fullName}...`}
-              className="w-full pl-4 pr-12 py-2 text-sm rounded-full border border-border/60 dark:border-white/[0.08] bg-muted/30 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isSendingMessage}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-primary text-white hover:opacity-90 transition-opacity disabled:opacity-30"
-            >
-              {isSendingMessage ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            </button>
-          </div>
+      <div className="flex-shrink-0 border-t border-border/30 dark:border-white/[0.04] px-6 py-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            placeholder={`Message ${firstName}...`}
+            className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-border/50 dark:border-white/[0.06] bg-muted/20 dark:bg-white/[0.03] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!message.trim() || isSendingMessage}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-white disabled:opacity-30 disabled:hover:bg-primary/10 disabled:hover:text-primary transition-all"
+          >
+            {isSendingMessage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </button>
         </div>
-        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <Calendar className="w-3 h-3" />
-          Applied {new Date(application.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-        </span>
       </div>
     </div>
   );

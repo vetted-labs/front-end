@@ -23,48 +23,22 @@ import {
   Clock,
   Star,
   AlertCircle,
+  ExternalLink,
+  Link2,
+  Trophy,
+  Loader2,
 } from "lucide-react";
 import { Modal, Button, Alert, Textarea, StatusBadge } from "@/components/ui";
+import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-import type { CandidateApplication } from "@/types";
+import type { Job, CandidateApplication, CandidateProfile } from "@/types";
 
-interface JobDetails {
-  id: string;
-  title: string;
-  department: string | null;
-  description: string;
-  requirements: string[];
-  skills: string[];
-  location: string;
-  locationType: "remote" | "onsite" | "hybrid";
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
-  experienceLevel: "junior" | "mid" | "senior" | "lead" | "executive" | null;
-  salary: { min: number | null; max: number | null; currency: string };
-  equityOffered: boolean | null;
-  equityRange: string | null;
-  status: "draft" | "active" | "paused" | "closed";
-  guild: string;
-  applicants: number;
-  views: number;
-  screeningQuestions: string[];
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  companyId: string;
-  companyName?: string;
-  companyLogo?: string;
-  featured?: boolean;
-}
-
-interface UserProfile {
-  resumeUrl?: string;
-  resumeFileName?: string;
-}
+type UserProfile = Pick<CandidateProfile, "resumeUrl" | "resumeFileName" | "bio" | "socialLinks" | "linkedIn" | "github">;
 
 export default function JobDetailView() {
   const params = useParams();
@@ -78,7 +52,7 @@ export default function JobDetailView() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [useProfileResume, setUseProfileResume] = useState(true);
   const [screeningAnswers, setScreeningAnswers] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: submitApplication, isLoading: isSubmitting } = useApi();
   const [applicationError, setApplicationError] = useState("");
   const [existingApplication, setExistingApplication] = useState<CandidateApplication | null>(null);
   const [isGuildMember, setIsGuildMember] = useState(false);
@@ -87,7 +61,7 @@ export default function JobDetailView() {
   const isAuthenticated = auth.isAuthenticated;
 
   // Fetch job details
-  const { data: job, isLoading, error } = useFetch<JobDetails>(
+  const { data: job, isLoading, error } = useFetch<Job>(
     () => jobsApi.getById(jobId!).then((data) => {
       // Track session views
       const viewedJobsKey = 'viewedJobs';
@@ -106,13 +80,13 @@ export default function JobDetailView() {
         screeningQuestions: data.screeningQuestions || [],
         department: data.department || null,
         location: data.location,
-        locationType: (data.locationType || "remote") as JobDetails["locationType"],
+        locationType: (data.locationType || "remote") as Job["locationType"],
         type: data.type,
-        experienceLevel: (data.experienceLevel || null) as JobDetails["experienceLevel"],
+        experienceLevel: (data.experienceLevel || null) as Job["experienceLevel"],
         salary: data.salary || { min: null, max: null, currency: 'USD' },
         equityOffered: data.equityOffered || null,
         equityRange: data.equityRange || null,
-        status: (data.status || "active") as JobDetails["status"],
+        status: (data.status || "active") as Job["status"],
         guild: data.guild || '',
         applicants: data.applicants || 0,
         views: data.views || 0,
@@ -128,11 +102,15 @@ export default function JobDetailView() {
     { skip: !jobId }
   );
 
-  // Fetch user profile to get existing resume
+  // Fetch user profile to get existing resume, bio, and social links
   const { data: profileResume } = useFetch<UserProfile | null>(
     () => candidateApi.getById(auth.userId as string).then((data) => ({
       resumeUrl: data.resumeUrl,
       resumeFileName: data.resumeFileName || "Your Profile Resume",
+      bio: data.bio,
+      socialLinks: data.socialLinks,
+      linkedIn: data.linkedIn,
+      github: data.github,
     })),
     {
       skip: !isAuthenticated,
@@ -196,6 +174,18 @@ export default function JobDetailView() {
     }
   );
 
+  // Resolve social links from profile (prefer socialLinks array, fall back to legacy fields)
+  const profileSocialLinks = (() => {
+    if (!profileResume) return [];
+    if (profileResume.socialLinks && profileResume.socialLinks.length > 0) {
+      return profileResume.socialLinks.filter((l) => l.url.trim());
+    }
+    const legacy: import("@/types").SocialLink[] = [];
+    if (profileResume.linkedIn) legacy.push({ platform: "linkedin", label: "LinkedIn", url: profileResume.linkedIn });
+    if (profileResume.github) legacy.push({ platform: "github", label: "GitHub", url: profileResume.github });
+    return legacy;
+  })();
+
   const handleApply = () => {
     // Check if already applied
     if (existingApplication) {
@@ -222,6 +212,10 @@ export default function JobDetailView() {
 
     if (job?.screeningQuestions) {
       setScreeningAnswers(new Array(job.screeningQuestions.length).fill(""));
+    }
+    // Pre-populate cover letter from profile bio if not already filled
+    if (!coverLetter && profileResume?.bio) {
+      setCoverLetter(profileResume.bio);
     }
     setShowApplyModal(true);
   };
@@ -282,65 +276,67 @@ export default function JobDetailView() {
       }
     }
 
-    setIsSubmitting(true);
-    try {
-      const candidateId = auth.userId;
-      if (!candidateId) {
-        setApplicationError("Unable to identify your account. Please log in again.");
-        setIsSubmitting(false);
-        return;
-      }
-      let resumeUrl = profileResume?.resumeUrl;
-
-      // If uploading new resume, upload it first
-      if (!useProfileResume && resumeFile) {
-        const resumeData = await candidateApi.uploadResume(candidateId, resumeFile);
-        resumeUrl = resumeData.resumeUrl;
-      }
-
-      // Submit the application
-      const newApplication = await applicationsApi.create({
-        jobId: job?.id,
-        candidateId,
-        coverLetter,
-        resumeUrl,
-        screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
-      });
-
-      // Update state to show user has applied
-      setExistingApplication({
-        id: newApplication.id,
-        jobId: job?.id || "",
-        status: "pending",
-        coverLetter,
-        appliedAt: new Date().toISOString(),
-        job: {
-          id: job?.id || "",
-          title: job?.title || "",
-          companyName: job?.companyName,
-          location: job?.location || "",
-          type: job?.type || "Full-time",
-        },
-      });
-
-      // Success!
-      setShowApplyModal(false);
-      setShowSuccessModal(true);
-      setCoverLetter("");
-      setResumeFile(null);
-      setUseProfileResume(true);
-      setScreeningAnswers([]);
-    } catch (error: unknown) {
-      setApplicationError(
-        `Failed to submit application: ${error instanceof Error ? error.message : "An error occurred"}`
-      );
-    } finally {
-      setIsSubmitting(false);
+    const candidateId = auth.userId;
+    if (!candidateId) {
+      setApplicationError("Unable to identify your account. Please log in again.");
+      return;
     }
+
+    await submitApplication(
+      async () => {
+        let resumeUrl = profileResume?.resumeUrl;
+
+        // If uploading new resume, upload it first
+        if (!useProfileResume && resumeFile) {
+          const resumeData = await candidateApi.uploadResume(candidateId, resumeFile);
+          resumeUrl = resumeData.resumeUrl;
+        }
+
+        // Submit the application
+        return applicationsApi.create({
+          jobId: job?.id,
+          candidateId,
+          coverLetter,
+          resumeUrl,
+          screeningAnswers: screeningAnswers.length > 0 ? screeningAnswers : undefined,
+          socialLinks: profileSocialLinks.length > 0 ? profileSocialLinks : undefined,
+        });
+      },
+      {
+        onSuccess: (newApplication) => {
+          setExistingApplication({
+            id: newApplication.id,
+            jobId: job?.id || "",
+            status: "pending",
+            coverLetter,
+            appliedAt: new Date().toISOString(),
+            job: {
+              id: job?.id || "",
+              title: job?.title || "",
+              companyName: job?.companyName,
+              location: job?.location || "",
+              type: job?.type || "Full-time",
+            },
+          });
+
+          setShowApplyModal(false);
+          setShowSuccessModal(true);
+          setCoverLetter("");
+          setResumeFile(null);
+          setUseProfileResume(true);
+          setScreeningAnswers([]);
+        },
+        onError: (msg) => setApplicationError(`Failed to submit application: ${msg}`),
+      }
+    );
   };
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (error && !job) {
@@ -491,8 +487,35 @@ export default function JobDetailView() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24 border border-border/60">
-              {/* Already Applied Warning */}
-              {hasAlreadyApplied && (
+              {/* Already Applied / Accepted */}
+              {hasAlreadyApplied && existingApplication.status === "accepted" && (
+                <div className="relative overflow-hidden p-4 rounded-lg border-2 border-emerald-500/30 animate-celebrate-glow bg-gradient-to-r from-emerald-500/10 via-green-500/5 to-emerald-500/10 animate-shimmer-border">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center flex-shrink-0">
+                      <Trophy className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-300 text-lg">
+                        Accepted!
+                      </span>
+                      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                        Congratulations on your offer
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                    You applied on {new Date(existingApplication.appliedAt).toLocaleDateString()}
+                  </p>
+                  <button
+                    onClick={() => router.push("/candidate/applications")}
+                    className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    View My Applications →
+                  </button>
+                </div>
+              )}
+              {hasAlreadyApplied && existingApplication.status !== "accepted" && (
                 <div className="p-4 bg-green-500/10 border-2 border-green-500/20 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -793,6 +816,39 @@ export default function JobDetailView() {
             showCounter
             minLength={50}
           />
+
+          {/* Social Links from Profile */}
+          {profileSocialLinks.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-card-foreground mb-2 flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-muted-foreground" />
+                Social Links from Profile
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {profileSocialLinks.map((link, i) => {
+                  const Icon = getPlatformIcon(link.platform);
+                  return (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all group text-sm"
+                    >
+                      <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <span className="font-medium text-foreground">
+                        {link.label || getPlatformLabel(link.platform)}
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </a>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                These links will be included with your application. Update them in your profile settings.
+              </p>
+            </div>
+          )}
 
           {/* Screening Questions */}
           {job?.screeningQuestions && job.screeningQuestions.length > 0 && (

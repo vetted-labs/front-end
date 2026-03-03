@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wallet, ArrowDownToLine, ExternalLink } from "lucide-react";
+import { getExplorerTxUrl } from "@/lib/blockchain";
 
 interface ClaimRewardsCardProps {
   pendingAmount: string;
@@ -62,7 +63,7 @@ export function ClaimRewardsCard({
           </Button>
           {claimTxHash && (
             <a
-              href={`https://sepolia.etherscan.io/tx/${claimTxHash}`}
+              href={getExplorerTxUrl(claimTxHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"

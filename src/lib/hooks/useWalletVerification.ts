@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useSignMessage } from "wagmi";
 import { blockchainApi } from "@/lib/api";
+import { isUserRejection } from "@/lib/blockchain";
+import { logger } from "@/lib/logger";
 
 interface UseWalletVerificationReturn {
   isVerified: boolean | null;
@@ -26,7 +28,9 @@ export function useWalletVerification(): UseWalletVerificationReturn {
       const verified = result?.verified === true;
       setIsVerified(verified);
       return verified;
-    } catch {
+    } catch (err) {
+      logger.error("Wallet verification check failed", err);
+      setError("Unable to check wallet verification status");
       setIsVerified(false);
       return false;
     } finally {
@@ -53,12 +57,10 @@ export function useWalletVerification(): UseWalletVerificationReturn {
       setIsVerified(true);
       return true;
     } catch (err: unknown) {
-      // User rejected the signature request
-      const walletErr = err as { code?: number; message?: string };
-      if (walletErr?.code === 4001 || walletErr?.message?.includes("User rejected")) {
+      if (isUserRejection(err)) {
         setError("Wallet signature was rejected. You can verify later from your dashboard.");
       } else {
-        setError(walletErr?.message || "Wallet verification failed");
+        setError(err instanceof Error ? err.message : "Wallet verification failed");
       }
       return false;
     } finally {

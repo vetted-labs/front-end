@@ -11,10 +11,8 @@ import {
   Award,
   Trophy,
   TrendingUp,
-  Building2,
   User,
   Briefcase,
-  MapPin,
   ChevronDown,
   Clock,
   Coins,
@@ -89,7 +87,7 @@ export function MyEndorsementsHistory() {
           {
             label: "Total Staked",
             value: `${totalStaked.toFixed(2)}`,
-            suffix: "VTD",
+            suffix: "VETD",
             icon: TrendingUp,
             accent: "emerald",
           },
@@ -219,7 +217,7 @@ export function MyEndorsementsHistory() {
                 {/* Stake */}
                 <div className="hidden md:block text-right min-w-[90px]">
                   <p className="text-sm font-semibold text-primary tabular-nums">
-                    {parseFloat(endorsement.stakeAmount || "0").toFixed(2)} VTD
+                    {parseFloat(endorsement.stakeAmount || "0").toFixed(2)} VETD
                   </p>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                     Stake
@@ -293,7 +291,7 @@ export function MyEndorsementsHistory() {
                           {parseFloat(
                             endorsement.blockchainData?.bidAmount || endorsement.stakeAmount || "0"
                           ).toFixed(2)}{" "}
-                          <span className="text-xs font-medium text-muted-foreground">VTD</span>
+                          <span className="text-xs font-medium text-muted-foreground">VETD</span>
                         </p>
                       </div>
                     </div>

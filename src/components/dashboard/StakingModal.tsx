@@ -6,9 +6,12 @@ import { sepolia } from "wagmi/chains";
 import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
 import Image from "next/image";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
+import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
+import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
@@ -38,9 +41,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   const [step, setStep] = useState<"input" | "transaction">("input");
 
   // Guild selection
-  const [guilds, setGuilds] = useState<GuildOption[]>([]);
   const [selectedGuild, setSelectedGuild] = useState<GuildOption | null>(null);
-  const [isLoadingGuilds, setIsLoadingGuilds] = useState(false);
   const [showGuildDropdown, setShowGuildDropdown] = useState(false);
 
   // Transaction modal state
@@ -50,9 +51,35 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   const [currentTxAmount, setCurrentTxAmount] = useState<string>("");
   const [currentTxAction, setCurrentTxAction] = useState<ActionMode>("stake");
 
+  // Fetch guilds via useFetch
+  const { data: guilds, isLoading: isLoadingGuilds } = useFetch<GuildOption[]>(
+    async () => {
+      const allData = await guildsApi.getAll();
+      const allGuilds = Array.isArray(allData) ? allData : [];
+      return allGuilds
+        .filter((g) => g.blockchainGuildId)
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          blockchainGuildId: g.blockchainGuildId as `0x${string}`,
+        }));
+    },
+    {
+      skip: !isOpen || !address,
+      onSuccess: (guildOptions) => {
+        if (preselectedGuildId) {
+          const preselected = guildOptions.find(g => g.id === preselectedGuildId);
+          if (preselected) setSelectedGuild(preselected);
+        }
+      },
+      onError: (msg) => toast.error(`Failed to load guilds: ${msg}`),
+    }
+  );
+
   // Contract hooks - use per-guild staking
   const { balance, allowance, approve, mint, refetchBalance, refetchAllowance } = useVettedToken();
-  const { stakeInfo, minimumStake, isPaused, stake, requestUnstake, refetchStake, guildTotalStaked } = useGuildStaking(selectedGuild?.blockchainGuildId);
+  const { stakeInfo, minimumStake, isPaused, stake, stakeWithPermit, requestUnstake, refetchStake, guildTotalStaked } = useGuildStaking(selectedGuild?.blockchainGuildId);
+  const { executeWithPermit } = usePermitOrApprove();
   const { isSuccess: txConfirmed, isError: txError, error: txErrorDetails } = useTransactionConfirmation(txHash || undefined);
 
   const isOnSepolia = chain?.id === sepolia.id;
@@ -66,40 +93,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
 
   // Whether guild is locked (opened from a specific guild page)
   const isGuildLocked = !!preselectedGuildId;
-
-  // Fetch guilds for selection
-  useEffect(() => {
-    if (!isOpen || !address) return;
-
-    const fetchGuilds = async () => {
-      setIsLoadingGuilds(true);
-      try {
-        // Always fetch all guilds so the full list is available
-        const allData = await guildsApi.getAll();
-        const allGuilds = Array.isArray(allData) ? allData : [];
-        const guildOptions: GuildOption[] = allGuilds
-          .filter((g) => g.blockchainGuildId)
-          .map((g) => ({
-            id: g.id,
-            name: g.name,
-            blockchainGuildId: g.blockchainGuildId as `0x${string}`,
-          }));
-        setGuilds(guildOptions);
-
-        // Auto-select preselected guild
-        if (preselectedGuildId) {
-          const preselected = guildOptions.find(g => g.id === preselectedGuildId);
-          if (preselected) setSelectedGuild(preselected);
-        }
-      } catch (error) {
-        // Silently fail - user can still manually select guilds
-      } finally {
-        setIsLoadingGuilds(false);
-      }
-    };
-
-    fetchGuilds();
-  }, [isOpen, address, preselectedGuildId]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -146,25 +139,16 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   // Handle transaction errors
   useEffect(() => {
     if (txError && txHash && step === "transaction") {
-      const errorMessage = (txErrorDetails as { shortMessage?: string })?.shortMessage ||
-                          (txErrorDetails instanceof Error ? txErrorDetails.message : null) ||
-                          "Transaction failed on blockchain";
-
+      const errorMessage = getTransactionErrorMessage(txErrorDetails, "Transaction failed on blockchain");
       setTxStatus("error");
       setTxErrorMessage(errorMessage);
       logger.error("Transaction error", txErrorDetails, { silent: true });
     }
   }, [txError, txHash, step, txErrorDetails]);
 
-  const isUserRejection = (error: unknown): boolean => {
-    const message = error instanceof Error ? error.message : "";
-    return message.includes("User rejected") || message.includes("User denied");
-  };
-
   /**
-   * Unified stake handler — if approval is needed, approves with MaxUint256
-   * first (one-time unlimited), waits for confirmation, then stakes.
-   * The user sees a single TransactionModal the whole time.
+   * Unified stake handler — tries EIP-2612 permit first (1 signature + 1 TX),
+   * falls back to approve + stake (2 TX) if permit signing fails.
    */
   const handleStake = async () => {
     if (!selectedGuild) {
@@ -190,12 +174,40 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     setShowTxModal(true);
     setTxStatus("pending");
 
+    // ── Try permit path first (1 signature + 1 TX), fall back to approve+stake ──
+    try {
+      const result = await executeWithPermit(
+        CONTRACT_ADDRESSES.STAKING,
+        stakeAmount,
+        (permit) => stakeWithPermit(
+          selectedGuild.blockchainGuildId,
+          stakeAmount,
+          permit.deadline,
+          permit.v,
+          permit.r,
+          permit.s,
+        ),
+      );
+
+      if (result.path === "permit") {
+        setTxHash(result.hash);
+        return;
+      }
+    } catch {
+      // User rejected permit — bail
+      toast.error("Transaction rejected");
+      setShowTxModal(false);
+      setStep("input");
+      return;
+    }
+
+    // ── Fallback: approve → stake (2 TX) ──
     try {
       const currentAllowanceVal = allowance !== undefined ? parseFloat(formatEther(allowance)) : 0;
 
       // If approval needed, approve for MaxUint256 (one-time unlimited)
       if (currentAllowanceVal < parseFloat(stakeAmount)) {
-        const approveHash = await approve(CONTRACT_ADDRESSES.STAKING as `0x${string}`, formatEther(maxUint256));
+        const approveHash = await approve(CONTRACT_ADDRESSES.STAKING, formatEther(maxUint256));
 
         // Wait for approval to confirm on-chain before staking
         if (publicClient) {
@@ -214,9 +226,8 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         toast.error("Transaction rejected");
         setShowTxModal(false);
       } else {
-        const shortMessage = (error as { shortMessage?: string })?.shortMessage;
         setTxStatus("error");
-        setTxErrorMessage(shortMessage || (error instanceof Error ? error.message : "Transaction failed"));
+        setTxErrorMessage(getTransactionErrorMessage(error, "Transaction failed"));
       }
 
       setStep("input");
@@ -266,9 +277,8 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         toast.error("Transaction rejected by user");
         setShowTxModal(false);
       } else {
-        const shortMessage = (error as { shortMessage?: string })?.shortMessage;
         setTxStatus("error");
-        setTxErrorMessage(shortMessage || (error instanceof Error ? error.message : "Failed to withdraw tokens"));
+        setTxErrorMessage(getTransactionErrorMessage(error, "Failed to withdraw tokens"));
       }
 
       setStep("input");
@@ -451,7 +461,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                   </button>
                 )}
 
-                {!isGuildLocked && showGuildDropdown && guilds.length > 0 && (
+                {!isGuildLocked && showGuildDropdown && guilds && guilds.length > 0 && (
                   <div className="absolute z-10 w-full mt-2 rounded-2xl shadow-2xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto">
                     {guilds.map((guild) => (
                       <button
@@ -471,7 +481,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                     ))}
                   </div>
                 )}
-                {!isGuildLocked && guilds.length === 0 && !isLoadingGuilds && (
+                {!isGuildLocked && (!guilds || guilds.length === 0) && !isLoadingGuilds && (
                   <p className="text-xs text-muted-foreground mt-2 text-center">
                     No guilds available. Join a guild first.
                   </p>
@@ -535,7 +545,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                   <div className="flex items-center gap-2.5">
                     <div>
                       <p className="text-xs text-orange-400/70 text-right">
-                        {selectedGuild ? `Staked` : "Staked"}
+                        Staked
                       </p>
                       <p className="text-sm font-semibold text-orange-400 tabular-nums text-right">
                         {selectedGuild ? formatTokenAmount(currentStake) : "—"} <span className="text-orange-400/50 font-normal">{selectedGuild ? stakeLabel : ""}</span>

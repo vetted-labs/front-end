@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -20,11 +21,12 @@ import {
 import { candidateApi, applicationsApi, messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { formatTimeAgo } from "@/lib/notification-helpers";
+import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
+import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
 
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -34,6 +36,28 @@ const STATUS_ICONS: Record<string, typeof Clock> = {
   accepted:    CheckCircle,
   rejected:    XCircle,
 };
+
+const CELEBRATED_KEY = "vetted:celebrated-acceptances";
+
+function getCelebratedIds(): string[] {
+  try {
+    const raw = localStorage.getItem(CELEBRATED_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function markCelebrated(id: string) {
+  try {
+    const ids = getCelebratedIds();
+    if (!ids.includes(id)) {
+      localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...ids, id]));
+    }
+  } catch {
+    // Incognito or quota exceeded — silently ignore
+  }
+}
 
 interface DashboardData {
   profile: CandidateProfile;
@@ -68,7 +92,7 @@ async function fetchDashboardData(): Promise<DashboardData> {
   }
 
   return {
-    profile: profileData as CandidateProfile,
+    profile: profileData,
     applications: apps,
     stats: {
       total: apps.length,
@@ -96,6 +120,26 @@ export default function CandidateDashboard() {
   const stats = data?.stats ?? { total: 0, pending: 0, reviewing: 0, interviewed: 0, accepted: 0, rejected: 0 };
   const guildApplications = data?.guildApplications ?? [];
   const conversations = data?.conversations ?? [];
+
+  const [celebrationApp, setCelebrationApp] = useState<CandidateApplication | null>(null);
+
+  useEffect(() => {
+    if (applications.length === 0) return;
+    const celebrated = getCelebratedIds();
+    const uncelebrated = applications.find(
+      (app) => app.status === "accepted" && !celebrated.includes(app.id)
+    );
+    if (uncelebrated) {
+      setCelebrationApp(uncelebrated);
+    }
+  }, [applications]);
+
+  const handleDismissCelebration = () => {
+    if (celebrationApp) {
+      markCelebrated(celebrationApp.id);
+    }
+    setCelebrationApp(null);
+  };
 
   if (!ready) return null;
 
@@ -412,6 +456,14 @@ export default function CandidateDashboard() {
           </div>
         </div>
       </div>
+
+      {celebrationApp && (
+        <CelebrationDialog
+          application={celebrationApp}
+          open={!!celebrationApp}
+          onClose={handleDismissCelebration}
+        />
+      )}
     </div>
   );
 }

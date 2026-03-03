@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { guildApplicationsApi, expertApi, blockchainApi } from "@/lib/api";
-import { logger } from "@/lib/logger";
 import { formatDeadline } from "@/lib/utils";
 import { Pagination } from "@/components/ui/pagination";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
@@ -11,20 +11,14 @@ import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   ThumbsUp,
   ThumbsDown,
   Clock,
   Users,
-  Loader2,
   Plus,
   AlertCircle,
 } from "lucide-react";
@@ -42,15 +36,16 @@ import { StructuredApplicationDisplay } from "@/components/StructuredApplication
 import { VotingScoreSlider } from "@/components/VotingScoreSlider";
 import { ApplicationFinalizationDisplay } from "@/components/ApplicationFinalizationDisplay";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import type { GuildApplication, ExpertProfile, StakeBalance } from "@/types";
 
 export default function VotingPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const auth = useAuthContext();
+  const address = wagmiAddress || auth.walletAddress;
   const { guilds: guildRecords } = useGuilds();
   const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string } | null>(null);
-  const [applications, setApplications] = useState<GuildApplication[]>([]);
-  const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [filterMode, setFilterMode] = useState<"assigned" | "all">("assigned");
@@ -67,7 +62,21 @@ export default function VotingPage() {
   const { data: stakingStatus } = useFetch<StakeBalance>(
     () => blockchainApi.getStakeBalance(address as string),
     { skip: !address }
-    // Endpoint may not be available yet — staking check is non-blocking
+  );
+
+  // Applications fetch via useFetch — replaces manual loadApplications
+  const { data: applications, isLoading: loading, refetch: refetchApplications } = useFetch<GuildApplication[]>(
+    async () => {
+      if (!selectedGuild) return [];
+      if (filterMode === "assigned" && expertData?.id) {
+        return guildApplicationsApi.getAssigned(expertData.id, selectedGuild.id);
+      }
+      return guildApplicationsApi.getByGuild(selectedGuild.id, "ongoing");
+    },
+    {
+      skip: !selectedGuild,
+      onError: (err) => toast.error(err),
+    }
   );
 
   // Mutations via useApi
@@ -80,7 +89,7 @@ export default function VotingPage() {
     totalPages,
     setCurrentPage,
     resetPage,
-  } = useClientPagination(applications, 10);
+  } = useClientPagination(applications ?? [], 10);
 
   // Auto-select first guild once loaded
   useEffect(() => {
@@ -89,34 +98,13 @@ export default function VotingPage() {
     }
   }, [guildRecords, selectedGuild]);
 
+  // Refetch applications when guild/filter/expert changes
   useEffect(() => {
     if (selectedGuild) {
       resetPage();
-      loadApplications();
+      refetchApplications();
     }
   }, [selectedGuild, filterMode, expertData]);
-
-  const loadApplications = async () => {
-    if (!selectedGuild) return;
-    try {
-      setLoading(true);
-
-      // If assigned filter is active and we have expertData, fetch assigned proposals
-      if (filterMode === "assigned" && expertData?.id) {
-        const response = await guildApplicationsApi.getAssigned(expertData.id, selectedGuild.id);
-        setApplications(response);
-      } else {
-        // Fetch all proposals for the guild
-        const response = await guildApplicationsApi.getByGuild(selectedGuild.id, "ongoing");
-        setApplications(response);
-      }
-    } catch (error) {
-      logger.error("Error loading proposals", error, { silent: true });
-      toast.error(error instanceof Error ? error.message : "Failed to load applications");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleVote = async (proposalId: string, score: number, stakeAmount: number, comment: string) => {
     if (!expertData) {
@@ -141,7 +129,7 @@ export default function VotingPage() {
         onSuccess: () => {
           toast.success("Score submitted successfully!");
           setVoting(null);
-          loadApplications();
+          refetchApplications();
         },
         onError: (err) => toast.error(err),
       }
@@ -173,12 +161,20 @@ export default function VotingPage() {
         onSuccess: () => {
           toast.success("Application created successfully!");
           setShowCreateForm(false);
-          loadApplications();
+          refetchApplications();
         },
         onError: (err) => toast.error(err),
       }
     );
   };
+
+  if (!address) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <WalletRequiredState message="Connect your wallet to access voting" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full animate-page-enter">

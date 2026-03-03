@@ -9,6 +9,7 @@ import {
   DollarSign,
   Coins,
   ClipboardList,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
@@ -23,16 +24,13 @@ import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { DashboardNotificationsFeed } from "@/components/dashboard/DashboardNotificationsFeed";
 import { blockchainApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { keccak256, toBytes } from "viem";
+import { hashToBytes32 } from "@/lib/blockchain";
+import { logger } from "@/lib/logger";
 import type { ExpertProfile, ExpertGuild } from "@/types";
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const [stakingStatus, setStakingStatus] = useState<{ stakedAmount: string; meetsMinimum: boolean } | null>(null);
-  const [guildStakes, setGuildStakes] = useState<Record<string, string>>({});
-  const [stakesLoaded, setStakesLoaded] = useState(false);
-  const [assignedApplications, setAssignedApplications] = useState<import("@/types").GuildApplicationSummary[]>([]);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -57,69 +55,11 @@ export function EnhancedExpertDashboard() {
     return () => clearTimeout(timer);
   }, [mounted, isConnected, address, isDisconnecting]);
 
-  const loadGuildStakes = async (guilds: ExpertGuild[], walletAddress: string) => {
-    setStakesLoaded(false);
-    try {
-      const batchResult = await blockchainApi.getExpertGuildStakes(walletAddress);
-      const stakesMap: Record<string, string> = {};
-      let totalStaked = 0;
-
-      if (Array.isArray(batchResult)) {
-        for (const entry of batchResult) {
-          stakesMap[entry.guildId] = entry.stakedAmount || "0";
-          totalStaked += parseFloat(entry.stakedAmount || "0");
-        }
-      } else if (batchResult && typeof batchResult === "object") {
-        for (const [guildId, amount] of Object.entries(batchResult)) {
-          const amountStr = String(amount || "0");
-          stakesMap[guildId] = amountStr;
-          totalStaked += parseFloat(amountStr);
-        }
-      }
-
-      setGuildStakes(stakesMap);
-      setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
-    } catch {
-      const stakesMap: Record<string, string> = {};
-      let totalStaked = 0;
-
-      for (let i = 0; i < guilds.length; i += 3) {
-        const batch = guilds.slice(i, i + 3);
-        const results = await Promise.all(
-          batch.map((guild: ExpertGuild) => {
-            const blockchainGuildId = keccak256(toBytes(guild.id));
-            return blockchainApi.getStakeBalance(walletAddress, blockchainGuildId)
-              .then((result) => ({
-                guildId: guild.id,
-                stakedAmount: result.stakedAmount || "0",
-              }))
-              .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
-          })
-        );
-        for (const result of results) {
-          stakesMap[result.guildId] = result.stakedAmount;
-          totalStaked += parseFloat(result.stakedAmount);
-        }
-      }
-
-      setGuildStakes(stakesMap);
-      setStakingStatus({ stakedAmount: totalStaked.toString(), meetsMinimum: totalStaked > 0 });
-    }
-
-    // Sync stakes to database in background (fire-and-forget)
-    for (const guild of guilds) {
-      const blockchainGuildId = keccak256(toBytes(guild.id));
-      blockchainApi.syncStake(walletAddress, blockchainGuildId).catch(() => {});
-    }
-
-    setStakesLoaded(true);
-  };
-
+  // Phase 1: Fetch profile and earnings
   const { data: profile, isLoading, error, refetch } = useFetch(
     async () => {
       if (!address) throw new Error("No wallet address");
 
-      // Phase 1: Fetch profile and earnings
       const [data, earningsResult] = await Promise.all([
         expertApi.getProfile(address),
         expertApi.getEarningsBreakdown(address, { limit: 1 }).catch(() => null),
@@ -148,32 +88,97 @@ export function EnhancedExpertDashboard() {
       skip: !mounted || !isConnected || !address,
       onSuccess: (enhancedData) => {
         if (!address) return;
-
-        // Fetch assigned applications in background
-        if (enhancedData.id) {
-          guildApplicationsApi.getAssigned(enhancedData.id)
-            .then((apps) => setAssignedApplications(Array.isArray(apps) ? apps : []))
-            .catch(() => setAssignedApplications([]));
-        }
-
         // Check wallet verification in background
         checkVerification(address).then((verified) => {
           if (!verified) setShowVerificationModal(true);
         });
-
-        // Phase 2: Load guild stakes progressively (page already visible)
-        const guilds = Array.isArray(enhancedData.guilds) ? enhancedData.guilds : [];
-        if (guilds.length > 0) {
-          loadGuildStakes(guilds, address);
-        } else {
-          setStakesLoaded(true);
-        }
       },
       onError: (message) => {
         toast.error(message);
       },
     }
   );
+
+  // Phase 2: Fetch assigned applications (depends on profile)
+  const { data: assignedApplications } = useFetch(
+    () => guildApplicationsApi.getAssigned(profile!.id),
+    {
+      skip: !profile?.id,
+      onError: (msg) => logger.warn("Failed to load assigned applications", msg),
+    }
+  );
+
+  // Phase 3: Load guild stakes progressively (depends on profile)
+  interface StakesResult {
+    stakesMap: Record<string, string>;
+    totalStaked: number;
+  }
+
+  const { data: stakesData, isLoading: stakesLoading } = useFetch<StakesResult>(
+    async () => {
+      if (!address || !profile?.guilds?.length) {
+        return { stakesMap: {}, totalStaked: 0 };
+      }
+
+      const guilds = profile.guilds;
+      const stakesMap: Record<string, string> = {};
+      let totalStaked = 0;
+
+      try {
+        const batchResult = await blockchainApi.getExpertGuildStakes(address);
+
+        if (Array.isArray(batchResult)) {
+          for (const entry of batchResult) {
+            stakesMap[entry.guildId] = entry.stakedAmount || "0";
+            totalStaked += parseFloat(entry.stakedAmount || "0");
+          }
+        } else if (batchResult && typeof batchResult === "object") {
+          for (const [guildId, amount] of Object.entries(batchResult)) {
+            const amountStr = String(amount || "0");
+            stakesMap[guildId] = amountStr;
+            totalStaked += parseFloat(amountStr);
+          }
+        }
+      } catch {
+        // Fallback: fetch per-guild stakes in batches
+        for (let i = 0; i < guilds.length; i += 3) {
+          const batch = guilds.slice(i, i + 3);
+          const results = await Promise.all(
+            batch.map((guild: ExpertGuild) => {
+              const blockchainGuildId = hashToBytes32(guild.id);
+              return blockchainApi.getStakeBalance(address, blockchainGuildId)
+                .then((result) => ({
+                  guildId: guild.id,
+                  stakedAmount: result.stakedAmount || "0",
+                }))
+                .catch(() => ({ guildId: guild.id, stakedAmount: "0" }));
+            })
+          );
+          for (const result of results) {
+            stakesMap[result.guildId] = result.stakedAmount;
+            totalStaked += parseFloat(result.stakedAmount);
+          }
+        }
+      }
+
+      // Sync stakes to database in background (fire-and-forget)
+      for (const guild of guilds) {
+        const blockchainGuildId = hashToBytes32(guild.id);
+        blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
+      }
+
+      return { stakesMap, totalStaked };
+    },
+    {
+      skip: !mounted || !isConnected || !address || !profile?.guilds?.length,
+    }
+  );
+
+  const guildStakes = stakesData?.stakesMap ?? {};
+  const stakesLoaded = !stakesLoading && !!stakesData;
+  const stakingStatus = stakesData
+    ? { stakedAmount: stakesData.totalStaked.toString(), meetsMinimum: stakesData.totalStaked > 0 }
+    : null;
 
   // Refetch when address changes
   useEffect(() => {
@@ -210,7 +215,11 @@ export function EnhancedExpertDashboard() {
   }
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (error) {
@@ -310,7 +319,7 @@ export function EnhancedExpertDashboard() {
         </div>
 
         {/* Assigned to Me */}
-        {assignedApplications.length > 0 && (
+        {assignedApplications && assignedApplications.length > 0 && (
           <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] mb-6">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
               <div className="flex items-center gap-2">
@@ -327,26 +336,25 @@ export function EnhancedExpertDashboard() {
                   <button
                     key={app.id}
                     onClick={() => {
-                      const guildId = app.guildId;
-                      if (guildId) {
-                        router.push(`/expert/guild/${guildId}?tab=membershipApplications&applicationId=${app.id}`);
+                      if (app.guild_id) {
+                        router.push(`/expert/guild/${app.guild_id}?tab=membershipApplications&applicationId=${app.id}`);
                       }
                     }}
                     className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30 hover:border-primary/40 hover:bg-muted/50 transition-all text-left"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">
-                        {app.candidateName || app.fullName || "Application"}
+                        {app.candidate_name || "Application"}
                       </p>
                       <p className="text-sm text-muted-foreground truncate">
-                        {app.guildName || "Guild"} {app.jobTitle ? `· ${app.jobTitle}` : ""}
+                        {app.guild_name || "Guild"}
                       </p>
                     </div>
-                    {app.totalStaked != null && (
+                    {app.total_stake_for != null && (
                       <div className="flex items-center gap-1.5 ml-4 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
                         <Coins className="w-3.5 h-3.5 text-primary" />
                         <span className="text-sm font-semibold text-primary">
-                          {Number(app.totalStaked).toLocaleString()} VETD
+                          {Number(app.total_stake_for).toLocaleString()} VETD
                         </span>
                       </div>
                     )}

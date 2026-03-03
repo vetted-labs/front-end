@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Gavel, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { usePublicClient } from "wagmi";
 import { guildAppealApi } from "@/lib/api";
 import { useAppealStaking } from "@/lib/hooks/useVettedContracts";
+import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
+import { CONTRACT_ADDRESSES } from "@/contracts/abis";
+import { getTransactionErrorMessage, isUserRejection, getExplorerTxUrl } from "@/lib/blockchain";
 
-type StakingStep = "idle" | "approving" | "staking" | "filing";
+type StakingStep = "idle" | "signing" | "approving" | "staking" | "filing";
 type ModalView = "form" | "success";
 
 interface AppealSubmissionFormProps {
@@ -42,13 +46,17 @@ export function AppealSubmissionForm({
   const [stakingStep, setStakingStep] = useState<StakingStep>("idle");
   const [modalView, setModalView] = useState<ModalView>("form");
   const [successTxHash, setSuccessTxHash] = useState<string | undefined>();
+  const [usedPermit, setUsedPermit] = useState(false);
 
-  const { approveTokens, stakeForAppeal, needsApproval } = useAppealStaking(guildId);
+  const publicClient = usePublicClient();
+  const { approveTokens, stakeForAppeal, stakeForAppealWithPermit, needsApproval } = useAppealStaking(guildId);
+  const { executeWithPermit } = usePermitOrApprove();
 
   const isSubmitting = stakingStep !== "idle";
 
   const buttonLabel = (() => {
     switch (stakingStep) {
+      case "signing": return "Sign Permit in Wallet...";
       case "approving": return "Approving Token Transfer...";
       case "staking": return "Staking VETD On-Chain...";
       case "filing": return "Filing Appeal...";
@@ -58,10 +66,11 @@ export function AppealSubmissionForm({
 
   const stepLabel = (() => {
     switch (stakingStep) {
+      case "signing": return "Step 1 of 2: Sign permit (no gas)";
       case "approving": return "Step 1 of 3: Approving tokens";
-      case "staking": return "Step 2 of 3: Staking on-chain";
-      case "filing": return "Step 3 of 3: Filing appeal";
-      default: return "Approve \u2192 Stake \u2192 File";
+      case "staking": return usedPermit ? "Step 2 of 2: Staking on-chain" : "Step 2 of 3: Staking on-chain";
+      case "filing": return "Filing appeal...";
+      default: return "Sign \u2192 Stake \u2192 File";
     }
   })();
 
@@ -76,16 +85,62 @@ export function AppealSubmissionForm({
     }
 
     let txHash: string | undefined;
+    const amountStr = stakeAmount.toString();
 
     try {
-      if (guildId && needsApproval(stakeAmount.toString())) {
-        setStakingStep("approving");
-        await approveTokens(stakeAmount.toString());
-      }
-
       if (guildId) {
+        // ── Try permit path first, fall back to approve+stake ──
+        setStakingStep("signing");
+        setUsedPermit(true);
+
+        try {
+          const result = await executeWithPermit(
+            CONTRACT_ADDRESSES.STAKING,
+            amountStr,
+            (permit) => stakeForAppealWithPermit(
+              amountStr,
+              permit.deadline,
+              permit.v,
+              permit.r,
+              permit.s,
+            ),
+          );
+
+          if (result.path === "permit") {
+            txHash = result.hash as string;
+          } else {
+            // Fallback: approve → stake (2 TX)
+            setUsedPermit(false);
+
+            if (needsApproval(amountStr)) {
+              setStakingStep("approving");
+              await approveTokens(amountStr);
+            }
+
+            setStakingStep("staking");
+            txHash = await stakeForAppeal(amountStr);
+          }
+        } catch (err) {
+          if (isUserRejection(err)) {
+            setStakingStep("idle");
+            setUsedPermit(false);
+            return;
+          }
+          toast.error(getTransactionErrorMessage(err, "Staking failed"));
+          setStakingStep("idle");
+          setUsedPermit(false);
+          return;
+        }
+
         setStakingStep("staking");
-        txHash = await stakeForAppeal(stakeAmount.toString());
+
+        // Wait for on-chain confirmation before filing the appeal
+        if (publicClient && txHash) {
+          const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+          if (receipt.status === "reverted") {
+            throw new Error("Staking transaction was reverted on-chain");
+          }
+        }
       }
 
       setStakingStep("filing");
@@ -103,13 +158,16 @@ export function AppealSubmissionForm({
       setModalView("success");
       onSuccess?.();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to file appeal";
+      if (isUserRejection(error)) {
+        // User cancelled the transaction — no error toast needed
+        return;
+      }
       if (stakingStep === "approving") {
         toast.error("Token approval was rejected or failed");
       } else if (stakingStep === "staking") {
-        toast.error("On-chain staking failed. No appeal was filed.");
+        toast.error(getTransactionErrorMessage(error, "On-chain staking failed. No appeal was filed."));
       } else {
-        toast.error(message);
+        toast.error(error instanceof Error ? error.message : "Failed to file appeal");
       }
     } finally {
       setStakingStep("idle");
@@ -189,7 +247,7 @@ export function AppealSubmissionForm({
 
             {successTxHash && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${successTxHash}`}
+                href={getExplorerTxUrl(successTxHash)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-primary hover:underline"

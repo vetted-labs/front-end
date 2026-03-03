@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { formatEther } from "viem";
+import { useAccount } from "wagmi";
 import {
   useVettedToken,
   useEndorsementBidding,
   useTransactionConfirmation,
 } from "@/lib/hooks/useVettedContracts";
+import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
+import { blockchainApi } from "@/lib/api";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { getTransactionErrorMessage } from "@/lib/blockchain";
 
 /** Shape expected by the hook for the application being endorsed. */
 export interface EndorsableApplication {
@@ -20,7 +24,7 @@ export interface EndorsableApplication {
   current_bid?: string;
 }
 
-export type TransactionStep = "idle" | "approving" | "bidding" | "success" | "error";
+export type TransactionStep = "idle" | "signing" | "approving" | "bidding" | "success" | "error";
 
 interface RefetchCallbacks {
   reloadApplications: () => void;
@@ -28,11 +32,11 @@ interface RefetchCallbacks {
 }
 
 interface UseEndorsementTransactionReturn {
-  /** Current step of the multi-step transaction flow */
+  /** Current step of the transaction flow */
   txStep: TransactionStep;
   /** Human-readable error message when txStep is "error" */
   txError: string | null;
-  /** Hash of the ERC-20 approval transaction, if applicable */
+  /** Hash of the ERC-20 approval transaction (only in fallback path) */
   approvalTxHash: `0x${string}` | undefined;
   /** Hash of the endorsement bid transaction */
   bidTxHash: `0x${string}` | undefined;
@@ -44,7 +48,7 @@ interface UseEndorsementTransactionReturn {
   minimumBidFormatted: string;
   /** Raw minimum bid from contract */
   minimumBid: bigint | undefined;
-  /** Place an endorsement bid, handling approval if needed */
+  /** Place an endorsement bid — permit-first with fallback to approve+bid */
   submitEndorsement: (app: EndorsableApplication, amount: string) => Promise<void>;
   /** Reset all transaction state back to idle */
   resetTransaction: () => void;
@@ -53,18 +57,24 @@ interface UseEndorsementTransactionReturn {
 }
 
 /**
- * Manages the full endorsement transaction lifecycle:
- * 1. Validates bid amount against balance, minimum bid, and existing bids
- * 2. Checks ERC-20 allowance; triggers approval tx if insufficient
- * 3. Waits for approval confirmation, then places the bid tx
- * 4. Tracks success/error states with transaction hashes
+ * Manages the full endorsement transaction lifecycle with EIP-2612 permit:
+ *
+ * Primary flow (1 signature + 1 TX):
+ *   1. Sign EIP-712 permit (off-chain, free, no gas)
+ *   2. Call placeBidWithPermit() — single on-chain transaction
+ *
+ * Fallback flow (2 TX, used if wallet rejects typed data signing):
+ *   1. approve() TX
+ *   2. placeBid() TX
  */
 export function useEndorsementTransaction(
   refetchCallbacks: RefetchCallbacks
 ): UseEndorsementTransactionReturn {
+  const { address } = useAccount();
   const { balance, endorsementAllowance, approve, refetchBalance, refetchEndorsementAllowance } =
     useVettedToken();
-  const { placeBid, minimumBid } = useEndorsementBidding();
+  const { placeBid, placeBidWithPermit, minimumBid } = useEndorsementBidding();
+  const { executeWithPermit } = usePermitOrApprove();
 
   // Transaction flow state
   const [txStep, setTxStep] = useState<TransactionStep>("idle");
@@ -72,7 +82,7 @@ export function useEndorsementTransaction(
   const [approvalTxHash, setApprovalTxHash] = useState<`0x${string}` | undefined>();
   const [bidTxHash, setBidTxHash] = useState<`0x${string}` | undefined>();
 
-  // Internal flags for the approval-then-bid handoff
+  // Internal flags for the approval-then-bid fallback handoff
   const [approving, setApproving] = useState(false);
   const [endorsing, setEndorsing] = useState(false);
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>();
@@ -81,14 +91,37 @@ export function useEndorsementTransaction(
   const [pendingApp, setPendingApp] = useState<EndorsableApplication | null>(null);
   const [pendingAmount, setPendingAmount] = useState<string>("");
 
-  const { data: txReceipt, isSuccess: txSuccess } = useTransactionConfirmation(txHash);
+  const { data: txReceipt, isSuccess: txSuccess, isError: txFailed, error: txFailDetails } = useTransactionConfirmation(txHash);
+
+  // ── Handle on-chain transaction failure ──
+  useEffect(() => {
+    if (!txFailed || !txHash) return;
+
+    const errorMessage = getTransactionErrorMessage(txFailDetails, "Transaction failed on blockchain");
+    setTxStep("error");
+    setTxError(errorMessage);
+    toast.error(errorMessage);
+    setApproving(false);
+    setEndorsing(false);
+    logger.error("On-chain transaction failed", txFailDetails, { silent: true });
+  }, [txFailed, txHash, txFailDetails]);
 
   // ── Handle transaction confirmations ──
   useEffect(() => {
     if (!txSuccess || !txReceipt) return;
 
+    // Guard against reverted transactions that still return a receipt
+    if (txReceipt.status === "reverted") {
+      setTxStep("error");
+      setTxError("Transaction was reverted on-chain");
+      toast.error("Transaction was reverted on-chain");
+      setApproving(false);
+      setEndorsing(false);
+      return;
+    }
+
     if (approving && pendingApp) {
-      // Approval confirmed -- proceed to place bid
+      // Approval confirmed -- proceed to place bid (fallback path)
       setApproving(false);
       refetchEndorsementAllowance();
 
@@ -96,11 +129,23 @@ export function useEndorsementTransaction(
       setTimeout(() => {
         executePlaceBid(pendingApp, pendingAmount);
       }, 1000);
-    } else if (endorsing) {
-      // Bid confirmed
+    } else if (endorsing && pendingApp) {
+      // Bid confirmed (either permit path or fallback path)
       setTxStep("success");
       toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
       setEndorsing(false);
+
+      // Sync endorsement to backend DB (fire-and-forget)
+      if (address) {
+        blockchainApi
+          .syncEndorsement(pendingApp.application_id, address, pendingApp.job_id, pendingApp.candidate_id)
+          .then(() => {
+            refetchCallbacks.refetchEndorsements();
+          })
+          .catch((err) => {
+            logger.error("Failed to sync endorsement to backend", err, { silent: true });
+          });
+      }
 
       // Refresh on-chain + backend data after blockchain state settles
       setTimeout(() => {
@@ -113,7 +158,7 @@ export function useEndorsementTransaction(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txSuccess, txReceipt, approving, endorsing]);
 
-  // ── Internal: send approval tx ──
+  // ── Internal: send approval tx (fallback path) ──
   const executeApprove = useCallback(
     async (amount: string) => {
       try {
@@ -121,7 +166,7 @@ export function useEndorsementTransaction(
         setApproving(true);
         setTxError(null);
 
-        const hash = await approve(CONTRACT_ADDRESSES.ENDORSEMENT as `0x${string}`, amount);
+        const hash = await approve(CONTRACT_ADDRESSES.ENDORSEMENT, amount);
         setApprovalTxHash(hash);
         setTxHash(hash);
         toast.success("Approval submitted! Waiting for confirmation...");
@@ -135,10 +180,10 @@ export function useEndorsementTransaction(
         setEndorsing(false);
       }
     },
-    [approve, refetchEndorsementAllowance]
+    [approve]
   );
 
-  // ── Internal: send bid tx ──
+  // ── Internal: send bid tx (fallback path, or direct if allowance sufficient) ──
   const executePlaceBid = useCallback(
     async (app: EndorsableApplication, amount: string) => {
       try {
@@ -154,23 +199,10 @@ export function useEndorsementTransaction(
         logger.error("Endorsement error", error, { silent: true });
         setTxStep("error");
 
-        const errMsg = error instanceof Error ? error.message : "";
-        const shortMsg = (error as { shortMessage?: string })?.shortMessage;
-
-        let errorMsg = "Failed to place endorsement";
-
-        if (errMsg.includes("InvalidJob")) {
-          errorMsg = "This job needs blockchain initialization. Please contact support.";
-        } else if (errMsg.includes("gas")) {
-          errorMsg = "Transaction failed: Please ensure you have sufficient balance.";
-        } else if (shortMsg) {
-          errorMsg = shortMsg;
-        } else if (errMsg) {
-          errorMsg = errMsg;
-        }
+        const errorMsg = getTransactionErrorMessage(error, "Failed to place endorsement");
 
         setTxError(errorMsg);
-        toast.error(errorMsg, errMsg.includes("InvalidJob") ? { duration: 5000 } : undefined);
+        toast.error(errorMsg);
         setEndorsing(false);
         setApproving(false);
       }
@@ -178,7 +210,9 @@ export function useEndorsementTransaction(
     [placeBid]
   );
 
-  // ── Public: submit an endorsement (validates, then approve-or-bid) ──
+  // ── Public: submit an endorsement ──
+  // Primary: sign permit (off-chain) → placeBidWithPermit (1 TX)
+  // Fallback: approve (TX) → placeBid (TX)
   const submitEndorsement = useCallback(
     async (app: EndorsableApplication, amount: string) => {
       // Validate: existing bid must be topped
@@ -200,9 +234,45 @@ export function useEndorsementTransaction(
         );
       }
 
-      // Stash for the approval -> bid handoff
+      // Stash pending data for the confirmation handler
       setPendingApp(app);
       setPendingAmount(amount);
+
+      // ── Try permit path first (1 signature + 1 TX), fall back to approve+bid ──
+      setTxError(null);
+
+      try {
+        setTxStep("signing");
+
+        const result = await executeWithPermit(
+          CONTRACT_ADDRESSES.ENDORSEMENT,
+          amount,
+          (permit) => placeBidWithPermit(
+            app.job_id,
+            app.candidate_id,
+            amount,
+            permit.deadline,
+            permit.v,
+            permit.r,
+            permit.s,
+          ),
+        );
+
+        if (result.path === "permit") {
+          setTxStep("bidding");
+          setEndorsing(true);
+          setBidTxHash(result.hash);
+          setTxHash(result.hash);
+          toast.success("Endorsement submitted! Waiting for confirmation...");
+          return;
+        }
+      } catch {
+        // User rejected permit — propagate
+        setTxStep("idle");
+        throw new Error("Transaction rejected by user");
+      }
+
+      // ── Fallback: approve → bid (2 TX) ──
       setEndorsing(true);
 
       try {
@@ -215,14 +285,14 @@ export function useEndorsementTransaction(
           return;
         }
 
-        // Sufficient allowance -- bid directly
+        // Sufficient allowance — bid directly
         await executePlaceBid(app, amount);
       } catch (error: unknown) {
         setEndorsing(false);
         throw error;
       }
     },
-    [minimumBid, balance, endorsementAllowance, executeApprove, executePlaceBid]
+    [minimumBid, balance, endorsementAllowance, executeWithPermit, placeBidWithPermit, executeApprove, executePlaceBid]
   );
 
   // ── Public: reset state (e.g. when closing the modal) ──
@@ -248,7 +318,7 @@ export function useEndorsementTransaction(
     txError,
     approvalTxHash,
     bidTxHash,
-    isTransacting: approving || endorsing,
+    isTransacting: txStep === "signing" || approving || endorsing,
     balance,
     minimumBidFormatted: minimumBid ? formatEther(minimumBid) : "1",
     minimumBid,

@@ -14,22 +14,15 @@ import {
   Calendar,
   Eye,
 } from "lucide-react";
-import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
-import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { StartConversationButton } from "@/components/messaging/StartConversationButton";
-import { cn } from "@/lib/utils";
+import { jobsApi, applicationsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ApplicationDetailModal } from "./ApplicationDetailModal";
 import type { CompanyApplication, ApplicationStatus } from "@/types";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -105,17 +98,22 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
   }, [statusFilter]);
 
   // Status update mutation
-  const { execute: updateStatus } = useApi();
+  const { updateStatus } = useApplicationStatusUpdate();
 
   const handleStatusChange = useCallback(
-    async (application: CompanyApplication, newStatus: string) => {
+    async (application: CompanyApplication, newStatus: ApplicationStatus) => {
       const result = await updateStatus(
-        () => applicationsApi.updateStatus(application.id, newStatus),
+        {
+          applicationId: application.id,
+          candidateId: application.candidateId,
+          jobId: application.jobId,
+          currentStatus: application.status as ApplicationStatus,
+          newStatus,
+        },
         { onError: (msg) => toast.error(msg) }
       );
 
       if (result) {
-        // Optimistically update the local list
         refetchApps();
         setSelectedApplication((prev) =>
           prev?.id === application.id
@@ -528,143 +526,13 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
         </div>
 
         {/* Application Detail Modal */}
-        {showApplicationModal && selectedApplication && (
-          <Dialog
+        {selectedApplication && (
+          <ApplicationDetailModal
+            application={selectedApplication}
             open={showApplicationModal}
             onOpenChange={setShowApplicationModal}
-          >
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
-              <DialogHeader className="px-6 py-5 border-b border-border/40">
-                <DialogTitle>Application Details</DialogTitle>
-              </DialogHeader>
-
-              <div>
-                {/* Candidate Info + Status */}
-                <div className="flex items-start gap-4 px-6 py-5 border-b border-border/40">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg font-semibold text-primary">
-                      {selectedApplication.candidate.fullName
-                        .charAt(0)
-                        .toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold text-lg">
-                        {selectedApplication.candidate.fullName}
-                      </h3>
-                      <Badge
-                        variant={
-                          selectedApplication.status === "accepted"
-                            ? "default"
-                            : selectedApplication.status === "rejected"
-                              ? "destructive"
-                              : selectedApplication.status === "interviewed"
-                                ? "secondary"
-                                : "outline"
-                        }
-                      >
-                        {selectedApplication.status.charAt(0).toUpperCase() +
-                          selectedApplication.status.slice(1)}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedApplication.candidate.email}
-                    </p>
-                    {selectedApplication.candidate.headline && (
-                      <p className="text-sm mt-1">
-                        {selectedApplication.candidate.headline}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-2">
-                      {selectedApplication.resumeUrl && (
-                        <a
-                          href={getAssetUrl(selectedApplication.resumeUrl)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={cn(
-                            buttonVariants({ variant: "outline", size: "sm" })
-                          )}
-                        >
-                          View Resume
-                        </a>
-                      )}
-                      <StartConversationButton
-                        applicationId={selectedApplication.id}
-                        candidateName={
-                          selectedApplication.candidate.fullName
-                        }
-                      />
-                      <Select
-                        value={selectedApplication.status}
-                        onValueChange={(newStatus) =>
-                          handleStatusChange(selectedApplication, newStatus)
-                        }
-                      >
-                        <SelectTrigger className="w-[150px] h-8 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="reviewing">Reviewing</SelectItem>
-                          <SelectItem value="interviewed">
-                            Interviewed
-                          </SelectItem>
-                          <SelectItem value="accepted">Accepted</SelectItem>
-                          <SelectItem value="rejected">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cover Letter */}
-                <div className="border-b border-border/40">
-                  <div className="px-5 py-4 border-b border-border/40">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                      Cover Letter
-                    </h4>
-                  </div>
-                  <div className="px-5 py-4 whitespace-pre-wrap text-sm">
-                    {selectedApplication.coverLetter}
-                  </div>
-                </div>
-
-                {/* Screening Answers */}
-                {selectedApplication.screeningAnswers &&
-                  selectedApplication.screeningAnswers.length > 0 && (
-                    <div className="border-b border-border/40">
-                      <div className="px-5 py-4 border-b border-border/40">
-                        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                          Screening Answers
-                        </h4>
-                      </div>
-                      <div className="divide-y divide-border/30">
-                        {selectedApplication.screeningAnswers.map(
-                          (answer: string, idx: number) => (
-                            <div key={idx} className="px-5 py-3.5">
-                              <p className="text-sm font-medium mb-1">
-                                Question {idx + 1}
-                              </p>
-                              <p className="text-sm">{answer}</p>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </div>
-
-              <DialogFooter className="px-6 py-4 border-t border-border/40">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowApplicationModal(false)}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            onStatusChange={handleStatusChange}
+          />
         )}
       </div>
     </div>

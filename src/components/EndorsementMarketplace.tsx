@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { formatEther, keccak256, toBytes } from "viem";
+import { formatEther } from "viem";
+import { hashToBytes32 } from "@/lib/blockchain";
 import { sepolia } from "wagmi/chains";
 import {
   useGuildStaking,
@@ -25,7 +26,6 @@ import {
   Coins,
   Users,
   AlertCircle,
-  RefreshCw,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -96,7 +96,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
     refetchEndorsements,
   });
 
-  const blockchainGuildId = guildId ? keccak256(toBytes(guildId)) as `0x${string}` : undefined;
+  const blockchainGuildId = guildId ? hashToBytes32(guildId) : undefined;
   const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
 
   // Filter endorsements for current guild
@@ -151,12 +151,18 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
     await submitEndorsement(app, amount);
   };
 
-  const handleRefresh = () => {
-    reloadApplications();
-    refetchEndorsements();
-    refetchTokenData();
-    toast.success("Data refreshed");
-  };
+  // Auto-refresh wallet/endorsement data when user returns to the tab
+  // (applications already re-fetch when guildId changes via useFetch)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refetchEndorsements();
+        refetchTokenData();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refetchEndorsements, refetchTokenData]);
 
   // ── Early returns ──
 
@@ -208,7 +214,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   }
 
   const isOnSepolia = chain?.id === sepolia.id;
-  const BACKEND_WALLET = process.env.NEXT_PUBLIC_BACKEND_WALLET || "0x8E65c02633C89c80b8F1D1E8EdEd926A15e1C3f0";
+  const BACKEND_WALLET = process.env.NEXT_PUBLIC_BACKEND_WALLET || "0x5b3141560e335f813047CFCB5D209fc8312B80c5";
   const isBackendWallet = address?.toLowerCase() === BACKEND_WALLET.toLowerCase();
 
   return (
@@ -225,20 +231,11 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       />
 
       {/* Header Stats */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
           Endorsement Dashboard
         </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh Data
-        </Button>
       </div>
 
       <EndorsementStatsGrid

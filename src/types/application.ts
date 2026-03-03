@@ -72,6 +72,16 @@ export interface GuildJobApplication {
   guildName?: string;
 }
 
+/** A single status transition record from the history timeline. */
+export interface StatusTransition {
+  id: string;
+  applicationId: string;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  changedAt: string;
+  note?: string;
+}
+
 export interface ApplicationStats {
   total: number;
   pending: number;

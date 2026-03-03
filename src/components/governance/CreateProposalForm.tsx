@@ -30,6 +30,7 @@ import {
   Circle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import {
   useAppealStaking,
@@ -210,8 +211,7 @@ export function CreateProposalForm() {
   // Handle on-chain tx error
   useEffect(() => {
     if (txError && txHash && submitStep === "confirming") {
-      const errorMessage =
-        (txErrorDetails as Error)?.message || "Transaction failed on blockchain";
+      const errorMessage = getTransactionErrorMessage(txErrorDetails, "Transaction failed on blockchain");
       setTxModalStatus("error");
       setTxErrorMessage(errorMessage);
       setSubmitStep("idle");
@@ -271,12 +271,7 @@ export function CreateProposalForm() {
         setTxModalStatus("success");
       }
     } catch (error: unknown) {
-      const isUserRejection =
-        error instanceof Error &&
-        (error.message.includes("User rejected") ||
-          error.message.includes("User denied"));
-
-      if (isUserRejection) {
+      if (isUserRejection(error)) {
         toast.error("Transaction rejected");
         setShowTxModal(false);
       } else if (submitStep === "approving") {

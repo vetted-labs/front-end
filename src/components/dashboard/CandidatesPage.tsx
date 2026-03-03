@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { companyApi, applicationsApi, blockchainApi } from "@/lib/api";
+import { companyApi, blockchainApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
-import type { CompanyApplication, EndorsementStats } from "@/types";
+import type { CompanyApplication, EndorsementStats, ApplicationStatus } from "@/types";
 
 interface GroupedJob {
   job: CompanyApplication["job"];
@@ -32,7 +33,7 @@ export default function CandidatesPage() {
   const { isLoading } = useFetch(
     async () => {
       const data = await companyApi.getApplications({ limit: 500 });
-      const apps = (data.applications || data || []) as CompanyApplication[];
+      const apps = data.applications ?? [];
 
       // Batch-fetch endorsement stats for unique job+candidate pairs
       const uniquePairs = new Map<string, { jobId: string; candidateId: string }>();
@@ -76,7 +77,7 @@ export default function CandidatesPage() {
     [endorsementData]
   );
 
-  const { execute: executeStatusUpdate } = useApi();
+  const { updateStatus, isLoading: isUpdatingStatus } = useApplicationStatusUpdate();
 
   // Group applications by job, with endorsed candidates sorted first
   const groupedJobs = useMemo(() => {
@@ -133,25 +134,35 @@ export default function CandidatesPage() {
     [allApplications]
   );
 
-  const handleStatusChange = async (applicationId: string, newStatus: string) => {
-    await executeStatusUpdate(
-      () => applicationsApi.updateStatus(applicationId, newStatus),
+  const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus, note?: string) => {
+    const app = allApplications.find((a) => a.id === applicationId);
+    if (!app) {
+      toast.error("Application not found — try refreshing the page");
+      return;
+    }
+
+    await updateStatus(
+      {
+        applicationId,
+        candidateId: app.candidateId,
+        jobId: app.jobId,
+        currentStatus: app.status,
+        newStatus,
+        note,
+      },
       {
         onSuccess: () => {
           setAllApplications((prev) =>
-            prev.map((app) =>
-              app.id === applicationId
-                ? { ...app, status: newStatus as CompanyApplication["status"] }
-                : app
+            prev.map((a) =>
+              a.id === applicationId ? { ...a, status: newStatus } : a
             )
           );
-          if (selectedApplication?.id === applicationId) {
-            setSelectedApplication((prev) =>
-              prev ? { ...prev, status: newStatus as CompanyApplication["status"] } : null
-            );
-          }
+          setSelectedApplication((prev) =>
+            prev?.id === applicationId ? { ...prev, status: newStatus } : prev
+          );
+          toast.success(`Status updated to ${newStatus}`);
         },
-        onError: () => toast.error("Failed to update application status"),
+        onError: (msg) => toast.error(`Failed to update status: ${msg}`),
       }
     );
   };
@@ -208,10 +219,10 @@ export default function CandidatesPage() {
         </div>
 
         {/* Two-panel layout */}
-        <div className="flex h-[calc(100%-8rem)] lg:h-[calc(100%-10rem)]">
-          {/* Left panel — candidate list (40%) */}
+        <div className="flex gap-4 px-4 pb-4 h-[calc(100%-8rem)] lg:h-[calc(100%-10rem)]">
+          {/* Left panel — candidate list */}
           <div
-            className={`w-full lg:w-[40%] xl:w-[35%] flex flex-col ${
+            className={`w-full lg:w-[38%] xl:w-[33%] flex flex-col ${
               selectedApplication ? "hidden lg:flex" : "flex"
             }`}
           >
@@ -228,9 +239,9 @@ export default function CandidatesPage() {
             />
           </div>
 
-          {/* Right panel — candidate detail (60%) */}
+          {/* Right panel — candidate detail */}
           <div
-            className={`w-full lg:w-[60%] xl:w-[65%] ${
+            className={`w-full flex-1 min-w-0 h-full ${
               selectedApplication ? "flex" : "hidden lg:flex"
             }`}
           >
@@ -238,6 +249,7 @@ export default function CandidatesPage() {
               <CandidateDetailPanel
                 application={selectedApplication}
                 onStatusChange={handleStatusChange}
+                isUpdatingStatus={isUpdatingStatus}
                 onBack={() => setSelectedApplication(null)}
                 showBackButton
               />

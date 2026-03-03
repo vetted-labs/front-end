@@ -22,6 +22,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
+import { getExplorerAddressUrl } from "@/lib/blockchain";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
@@ -383,7 +384,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               profile.walletAddress && (
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <a
-                    href={`https://etherscan.io/address/${profile.walletAddress}`}
+                    href={getExplorerAddressUrl(profile.walletAddress)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted transition-all text-xs font-mono text-muted-foreground hover:text-foreground"

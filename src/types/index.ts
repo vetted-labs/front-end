@@ -8,6 +8,7 @@ export type {
   GuildJobApplication,
   ApplicationStatus,
   ApplicationStats,
+  StatusTransition,
 } from "./application";
 export type {
   GuildApplication,

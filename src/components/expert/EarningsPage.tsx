@@ -8,8 +8,10 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { useRewardClaiming } from "@/lib/hooks/useVettedContracts";
 import { GuildSelector } from "@/components/ui/guild-selector";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
-import { Calendar } from "lucide-react";
+import { useAuthContext } from "@/hooks/useAuthContext";
+import { Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import type {
   EarningsEntry,
   EarningsSummary,
@@ -48,7 +50,9 @@ interface EarningsBreakdownResponse {
 }
 
 export default function EarningsPage() {
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const auth = useAuthContext();
+  const address = wagmiAddress || auth.walletAddress;
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [items, setItems] = useState<EarningsEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -59,7 +63,7 @@ export default function EarningsPage() {
   const [claimTxHash, setClaimTxHash] = useState<`0x${string}` | undefined>();
 
   const { pendingRewards, totalClaimed, claimRewards, refetchAll } = useRewardClaiming();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: claimFailed, error: claimError } = useWaitForTransactionReceipt({
     hash: claimTxHash,
   });
 
@@ -72,14 +76,21 @@ export default function EarningsPage() {
     }
   }, [isConfirmed, claimTxHash, refetchAll]);
 
+  // Handle claim failure
+  useEffect(() => {
+    if (claimFailed && claimTxHash) {
+      toast.error(getTransactionErrorMessage(claimError, "Failed to claim rewards on-chain"));
+      setClaimTxHash(undefined);
+    }
+  }, [claimFailed, claimTxHash, claimError]);
+
   const handleClaim = async () => {
     try {
       const hash = await claimRewards();
       setClaimTxHash(hash);
       toast.info("Transaction submitted. Waiting for confirmation...");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "";
-      if (message.includes("User rejected")) {
+      if (isUserRejection(err)) {
         toast.error("Transaction rejected");
       } else {
         toast.error("Failed to claim rewards");
@@ -109,7 +120,7 @@ export default function EarningsPage() {
       skip: !address,
       onSuccess: (result) => {
         if (!result) return;
-        setProfile(result.profileResult as ExpertProfile);
+        setProfile(result.profileResult);
         const data = result.earningsResult.data ?? result.earningsResult;
         setSummary(data.summary || null);
         setItems(data.items?.items || []);
@@ -147,7 +158,11 @@ export default function EarningsPage() {
   }
 
   if (loading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (

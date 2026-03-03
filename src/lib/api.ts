@@ -428,10 +428,27 @@ export const applicationsApi = {
       requiresAuth: true,
     }),
 
-  updateStatus: (id: string, status: string, notes?: string) =>
-    apiRequest<{ id: string; status: string }>(`/api/applications/${id}/status`, {
+  updateStatus: (id: string, status: string, note?: string) =>
+    apiRequest<{
+      id: string;
+      status: string;
+      transition: import("@/types").StatusTransition;
+    }>(`/api/applications/${id}/status`, {
       method: "PUT",
-      body: JSON.stringify({ status, notes }),
+      body: JSON.stringify({ status, ...(note ? { note } : {}) }),
+      requiresAuth: true,
+    }),
+
+  getStatusHistory: (applicationId: string) =>
+    apiRequest<import("@/types").StatusTransition[]>(
+      `/api/applications/${applicationId}/history`,
+      { requiresAuth: true },
+    ),
+
+  updateNotes: (id: string, notes: string) =>
+    apiRequest<{ id: string; notes: string }>(`/api/applications/${id}/notes`, {
+      method: "PUT",
+      body: JSON.stringify({ notes }),
       requiresAuth: true,
     }),
 
@@ -923,21 +940,28 @@ export const blockchainApi = {
   getEndorsementStats: (jobId: string, candidateId: string) =>
     apiRequest<import("@/types").EndorsementStats>(`/api/blockchain/endorsements/stats/${jobId}/${candidateId}`),
 
-  syncEndorsement: (applicationId: string, expertId: string, jobId: string, candidateId: string) =>
+  syncEndorsement: (applicationId: string, walletAddress: string, jobId: string, candidateId: string) =>
     apiRequest<{ success: boolean }>("/api/blockchain/endorsements/sync", {
       method: "POST",
-      body: JSON.stringify({ applicationId, expertId, jobId, candidateId }),
+      body: JSON.stringify({ applicationId, walletAddress, jobId, candidateId }),
     }),
 
   getApplicationsForEndorsement: (guildId: string) =>
-    apiRequest<import("@/types").GuildJobApplication[]>(`/api/blockchain/endorsements/applications/${guildId}`),
+    apiRequest<import("@/types").EndorsementApplication[]>(`/api/blockchain/endorsements/applications/${guildId}`),
 
-  getExpertEndorsements: (walletAddress: string, params?: { status?: string; limit?: number }) => {
+  getExpertEndorsements: async (walletAddress: string, params?: { status?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.status) queryParams.append("status", params.status);
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     const query = queryParams.toString();
-    return apiRequest<import("@/types").ActiveEndorsement[]>(`/api/blockchain/endorsements/expert/${walletAddress}${query ? `?${query}` : ""}`);
+    const endorsements = await apiRequest<import("@/types").ActiveEndorsement[]>(
+      `/api/blockchain/endorsements/expert/${walletAddress}${query ? `?${query}` : ""}`
+    );
+    // Normalize: ensure stakeAmount is always populated (API sometimes returns only `amount`)
+    return endorsements.map((e) => ({
+      ...e,
+      stakeAmount: e.stakeAmount || e.amount,
+    }));
   },
 
   // Reputation endpoints
@@ -1184,7 +1208,7 @@ export const governanceApi = {
 
 // Endorsement Accountability API
 export const endorsementAccountabilityApi = {
-  recordHireOutcome: (data: Record<string, unknown>) =>
+  recordHireOutcome: (data: { applicationId: string; candidateId: string; jobId: string; outcome: "hired" | "not_hired" }) =>
     apiRequest<{ success: boolean }>("/api/endorsements/hire-outcome", {
       method: "POST",
       body: JSON.stringify(data),

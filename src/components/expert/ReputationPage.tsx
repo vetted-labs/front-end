@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { Shield } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
 import type {
   ReputationTimelineEntry,
@@ -28,7 +29,9 @@ interface ReputationTimelineResponse {
 }
 
 export default function ReputationPage() {
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const auth = useAuthContext();
+  const address = wagmiAddress || auth.walletAddress;
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [timeline, setTimeline] = useState<ReputationTimelineEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -47,7 +50,7 @@ export default function ReputationPage() {
       skip: !address,
       onSuccess: (result) => {
         if (!result) return;
-        setProfile(result.profileRes as ExpertProfile);
+        setProfile(result.profileRes);
         const tData = result.timelineRes.data ?? result.timelineRes;
         setTimeline(tData.items || []);
         setPagination(tData.pagination || null);
@@ -83,7 +86,11 @@ export default function ReputationPage() {
   }
 
   if (loading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   const reputation = profile?.reputation ?? 0;
