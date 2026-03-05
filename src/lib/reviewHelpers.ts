@@ -23,17 +23,18 @@ export function mapCandidateToReviewApplication(
   const domainTopics: Record<string, string> = {};
 
   Object.entries(flatAnswers).forEach(([key, value]) => {
+    const strValue = typeof value === "string" ? value : String(value ?? "");
     if (key.startsWith("domain.")) {
       const topicId = key.replace("domain.", "");
-      domainTopics[topicId] = value as string;
+      domainTopics[topicId] = strValue;
     } else if (key.includes(".")) {
       const [questionId, partId] = key.split(".");
       const camelKey = GENERAL_KEY_MAP[questionId] || questionId;
       if (!general[camelKey] || typeof general[camelKey] === "string") general[camelKey] = {};
-      (general[camelKey] as Record<string, string>)[partId] = value as string;
+      (general[camelKey] as Record<string, string>)[partId] = strValue;
     } else {
       const camelKey = GENERAL_KEY_MAP[key] || key;
-      general[camelKey] = value as string;
+      general[camelKey] = strValue;
     }
   });
 

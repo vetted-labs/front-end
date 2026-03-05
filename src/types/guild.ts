@@ -62,6 +62,29 @@ export interface ExpertGuild {
   closedProposals: number;
 }
 
+/** Extended guild detail returned by expertApi.getGuildDetails — includes members, jobs, applications, earnings. */
+export interface ExpertGuildDetail extends ExpertGuild {
+  totalMembers?: number;
+  experts?: import("./expert").ExpertMember[];
+  candidates?: import("./candidate").CandidateMember[];
+  recentJobs?: import("./job").Job[];
+  guildApplications?: import("./review").ExpertMembershipApplication[];
+  applications?: import("./application").GuildJobApplication[];
+  recentActivity?: Array<{ id: string; type: string; actor: string; target?: string; details: string; timestamp: string }>;
+  earnings?: {
+    totalPoints?: number;
+    totalEndorsementEarnings?: number;
+    recentEarnings?: Array<{ id: string; type: "proposal" | "endorsement"; amount: number; description: string; date: string }>;
+  };
+  statistics?: { vettedProposals?: number; totalVetdStaked?: number; totalEarningsFromEndorsements?: number };
+  totalProposalsReviewed?: number;
+  averageApprovalTime?: string;
+  totalVetdStaked?: number;
+  blockchainGuildId?: string;
+  candidateCount?: number;
+  openPositions?: number;
+}
+
 /** Minimal guild record for dropdowns and selection lists. */
 export interface GuildRecord {
   id: string;

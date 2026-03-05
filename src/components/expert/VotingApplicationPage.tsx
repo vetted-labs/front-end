@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { guildApplicationsApi } from "@/lib/api";
@@ -188,6 +188,7 @@ export default function VotingApplicationPage({
   // UI state that changes based on user actions (not initial data loading)
   const [showVoting, setShowVoting] = useState(false);
   const [isSubmittingVote, setIsSubmittingVote] = useState(false);
+  const hasRedirectedRef = useRef(false);
 
   const {
     application,
@@ -200,6 +201,15 @@ export default function VotingApplicationPage({
     loadPhaseStatus,
     loadApplication,
   } = useVotingApplicationData(applicationId, address);
+
+  // Redirect to guild page if expert hasn't staked
+  useEffect(() => {
+    if (!loading && application && stakingStatus && !stakingStatus.meetsMinimum && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      toast.error("You must stake VETD tokens to review applications");
+      router.replace(`/expert/guild/${application.guild_id}`);
+    }
+  }, [loading, application, stakingStatus, router]);
 
   /* -- user actions -- */
   const handleVote = async (

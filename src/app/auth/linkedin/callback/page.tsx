@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { candidateApi } from "@/lib/api";
 import { clearAllAuthState } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { useDisconnect } from "wagmi";
 
 /**
@@ -26,6 +27,7 @@ function isInternalPath(path: string): boolean {
 function LinkedInCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const auth = useAuthContext();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Processing LinkedIn authentication...");
   const { disconnect } = useDisconnect();
@@ -101,11 +103,15 @@ function LinkedInCallbackContent() {
         setMessage("Exchanging authorization code...");
         const data = await candidateApi.linkedinAuth(code);
 
-        // Store authentication data
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("candidateId", data.candidate?.id || "");
-        localStorage.setItem("candidateEmail", data.candidate?.email || "");
-        localStorage.setItem("userType", "candidate");
+        // Store authentication data via AuthContext
+        auth.login(
+          data.token,
+          "candidate",
+          data.candidate?.id || "",
+          data.candidate?.email,
+          undefined,
+          data.refreshToken,
+        );
 
         setStatus("success");
         setMessage("Successfully authenticated! Redirecting...");
@@ -124,6 +130,7 @@ function LinkedInCallbackContent() {
     };
 
     handleCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
   return (

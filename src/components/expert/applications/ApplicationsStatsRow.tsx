@@ -3,20 +3,20 @@ import { Card } from "@/components/ui/card";
 interface ApplicationsStatsRowProps {
   pendingReviews: number;
   proposalsToVote: number;
-  completedThisMonth: number;
+  completedReviews: number;
   guildsActive: number;
 }
 
 export function ApplicationsStatsRow({
   pendingReviews,
   proposalsToVote,
-  completedThisMonth,
+  completedReviews,
   guildsActive,
 }: ApplicationsStatsRowProps) {
   const stats = [
     { label: "Pending Reviews", value: pendingReviews },
     { label: "Proposals to Vote", value: proposalsToVote },
-    { label: "Completed This Month", value: completedThisMonth },
+    { label: "Completed Reviews", value: completedReviews },
     { label: "Guilds Active", value: guildsActive },
   ];
 

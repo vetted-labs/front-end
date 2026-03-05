@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronsLeft, X } from "lucide-react";
 import { useAccount } from "wagmi";
@@ -11,6 +11,7 @@ import { SidebarNavGroup } from "./SidebarNavGroup";
 import { SidebarUserSection } from "./SidebarUserSection";
 import { useNotificationCount } from "@/lib/hooks/useNotificationCount";
 import { useMessageCount } from "@/lib/hooks/useMessageCount";
+import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { cn } from "@/lib/utils";
 import type { SidebarConfig } from "./sidebar-config";
 
@@ -22,10 +23,11 @@ export function AppSidebar({ config }: AppSidebarProps) {
   const router = useRouter();
   const { isCollapsed, isMobileOpen, hasMounted, toggle, closeMobile } = useSidebar();
   const { address, isConnected } = useAccount();
+  const { expertStatus } = useExpertStatus();
 
   const notificationCount = useNotificationCount(
     address,
-    config.variant === "expert" && isConnected
+    config.variant === "expert" && isConnected && expertStatus === "approved"
   );
 
   const messageCount = useMessageCount(
@@ -34,20 +36,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
 
   const badgeCounts = { notifications: notificationCount, messages: messageCount };
 
-  // Quick hint from localStorage, then verified by layout's API call
-  const [isExpertPending, setIsExpertPending] = useState(false);
-  useEffect(() => {
-    if (config.variant !== "expert") return;
-    setIsExpertPending(localStorage.getItem("expertStatus") === "pending");
-    // Listen for status changes (e.g. layout API verification corrects localStorage)
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "expertStatus") {
-        setIsExpertPending(e.newValue === "pending");
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [config.variant]);
+  const isExpertPending = config.variant === "expert" && expertStatus === "pending";
 
   // Escape key closes mobile drawer
   useEffect(() => {

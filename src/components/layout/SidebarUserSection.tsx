@@ -10,6 +10,7 @@ import { useSidebar } from "./SidebarProvider";
 import { expertApi } from "@/lib/api";
 import { calculateTotalPoints, truncateAddress } from "@/lib/utils";
 import { getNetworkName } from "@/lib/web3Utils";
+import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { cn } from "@/lib/utils";
 import type { SidebarConfig } from "./sidebar-config";
 
@@ -24,6 +25,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { disconnect } = useDisconnect();
+  const { expertStatus } = useExpertStatus();
   const [mounted, setMounted] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
@@ -32,7 +34,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
 
   // Fetch expert points
   useEffect(() => {
-    if (variant !== "expert" || !isConnected || !address) return;
+    if (variant !== "expert" || !isConnected || !address || expertStatus !== "approved") return;
     expertApi
       .getProfile(address)
       .then((data) => setTotalPoints(calculateTotalPoints(data)))

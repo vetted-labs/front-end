@@ -551,7 +551,7 @@ export const expertApi = {
   },
 
   getGuildDetails: (guildId: string, walletAddress: string) =>
-    apiRequest<import("@/types").ExpertGuild>(`/api/experts/guilds/${encodeURIComponent(guildId)}?wallet=${encodeURIComponent(walletAddress)}`),
+    apiRequest<import("@/types").ExpertGuildDetail>(`/api/experts/guilds/${encodeURIComponent(guildId)}?wallet=${encodeURIComponent(walletAddress)}`),
 
   // Note: Backend still uses /proposals/ path for staking endpoint
   stakeOnApplication: (applicationId: string, data: Record<string, unknown>) =>
@@ -700,7 +700,7 @@ export const guildsApi = {
   // Get guild's candidate applications (for expert review)
   getCandidateApplications: (guildId: string, wallet?: string) => {
     const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
-    return apiRequest<import("@/types").GuildApplicationSummary[]>(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`);
+    return apiRequest<import("@/types").CandidateGuildApplication[]>(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`);
   },
 
   // Review candidate guild application (expert)

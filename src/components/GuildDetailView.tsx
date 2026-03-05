@@ -31,36 +31,7 @@ const StakingModal = dynamic(
   { ssr: false }
 );
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
-import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
-
-/** Extended guild detail response from expertApi.getGuildDetails — the backend returns more fields than the ExpertGuild type declares. */
-interface ExpertGuildDetailResponse {
-  id: string;
-  name: string;
-  description: string;
-  memberCount?: number;
-  totalMembers?: number;
-  expertRole?: string;
-  reputation?: number;
-  experts?: ExpertMember[];
-  candidates?: CandidateMember[];
-  recentJobs?: Job[];
-  guildApplications?: ExpertMembershipApplication[];
-  applications?: GuildJobApplication[];
-  recentActivity?: Activity[];
-  earnings?: Partial<Earnings>;
-  statistics?: {
-    vettedProposals?: number;
-    totalVetdStaked?: number;
-    totalEarningsFromEndorsements?: number;
-  };
-  totalProposalsReviewed?: number;
-  averageApprovalTime?: string;
-  totalVetdStaked?: number;
-  blockchainGuildId?: string;
-  candidateCount?: number;
-  openPositions?: number;
-}
+import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, ExpertGuildDetail, LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 interface Earnings {
   totalPoints: number;
@@ -181,7 +152,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
 
   const fetchGuildData = async (walletAddress: string) => {
-    const data = await expertApi.getGuildDetails(guildId, walletAddress) as ExpertGuildDetailResponse;
+    const data = await expertApi.getGuildDetails(guildId, walletAddress);
     // Find the current user's expert entry to extract personal stats
     const currentExpert = Array.isArray(data.experts)
       ? data.experts.find((e: ExpertMember) => e.walletAddress?.toLowerCase() === walletAddress.toLowerCase())

@@ -14,12 +14,15 @@ import {
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
+import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const unreadCount = useNotificationCount(address, isConnected);
+  const { expertStatus } = useExpertStatus();
+  const isApprovedExpert = expertStatus === "approved";
+  const unreadCount = useNotificationCount(address, isConnected && isApprovedExpert);
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +80,7 @@ export function NotificationBell() {
     router.push(buildNotificationUrl(notification));
   };
 
-  if (!isConnected || !address) return null;
+  if (!isConnected || !address || !isApprovedExpert) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>

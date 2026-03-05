@@ -778,12 +778,13 @@ export default function JobDetailView() {
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setResumeFile(null);
                         setUseProfileResume(true);
                       }}
-                      className="text-destructive hover:text-red-700 text-sm"
+                      className="text-destructive hover:text-red-700 text-sm cursor-pointer"
                     >
                       Remove
                     </button>

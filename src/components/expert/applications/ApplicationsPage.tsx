@@ -88,8 +88,8 @@ export default function ApplicationsPage() {
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
-            const data = await expertApi.getGuildDetails(g.id, address) as Record<string, unknown>;
-            const apps = Array.isArray(data.guildApplications) ? data.guildApplications as ExpertMembershipApplication[] : [];
+            const data = await expertApi.getGuildDetails(g.id, address);
+            const apps = Array.isArray(data.guildApplications) ? data.guildApplications : [];
             return apps.map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
           } catch {
             return [];
@@ -109,7 +109,7 @@ export default function ApplicationsPage() {
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
-            const apps = await guildsApi.getCandidateApplications(g.id, address) as unknown as CandidateGuildApplication[];
+            const apps = await guildsApi.getCandidateApplications(g.id, address);
             return (Array.isArray(apps) ? apps : []).map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
           } catch {
             return [];
@@ -144,12 +144,8 @@ export default function ApplicationsPage() {
   const voteApi = useApi();
   const createApi = useApi();
 
-  // Filter expert apps — "assigned" shows all unreviewed (no explicit assigned field for membership apps)
-  const expertApps = useMemo(() => {
-    const apps = expertAppsRaw ?? [];
-    if (filterMode === "assigned") return apps;
-    return apps;
-  }, [expertAppsRaw, filterMode]);
+  // Expert apps — membership apps have no assigned field, so no filtering needed
+  const expertApps = expertAppsRaw ?? [];
 
   // Filter candidate apps
   const candidateApps = useMemo(() => {
@@ -181,7 +177,7 @@ export default function ApplicationsPage() {
   // Stats
   const pendingReviews = (expertApps?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
   const proposalsToVote = proposals.filter((p) => p.is_assigned_reviewer && !p.has_voted).length;
-  const completedThisMonth = (candidateApps?.filter((a) => a.expertHasReviewed)?.length ?? 0)
+  const completedReviews = (candidateApps?.filter((a) => a.expertHasReviewed)?.length ?? 0)
     + proposals.filter((p) => p.has_voted).length;
   const guildsActive = guildRecords.length;
 
@@ -363,7 +359,7 @@ export default function ApplicationsPage() {
         <ApplicationsStatsRow
           pendingReviews={pendingReviews}
           proposalsToVote={proposalsToVote}
-          completedThisMonth={completedThisMonth}
+          completedReviews={completedReviews}
           guildsActive={guildsActive}
         />
 

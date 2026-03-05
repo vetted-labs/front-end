@@ -116,7 +116,7 @@ export function ProposalCard({
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium">{proposal.vote_count} Votes</span>
-              {proposal.assigned_reviewer_count && (
+              {proposal.assigned_reviewer_count != null && (
                 <span className="text-xs text-muted-foreground">
                   / {proposal.assigned_reviewer_count} assigned
                 </span>
