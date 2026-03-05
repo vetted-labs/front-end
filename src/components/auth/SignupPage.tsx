@@ -119,7 +119,7 @@ function SignupForm() {
           experienceLevel: "mid",
         });
 
-        auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "");
+        auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "", undefined, data.refreshToken);
         router.push(redirectUrl || "/candidate/dashboard");
       } else {
         const data = await companyApi.create({
@@ -129,7 +129,7 @@ function SignupForm() {
           website,
         });
 
-        auth.login(data.token, "company", data.company?.id || "", data.company?.email || "");
+        auth.login(data.token, "company", data.company?.id || "", data.company?.email || "", undefined, data.refreshToken);
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: unknown) {

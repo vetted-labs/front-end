@@ -13,7 +13,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (token: string, userType: string, userId: string, email?: string, walletAddress?: string) => void;
+  login: (token: string, userType: string, userId: string, email?: string, walletAddress?: string, refreshToken?: string) => void;
   logout: () => void;
   updateWallet: (address: string) => void;
 }
@@ -91,10 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth-token-refreshed', handler);
   }, []);
 
-  const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string) => {
+  const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string, refreshToken?: string) => {
     // Store in localStorage — experts may not have a token
     if (token) {
       localStorage.setItem('authToken', token);
+    }
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
     }
     localStorage.setItem('userType', userType);
     localStorage.setItem(`${userType}Id`, userId);

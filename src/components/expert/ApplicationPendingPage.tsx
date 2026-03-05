@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   Mail,
   CheckCircle,
-  XCircle,
   Users,
   Plus,
   Shield,
@@ -83,15 +82,8 @@ export default function ApplicationPendingPage() {
     },
   });
 
-  // Redirect unauthenticated users
-  if (!isConnected || !address) {
-    if (typeof window !== "undefined") {
-      router.push("/");
-    }
-    return null;
-  }
-
-  if (isLoading) {
+  // Wait for wallet connection (skip redirect — expert layout handles auth guards)
+  if (!isConnected || !address || isLoading) {
     return null;
   }
 
@@ -148,15 +140,10 @@ export default function ApplicationPendingPage() {
                 <div className="flex items-center gap-3">
                   {guild.status === "pending" ? (
                     <>
-                      <div className="hidden sm:flex items-center gap-2 text-sm">
-                        <span className="flex items-center gap-1 text-green-500">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          {guild.approvalCount ?? expert.approvalCount}
-                        </span>
-                        <span className="flex items-center gap-1 text-red-400">
-                          <XCircle className="w-3.5 h-3.5" />
-                          {guild.rejectionCount ?? expert.rejectionCount}
-                        </span>
+                      <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="font-medium">{guild.reviewCount ?? expert.reviewCount ?? 0}</span>
+                        <span>reviewed</span>
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                         <Clock className="w-3 h-3" />
@@ -180,23 +167,11 @@ export default function ApplicationPendingPage() {
 
           {/* Review Stats - only show if there are pending apps */}
           {pendingApps.length > 0 && (
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <div className="mb-8">
               <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
                 <Users className="w-7 h-7 text-muted-foreground mx-auto mb-2" />
                 <p className="text-2xl font-bold text-foreground">{expert.reviewCount ?? 0}</p>
                 <p className="text-sm text-muted-foreground">Total Reviews</p>
-              </div>
-
-              <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
-                <CheckCircle className="w-7 h-7 text-green-500 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground">{expert.approvalCount ?? 0}</p>
-                <p className="text-sm text-muted-foreground">Approvals</p>
-              </div>
-
-              <div className="text-center p-4 rounded-lg border border-border bg-muted/30">
-                <XCircle className="w-7 h-7 text-red-400 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground">{expert.rejectionCount ?? 0}</p>
-                <p className="text-sm text-muted-foreground">Rejections</p>
               </div>
             </div>
           )}
@@ -234,7 +209,7 @@ export default function ApplicationPendingPage() {
                 <p className="font-semibold text-foreground mb-0.5">Under Guild Review</p>
                 <p className="text-sm text-muted-foreground">
                   Guild members are reviewing your credentials. You currently have{" "}
-                  {expert.approvalCount ?? 0} approval(s).
+                  {expert.reviewCount ?? 0} review(s).
                 </p>
               </div>
             </div>
@@ -269,7 +244,7 @@ export default function ApplicationPendingPage() {
               Browse Guilds
             </button>
             <button
-              onClick={() => router.push("/expert/apply")}
+              onClick={() => router.push("/expert/apply?apply=new")}
               className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all"
             >
               <Plus className="w-4 h-4 mr-2" />

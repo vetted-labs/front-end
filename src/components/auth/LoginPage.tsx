@@ -122,11 +122,11 @@ function LoginForm() {
     try {
       if (userType === "candidate") {
         const data = await candidateApi.login(email, password);
-        auth.login(data.token, "candidate", data.candidate!.id, data.candidate!.email);
+        auth.login(data.token, "candidate", data.candidate!.id, data.candidate!.email, undefined, data.refreshToken);
         router.push(redirectUrl || "/candidate/dashboard");
       } else {
         const data = await companyApi.login(email, password);
-        auth.login(data.token, "company", data.company!.id, data.company!.email);
+        auth.login(data.token, "company", data.company!.id, data.company!.email, undefined, data.refreshToken);
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: unknown) {

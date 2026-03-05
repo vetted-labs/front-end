@@ -15,11 +15,14 @@ export function useMessageCount(enabled: boolean) {
 
   const fetchCount = useCallback(async () => {
     if (!enabled || failedRef.current) return;
+    // Skip if no auth token — prevents 401 spam before login completes
+    const hasToken = localStorage.getItem("authToken") || localStorage.getItem("companyAuthToken");
+    if (!hasToken) return;
     try {
       const result = await messagingApi.getUnreadCounts();
       setCount(result?.total || 0);
     } catch {
-      // Stop polling if backend messaging endpoints don't exist yet (404).
+      // Stop polling if backend messaging endpoints don't exist yet (404/401).
       failedRef.current = true;
       setCount(0);
     }

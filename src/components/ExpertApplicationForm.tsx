@@ -64,16 +64,20 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     setMounted(true);
   }, []);
 
-  // Redirect approved experts to dashboard — unless they're applying to a new guild
+  // Redirect existing experts unless they're applying to a new guild.
+  // Both approved and pending experts can apply to additional guilds.
   const guildParam = searchParams.get("guild");
+  const applyNew = searchParams.get("apply") === "new";
 
   useEffect(() => {
     if (!mounted || !isConnected || !address) return;
     const checkExistingProfile = async () => {
       try {
         const result = await expertApi.getProfile(address);
-        if (result?.status === "approved") {
-          if (guildParam) {
+        const wantsNewGuild = guildParam || applyNew;
+
+        if (result?.status === "approved" || result?.status === "pending") {
+          if (wantsNewGuild) {
             // Expert is applying to a new guild — pre-fill from existing profile
             setFormData((prev) => ({
               ...prev,
@@ -91,16 +95,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
             }));
             return; // Don't redirect — let them apply to the new guild
           }
-          router.replace("/expert/dashboard");
-        } else if (result?.status === "pending") {
-          router.replace("/expert/application-pending");
+          // No explicit intent to apply to a new guild — redirect to appropriate page
+          if (result.status === "approved") {
+            router.replace("/expert/dashboard");
+          } else {
+            router.replace("/expert/application-pending");
+          }
         }
       } catch {
         // 404 = no profile, stay on apply page
       }
     };
     checkExistingProfile();
-  }, [mounted, isConnected, address, router, guildParam]);
+  }, [mounted, isConnected, address, router, guildParam, applyNew]);
 
   useEffect(() => {
     if (!error) return;
@@ -184,9 +191,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       noAiDeclaration: true,
       generalAnswers: true,
       levelAnswers: true,
+      "general.learningFromFailure": true,
+      "general.decisionUnderUncertainty": true,
+      "general.motivationAndConflict": true,
+      "general.guildImprovement": true,
     };
+    // Also mark individual level answer fields
+    if (levelTemplate?.topics) {
+      for (const topic of levelTemplate.topics) {
+        allFields[`level.${topic.id}`] = true;
+      }
+    }
     setTouched(allFields);
-  }, []);
+  }, [levelTemplate]);
 
   // Compute field-level errors
   const fieldErrors = useMemo((): FieldErrors => {
@@ -230,33 +247,53 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       errors.expertiseAreas = "Please add at least one area of expertise";
     }
 
-    // Bio & motivation (optional but have min length if provided)
-    if (touched.bio && formData.bio.length > 0 && formData.bio.length < 50) {
-      errors.bio = `${50 - formData.bio.length} more characters needed (minimum 50)`;
+    // Bio & motivation (required, min 50 chars)
+    if (touched.bio) {
+      if (!formData.bio.trim()) {
+        errors.bio = "Professional bio is required";
+      } else if (formData.bio.length < 50) {
+        errors.bio = `${50 - formData.bio.length} more characters needed (minimum 50)`;
+      } else if (formData.bio.length > 2000) {
+        errors.bio = "Must not exceed 2,000 characters";
+      }
     }
-    if (touched.bio && formData.bio.length > 2000) {
-      errors.bio = "Must not exceed 2,000 characters";
-    }
-    if (touched.motivation && formData.motivation.length > 0 && formData.motivation.length < 50) {
-      errors.motivation = `${50 - formData.motivation.length} more characters needed (minimum 50)`;
-    }
-    if (touched.motivation && formData.motivation.length > 2000) {
-      errors.motivation = "Must not exceed 2,000 characters";
-    }
-
-    // General answers
-    if (touched.generalAnswers && generalTemplate) {
-      if (!generalAnswers.learningFromFailure.trim()) errors["general.learningFromFailure"] = "This question is required";
-      if (!generalAnswers.decisionUnderUncertainty.trim()) errors["general.decisionUnderUncertainty"] = "This question is required";
-      if (!generalAnswers.motivationAndConflict.trim()) errors["general.motivationAndConflict"] = "This question is required";
-      if (!generalAnswers.guildImprovement.trim()) errors["general.guildImprovement"] = "This question is required";
+    if (touched.motivation) {
+      if (!formData.motivation.trim()) {
+        errors.motivation = "Motivation is required";
+      } else if (formData.motivation.length < 50) {
+        errors.motivation = `${50 - formData.motivation.length} more characters needed (minimum 50)`;
+      } else if (formData.motivation.length > 2000) {
+        errors.motivation = "Must not exceed 2,000 characters";
+      }
     }
 
-    // Level answers
-    if (touched.levelAnswers && levelTemplate?.topics) {
+    // General answers (per-field touched tracking)
+    if (generalTemplate) {
+      const generalKeys = ["learningFromFailure", "decisionUnderUncertainty", "motivationAndConflict", "guildImprovement"] as const;
+      for (const key of generalKeys) {
+        const fieldKey = `general.${key}`;
+        if (touched[fieldKey] || touched.generalAnswers) {
+          const val = generalAnswers[key];
+          if (!val.trim()) {
+            errors[fieldKey] = "This question is required";
+          } else if (val.length < 50) {
+            errors[fieldKey] = `${50 - val.length} more characters needed (minimum 50)`;
+          }
+        }
+      }
+    }
+
+    // Level answers (per-field touched tracking)
+    if (levelTemplate?.topics) {
       for (const topic of levelTemplate.topics) {
-        if (!levelAnswers[topic.id]?.trim()) {
-          errors[`level.${topic.id}`] = "This question is required";
+        const fieldKey = `level.${topic.id}`;
+        if (touched[fieldKey] || touched.levelAnswers) {
+          const val = levelAnswers[topic.id] || "";
+          if (!val.trim()) {
+            errors[fieldKey] = "This question is required";
+          } else if (val.length < 50) {
+            errors[fieldKey] = `${50 - val.length} more characters needed (minimum 50)`;
+          }
         }
       }
     }
@@ -279,19 +316,19 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     if (!formData.currentCompany.trim()) return false;
     if (formData.expertiseAreas.length === 0) return false;
     if (!noAiDeclaration) return false;
-    if (formData.bio.length > 0 && formData.bio.length < 50) return false;
-    if (formData.motivation.length > 0 && formData.motivation.length < 50) return false;
-    // General answers
+    if (formData.bio.length < 50) return false;
+    if (formData.motivation.length < 50) return false;
+    // General answers (min 50 chars each)
     if (generalTemplate) {
-      if (!generalAnswers.learningFromFailure.trim() ||
-          !generalAnswers.decisionUnderUncertainty.trim() ||
-          !generalAnswers.motivationAndConflict.trim() ||
-          !generalAnswers.guildImprovement.trim()) return false;
+      if (generalAnswers.learningFromFailure.trim().length < 50 ||
+          generalAnswers.decisionUnderUncertainty.trim().length < 50 ||
+          generalAnswers.motivationAndConflict.trim().length < 50 ||
+          generalAnswers.guildImprovement.trim().length < 50) return false;
     }
-    // Level answers
+    // Level answers (min 50 chars each)
     if (levelTemplate?.topics) {
       for (const topic of levelTemplate.topics) {
-        if (!levelAnswers[topic.id]?.trim()) return false;
+        if ((levelAnswers[topic.id] || "").trim().length < 50) return false;
       }
     }
     return true;

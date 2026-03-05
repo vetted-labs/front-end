@@ -163,9 +163,12 @@ export function ApplicationQuestionsSection({
                     label="Your Answer"
                     value={generalAnswers[answerKey as keyof typeof generalAnswers]}
                     onChange={(e) => onUpdateGeneralAnswer(question.id, null, e.target.value)}
-                    onBlur={() => onBlur?.("generalAnswers")}
+                    onBlur={() => onBlur?.(`general.${answerKey}`)}
                     placeholder={question.parts?.length ? `Address all parts: ${question.parts.map((p: QuestionPart) => p.label).join(", ")}` : "Be specific about what you'd improve and why."}
                     rows={5}
+                    minLength={50}
+                    maxLength={2000}
+                    showCounter
                     error={fieldErrors[`general.${answerKey}`]}
                     required
                   />
@@ -221,9 +224,12 @@ export function ApplicationQuestionsSection({
                   label="Your Answer"
                   value={levelAnswers[topic.id] || ""}
                   onChange={(e) => onUpdateLevelAnswer(topic.id, e.target.value)}
-                  onBlur={() => onBlur?.("levelAnswers")}
+                  onBlur={() => onBlur?.(`level.${topic.id}`)}
                   placeholder="Provide a clear, structured response."
                   rows={4}
+                  minLength={50}
+                  maxLength={2000}
+                  showCounter
                   error={fieldErrors[`level.${topic.id}`]}
                   required
                 />
@@ -251,33 +257,35 @@ export function ApplicationQuestionsSection({
 
         <div data-field-error={fieldErrors.bio ? "" : undefined}>
           <Textarea
-            label="Professional Bio (Optional)"
+            label="Professional Bio"
             value={bio}
             onChange={(e) => onChange("bio", e.target.value)}
             onBlur={() => onBlur?.("bio")}
             placeholder="Tell us about your professional background, key achievements, and what makes you qualified to be an expert reviewer..."
-            description={bio.length > 0 && bio.length < 50 ? undefined : "Optional context about your professional background"}
+            description={!fieldErrors.bio ? "Tell us about your professional background" : undefined}
             rows={4}
             maxLength={2000}
             minLength={50}
-            showCounter={bio.length > 0}
+            showCounter
             error={fieldErrors.bio}
+            required
           />
         </div>
 
         <div data-field-error={fieldErrors.motivation ? "" : undefined}>
           <Textarea
-            label="Why do you want to become an expert? (Optional)"
+            label="Why do you want to become an expert?"
             value={motivation}
             onChange={(e) => onChange("motivation", e.target.value)}
             onBlur={() => onBlur?.("motivation")}
             placeholder="Explain your motivation for joining Vetted as an expert reviewer, and how you plan to contribute to the guild..."
-            description={motivation.length > 0 && motivation.length < 50 ? undefined : "Optional additional context about your motivation"}
+            description={!fieldErrors.motivation ? "Share your motivation for joining" : undefined}
             rows={4}
             maxLength={2000}
             minLength={50}
-            showCounter={motivation.length > 0}
+            showCounter
             error={fieldErrors.motivation}
+            required
           />
         </div>
       </div>

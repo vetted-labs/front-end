@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { notificationsApi } from "@/lib/api";
 
 /**
@@ -11,14 +11,16 @@ export const NOTIFICATION_READ_EVENT = "notification-read";
 
 export function useNotificationCount(address: string | undefined, enabled: boolean) {
   const [count, setCount] = useState(0);
+  const failedRef = useRef(false);
 
   const fetchCount = useCallback(async () => {
-    if (!enabled || !address) return;
+    if (!enabled || !address || failedRef.current) return;
     try {
       const result = await notificationsApi.getUnreadCount(address);
       setCount(result?.count || 0);
     } catch {
-      // Silently fail — badge just won't show
+      // Stop polling on error (e.g. 404 for unregistered experts)
+      failedRef.current = true;
     }
   }, [enabled, address]);
 
@@ -28,11 +30,17 @@ export function useNotificationCount(address: string | undefined, enabled: boole
       return;
     }
 
+    // Reset failure state when address/enabled changes
+    failedRef.current = false;
+
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
 
     // Instantly refresh when a notification is marked as read
-    const handler = () => fetchCount();
+    const handler = () => {
+      failedRef.current = false;
+      fetchCount();
+    };
     window.addEventListener(NOTIFICATION_READ_EVENT, handler);
 
     return () => {

@@ -1,4 +1,5 @@
 // Contract ABIs for blockchain interactions
+// Auto-synced from smart-contracts Foundry artifacts (2026-03-04)
 
 export const VETTED_TOKEN_ABI = [
   // Read functions
@@ -19,11 +20,82 @@ export const VETTED_TOKEN_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', type: 'string' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', type: 'uint8' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'maxSupply',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'owner', type: 'address' }],
+    name: 'nonces',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'DOMAIN_SEPARATOR',
+    outputs: [{ name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'eip712Domain',
+    outputs: [
+      { name: 'fields', type: 'bytes1' },
+      { name: 'name', type: 'string' },
+      { name: 'version', type: 'string' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'verifyingContract', type: 'address' },
+      { name: 'salt', type: 'bytes32' },
+      { name: 'extensions', type: 'uint256[]' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
   // Write functions
   {
     inputs: [
       { name: 'spender', type: 'address' },
-      { name: 'amount', type: 'uint256' },
+      { name: 'value', type: 'uint256' },
     ],
     name: 'approve',
     outputs: [{ name: '', type: 'bool' }],
@@ -33,9 +105,20 @@ export const VETTED_TOKEN_ABI = [
   {
     inputs: [
       { name: 'to', type: 'address' },
-      { name: 'amount', type: 'uint256' },
+      { name: 'value', type: 'uint256' },
     ],
     name: 'transfer',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+    name: 'transferFrom',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -50,20 +133,95 @@ export const VETTED_TOKEN_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // ERC20Permit functions
   {
-    inputs: [{ name: 'owner', type: 'address' }],
-    name: 'nonces',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
+    inputs: [{ name: 'value', type: 'uint256' }],
+    name: 'burn',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'DOMAIN_SEPARATOR',
-    outputs: [{ name: '', type: 'bytes32' }],
-    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' },
+    ],
+    name: 'permit',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'owner', type: 'address' },
+      { indexed: true, name: 'spender', type: 'address' },
+      { indexed: false, name: 'value', type: 'uint256' },
+    ],
+    name: 'Approval',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'from', type: 'address' },
+      { indexed: true, name: 'to', type: 'address' },
+      { indexed: false, name: 'value', type: 'uint256' },
+    ],
+    name: 'Transfer',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'to', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'TokensMinted',
+    type: 'event',
+  },
+  // Errors
+  { inputs: [], name: 'ZeroAmount', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'ExceedsMaxSupply', type: 'error' },
+  { inputs: [], name: 'ExceedsAbsoluteMaxSupply', type: 'error' },
+  { inputs: [], name: 'MaxSupplyBelowTotalSupply', type: 'error' },
+  { inputs: [], name: 'EnforcedPause', type: 'error' },
+  {
+    inputs: [{ name: 'deadline', type: 'uint256' }],
+    name: 'ERC2612ExpiredSignature',
+    type: 'error',
+  },
+  {
+    inputs: [
+      { name: 'signer', type: 'address' },
+      { name: 'owner', type: 'address' },
+    ],
+    name: 'ERC2612InvalidSigner',
+    type: 'error',
+  },
+  {
+    inputs: [
+      { name: 'sender', type: 'address' },
+      { name: 'balance', type: 'uint256' },
+      { name: 'needed', type: 'uint256' },
+    ],
+    name: 'ERC20InsufficientBalance',
+    type: 'error',
+  },
+  {
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'allowance', type: 'uint256' },
+      { name: 'needed', type: 'uint256' },
+    ],
+    name: 'ERC20InsufficientAllowance',
+    type: 'error',
   },
 ] as const;
 
@@ -96,6 +254,16 @@ export const EXPERT_STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [
+      { name: '', type: 'address' },
+      { name: '', type: 'bytes32' },
+    ],
+    name: 'lockedStake',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [{ name: '', type: 'bytes32' }],
     name: 'guildTotalStaked',
     outputs: [{ name: '', type: 'uint256' }],
@@ -112,6 +280,13 @@ export const EXPERT_STAKING_ABI = [
   {
     inputs: [],
     name: 'minimumStake',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'cooldownPeriod',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -143,6 +318,26 @@ export const EXPERT_STAKING_ABI = [
       { name: 'amount', type: 'uint256' },
       { name: 'stakedAt', type: 'uint256' },
     ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'getTotalStakedAmount',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'getUnlockedStake',
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -222,19 +417,6 @@ export const EXPERT_STAKING_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // Custom errors
-  { inputs: [], name: 'ZeroAmount', type: 'error' },
-  { inputs: [], name: 'ZeroAddress', type: 'error' },
-  { inputs: [], name: 'BelowMinimumStake', type: 'error' },
-  { inputs: [], name: 'InsufficientStake', type: 'error' },
-  { inputs: [], name: 'CooldownNotExpired', type: 'error' },
-  { inputs: [], name: 'NoUnstakeRequest', type: 'error' },
-  { inputs: [], name: 'UnstakeRequestExists', type: 'error' },
-  { inputs: [], name: 'InvalidGuildId', type: 'error' },
-  { inputs: [], name: 'NotAuthorizedSlasher', type: 'error' },
-  { inputs: [], name: 'NotGuildMember', type: 'error' },
-  { inputs: [], name: 'StakeIsLocked', type: 'error' },
-  { inputs: [], name: 'InsufficientUnlockedStake', type: 'error' },
   // Events
   {
     anonymous: false,
@@ -274,20 +456,92 @@ export const EXPERT_STAKING_ABI = [
       { indexed: true, name: 'expert', type: 'address' },
       { indexed: true, name: 'guildId', type: 'bytes32' },
       { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'totalStake', type: 'uint256' },
+    ],
+    name: 'UnstakeCancelled',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
     ],
     name: 'EmergencyWithdraw',
     type: 'event',
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: true, name: 'recipient', type: 'address' },
+    ],
+    name: 'Slashed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'SlashRestored',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'StakeLocked',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'StakeUnlocked',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAmount', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'BelowMinimumStake', type: 'error' },
+  { inputs: [], name: 'InsufficientStake', type: 'error' },
+  { inputs: [], name: 'CooldownNotExpired', type: 'error' },
+  { inputs: [], name: 'NoUnstakeRequest', type: 'error' },
+  { inputs: [], name: 'UnstakeRequestExists', type: 'error' },
+  { inputs: [], name: 'InvalidGuildId', type: 'error' },
+  { inputs: [], name: 'NotAuthorizedSlasher', type: 'error' },
+  { inputs: [], name: 'NotGuildMember', type: 'error' },
+  { inputs: [], name: 'StakeIsLocked', type: 'error' },
+  { inputs: [], name: 'InsufficientUnlockedStake', type: 'error' },
+  { inputs: [], name: 'CooldownPeriodTooLong', type: 'error' },
+  { inputs: [], name: 'CooldownPeriodTooShort', type: 'error' },
+  { inputs: [], name: 'InvalidRecipient', type: 'error' },
+  { inputs: [], name: 'MinimumStakeTooHigh', type: 'error' },
+  { inputs: [], name: 'NotInEmergencyMode', type: 'error' },
 ] as const;
 
 export const ENDORSEMENT_BIDDING_ABI = [
   // Read functions
   {
-    inputs: [{ name: 'jobId', type: 'bytes32' }],
+    inputs: [{ name: '', type: 'bytes32' }],
     name: 'jobs',
     outputs: [
       { name: 'creator', type: 'address' },
       { name: 'isOpen', type: 'bool' },
+      { name: 'createdAt', type: 'uint256' },
+      { name: 'finalizedAt', type: 'uint256' },
       { name: 'selectedCandidate', type: 'bytes32' },
     ],
     stateMutability: 'view',
@@ -321,9 +575,70 @@ export const ENDORSEMENT_BIDDING_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'jobId', type: 'bytes32' }],
+    name: 'getJobCandidates',
+    outputs: [{ name: '', type: 'bytes32[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'minimumBid',
     outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'pendingRefunds',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'bytes32' },
+      { name: '', type: 'bytes32' },
+      { name: '', type: 'address' },
+    ],
+    name: 'bids',
+    outputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'timestamp', type: 'uint256' },
+      { name: 'isActive', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'bytes32' },
+      { name: '', type: 'bytes32' },
+    ],
+    name: 'endorsements',
+    outputs: [{ name: 'bidCount', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'rewardsDistributed',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'jobSlashed',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -368,18 +683,30 @@ export const ENDORSEMENT_BIDDING_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // Custom errors
-  { inputs: [], name: 'ZeroAmount', type: 'error' },
-  { inputs: [], name: 'InvalidJob', type: 'error' },
-  { inputs: [], name: 'InvalidCandidate', type: 'error' },
-  { inputs: [], name: 'BidAlreadyExists', type: 'error' },
-  { inputs: [], name: 'BidIsActive', type: 'error' },
-  { inputs: [], name: 'NoBidToWithdraw', type: 'error' },
-  { inputs: [], name: 'JobClosed', type: 'error' },
-  { inputs: [], name: 'Unauthorized', type: 'error' },
-  { inputs: [], name: 'SlashPercentageTooHigh', type: 'error' },
-  { inputs: [], name: 'AlreadySlashed', type: 'error' },
-  { inputs: [], name: 'AlreadyDistributed', type: 'error' },
+  {
+    inputs: [
+      { name: 'jobId', type: 'bytes32' },
+      { name: 'selectedCandidate', type: 'bytes32' },
+    ],
+    name: 'finalizeJob',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'jobId', type: 'bytes32' }],
+    name: 'reclaimExpiredBids',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'jobId', type: 'bytes32' }],
+    name: 'reclaimFinalizedBids',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   // Events
   {
     anonymous: false,
@@ -393,34 +720,222 @@ export const ENDORSEMENT_BIDDING_ABI = [
     name: 'BidPlaced',
     type: 'event',
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'BidRefunded',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'jobId', type: 'bytes32' },
+      { indexed: true, name: 'creator', type: 'address' },
+    ],
+    name: 'JobCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'jobId', type: 'bytes32' },
+      { indexed: true, name: 'selectedCandidate', type: 'bytes32' },
+    ],
+    name: 'JobFinalized',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAmount', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'InvalidJob', type: 'error' },
+  { inputs: [], name: 'InvalidCandidate', type: 'error' },
+  { inputs: [], name: 'BidAlreadyExists', type: 'error' },
+  { inputs: [], name: 'BidIsActive', type: 'error' },
+  { inputs: [], name: 'NoBidToWithdraw', type: 'error' },
+  { inputs: [], name: 'JobClosed', type: 'error' },
+  { inputs: [], name: 'Unauthorized', type: 'error' },
+  { inputs: [], name: 'SlashPercentageTooHigh', type: 'error' },
+  { inputs: [], name: 'AlreadySlashed', type: 'error' },
+  { inputs: [], name: 'AlreadyDistributed', type: 'error' },
+  { inputs: [], name: 'AlreadyReclaimed', type: 'error' },
+  { inputs: [], name: 'BelowMinimumBid', type: 'error' },
+  { inputs: [], name: 'InsufficientBalance', type: 'error' },
+  { inputs: [], name: 'JobNotExpired', type: 'error' },
+  { inputs: [], name: 'NoActiveEndorsers', type: 'error' },
+  { inputs: [], name: 'ReclaimDeadlineNotReached', type: 'error' },
 ] as const;
 
 export const REPUTATION_MANAGER_ABI = [
+  // Read functions
   {
     inputs: [{ name: 'expert', type: 'address' }],
-    name: 'reputation',
+    name: 'getExpertReputation',
+    outputs: [
+      { name: 'globalScore', type: 'int256' },
+      { name: 'lastActivityTimestamp', type: 'uint256' },
+      { name: 'totalVotes', type: 'uint256' },
+      { name: 'alignedVotes', type: 'uint256' },
+      { name: 'alignmentRate', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'expertReputation',
+    outputs: [
+      { name: 'globalScore', type: 'int256' },
+      { name: 'lastActivityTimestamp', type: 'uint256' },
+      { name: 'totalVotes', type: 'uint256' },
+      { name: 'alignedVotes', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertTier',
+    outputs: [{ name: '', type: 'uint8' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertTierWeight',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+    ],
+    name: 'getGuildReputation',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'address' },
+      { name: '', type: 'bytes32' },
+    ],
+    name: 'guildReputation',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'expert', type: 'address' },
+      { name: 'threshold', type: 'int256' },
+    ],
+    name: 'meetsReputationThreshold',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'daysSinceLastActivity',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Constants
+  {
+    inputs: [],
+    name: 'MAX_REPUTATION',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'MIN_REPUTATION',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'TIER_ESTABLISHED_THRESHOLD',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'TIER_AUTHORITY_THRESHOLD',
+    outputs: [{ name: '', type: 'int256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'oldReputation', type: 'int256' },
+      { indexed: false, name: 'newReputation', type: 'int256' },
+      { indexed: false, name: 'reason', type: 'string' },
+    ],
+    name: 'GlobalReputationUpdated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'oldReputation', type: 'int256' },
+      { indexed: false, name: 'newReputation', type: 'int256' },
+      { indexed: false, name: 'reason', type: 'string' },
+    ],
+    name: 'GuildReputationUpdated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'oldTier', type: 'uint8' },
+      { indexed: false, name: 'newTier', type: 'uint8' },
+    ],
+    name: 'TierChanged',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'decayAmount', type: 'uint256' },
+    ],
+    name: 'ReputationDecayed',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'Unauthorized', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'ArrayLengthMismatch', type: 'error' },
+  { inputs: [], name: 'BatchTooLarge', type: 'error' },
+  { inputs: [], name: 'ChangeTooLarge', type: 'error' },
+  { inputs: [], name: 'DecayAmountTooLarge', type: 'error' },
 ] as const;
 
 export const REWARD_DISTRIBUTOR_ABI = [
-  // Custom errors
-  { inputs: [], name: 'ZeroAmount', type: 'error' },
-  { inputs: [], name: 'ArrayLengthMismatch', type: 'error' },
-  { inputs: [], name: 'InsufficientTreasury', type: 'error' },
-  { inputs: [], name: 'NoRewardWeight', type: 'error' },
-  { inputs: [], name: 'BatchTooLarge', type: 'error' },
-  { inputs: [], name: 'DuplicateExpert', type: 'error' },
-  { inputs: [], name: 'ReputationManagerNotSet', type: 'error' },
-  {
-    inputs: [],
-    name: 'claimRewards',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
+  // Read functions
   {
     inputs: [{ name: '', type: 'address' }],
     name: 'pendingRewards',
@@ -431,6 +946,20 @@ export const REWARD_DISTRIBUTOR_ABI = [
   {
     inputs: [{ name: '', type: 'address' }],
     name: 'expertRewards',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertPendingRewards',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertTotalRewards',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -449,16 +978,536 @@ export const REWARD_DISTRIBUTOR_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [],
+    name: 'totalRewardsClaimed',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalPendingRewards',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Write functions
+  {
+    inputs: [],
+    name: 'claimRewards',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'reason', type: 'string' },
+    ],
+    name: 'RewardDistributed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'funder', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'TreasuryFunded',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAmount', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'ArrayLengthMismatch', type: 'error' },
+  { inputs: [], name: 'InsufficientTreasury', type: 'error' },
+  { inputs: [], name: 'NoRewardWeight', type: 'error' },
+  { inputs: [], name: 'BatchTooLarge', type: 'error' },
+  { inputs: [], name: 'DuplicateExpert', type: 'error' },
+  { inputs: [], name: 'ReputationManagerNotSet', type: 'error' },
 ] as const;
 
-// Contract addresses on Sepolia (updated 2026-03-03)
+export const SLASHING_MANAGER_ABI = [
+  // Read functions
+  {
+    inputs: [{ name: 'slashId', type: 'bytes32' }],
+    name: 'getSlashingRecord',
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'expert', type: 'address' },
+          { name: 'guildId', type: 'bytes32' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'reason', type: 'string' },
+          { name: 'timestamp', type: 'uint256' },
+          { name: 'appealDeadline', type: 'uint256' },
+          { name: 'appealResolutionDeadline', type: 'uint256' },
+          { name: 'isAppealed', type: 'bool' },
+          { name: 'appealResolved', type: 'bool' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertSlashCount',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'expert', type: 'address' }],
+    name: 'getExpertTotalSlashed',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'expertSlashCount',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'address' }],
+    name: 'expertSlashed',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'defaultSlashingPercentage',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalSlashed',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'baseAmount', type: 'uint256' },
+      { name: 'slashingPercentage', type: 'uint256' },
+    ],
+    name: 'calculateSlashAmount',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'pure',
+    type: 'function',
+  },
+  // Write functions
+  {
+    inputs: [{ name: 'slashId', type: 'bytes32' }],
+    name: 'submitAppeal',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'slashId', type: 'bytes32' },
+      { name: 'approve', type: 'bool' },
+    ],
+    name: 'resolveAppeal',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'reason', type: 'string' },
+    ],
+    name: 'ExpertSlashed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'slashId', type: 'bytes32' },
+    ],
+    name: 'AppealSubmitted',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: true, name: 'slashId', type: 'bytes32' },
+      { indexed: false, name: 'approved', type: 'bool' },
+    ],
+    name: 'AppealResolved',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'treasury', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'SlashedFundsTransferred',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAmount', type: 'error' },
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'AlreadyAppealed', type: 'error' },
+  { inputs: [], name: 'AlreadyResolved', type: 'error' },
+  { inputs: [], name: 'AppealPeriodExpired', type: 'error' },
+  { inputs: [], name: 'AppealResolutionExpired', type: 'error' },
+  { inputs: [], name: 'AppealResolutionNotExpired', type: 'error' },
+  { inputs: [], name: 'ArrayLengthMismatch', type: 'error' },
+  { inputs: [], name: 'BatchTooLarge', type: 'error' },
+  { inputs: [], name: 'InsufficientBalance', type: 'error' },
+  { inputs: [], name: 'InsufficientEscrowBalance', type: 'error' },
+  { inputs: [], name: 'NoActiveAppeal', type: 'error' },
+  { inputs: [], name: 'NotSlashedExpert', type: 'error' },
+  { inputs: [], name: 'SlashingPercentageTooHigh', type: 'error' },
+] as const;
+
+export const GUILD_REGISTRY_ABI = [
+  // Read functions
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'getGuildConfig',
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'name', type: 'string' },
+          { name: 'active', type: 'bool' },
+          { name: 'minStake', type: 'uint256' },
+          { name: 'minReputation', type: 'int256' },
+          { name: 'createdAt', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'guildExists',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'guildId', type: 'bytes32' },
+      { name: 'member', type: 'address' },
+    ],
+    name: 'isMember',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'guildId', type: 'bytes32' }],
+    name: 'getMinStake',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'memberCount',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'guilds',
+    outputs: [
+      { name: 'name', type: 'string' },
+      { name: 'active', type: 'bool' },
+      { name: 'minStake', type: 'uint256' },
+      { name: 'minReputation', type: 'int256' },
+      { name: 'createdAt', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'name', type: 'string' },
+      { indexed: false, name: 'minStake', type: 'uint256' },
+      { indexed: false, name: 'minReputation', type: 'int256' },
+    ],
+    name: 'GuildCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, name: 'guildId', type: 'bytes32' }],
+    name: 'GuildDeactivated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, name: 'guildId', type: 'bytes32' }],
+    name: 'GuildReactivated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: true, name: 'member', type: 'address' },
+    ],
+    name: 'MemberAdded',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: true, name: 'member', type: 'address' },
+    ],
+    name: 'MemberRemoved',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'InvalidGuildId', type: 'error' },
+  { inputs: [], name: 'AlreadyMember', type: 'error' },
+  { inputs: [], name: 'NotMember', type: 'error' },
+  { inputs: [], name: 'GuildAlreadyExists', type: 'error' },
+  { inputs: [], name: 'GuildDoesNotExist', type: 'error' },
+  { inputs: [], name: 'GuildNotActive', type: 'error' },
+  { inputs: [], name: 'GuildAlreadyActive', type: 'error' },
+  { inputs: [], name: 'GuildAlreadyInactive', type: 'error' },
+  { inputs: [], name: 'BatchTooLarge', type: 'error' },
+] as const;
+
+export const VETTING_MANAGER_ABI = [
+  // Read functions
+  {
+    inputs: [{ name: '', type: 'bytes32' }],
+    name: 'sessions',
+    outputs: [
+      { name: 'guildId', type: 'bytes32' },
+      { name: 'commitDeadline', type: 'uint256' },
+      { name: 'revealDeadline', type: 'uint256' },
+      { name: 'panelSize', type: 'uint256' },
+      { name: 'commitCount', type: 'uint256' },
+      { name: 'revealCount', type: 'uint256' },
+      { name: 'phase', type: 'uint8' },
+      { name: 'applicationHash', type: 'bytes32' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'sessionId', type: 'bytes32' }],
+    name: 'getSessionPanel',
+    outputs: [{ name: '', type: 'address[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'panelist', type: 'address' },
+    ],
+    name: 'getVote',
+    outputs: [
+      { name: 'commitment', type: 'bytes32' },
+      { name: 'score', type: 'uint8' },
+      { name: 'committed', type: 'bool' },
+      { name: 'revealed', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'bytes32' },
+      { name: '', type: 'address' },
+    ],
+    name: 'isPanelMember',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: '', type: 'bytes32' },
+      { name: '', type: 'address' },
+    ],
+    name: 'votes',
+    outputs: [
+      { name: 'commitment', type: 'bytes32' },
+      { name: 'score', type: 'uint8' },
+      { name: 'committed', type: 'bool' },
+      { name: 'revealed', type: 'bool' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Write functions
+  {
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'commitment', type: 'bytes32' },
+    ],
+    name: 'commitVote',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'score', type: 'uint8' },
+      { name: 'salt', type: 'bytes32' },
+    ],
+    name: 'revealVote',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Events
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: true, name: 'guildId', type: 'bytes32' },
+      { indexed: false, name: 'panel', type: 'address[]' },
+      { indexed: false, name: 'applicationHash', type: 'bytes32' },
+    ],
+    name: 'SessionCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: true, name: 'panelist', type: 'address' },
+    ],
+    name: 'VoteCommitted',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: true, name: 'panelist', type: 'address' },
+      { indexed: false, name: 'score', type: 'uint8' },
+    ],
+    name: 'VoteRevealed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: false, name: 'aligned', type: 'address[]' },
+      { indexed: false, name: 'misaligned', type: 'address[]' },
+    ],
+    name: 'SessionFinalized',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, name: 'sessionId', type: 'bytes32' }],
+    name: 'SessionExpired',
+    type: 'event',
+  },
+  // Custom errors
+  { inputs: [], name: 'ZeroAddress', type: 'error' },
+  { inputs: [], name: 'ZeroSessionId', type: 'error' },
+  { inputs: [], name: 'InvalidGuildId', type: 'error' },
+  { inputs: [], name: 'InvalidPanelSize', type: 'error' },
+  { inputs: [], name: 'InvalidScore', type: 'error' },
+  { inputs: [], name: 'InvalidSessionPhase', type: 'error' },
+  { inputs: [], name: 'InvalidCommitment', type: 'error' },
+  { inputs: [], name: 'SessionAlreadyExists', type: 'error' },
+  { inputs: [], name: 'SessionDoesNotExist', type: 'error' },
+  { inputs: [], name: 'SessionDurationTooLong', type: 'error' },
+  { inputs: [], name: 'NotPanelMember', type: 'error' },
+  { inputs: [], name: 'AlreadyCommitted', type: 'error' },
+  { inputs: [], name: 'AlreadyRevealed', type: 'error' },
+  { inputs: [], name: 'CommitPeriodEnded', type: 'error' },
+  { inputs: [], name: 'CommitPeriodNotEnded', type: 'error' },
+  { inputs: [], name: 'RevealPeriodNotEnded', type: 'error' },
+  { inputs: [], name: 'DuplicatePanelist', type: 'error' },
+  { inputs: [], name: 'DuplicateInResults', type: 'error' },
+  { inputs: [], name: 'PanelSizeMismatch', type: 'error' },
+  { inputs: [], name: 'PanelistDidNotReveal', type: 'error' },
+  { inputs: [], name: 'ExpireGracePeriodNotElapsed', type: 'error' },
+  { inputs: [], name: 'NotAuthorizedToExpire', type: 'error' },
+  {
+    inputs: [
+      { name: 'panelist', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
+      { name: 'required', type: 'uint256' },
+      { name: 'available', type: 'uint256' },
+    ],
+    name: 'InsufficientPanelistStake',
+    type: 'error',
+  },
+] as const;
+
+// Contract addresses on Sepolia (deployed 2026-03-04)
 export const CONTRACT_ADDRESSES: Record<string, `0x${string}`> = {
-  TOKEN: '0x8BAD852D0C0A9bc66196b2a833183db4D05E2711',
-  STAKING: '0x1EE77A26F1dCBb37FC8F9f705699104fb2AF9E1E',
-  ENDORSEMENT: '0xbe1773ba0FAc2cFAc3f26adcD5D097fb76000BF3',
-  REPUTATION: '0xa8AD3B6B1D67a2F6Bb1624747C32c22000Cab8d8',
-  REWARD: '0xE83e817420bBD067cCB6d4D94E41DF4A1c69a16b',
-  SLASHING: '0xe7F88cd5883df8A3e3A5fCC3Ba65c619B7F354eE',
-  GUILD_REGISTRY: '0xe525A91F3b8dA61921F36313d352735c4D6e9624',
-  VETTING: '0xddD3b7436FF8C6548C54A64b051D2FA4ff3736aA',
+  TOKEN: '0x6490A0eb6e87D07B04773a840671c74C5d69c7eb',
+  STAKING: '0xCDE7871bADd1A23F139098ac16134Ee359b88fA0',
+  ENDORSEMENT: '0x4cbDF693E0D68c2b1174D20913DDf8eca6aCEe56',
+  REPUTATION: '0xba3F62700f8c68438ed263D05c4021d0FF34e450',
+  REWARD: '0xF47F887482863Da1194f5b4D23D667B19eF5654E',
+  SLASHING: '0xd384d254F4A80DF400D87924fe917daC4A84a0A1',
+  GUILD_REGISTRY: '0x2D0aF431A5e95e8f89523178D8781BDF30bA298b',
+  VETTING: '0x76Fb78a47f43c8C833315E9dE7112B7965fd329D',
 };

@@ -37,9 +37,26 @@ export function isUserRejection(error: unknown): boolean {
 
 /** Map of Solidity custom error names → user-friendly messages. */
 const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
-  // ExpertStaking
+  // Shared
   ZeroAmount: "Amount must be greater than zero",
   ZeroAddress: "Invalid address provided",
+  Unauthorized: "You are not authorized for this action",
+  ArrayLengthMismatch: "Input arrays must have the same length",
+  BatchTooLarge: "Batch size exceeds the maximum allowed",
+  EnforcedPause: "Contract is currently paused",
+
+  // VettedToken
+  ExceedsMaxSupply: "Exceeds maximum token supply",
+  ExceedsAbsoluteMaxSupply: "Exceeds absolute maximum token supply",
+  MaxSupplyBelowTotalSupply: "Max supply cannot be below current total supply",
+  ERC20InsufficientBalance: "Insufficient token balance",
+  ERC20InsufficientAllowance: "Insufficient token allowance — approve tokens first",
+
+  // ERC20Permit
+  ERC2612ExpiredSignature: "Permit signature has expired — please try again",
+  ERC2612InvalidSigner: "Invalid permit signature — please reconnect your wallet",
+
+  // ExpertStaking
   BelowMinimumStake: "Stake amount is below the minimum required",
   InsufficientStake: "Insufficient staked balance",
   CooldownNotExpired: "Cooldown period has not expired yet",
@@ -50,6 +67,11 @@ const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
   NotGuildMember: "You are not a member of this guild",
   StakeIsLocked: "Your stake is currently locked",
   InsufficientUnlockedStake: "Not enough unlocked stake available",
+  CooldownPeriodTooLong: "Cooldown period exceeds the maximum allowed",
+  CooldownPeriodTooShort: "Cooldown period is below the minimum allowed",
+  InvalidRecipient: "Invalid recipient address",
+  MinimumStakeTooHigh: "Minimum stake exceeds the maximum allowed",
+  NotInEmergencyMode: "Emergency mode is not active",
 
   // EndorsementBidding
   InvalidJob: "This job has not been initialized on-chain",
@@ -58,22 +80,68 @@ const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
   BidIsActive: "Cannot withdraw — bid is still active",
   NoBidToWithdraw: "No bid available to withdraw",
   JobClosed: "This job is no longer accepting endorsements",
-  Unauthorized: "You are not authorized for this action",
   SlashPercentageTooHigh: "Slash percentage exceeds the allowed maximum",
   AlreadySlashed: "This bid has already been slashed",
   AlreadyDistributed: "Rewards have already been distributed",
+  AlreadyReclaimed: "Bids have already been reclaimed",
+  BelowMinimumBid: "Bid amount is below the minimum required",
+  InsufficientBalance: "Insufficient token balance for this operation",
+  JobNotExpired: "Job has not expired yet",
+  NoActiveEndorsers: "No active endorsers found for this job",
+  ReclaimDeadlineNotReached: "Reclaim deadline has not been reached yet",
 
-  // ERC20Permit
-  ERC2612ExpiredSignature: "Permit signature has expired — please try again",
-  ERC2612InvalidSigner: "Invalid permit signature — please reconnect your wallet",
+  // ReputationManager
+  ChangeTooLarge: "Reputation change exceeds the maximum allowed per call",
+  DecayAmountTooLarge: "Reputation decay amount is too large",
 
   // RewardDistributor
-  ArrayLengthMismatch: "Input arrays must have the same length",
   InsufficientTreasury: "Insufficient funds in the treasury",
   NoRewardWeight: "No reward weight assigned — earn reputation first",
-  BatchTooLarge: "Batch size exceeds the maximum allowed",
   DuplicateExpert: "Duplicate expert in the batch",
   ReputationManagerNotSet: "Reputation manager contract is not configured",
+
+  // SlashingManager
+  AlreadyAppealed: "This slashing has already been appealed",
+  AlreadyResolved: "This appeal has already been resolved",
+  AppealPeriodExpired: "The appeal period has expired",
+  AppealResolutionExpired: "The appeal resolution period has expired",
+  AppealResolutionNotExpired: "The appeal resolution period has not expired yet",
+  InsufficientEscrowBalance: "Insufficient balance in escrow",
+  NoActiveAppeal: "No active appeal found",
+  NotSlashedExpert: "Only the slashed expert can perform this action",
+  SlashingPercentageTooHigh: "Slashing percentage exceeds the allowed maximum",
+
+  // GuildRegistry
+  AlreadyMember: "This address is already a guild member",
+  NotMember: "This address is not a guild member",
+  GuildAlreadyExists: "A guild with this ID already exists",
+  GuildDoesNotExist: "This guild does not exist",
+  GuildNotActive: "This guild is not currently active",
+  GuildAlreadyActive: "This guild is already active",
+  GuildAlreadyInactive: "This guild is already inactive",
+
+  // VettingManager
+  AlreadyCommitted: "You have already committed a vote for this session",
+  AlreadyRevealed: "You have already revealed your vote",
+  CommitPeriodEnded: "The commit period has ended",
+  CommitPeriodNotEnded: "The commit period has not ended yet",
+  RevealPeriodNotEnded: "The reveal period has not ended yet",
+  InvalidCommitment: "Vote commitment does not match the revealed score",
+  InvalidPanelSize: "Panel size is outside the allowed range",
+  InvalidScore: "Score is outside the valid range",
+  InvalidSessionPhase: "Invalid session phase for this operation",
+  SessionAlreadyExists: "A session with this ID already exists",
+  SessionDoesNotExist: "This vetting session does not exist",
+  SessionDurationTooLong: "Session duration exceeds the maximum allowed",
+  NotPanelMember: "You are not a panel member for this session",
+  DuplicatePanelist: "Duplicate panelist in the panel",
+  DuplicateInResults: "Duplicate address in finalization results",
+  PanelSizeMismatch: "Results size does not match the panel size",
+  PanelistDidNotReveal: "A panelist did not reveal their vote",
+  ExpireGracePeriodNotElapsed: "Grace period for expiration has not elapsed",
+  NotAuthorizedToExpire: "Not authorized to expire this session",
+  InsufficientPanelistStake: "Panelist does not meet the minimum stake requirement",
+  ZeroSessionId: "Session ID cannot be zero",
 };
 
 /**

@@ -463,14 +463,15 @@ export function useEndorsementBidding() {
 
 /**
  * Hook for reputation
+ * Uses getExpertReputation which returns (globalScore: int256, lastActivityTimestamp, totalVotes, alignedVotes, alignmentRate)
  */
 export function useReputation() {
   const { address } = useAccount();
 
-  const { data: reputationScore, refetch: refetchReputation } = useReadContract({
+  const { data: reputationData, refetch: refetchReputation } = useReadContract({
     address: CONTRACT_ADDRESSES.REPUTATION,
     abi: REPUTATION_MANAGER_ABI,
-    functionName: 'reputation',
+    functionName: 'getExpertReputation',
     args: address ? [address] : undefined,
     query: {
       refetchInterval: false,
@@ -478,8 +479,17 @@ export function useReputation() {
     },
   });
 
+  // Parse the tuple result: [globalScore, lastActivityTimestamp, totalVotes, alignedVotes, alignmentRate]
+  const parsed = reputationData as [bigint, bigint, bigint, bigint, bigint] | undefined;
+
   return {
-    reputationScore,
+    /** Global reputation score (signed — can be negative) */
+    reputationScore: parsed?.[0],
+    lastActivityTimestamp: parsed?.[1],
+    totalVotes: parsed?.[2],
+    alignedVotes: parsed?.[3],
+    /** Alignment rate as percentage (0-100) */
+    alignmentRate: parsed?.[4],
     refetchReputation,
   };
 }
