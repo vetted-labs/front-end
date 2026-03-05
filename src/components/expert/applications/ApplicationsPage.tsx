@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Inbox, Plus } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import {
@@ -470,6 +470,7 @@ export default function ApplicationsPage() {
           </div>
         ) : activeItems.length === 0 ? (
           <EmptyState
+            icon={Inbox}
             title={
               activeTab === "expert" ? "No expert applications"
                 : activeTab === "candidate" ? "No candidate applications"
