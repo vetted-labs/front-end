@@ -2,61 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, CheckCircle, XCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote } from "lucide-react";
+import { UserPlus, CheckCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
-import type { GuildApplication } from "@/types";
+import type { GuildApplication, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 const ITEMS_PER_SECTION = 10;
-
-interface ExpertMembershipApplication {
-  id: string;
-  fullName: string;
-  email: string;
-  walletAddress: string;
-  linkedinUrl: string;
-  portfolioUrl?: string;
-  resumeUrl?: string;
-  expertiseLevel: string;
-  yearsOfExperience: number;
-  currentTitle: string;
-  currentCompany: string;
-  bio: string;
-  motivation: string;
-  expertiseAreas: string[];
-  appliedAt: string;
-  reviewCount: number;
-  approvalCount: number;
-  rejectionCount: number;
-}
-
-interface CandidateApplication {
-  id: string;
-  candidateName: string;
-  candidateEmail: string;
-  status: string;
-  expertiseLevel: string;
-  applicationResponses: Record<string, unknown>;
-  resumeUrl?: string | null;
-  submittedAt: string;
-  reviewCount: number;
-  approvalCount: number;
-  rejectionCount: number;
-  jobTitle: string | null;
-  jobId: string | null;
-  expertHasReviewed: boolean;
-}
 
 interface GuildMembershipApplicationsTabProps {
   guildId: string;
   guildName: string;
   guildApplications: ExpertMembershipApplication[];
-  candidateApplications: CandidateApplication[];
+  candidateApplications: CandidateGuildApplication[];
   onReviewApplication: (application: ExpertMembershipApplication) => void;
-  onReviewCandidateApplication: (application: CandidateApplication) => void;
+  onReviewCandidateApplication: (application: CandidateGuildApplication) => void;
   isStaked?: boolean;
   onStakeClick?: () => void;
 }
@@ -280,18 +242,10 @@ export function GuildMembershipApplicationsTab({
                     </div>
 
                     <div className="shrink-0 flex flex-col items-end gap-3">
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="flex items-center text-green-400">
-                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                          <span className="font-semibold">{application.approvalCount}</span>
-                        </div>
-                        <div className="flex items-center text-red-400">
-                          <XCircle className="w-3.5 h-3.5 mr-1" />
-                          <span className="font-semibold">{application.rejectionCount}</span>
-                        </div>
-                        <span className="text-muted-foreground">
-                          ({application.reviewCount})
-                        </span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="font-semibold">{application.reviewCount}</span>
+                        <span>reviewed</span>
                       </div>
 
                       <Button
@@ -392,18 +346,10 @@ export function GuildMembershipApplicationsTab({
                     </div>
 
                     <div className="shrink-0 flex flex-col items-end gap-3">
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="flex items-center text-green-400">
-                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                          <span className="font-semibold">{application.approvalCount}</span>
-                        </div>
-                        <div className="flex items-center text-red-400">
-                          <XCircle className="w-3.5 h-3.5 mr-1" />
-                          <span className="font-semibold">{application.rejectionCount}</span>
-                        </div>
-                        <span className="text-muted-foreground">
-                          ({application.reviewCount})
-                        </span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="font-semibold">{application.reviewCount}</span>
+                        <span>reviewed</span>
                       </div>
 
                       {application.expertHasReviewed ? (

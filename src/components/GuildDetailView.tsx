@@ -30,7 +30,8 @@ const StakingModal = dynamic(
   () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
   { ssr: false }
 );
-import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, LeaderboardEntry } from "@/types";
+import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
+import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 /** Extended guild detail response from expertApi.getGuildDetails — the backend returns more fields than the ExpertGuild type declares. */
 interface ExpertGuildDetailResponse {
@@ -73,27 +74,7 @@ interface Earnings {
   }>;
 }
 
-interface ExpertMembershipApplication {
-  id: string;
-  fullName: string;
-  email: string;
-  walletAddress: string;
-  linkedinUrl: string;
-  portfolioUrl?: string;
-  resumeUrl?: string;
-  expertiseLevel: string;
-  yearsOfExperience: number;
-  currentTitle: string;
-  currentCompany: string;
-  bio: string;
-  motivation: string;
-  expertiseAreas: string[];
-  appliedAt: string;
-  reviewCount: number;
-  approvalCount: number;
-  rejectionCount: number;
-  applicationResponses?: Record<string, unknown>;
-}
+// ExpertMembershipApplication imported from @/types
 
 interface LeaderboardExpert {
   id: string;
@@ -117,32 +98,8 @@ interface Activity {
   details: string;
 }
 
-/** Candidate application shape returned by the candidate-applications endpoint — includes both review and listing fields. */
-interface CandidateApplicationForReview {
-  id: string;
-  candidateName: string;
-  candidateEmail: string;
-  status: string;
-  expertiseLevel: string;
-  applicationResponses: Record<string, unknown>;
-  resumeUrl?: string | null;
-  submittedAt: string;
-  reviewCount: number;
-  approvalCount: number;
-  rejectionCount: number;
-  jobTitle: string | null;
-  jobId: string | null;
-  expertHasReviewed: boolean;
-  // Additional fields used for review mapping
-  linkedinUrl?: string;
-  currentTitle?: string;
-  currentCompany?: string;
-  bio?: string;
-  motivation?: string;
-  expertiseAreas?: string[];
-  yearsOfExperience?: number;
-  requiredStake?: number;
-}
+// CandidateGuildApplication imported from @/types — used as CandidateApplicationForReview
+type CandidateApplicationForReview = CandidateGuildApplication;
 
 interface GuildDetail {
   id: string;
@@ -378,14 +335,20 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (!guild || autoOpenedReview) return;
     const applicationId = searchParams?.get("applicationId");
     if (!applicationId) return;
-    const target = guild.guildApplications?.find((app) => app.id === applicationId);
-    if (target) {
-      setSelectedExpertMembershipApplication(target);
-      setShowReviewModal(true);
-      setActiveTab("membershipApplications");
-      setAutoOpenedReview(true);
+
+    // Always navigate to the membership applications tab
+    setActiveTab("membershipApplications");
+    setAutoOpenedReview(true);
+
+    // Only auto-open the review modal if the expert has staked
+    if (stakingStatus?.meetsMinimum) {
+      const target = guild.guildApplications?.find((app) => app.id === applicationId);
+      if (target) {
+        setSelectedExpertMembershipApplication(target);
+        setShowReviewModal(true);
+      }
     }
-  }, [guild, autoOpenedReview, searchParams]);
+  }, [guild, autoOpenedReview, searchParams, stakingStatus]);
 
   const fetchLeaderboard = async () => {
     if (!address || isLoadingLeaderboard) return;
@@ -531,61 +494,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       toast.info("You need to stake VETD tokens first to unlock reviewing.");
       return;
     }
-    // Transform flat answer format to nested format expected by review modal
-    // Flat: { "learning_from_failure.event": "...", "domain.topicId": "..." }
-    // Nested: { general: { learningFromFailure: { event: "..." } }, domain: { topics: { topicId: "..." } }, level: "..." }
-    const flatAnswers = candidateApp.applicationResponses || {};
-    const generalKeyMap: Record<string, string> = {
-      learning_from_failure: "learningFromFailure",
-      decision_under_uncertainty: "decisionUnderUncertainty",
-      motivation_and_conflict: "motivationAndConflict",
-      guild_improvement: "guildImprovement",
-    };
-
-    const general: Record<string, string | Record<string, string>> = {};
-    const domainTopics: Record<string, string> = {};
-
-    Object.entries(flatAnswers).forEach(([key, value]) => {
-      if (key.startsWith("domain.")) {
-        const topicId = key.replace("domain.", "");
-        domainTopics[topicId] = value as string;
-      } else if (key.includes(".")) {
-        const [questionId, partId] = key.split(".");
-        const camelKey = generalKeyMap[questionId] || questionId;
-        if (!general[camelKey] || typeof general[camelKey] === "string") general[camelKey] = {};
-        (general[camelKey] as Record<string, string>)[partId] = value as string;
-      } else {
-        const camelKey = generalKeyMap[key] || key;
-        general[camelKey] = value as string;
-      }
-    });
-
-    const structuredResponses = {
-      general,
-      domain: { topics: domainTopics },
-      level: candidateApp.expertiseLevel || "",
-    };
-
-    const mapped: ExpertMembershipApplication = {
-      id: candidateApp.id,
-      fullName: candidateApp.candidateName,
-      email: candidateApp.candidateEmail,
-      walletAddress: "",
-      linkedinUrl: candidateApp.linkedinUrl || "",
-      resumeUrl: candidateApp.resumeUrl || undefined,
-      expertiseLevel: candidateApp.expertiseLevel || "entry",
-      yearsOfExperience: candidateApp.yearsOfExperience || 0,
-      currentTitle: candidateApp.jobTitle ? `Applying for: ${candidateApp.jobTitle}` : (candidateApp.currentTitle || "Candidate"),
-      currentCompany: candidateApp.currentCompany || "",
-      bio: candidateApp.bio || "",
-      motivation: candidateApp.motivation || "",
-      expertiseAreas: candidateApp.expertiseAreas || [],
-      appliedAt: candidateApp.submittedAt,
-      reviewCount: candidateApp.reviewCount || 0,
-      approvalCount: candidateApp.approvalCount || 0,
-      rejectionCount: candidateApp.rejectionCount || 0,
-      applicationResponses: structuredResponses,
-    };
+    const mapped = mapCandidateToReviewApplication(candidateApp);
     setSelectedExpertMembershipApplication(mapped);
     setApplicationReviewType("candidate");
     setShowReviewModal(true);

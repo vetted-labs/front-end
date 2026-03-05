@@ -143,3 +143,4 @@ export type {
   ReviewSubmitResponse,
 } from "./rubric";
 export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";
+export type { ExpertMembershipApplication, CandidateGuildApplication } from "./review";
