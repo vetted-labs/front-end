@@ -10,14 +10,16 @@ type ExpertStatus = string | null;
  * Centralizes all reads/writes of `localStorage.getItem("expertStatus")`.
  * Provides cross-tab sync via the `storage` event and an in-tab custom event
  * so components in the same tab stay in sync when the value changes.
+ *
+ * Defers the initial read to useEffect to avoid SSR hydration mismatches.
  */
 export function useExpertStatus() {
-  const [status, setStatus] = useState<ExpertStatus>(() => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(STORAGE_KEY);
-  });
+  const [status, setStatus] = useState<ExpertStatus>(null);
 
+  // Read from localStorage after mount (SSR-safe)
   useEffect(() => {
+    setStatus(localStorage.getItem(STORAGE_KEY));
+
     // Cross-tab sync
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
