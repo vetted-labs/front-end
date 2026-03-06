@@ -73,7 +73,7 @@ export function DialogContent({ children, className }: DialogContentProps) {
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
           className={cn(
-            "relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full max-w-2xl border border-border/60",
+            "relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] border border-border/60",
             "dark:bg-card/95 dark:backdrop-blur-xl dark:border-white/[0.08]",
             className
           )}

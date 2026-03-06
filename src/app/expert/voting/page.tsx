@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import VotingPage from "@/components/expert/VotingPage";
 
 export default function Page() {
-  return <VotingPage />;
+  return (
+    <Suspense>
+      <VotingPage />
+    </Suspense>
+  );
 }

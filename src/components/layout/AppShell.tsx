@@ -26,15 +26,13 @@ function ShellContent({ config, children }: AppShellProps) {
         )}
       >
         <MobileTopBar config={config} />
+        {/* Desktop notification bell — fixed position so it's never clipped by overflow */}
+        {config.variant === "expert" && (
+          <div className="fixed top-4 right-6 z-30 hidden md:block">
+            <NotificationBell />
+          </div>
+        )}
         <main className="relative flex-1 overflow-auto content-gradient min-h-screen">
-          {/* Desktop notification bell — floats over content */}
-          {config.variant === "expert" && (
-            <div className="sticky top-0 z-20 hidden h-0 items-center justify-end px-6 md:flex">
-              <div className="relative -top-0 mt-4">
-                <NotificationBell />
-              </div>
-            </div>
-          )}
           {children}
         </main>
       </div>

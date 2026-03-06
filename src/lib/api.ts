@@ -572,6 +572,11 @@ export const expertApi = {
       body: JSON.stringify(data),
     }),
 
+  getMyExpertApplicationReview: (applicationId: string, wallet: string) =>
+    apiRequest<import("@/types").MyReviewData>(
+      `/api/experts/guild-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`
+    ),
+
   saveGuildTemplate: (guildId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/experts/guilds/${guildId}/templates`, {
       method: "POST",
@@ -712,6 +717,11 @@ export const guildsApi = {
       body: JSON.stringify(data),
     });
   },
+
+  getMyCandidateApplicationReview: (applicationId: string, wallet: string) =>
+    apiRequest<import("@/types").MyReviewData>(
+      `/api/guilds/candidate-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`
+    ),
 
   // Get guild members (experts + candidates)
   getMembers: (guildId: string, params?: { role?: string; limit?: number }) => {
@@ -1105,6 +1115,11 @@ export const guildApplicationsApi = {
       stakeAmount: number;
       comment?: string;
       txHash?: string;
+      // Structured review data (from rubric modal)
+      criteriaScores?: Record<string, unknown>;
+      criteriaJustifications?: Record<string, unknown>;
+      overallScore?: number;
+      redFlagDeductions?: number;
     }
   ) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/vote`, {
@@ -1143,8 +1158,11 @@ export const guildApplicationsApi = {
     apiRequest<import("@/types").VoteHistoryItem | null>(`/api/proposals/${applicationId}/vote/${expertId}`),
 
   // Get guild applications assigned to a specific expert
-  getAssigned: async (expertId: string, guildId?: string) => {
-    const query = guildId ? `?guildId=${guildId}` : "";
+  getAssigned: async (expertId: string, guildId?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (guildId) params.set("guildId", guildId);
+    if (status) params.set("status", status);
+    const query = params.toString() ? `?${params.toString()}` : "";
     const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/assigned/${expertId}${query}`);
     return data.map(mapProposalToGuildApplication);
   },

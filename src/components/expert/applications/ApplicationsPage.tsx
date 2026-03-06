@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { expertApi, guildsApi, guildApplicationsApi, blockchainApi } from "@/lib/api";
-import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
+import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { Pagination } from "@/components/ui/pagination";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { EmptyState } from "@/components/ui/empty-state";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Inbox, Plus } from "lucide-react";
+import { ArrowRight, Coins, History, Inbox, Shield } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import {
@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { StructuredProposalForm, StructuredProposalData } from "@/components/StructuredProposalForm";
+import { ViewReviewModal } from "./ViewReviewModal";
 import { ApplicationsStatsRow } from "./ApplicationsStatsRow";
 import { ExpertReviewCard } from "./ExpertReviewCard";
 import { CandidateReviewCard } from "./CandidateReviewCard";
@@ -35,7 +35,7 @@ import type {
   CandidateGuildApplication,
   GuildApplication,
   ExpertProfile,
-  StakeBalance,
+  GuildStakeInfo,
 } from "@/types";
 import type { ReviewSubmitPayload, ReviewSubmitResponse } from "@/types";
 
@@ -46,10 +46,11 @@ const ReviewGuildApplicationModal = dynamic(
 
 const ALL_GUILDS = { id: "all", name: "All Guilds" } as const;
 
-type TabType = "expert" | "candidate" | "proposals";
+type TabType = "expert" | "candidate" | "proposals" | "history";
 
 export default function ApplicationsPage() {
   const { address: wagmiAddress } = useAccount();
+  const searchParams = useSearchParams();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
   const { guilds: guildRecords } = useGuilds();
@@ -57,14 +58,19 @@ export default function ApplicationsPage() {
   const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string }>(ALL_GUILDS);
   const [filterMode, setFilterMode] = useState<"assigned" | "all">("assigned");
   const [activeTab, setActiveTab] = useState<TabType>("expert");
-  const [voting, setVoting] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedReviewApp, setSelectedReviewApp] = useState<ExpertMembershipApplication | null>(null);
-  const [reviewType, setReviewType] = useState<"expert" | "candidate">("expert");
+  const [reviewType, setReviewType] = useState<"expert" | "candidate" | "proposal">("expert");
+  const [reviewProposalContext, setReviewProposalContext] = useState<{ requiredStake: number } | undefined>();
   const [isReviewing, setIsReviewing] = useState(false);
+
+  // View review modal state
+  const [showViewReview, setShowViewReview] = useState(false);
+  const [viewReviewAppId, setViewReviewAppId] = useState<string | null>(null);
+  const [viewReviewApplicantName, setViewReviewApplicantName] = useState("");
+  const [viewReviewType, setViewReviewType] = useState<"expert" | "candidate">("expert");
 
   const isAllGuilds = selectedGuild.id === "all";
 
@@ -74,11 +80,22 @@ export default function ApplicationsPage() {
     { skip: !address, onError: (err) => toast.error(err) },
   );
 
-  // Staking status
-  const { data: stakingStatus } = useFetch<StakeBalance>(
-    () => blockchainApi.getStakeBalance(address as string),
+  // Per-guild staking data
+  const { data: guildStakes } = useFetch<GuildStakeInfo[]>(
+    () => blockchainApi.getExpertGuildStakes(address as string),
     { skip: !address },
   );
+
+  const stakedGuildIds = useMemo(() => {
+    if (!guildStakes) return new Set<string>();
+    return new Set(guildStakes.filter(s => parseFloat(s.stakedAmount) > 0).map(s => s.guildId));
+  }, [guildStakes]);
+
+  const isStakedInGuild = (guildId?: string) => {
+    if (!guildId) return stakedGuildIds.size > 0;
+    return stakedGuildIds.has(guildId);
+  };
+  const hasAnyStake = stakedGuildIds.size > 0;
 
   // Expert membership applications (across all guilds)
   const { data: expertAppsRaw, isLoading: expertAppsLoading, refetch: refetchExpertApps } = useFetch<ExpertMembershipApplication[]>(
@@ -141,23 +158,48 @@ export default function ApplicationsPage() {
     { onError: (err) => toast.error(err) },
   );
 
-  const voteApi = useApi();
-  const createApi = useApi();
+  // History: finalized proposals the expert voted on
+  const { data: historyProposalsRaw, isLoading: historyLoading, refetch: refetchHistory } = useFetch<GuildApplication[]>(
+    async () => {
+      if (!expertData?.id) return [];
+      const all = await guildApplicationsApi.getAssigned(
+        expertData.id,
+        isAllGuilds ? undefined : selectedGuild.id,
+        "all",
+      );
+      return all.filter((p) => p.finalized && p.has_voted);
+    },
+    { onError: (err) => toast.error(err) },
+  );
 
   // Expert apps — membership apps have no assigned field, so no filtering needed
   const expertApps = expertAppsRaw ?? [];
 
-  // Filter candidate apps
-  const candidateApps = useMemo(() => {
-    const apps = candidateAppsRaw ?? [];
-    if (filterMode === "assigned") return apps.filter((a) => !a.expertHasReviewed);
-    return apps;
-  }, [candidateAppsRaw, filterMode]);
+  // Candidate apps — show all (including reviewed) so experts can view their past reviews
+  const candidateApps = candidateAppsRaw ?? [];
 
   const proposals = proposalsRaw ?? [];
 
+  // History: combine finalized proposals + reviewed candidate apps
+  const historyItems = useMemo(() => {
+    const finalized = historyProposalsRaw ?? [];
+    const reviewedCandidateApps = (candidateAppsRaw ?? []).filter((a) => a.expertHasReviewed);
+    return { proposals: finalized, candidateApps: reviewedCandidateApps };
+  }, [historyProposalsRaw, candidateAppsRaw]);
+
+  const historyCount = historyItems.proposals.length + historyItems.candidateApps.length;
+
+  // Unified history list for pagination (proposals first, then candidate reviews, both by date desc)
+  const historyList = useMemo(() => {
+    const items: Array<{ type: "proposal"; data: GuildApplication; sortDate: string } | { type: "candidate"; data: CandidateGuildApplication; sortDate: string }> = [
+      ...historyItems.proposals.map((p) => ({ type: "proposal" as const, data: p, sortDate: p.created_at })),
+      ...historyItems.candidateApps.map((a) => ({ type: "candidate" as const, data: a, sortDate: a.submittedAt })),
+    ];
+    return items.sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime());
+  }, [historyItems]);
+
   // Pagination for the active tab
-  const activeItems = activeTab === "expert" ? expertApps : activeTab === "candidate" ? candidateApps : proposals;
+  const activeItems = activeTab === "history" ? historyList : activeTab === "expert" ? expertApps : activeTab === "candidate" ? candidateApps : proposals;
   const {
     paginatedItems,
     currentPage,
@@ -166,25 +208,34 @@ export default function ApplicationsPage() {
     resetPage,
   } = useClientPagination(activeItems, 10);
 
+  // Pre-select guild from URL query param
+  useEffect(() => {
+    const guildParam = searchParams.get("guild");
+    if (guildParam && guildRecords.length > 0) {
+      const match = guildRecords.find((g) => g.id === guildParam);
+      if (match) setSelectedGuild(match);
+    }
+  }, [searchParams, guildRecords]);
+
   // Refetch on filter/guild change
   useEffect(() => {
     resetPage();
     refetchExpertApps();
     refetchCandidateApps();
     refetchProposals();
+    refetchHistory();
   }, [selectedGuild, filterMode, expertData, guildRecords]);
 
   // Stats
-  const pendingReviews = (expertApps?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
+  const pendingReviews = (expertApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
   const proposalsToVote = proposals.filter((p) => p.is_assigned_reviewer && !p.has_voted).length;
-  const completedReviews = (candidateApps?.filter((a) => a.expertHasReviewed)?.length ?? 0)
-    + proposals.filter((p) => p.has_voted).length;
+  const completedReviews = historyCount;
   const guildsActive = guildRecords.length;
 
   // Handlers
   const handleReviewExpert = (application: ExpertMembershipApplication) => {
-    if (!stakingStatus?.meetsMinimum) {
-      toast.info("You need to stake VETD tokens first to unlock reviewing.");
+    if (!isStakedInGuild(application.guildId)) {
+      toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
     }
     setSelectedReviewApp(application);
@@ -193,8 +244,8 @@ export default function ApplicationsPage() {
   };
 
   const handleReviewCandidate = (candidateApp: CandidateGuildApplication) => {
-    if (!stakingStatus?.meetsMinimum) {
-      toast.info("You need to stake VETD tokens first to unlock reviewing.");
+    if (!isStakedInGuild(candidateApp.guildId)) {
+      toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
     }
     const mapped = mapCandidateToReviewApplication(candidateApp);
@@ -203,11 +254,60 @@ export default function ApplicationsPage() {
     setShowReviewModal(true);
   };
 
+  const handleViewExpertReview = (application: ExpertMembershipApplication) => {
+    setViewReviewAppId(application.id);
+    setViewReviewApplicantName(application.fullName);
+    setViewReviewType("expert");
+    setShowViewReview(true);
+  };
+
+  const handleViewCandidateReview = (candidateApp: CandidateGuildApplication) => {
+    setViewReviewAppId(candidateApp.id);
+    setViewReviewApplicantName(candidateApp.candidateName);
+    setViewReviewType("candidate");
+    setShowViewReview(true);
+  };
+
+  const handleReviewProposal = (proposal: GuildApplication) => {
+    if (!isStakedInGuild(proposal.guild_id)) {
+      toast.info("You need to stake VETD tokens in this guild to vote.");
+      return;
+    }
+    const mapped = mapProposalToReviewApplication(proposal);
+    setSelectedReviewApp(mapped);
+    setReviewType("proposal");
+    setReviewProposalContext({ requiredStake: proposal.required_stake });
+    setShowReviewModal(true);
+  };
+
   const handleSubmitReview = async (payload: ReviewSubmitPayload): Promise<ReviewSubmitResponse | void> => {
     if (!selectedReviewApp || !address) return;
 
     setIsReviewing(true);
     try {
+      if (reviewType === "proposal") {
+        if (!expertData) throw new Error("Expert data not loaded");
+
+        // Normalize rubric score to 0-100 for the vote API
+        const scores = payload.criteriaScores as { overallMax?: number; overallScore?: number };
+        const overallMax = (scores.overallMax as number) || 1;
+        const normalizedScore = Math.round((payload.overallScore / overallMax) * 100);
+
+        await guildApplicationsApi.vote(selectedReviewApp.id, {
+          expertId: expertData.id,
+          score: normalizedScore,
+          stakeAmount: payload.stakeAmount ?? 0,
+          comment: payload.feedback,
+          criteriaScores: payload.criteriaScores,
+          criteriaJustifications: payload.criteriaJustifications,
+          overallScore: payload.overallScore,
+          redFlagDeductions: payload.redFlagDeductions,
+        });
+
+        refetchProposals();
+        return { message: "Your vote has been recorded with structured review data." };
+      }
+
       const reviewData = {
         walletAddress: address,
         feedback: payload.feedback || undefined,
@@ -234,61 +334,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleVote = async (proposalId: string, score: number, stakeAmount: number, comment: string) => {
-    if (!expertData) {
-      toast.error("Expert data not loaded");
-      return;
-    }
-    if (!stakingStatus?.meetsMinimum) {
-      toast.error("You must stake the minimum VETD amount to vote");
-      return;
-    }
-
-    await voteApi.execute(
-      () => guildApplicationsApi.vote(proposalId, {
-        expertId: expertData.id,
-        score,
-        stakeAmount,
-        comment,
-      }),
-      {
-        onSuccess: () => {
-          toast.success("Score submitted successfully!");
-          setVoting(null);
-          refetchProposals();
-        },
-        onError: (err) => toast.error(err),
-      },
-    );
-  };
-
-  const handleCreateProposal = async (data: StructuredProposalData) => {
-    if (isAllGuilds) return;
-
-    await createApi.execute(
-      () => guildApplicationsApi.create({
-        guildId: selectedGuild.id,
-        candidateName: data.candidateName,
-        candidateEmail: data.candidateEmail,
-        yearsOfExperience: data.yearsOfExperience,
-        skillsSummary: data.skillsSummary,
-        experienceSummary: data.experienceSummary,
-        motivationStatement: data.motivationStatement,
-        credibilityEvidence: data.credibilityEvidence,
-        achievements: data.achievements,
-        requiredStake: data.requiredStake,
-        votingDurationDays: data.votingDurationDays,
-      }),
-      {
-        onSuccess: () => {
-          toast.success("Application created successfully!");
-          setShowCreateForm(false);
-          refetchProposals();
-        },
-        onError: (err) => toast.error(err),
-      },
-    );
-  };
 
   if (!address) {
     return (
@@ -300,7 +345,8 @@ export default function ApplicationsPage() {
 
   const isLoading = activeTab === "expert" ? expertAppsLoading
     : activeTab === "candidate" ? candidateAppsLoading
-    : proposalsLoading;
+    : activeTab === "proposals" ? proposalsLoading
+    : historyLoading;
 
   const tabs: { value: TabType; label: React.ReactNode }[] = [
     {
@@ -308,9 +354,9 @@ export default function ApplicationsPage() {
       label: (
         <>
           Expert Reviews
-          {expertApps.length > 0 && (
+          {expertApps.filter((a) => !a.expertHasReviewed).length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
-              {expertApps.length}
+              {expertApps.filter((a) => !a.expertHasReviewed).length}
             </span>
           )}
         </>
@@ -342,6 +388,19 @@ export default function ApplicationsPage() {
         </>
       ),
     },
+    {
+      value: "history",
+      label: (
+        <>
+          History
+          {historyCount > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 bg-muted text-muted-foreground text-xs font-semibold rounded-full">
+              {historyCount}
+            </span>
+          )}
+        </>
+      ),
+    },
   ];
 
   return (
@@ -364,124 +423,123 @@ export default function ApplicationsPage() {
         />
 
         {/* Staking Warning */}
-        {stakingStatus && !stakingStatus.meetsMinimum && (
-          <Card className="border-amber-500/50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Staking Required to Review</p>
-                  <p className="text-sm text-muted-foreground">
-                    You must stake VETD tokens to participate in reviews and voting.
-                    Current stake: {stakingStatus.stakedAmount || "0"} VETD.
-                  </p>
-                </div>
-                <Button variant="default" size="sm">
-                  Stake VETD
+        {guildStakes && !hasAnyStake && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+                <Shield className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-foreground mb-1">
+                  Stake VETD to Start Reviewing
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  To review applications and vote on proposals, you need to stake VETD tokens in at least one guild. Your stake will be returned after reviews, with bonus rewards if you vote with the majority.
+                </p>
+                <Button>
+                  <Coins className="w-4 h-4 mr-2" />
+                  Stake VETD Tokens
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
-        {/* Filters */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <Select
-            value={selectedGuild.id}
-            onValueChange={(value) => {
-              if (value === "all") {
-                setSelectedGuild(ALL_GUILDS);
-              } else {
-                const guild = guildRecords.find((g) => g.id === value);
-                if (guild) setSelectedGuild(guild);
-              }
-            }}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Guilds" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Guilds</SelectItem>
-              {guildRecords.map((guild) => (
-                <SelectItem key={guild.id} value={guild.id}>
-                  {guild.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Tabs + Filters */}
+        <div className="space-y-4">
+          <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); resetPage(); }} />
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant={filterMode === "assigned" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterMode("assigned")}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Select
+              value={selectedGuild.id}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  setSelectedGuild(ALL_GUILDS);
+                } else {
+                  const guild = guildRecords.find((g) => g.id === value);
+                  if (guild) setSelectedGuild(guild);
+                }
+              }}
             >
-              Assigned to Me
-            </Button>
-            <Button
-              variant={filterMode === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterMode("all")}
-            >
-              All
-            </Button>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder="All Guilds" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Guilds</SelectItem>
+                {guildRecords.map((guild) => (
+                  <SelectItem key={guild.id} value={guild.id}>
+                    {guild.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {activeTab === "proposals" && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowCreateForm(!showCreateForm)}
-                disabled={isAllGuilds}
-                title={isAllGuilds ? "Select a specific guild to create a proposal" : undefined}
+            <div className="flex items-center rounded-lg border border-border/60 overflow-hidden">
+              <button
+                onClick={() => setFilterMode("assigned")}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  filterMode === "assigned"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Create Proposal
-              </Button>
-            )}
+                Assigned
+              </button>
+              <button
+                onClick={() => setFilterMode("all")}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  filterMode === "all"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                All
+              </button>
+            </div>
+
           </div>
         </div>
-
-        {/* Tabs */}
-        <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); resetPage(); }} />
-
-        {/* Create Proposal Form */}
-        {showCreateForm && !isAllGuilds && activeTab === "proposals" && (
-          <StructuredProposalForm
-            guildId={selectedGuild.id}
-            guildName={selectedGuild.name}
-            onSubmit={handleCreateProposal}
-            onCancel={() => setShowCreateForm(false)}
-          />
-        )}
 
         {/* Content */}
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="border border-border bg-card p-5 space-y-3 animate-pulse">
-                <div className="h-5 w-2/3 rounded bg-muted/60" />
-                <div className="h-3 w-1/2 rounded bg-muted/60" />
-                <div className="flex gap-2">
-                  <div className="h-6 w-20 rounded bg-muted/60" />
-                  <div className="h-6 w-16 rounded bg-muted/60" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 animate-pulse dark:bg-card/40 dark:border-white/[0.06]">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-36 rounded-md bg-muted/50" />
+                      <div className="h-5 w-16 rounded-full bg-muted/40" />
+                    </div>
+                    <div className="h-3 w-48 rounded bg-muted/40" />
+                    <div className="flex gap-3 mt-1">
+                      <div className="h-3 w-20 rounded bg-muted/30" />
+                      <div className="h-3 w-24 rounded bg-muted/30" />
+                    </div>
+                  </div>
+                  <div className="h-8 w-20 rounded-lg bg-muted/40" />
                 </div>
               </div>
             ))}
           </div>
         ) : activeItems.length === 0 ? (
           <EmptyState
-            icon={Inbox}
+            icon={activeTab === "history" ? History : Inbox}
             title={
               activeTab === "expert" ? "No expert applications"
                 : activeTab === "candidate" ? "No candidate applications"
-                : "No proposals"
+                : activeTab === "proposals" ? "No proposals"
+                : "No completed reviews"
             }
             description={
-              filterMode === "assigned"
-                ? "No items assigned to you right now."
-                : isAllGuilds
-                  ? "No items across your guilds."
-                  : `No items in ${selectedGuild.name}.`
+              activeTab === "history"
+                ? "Completed reviews and finalized proposals will appear here."
+                : filterMode === "assigned"
+                  ? "No items assigned to you right now."
+                  : isAllGuilds
+                    ? "No items across your guilds."
+                    : `No items in ${selectedGuild.name}.`
             }
           />
         ) : (
@@ -492,6 +550,7 @@ export default function ApplicationsPage() {
                   key={app.id}
                   application={app}
                   onReview={handleReviewExpert}
+                  onViewReview={handleViewExpertReview}
                   showGuildBadge={isAllGuilds}
                 />
               ))
@@ -503,6 +562,7 @@ export default function ApplicationsPage() {
                   key={app.id}
                   application={app}
                   onReview={handleReviewCandidate}
+                  onViewReview={handleViewCandidateReview}
                   showGuildBadge={isAllGuilds}
                 />
               ))
@@ -513,17 +573,33 @@ export default function ApplicationsPage() {
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}
-                  isVoting={voting === proposal.id}
-                  onStartVote={() => setVoting(proposal.id)}
-                  onCancelVote={() => setVoting(null)}
-                  onSubmitVote={(score, stakeAmount, comment) =>
-                    handleVote(proposal.id, score, stakeAmount, comment)
-                  }
-                  isSubmittingVote={voteApi.isLoading}
-                  meetsStakingRequirement={!!stakingStatus?.meetsMinimum}
+                  onReview={handleReviewProposal}
+                  meetsStakingRequirement={isStakedInGuild(proposal.guild_id)}
                   showGuildBadge={isAllGuilds}
                 />
               ))
+            )}
+
+            {activeTab === "history" && (
+              (paginatedItems as typeof historyList).map((item) =>
+                item.type === "proposal" ? (
+                  <ProposalCard
+                    key={`proposal-${item.data.id}`}
+                    proposal={item.data}
+                    onReview={handleReviewProposal}
+                    meetsStakingRequirement={false}
+                    showGuildBadge={isAllGuilds}
+                  />
+                ) : (
+                  <CandidateReviewCard
+                    key={`candidate-${item.data.id}`}
+                    application={item.data}
+                    onReview={() => {}}
+                    onViewReview={handleViewCandidateReview}
+                    showGuildBadge={isAllGuilds}
+                  />
+                )
+              )
             )}
 
             <Pagination
@@ -538,11 +614,22 @@ export default function ApplicationsPage() {
       {/* Review Modal */}
       <ReviewGuildApplicationModal
         isOpen={showReviewModal}
-        onClose={() => { setShowReviewModal(false); setSelectedReviewApp(null); }}
+        onClose={() => { setShowReviewModal(false); setSelectedReviewApp(null); setReviewProposalContext(undefined); }}
         application={selectedReviewApp}
         guildId={selectedReviewApp?.guildId || selectedGuild.id}
         onSubmitReview={handleSubmitReview}
         isReviewing={isReviewing}
+        proposalContext={reviewType === "proposal" ? reviewProposalContext : undefined}
+      />
+
+      {/* View Review Modal (read-only) */}
+      <ViewReviewModal
+        isOpen={showViewReview}
+        onClose={() => { setShowViewReview(false); setViewReviewAppId(null); }}
+        applicationId={viewReviewAppId}
+        applicantName={viewReviewApplicantName}
+        reviewType={viewReviewType}
+        walletAddress={address as string}
       />
     </div>
   );

@@ -160,10 +160,7 @@ export function GuildApplicationsTab({
                           <span className="text-sm font-medium">Staked</span>
                         </div>
                       ) : (
-                        <Button
-                          onClick={() => onStakeApplication(application)}
-                          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
-                        >
+                        <Button onClick={() => onStakeApplication(application)}>
                           <Lock className="w-4 h-4 mr-2" />
                           Stake to Participate
                         </Button>

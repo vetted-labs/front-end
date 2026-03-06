@@ -82,7 +82,7 @@ export function DomainReviewStep({
                   <div className="flex items-center gap-2.5">
                     <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
+                        className="h-full rounded-full bg-primary transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>

@@ -54,10 +54,10 @@ export function GuildMembershipApplicationsTab({
   return (
     <div className="space-y-4">
       {!isStaked && (expertCount > 0 || candidateCount > 0) && (
-        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-amber-500/5 p-6">
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+              <Shield className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-semibold text-foreground mb-1">
@@ -66,10 +66,7 @@ export function GuildMembershipApplicationsTab({
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                 To review applications, you need to stake VETD tokens in this guild. Your stake will be returned after reviews, with bonus rewards if you vote with the majority.
               </p>
-              <Button
-                onClick={onStakeClick}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0 shadow-lg shadow-amber-500/20"
-              >
+              <Button onClick={onStakeClick}>
                 <Coins className="w-4 h-4 mr-2" />
                 Stake VETD Tokens
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -131,7 +128,7 @@ export function GuildMembershipApplicationsTab({
                 Expert Proposals to Join Guild
               </h3>
               <p className="text-sm text-muted-foreground">
-                Review proposals from experts wanting to join {guildName}. 1+ approval
+                Review proposals from experts wanting to join {guildName}. 3 approvals
                 needed for auto-acceptance as &quot;Recruit&quot; member.
               </p>
             </div>
@@ -252,10 +249,6 @@ export function GuildMembershipApplicationsTab({
                         onClick={() => onReviewApplication(application)}
                         size="sm"
                         disabled={!isStaked}
-                        className={isStaked
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
-                          : "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50"
-                        }
                       >
                         <Users className="w-3.5 h-3.5 mr-1.5" />
                         Review
@@ -362,10 +355,6 @@ export function GuildMembershipApplicationsTab({
                           onClick={() => onReviewCandidateApplication(application)}
                           size="sm"
                           disabled={!isStaked}
-                          className={isStaked
-                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0"
-                            : "bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50"
-                          }
                         >
                           <Users className="w-3.5 h-3.5 mr-1.5" />
                           Review

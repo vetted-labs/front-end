@@ -66,6 +66,10 @@ export function GuildsOverview() {
     router.push(`/expert/guild/${guildId}`);
   };
 
+  const handleActionRequiredClick = (guildId: string) => {
+    router.push(`/expert/voting?guild=${guildId}`);
+  };
+
   const filteredGuilds = profileGuilds.filter((guild) => {
     const detailedInfo = getGuildDetailedInfo(guild.name);
     const searchLower = debouncedSearch.toLowerCase();
@@ -193,7 +197,7 @@ export function GuildsOverview() {
                   .map((guild) => (
                     <button
                       key={guild.id}
-                      onClick={() => handleGuildClick(guild.id)}
+                      onClick={() => handleActionRequiredClick(guild.id)}
                       className="w-full flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-primary/50 transition-all"
                     >
                       <div className="text-left">

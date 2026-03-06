@@ -15,7 +15,7 @@ import type {
   VoteHistoryItem,
   CandidateProfile,
   ExpertProfile,
-  StakeBalance,
+  GuildStakeInfo,
 } from "@/types";
 
 type CommitRevealPhaseType = "direct" | "commit" | "reveal" | "finalized";
@@ -35,7 +35,7 @@ interface VotingApplicationData {
   application: GuildApplication | null;
   expertData: ExpertProfile | null;
   candidateProfile: CandidateProfile | null;
-  stakingStatus: StakeBalance | null;
+  isStakedInGuild: boolean;
   crPhase: CommitRevealPhase | null;
   voteHistory: VoteHistoryItem[];
   loading: boolean;
@@ -55,14 +55,14 @@ export function useVotingApplicationData(
   /* -- initial data fetching (cascade) -- */
   const { data: initialData, isLoading: loading } = useFetch(
     async () => {
-      // 1. Fetch expert profile + staking status + CR phase in parallel (independent calls)
-      const [expert, staking, phase] = await Promise.all([
+      // 1. Fetch expert profile + guild stakes + CR phase in parallel (independent calls)
+      const [expert, guildStakes, phase] = await Promise.all([
         address
           ? expertApi.getProfile(address).catch(() => null)
           : Promise.resolve(null),
         address
-          ? blockchainApi.getStakeBalance(address).catch(() => null)
-          : Promise.resolve(null),
+          ? blockchainApi.getExpertGuildStakes(address).catch((): GuildStakeInfo[] => [])
+          : Promise.resolve([] as GuildStakeInfo[]),
         commitRevealApi.getPhaseStatus(applicationId).catch(() => null),
       ]);
 
@@ -82,7 +82,7 @@ export function useVotingApplicationData(
           : Promise.resolve([]),
       ]);
 
-      return { expert, staking, phase, app, candidate, votes };
+      return { expert, guildStakes, phase, app, candidate, votes };
     },
     {
       onSuccess: (result) => {
@@ -99,7 +99,14 @@ export function useVotingApplicationData(
 
   const expertData = initialData?.expert ?? null;
   const candidateProfile = initialData?.candidate ?? null;
-  const stakingStatus = initialData?.staking ?? null;
+
+  // Derive per-guild staking status
+  const isStakedInGuild = (() => {
+    if (!application || !initialData?.guildStakes) return false;
+    return initialData.guildStakes.some(
+      (s) => s.guildId === application.guild_id && parseFloat(s.stakedAmount) > 0
+    );
+  })();
 
   /* -- reload helpers for user-triggered refreshes -- */
   const loadPhaseStatus = useCallback(async () => {
@@ -135,7 +142,7 @@ export function useVotingApplicationData(
     application,
     expertData,
     candidateProfile,
-    stakingStatus,
+    isStakedInGuild,
     crPhase,
     voteHistory,
     loading,

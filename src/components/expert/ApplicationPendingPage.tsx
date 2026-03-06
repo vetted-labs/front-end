@@ -183,7 +183,7 @@ export default function ApplicationPendingPage() {
               <div>
                 <p className="font-semibold text-foreground mb-1">Auto-Approval System</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Your application needs <strong className="text-foreground">1+ approval</strong> from a guild member to be
+                  Your application needs <strong className="text-foreground">3 approvals</strong> from guild members to be
                   automatically accepted. Once approved, you&apos;ll get instant access to the expert
                   dashboard and join the guild as a &quot;Recruit&quot;.
                 </p>
@@ -219,7 +219,7 @@ export default function ApplicationPendingPage() {
               <div>
                 <p className="font-semibold text-foreground mb-0.5">Approval &amp; Dashboard Access</p>
                 <p className="text-sm text-muted-foreground">
-                  Once you receive 1+ approval, you&apos;ll automatically be accepted as a &quot;Recruit&quot;
+                  Once you receive 3 approvals, you&apos;ll automatically be accepted as a &quot;Recruit&quot;
                   member and gain access to the dashboard.
                 </p>
               </div>

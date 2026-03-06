@@ -125,6 +125,8 @@ export interface ReviewSubmitPayload {
   criteriaJustifications: Record<string, unknown>;
   overallScore: number;
   redFlagDeductions: number;
+  /** Stake amount for proposal votes (set by the review modal when proposalContext is active). */
+  stakeAmount?: number;
 }
 
 /** The response returned after submitting a review. */

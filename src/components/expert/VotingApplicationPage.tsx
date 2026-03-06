@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { guildApplicationsApi } from "@/lib/api";
@@ -188,28 +188,17 @@ export default function VotingApplicationPage({
   // UI state that changes based on user actions (not initial data loading)
   const [showVoting, setShowVoting] = useState(false);
   const [isSubmittingVote, setIsSubmittingVote] = useState(false);
-  const hasRedirectedRef = useRef(false);
-
   const {
     application,
     expertData,
     candidateProfile,
-    stakingStatus,
+    isStakedInGuild,
     crPhase,
     voteHistory,
     loading,
     loadPhaseStatus,
     loadApplication,
   } = useVotingApplicationData(applicationId, address);
-
-  // Redirect to guild page if expert hasn't staked
-  useEffect(() => {
-    if (!loading && application && stakingStatus && !stakingStatus.meetsMinimum && !hasRedirectedRef.current) {
-      hasRedirectedRef.current = true;
-      toast.error("You must stake VETD tokens to review applications");
-      router.replace(`/expert/guild/${application.guild_id}`);
-    }
-  }, [loading, application, stakingStatus, router]);
 
   /* -- user actions -- */
   const handleVote = async (
@@ -221,8 +210,8 @@ export default function VotingApplicationPage({
       toast.error("Expert data not loaded");
       return;
     }
-    if (!stakingStatus?.meetsMinimum) {
-      toast.error("You must stake the minimum VETD amount to vote");
+    if (!isStakedInGuild) {
+      toast.error("You must stake VETD tokens in this guild to vote");
       return;
     }
     try {
@@ -282,7 +271,7 @@ export default function VotingApplicationPage({
     !!isReviewer &&
     !hasVoted &&
     !isFinalized &&
-    !!stakingStatus?.meetsMinimum;
+    isStakedInGuild;
 
   return (
     <div className="min-h-screen bg-background">
@@ -382,7 +371,7 @@ export default function VotingApplicationPage({
         </div>
 
         {/* -- Staking warning -- */}
-        {stakingStatus && !stakingStatus.meetsMinimum && isReviewer && (
+        {!isStakedInGuild && isReviewer && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 mb-6">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
@@ -391,13 +380,14 @@ export default function VotingApplicationPage({
                   Staking Required to Vote
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  You must stake at least{" "}
-                  {stakingStatus.minimumRequired || "?"} VETD to submit your
-                  score. Current stake: {stakingStatus.stakedAmount || "0"}{" "}
-                  VETD.
+                  You must stake VETD tokens in this guild to submit your score.
                 </p>
               </div>
-              <Button variant="default" size="sm">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => router.push(`/expert/guild/${application.guild_id}`)}
+              >
                 Stake VETD
               </Button>
             </div>

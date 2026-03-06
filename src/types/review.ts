@@ -21,9 +21,21 @@ export interface ExpertMembershipApplication {
   approvalCount: number;
   rejectionCount: number;
   applicationResponses?: ApplicationResponses;
+  expertHasReviewed?: boolean;
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;
+}
+
+/** The current expert's own review data, fetched via my-review endpoints */
+export interface MyReviewData {
+  vote: string;
+  criteriaScores: Record<string, unknown>;
+  criteriaJustifications: Record<string, unknown>;
+  overallScore: number;
+  redFlagDeductions: number;
+  feedback?: string;
+  createdAt: string;
 }
 
 /** Candidate applying to join a guild */

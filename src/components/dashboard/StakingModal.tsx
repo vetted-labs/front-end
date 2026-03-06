@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAccount, useSwitchChain, usePublicClient } from "wagmi";
-import { formatEther, maxUint256 } from "viem";
+import { useAccount, useSwitchChain } from "wagmi";
+import { formatEther } from "viem";
 import { sepolia } from "wagmi/chains";
 import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
 import Image from "next/image";
@@ -34,7 +34,6 @@ type ActionMode = "stake" | "withdraw";
 export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }: StakingModalProps) {
   const { address, chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const publicClient = usePublicClient();
   const [actionMode, setActionMode] = useState<ActionMode>("stake");
   const [stakeAmount, setStakeAmount] = useState("");
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
@@ -77,8 +76,8 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   );
 
   // Contract hooks - use per-guild staking
-  const { balance, allowance, approve, mint, refetchBalance, refetchAllowance } = useVettedToken();
-  const { stakeInfo, minimumStake, isPaused, stake, stakeWithPermit, requestUnstake, refetchStake, guildTotalStaked } = useGuildStaking(selectedGuild?.blockchainGuildId);
+  const { balance, mint, refetchBalance } = useVettedToken();
+  const { stakeInfo, minimumStake, isPaused, stakeWithPermit, requestUnstake, refetchStake, guildTotalStaked } = useGuildStaking(selectedGuild?.blockchainGuildId);
   const { executeWithPermit } = usePermitOrApprove();
   const { isSuccess: txConfirmed, isError: txError, error: txErrorDetails } = useTransactionConfirmation(txHash || undefined);
 
@@ -113,7 +112,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     if (isOpen && address) {
       refetchBalance();
       refetchStake();
-      refetchAllowance();
     }
   }, [isOpen, address, selectedGuild]);
 
@@ -123,7 +121,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       setTxStatus("success");
       refetchBalance();
       refetchStake();
-      refetchAllowance();
       // Sync stake to database in the background — don't call onSuccess yet.
       // onSuccess (which refreshes the parent page) is deferred to when the
       // user dismisses the success screen so they can see the confirmation.
@@ -146,10 +143,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     }
   }, [txError, txHash, step, txErrorDetails]);
 
-  /**
-   * Unified stake handler — tries EIP-2612 permit first (1 signature + 1 TX),
-   * falls back to approve + stake (2 TX) if permit signing fails.
-   */
+  /** Stake via EIP-2612 permit (1 signature + 1 TX). */
   const handleStake = async () => {
     if (!selectedGuild) {
       toast.error("Please select a guild to stake for");
@@ -167,14 +161,12 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       return;
     }
 
-    // Show the transaction modal immediately
     setStep("transaction");
     setCurrentTxAmount(stakeAmount);
     setCurrentTxAction("stake");
     setShowTxModal(true);
     setTxStatus("pending");
 
-    // ── Try permit path first (1 signature + 1 TX), fall back to approve+stake ──
     try {
       const result = await executeWithPermit(
         CONTRACT_ADDRESSES.STAKING,
@@ -189,47 +181,16 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         ),
       );
 
-      if (result.path === "permit") {
-        setTxHash(result.hash);
-        return;
-      }
-    } catch {
-      // User rejected permit — bail
-      toast.error("Transaction rejected");
-      setShowTxModal(false);
-      setStep("input");
-      return;
-    }
-
-    // ── Fallback: approve → stake (2 TX) ──
-    try {
-      const currentAllowanceVal = allowance !== undefined ? parseFloat(formatEther(allowance)) : 0;
-
-      // If approval needed, approve for MaxUint256 (one-time unlimited)
-      if (currentAllowanceVal < parseFloat(stakeAmount)) {
-        const approveHash = await approve(CONTRACT_ADDRESSES.STAKING, formatEther(maxUint256));
-
-        // Wait for approval to confirm on-chain before staking
-        if (publicClient) {
-          await publicClient.waitForTransactionReceipt({ hash: approveHash });
-        }
-        refetchAllowance();
-      }
-
-      // Now stake
-      const hash = await stake(selectedGuild.blockchainGuildId, stakeAmount);
-      setTxHash(hash);
+      setTxHash(result.hash);
     } catch (error: unknown) {
-      logger.error("Staking error", error, { silent: true });
-
       if (isUserRejection(error)) {
         toast.error("Transaction rejected");
         setShowTxModal(false);
       } else {
+        logger.error("Staking error", error, { silent: true });
         setTxStatus("error");
         setTxErrorMessage(getTransactionErrorMessage(error, "Transaction failed"));
       }
-
       setStep("input");
     }
   };
@@ -314,8 +275,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   const currentStake =
     stakeInfo !== undefined && isOnSepolia ? parseFloat(formatEther(stakeInfo[0])) : null;
   const minStake = minimumStake ? parseFloat(formatEther(minimumStake)) : 10;
-  const currentAllowance = allowance !== undefined ? parseFloat(formatEther(allowance)) : 0;
-  const needsApproval = currentAllowance < parseFloat(stakeAmount || "0");
   const balanceLabel = !isOnSepolia
     ? "Switch to Sepolia"
     : balance === undefined
@@ -330,11 +289,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
       <div
-        className="relative max-w-[460px] w-full mx-4 max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
+        className="relative max-w-[460px] w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="relative overflow-hidden px-6 pt-5 pb-6">
+        <div className="relative overflow-hidden px-6 pt-5 pb-6 flex-shrink-0">
           {/* Decorative background glow */}
           <div className="absolute -top-20 -left-20 w-60 h-60 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-600/10 rounded-full blur-[60px] pointer-events-none" />
@@ -370,7 +329,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
         </div>
 
         {/* ── Content ── */}
-        <div className="px-6 pt-6 pb-6 space-y-4">
+        <div className="px-6 pt-6 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
           {/* Wrong Network Warning */}
           {!isOnSepolia && (
             <div className="p-3.5 bg-yellow-500/[0.08] border border-yellow-500/20 rounded-2xl flex items-center gap-3">
@@ -558,16 +517,6 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                 </div>
               </div>
 
-              {/* ── Approval notice ── */}
-              {actionMode === "stake" && needsApproval && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/[0.06] border border-orange-500/10">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
-                  <p className="text-xs text-orange-300/70">
-                    Token approval required (one-time, automatic)
-                  </p>
-                </div>
-              )}
-
               {/* ── Action Button ── */}
               <Button
                 onClick={actionMode === "stake" ? handleStake : handleWithdraw}
@@ -579,7 +528,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                   parseFloat(stakeAmount) <= 0 ||
                   !selectedGuild
                 }
-                className="w-full h-[3.25rem] bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 hover:from-orange-500 hover:via-orange-400 hover:to-orange-500 text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-400/35 transition-all duration-300 rounded-2xl font-bold text-[15px]"
+                className="w-full h-[3.25rem] rounded-2xl font-bold text-[15px]"
               >
                 {actionMode === "stake" ? (
                   <>

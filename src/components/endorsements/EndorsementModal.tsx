@@ -109,217 +109,220 @@ export function EndorsementModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 px-6 pt-6">
           <DialogTitle>Endorse Candidate</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="application">Application</TabsTrigger>
-            <TabsTrigger value="match">Job Match</TabsTrigger>
-            <TabsTrigger value="job">Job Details</TabsTrigger>
-          </TabsList>
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="application">Application</TabsTrigger>
+              <TabsTrigger value="match">Job Match</TabsTrigger>
+              <TabsTrigger value="job">Job Details</TabsTrigger>
+            </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Candidate Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <Avatar className="w-16 h-16">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                      {candidateInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold">{application.candidate_name}</h3>
-                    <p className="text-muted-foreground">{application.candidate_headline}</p>
-                    <Badge variant="secondary" className="mt-2">{application.experience_level}</Badge>
-                  </div>
-                </div>
-
-                {application.candidate_bio && (
-                  <div>
-                    <h4 className="font-medium mb-2">Bio</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {application.candidate_bio}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  {application.linkedin && (
-                    <a href={application.linkedin} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                      <Linkedin className="w-4 h-4 mr-2" />
-                      LinkedIn
-                      <ExternalLink className="w-3 h-3 ml-1" />
-                    </a>
-                  )}
-                  {application.github && (
-                    <a href={application.github} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                      <Github className="w-4 h-4 mr-2" />
-                      GitHub
-                      <ExternalLink className="w-3 h-3 ml-1" />
-                    </a>
-                  )}
-                  {application.resume_url && (
-                    <a href={getAssetUrl(`/api/candidates/${application.candidate_id}/resume`)} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Resume
-                      <ExternalLink className="w-3 h-3 ml-1" />
-                    </a>
-                  )}
-                </div>
-
-                <Link href={`/candidates/${application.candidate_id}`} target="_blank" className={cn(buttonVariants({ variant: "link" }), "p-0 h-auto")}>
-                  View Full Profile →
-                </Link>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Application Tab */}
-          <TabsContent value="application" className="space-y-4 mt-4">
-            {application.cover_letter && (
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-4 mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Cover Letter</CardTitle>
+                  <CardTitle>Candidate Profile</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {application.cover_letter}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {application.screening_answers && Object.keys(application.screening_answers).length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Screening Answers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Object.entries(application.screening_answers).map(([question, answer]) => (
-                      <div key={question}>
-                        <p className="font-medium text-sm mb-1">{question}</p>
-                        <p className="text-sm text-muted-foreground">{answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {!application.cover_letter && (!application.screening_answers || Object.keys(application.screening_answers).length === 0) && (
-              <div className="text-center py-8 text-muted-foreground">
-                No additional application materials provided.
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Job Match Tab */}
-          <TabsContent value="match" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Skill Match Analysis</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Match Score</span>
-                    <span className="text-2xl font-bold">{skillMatch}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        skillMatch >= 70 ? 'bg-green-500' : skillMatch >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${skillMatch}%` }}
-                    />
-                  </div>
-                </div>
-
-                {application.requirements && application.requirements.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2">Job Requirements</h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {application.requirements.map((req: string, i: number) => (
-                        <li key={i}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {application.job_skills && (
-                  <div>
-                    <h4 className="font-medium mb-2">Required Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {(Array.isArray(application.job_skills)
-                        ? application.job_skills
-                        : application.job_skills.split(',')
-                      ).map((skill: string, i: number) => (
-                        <Badge key={i} variant="secondary">{skill.trim()}</Badge>
-                      ))}
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="w-16 h-16">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                        {candidateInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold">{application.candidate_name}</h3>
+                      <p className="text-muted-foreground">{application.candidate_headline}</p>
+                      <Badge variant="secondary" className="mt-2">{application.experience_level}</Badge>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {/* Job Details Tab */}
-          <TabsContent value="job" className="space-y-4 mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Posting</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold">{application.job_title}</h3>
-                  <p className="text-sm text-muted-foreground">{application.company_name}</p>
-                </div>
+                  {application.candidate_bio && (
+                    <div>
+                      <h4 className="font-medium mb-2">Bio</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {application.candidate_bio}
+                      </p>
+                    </div>
+                  )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  {application.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {application.location}
-                    </span>
-                  )}
-                  {application.job_type && (
-                    <span className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                      {application.job_type}
-                    </span>
-                  )}
-                  {(application.salary_min || application.salary_max) && (
-                    <span className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4" />
-                      {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
-                    </span>
-                  )}
-                </div>
-
-                {application.job_description && (
-                  <div>
-                    <h4 className="font-medium mb-2">Description</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {application.job_description}
-                    </p>
+                  <div className="flex flex-wrap gap-2">
+                    {application.linkedin && (
+                      <a href={application.linkedin} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                        <Linkedin className="w-4 h-4 mr-2" />
+                        LinkedIn
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </a>
+                    )}
+                    {application.github && (
+                      <a href={application.github} target="_blank" rel="noopener" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                        <Github className="w-4 h-4 mr-2" />
+                        GitHub
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </a>
+                    )}
+                    {application.resume_url && (
+                      <a href={getAssetUrl(`/api/candidates/${application.candidate_id}/resume`)} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                        <FileText className="w-4 h-4 mr-2" />
+                        Resume
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </a>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
 
-        {/* Endorsement Form (Sticky Footer) */}
-        <div className="border-t pt-4 mt-4 bg-background sticky bottom-0">
+                  <Link href={`/candidates/${application.candidate_id}`} target="_blank" className={cn(buttonVariants({ variant: "link" }), "p-0 h-auto")}>
+                    View Full Profile →
+                  </Link>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Application Tab */}
+            <TabsContent value="application" className="space-y-4 mt-4">
+              {application.cover_letter && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cover Letter</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                      {application.cover_letter}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {application.screening_answers && Object.keys(application.screening_answers).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Screening Answers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {Object.entries(application.screening_answers).map(([question, answer]) => (
+                        <div key={question}>
+                          <p className="font-medium text-sm mb-1">{question}</p>
+                          <p className="text-sm text-muted-foreground">{answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!application.cover_letter && (!application.screening_answers || Object.keys(application.screening_answers).length === 0) && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No additional application materials provided.
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Job Match Tab */}
+            <TabsContent value="match" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Skill Match Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Match Score</span>
+                      <span className="text-2xl font-bold">{skillMatch}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          skillMatch >= 70 ? 'bg-green-500' : skillMatch >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${skillMatch}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {application.requirements && application.requirements.length > 0 && (
+                    <div>
+                      <h4 className="font-medium mb-2">Job Requirements</h4>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                        {application.requirements.map((req: string, i: number) => (
+                          <li key={i}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {application.job_skills && (
+                    <div>
+                      <h4 className="font-medium mb-2">Required Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {(Array.isArray(application.job_skills)
+                          ? application.job_skills
+                          : application.job_skills.split(',')
+                        ).map((skill: string, i: number) => (
+                          <Badge key={i} variant="secondary">{skill.trim()}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Job Details Tab */}
+            <TabsContent value="job" className="space-y-4 mt-4 pb-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Job Posting</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{application.job_title}</h3>
+                    <p className="text-sm text-muted-foreground">{application.company_name}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    {application.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {application.location}
+                      </span>
+                    )}
+                    {application.job_type && (
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        {application.job_type}
+                      </span>
+                    )}
+                    {(application.salary_min || application.salary_max) && (
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="w-4 h-4" />
+                        {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
+                      </span>
+                    )}
+                  </div>
+
+                  {application.job_description && (
+                    <div>
+                      <h4 className="font-medium mb-2">Description</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        {application.job_description}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Endorsement Form (Fixed Footer) */}
+        <div className="border-t pt-4 px-6 pb-6 flex-shrink-0">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <Label className="text-xs text-muted-foreground">Your Balance</Label>

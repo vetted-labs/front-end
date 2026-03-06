@@ -11,6 +11,7 @@ import {
   Award,
   Target,
   Sparkles,
+  Coins,
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { expertApi } from "@/lib/api";
@@ -55,6 +56,8 @@ interface ReviewGuildApplicationModalProps {
   guildId: string;
   onSubmitReview: (payload: ReviewSubmitPayload) => Promise<ReviewSubmitResponse | void>;
   isReviewing: boolean;
+  /** When set, renders a staking input in the final step (used for proposal votes). */
+  proposalContext?: { requiredStake: number };
 }
 
 const GENERAL_RESPONSE_KEY_MAP: Record<string, string> = {
@@ -123,7 +126,7 @@ export const ScoreButtons = ({
           onClick={() => onChange(idx)}
           className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
             value === idx
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_0_12px_rgba(251,146,60,0.4)] border border-amber-400/50"
+              ? "bg-primary text-primary-foreground shadow-sm border border-primary/50"
               : "bg-muted/50 text-muted-foreground border border-border hover:border-primary/40 hover:text-primary hover:bg-muted"
           }`}
         >
@@ -155,7 +158,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               <div
                 className={`w-12 h-[2px] mx-1 transition-all duration-500 ${
                   currentStep > step.number
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                    ? "bg-primary"
                     : "bg-border"
                 }`}
               />
@@ -164,9 +167,9 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               <div
                 className={`relative w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                   isCompleted
-                    ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-[0_0_16px_rgba(251,146,60,0.5)]"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : isActive
-                    ? "bg-amber-500/15 text-primary border-2 border-amber-400/60 shadow-[0_0_20px_rgba(251,146,60,0.3)]"
+                    ? "bg-primary/15 text-primary border-2 border-primary/60 shadow-sm"
                     : "bg-muted/50 text-muted-foreground border border-border"
                 }`}
               >
@@ -201,6 +204,7 @@ export function ReviewGuildApplicationModal({
   guildId,
   onSubmitReview,
   isReviewing,
+  proposalContext,
 }: ReviewGuildApplicationModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -216,6 +220,7 @@ export function ReviewGuildApplicationModal({
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [apiResponse, setApiResponse] = useState<ReviewSubmitResponse | null>(null);
+  const [stakeAmount, setStakeAmount] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -242,7 +247,8 @@ export function ReviewGuildApplicationModal({
     setTemplateError(null);
     setValidationError(null);
     setApiResponse(null);
-  }, [application, isOpen]);
+    setStakeAmount(proposalContext?.requiredStake ?? 0);
+  }, [application, isOpen, proposalContext?.requiredStake]);
 
   const responses = application?.applicationResponses || {};
   const generalResponses = responses.general || {};
@@ -415,6 +421,11 @@ export function ReviewGuildApplicationModal({
 
     if (!validateStep3()) return;
 
+    if (proposalContext && stakeAmount < proposalContext.requiredStake) {
+      setValidationError(`Minimum stake is ${proposalContext.requiredStake} VETD.`);
+      return;
+    }
+
     setValidationError(null);
 
     const domainScoresPayload = { topics: topicScores, total: topicTotal, max: topicMax };
@@ -436,6 +447,7 @@ export function ReviewGuildApplicationModal({
         },
         overallScore,
         redFlagDeductions,
+        ...(proposalContext ? { stakeAmount } : {}),
       });
       setApiResponse(response || null);
       setCurrentStep(4);
@@ -471,27 +483,53 @@ export function ReviewGuildApplicationModal({
 
   // ── Step 3: Domain Review + Deductions + Submit ──────────────
   const renderStep3 = () => (
-    <DomainReviewStep
-      loadingTemplates={loadingTemplates}
-      levelTemplate={levelTemplate}
-      topicList={topicList}
-      topicAnswers={topicAnswers}
-      topicScores={topicScores}
-      topicJustifications={topicJustifications}
-      redFlags={redFlags}
-      generalRedFlags={generalRedFlags}
-      redFlagDeductions={redFlagDeductions}
-      generalTotal={generalTotal}
-      generalMax={generalMax}
-      topicTotal={topicTotal}
-      topicMax={topicMax}
-      overallScore={overallScore}
-      feedback={feedback}
-      onTopicScoresChange={setTopicScores}
-      onTopicJustificationsChange={setTopicJustifications}
-      onRedFlagsChange={setRedFlags}
-      onFeedbackChange={setFeedback}
-    />
+    <>
+      <DomainReviewStep
+        loadingTemplates={loadingTemplates}
+        levelTemplate={levelTemplate}
+        topicList={topicList}
+        topicAnswers={topicAnswers}
+        topicScores={topicScores}
+        topicJustifications={topicJustifications}
+        redFlags={redFlags}
+        generalRedFlags={generalRedFlags}
+        redFlagDeductions={redFlagDeductions}
+        generalTotal={generalTotal}
+        generalMax={generalMax}
+        topicTotal={topicTotal}
+        topicMax={topicMax}
+        overallScore={overallScore}
+        feedback={feedback}
+        onTopicScoresChange={setTopicScores}
+        onTopicJustificationsChange={setTopicJustifications}
+        onRedFlagsChange={setRedFlags}
+        onFeedbackChange={setFeedback}
+      />
+
+      {proposalContext && (
+        <div className="mt-6 rounded-xl border border-border bg-muted/20 p-5 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase flex items-center gap-2">
+            <Coins className="w-4 h-4 text-primary" />
+            Stake VETD
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Enter the amount of VETD tokens to stake on this vote. Minimum: {proposalContext.requiredStake} VETD.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={proposalContext.requiredStake}
+              step={1}
+              value={stakeAmount}
+              onChange={(e) => setStakeAmount(Math.max(0, Number(e.target.value)))}
+              className="w-40 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder={`Min ${proposalContext.requiredStake}`}
+            />
+            <span className="text-sm text-muted-foreground font-medium">VETD</span>
+          </div>
+        </div>
+      )}
+    </>
   );
 
   // ── Step 4: Review Submitted ────────────────────────────────
@@ -600,7 +638,7 @@ export function ReviewGuildApplicationModal({
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
             <h2 className="text-lg font-bold text-foreground tracking-tight">
-              Review Expert Application
+              {proposalContext ? "Review Proposal" : "Review Expert Application"}
             </h2>
             <button
               onClick={onClose}
@@ -647,7 +685,7 @@ export function ReviewGuildApplicationModal({
                 </button>
                 <button
                   onClick={handleNext}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-sm font-bold text-white shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_28px_rgba(251,146,60,0.45)] hover:from-amber-400 hover:to-orange-400 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -664,7 +702,7 @@ export function ReviewGuildApplicationModal({
                 </button>
                 <button
                   onClick={handleNext}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-sm font-bold text-white shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_28px_rgba(251,146,60,0.45)] hover:from-amber-400 hover:to-orange-400 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -682,7 +720,7 @@ export function ReviewGuildApplicationModal({
                 <button
                   onClick={handleSubmit}
                   disabled={isReviewing}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-sm font-bold text-white shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_28px_rgba(251,146,60,0.45)] hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   {isReviewing ? (
                     <>
@@ -700,7 +738,7 @@ export function ReviewGuildApplicationModal({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-sm font-bold text-white shadow-[0_0_20px_rgba(251,146,60,0.3)] hover:shadow-[0_0_28px_rgba(251,146,60,0.45)] hover:from-amber-400 hover:to-orange-400 transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
               >
                 Done
               </button>

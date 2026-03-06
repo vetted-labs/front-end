@@ -51,12 +51,12 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className={`relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border border-border/60 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]`}
+          className={`relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] flex flex-col overflow-hidden border border-border/60 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
               <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">{title}</h2>
               <button
                 onClick={onClose}
@@ -68,7 +68,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
           )}
 
           {/* Content */}
-          <div className={title ? "p-4 sm:p-6" : "p-4 sm:p-6 relative"}>
+          <div className={`flex-1 overflow-y-auto min-h-0 ${title ? "p-4 sm:p-6" : "p-4 sm:p-6 relative"}`}>
             {!title && (
               <button
                 onClick={onClose}

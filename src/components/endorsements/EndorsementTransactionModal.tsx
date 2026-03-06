@@ -125,11 +125,11 @@ export function EndorsementTransactionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
       <div
-        className="relative max-w-[480px] w-full mx-4 max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
+        className="relative max-w-[480px] w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           {/* Decorative glow layer */}
           <div className="absolute inset-0 overflow-hidden rounded-t-3xl pointer-events-none">
             <div className="absolute -top-20 -left-20 w-60 h-60 bg-primary/15 rounded-full blur-[80px]" />
@@ -155,7 +155,7 @@ export function EndorsementTransactionModal({
         </div>
 
         {/* ── Content ── */}
-        <div className="px-6 pb-6 space-y-4">
+        <div className="px-6 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
 
           {/* Progress Steps */}
           {(txStep === 'signing' || txStep === 'approving' || txStep === 'bidding' || txStep === 'success') && (
