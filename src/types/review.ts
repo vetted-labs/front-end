@@ -22,9 +22,45 @@ export interface ExpertMembershipApplication {
   rejectionCount: number;
   applicationResponses?: ApplicationResponses;
   expertHasReviewed?: boolean;
+  /** IQR finalization fields */
+  votingDeadline?: string;
+  consensusScore?: number;
+  finalized?: boolean;
+  finalizedAt?: string;
+  outcome?: string;
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;
+}
+
+/** Finalization results for an expert application */
+export interface ExpertApplicationFinalization {
+  outcome: string;
+  consensusScore: number;
+  finalizedAt: string;
+  totalRewards: number;
+  voteCount: number;
+  votes: Array<{
+    reviewerId: string;
+    reviewerName: string;
+    score: number;
+    alignmentDistance: number;
+    reputationChange: number;
+    rewardAmount: number;
+    slashPercent: number;
+    slashingTier: string;
+    vote: string;
+    createdAt: string;
+  }>;
+  iqr: {
+    median: number;
+    q1: number;
+    q3: number;
+    iqr: number;
+    consensusScore: number;
+    includedScores: number[];
+    excludedScores: number[];
+  } | null;
 }
 
 /** The current expert's own review data, fetched via my-review endpoints */

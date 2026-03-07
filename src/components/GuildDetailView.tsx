@@ -30,6 +30,10 @@ const StakingModal = dynamic(
   () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
   { ssr: false }
 );
+const ViewReviewModal = dynamic(
+  () => import("./expert/applications/ViewReviewModal").then(m => ({ default: m.ViewReviewModal })),
+  { ssr: false }
+);
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
 import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, ExpertGuildDetail, LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
@@ -130,6 +134,12 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [isReviewing, setIsReviewing] = useState(false);
   const [autoOpenedReview, setAutoOpenedReview] = useState(false);
   const [applicationReviewType, setApplicationReviewType] = useState<"expert" | "candidate">("expert");
+
+  // View review modal state
+  const [showViewReview, setShowViewReview] = useState(false);
+  const [viewReviewAppId, setViewReviewAppId] = useState<string | null>(null);
+  const [viewReviewApplicantName, setViewReviewApplicantName] = useState("");
+  const [viewReviewType, setViewReviewType] = useState<"expert" | "candidate">("expert");
 
   // Candidate applications state
   const [candidateApplications, setCandidateApplications] = useState<CandidateApplicationForReview[]>([]);
@@ -471,6 +481,20 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setShowReviewModal(true);
   };
 
+  const handleViewExpertReview = (application: ExpertMembershipApplication) => {
+    setViewReviewAppId(application.id);
+    setViewReviewApplicantName(application.fullName);
+    setViewReviewType("expert");
+    setShowViewReview(true);
+  };
+
+  const handleViewCandidateReview = (candidateApp: CandidateApplicationForReview) => {
+    setViewReviewAppId(candidateApp.id);
+    setViewReviewApplicantName(candidateApp.candidateName);
+    setViewReviewType("candidate");
+    setShowViewReview(true);
+  };
+
   const handleSubmitReview = async (payload: {
     feedback?: string;
     criteriaScores: Record<string, unknown>;
@@ -658,7 +682,9 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                 guildApplications={guild.guildApplications}
                 candidateApplications={candidateApplications}
                 onReviewApplication={handleReviewApplication}
+                onViewExpertReview={handleViewExpertReview}
                 onReviewCandidateApplication={handleReviewCandidateApplication}
+                onViewCandidateReview={handleViewCandidateReview}
                 isStaked={!!stakingStatus?.meetsMinimum}
                 onStakeClick={() => setShowVetdStakingModal(true)}
               />
@@ -696,6 +722,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         onClose={() => setShowVetdStakingModal(false)}
         onSuccess={() => refetch()}
         preselectedGuildId={guildId}
+      />
+
+      <ViewReviewModal
+        isOpen={showViewReview}
+        onClose={() => setShowViewReview(false)}
+        applicationId={viewReviewAppId}
+        applicantName={viewReviewApplicantName}
+        reviewType={viewReviewType}
+        walletAddress={address || ""}
       />
       </div>
     </div>

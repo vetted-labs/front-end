@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, CheckCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote } from "lucide-react";
+import { UserPlus, CheckCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote, Eye, Timer, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
@@ -12,13 +12,32 @@ import type { GuildApplication, ExpertMembershipApplication, CandidateGuildAppli
 
 const ITEMS_PER_SECTION = 10;
 
+function formatDeadlineCountdown(deadline: string): string {
+  const now = new Date();
+  const deadlineDate = new Date(deadline);
+  const diffMs = deadlineDate.getTime() - now.getTime();
+
+  if (diffMs <= 0) return "Voting ended";
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  if (days > 0) return `${days}d ${remainingHours}h left`;
+  if (hours > 0) return `${hours}h left`;
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  return `${minutes}m left`;
+}
+
 interface GuildMembershipApplicationsTabProps {
   guildId: string;
   guildName: string;
   guildApplications: ExpertMembershipApplication[];
   candidateApplications: CandidateGuildApplication[];
   onReviewApplication: (application: ExpertMembershipApplication) => void;
+  onViewExpertReview?: (application: ExpertMembershipApplication) => void;
   onReviewCandidateApplication: (application: CandidateGuildApplication) => void;
+  onViewCandidateReview?: (application: CandidateGuildApplication) => void;
   isStaked?: boolean;
   onStakeClick?: () => void;
 }
@@ -29,7 +48,9 @@ export function GuildMembershipApplicationsTab({
   guildApplications,
   candidateApplications,
   onReviewApplication,
+  onViewExpertReview,
   onReviewCandidateApplication,
+  onViewCandidateReview,
   isStaked,
   onStakeClick,
 }: GuildMembershipApplicationsTabProps) {
@@ -128,8 +149,8 @@ export function GuildMembershipApplicationsTab({
                 Expert Proposals to Join Guild
               </h3>
               <p className="text-sm text-muted-foreground">
-                Review proposals from experts wanting to join {guildName}. 3 approvals
-                needed for auto-acceptance as &quot;Recruit&quot; member.
+                Review proposals from experts wanting to join {guildName}. Consensus
+                is determined by IQR scoring after the voting deadline.
               </p>
             </div>
             {expertCount > 0 && (
@@ -167,6 +188,13 @@ export function GuildMembershipApplicationsTab({
                         <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
                           {application.expertiseLevel}
                         </span>
+                        {application.finalized && application.outcome && (
+                          <Badge
+                            variant={application.outcome === "approved" ? "default" : "destructive"}
+                          >
+                            {application.outcome === "approved" ? "Approved" : "Rejected"}
+                          </Badge>
+                        )}
                       </div>
 
                       <p className="text-sm text-muted-foreground mb-2">
@@ -181,6 +209,18 @@ export function GuildMembershipApplicationsTab({
                           <Clock className="w-3.5 h-3.5 mr-1" />
                           {new Date(application.appliedAt).toLocaleDateString()}
                         </span>
+                        {application.votingDeadline && !application.finalized && (
+                          <span className="flex items-center text-amber-500">
+                            <Timer className="w-3.5 h-3.5 mr-1" />
+                            {formatDeadlineCountdown(application.votingDeadline)}
+                          </span>
+                        )}
+                        {application.consensusScore != null && (
+                          <span className="flex items-center text-muted-foreground">
+                            <BarChart3 className="w-3.5 h-3.5 mr-1" />
+                            Score: {application.consensusScore.toFixed(1)}/100
+                          </span>
+                        )}
 
                         <a
                           href={application.linkedinUrl}
@@ -245,14 +285,33 @@ export function GuildMembershipApplicationsTab({
                         <span>reviewed</span>
                       </div>
 
-                      <Button
-                        onClick={() => onReviewApplication(application)}
-                        size="sm"
-                        disabled={!isStaked}
-                      >
-                        <Users className="w-3.5 h-3.5 mr-1.5" />
-                        Review
-                      </Button>
+                      {application.expertHasReviewed ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                            <span className="text-sm font-medium">Reviewed</span>
+                          </div>
+                          {onViewExpertReview && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onViewExpertReview(application)}
+                            >
+                              <Eye className="w-3.5 h-3.5 mr-1.5" />
+                              View
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => onReviewApplication(application)}
+                          size="sm"
+                          disabled={!isStaked || application.finalized}
+                        >
+                          <Users className="w-3.5 h-3.5 mr-1.5" />
+                          Review
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -346,9 +405,21 @@ export function GuildMembershipApplicationsTab({
                       </div>
 
                       {application.expertHasReviewed ? (
-                        <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
-                          <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                          <span className="text-sm font-medium">Reviewed</span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+                            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                            <span className="text-sm font-medium">Reviewed</span>
+                          </div>
+                          {onViewCandidateReview && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onViewCandidateReview(application)}
+                            >
+                              <Eye className="w-3.5 h-3.5 mr-1.5" />
+                              View
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <Button

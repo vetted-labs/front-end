@@ -630,6 +630,11 @@ export const expertApi = {
 
   getProposalRewardDetail: (walletAddress: string, proposalId: string) =>
     apiRequest<import("@/types").RewardDetail>(`/api/experts/proposals/${proposalId}/reward-detail?wallet=${walletAddress}`),
+
+  getExpertApplicationFinalization: (applicationId: string) =>
+    apiRequest<import("@/types").ExpertApplicationFinalization>(
+      `/api/experts/guild-applications/${applicationId}/finalization`
+    ),
 };
 
 // Notifications API
