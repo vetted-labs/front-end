@@ -7,10 +7,8 @@ import { User, LogOut, Wallet, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useSidebar } from "./SidebarProvider";
-import { expertApi } from "@/lib/api";
-import { calculateTotalPoints, truncateAddress } from "@/lib/utils";
+import { truncateAddress } from "@/lib/utils";
 import { getNetworkName } from "@/lib/web3Utils";
-import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { cn } from "@/lib/utils";
 import type { SidebarConfig } from "./sidebar-config";
 
@@ -25,21 +23,10 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { disconnect } = useDisconnect();
-  const { expertStatus } = useExpertStatus();
   const [mounted, setMounted] = useState(false);
-  const [totalPoints, setTotalPoints] = useState(0);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
 
   useEffect(() => setMounted(true), []);
-
-  // Fetch expert points
-  useEffect(() => {
-    if (variant !== "expert" || !isConnected || !address || expertStatus !== "approved") return;
-    expertApi
-      .getProfile(address)
-      .then((data) => setTotalPoints(calculateTotalPoints(data)))
-      .catch(() => {});
-  }, [variant, isConnected, address]);
 
   // Close wallet menu on outside click
   useEffect(() => {
@@ -80,16 +67,6 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           <User className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span>My Profile</span>}
         </button>
-
-        {/* Total points */}
-        {!isCollapsed && totalPoints > 0 && (
-          <div className="flex items-center justify-between rounded-lg bg-primary/10 px-3 py-2">
-            <span className="text-xs font-semibold text-primary">Total Points</span>
-            <span className="text-sm font-bold text-foreground">
-              {totalPoints.toLocaleString()}
-            </span>
-          </div>
-        )}
 
         {/* Wallet */}
         {address && (

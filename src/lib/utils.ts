@@ -23,16 +23,6 @@ export function getTimeAgo(dateString: string): string {
 }
 
 /**
- * Calculate total points (reputation + earnings)
- */
-export function calculateTotalPoints(profile: {
-  reputation: number;
-  totalEarnings: number;
-}): number {
-  return profile.reputation + profile.totalEarnings;
-}
-
-/**
  * Get notification count from profile data
  * Aggregates pending proposals, unreviewed applications, and guilds with pending proposals
  */

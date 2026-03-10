@@ -608,8 +608,9 @@ export function ReviewGuildApplicationModal({
             <p className="font-medium text-foreground mb-1">What happens next?</p>
             <p>
               Once all assigned reviewers submit their scores, the application will be
-              finalized using IQR-based consensus. Your alignment with the consensus
-              will affect your reputation and rewards.
+              finalized immediately using IQR-based consensus. If not all reviewers
+              submit before the deadline, finalization runs automatically. Your
+              alignment with the consensus will affect your reputation and rewards.
             </p>
           </div>
         </div>

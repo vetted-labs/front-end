@@ -48,8 +48,8 @@ export function VotingInterface({
                   {application.my_vote_score}/100
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Your vote has been recorded. Results will be available after
-                  the voting deadline.
+                  Your vote has been recorded. Results will be available once
+                  all reviewers have voted, or after the voting deadline.
                 </p>
               </div>
             ) : showVoting ? (

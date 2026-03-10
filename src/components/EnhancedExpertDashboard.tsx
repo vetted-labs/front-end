@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
   Shield,
-  TrendingUp,
   Star,
   DollarSign,
   Coins,
@@ -14,7 +13,6 @@ import {
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { expertApi, guildApplicationsApi } from "@/lib/api";
-import { calculateTotalPoints } from "@/lib/utils";
 
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -248,7 +246,6 @@ export function EnhancedExpertDashboard() {
     );
   }
 
-  const totalPoints = calculateTotalPoints({ reputation: profile.reputation, totalEarnings: profile.totalEarnings ?? 0 });
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -263,15 +260,9 @@ export function EnhancedExpertDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {profile.fullName}!
-            </h1>
-            <div className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-4 py-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">{totalPoints.toLocaleString()} Points</span>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Welcome back, {profile.fullName}!
+          </h1>
           <p className="text-muted-foreground">
             Here&apos;s your expert activity overview
           </p>
