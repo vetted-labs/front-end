@@ -672,6 +672,47 @@ export const notificationsApi = {
     }),
 };
 
+// --- Notification API factory ---
+function createNotificationsApi<
+  TNotification,
+  TResponse extends { notifications: TNotification[]; total: number },
+  TPreferences,
+>(basePath: string) {
+  return {
+    getNotifications: (filters?: { isRead?: boolean; type?: string; limit?: number; offset?: number }) => {
+      const queryParams = new URLSearchParams();
+      if (filters?.isRead !== undefined) queryParams.append("isRead", filters.isRead.toString());
+      if (filters?.type) queryParams.append("type", filters.type);
+      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
+      if (filters?.offset) queryParams.append("offset", filters.offset.toString());
+      const qs = queryParams.toString();
+      return apiRequest<TResponse>(`${basePath}/notifications${qs ? `?${qs}` : ""}`, { requiresAuth: true });
+    },
+    getUnreadCount: () =>
+      apiRequest<import("@/types").NotificationUnreadCount>(`${basePath}/notifications/unread-count`, { requiresAuth: true }),
+    markAsRead: (notificationId: string) =>
+      apiRequest<{ success: boolean }>(`${basePath}/notifications/${notificationId}/read`, { method: "POST", requiresAuth: true }),
+    markAllAsRead: () =>
+      apiRequest<{ success: boolean }>(`${basePath}/notifications/mark-all-read`, { method: "POST", requiresAuth: true }),
+    getPreferences: () =>
+      apiRequest<TPreferences>(`${basePath}/notification-preferences`, { requiresAuth: true }),
+    updatePreferences: (prefs: Partial<TPreferences>) =>
+      apiRequest<TPreferences>(`${basePath}/notification-preferences`, { method: "PUT", body: JSON.stringify(prefs), requiresAuth: true }),
+  };
+}
+
+export const companyNotificationsApi = createNotificationsApi<
+  import("@/types").CompanyNotification,
+  import("@/types").CompanyNotificationsResponse,
+  import("@/types").CompanyNotificationPreferences
+>("/api/companies/me");
+
+export const candidateNotificationsApi = createNotificationsApi<
+  import("@/types").CandidateNotification,
+  import("@/types").CandidateNotificationsResponse,
+  import("@/types").CandidateNotificationPreferences
+>("/api/candidates/me");
+
 // Guilds API
 export const guildsApi = {
   // Get all guilds (public)
@@ -708,8 +749,11 @@ export const guildsApi = {
     }),
 
   // Get guild's candidate applications (for expert review)
-  getCandidateApplications: (guildId: string, wallet?: string) => {
-    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+  getCandidateApplications: (guildId: string, wallet?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (wallet) params.set("wallet", wallet);
+    if (status) params.set("status", status);
+    const query = params.toString() ? `?${params.toString()}` : "";
     return apiRequest<import("@/types").CandidateGuildApplication[]>(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`);
   },
 
@@ -997,6 +1041,12 @@ export const blockchainApi = {
   getTokenInfo: () =>
     apiRequest<import("@/types").TokenInfo>("/api/blockchain/token/info"),
 
+  // Job on-chain management
+  ensureJobOnChain: (jobId: string) =>
+    apiRequest<{ exists: boolean; blockchainJobId: string }>(`/api/blockchain/endorsement/ensure-job/${jobId}`, {
+      method: "POST",
+    }),
+
   // System endpoints
   getBlockchainConfig: () =>
     apiRequest<import("@/types").BlockchainConfig>("/api/blockchain/config"),
@@ -1052,7 +1102,7 @@ function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/
     consensus_score: raw.consensusScore != null || raw.consensus_score != null
       ? Number(raw.consensusScore ?? raw.consensus_score) : undefined,
     finalized: Boolean(raw.finalized),
-    outcome: (raw.outcome ?? (raw.status === "approved" ? "approved" : raw.status === "rejected" ? "rejected" : undefined)) as import("@/types").GuildApplicationOutcome | undefined,
+    outcome: (raw.outcome === "consensus_failed" ? "inconclusive" : raw.outcome ?? (raw.status === "approved" ? "approved" : raw.status === "rejected" ? "rejected" : raw.status === "consensus_failed" ? "inconclusive" : undefined)) as import("@/types").GuildApplicationOutcome | undefined,
     finalized_at: (raw.finalizedAt ?? raw.finalized_at) as string | undefined,
     total_rewards_distributed: raw.totalRewardsDistributed != null || raw.total_rewards_distributed != null
       ? Number(raw.totalRewardsDistributed ?? raw.total_rewards_distributed) : undefined,
@@ -1066,6 +1116,13 @@ function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/
       ? Number(raw.myReputationChange ?? raw.my_reputation_change) : undefined,
     my_reward_amount: raw.myRewardAmount != null || raw.my_reward_amount != null
       ? Number(raw.myRewardAmount ?? raw.my_reward_amount) : undefined,
+    // Consensus failure / tiebreaker fields
+    consensus_failed: Boolean(raw.consensusFailed ?? raw.consensus_failed ?? false),
+    tiebreaker_required: Boolean(raw.tiebreakerRequired ?? raw.tiebreaker_required ?? false),
+    is_tiebreaker_reviewer: Boolean(raw.isTiebreakerReviewer ?? raw.is_tiebreaker_reviewer ?? false),
+    tiebreaker_reviewer_id: (raw.tiebreakerReviewerId ?? raw.tiebreaker_reviewer_id) as string | undefined,
+    cluster_a_scores: (raw.clusterAScores ?? raw.cluster_a_scores) as number[] | undefined,
+    cluster_b_scores: (raw.clusterBScores ?? raw.cluster_b_scores) as number[] | undefined,
   };
 }
 
@@ -1153,6 +1210,7 @@ export const guildApplicationsApi = {
         ? Number(v.reputationChange ?? v.reputation_change) : undefined,
       reward_amount: v.rewardAmount != null || v.reward_amount != null
         ? Number(v.rewardAmount ?? v.reward_amount) : undefined,
+      slashing_tier: (v.slashingTier ?? v.slashing_tier) as string | undefined,
       comment: (v.comment) as string | undefined,
       created_at: (v.createdAt ?? v.created_at ?? "") as string,
     }));

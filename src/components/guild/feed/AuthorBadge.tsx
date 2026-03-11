@@ -58,9 +58,7 @@ export function AuthorBadge({
 
       {/* Author Name */}
       <span className="text-sm font-medium text-foreground">
-        {author.walletAddress
-          ? truncateAddress(author.walletAddress)
-          : author.fullName}
+        {author.fullName || truncateAddress(author.walletAddress || "")}
       </span>
 
       {/* Reputation */}

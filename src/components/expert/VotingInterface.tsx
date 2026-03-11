@@ -39,6 +39,14 @@ export function VotingInterface({
         {/* Direct voting */}
         {(!crPhase || crPhase.phase === "direct") && (
           <div className="bg-card border border-border border-t-2 border-t-primary rounded-xl p-6">
+            {application.is_tiebreaker_reviewer && !hasVoted && (
+              <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 mb-4">
+                <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Tiebreaker Vote</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Scores were split between two clusters. Your vote will determine the final outcome.
+                </p>
+              </div>
+            )}
             <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
               Your Vote
             </h3>

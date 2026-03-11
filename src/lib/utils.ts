@@ -147,6 +147,28 @@ export function ensureHttps(url: string): string {
 }
 
 /**
+ * Retry an async function with progressive backoff delays.
+ * Returns the result on success, or calls `onExhausted` if all retries fail.
+ */
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  delays: number[] = [2000, 4000, 6000],
+  onExhausted?: () => void,
+): Promise<T | undefined> {
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    try {
+      return await fn();
+    } catch {
+      if (attempt < delays.length - 1) {
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+      }
+    }
+  }
+  onExhausted?.();
+  return undefined;
+}
+
+/**
  * Strip markdown syntax for plain-text previews
  */
 export function stripMarkdown(text: string): string {

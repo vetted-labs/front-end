@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { MapPin, Briefcase, DollarSign, Award, Star, Linkedin, Github, FileText, ExternalLink, Eye, Zap } from 'lucide-react';
+import { MapPin, Briefcase, DollarSign, Award, Star, Linkedin, Github, FileText, ExternalLink, Eye, Zap, Clock } from 'lucide-react';
 import { useMemo } from 'react';
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
+import { useCountdown } from "@/lib/hooks/useCountdown";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationCardProps {
@@ -15,6 +16,11 @@ interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
+  const { label: countdownLabel, isExpired, isUrgent } = useCountdown(
+    application.bidding_deadline,
+    { fallbackStart: application.applied_at, expiredLabel: "Bidding closed" },
+  );
+
   const candidateInitials = application.candidate_name
     .split(' ')
     .map((n: string) => n[0])
@@ -219,10 +225,20 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </div>
         </div>
 
-        {/* Meta Info */}
-        <div className="flex items-center justify-between pt-4 border-t border-border/60 text-xs text-muted-foreground mb-4">
-          <span>
+        {/* Bidding Period Countdown */}
+        <div className="flex items-center justify-between pt-4 border-t border-border/60 text-xs mb-4">
+          <span className="text-muted-foreground">
             Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
+          </span>
+          <span className={`flex items-center gap-1 font-medium ${
+            isExpired
+              ? "text-muted-foreground"
+              : isUrgent
+              ? "text-red-500"
+              : "text-primary"
+          }`}>
+            <Clock className="w-3 h-3" />
+            {countdownLabel}
           </span>
         </div>
 
@@ -241,13 +257,14 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </Button>
           <Button
             className="w-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
+            disabled={isExpired}
             onClick={(e) => {
               e.stopPropagation();
               onQuickEndorse(application);
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            Endorse Now
+            {isExpired ? "Bidding Closed" : "Endorse Now"}
           </Button>
         </div>
       </CardContent>

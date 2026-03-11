@@ -365,7 +365,7 @@ export function ReviewGuildApplicationModal({
       return sum + points;
     }, 0);
 
-  const overallScore = generalTotal + topicTotal - redFlagDeductions;
+  const overallScore = Math.max(0, generalTotal + topicTotal - redFlagDeductions);
 
   if (!application || !isOpen) return null;
 

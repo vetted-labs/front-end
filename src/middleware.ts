@@ -26,7 +26,7 @@ export function middleware(_request: NextRequest) {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "upgrade-insecure-requests",
+    // Note: no upgrade-insecure-requests in dev — it would upgrade http://localhost to https://localhost and break everything
   ].join("; ");
 
   // Production CSP: Use nonce-based script policy instead of unsafe-inline

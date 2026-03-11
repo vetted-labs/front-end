@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { candidateApi } from "@/lib/api";
@@ -31,6 +31,13 @@ function LinkedInCallbackContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Processing LinkedIn authentication...");
   const { disconnect } = useDisconnect();
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  /** Schedule a redirect with automatic cleanup on unmount */
+  const scheduleRedirect = useCallback((path: string, delayMs: number) => {
+    const id = setTimeout(() => router.push(path), delayMs);
+    timeoutsRef.current.push(id);
+  }, [router]);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -42,14 +49,14 @@ function LinkedInCallbackContent() {
         if (error) {
           setStatus("error");
           setMessage(`LinkedIn authentication failed: ${error}`);
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
         if (!code) {
           setStatus("error");
           setMessage("No authorization code received from LinkedIn");
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
@@ -58,7 +65,7 @@ function LinkedInCallbackContent() {
         if (!savedStateData) {
           setStatus("error");
           setMessage("OAuth state validation failed - session expired");
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
@@ -70,7 +77,7 @@ function LinkedInCallbackContent() {
           setStatus("error");
           setMessage("OAuth state data is corrupted - please try again");
           sessionStorage.removeItem('linkedin_oauth_state');
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
@@ -78,7 +85,7 @@ function LinkedInCallbackContent() {
         if (state !== stateData.token) {
           setStatus("error");
           setMessage("OAuth state validation failed - potential CSRF attack");
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
@@ -88,7 +95,7 @@ function LinkedInCallbackContent() {
           setStatus("error");
           setMessage("OAuth state expired - please try again");
           sessionStorage.removeItem('linkedin_oauth_state');
-          setTimeout(() => router.push("/auth/login"), 3000);
+          scheduleRedirect("/auth/login", 3000);
           return;
         }
 
@@ -120,16 +127,21 @@ function LinkedInCallbackContent() {
         // Prevents open redirect attacks via manipulated sessionStorage
         const rawRedirect = stateData.redirect || "/candidate/dashboard";
         const safeRedirect = isInternalPath(rawRedirect) ? rawRedirect : "/candidate/dashboard";
-        setTimeout(() => router.push(safeRedirect), 1500);
+        scheduleRedirect(safeRedirect, 1500);
       } catch (error: unknown) {
         logger.error("LinkedIn OAuth error", error, { silent: true });
         setStatus("error");
         setMessage(error instanceof Error ? error.message : "Failed to authenticate with LinkedIn");
-        setTimeout(() => router.push("/auth/login"), 3000);
+        scheduleRedirect("/auth/login", 3000);
       }
     };
 
     handleCallback();
+
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current = [];
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Briefcase,
@@ -50,18 +51,13 @@ interface UpcomingMeeting {
   details: MeetingDetails;
 }
 
-interface CompanyDashboardData {
+interface CriticalDashboardData {
   companyName: string;
   stats: DashboardStats;
   recentJobs: Job[];
-  recentApplications: CompanyApplication[];
-  unreadCount: number;
-  meetings: UpcomingMeeting[];
-  activityFeed: CompanyActivityItem[];
 }
 
-async function loadDashboardData(userId: string | null): Promise<CompanyDashboardData> {
-  // Critical data -- fetch in parallel
+async function loadCriticalData(userId: string | null): Promise<CriticalDashboardData> {
   const [profile, statsData, jobsData] = await Promise.all([
     companyApi.getProfile(),
     dashboardApi.getStats(userId ?? undefined),
@@ -74,99 +70,83 @@ async function loadDashboardData(userId: string | null): Promise<CompanyDashboar
   const allJobs = (Array.isArray(jobsData) ? jobsData : []) as Job[];
   const recentJobs = allJobs.slice(0, 5);
 
-  // Non-critical data -- individual try/catch so failures don't block the dashboard
-  let activityFeed: CompanyActivityItem[] = [];
-  let recentApplications: CompanyApplication[] = [];
-  let unreadCount = 0;
-  let meetings: UpcomingMeeting[] = [];
-
-  try {
-    const appsResult = await companyApi.getApplications({ limit: 5 });
-    const appsList = Array.isArray(appsResult) ? appsResult : (appsResult?.applications ?? []);
-    recentApplications = appsList;
-  } catch {
-    // Applications failed -- proceed without them
-  }
-
-  try {
-    activityFeed = await companyApi.getActivity(10);
-  } catch {
-    // Activity feed failed -- proceed without it
-  }
-
-  try {
-    const counts = (await messagingApi.getUnreadCounts()) as { total: number };
-    unreadCount = counts.total ?? 0;
-  } catch {
-    // Unread counts failed -- default 0
-  }
-
-  // Upcoming meetings -- scan recent conversations for meeting_scheduled messages
-  try {
-    const allConvs = (await messagingApi.getCompanyConversations()) as Conversation[];
-    const convsList = Array.isArray(allConvs) ? allConvs : [];
-    const upcomingMeetings: UpcomingMeeting[] = [];
-
-    // Check the most recent conversations for meetings (limit to 10 to avoid excessive API calls)
-    const toCheck = convsList.slice(0, 10);
-    const convDetails = await Promise.all(
-      toCheck.map((c) =>
-        messagingApi.getConversation(c.id).catch(() => null)
-      )
-    );
-
-    const now = new Date();
-    for (let i = 0; i < convDetails.length; i++) {
-      const detail = convDetails[i] as { messages?: Array<{ type: string; meetingDetails?: MeetingDetails }> } | null;
-      if (!detail?.messages) continue;
-
-      for (const msg of detail.messages) {
-        if (msg.type === "meeting_scheduled" && msg.meetingDetails) {
-          const meetingDate = new Date(msg.meetingDetails.scheduledAt);
-          if (meetingDate > now) {
-            upcomingMeetings.push({
-              conversationId: toCheck[i].id,
-              candidateName: toCheck[i].candidateName,
-              details: msg.meetingDetails,
-            });
-          }
-        }
-      }
-    }
-
-    upcomingMeetings.sort(
-      (a, b) => new Date(a.details.scheduledAt).getTime() - new Date(b.details.scheduledAt).getTime()
-    );
-    meetings = upcomingMeetings.slice(0, 5);
-  } catch {
-    // Meetings failed -- proceed without them
-  }
-
-  return {
-    companyName,
-    stats,
-    recentJobs,
-    recentApplications,
-    unreadCount,
-    meetings,
-    activityFeed,
-  };
+  return { companyName, stats, recentJobs };
 }
 
 export function CompanyDashboardOverview() {
   const { userId } = useAuthContext();
 
+  // Critical data — renders stats, jobs, and welcome header immediately
   const { data, isLoading, error } = useFetch(
-    () => loadDashboardData(userId),
+    () => loadCriticalData(userId),
   );
+
+  // Non-critical data — loaded progressively after the critical render
+  const [recentApplications, setRecentApplications] = useState<CompanyApplication[]>([]);
+  const [activityFeed, setActivityFeed] = useState<CompanyActivityItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [meetings, setMeetings] = useState<UpcomingMeeting[]>([]);
+  const nonCriticalFetched = useRef(false);
+
+  useEffect(() => {
+    if (!data || nonCriticalFetched.current) return;
+    nonCriticalFetched.current = true;
+
+    // Fire all non-critical fetches in parallel, updating state as each resolves
+    companyApi.getApplications({ limit: 5 }).then((appsResult) => {
+      const appsList = Array.isArray(appsResult) ? appsResult : (appsResult?.applications ?? []);
+      setRecentApplications(appsList);
+    }).catch(() => {});
+
+    companyApi.getActivity(10).then((feed) => {
+      setActivityFeed(feed);
+    }).catch(() => {});
+
+    messagingApi.getUnreadCounts().then((counts) => {
+      setUnreadCount((counts as { total: number }).total ?? 0);
+    }).catch(() => {});
+
+    // Meetings — heavier fetch (conversations + details)
+    (async () => {
+      try {
+        const allConvs = (await messagingApi.getCompanyConversations()) as Conversation[];
+        const convsList = Array.isArray(allConvs) ? allConvs : [];
+        const toCheck = convsList.slice(0, 10);
+        const convDetails = await Promise.all(
+          toCheck.map((c) => messagingApi.getConversation(c.id).catch(() => null))
+        );
+
+        const now = new Date();
+        const upcomingMeetings: UpcomingMeeting[] = [];
+        for (let i = 0; i < convDetails.length; i++) {
+          const detail = convDetails[i] as { messages?: Array<{ type: string; meetingDetails?: MeetingDetails }> } | null;
+          if (!detail?.messages) continue;
+          for (const msg of detail.messages) {
+            if (msg.type === "meeting_scheduled" && msg.meetingDetails) {
+              const meetingDate = new Date(msg.meetingDetails.scheduledAt);
+              if (meetingDate > now) {
+                upcomingMeetings.push({
+                  conversationId: toCheck[i].id,
+                  candidateName: toCheck[i].candidateName,
+                  details: msg.meetingDetails,
+                });
+              }
+            }
+          }
+        }
+        upcomingMeetings.sort(
+          (a, b) => new Date(a.details.scheduledAt).getTime() - new Date(b.details.scheduledAt).getTime()
+        );
+        setMeetings(upcomingMeetings.slice(0, 5));
+      } catch {
+        // Meetings failed — proceed without them
+      }
+    })();
+  }, [data]);
 
   const companyName = data?.companyName ?? "";
   const stats = data?.stats ?? null;
   const recentJobs = data?.recentJobs ?? [];
-  const recentApplications = data?.recentApplications ?? [];
-  const unreadCount = data?.unreadCount ?? 0;
-  const meetings = data?.meetings ?? [];
-  const activityFeed = data?.activityFeed ?? [];
 
   if (isLoading) {
     return null;
@@ -232,6 +212,55 @@ export function CompanyDashboardOverview() {
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 mb-6">
           {/* Left Column */}
           <div className="space-y-6">
+            {/* Recent Applications */}
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Recent Applications
+                </h2>
+                <Link
+                  href="/dashboard/candidates"
+                  className="text-xs text-primary hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+              <div className="p-5">
+                {recentApplications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                    <p className="text-sm font-medium text-foreground mb-1">No applications yet</p>
+                    <p className="text-xs text-muted-foreground">
+                      Applications will appear here as candidates apply
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {recentApplications.map((app) => (
+                      <Link
+                        key={app.id}
+                        href="/dashboard/candidates"
+                        className="w-full flex items-center justify-between p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                            {app.candidate.fullName}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {app.job.title} · {formatTimeAgo(app.appliedAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                          <StatusBadge status={app.status} size="sm" />
+                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Recent Job Postings */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
@@ -279,55 +308,6 @@ export function CompanyDashboardOverview() {
                         </div>
                         <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                           <StatusBadge status={job.status ?? "active"} size="sm" />
-                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Applications */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Recent Applications
-                </h2>
-                <Link
-                  href="/dashboard/candidates"
-                  className="text-xs text-primary hover:underline"
-                >
-                  View All
-                </Link>
-              </div>
-              <div className="p-5">
-                {recentApplications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                    <p className="text-sm font-medium text-foreground mb-1">No applications yet</p>
-                    <p className="text-xs text-muted-foreground">
-                      Applications will appear here as candidates apply
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentApplications.map((app) => (
-                      <Link
-                        key={app.id}
-                        href="/dashboard/candidates"
-                        className="w-full flex items-center justify-between p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group text-left"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                            {app.candidate.fullName}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {app.job.title} · {formatTimeAgo(app.appliedAt)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                          <StatusBadge status={app.status} size="sm" />
                           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                       </Link>

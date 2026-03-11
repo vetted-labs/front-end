@@ -86,13 +86,24 @@ export const companySidebarConfig: SidebarConfig = {
   variant: "company",
   groups: [
     {
-      label: "Main",
+      label: "Home",
       items: [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
-        { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
+        { label: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: "notifications" },
+      ],
+    },
+    {
+      label: "Hiring",
+      items: [
         { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
         { label: "Candidates", href: "/dashboard/candidates", icon: Users },
         { label: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
+      ],
+    },
+    {
+      label: "Company",
+      items: [
+        { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
         { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
@@ -104,10 +115,10 @@ export const candidateSidebarConfig: SidebarConfig = {
   variant: "candidate",
   groups: [
     {
-      label: "Main",
+      label: "Home",
       items: [
         { label: "Dashboard", href: "/candidate/dashboard", icon: LayoutDashboard, exact: true },
-        { label: "Messages", href: "/candidate/messages", icon: MessageSquare, badge: "messages" },
+        { label: "Notifications", href: "/candidate/notifications", icon: Bell, badge: "notifications" },
       ],
     },
     {
@@ -115,6 +126,7 @@ export const candidateSidebarConfig: SidebarConfig = {
       items: [
         { label: "Browse Jobs", href: "/browse/jobs", icon: Briefcase },
         { label: "My Applications", href: "/candidate/applications", icon: FileText },
+        { label: "Messages", href: "/candidate/messages", icon: MessageSquare, badge: "messages" },
       ],
     },
     {

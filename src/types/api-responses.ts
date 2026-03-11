@@ -36,6 +36,41 @@ export interface NotificationsResponse {
   total: number;
 }
 
+// --- Base Notification (shared shape) ---
+export interface BaseNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  applicationId?: string;
+  link: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+// --- Company Notifications ---
+export interface CompanyNotification extends BaseNotification {
+  companyId: string;
+  jobId?: string;
+  candidateId?: string;
+}
+
+export interface CompanyNotificationsResponse {
+  notifications: CompanyNotification[];
+  total: number;
+}
+
+export interface CompanyNotificationPreferences {
+  emailNotifications: boolean;
+  newApplications: boolean;
+  applicationUpdates: boolean;
+  messagesMeetings: boolean;
+  jobUpdates: boolean;
+  weeklyReports: boolean;
+}
+
 // --- Guild Report (visible to recruiter) ---
 export interface CandidateGuildReport {
   guildApplication: {
@@ -63,6 +98,25 @@ export interface GuildReportReview {
   overallScore: number;
   reviewerName: string;
   createdAt: string;
+}
+
+// --- Candidate Notifications ---
+export interface CandidateNotification extends BaseNotification {
+  candidateId: string;
+  jobId?: string;
+  companyId?: string;
+}
+
+export interface CandidateNotificationsResponse {
+  notifications: CandidateNotification[];
+  total: number;
+}
+
+export interface CandidateNotificationPreferences {
+  emailNotifications: boolean;
+  applicationUpdates: boolean;
+  messages: boolean;
+  jobRecommendations: boolean;
 }
 
 // --- Company Activity ---
@@ -197,6 +251,8 @@ export interface EndorsementApplication {
   salary_max: number;
   salary_currency?: string;
   applied_at: string;
+  /** ISO timestamp 24h after applied_at — when blind bidding ends. */
+  bidding_deadline?: string;
   current_bid?: string;
   rank?: number;
   status?: string;

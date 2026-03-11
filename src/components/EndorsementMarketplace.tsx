@@ -296,7 +296,6 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
         userStake={userStake}
         minimumBid={minimumBidFormatted}
         onPlaceEndorsement={handlePlaceEndorsement}
-        topBids={[]}
         txStep={txStep}
         txError={txError}
         approvalTxHash={approvalTxHash}

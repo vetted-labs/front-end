@@ -28,10 +28,6 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: "Vetted",
   description: "Decentralized Hiring Platform",
-  icons: {
-    icon: "/Vetted-orange.png",
-    apple: "/Vetted-orange.png",
-  },
 };
 
 export default async function RootLayout({

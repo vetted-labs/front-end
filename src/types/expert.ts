@@ -13,6 +13,7 @@ export interface PendingGuildInfo {
   reviewCount?: number;
   approvalCount?: number;
   rejectionCount?: number;
+  votingDeadline?: string;
 }
 
 /** Expert profile — returned by expertApi.getProfile. */

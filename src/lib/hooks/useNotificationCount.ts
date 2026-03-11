@@ -12,17 +12,27 @@ export const NOTIFICATION_READ_EVENT = "notification-read";
 export function useNotificationCount(address: string | undefined, enabled: boolean) {
   const [count, setCount] = useState(0);
   const failedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const fetchCount = useCallback(async () => {
     if (!enabled || !address || failedRef.current) return;
     try {
       const result = await notificationsApi.getUnreadCount(address);
-      setCount(result?.count || 0);
+      if (mountedRef.current) {
+        setCount(result?.count || 0);
+      }
     } catch {
       // Stop polling on error (e.g. 404 for unregistered experts)
       failedRef.current = true;
     }
   }, [enabled, address]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!enabled || !address) {

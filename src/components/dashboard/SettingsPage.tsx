@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -8,19 +8,62 @@ import {
   CreditCard,
   ArrowLeft,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { companyNotificationsApi } from "@/lib/api";
+import { toast } from "sonner";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import type { CompanyNotificationPreferences } from "@/types";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { ready } = useRequireAuth("company");
   const [activeTab, setActiveTab] = useState<"notifications" | "security" | "billing">("notifications");
 
-  // Notification Settings
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [newApplications, setNewApplications] = useState(true);
-  const [applicationUpdates, setApplicationUpdates] = useState(true);
-  const [weeklyReports, setWeeklyReports] = useState(false);
+  // Notification preferences state
+  const [prefs, setPrefs] = useState<CompanyNotificationPreferences>({
+    emailNotifications: true,
+    newApplications: true,
+    applicationUpdates: true,
+    messagesMeetings: true,
+    jobUpdates: true,
+    weeklyReports: false,
+  });
+  const [isLoadingPrefs, setIsLoadingPrefs] = useState(true);
+  const [isSavingPrefs, setIsSavingPrefs] = useState(false);
+
+  const fetchPreferences = useCallback(async () => {
+    try {
+      const result = await companyNotificationsApi.getPreferences();
+      setPrefs(result);
+    } catch {
+      // Use defaults on error
+    } finally {
+      setIsLoadingPrefs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (ready) fetchPreferences();
+  }, [ready, fetchPreferences]);
+
+  const handleSavePreferences = async () => {
+    setIsSavingPrefs(true);
+    try {
+      const result = await companyNotificationsApi.updatePreferences(prefs);
+      setPrefs(result);
+      toast.success("Notification preferences saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save preferences");
+    } finally {
+      setIsSavingPrefs(false);
+    }
+  };
+
+  const updatePref = (key: keyof CompanyNotificationPreferences, value: boolean) => {
+    setPrefs((prev) => ({ ...prev, [key]: value }));
+  };
 
   if (!ready) return null;
 
@@ -106,71 +149,33 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
-                      <div>
-                        <p className="font-medium text-foreground">Email Notifications</p>
-                        <p className="text-sm text-muted-foreground">Receive notifications via email</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={emailNotifications}
-                          onChange={(e) => setEmailNotifications(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-                      </label>
+                  {isLoadingPrefs ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                     </div>
+                  ) : (
+                    <>
+                      <div className="space-y-4">
+                        <ToggleSwitch label="Email Notifications" description="Receive notifications via email" checked={prefs.emailNotifications} onChange={(v) => updatePref("emailNotifications", v)} />
+                        <ToggleSwitch label="New Applications" description="Get notified when someone applies" checked={prefs.newApplications} onChange={(v) => updatePref("newApplications", v)} />
+                        <ToggleSwitch label="Application Updates" description="Status changes and guild vetting results" checked={prefs.applicationUpdates} onChange={(v) => updatePref("applicationUpdates", v)} />
+                        <ToggleSwitch label="Messages & Meetings" description="New messages and meeting invitations" checked={prefs.messagesMeetings} onChange={(v) => updatePref("messagesMeetings", v)} />
+                        <ToggleSwitch label="Job Updates" description="Expiring jobs and low application alerts" checked={prefs.jobUpdates} onChange={(v) => updatePref("jobUpdates", v)} />
+                        <ToggleSwitch label="Weekly Reports" description="Summary of your hiring activity" checked={prefs.weeklyReports} onChange={(v) => updatePref("weeklyReports", v)} />
+                      </div>
 
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
-                      <div>
-                        <p className="font-medium text-foreground">New Applications</p>
-                        <p className="text-sm text-muted-foreground">Get notified when someone applies</p>
+                      <div className="flex justify-end pt-2">
+                        <button
+                          onClick={handleSavePreferences}
+                          disabled={isSavingPrefs}
+                          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {isSavingPrefs && <Loader2 className="w-4 h-4 animate-spin" />}
+                          Save Preferences
+                        </button>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={newApplications}
-                          onChange={(e) => setNewApplications(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
-                      <div>
-                        <p className="font-medium text-foreground">Application Updates</p>
-                        <p className="text-sm text-muted-foreground">Status changes and updates</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={applicationUpdates}
-                          onChange={(e) => setApplicationUpdates(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border/30">
-                      <div>
-                        <p className="font-medium text-foreground">Weekly Reports</p>
-                        <p className="text-sm text-muted-foreground">Summary of your hiring activity</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={weeklyReports}
-                          onChange={(e) => setWeeklyReports(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -271,8 +276,6 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-
-              {/* Note: Save functionality will be connected when notification preferences API is available */}
             </div>
           </div>
         </div>

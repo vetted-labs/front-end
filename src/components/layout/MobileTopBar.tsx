@@ -5,6 +5,8 @@ import { Logo } from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "./SidebarProvider";
 import { NotificationBell } from "./NotificationBell";
+import { CompanyNotificationBell } from "./CompanyNotificationBell";
+import { CandidateNotificationBell } from "./CandidateNotificationBell";
 import type { SidebarConfig } from "./sidebar-config";
 
 interface MobileTopBarProps {
@@ -29,6 +31,10 @@ export function MobileTopBar({ config }: MobileTopBarProps) {
       </div>
       {config?.variant === "expert" ? (
         <NotificationBell />
+      ) : config?.variant === "company" ? (
+        <CompanyNotificationBell />
+      ) : config?.variant === "candidate" ? (
+        <CandidateNotificationBell />
       ) : (
         /* Spacer to keep logo centered */
         <div className="w-9" />

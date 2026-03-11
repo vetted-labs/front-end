@@ -533,6 +533,17 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         recentActivity: [newActivity, ...(prev.recentActivity || [])],
       } : prev);
 
+      // Optimistically mark candidate as reviewed so button updates immediately
+      if (applicationReviewType === "candidate") {
+        setCandidateApplications(prev =>
+          prev.map(app =>
+            app.id === selectedExpertMembershipApplication.id
+              ? { ...app, expertHasReviewed: true, reviewCount: app.reviewCount + 1 }
+              : app
+          )
+        );
+      }
+
       refetch();
       setTimeout(() => refetch(), 3000);
 

@@ -31,23 +31,24 @@ export function useFetch<T = unknown>(
     onErrorRef.current = onError;
   });
 
+  // Ref-based cancellation flag — set synchronously in cleanup,
+  // so it's guaranteed to be `true` before any pending `.then()` runs.
+  const cancelledRef = useRef(false);
+
   const execute = useCallback(async () => {
     if (skip) return;
 
     setIsLoading(true);
     setError(null);
 
-    // Track whether this effect is still active (component mounted)
-    let cancelled = false;
-
     try {
       const result = await fetchFnRef.current();
-      if (!cancelled) {
+      if (!cancelledRef.current) {
         setData(result);
         onSuccessRef.current?.(result);
       }
     } catch (err) {
-      if (!cancelled) {
+      if (!cancelledRef.current) {
         const errorMessage =
           err instanceof ApiError
             ? err.message
@@ -56,24 +57,17 @@ export function useFetch<T = unknown>(
         onErrorRef.current?.(errorMessage);
       }
     } finally {
-      if (!cancelled) {
+      if (!cancelledRef.current) {
         setIsLoading(false);
       }
     }
-
-    // Return cleanup that marks this execution as cancelled
-    return () => {
-      cancelled = true;
-    };
   }, [skip]);
 
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    execute().then((fn) => {
-      cleanup = fn;
-    });
+    cancelledRef.current = false;
+    execute();
     return () => {
-      cleanup?.();
+      cancelledRef.current = true;
     };
   }, [execute]);
 

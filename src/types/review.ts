@@ -28,6 +28,9 @@ export interface ExpertMembershipApplication {
   finalized?: boolean;
   finalizedAt?: string;
   outcome?: string;
+  /** Consensus failure / tiebreaker fields */
+  consensus_failed?: boolean;
+  tiebreaker_required?: boolean;
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;
@@ -49,6 +52,7 @@ export interface ExpertApplicationFinalization {
     rewardAmount: number;
     slashPercent: number;
     slashingTier: string;
+    cluster?: "majority" | "minority" | "neutral";
     vote: string;
     createdAt: string;
   }>;

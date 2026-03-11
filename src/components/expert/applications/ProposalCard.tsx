@@ -28,7 +28,9 @@ export function ProposalCard({
       ? "Approved"
       : proposal.outcome === "rejected"
         ? "Rejected"
-        : null;
+        : proposal.outcome === "inconclusive"
+          ? "Inconclusive"
+          : null;
 
   return (
     <div className="group rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 transition-all hover:border-primary/30 dark:bg-card/40 dark:border-white/[0.06] dark:hover:border-white/[0.12]">
@@ -58,6 +60,14 @@ export function ProposalCard({
             {isAssigned && !isFinalized && (
               <Badge variant="default" className="text-xs shrink-0">Assigned</Badge>
             )}
+            {proposal.consensus_failed && !isFinalized && (
+              <Badge variant="outline" className="border-orange-500/40 text-orange-500 text-xs shrink-0">
+                Consensus Failed
+              </Badge>
+            )}
+            {proposal.is_tiebreaker_reviewer && !hasVoted && !isFinalized && (
+              <Badge className="text-xs shrink-0 bg-violet-600">Tiebreaker</Badge>
+            )}
             {hasVoted && (
               <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                 <CheckCircle className="w-3 h-3" />
@@ -85,9 +95,9 @@ export function ProposalCard({
                 <Lock className="w-3.5 h-3.5 mr-1" />
                 Stake Required
               </Button>
-            ) : isAssigned && !hasVoted ? (
+            ) : (isAssigned || proposal.is_tiebreaker_reviewer) && !hasVoted ? (
               <Button size="sm" onClick={() => onReview(proposal)}>
-                Cast Vote
+                {proposal.is_tiebreaker_reviewer ? "Tiebreaker Vote" : "Cast Vote"}
               </Button>
             ) : hasVoted ? (
               <Button variant="outline" size="sm" disabled>

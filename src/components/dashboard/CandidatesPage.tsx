@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,7 +13,7 @@ import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpda
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
-import type { CompanyApplication, EndorsementStats, ApplicationStatus } from "@/types";
+import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption } from "@/types";
 
 interface GroupedJob {
   job: CompanyApplication["job"];
@@ -27,23 +27,37 @@ export default function CandidatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterGuild, setFilterGuild] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<CandidateSortOption>("endorsements");
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
   const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
   const [endorsementData, setEndorsementData] = useState<Map<string, EndorsementStats>>(new Map());
 
+  // Load candidates first, then fetch endorsements in background
   const { isLoading } = useFetch(
-    async () => {
-      const data = await companyApi.getApplications({ limit: 500 });
-      const apps = data.applications ?? [];
+    () => companyApi.getApplications({ limit: 500 }).then((d) => d.applications ?? []),
+    {
+      skip: !ready,
+      onSuccess: (apps) => setAllApplications(apps),
+      onError: () => toast.error("Failed to load candidates"),
+    }
+  );
 
-      // Batch-fetch endorsement stats for unique job+candidate pairs
-      const uniquePairs = new Map<string, { jobId: string; candidateId: string }>();
-      for (const app of apps) {
-        const key = `${app.jobId}:${app.candidateId}`;
-        if (!uniquePairs.has(key)) {
-          uniquePairs.set(key, { jobId: app.jobId, candidateId: app.candidateId });
-        }
+  // Fetch endorsement stats in background after candidates load
+  const endorsementsFetched = useRef(false);
+  useEffect(() => {
+    if (allApplications.length === 0 || endorsementsFetched.current) return;
+    endorsementsFetched.current = true;
+
+    const uniquePairs = new Map<string, { jobId: string; candidateId: string }>();
+    for (const app of allApplications) {
+      const key = `${app.jobId}:${app.candidateId}`;
+      if (!uniquePairs.has(key)) {
+        uniquePairs.set(key, { jobId: app.jobId, candidateId: app.candidateId });
       }
+    }
 
+    (async () => {
       const endorsements = new Map<string, EndorsementStats>();
       const pairEntries = Array.from(uniquePairs.entries());
       for (let i = 0; i < pairEntries.length; i += 10) {
@@ -60,26 +74,28 @@ export default function CandidatesPage() {
         }
       }
       setEndorsementData(endorsements);
+    })();
+  }, [allApplications]);
 
-      return apps;
-    },
-    {
-      skip: !ready,
-      onSuccess: (apps) => setAllApplications(apps),
-      onError: () => toast.error("Failed to load candidates"),
-    }
-  );
-
-  const isEndorsed = useCallback(
-    (app: CompanyApplication): boolean => {
-      return (endorsementData.get(`${app.jobId}:${app.candidateId}`)?.totalEndorsements ?? 0) > 0;
+  const getEndorsementCount = useCallback(
+    (app: CompanyApplication): number => {
+      return endorsementData.get(`${app.jobId}:${app.candidateId}`)?.totalEndorsements ?? 0;
     },
     [endorsementData]
   );
 
   const { updateStatus, isLoading: isUpdatingStatus } = useApplicationStatusUpdate();
 
-  // Group applications by job, with endorsed candidates sorted first
+  // Unique guilds for the guild filter dropdown
+  const uniqueGuilds = useMemo(() => {
+    const set = new Set<string>();
+    for (const app of allApplications) {
+      if (app.job.guild) set.add(app.job.guild);
+    }
+    return Array.from(set).sort();
+  }, [allApplications]);
+
+  // Group applications by job with current sort
   const groupedJobs = useMemo(() => {
     const groups = allApplications.reduce<GroupedJob[]>((acc, app) => {
       const existing = acc.find((g) => g.job.id === app.jobId);
@@ -93,17 +109,27 @@ export default function CandidatesPage() {
 
     for (const group of groups) {
       group.applications.sort((a, b) => {
-        const aCount = endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0;
-        const bCount = endorsementData.get(`${b.jobId}:${b.candidateId}`)?.totalEndorsements ?? 0;
-        return bCount - aCount;
+        switch (sortBy) {
+          case "endorsements": {
+            const aCount = endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0;
+            const bCount = endorsementData.get(`${b.jobId}:${b.candidateId}`)?.totalEndorsements ?? 0;
+            return bCount - aCount;
+          }
+          case "newest":
+            return new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime();
+          case "oldest":
+            return new Date(a.appliedAt).getTime() - new Date(b.appliedAt).getTime();
+          case "name":
+            return a.candidate.fullName.localeCompare(b.candidate.fullName);
+        }
       });
     }
 
     return groups;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allApplications, endorsementData]);
+  }, [allApplications, endorsementData, sortBy]);
 
-  // Apply search and status filters
+  // Apply search, status, and job filters
   const filteredJobs = useMemo(() => {
     return groupedJobs
       .map((group) => {
@@ -115,14 +141,50 @@ export default function CandidatesPage() {
             group.job.title.toLowerCase().includes(debouncedSearch.toLowerCase());
 
           const matchesFilter = filterStatus === "all" || app.status === filterStatus;
+          const matchesGuild = filterGuild === "all" || group.job.guild === filterGuild;
 
-          return matchesSearch && matchesFilter;
+          return matchesSearch && matchesFilter && matchesGuild;
         });
 
         return filteredApps.length > 0 ? { ...group, applications: filteredApps } : null;
       })
       .filter(Boolean) as GroupedJob[];
-  }, [groupedJobs, debouncedSearch, filterStatus]);
+  }, [groupedJobs, debouncedSearch, filterStatus, filterGuild]);
+
+  // Auto-expand all groups whenever the filtered list changes
+  useEffect(() => {
+    setExpandedJobIds(new Set(filteredJobs.map((g) => g.job.id)));
+  }, [filteredJobs]);
+
+  // Auto-expand when selecting a candidate in a collapsed group
+  useEffect(() => {
+    if (selectedApplication) {
+      setExpandedJobIds((prev) => {
+        if (prev.has(selectedApplication.jobId)) return prev;
+        return new Set([...prev, selectedApplication.jobId]);
+      });
+    }
+  }, [selectedApplication]);
+
+  const handleToggleJob = useCallback((jobId: string) => {
+    setExpandedJobIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) {
+        next.delete(jobId);
+      } else {
+        next.add(jobId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    setExpandedJobIds(new Set(filteredJobs.map((g) => g.job.id)));
+  }, [filteredJobs]);
+
+  const handleCollapseAll = useCallback(() => {
+    setExpandedJobIds(new Set());
+  }, []);
 
   const stats = useMemo(
     () => ({
@@ -130,6 +192,7 @@ export default function CandidatesPage() {
       pending: allApplications.filter((a) => a.status === "pending").length,
       accepted: allApplications.filter((a) => a.status === "accepted").length,
       reviewing: allApplications.filter((a) => a.status === "reviewing").length,
+      interviewed: allApplications.filter((a) => a.status === "interviewed").length,
     }),
     [allApplications]
   );
@@ -170,99 +233,107 @@ export default function CandidatesPage() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-full relative animate-page-enter">
-      <div className="pointer-events-none absolute inset-0 content-gradient" />
-
-      <div className="relative h-[calc(100vh-4rem)]">
-        {/* Mobile header — visible only on small screens */}
-        <div className="px-6 py-4 border-b border-border/40 dark:border-white/[0.04] lg:hidden">
-          {selectedApplication ? (
-            <button
-              onClick={() => setSelectedApplication(null)}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to list
-            </button>
-          ) : (
-            <div>
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors mb-2 flex items-center gap-1"
-              >
-                <ArrowLeft className="w-3 h-3" />
-                Dashboard
-              </button>
-              <h1 className="text-lg font-semibold text-foreground">Candidates</h1>
-            </div>
-          )}
-        </div>
-
-        {/* Desktop header — hidden on mobile */}
-        <div className="hidden lg:block px-6 py-4 border-b border-border/40 dark:border-white/[0.04]">
-          <div className="flex items-center gap-4 mb-4">
+    <div className="h-full flex flex-col animate-page-enter">
+      {/* Mobile header — visible only on small screens */}
+      <div className="flex-shrink-0 px-6 py-3 border-b border-border/40 dark:border-white/[0.04] lg:hidden">
+        {selectedApplication ? (
+          <button
+            onClick={() => setSelectedApplication(null)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to list
+          </button>
+        ) : (
+          <div>
             <button
               onClick={() => router.push("/dashboard")}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors mb-2 flex items-center gap-1"
             >
               <ArrowLeft className="w-3 h-3" />
               Dashboard
             </button>
             <h1 className="text-lg font-semibold text-foreground">Candidates</h1>
           </div>
+        )}
+      </div>
+
+      {/* Desktop header — hidden on mobile */}
+      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-6 py-2.5 border-b border-border/40 dark:border-white/[0.04]">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
+          <ArrowLeft className="w-3 h-3" />
+          Dashboard
+        </button>
+        <h1 className="text-lg font-semibold text-foreground">Candidates</h1>
+        <div className="ml-auto pr-12">
           <CandidateStatsBar
             total={stats.total}
             pending={stats.pending}
             accepted={stats.accepted}
             reviewing={stats.reviewing}
+            interviewed={stats.interviewed}
+            activeFilter={filterStatus}
+            onFilterClick={setFilterStatus}
+          />
+        </div>
+      </div>
+
+      {/* Two-panel layout — fills remaining height, no gaps */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left panel — candidate list */}
+        <div
+          className={`w-full lg:w-[38%] xl:w-[33%] flex flex-col border-r border-border/40 dark:border-white/[0.04] ${
+            selectedApplication ? "hidden lg:flex" : "flex"
+          }`}
+        >
+          <CandidateListPanel
+            groupedJobs={filteredJobs}
+            selectedApplicationId={selectedApplication?.id ?? null}
+            onSelectApplication={setSelectedApplication}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filterStatus={filterStatus}
+            onFilterChange={setFilterStatus}
+            isLoading={isLoading}
+            getEndorsementCount={getEndorsementCount}
+            uniqueGuilds={uniqueGuilds}
+            filterGuild={filterGuild}
+            onGuildFilterChange={setFilterGuild}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            expandedJobIds={expandedJobIds}
+            onToggleJob={handleToggleJob}
+            onExpandAll={handleExpandAll}
+            onCollapseAll={handleCollapseAll}
           />
         </div>
 
-        {/* Two-panel layout */}
-        <div className="flex gap-4 px-4 pb-4 h-[calc(100%-8rem)] lg:h-[calc(100%-10rem)]">
-          {/* Left panel — candidate list */}
-          <div
-            className={`w-full lg:w-[38%] xl:w-[33%] flex flex-col ${
-              selectedApplication ? "hidden lg:flex" : "flex"
-            }`}
-          >
-            <CandidateListPanel
-              groupedJobs={filteredJobs}
-              selectedApplicationId={selectedApplication?.id ?? null}
-              onSelectApplication={setSelectedApplication}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              filterStatus={filterStatus}
-              onFilterChange={setFilterStatus}
-              isLoading={isLoading}
-              isEndorsed={isEndorsed}
+        {/* Right panel — candidate detail */}
+        <div
+          className={`w-full flex-1 min-w-0 min-h-0 ${
+            selectedApplication ? "flex" : "hidden lg:flex"
+          }`}
+        >
+          {selectedApplication ? (
+            <CandidateDetailPanel
+              application={selectedApplication}
+              onStatusChange={handleStatusChange}
+              isUpdatingStatus={isUpdatingStatus}
+              onBack={() => setSelectedApplication(null)}
+              showBackButton
             />
-          </div>
-
-          {/* Right panel — candidate detail */}
-          <div
-            className={`w-full flex-1 min-w-0 h-full ${
-              selectedApplication ? "flex" : "hidden lg:flex"
-            }`}
-          >
-            {selectedApplication ? (
-              <CandidateDetailPanel
-                application={selectedApplication}
-                onStatusChange={handleStatusChange}
-                isUpdatingStatus={isUpdatingStatus}
-                onBack={() => setSelectedApplication(null)}
-                showBackButton
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <EmptyState
+                icon={Users}
+                title="Select a candidate"
+                description="Choose a candidate from the list to view their details"
               />
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <EmptyState
-                  icon={Users}
-                  title="Select a candidate"
-                  description="Choose a candidate from the list to view their details"
-                />
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

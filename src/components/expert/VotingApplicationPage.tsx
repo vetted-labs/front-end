@@ -264,7 +264,9 @@ export default function VotingApplicationPage({
 
   /* -- derived values -- */
   const isFinalized = application.finalized;
-  const isReviewer = application.is_assigned_reviewer;
+  const isConsensusFailed = application.consensus_failed && !isFinalized;
+  const isTiebreakerReviewer = application.is_tiebreaker_reviewer;
+  const isReviewer = application.is_assigned_reviewer || !!isTiebreakerReviewer;
   const hasVoted = application.has_voted;
   const showVotingInterface = !isFinalized && isReviewer;
   const canVote =
@@ -304,6 +306,13 @@ export default function VotingApplicationPage({
                   {application.outcome === "approved"
                     ? "Approved"
                     : "Rejected"}
+                </Badge>
+              ) : isConsensusFailed ? (
+                <Badge
+                  variant="outline"
+                  className="border-orange-500/40 text-orange-500"
+                >
+                  {application.tiebreaker_required ? "Tiebreaker Pending" : "Consensus Failed"}
                 </Badge>
               ) : (
                 <Badge

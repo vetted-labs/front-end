@@ -65,6 +65,7 @@ export default function ApplicationsPage() {
   const [reviewType, setReviewType] = useState<"expert" | "candidate" | "proposal">("expert");
   const [reviewProposalContext, setReviewProposalContext] = useState<{ requiredStake: number } | undefined>();
   const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewedCandidateIds, setReviewedCandidateIds] = useState<Set<string>>(new Set());
 
   // View review modal state
   const [showViewReview, setShowViewReview] = useState(false);
@@ -158,6 +159,26 @@ export default function ApplicationsPage() {
     { onError: (err) => toast.error(err) },
   );
 
+  // History: candidate apps the expert has reviewed (including accepted/rejected)
+  const { data: historyCandidateAppsRaw, isLoading: historyCandidateAppsLoading, refetch: refetchHistoryCandidateApps } = useFetch<CandidateGuildApplication[]>(
+    async () => {
+      if (!address || guildRecords.length === 0) return [];
+      const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      const results = await Promise.all(
+        targetGuilds.map(async (g) => {
+          try {
+            const apps = await guildsApi.getCandidateApplications(g.id, address, "all");
+            return (Array.isArray(apps) ? apps : []).map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
+          } catch {
+            return [];
+          }
+        }),
+      );
+      return results.flat().filter((a) => a.expertHasReviewed);
+    },
+    { skip: activeTab !== "history", onError: (err) => toast.error(err) },
+  );
+
   // History: finalized proposals the expert voted on
   const { data: historyProposalsRaw, isLoading: historyLoading, refetch: refetchHistory } = useFetch<GuildApplication[]>(
     async () => {
@@ -169,23 +190,29 @@ export default function ApplicationsPage() {
       );
       return all.filter((p) => p.finalized && p.has_voted);
     },
-    { onError: (err) => toast.error(err) },
+    { skip: activeTab !== "history", onError: (err) => toast.error(err) },
   );
 
   // Expert apps — membership apps have no assigned field, so no filtering needed
   const expertApps = expertAppsRaw ?? [];
 
-  // Candidate apps — show all (including reviewed) so experts can view their past reviews
-  const candidateApps = candidateAppsRaw ?? [];
+  // Candidate apps — optimistically mark reviewed IDs so the UI updates immediately
+  const candidateApps = useMemo(() => {
+    const raw = candidateAppsRaw ?? [];
+    if (reviewedCandidateIds.size === 0) return raw;
+    return raw.map((app) =>
+      reviewedCandidateIds.has(app.id) ? { ...app, expertHasReviewed: true } : app
+    );
+  }, [candidateAppsRaw, reviewedCandidateIds]);
 
   const proposals = proposalsRaw ?? [];
 
   // History: combine finalized proposals + reviewed candidate apps
   const historyItems = useMemo(() => {
     const finalized = historyProposalsRaw ?? [];
-    const reviewedCandidateApps = (candidateAppsRaw ?? []).filter((a) => a.expertHasReviewed);
+    const reviewedCandidateApps = historyCandidateAppsRaw ?? [];
     return { proposals: finalized, candidateApps: reviewedCandidateApps };
-  }, [historyProposalsRaw, candidateAppsRaw]);
+  }, [historyProposalsRaw, historyCandidateAppsRaw]);
 
   const historyCount = historyItems.proposals.length + historyItems.candidateApps.length;
 
@@ -224,11 +251,14 @@ export default function ApplicationsPage() {
     refetchCandidateApps();
     refetchProposals();
     refetchHistory();
+    refetchHistoryCandidateApps();
   }, [selectedGuild, filterMode, expertData, guildRecords]);
 
   // Stats
   const pendingReviews = (expertApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
-  const proposalsToVote = proposals.filter((p) => p.is_assigned_reviewer && !p.has_voted).length;
+  const proposalsToVote = proposals.filter(
+    (p) => (p.is_assigned_reviewer || p.is_tiebreaker_reviewer) && !p.has_voted
+  ).length;
   const completedReviews = historyCount;
   const guildsActive = guildRecords.length;
 
@@ -244,6 +274,9 @@ export default function ApplicationsPage() {
   };
 
   const handleReviewCandidate = (candidateApp: CandidateGuildApplication) => {
+    if (candidateApp.expertHasReviewed || reviewedCandidateIds.has(candidateApp.id)) {
+      return;
+    }
     if (!isStakedInGuild(candidateApp.guildId)) {
       toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
@@ -323,6 +356,11 @@ export default function ApplicationsPage() {
 
       refetchExpertApps();
       refetchCandidateApps();
+      refetchHistoryCandidateApps();
+
+      if (reviewType === "candidate" && selectedReviewApp) {
+        setReviewedCandidateIds((prev) => new Set(prev).add(selectedReviewApp.id));
+      }
 
       return response;
     } catch (err: unknown) {
@@ -346,7 +384,7 @@ export default function ApplicationsPage() {
   const isLoading = activeTab === "expert" ? expertAppsLoading
     : activeTab === "candidate" ? candidateAppsLoading
     : activeTab === "proposals" ? proposalsLoading
-    : historyLoading;
+    : historyLoading || historyCandidateAppsLoading;
 
   const tabs: { value: TabType; label: React.ReactNode }[] = [
     {

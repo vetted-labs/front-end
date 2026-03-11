@@ -8,7 +8,6 @@ import {
   Github,
   ExternalLink,
   FileText,
-  Wallet,
   Calendar,
   Send,
   Loader2,
@@ -20,7 +19,7 @@ import {
 } from "lucide-react";
 import { applicationsApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import { truncateAddress, ensureHttps, formatSalaryRange } from "@/lib/utils";
+import { ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -75,10 +74,12 @@ export function CandidateDetailPanel({
 
   const { data: guildReport, isLoading: guildReportLoading, error: guildReportError } = useFetch<CandidateGuildReport>(
     () => companyApi.getCandidateGuildReport(application.candidateId, application.jobId),
+    { skip: activeTab !== "guild-report" },
   );
 
   const { data: statusHistory, isLoading: historyLoading, refetch: refetchHistory } = useFetch<StatusTransition[]>(
     () => applicationsApi.getStatusHistory(application.id),
+    { skip: activeTab !== "history" },
   );
 
   const handleStatusAdvance = (newStatus: ApplicationStatus, note?: string) => {
@@ -164,11 +165,11 @@ export function CandidateDetailPanel({
   }
 
   return (
-    <div className="flex flex-col w-full h-full rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+    <div className="flex flex-col w-full h-full overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-border/40 px-6 pt-5 pb-4">
+      <div className="flex-shrink-0 border-b border-border/40 px-6 pt-4 pb-3">
         {/* Row 1 — Back + status actions */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {showBackButton && (
               <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors lg:hidden">
@@ -187,20 +188,17 @@ export function CandidateDetailPanel({
           />
         </div>
 
-        {/* Row 2 — Avatar + name + contacts */}
+        {/* Row 2 — Avatar + name + contacts + pipeline stepper */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
-            <span className="text-primary font-display font-bold text-xl">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
+            <span className="text-primary font-display font-bold text-lg">
               {candidate.fullName.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-2xl font-bold text-foreground truncate tracking-tight">{candidate.fullName}</h3>
-            {candidate.headline && (
-              <p className="text-sm text-muted-foreground truncate mt-0.5">{candidate.headline}</p>
-            )}
-            {/* Inline contact links */}
-            <div className="flex items-center gap-1 mt-2">
+          <div className="min-w-0 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground truncate tracking-tight">{candidate.fullName}</h3>
+              {/* Inline contact links */}
               {contactLinks.map((link, idx) => {
                 const Icon = link.icon;
                 const isExternal = !link.href.startsWith("mailto:") && !link.href.startsWith("tel:");
@@ -210,32 +208,33 @@ export function CandidateDetailPanel({
                     href={link.href}
                     {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     title={link.title}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </a>
                 );
               })}
             </div>
+            {candidate.headline && (
+              <p className="text-sm text-muted-foreground truncate mt-0.5">{candidate.headline}</p>
+            )}
           </div>
-        </div>
-
-        {/* Row 3 — Pipeline stepper */}
-        <div className="mt-5">
-          <PipelineStepper
-            currentStatus={application.status}
-            history={statusHistory ?? []}
-          />
+          <div className="flex-1 min-w-0 ml-auto">
+            <PipelineStepper
+              currentStatus={application.status}
+              history={statusHistory ?? []}
+            />
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 px-6 py-3 border-b border-border/30 dark:border-white/[0.04]">
+      <div className="flex-shrink-0 px-6 py-2 border-b border-border/30 dark:border-white/[0.04]">
         <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       {/* Tab Content (scrollable) */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         {activeTab === "profile" && (
           <div className="space-y-5">
             {/* Applied For — hero card */}
@@ -294,17 +293,6 @@ export function CandidateDetailPanel({
                 <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Experience</p>
                   <p className="text-sm font-semibold text-foreground capitalize">{candidate.experienceLevel} Level</p>
-                </div>
-              )}
-
-              {/* Wallet */}
-              {candidate.walletAddress && (
-                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Wallet</p>
-                  <div className="flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
-                    <p className="text-sm font-mono text-foreground">{truncateAddress(candidate.walletAddress)}</p>
-                  </div>
                 </div>
               )}
 

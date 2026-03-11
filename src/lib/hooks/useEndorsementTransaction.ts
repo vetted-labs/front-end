@@ -11,6 +11,7 @@ import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi } from "@/lib/api";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { retryWithBackoff } from "@/lib/utils";
 import { getTransactionErrorMessage } from "@/lib/blockchain";
 
 /** Shape expected by the hook for the application being endorsed. */
@@ -114,16 +115,20 @@ export function useEndorsementTransaction(
       toast.success("Endorsement confirmed! Rewards will be distributed on candidate hire.");
       setEndorsing(false);
 
-      // Sync endorsement to backend DB (fire-and-forget)
+      // Sync endorsement to backend DB with retry + warning toast
       if (address) {
-        blockchainApi
-          .syncEndorsement(pendingApp.application_id, address, pendingApp.job_id, pendingApp.candidate_id)
-          .then(() => {
+        retryWithBackoff(
+          async () => {
+            await blockchainApi.syncEndorsement(
+              pendingApp.application_id, address, pendingApp.job_id, pendingApp.candidate_id
+            );
             refetchCallbacks.refetchEndorsements();
-          })
-          .catch((err) => {
-            logger.error("Failed to sync endorsement to backend", err, { silent: true });
-          });
+          },
+          [2000, 4000, 6000],
+          () => toast.warning(
+            "Your endorsement is confirmed on-chain but could not be synced to the server. It will sync automatically within a few minutes."
+          ),
+        );
       }
 
       // Refresh on-chain + backend data after blockchain state settles
@@ -163,6 +168,17 @@ export function useEndorsementTransaction(
 
       setTxError(null);
       setTxStep("signing");
+
+      // Ensure the job exists on-chain before attempting the bid
+      try {
+        await blockchainApi.ensureJobOnChain(app.job_id);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to prepare job on blockchain";
+        setTxStep("error");
+        setTxError(msg);
+        toast.error("Could not verify job on blockchain. Please try again later.");
+        return;
+      }
 
       const { hash } = await executeWithPermit(
         CONTRACT_ADDRESSES.ENDORSEMENT,

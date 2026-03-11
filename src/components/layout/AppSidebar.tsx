@@ -10,6 +10,8 @@ import { useSidebar } from "./SidebarProvider";
 import { SidebarNavGroup } from "./SidebarNavGroup";
 import { SidebarUserSection } from "./SidebarUserSection";
 import { useNotificationCount } from "@/lib/hooks/useNotificationCount";
+import { useCompanyNotificationCount } from "@/lib/hooks/useCompanyNotificationCount";
+import { useCandidateNotificationCount } from "@/lib/hooks/useCandidateNotificationCount";
 import { useMessageCount } from "@/lib/hooks/useMessageCount";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { cn } from "@/lib/utils";
@@ -25,10 +27,24 @@ export function AppSidebar({ config }: AppSidebarProps) {
   const { address, isConnected } = useAccount();
   const { expertStatus } = useExpertStatus();
 
-  const notificationCount = useNotificationCount(
+  const expertNotificationCount = useNotificationCount(
     address,
     config.variant === "expert" && isConnected && expertStatus === "approved"
   );
+
+  const companyNotificationCount = useCompanyNotificationCount(
+    config.variant === "company"
+  );
+
+  const candidateNotificationCount = useCandidateNotificationCount(
+    config.variant === "candidate"
+  );
+
+  const notificationCount = config.variant === "company"
+    ? companyNotificationCount
+    : config.variant === "candidate"
+    ? candidateNotificationCount
+    : expertNotificationCount;
 
   const messageCount = useMessageCount(
     config.variant === "company" || config.variant === "candidate"

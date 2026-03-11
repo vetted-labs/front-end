@@ -12,6 +12,7 @@ import {
   Plus,
   Shield,
   Swords,
+  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +20,21 @@ import { Alert } from "@/components/ui/alert";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import type { ExpertProfile, PendingGuildInfo } from "@/types";
+
+function getTimeRemaining(deadline?: string) {
+  if (!deadline) return null;
+  const now = Date.now();
+  const end = new Date(deadline).getTime();
+  const diff = end - now;
+  if (diff <= 0) return { label: "Voting ended", color: "text-red-400" };
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 3) return { label: `${days}d ${hours}h left`, color: "text-green-400" };
+  if (days >= 1) return { label: `${days}d ${hours}h left`, color: "text-amber-400" };
+  if (hours > 0) return { label: `${hours}h left`, color: "text-red-400" };
+  const minutes = Math.floor(diff / (1000 * 60));
+  return { label: `${minutes}m left`, color: "text-red-400" };
+}
 
 /**
  * Build the guild applications list from the profile data.
@@ -88,9 +104,20 @@ export default function ApplicationPendingPage() {
   }
 
   if (error || !expert) {
+    const isInsufficientMembers = error?.includes("minimum") || error?.includes("enough members") || error?.includes("5 members");
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <Alert variant="error">{error || "Failed to load application status"}</Alert>
+        {isInsufficientMembers ? (
+          <div className="max-w-md text-center">
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">Not Enough Guild Members</h2>
+            <p className="text-sm text-muted-foreground">
+              This guild needs at least 5 members to process applications. Your application will be reviewed once more experts join.
+            </p>
+          </div>
+        ) : (
+          <Alert variant="error">{error || "Failed to load application status"}</Alert>
+        )}
       </div>
     );
   }
@@ -145,6 +172,15 @@ export default function ApplicationPendingPage() {
                         <span className="font-medium">{guild.reviewCount ?? expert.reviewCount ?? 0}</span>
                         <span>reviewed</span>
                       </div>
+                      {(() => {
+                        const time = getTimeRemaining(guild.votingDeadline);
+                        return time ? (
+                          <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium ${time.color}`}>
+                            <Timer className="w-3 h-3" />
+                            {time.label}
+                          </span>
+                        ) : null;
+                      })()}
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                         <Clock className="w-3 h-3" />
                         Pending
@@ -183,8 +219,8 @@ export default function ApplicationPendingPage() {
               <div>
                 <p className="font-semibold text-foreground mb-1">Auto-Approval System</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Your application needs <strong className="text-foreground">3 approvals</strong> from guild members to be
-                  automatically accepted. Once approved, you&apos;ll get instant access to the expert
+                  Your application needs <strong className="text-foreground">5 reviews</strong> from guild members to be
+                  evaluated. Once the consensus threshold is met, you&apos;ll get instant access to the expert
                   dashboard and join the guild as a &quot;Recruit&quot;.
                 </p>
               </div>
@@ -211,6 +247,21 @@ export default function ApplicationPendingPage() {
                   Guild members are reviewing your credentials. You currently have{" "}
                   {expert.reviewCount ?? 0} review(s).
                 </p>
+                {(() => {
+                  const deadlines = pendingApps
+                    .map((app) => app.votingDeadline)
+                    .filter((d): d is string => !!d);
+                  if (deadlines.length === 0) return null;
+                  const earliest = deadlines.sort()[0];
+                  const time = getTimeRemaining(earliest);
+                  if (!time) return null;
+                  return (
+                    <p className={`text-sm font-medium mt-1.5 flex items-center gap-1.5 ${time.color}`}>
+                      <Timer className="w-3.5 h-3.5" />
+                      Review period: {time.label}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
 

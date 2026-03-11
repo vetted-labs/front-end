@@ -162,7 +162,9 @@ export function EnhancedExpertDashboard() {
       // Sync stakes to database in background (fire-and-forget)
       for (const guild of guilds) {
         const blockchainGuildId = hashToBytes32(guild.id);
-        blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
+        blockchainApi.syncStake(address, blockchainGuildId).catch((err) => {
+          logger.warn(`Background stake sync failed for guild ${guild.id}`, err);
+        });
       }
 
       return { stakesMap, totalStaked };

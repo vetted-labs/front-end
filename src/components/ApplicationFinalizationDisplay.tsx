@@ -10,7 +10,7 @@ interface ApplicationFinalizationDisplayProps {
   application: {
     id: string;
     finalized: boolean;
-    outcome?: "approved" | "rejected";
+    outcome?: "approved" | "rejected" | "inconclusive";
     status?: string;
     consensus_score?: number;
     vote_count?: number;
@@ -18,6 +18,11 @@ interface ApplicationFinalizationDisplayProps {
     guild_id?: string;
     guild_name?: string;
     candidate_name?: string;
+    consensus_failed?: boolean;
+    tiebreaker_required?: boolean;
+    is_tiebreaker_reviewer?: boolean;
+    cluster_a_scores?: number[];
+    cluster_b_scores?: number[];
     iqr?: {
       median: number;
       q1: number;
@@ -55,6 +60,32 @@ export function ApplicationFinalizationDisplay({
     { skip: !application.finalized || outcome !== "rejected" }
   );
   const appealLoaded = !appealLoading;
+
+  // Consensus failed — show orange banner instead of null
+  if (!application.finalized && application.consensus_failed) {
+    const isTiebreaker = application.tiebreaker_required;
+    if (compact) {
+      return (
+        <div className="border-l-4 border-l-orange-500 bg-card border border-border rounded-xl p-4">
+          <p className="font-bold text-orange-500">Consensus Failed</p>
+          <p className="text-sm text-muted-foreground">
+            {isTiebreaker ? "Tiebreaker expert assigned" : "Assigning tiebreaker..."}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="border-l-4 border-l-orange-500 bg-card border border-border rounded-xl p-6">
+        <h2 className="text-xl font-bold mb-1">Consensus Could Not Be Reached</h2>
+        <p className="text-sm text-muted-foreground">
+          Reviewer scores were split into two distinct clusters.
+          {isTiebreaker
+            ? " A tiebreaker expert has been assigned to cast the deciding vote."
+            : " The system is assigning a tiebreaker expert."}
+        </p>
+      </div>
+    );
+  }
 
   if (!application.finalized) {
     return null;
@@ -196,6 +227,7 @@ export function ApplicationFinalizationDisplay({
                 <dt className="text-sm text-muted-foreground">Tier</dt>
                 <dd className={`text-base font-semibold ${
                   myVote.slashing_tier === "aligned" ? "text-green-500"
+                    : myVote.slashing_tier === "neutral" ? "text-muted-foreground"
                     : myVote.slashing_tier === "mild" ? "text-amber-500"
                     : myVote.slashing_tier === "moderate" ? "text-orange-500"
                     : "text-red-500"

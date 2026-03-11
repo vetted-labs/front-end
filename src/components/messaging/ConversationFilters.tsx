@@ -38,12 +38,12 @@ export function ConversationFilters({
           className="w-full pl-9 pr-3 py-2 text-xs rounded-full bg-muted/40 dark:bg-white/[0.05] border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground transition-colors"
         />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
         {jobs.length > 0 && (
           <select
             value={jobFilter}
             onChange={(e) => onJobFilterChange(e.target.value)}
-            className="flex-1 px-3 py-1.5 text-xs rounded-full bg-muted/40 dark:bg-white/[0.05] border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+            className="min-w-0 flex-1 truncate px-3 py-1.5 text-xs rounded-full bg-muted/40 dark:bg-white/[0.05] border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
           >
             <option value="">All Jobs</option>
             {jobs.map((job) => (
@@ -56,7 +56,7 @@ export function ConversationFilters({
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="flex-1 px-3 py-1.5 text-xs rounded-full bg-muted/40 dark:bg-white/[0.05] border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+          className="min-w-0 flex-1 truncate px-3 py-1.5 text-xs rounded-full bg-muted/40 dark:bg-white/[0.05] border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
         >
           <option value="">All Status</option>
           <option value="pending">Pending</option>

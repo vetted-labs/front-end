@@ -48,7 +48,10 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     if (!address || !localStorage.getItem("expertId") || verifiedRef.current || isAllowedForPending(pathname)) return;
     verifiedRef.current = true;
 
+    let cancelled = false;
+
     expertApi.getProfile(address).then((result) => {
+      if (cancelled) return;
       const status = result?.status;
       if (status) {
         setExpertStatus(status);
@@ -57,6 +60,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
         router.replace("/expert/application-pending");
       }
     }).catch((err) => {
+      if (cancelled) return;
       // No expert profile exists for this wallet — redirect to apply
       if (err?.status === 404) {
         localStorage.removeItem("expertId");
@@ -64,6 +68,10 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
         router.replace("/expert/apply");
       }
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [address, pathname, router, setExpertStatus, clearExpertStatus]);
 
   if (!checked) return null;

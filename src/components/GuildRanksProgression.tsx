@@ -98,15 +98,20 @@ const GUILD_RANK_CONFIGS: RankConfig[] = [
     level: 5,
     name: "Guild Master",
     role: "master",
-    description: "Elected leader representing the guild in platform governance",
+    description: "Elected leader representing the guild in platform governance. Only one per guild.",
     requirements: [
-      { label: "Elected by guild members", metric: null, target: null },
+      { label: "Elected by guild members (1 per guild)", metric: null, target: null },
       { label: "Complete 200+ reviews", metric: "reviewCount", target: 200 },
       { label: "Maintain 85%+ consensus", metric: "consensusRate", target: 85, format: "percent" },
       { label: "Reputation score 500+", metric: "reputation", target: 500 },
       { label: "Proven leadership", metric: null, target: null },
     ],
-    unlocks: ["Full delete/moderation", "Full guild control"],
+    unlocks: [
+      "Full delete/moderation",
+      "Full guild control",
+      "3-month term (1 quarter), re-electable once",
+      "Must step down after 2 consecutive terms",
+    ],
   },
 ];
 
@@ -238,6 +243,20 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
           ))}
         </div>
       </div>
+
+      {rank.role === "master" && (
+        <div className="mt-5 pt-5 border-t border-border/40">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
+            Term Rules
+          </p>
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            <li>3-month term (1 quarter)</li>
+            <li>Can be re-elected for a second consecutive term</li>
+            <li>Must step down after 2 consecutive terms</li>
+            <li>Eligible to run again after sitting out one term</li>
+          </ul>
+        </div>
+      )}
 
       <div className="mt-5 pt-5 border-t border-border/40">
         <div className="flex items-center justify-between">

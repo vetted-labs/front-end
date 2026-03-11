@@ -9,6 +9,7 @@ import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/l
 import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
+import { retryWithBackoff } from "@/lib/utils";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
@@ -125,10 +126,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       // onSuccess (which refreshes the parent page) is deferred to when the
       // user dismisses the success screen so they can see the confirmation.
       if (address && selectedGuild) {
-        blockchainApi.syncStake(address, selectedGuild.blockchainGuildId)
-          .catch((err) => {
-            logger.error("Failed to sync stake to database", err);
-          });
+        retryWithBackoff(
+          () => blockchainApi.syncStake(address, selectedGuild.blockchainGuildId),
+          [2000, 4000, 6000],
+          () => toast.warning("Stake confirmed on-chain but server sync delayed."),
+        );
       }
     }
   }, [txConfirmed, txHash, step]);

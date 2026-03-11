@@ -51,8 +51,8 @@ export interface GuildDomainTopic {
 
 // --- Guild Application voting/status types ---
 
-export type GuildApplicationStatus = "active" | "closed" | "expired" | "finalized";
-export type GuildApplicationOutcome = "approved" | "rejected";
+export type GuildApplicationStatus = "active" | "closed" | "expired" | "finalized" | "consensus_failed" | "tiebreaker_pending";
+export type GuildApplicationOutcome = "approved" | "rejected" | "inconclusive";
 
 /** Guild application as listed on the voting page. */
 export interface GuildApplication {
@@ -96,6 +96,13 @@ export interface GuildApplication {
   alignment_distance?: number;
   my_reputation_change?: number;
   my_reward_amount?: number;
+  // Consensus failure / tiebreaker fields
+  consensus_failed?: boolean;
+  tiebreaker_required?: boolean;
+  is_tiebreaker_reviewer?: boolean;
+  tiebreaker_reviewer_id?: string;
+  cluster_a_scores?: number[];
+  cluster_b_scores?: number[];
 }
 
 /** Guild-context application summary (camelCase naming from guild detail views). */
@@ -138,6 +145,7 @@ export interface VoteHistoryItem {
   alignment_distance?: number;
   reputation_change?: number;
   reward_amount?: number;
+  slashing_tier?: string;
   comment?: string;
   created_at: string;
 }

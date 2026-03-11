@@ -57,7 +57,7 @@ export const logger = {
         message,
         error ?? ""
       );
-    } else {
+    } else if (!opts?.silent) {
       console.error(formatPrefix("ERROR", opts?.component), message);
     }
 

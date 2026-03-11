@@ -125,7 +125,17 @@ export type {
   CompanyActivityItem,
   CandidateGuildReport,
   GuildReportReview,
+  BaseNotification,
+  CompanyNotification,
+  CompanyNotificationsResponse,
+  CompanyNotificationPreferences,
+  CandidateNotification,
+  CandidateNotificationsResponse,
+  CandidateNotificationPreferences,
 } from "./api-responses";
+
+// --- Shared UI types ---
+export type CandidateSortOption = "endorsements" | "newest" | "oldest" | "name";
 export type {
   RubricCriterion,
   RubricQuestionEntry,

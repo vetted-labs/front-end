@@ -13,17 +13,13 @@ import {
   ExternalLink,
   Zap,
   ArrowRight,
-  X
+  X,
+  Clock
 } from 'lucide-react';
 import { logger } from "@/lib/logger";
 import { getExplorerTxUrl } from "@/lib/blockchain";
+import { useCountdown } from "@/lib/hooks/useCountdown";
 import type { EndorsementApplication } from "@/types";
-
-interface TopBid {
-  expert: string;
-  amount: string;
-  rank: number;
-}
 
 interface EndorsementTransactionModalProps {
   application: EndorsementApplication | null;
@@ -33,7 +29,6 @@ interface EndorsementTransactionModalProps {
   userStake: string;
   minimumBid: string;
   onPlaceEndorsement: (application: EndorsementApplication, bidAmount: string) => Promise<void>;
-  topBids?: TopBid[];
   txStep: 'idle' | 'signing' | 'approving' | 'bidding' | 'success' | 'error';
   txError: string | null;
   approvalTxHash?: `0x${string}`;
@@ -48,7 +43,6 @@ export function EndorsementTransactionModal({
   userStake,
   minimumBid,
   onPlaceEndorsement,
-  topBids = [],
   txStep,
   txError,
   approvalTxHash,
@@ -56,6 +50,10 @@ export function EndorsementTransactionModal({
 }: EndorsementTransactionModalProps) {
   const [bidAmount, setBidAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const { label: countdownLabel, isExpired: biddingExpired, isUrgent: biddingUrgent } = useCountdown(
+    application?.bidding_deadline,
+    { fallbackStart: application?.applied_at, expiredLabel: "Bidding closed" },
+  );
 
   useEffect(() => {
     if (isOpen && txStep === 'idle') {
@@ -63,16 +61,6 @@ export function EndorsementTransactionModal({
       setErrorMessage('');
     }
   }, [isOpen, txStep]);
-
-  const estimatedRank = () => {
-    if (!bidAmount || parseFloat(bidAmount) <= 0) return null;
-    const currentBidAmount = parseFloat(bidAmount);
-    let rank = 1;
-    for (const bid of topBids) {
-      if (parseFloat(bid.amount) >= currentBidAmount) rank++;
-    }
-    return Math.min(rank, topBids.length + 1);
-  };
 
   const handleQuickAmount = (multiplier: number, type: 'min' | 'balance') => {
     if (type === 'min') {
@@ -206,6 +194,27 @@ export function EndorsementTransactionModal({
             </div>
           </div>
 
+          {/* Bidding Period Countdown */}
+          <div className={`rounded-2xl border p-3 flex items-center gap-2.5 ${
+            biddingExpired
+              ? "border-red-500/20 bg-red-500/[0.08]"
+              : biddingUrgent
+              ? "border-amber-500/20 bg-amber-500/[0.08]"
+              : "border-white/[0.08] bg-white/[0.03]"
+          }`}>
+            <Clock className={`w-4 h-4 flex-shrink-0 ${
+              biddingExpired ? "text-red-400" : biddingUrgent ? "text-amber-400" : "text-primary"
+            }`} />
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground">Bidding period</p>
+              <p className={`text-sm font-semibold tabular-nums ${
+                biddingExpired ? "text-red-400" : biddingUrgent ? "text-amber-400" : "text-primary"
+              }`}>
+                {countdownLabel}
+              </p>
+            </div>
+          </div>
+
           {/* Existing Bid Warning */}
           {application?.current_bid && (
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.08] p-4 flex items-start gap-3">
@@ -305,16 +314,16 @@ export function EndorsementTransactionModal({
                 </div>
               </div>
 
-              {/* Estimated Rank */}
-              {bidAmount && parseFloat(bidAmount) > 0 && estimatedRank() && (
-                <div className="rounded-2xl border border-primary/20 bg-primary/[0.06] p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                    <Award className="w-5 h-5 text-primary" />
+              {/* Blind bidding — rank is hidden until bidding ends */}
+              {bidAmount && parseFloat(bidAmount) > 0 && (
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                    <Award className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Estimated rank</p>
-                    <p className="text-sm font-semibold">
-                      <span className="text-primary">{parseFloat(bidAmount).toFixed(2)} VETD</span> → Rank <span className="text-lg font-bold text-primary">#{estimatedRank()}</span>
+                    <p className="text-xs text-muted-foreground">Blind bidding</p>
+                    <p className="text-sm text-muted-foreground">
+                      Rankings are hidden during the bidding period and revealed when it ends.
                     </p>
                   </div>
                 </div>
@@ -342,11 +351,11 @@ export function EndorsementTransactionModal({
                 </Button>
                 <button
                   onClick={handleSubmit}
-                  disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid}
+                  disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid || biddingExpired}
                   className="flex-1 h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-[15px] bg-gradient-to-r from-primary via-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 hover:shadow-primary/35 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Zap className="w-4 h-4" />
-                  {application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
+                  {biddingExpired ? 'Bidding Closed' : application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -444,14 +453,10 @@ export function EndorsementTransactionModal({
                   <span className="text-xs text-muted-foreground">Bid Amount</span>
                   <span className="text-sm font-bold text-primary">{bidAmount} VETD</span>
                 </div>
-                {estimatedRank() && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">Estimated Rank</span>
-                    <Badge className="bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] border-0 font-bold">
-                      #{estimatedRank()}
-                    </Badge>
-                  </div>
-                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Ranking</span>
+                  <span className="text-xs text-muted-foreground">Revealed when bidding ends</span>
+                </div>
 
                 {(approvalTxHash || bidTxHash) && (
                   <>
