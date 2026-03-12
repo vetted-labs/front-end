@@ -59,7 +59,6 @@ export function CandidateDetailPanel({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>("profile");
   const [notes, setNotes] = useState(application.notes ?? "");
-  const [notesSaved, setNotesSaved] = useState(false);
   const [message, setMessage] = useState("");
   const { execute: executeSaveNotes, isLoading: isSavingNotes } = useApi();
   const { execute: executeSendMessage, isLoading: isSendingMessage } = useApi();
@@ -67,7 +66,6 @@ export function CandidateDetailPanel({
   // Sync notes when the selected application changes
   useEffect(() => {
     setNotes(application.notes ?? "");
-    setNotesSaved(false);
   }, [application.id, application.notes]);
 
   const { candidate, job } = application;
@@ -82,10 +80,9 @@ export function CandidateDetailPanel({
     { skip: activeTab !== "history" },
   );
 
-  const handleStatusAdvance = (newStatus: ApplicationStatus, note?: string) => {
-    onStatusChange(application.id, newStatus, note);
-    // Refetch history after a short delay to allow backend to process
-    setTimeout(() => refetchHistory(), 500);
+  const handleStatusAdvance = async (newStatus: ApplicationStatus, note?: string) => {
+    await onStatusChange(application.id, newStatus, note);
+    refetchHistory();
   };
 
   const resumeUrl = application.resumeUrl ? getAssetUrl(application.resumeUrl) : null;
@@ -129,8 +126,7 @@ export function CandidateDetailPanel({
       () => applicationsApi.updateNotes(application.id, notes),
       {
         onSuccess: () => {
-          setNotesSaved(true);
-          setTimeout(() => setNotesSaved(false), 2000);
+          toast.success("Notes saved!");
         },
         onError: () => toast.error("Failed to save notes"),
       }
@@ -500,7 +496,7 @@ export function CandidateDetailPanel({
               />
             </div>
             <Button onClick={handleSaveNotes} disabled={isSavingNotes} size="sm">
-              {isSavingNotes ? "Saving..." : notesSaved ? "Saved!" : "Save Notes"}
+              {isSavingNotes ? "Saving..." : "Save Notes"}
             </Button>
           </div>
         )}

@@ -110,6 +110,7 @@ export default function EndorsementsPage() {
             key={selectedGuild.id}
             guildId={selectedGuild.id}
             guildName={selectedGuild.name}
+            blockchainGuildId={selectedGuild.blockchainGuildId as `0x${string}` | undefined}
             initialApplicationId={applicationIdParam || undefined}
           />
         )}

@@ -16,10 +16,9 @@ import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
+import type { GuildOption } from "@/types/guild";
 
-interface GuildOption {
-  id: string;
-  name: string;
+interface StakingGuildOption extends GuildOption {
   blockchainGuildId: `0x${string}`;
 }
 
@@ -41,7 +40,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   const [step, setStep] = useState<"input" | "transaction">("input");
 
   // Guild selection
-  const [selectedGuild, setSelectedGuild] = useState<GuildOption | null>(null);
+  const [selectedGuild, setSelectedGuild] = useState<StakingGuildOption | null>(null);
   const [showGuildDropdown, setShowGuildDropdown] = useState(false);
 
   // Transaction modal state
@@ -52,7 +51,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
   const [currentTxAction, setCurrentTxAction] = useState<ActionMode>("stake");
 
   // Fetch guilds via useFetch
-  const { data: guilds, isLoading: isLoadingGuilds } = useFetch<GuildOption[]>(
+  const { data: guilds, isLoading: isLoadingGuilds } = useFetch<StakingGuildOption[]>(
     async () => {
       const allData = await guildsApi.getAll();
       const allGuilds = Array.isArray(allData) ? allData : [];

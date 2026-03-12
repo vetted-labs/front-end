@@ -8,25 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
+import { formatDeadline } from "@/lib/utils";
 import type { GuildApplication, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 const ITEMS_PER_SECTION = 10;
 
 function formatDeadlineCountdown(deadline: string): string {
-  const now = new Date();
-  const deadlineDate = new Date(deadline);
-  const diffMs = deadlineDate.getTime() - now.getTime();
-
-  if (diffMs <= 0) return "Voting ended";
-
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(hours / 24);
-  const remainingHours = hours % 24;
-
-  if (days > 0) return `${days}d ${remainingHours}h left`;
-  if (hours > 0) return `${hours}h left`;
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  return `${minutes}m left`;
+  const result = formatDeadline(deadline, "Voting ended");
+  return result === "Voting ended" ? result : `${result} left`;
 }
 
 interface GuildMembershipApplicationsTabProps {

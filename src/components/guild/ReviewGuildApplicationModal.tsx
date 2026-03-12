@@ -14,7 +14,17 @@ import {
   Coins,
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { useAccount } from "wagmi";
 import { expertApi } from "@/lib/api";
+import {
+  generateBytes32Salt,
+  computeOnChainCommitHash,
+  mapScoreToChain,
+  isUserRejection,
+  getTransactionErrorMessage,
+} from "@/lib/blockchain";
+import { useVettingManager } from "@/lib/hooks/useVettedContracts";
 import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
@@ -58,6 +68,14 @@ interface ReviewGuildApplicationModalProps {
   isReviewing: boolean;
   /** When set, renders a staking input in the final step (used for proposal votes). */
   proposalContext?: { requiredStake: number };
+  /** Commit-reveal voting phase for expert applications */
+  commitRevealPhase?: "direct" | "commit" | "reveal" | "finalized";
+  /** On-chain blockchain session ID for commit-reveal */
+  blockchainSessionId?: string;
+  /** Whether the on-chain session has been created */
+  blockchainSessionCreated?: boolean;
+  /** The expert reviewer's ID (needed for localStorage key) */
+  reviewerId?: string;
 }
 
 const GENERAL_RESPONSE_KEY_MAP: Record<string, string> = {
@@ -205,6 +223,10 @@ export function ReviewGuildApplicationModal({
   onSubmitReview,
   isReviewing,
   proposalContext,
+  commitRevealPhase,
+  blockchainSessionId,
+  blockchainSessionCreated,
+  reviewerId,
 }: ReviewGuildApplicationModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -220,7 +242,18 @@ export function ReviewGuildApplicationModal({
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [apiResponse, setApiResponse] = useState<ReviewSubmitResponse | null>(null);
+  const [commitTxHash, setCommitTxHash] = useState<string | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
+  const [isCommitting, setIsCommitting] = useState(false);
+
+  const isCommitPhase = commitRevealPhase === "commit";
+  const { address } = useAccount();
+
+  // Set up on-chain session ID for wallet commit
+  const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
+  const { commitVote } = useVettingManager(
+    isCommitPhase && blockchainSessionCreated ? sessionIdBytes32 : undefined
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -247,8 +280,14 @@ export function ReviewGuildApplicationModal({
     setTemplateError(null);
     setValidationError(null);
     setApiResponse(null);
-    setStakeAmount(proposalContext?.requiredStake ?? 0);
-  }, [application, isOpen, proposalContext?.requiredStake]);
+    setStakeAmount(0);
+  }, [application?.id, isOpen]);
+
+  useEffect(() => {
+    if (proposalContext?.requiredStake != null) {
+      setStakeAmount(proposalContext.requiredStake);
+    }
+  }, [proposalContext?.requiredStake]);
 
   const responses = application?.applicationResponses || {};
   const generalResponses = responses.general || {};
@@ -430,14 +469,107 @@ export function ReviewGuildApplicationModal({
 
     const domainScoresPayload = { topics: topicScores, total: topicTotal, max: topicMax };
     const domainJustificationsPayload = topicJustifications;
+    const computedOverallMax = (generalMax || 0) + (topicMax || 0);
 
+    // ── Commit-reveal flow ──────────────────────────────────────
+    if (isCommitPhase && application?.id) {
+      setIsCommitting(true);
+      try {
+        // Compute normalized score (0-100) from the rubric
+        const normalizedScore = computedOverallMax > 0
+          ? Math.round((overallScore / computedOverallMax) * 100)
+          : 0;
+
+        // Generate nonce
+        const nonce = crypto.randomUUID();
+
+        // On-chain commit (if session is ready)
+        let onChainSalt: string | undefined;
+        let onChainCommitHash: string | undefined;
+        let onChainScore: number | undefined;
+        let onChainTxHash: string | undefined;
+
+        const hasOnChainSession = blockchainSessionId && blockchainSessionCreated && address;
+
+        if (hasOnChainSession) {
+          onChainSalt = generateBytes32Salt();
+          onChainScore = mapScoreToChain(normalizedScore);
+          onChainCommitHash = computeOnChainCommitHash(
+            sessionIdBytes32!,
+            address as `0x${string}`,
+            onChainScore,
+            onChainSalt as `0x${string}`
+          );
+
+          try {
+            onChainTxHash = await commitVote(onChainCommitHash as `0x${string}`);
+            setCommitTxHash(onChainTxHash || null);
+          } catch (err: unknown) {
+            if (isUserRejection(err)) {
+              setIsCommitting(false);
+              return;
+            }
+            toast.error(getTransactionErrorMessage(err, "On-chain commit failed"));
+            setIsCommitting(false);
+            return;
+          }
+        }
+
+        // Get backend hash
+        const hashResult = await expertApi.expertCommitReveal.generateHash(normalizedScore, nonce);
+
+        // Submit commitment to backend
+        await expertApi.expertCommitReveal.submitCommitment(application.id, {
+          commitHash: hashResult.hash,
+          onChainCommitHash: onChainCommitHash || undefined,
+          onChainSalt: onChainSalt || undefined,
+          onChainScore: onChainScore ?? undefined,
+          onChainTxHash: onChainTxHash || undefined,
+        });
+
+        // Save full review data to localStorage for reveal phase
+        const storageKey = `expertCR:${application.id}:${reviewerId || "unknown"}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          normalizedScore,
+          nonce,
+          salt: onChainSalt,
+          onChainScore,
+          feedback: feedback || undefined,
+          criteriaScores: {
+            general: { ...generalScores, totals: generalTotals, total: generalTotal, max: generalMax },
+            domain: domainScoresPayload,
+            overallMax: computedOverallMax,
+            overallScore,
+            redFlagDeductions,
+          },
+          criteriaJustifications: {
+            general: generalJustifications,
+            domain: domainJustificationsPayload,
+          },
+          overallScore,
+          redFlagDeductions,
+        }));
+
+        setApiResponse({ message: "Commitment submitted! Your review is hidden until the reveal phase." });
+        setCurrentStep(4);
+        contentRef.current?.scrollTo(0, 0);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to submit commitment";
+        toast.error(message);
+      } finally {
+        setIsCommitting(false);
+      }
+      return;
+    }
+
+    // ── Direct review flow (unchanged) ──────────────────────────
     try {
       const response = await onSubmitReview({
         feedback: feedback || undefined,
         criteriaScores: {
           general: { ...generalScores, totals: generalTotals, total: generalTotal, max: generalMax },
           domain: domainScoresPayload,
-          overallMax: (generalMax || 0) + (topicMax || 0),
+          overallMax: computedOverallMax,
           overallScore,
           redFlagDeductions,
         },
@@ -543,7 +675,9 @@ export function ReviewGuildApplicationModal({
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
           <CheckCircle className="w-8 h-8 text-green-500" />
         </div>
-        <h3 className="text-xl font-bold text-foreground mb-1">Review Submitted</h3>
+        <h3 className="text-xl font-bold text-foreground mb-1">
+          {isCommitPhase ? "Commitment Submitted" : "Review Submitted"}
+        </h3>
         <p className="text-sm text-muted-foreground">
           {apiResponse?.message || "Your review has been recorded. Thanks for voting!"}
         </p>
@@ -600,6 +734,35 @@ export function ReviewGuildApplicationModal({
         </div>
       </div>
 
+      {/* On-chain transaction */}
+      {commitTxHash && (
+        <div className="rounded-xl border border-green-500/20 bg-green-500/[0.04] p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+            <div className="text-sm flex-1 min-w-0">
+              <p className="font-medium text-foreground mb-1">On-Chain Transaction Confirmed</p>
+              <p className="text-muted-foreground mb-2">
+                Your vote commitment has been recorded on the Ethereum blockchain.
+              </p>
+              <a
+                href={`https://sepolia.etherscan.io/tx/${commitTxHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                View on Etherscan
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+              <p className="text-[10px] text-muted-foreground font-mono mt-1.5 truncate">
+                {commitTxHash}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* What happens next */}
       <div className="rounded-xl border border-border bg-blue-500/[0.04] p-4">
         <div className="flex items-start gap-3">
@@ -607,10 +770,9 @@ export function ReviewGuildApplicationModal({
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">What happens next?</p>
             <p>
-              Once all assigned reviewers submit their scores, the application will be
-              finalized immediately using IQR-based consensus. If not all reviewers
-              submit before the deadline, finalization runs automatically. Your
-              alignment with the consensus will affect your reputation and rewards.
+              {isCommitPhase
+                ? "Your review is hidden until the reveal phase begins. When the commit deadline passes, you'll need to reveal your vote using the data saved in your browser. Keep this browser session — if you clear your data, you'll need your nonce to reveal manually."
+                : "Once all assigned reviewers submit their scores, the application will be finalized immediately using IQR-based consensus. If not all reviewers submit before the deadline, finalization runs automatically. Your alignment with the consensus will affect your reputation and rewards."}
             </p>
           </div>
         </div>
@@ -720,18 +882,18 @@ export function ReviewGuildApplicationModal({
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={isReviewing}
+                  disabled={isReviewing || isCommitting}
                   className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  {isReviewing ? (
+                  {isReviewing || isCommitting ? (
                     <>
                       <Loader2 className="animate-spin w-4 h-4" />
-                      Submitting...
+                      {isCommitting ? "Committing..." : "Submitting..."}
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      Submit Review
+                      {isCommitPhase ? "Submit Commitment" : "Submit Review"}
                     </>
                   )}
                 </button>

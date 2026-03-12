@@ -138,17 +138,52 @@ export default function GuildMyStatsPage() {
   const candidateId = auth.userId;
 
   const { data, isLoading, error } = useFetch<MyStatsData>(
-    () =>
-      Promise.all([
-        guildsApi.checkMembership(candidateId!, guildId),
-        guildsApi.getAverages(guildId),
-        guildsApi.getMemberActivity(guildId, candidateId!),
-      ]).then(([statsData, guildAveragesData, activityData]) => ({
-        stats: statsData as unknown as PersonalStats,
-        guildAverages: guildAveragesData as unknown as MyStatsGuildAverages,
-        recentActivity:
-          (activityData as unknown as RecentActivity[]) || [],
-      })),
+    async () => {
+      const membership = await guildsApi.checkMembership(candidateId!, guildId);
+      // checkMembership returns basic data; map to PersonalStats shape
+      // Advanced stats (averages, activity) require backend endpoints not yet implemented
+      const stats: PersonalStats = {
+        memberId: candidateId!,
+        fullName: "",
+        email: "",
+        role: (membership.role as PersonalStats["role"]) || "candidate",
+        reputation: 0,
+        guildReputation: 0,
+        joinedAt: membership.joinedAt || "",
+        reviewsGiven: 0,
+        reviewsReceived: 0,
+        approvalRate: 0,
+        rejectionRate: 0,
+        averageConfidenceLevel: 0,
+        endorsementsGiven: 0,
+        endorsementsReceived: 0,
+        applicationsReviewed: 0,
+        candidatesApproved: 0,
+        candidatesRejected: 0,
+        jobsAppliedTo: 0,
+        interviewsReceived: 0,
+        offersReceived: 0,
+        responseTime: "N/A",
+        activityScore: 0,
+        contributionScore: 0,
+      };
+      // Try fetching averages and activity, but don't fail if endpoints are unavailable
+      let guildAverages: MyStatsGuildAverages = { averageReputation: 0, averageReviews: 0, averageApprovalRate: 0, averageResponseTime: "N/A" };
+      let recentActivity: RecentActivity[] = [];
+      try {
+        const avg = await guildsApi.getAverages(guildId);
+        guildAverages = avg as unknown as MyStatsGuildAverages;
+      } catch (err) {
+        console.warn("Guild averages endpoint unavailable:", err);
+      }
+      try {
+        const activity = await guildsApi.getMemberActivity(guildId, candidateId!);
+        recentActivity = (activity as unknown as RecentActivity[]) || [];
+      } catch (err) {
+        console.warn("Guild member activity endpoint unavailable:", err);
+      }
+      return { stats, guildAverages, recentActivity };
+    },
     {
       skip: !guildId || !candidateId,
       onError: (msg) => toast.error(msg || "Failed to load your guild statistics"),

@@ -12,7 +12,7 @@ import type { EndorsementApplication } from "@/types";
 interface ApplicationCardProps {
   application: EndorsementApplication;
   onViewDetails: (application: EndorsementApplication) => void;
-  onQuickEndorse: (application: EndorsementApplication) => void;
+  onQuickEndorse?: (application: EndorsementApplication) => void;
 }
 
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
@@ -28,26 +28,33 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     .toUpperCase()
     .substring(0, 2);
 
-  // Calculate skill match percentage
+  // Calculate skill match percentage by checking job skills against candidate bio + headline
   const skillMatch = useMemo(() => {
-    if (!application.job_skills || !application.candidate_bio) return null;
+    if (!application.job_skills) return null;
+
+    const searchText = [application.candidate_bio, application.candidate_headline]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    if (!searchText) return null;
 
     try {
       const jobSkills = typeof application.job_skills === 'string'
         ? application.job_skills.toLowerCase().split(',').map((s: string) => s.trim())
         : application.job_skills.map((s: string) => s.toLowerCase().trim());
 
-      const candidateBio = application.candidate_bio.toLowerCase();
-
       const matchedSkills = jobSkills.filter((skill: string) =>
-        candidateBio.includes(skill)
+        searchText.includes(skill)
       );
 
-      return Math.round((matchedSkills.length / jobSkills.length) * 100);
-    } catch (error) {
+      const pct = Math.round((matchedSkills.length / jobSkills.length) * 100);
+      // Don't show 0% — it's noise, not signal
+      return pct > 0 ? pct : null;
+    } catch {
       return null;
     }
-  }, [application.job_skills, application.candidate_bio]);
+  }, [application.job_skills, application.candidate_bio, application.candidate_headline]);
 
   // Parse skills for display
   const skillsArray = useMemo(() => {
@@ -63,7 +70,10 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     }
   }, [application.job_skills]);
 
-  const guildScore = application.guild_score ? (parseFloat(application.guild_score.toString()) * 10).toFixed(0) : null;
+  // guild_score is already on a 0-100 scale (consensus score from expert reviews)
+  // Only show it if the application has actually been reviewed (not for fresh pending applications)
+  const rawGuildScore = application.guild_score ? parseFloat(application.guild_score.toString()) : null;
+  const guildScore = rawGuildScore && rawGuildScore > 0 ? rawGuildScore.toFixed(0) : null;
 
   return (
     <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden transition-all hover:border-primary/40 hover:shadow-sm h-full flex flex-col">
@@ -257,10 +267,10 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </Button>
           <Button
             className="w-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
-            disabled={isExpired}
+            disabled={isExpired || !onQuickEndorse}
             onClick={(e) => {
               e.stopPropagation();
-              onQuickEndorse(application);
+              onQuickEndorse?.(application);
             }}
           >
             <Zap className="w-4 h-4 mr-2" />

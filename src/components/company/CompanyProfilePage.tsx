@@ -63,7 +63,6 @@ export default function CompanyProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -104,16 +103,13 @@ export default function CompanyProfilePage() {
   };
 
   const handleSave = async () => {
-    setSuccessMessage("");
-
     const updatedProfile = await executeSave(
       () => companyApi.updateProfile({ ...formData }) as Promise<CompanyProfileFull>,
       {
         onSuccess: (data) => {
           setFormData(profileToFormData(data));
           setIsEditing(false);
-          setSuccessMessage("Profile updated successfully!");
-          setTimeout(() => setSuccessMessage(""), 3000);
+          toast.success("Profile updated successfully!");
         },
         onError: (errMsg) => {
           toast.error(errMsg);
@@ -142,13 +138,11 @@ export default function CompanyProfilePage() {
     }
 
     setIsUploadingLogo(true);
-    setSuccessMessage("");
 
     try {
       await companyApi.uploadLogo(file);
       refetch();
-      setSuccessMessage("Logo uploaded successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Logo uploaded successfully!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to upload logo";
       toast.error(message);
@@ -196,15 +190,6 @@ export default function CompanyProfilePage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6">
-            <Alert variant="success">
-              {successMessage}
-            </Alert>
-          </div>
-        )}
-
         {/* Error Message */}
         {error && (
           <div className="mb-6">

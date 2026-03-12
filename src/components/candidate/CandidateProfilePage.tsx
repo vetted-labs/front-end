@@ -18,6 +18,7 @@ import {
   Briefcase,
   Award,
 } from "lucide-react";
+import { toast } from "sonner";
 import { candidateApi, getAssetUrl } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -41,7 +42,6 @@ export default function CandidateProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   // Snapshot of profile before editing so we can cancel
@@ -138,8 +138,7 @@ export default function CandidateProfilePage() {
         resumeUrl: data.resumeUrl,
         resumeFileName: (data as { resumeUrl: string; fileName?: string }).fileName,
       });
-      setSuccessMessage("Resume uploaded successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Resume uploaded successfully!");
       setResumeFile(null);
     } catch {
       setErrors({ resume: "Failed to upload resume. Please try again." });
@@ -174,8 +173,7 @@ export default function CandidateProfilePage() {
         socialLinks: filledLinks,
       };
       await candidateApi.updateProfile(candidateId, payload);
-      setSuccessMessage("Profile updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
       setEditSnapshot(null);
     } catch {
@@ -212,14 +210,6 @@ export default function CandidateProfilePage() {
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <p className="text-green-700 dark:text-green-300">{successMessage}</p>
-          </div>
-        )}
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

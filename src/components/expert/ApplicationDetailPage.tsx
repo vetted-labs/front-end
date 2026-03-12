@@ -48,10 +48,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
   const [comment, setComment] = useState("");
 
   const { data: application, isLoading, error, refetch: refetchApplication } = useFetch<GuildApplicationDetail>(
-    async () => {
-      const result = await guildApplicationsApi.getDetails(applicationId);
-      return result as unknown as GuildApplicationDetail;
-    },
+    () => guildApplicationsApi.getDetails(applicationId),
     { skip: !applicationId || !address }
   );
 

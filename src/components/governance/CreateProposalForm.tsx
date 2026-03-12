@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { useRequireWallet } from "@/lib/hooks/useRequireWallet";
-import { governanceApi } from "@/lib/api";
+import { governanceApi, extractApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -195,10 +195,7 @@ export function CreateProposalForm() {
           await governanceApi.createProposal(buildProposalData(), address!);
           setTxModalStatus("success");
         } catch (error: unknown) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "Failed to create proposal";
+          const message = extractApiError(error, "Failed to create proposal");
           toast.error(message);
           setTxModalStatus("error");
           setTxErrorMessage(message);
@@ -281,8 +278,7 @@ export function CreateProposalForm() {
         toast.error("On-chain staking failed. No proposal was created.");
         setShowTxModal(false);
       } else {
-        const message =
-          error instanceof Error ? error.message : "Failed to create proposal";
+        const message = extractApiError(error, "Failed to create proposal");
         setTxModalStatus("error");
         setTxErrorMessage(message);
       }

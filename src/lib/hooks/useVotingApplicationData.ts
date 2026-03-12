@@ -29,6 +29,8 @@ export interface CommitRevealPhase {
   totalExpected?: number;
   userCommitted?: boolean;
   userRevealed?: boolean;
+  blockchainSessionId?: string;
+  blockchainSessionCreated?: boolean;
 }
 
 interface VotingApplicationData {

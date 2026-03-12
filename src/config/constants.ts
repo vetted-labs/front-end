@@ -100,6 +100,83 @@ export const APPLICATION_STATUS_CONFIG: Record<string, { label: string; classNam
   withdrawn: { label: "Withdrawn", className: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400" },
 };
 
+/**
+ * Shared job status badge configuration.
+ * Use this instead of local getStatusColor() functions for job status badges.
+ */
+export const JOB_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  active: { label: "Active", className: "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400" },
+  paused: { label: "Paused", className: "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400" },
+  closed: { label: "Closed", className: "bg-muted border border-border text-muted-foreground" },
+  draft: { label: "Draft", className: "bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400" },
+};
+
+/**
+ * Shared appeal status configuration.
+ * Maps appeal statuses to labels and text color classes.
+ */
+export const APPEAL_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  pending: { label: "Pending Review", color: "text-amber-500" },
+  reviewing: { label: "Under Review", color: "text-blue-500" },
+  upheld: { label: "Rejection Upheld", color: "text-red-500" },
+  overturned: { label: "Overturned — Candidate Admitted", color: "text-emerald-500" },
+};
+
+/**
+ * Shared team member status badge configuration.
+ */
+export const TEAM_MEMBER_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  active: { label: "Active", className: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20" },
+  pending: { label: "Pending", className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  inactive: { label: "Inactive", className: "text-muted-foreground bg-muted/30 border-border/40" },
+};
+
+/**
+ * Shared guild application status badge configuration.
+ */
+export const GUILD_APPLICATION_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  approved: { label: "Approved", className: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+  rejected: { label: "Rejected", className: "text-red-500 bg-red-500/10 border-red-500/20" },
+  pending: { label: "Pending", className: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+};
+
+/**
+ * Shared commit-reveal user status labels.
+ */
+export const COMMIT_REVEAL_STATUS_LABELS: Record<string, string> = {
+  pending: "Not Yet Committed",
+  committed: "Committed",
+  revealed: "Revealed",
+};
+
+/**
+ * Shared governance proposal status configuration.
+ */
+export const PROPOSAL_STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+  active: { label: "Active", variant: "default" },
+  passed: { label: "Passed", variant: "default" },
+  rejected: { label: "Rejected", variant: "destructive" },
+};
+
+/**
+ * Shared application status timeline dot/text color configuration.
+ * Used specifically for timeline visualization where dot + text colors are needed.
+ */
+export const APPLICATION_STATUS_TIMELINE_CONFIG: Record<string, { dotClass: string; textClass: string }> = {
+  accepted: { dotClass: "bg-green-500 shadow-sm shadow-green-500/30", textClass: "text-green-600 dark:text-green-400" },
+  rejected: { dotClass: "bg-red-500 shadow-sm shadow-red-500/30", textClass: "text-red-600 dark:text-red-400" },
+};
+
+export const APPLICATION_STATUS_TIMELINE_DEFAULT = {
+  dotClass: "bg-primary shadow-sm shadow-primary/30",
+  textClass: "text-primary",
+} as const;
+
+export const APPLICATION_STATUS_TIMELINE_NULL = {
+  dotClass: "bg-muted-foreground",
+  textClass: "text-muted-foreground",
+} as const;
+
 export const SKILLS = [
   "JavaScript",
   "TypeScript",

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { expertApi, guildsApi, guildApplicationsApi, blockchainApi } from "@/lib/api";
+import { expertApi, guildsApi, guildApplicationsApi, blockchainApi, extractApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
@@ -12,6 +12,7 @@ import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from 
 import { Pagination } from "@/components/ui/pagination";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Modal } from "@/components/ui/modal";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Coins, History, Inbox, Shield } from "lucide-react";
@@ -37,10 +38,14 @@ import type {
   ExpertProfile,
   GuildStakeInfo,
 } from "@/types";
-import type { ReviewSubmitPayload, ReviewSubmitResponse } from "@/types";
+import type { ReviewSubmitPayload, ReviewSubmitResponse, ExpertCRPhaseStatus } from "@/types";
 
 const ReviewGuildApplicationModal = dynamic(
   () => import("@/components/guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
+  { ssr: false },
+);
+const ExpertRevealForm = dynamic(
+  () => import("@/components/expert/ExpertRevealForm").then(m => ({ default: m.ExpertRevealForm })),
   { ssr: false },
 );
 
@@ -73,6 +78,11 @@ export default function ApplicationsPage() {
   const [viewReviewApplicantName, setViewReviewApplicantName] = useState("");
   const [viewReviewType, setViewReviewType] = useState<"expert" | "candidate">("expert");
 
+  // Commit-reveal state
+  const [crPhaseStatus, setCrPhaseStatus] = useState<ExpertCRPhaseStatus | null>(null);
+  const [showRevealForm, setShowRevealForm] = useState(false);
+  const [revealAppId, setRevealAppId] = useState<string | null>(null);
+
   const isAllGuilds = selectedGuild.id === "all";
 
   // Expert profile
@@ -103,6 +113,7 @@ export default function ApplicationsPage() {
     async () => {
       if (!address || guildRecords.length === 0) return [];
       const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
@@ -110,10 +121,14 @@ export default function ApplicationsPage() {
             const apps = Array.isArray(data.guildApplications) ? data.guildApplications : [];
             return apps.map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
           } catch {
+            failedGuilds.push(g.name);
             return [];
           }
         }),
       );
+      if (failedGuilds.length > 0) {
+        toast.warning(`Could not load expert apps from: ${failedGuilds.join(", ")}`);
+      }
       return results.flat();
     },
     { onError: (err) => toast.error(err) },
@@ -124,19 +139,24 @@ export default function ApplicationsPage() {
     async () => {
       if (!address || guildRecords.length === 0) return [];
       const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
             const apps = await guildsApi.getCandidateApplications(g.id, address);
             return (Array.isArray(apps) ? apps : []).map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
           } catch {
+            failedGuilds.push(g.name);
             return [];
           }
         }),
       );
+      if (failedGuilds.length > 0) {
+        toast.warning(`Could not load candidate apps from: ${failedGuilds.join(", ")}`);
+      }
       return results.flat();
     },
-    { onError: (err) => toast.error(err) },
+    { skip: !address || guildRecords.length === 0, onError: (err) => toast.error(err) },
   );
 
   // Proposals (Schelling voting)
@@ -164,16 +184,21 @@ export default function ApplicationsPage() {
     async () => {
       if (!address || guildRecords.length === 0) return [];
       const targetGuilds = isAllGuilds ? guildRecords : [selectedGuild];
+      const failedGuilds: string[] = [];
       const results = await Promise.all(
         targetGuilds.map(async (g) => {
           try {
             const apps = await guildsApi.getCandidateApplications(g.id, address, "all");
             return (Array.isArray(apps) ? apps : []).map((a) => ({ ...a, guildId: g.id, guildName: g.name }));
           } catch {
+            failedGuilds.push(g.name);
             return [];
           }
         }),
       );
+      if (failedGuilds.length > 0) {
+        toast.warning(`Could not load history from: ${failedGuilds.join(", ")}`);
+      }
       return results.flat().filter((a) => a.expertHasReviewed);
     },
     { skip: activeTab !== "history", onError: (err) => toast.error(err) },
@@ -244,15 +269,28 @@ export default function ApplicationsPage() {
     }
   }, [searchParams, guildRecords]);
 
-  // Refetch on filter/guild change
+  // Refetch when user changes guild or filter
+  const hasInitializedRef = useRef(false);
+
   useEffect(() => {
+    if (!hasInitializedRef.current) return;
     resetPage();
     refetchExpertApps();
     refetchCandidateApps();
     refetchProposals();
     refetchHistory();
     refetchHistoryCandidateApps();
-  }, [selectedGuild, filterMode, expertData, guildRecords]);
+  }, [selectedGuild, filterMode]);
+
+  // Initial data load — fire once when expertData and guildRecords first become available
+  useEffect(() => {
+    if (hasInitializedRef.current) return;
+    if (!expertData || guildRecords.length === 0) return;
+    hasInitializedRef.current = true;
+    refetchExpertApps();
+    refetchCandidateApps();
+    refetchProposals();
+  }, [expertData, guildRecords]);
 
   // Stats
   const pendingReviews = (expertApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
@@ -263,11 +301,26 @@ export default function ApplicationsPage() {
   const guildsActive = guildRecords.length;
 
   // Handlers
-  const handleReviewExpert = (application: ExpertMembershipApplication) => {
+  const handleReviewExpert = async (application: ExpertMembershipApplication) => {
     if (!isStakedInGuild(application.guildId)) {
       toast.info("You need to stake VETD tokens in this guild to unlock reviewing.");
       return;
     }
+
+    // Fetch commit-reveal phase status
+    try {
+      const phaseStatus = await expertApi.expertCommitReveal.getPhaseStatus(application.id);
+      setCrPhaseStatus(phaseStatus);
+
+      if (phaseStatus.votingPhase === "reveal") {
+        setRevealAppId(application.id);
+        setShowRevealForm(true);
+        return;
+      }
+    } catch {
+      setCrPhaseStatus(null);
+    }
+
     setSelectedReviewApp(application);
     setReviewType("expert");
     setShowReviewModal(true);
@@ -364,8 +417,7 @@ export default function ApplicationsPage() {
 
       return response;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to submit review";
-      toast.error(message);
+      toast.error(extractApiError(err, "Failed to submit review"));
       throw err;
     } finally {
       setIsReviewing(false);
@@ -652,12 +704,16 @@ export default function ApplicationsPage() {
       {/* Review Modal */}
       <ReviewGuildApplicationModal
         isOpen={showReviewModal}
-        onClose={() => { setShowReviewModal(false); setSelectedReviewApp(null); setReviewProposalContext(undefined); }}
+        onClose={() => { setShowReviewModal(false); setSelectedReviewApp(null); setReviewProposalContext(undefined); setCrPhaseStatus(null); refetchExpertApps(); }}
         application={selectedReviewApp}
         guildId={selectedReviewApp?.guildId || selectedGuild.id}
         onSubmitReview={handleSubmitReview}
         isReviewing={isReviewing}
         proposalContext={reviewType === "proposal" ? reviewProposalContext : undefined}
+        commitRevealPhase={reviewType === "expert" ? crPhaseStatus?.votingPhase : undefined}
+        blockchainSessionId={reviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
+        blockchainSessionCreated={reviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
+        reviewerId={expertData?.id}
       />
 
       {/* View Review Modal (read-only) */}
@@ -669,6 +725,25 @@ export default function ApplicationsPage() {
         reviewType={viewReviewType}
         walletAddress={address as string}
       />
+
+      {/* Expert Reveal Form Dialog */}
+      {revealAppId && expertData?.id && (
+        <Modal isOpen={showRevealForm} onClose={() => setShowRevealForm(false)} title="Reveal Vote" size="sm">
+          <ExpertRevealForm
+            applicationId={revealAppId}
+            reviewerId={expertData.id}
+            onSubmit={() => {
+              setShowRevealForm(false);
+              setRevealAppId(null);
+              refetchExpertApps();
+            }}
+            onCancel={() => {
+              setShowRevealForm(false);
+              setRevealAppId(null);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

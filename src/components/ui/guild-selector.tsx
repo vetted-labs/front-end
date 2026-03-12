@@ -5,11 +5,9 @@ import { Shield, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getGuildIcon } from "@/lib/guildHelpers";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
+import type { GuildOption } from "@/types/guild";
 
-export interface GuildOption {
-  id: string;
-  name: string;
-}
+export type { GuildOption };
 
 interface GuildSelectorProps {
   guilds: GuildOption[];

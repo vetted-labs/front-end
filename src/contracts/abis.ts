@@ -229,34 +229,8 @@ export const EXPERT_STAKING_ABI = [
   // Read functions
   {
     inputs: [
-      { name: '', type: 'address' },
-      { name: '', type: 'bytes32' },
-    ],
-    name: 'stakes',
-    outputs: [
-      { name: 'amount', type: 'uint256' },
-      { name: 'stakedAt', type: 'uint256' },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '', type: 'address' },
-      { name: '', type: 'bytes32' },
-    ],
-    name: 'unstakeRequests',
-    outputs: [
-      { name: 'amount', type: 'uint256' },
-      { name: 'unlockTime', type: 'uint256' },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '', type: 'address' },
-      { name: '', type: 'bytes32' },
+      { name: 'expert', type: 'address' },
+      { name: 'guildId', type: 'bytes32' },
     ],
     name: 'lockedStake',
     outputs: [{ name: '', type: 'uint256' }],
@@ -543,6 +517,7 @@ export const ENDORSEMENT_BIDDING_ABI = [
       { name: 'createdAt', type: 'uint256' },
       { name: 'finalizedAt', type: 'uint256' },
       { name: 'selectedCandidate', type: 'bytes32' },
+      { name: 'slashBps', type: 'uint256' },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -596,41 +571,25 @@ export const ENDORSEMENT_BIDDING_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'jobId', type: 'bytes32' }],
+    name: 'jobCreationFee',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'address' },
-    ],
-    name: 'bids',
-    outputs: [
+      { name: 'jobId', type: 'bytes32' },
       { name: 'expert', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-      { name: 'timestamp', type: 'uint256' },
-      { name: 'isActive', type: 'bool' },
     ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'bytes32' },
-    ],
-    name: 'endorsements',
-    outputs: [{ name: 'bidCount', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: '', type: 'bytes32' }],
-    name: 'rewardsDistributed',
+    name: 'isBidClaimed',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [{ name: '', type: 'bytes32' }],
-    name: 'jobSlashed',
+    name: 'rewardsDistributed',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
@@ -687,6 +646,7 @@ export const ENDORSEMENT_BIDDING_ABI = [
     inputs: [
       { name: 'jobId', type: 'bytes32' },
       { name: 'selectedCandidate', type: 'bytes32' },
+      { name: 'slashPercentage', type: 'uint256' },
     ],
     name: 'finalizeJob',
     outputs: [],
@@ -695,14 +655,7 @@ export const ENDORSEMENT_BIDDING_ABI = [
   },
   {
     inputs: [{ name: 'jobId', type: 'bytes32' }],
-    name: 'reclaimExpiredBids',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'jobId', type: 'bytes32' }],
-    name: 'reclaimFinalizedBids',
+    name: 'claimBid',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -747,6 +700,35 @@ export const ENDORSEMENT_BIDDING_ABI = [
     name: 'JobFinalized',
     type: 'event',
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'RewardDistributed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+    ],
+    name: 'StakeSlashed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'jobId', type: 'bytes32' },
+      { indexed: true, name: 'expert', type: 'address' },
+      { indexed: false, name: 'refundAmount', type: 'uint256' },
+      { indexed: false, name: 'slashAmount', type: 'uint256' },
+    ],
+    name: 'BidClaimed',
+    type: 'event',
+  },
   // Custom errors
   { inputs: [], name: 'ZeroAmount', type: 'error' },
   { inputs: [], name: 'ZeroAddress', type: 'error' },
@@ -758,14 +740,17 @@ export const ENDORSEMENT_BIDDING_ABI = [
   { inputs: [], name: 'JobClosed', type: 'error' },
   { inputs: [], name: 'Unauthorized', type: 'error' },
   { inputs: [], name: 'SlashPercentageTooHigh', type: 'error' },
-  { inputs: [], name: 'AlreadySlashed', type: 'error' },
   { inputs: [], name: 'AlreadyDistributed', type: 'error' },
-  { inputs: [], name: 'AlreadyReclaimed', type: 'error' },
+  { inputs: [], name: 'AlreadyClaimed', type: 'error' },
   { inputs: [], name: 'BelowMinimumBid', type: 'error' },
   { inputs: [], name: 'InsufficientBalance', type: 'error' },
   { inputs: [], name: 'JobNotExpired', type: 'error' },
+  { inputs: [], name: 'JobStillOpen', type: 'error' },
+  { inputs: [], name: 'JobExpired', type: 'error' },
   { inputs: [], name: 'NoActiveEndorsers', type: 'error' },
   { inputs: [], name: 'ReclaimDeadlineNotReached', type: 'error' },
+  { inputs: [], name: 'CreatorCannotBid', type: 'error' },
+  { inputs: [], name: 'OneCandiatePerExpert', type: 'error' },
 ] as const;
 
 export const REPUTATION_MANAGER_ABI = [
@@ -779,18 +764,6 @@ export const REPUTATION_MANAGER_ABI = [
       { name: 'totalVotes', type: 'uint256' },
       { name: 'alignedVotes', type: 'uint256' },
       { name: 'alignmentRate', type: 'uint256' },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: '', type: 'address' }],
-    name: 'expertReputation',
-    outputs: [
-      { name: 'globalScore', type: 'int256' },
-      { name: 'lastActivityTimestamp', type: 'uint256' },
-      { name: 'totalVotes', type: 'uint256' },
-      { name: 'alignedVotes', type: 'uint256' },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -815,16 +788,6 @@ export const REPUTATION_MANAGER_ABI = [
       { name: 'guildId', type: 'bytes32' },
     ],
     name: 'getGuildReputation',
-    outputs: [{ name: '', type: 'int256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '', type: 'address' },
-      { name: '', type: 'bytes32' },
-    ],
-    name: 'guildReputation',
     outputs: [{ name: '', type: 'int256' }],
     stateMutability: 'view',
     type: 'function',
@@ -944,13 +907,6 @@ export const REWARD_DISTRIBUTOR_ABI = [
     type: 'function',
   },
   {
-    inputs: [{ name: '', type: 'address' }],
-    name: 'expertRewards',
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [{ name: 'expert', type: 'address' }],
     name: 'getExpertPendingRewards',
     outputs: [{ name: '', type: 'uint256' }],
@@ -1049,14 +1005,14 @@ export const SLASHING_MANAGER_ABI = [
         type: 'tuple',
         components: [
           { name: 'expert', type: 'address' },
+          { name: 'isAppealed', type: 'bool' },
+          { name: 'appealResolved', type: 'bool' },
           { name: 'guildId', type: 'bytes32' },
           { name: 'amount', type: 'uint256' },
-          { name: 'reason', type: 'string' },
+          { name: 'reasonHash', type: 'bytes32' },
           { name: 'timestamp', type: 'uint256' },
           { name: 'appealDeadline', type: 'uint256' },
           { name: 'appealResolutionDeadline', type: 'uint256' },
-          { name: 'isAppealed', type: 'bool' },
-          { name: 'appealResolved', type: 'bool' },
         ],
       },
     ],
@@ -1250,19 +1206,6 @@ export const GUILD_REGISTRY_ABI = [
     type: 'function',
   },
   {
-    inputs: [{ name: '', type: 'bytes32' }],
-    name: 'guilds',
-    outputs: [
-      { name: 'name', type: 'string' },
-      { name: 'active', type: 'bool' },
-      { name: 'minStake', type: 'uint256' },
-      { name: 'minReputation', type: 'int256' },
-      { name: 'createdAt', type: 'uint256' },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [],
     name: 'paused',
     outputs: [{ name: '', type: 'bool' }],
@@ -1327,15 +1270,15 @@ export const GUILD_REGISTRY_ABI = [
 export const VETTING_MANAGER_ABI = [
   // Read functions
   {
-    inputs: [{ name: '', type: 'bytes32' }],
+    inputs: [{ name: 'sessionId', type: 'bytes32' }],
     name: 'sessions',
     outputs: [
       { name: 'guildId', type: 'bytes32' },
-      { name: 'commitDeadline', type: 'uint256' },
-      { name: 'revealDeadline', type: 'uint256' },
-      { name: 'panelSize', type: 'uint256' },
-      { name: 'commitCount', type: 'uint256' },
-      { name: 'revealCount', type: 'uint256' },
+      { name: 'commitDeadline', type: 'uint64' },
+      { name: 'revealDeadline', type: 'uint64' },
+      { name: 'panelSize', type: 'uint32' },
+      { name: 'commitCount', type: 'uint32' },
+      { name: 'revealCount', type: 'uint32' },
       { name: 'phase', type: 'uint8' },
       { name: 'applicationHash', type: 'bytes32' },
     ],
@@ -1366,8 +1309,8 @@ export const VETTING_MANAGER_ABI = [
   },
   {
     inputs: [
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'address' },
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'panelist', type: 'address' },
     ],
     name: 'isPanelMember',
     outputs: [{ name: '', type: 'bool' }],
@@ -1376,8 +1319,8 @@ export const VETTING_MANAGER_ABI = [
   },
   {
     inputs: [
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'address' },
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'panelist', type: 'address' },
     ],
     name: 'votes',
     outputs: [
@@ -1386,6 +1329,13 @@ export const VETTING_MANAGER_ABI = [
       { name: 'committed', type: 'bool' },
       { name: 'revealed', type: 'bool' },
     ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'account', type: 'address' }],
+    name: 'isAuthorizedRevealer',
+    outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -1414,6 +1364,44 @@ export const VETTING_MANAGER_ABI = [
       { name: 'salt', type: 'bytes32' },
     ],
     name: 'revealVote',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'panelists', type: 'address[]' },
+      { name: 'scores', type: 'uint8[]' },
+      { name: 'salts', type: 'bytes32[]' },
+    ],
+    name: 'batchRevealVotes',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'panelist', type: 'address' },
+      { name: 'score', type: 'uint8' },
+      { name: 'salt', type: 'bytes32' },
+    ],
+    name: 'revealVoteFor',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'sessionId', type: 'bytes32' }],
+    name: 'finalizeSessionVerifiable',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'revealer', type: 'address' }],
+    name: 'addAuthorizedRevealer',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -1465,6 +1453,18 @@ export const VETTING_MANAGER_ABI = [
     name: 'SessionExpired',
     type: 'event',
   },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, name: 'sessionId', type: 'bytes32' }],
+    name: 'AllVotesCommitted',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [{ indexed: true, name: 'sessionId', type: 'bytes32' }],
+    name: 'AllVotesRevealed',
+    type: 'event',
+  },
   // Custom errors
   { inputs: [], name: 'ZeroAddress', type: 'error' },
   { inputs: [], name: 'ZeroSessionId', type: 'error' },
@@ -1488,6 +1488,9 @@ export const VETTING_MANAGER_ABI = [
   { inputs: [], name: 'PanelistDidNotReveal', type: 'error' },
   { inputs: [], name: 'ExpireGracePeriodNotElapsed', type: 'error' },
   { inputs: [], name: 'NotAuthorizedToExpire', type: 'error' },
+  { inputs: [], name: 'NotAuthorizedRevealer', type: 'error' },
+  { inputs: [], name: 'ArrayLengthMismatch', type: 'error' },
+  { inputs: [], name: 'InsufficientReveals', type: 'error' },
   {
     inputs: [
       { name: 'panelist', type: 'address' },

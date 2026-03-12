@@ -15,6 +15,7 @@ import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import type {
   EarningsEntry,
   EarningsSummary,
+  EarningsBreakdownResponse,
   TimeRange,
   PaginationInfo,
   ExpertProfile,
@@ -32,21 +33,6 @@ function getDateFrom(range: TimeRange): string | undefined {
   else if (range === "week") now.setDate(now.getDate() - 7);
   else if (range === "month") now.setMonth(now.getMonth() - 1);
   return now.toISOString();
-}
-
-interface EarningsBreakdownResponse {
-  summary?: EarningsSummary;
-  items?: {
-    items: EarningsEntry[];
-    pagination: PaginationInfo;
-  };
-  data?: {
-    summary?: EarningsSummary;
-    items?: {
-      items: EarningsEntry[];
-      pagination: PaginationInfo;
-    };
-  };
 }
 
 export default function EarningsPage() {
@@ -121,7 +107,7 @@ export default function EarningsPage() {
       onSuccess: (result) => {
         if (!result) return;
         setProfile(result.profileResult);
-        const data = result.earningsResult.data ?? result.earningsResult;
+        const data = result.earningsResult;
         setSummary(data.summary || null);
         setItems(data.items?.items || []);
         setPagination(data.items?.pagination || null);

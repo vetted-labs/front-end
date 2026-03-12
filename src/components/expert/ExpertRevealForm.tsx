@@ -3,46 +3,53 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { commitRevealApi, extractApiError } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { expertApi, extractApiError } from "@/lib/api";
 
-interface RevealFormProps {
+interface ExpertRevealFormProps {
   applicationId: string;
-  expertId: string;
+  reviewerId: string;
   onSubmit: () => void;
   onCancel: () => void;
 }
 
-export function RevealForm({
+interface SavedReviewData {
+  normalizedScore: number;
+  nonce: string;
+  salt?: string;
+  onChainScore?: number;
+  feedback?: string;
+  criteriaScores?: Record<string, unknown>;
+  criteriaJustifications?: Record<string, unknown>;
+  overallScore?: number;
+  redFlagDeductions?: number;
+}
+
+export function ExpertRevealForm({
   applicationId,
-  expertId,
+  reviewerId,
   onSubmit,
   onCancel,
-}: RevealFormProps) {
+}: ExpertRevealFormProps) {
   const [score, setScore] = useState("");
   const [nonce, setNonce] = useState("");
-  const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localStorageFound, setLocalStorageFound] = useState(false);
+  const [savedData, setSavedData] = useState<SavedReviewData | null>(null);
 
-  const localStorageKey = `commitReveal:${applicationId}:${expertId}`;
+  const localStorageKey = `expertCR:${applicationId}:${reviewerId}`;
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(localStorageKey);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        // Handle both legacy { score, nonce } and new { score, nonce, salt } formats
-        const savedScore = parsed.score;
-        const savedNonce = parsed.nonce || parsed.salt;
-        if (savedScore !== undefined && savedNonce) {
-          setScore(savedScore.toString());
-          setNonce(savedNonce);
-          setLocalStorageFound(true);
+        const parsed: SavedReviewData = JSON.parse(saved);
+        if (parsed.normalizedScore !== undefined && parsed.nonce) {
+          setSavedData(parsed);
+          setScore(parsed.normalizedScore.toString());
+          setNonce(parsed.nonce);
         }
       }
     } catch {
@@ -59,19 +66,21 @@ export function RevealForm({
     try {
       setIsSubmitting(true);
 
-      await commitRevealApi.revealVote(applicationId, {
-        expertId,
-        score: parseInt(score),
+      await expertApi.expertCommitReveal.revealVote(applicationId, {
+        normalizedScore: parseInt(score),
         nonce,
-        comment,
+        feedback: savedData?.feedback,
+        criteriaScores: savedData?.criteriaScores,
+        criteriaJustifications: savedData?.criteriaJustifications,
+        overallScore: savedData?.overallScore,
+        redFlagDeductions: savedData?.redFlagDeductions,
       });
 
       localStorage.removeItem(localStorageKey);
-      toast.success("Vote revealed successfully!");
+      toast.success("Review revealed successfully!");
       onSubmit();
     } catch (error: unknown) {
-      logger.error("Reveal error", error, { silent: true });
-      const msg = extractApiError(error, "Failed to reveal vote");
+      const msg = extractApiError(error, "Failed to reveal review");
       if (msg.toLowerCase().includes("hash")) {
         toast.error("Hash mismatch. Make sure your score and nonce match your commitment.");
       } else {
@@ -84,28 +93,33 @@ export function RevealForm({
 
   return (
     <div className="space-y-4">
-      {localStorageFound && (
+      {savedData && (
         <div className="flex items-start gap-2 rounded-xl bg-green-500/5 border border-green-500/20 p-3">
-          <Badge variant="default" className="bg-green-600">Auto-filled</Badge>
-          <p className="text-sm text-muted-foreground">
-            Your score and nonce were restored from local storage.
-          </p>
+          <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">Auto-filled from saved data</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Your review data was restored from local storage.
+              {savedData.overallScore !== undefined && (
+                <> Raw score: {savedData.overallScore} | Normalized: {savedData.normalizedScore}/100</>
+              )}
+            </p>
+          </div>
         </div>
       )}
 
-      {!localStorageFound && (
-        <div className="flex items-start gap-2 rounded-xl bg-amber-500/5 border border-amber-500/20 p-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            Could not find saved commitment data. Please enter your score and
-            nonce manually.
-          </p>
-        </div>
+      {!savedData && (
+        <EmptyState
+          icon={AlertCircle}
+          title="No saved data found"
+          description="Enter your normalized score (0-100) and nonce manually. Note: criteria details won't be recorded without saved data."
+          className="py-3"
+        />
       )}
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Score</label>
+          <label className="text-sm font-medium">Normalized Score</label>
           <Badge variant="secondary">{score || "?"}/100</Badge>
         </div>
         <Input
@@ -114,7 +128,8 @@ export function RevealForm({
           max={100}
           value={score}
           onChange={(e) => setScore(e.target.value)}
-          placeholder="Enter the score you committed"
+          placeholder="Enter the normalized score you committed"
+          readOnly={!!savedData}
         />
       </div>
 
@@ -125,16 +140,7 @@ export function RevealForm({
           onChange={(e) => setNonce(e.target.value)}
           placeholder="Enter your nonce"
           className="font-mono text-sm"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Comment (optional)</label>
-        <Textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Add a comment to your vote"
-          rows={3}
+          readOnly={!!savedData}
         />
       </div>
 
@@ -153,7 +159,7 @@ export function RevealForm({
               Revealing...
             </>
           ) : (
-            "Reveal Vote"
+            "Reveal Review"
           )}
         </Button>
       </div>

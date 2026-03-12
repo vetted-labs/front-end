@@ -15,10 +15,12 @@ type ExpertStatus = string | null;
  */
 export function useExpertStatus() {
   const [status, setStatus] = useState<ExpertStatus>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Read from localStorage after mount (SSR-safe)
   useEffect(() => {
     setStatus(localStorage.getItem(STORAGE_KEY));
+    setIsHydrated(true);
 
     // Cross-tab sync
     const onStorage = (e: StorageEvent) => {
@@ -52,5 +54,5 @@ export function useExpertStatus() {
     window.dispatchEvent(new Event("expertStatusChange"));
   }, []);
 
-  return { expertStatus: status, setExpertStatus, clearExpertStatus };
+  return { expertStatus: status, isHydrated, setExpertStatus, clearExpertStatus };
 }

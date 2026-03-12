@@ -62,7 +62,6 @@ export function CandidateDetailModal({
   const [activeTab, setActiveTab] = useState<TabValue>("profile");
   const [notes, setNotes] = useState(application.notes ?? "");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
-  const [notesSaved, setNotesSaved] = useState(false);
   const [message, setMessage] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
 
@@ -110,8 +109,7 @@ export function CandidateDetailModal({
         application.status,
         notes
       );
-      setNotesSaved(true);
-      setTimeout(() => setNotesSaved(false), 2000);
+      toast.success("Notes saved!");
     } catch (error) {
       logger.error("Error saving notes", error, { silent: true });
       toast.error("Failed to save notes");
@@ -564,11 +562,7 @@ export function CandidateDetailModal({
                 disabled={isSavingNotes}
                 size="sm"
               >
-                {isSavingNotes
-                  ? "Saving..."
-                  : notesSaved
-                    ? "Saved!"
-                    : "Save Notes"}
+                {isSavingNotes ? "Saving..." : "Save Notes"}
               </Button>
             </div>
           )}

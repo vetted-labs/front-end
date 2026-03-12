@@ -48,6 +48,34 @@ export function sanitizeErrorMessage(message: unknown): string {
   return stripped.slice(0, 500);
 }
 
+/**
+ * Extract the best error message from a caught error.
+ * Use in manual catch blocks instead of inline `err instanceof Error ? err.message : "fallback"`.
+ */
+export function extractApiError(err: unknown, fallback = "An error occurred"): string {
+  if (err instanceof ApiError) {
+    // ApiError.message already contains the extracted backend message (from Phase 1A fix).
+    // Fall back to .data fields if message is just the status code default.
+    if (err.message && !err.message.match(/^\d+ - /)) return err.message;
+    const data = err.data;
+    if (data) {
+      const msg = data.error || data.message;
+      if (typeof msg === "string" && msg) return sanitizeErrorMessage(msg);
+    }
+    // Status-based fallbacks
+    if (err.status === 401) return "Your session has expired. Please sign in again.";
+    if (err.status === 403) return "You don't have permission to perform this action.";
+    if (err.status === 404) return "The requested resource was not found.";
+    if (err.status === 409) return "This action conflicts with the current state.";
+    if (err.status === 429) return "Too many requests. Please try again shortly.";
+    return err.message || fallback;
+  }
+  if (err instanceof Error) {
+    return err.message || fallback;
+  }
+  return fallback;
+}
+
 // Track whether a token refresh is in progress to prevent concurrent refreshes
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -103,6 +131,13 @@ async function attemptTokenRefresh(): Promise<boolean> {
   return refreshPromise;
 }
 
+/**
+ * In-flight GET request deduplication.
+ * If the same GET URL is already in-flight, callers share the same promise
+ * instead of firing a duplicate request (prevents 429s on page load).
+ */
+const inflightGets = new Map<string, Promise<unknown>>();
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: ApiRequestOptions = {}
@@ -128,80 +163,112 @@ export async function apiRequest<T = unknown>(
     }
   }
 
+  // Expert wallet-based auth: always send wallet header if available
+  // Backend verifyExpertWallet reads X-Wallet-Address for identity
+  if (typeof window !== "undefined") {
+    const walletAddress = localStorage.getItem("walletAddress");
+    if (walletAddress && !requestHeaders["X-Wallet-Address"]) {
+      requestHeaders["X-Wallet-Address"] = walletAddress;
+    }
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
+  const method = (fetchOptions.method || "GET").toUpperCase();
 
-  // Prepare body based on type
-  let processedBody: BodyInit | null | undefined = body;
-  if (body && !(body instanceof FormData) && typeof body === 'object') {
-    processedBody = JSON.stringify(body);
+  // Deduplicate concurrent GET requests to the same URL
+  if (method === "GET" && !_isRetry) {
+    const existing = inflightGets.get(url);
+    if (existing) return existing as Promise<T>;
   }
 
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers: requestHeaders,
-      body: processedBody,
-    });
+  const execute = async (): Promise<T> => {
+    // Prepare body based on type
+    let processedBody: BodyInit | null | undefined = body;
+    if (body && !(body instanceof FormData) && typeof body === 'object') {
+      processedBody = JSON.stringify(body);
+    }
 
-    if (!response.ok) {
-      // 🔐 SECURITY: Auto-refresh on 401 (token expired)
-      if (response.status === 401 && requiresAuth && !_isRetry) {
-        const refreshed = await attemptTokenRefresh();
-        if (refreshed) {
-          // Retry the original request with new token
-          return apiRequest<T>(endpoint, { ...options, _isRetry: true });
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers: requestHeaders,
+        body: processedBody,
+      });
+
+      if (!response.ok) {
+        // 🔐 SECURITY: Auto-refresh on 401 (token expired)
+        if (response.status === 401 && requiresAuth && !_isRetry) {
+          const refreshed = await attemptTokenRefresh();
+          if (refreshed) {
+            // Retry the original request with new token
+            return apiRequest<T>(endpoint, { ...options, _isRetry: true });
+          }
         }
+
+        // Try to parse error response body
+        let errorData: Record<string, unknown> = {};
+        try {
+          const text = await response.text();
+          errorData = text ? JSON.parse(text) : {};
+        } catch {
+          // If parsing fails, leave errorData empty
+        }
+
+        const errorMessage = sanitizeErrorMessage(
+          errorData.error || errorData.message || `${response.status} - ${response.statusText}`
+        );
+        throw new ApiError(response.status, response.statusText, errorData, errorMessage);
       }
 
-      // Try to parse error response body
-      let errorData: Record<string, unknown> = {};
-      try {
-        const text = await response.text();
-        errorData = text ? JSON.parse(text) : {};
-      } catch {
-        // If parsing fails, leave errorData empty
+      const data = await response.json();
+
+      // Reject { success: false } responses that slipped through with a 2xx status
+      if (
+        data !== null &&
+        typeof data === "object" &&
+        !Array.isArray(data) &&
+        data.success === false
+      ) {
+        throw new ApiError(
+          response.status,
+          response.statusText,
+          data,
+          sanitizeErrorMessage(data.error || data.message || 'Request failed')
+        );
       }
 
-      throw new ApiError(response.status, response.statusText, errorData);
-    }
+      // Auto-unwrap { success: true, data: T } envelope from backend
+      if (
+        !options.rawEnvelope &&
+        data !== null &&
+        typeof data === "object" &&
+        !Array.isArray(data) &&
+        "success" in data &&
+        "data" in data &&
+        data.success === true
+      ) {
+        return data.data as T;
+      }
 
-    const data = await response.json();
-
-    // Reject { success: false } responses that slipped through with a 2xx status
-    if (
-      data !== null &&
-      typeof data === "object" &&
-      !Array.isArray(data) &&
-      data.success === false
-    ) {
-      throw new ApiError(
-        response.status,
-        response.statusText,
-        data,
-        sanitizeErrorMessage(data.error || data.message || 'Request failed')
-      );
+      return data as T;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new Error(`Network error: ${(error as Error).message}`);
     }
+  };
 
-    // Auto-unwrap { success: true, data: T } envelope from backend
-    if (
-      !options.rawEnvelope &&
-      data !== null &&
-      typeof data === "object" &&
-      !Array.isArray(data) &&
-      "success" in data &&
-      "data" in data &&
-      data.success === true
-    ) {
-      return data.data as T;
-    }
+  const promise = execute();
 
-    return data as T;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new Error(`Network error: ${(error as Error).message}`);
+  if (method === "GET" && !_isRetry) {
+    inflightGets.set(url, promise);
+    // Suppress unhandled rejection on the derived cleanup promise —
+    // the caller handles the original `promise` rejection via their own catch.
+    promise.finally(() => inflightGets.delete(url)).catch(() => {});
   }
+
+  return promise;
 }
 
 // Auth API
@@ -287,12 +354,6 @@ export const jobsApi = {
       requiresAuth: true,
     }),
 
-  apply: (id: string, data: Record<string, unknown>) =>
-    apiRequest<{ id: string }>(`/api/jobs/${id}/apply`, {
-      method: "POST",
-      body: JSON.stringify(data),
-      requiresAuth: true,
-    }),
 };
 
 // Dashboard API - uses /api/jobs/stats endpoint on backend
@@ -635,6 +696,32 @@ export const expertApi = {
     apiRequest<import("@/types").ExpertApplicationFinalization>(
       `/api/experts/guild-applications/${applicationId}/finalization`
     ),
+
+  // Expert application commit-reveal
+  expertCommitReveal: {
+    getPhaseStatus: (applicationId: string) =>
+      apiRequest<import("@/types").ExpertCRPhaseStatus>(
+        `/api/experts/guild-applications/${applicationId}/commit-reveal/status`
+      ),
+
+    generateHash: (score: number, nonce: string) =>
+      apiRequest<import("@/types").CommitRevealHash>(
+        "/api/experts/guild-applications/commit-reveal/generate-hash",
+        { method: "POST", body: JSON.stringify({ score, nonce }) }
+      ),
+
+    submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
+      apiRequest<{ success: boolean }>(
+        `/api/experts/guild-applications/${applicationId}/commit`,
+        { method: "POST", body: JSON.stringify(data) }
+      ),
+
+    revealVote: (applicationId: string, data: Record<string, unknown>) =>
+      apiRequest<{ success: boolean }>(
+        `/api/experts/guild-applications/${applicationId}/reveal`,
+        { method: "POST", body: JSON.stringify(data) }
+      ),
+  },
 };
 
 // Notifications API
@@ -973,8 +1060,11 @@ export const blockchainApi = {
       body: JSON.stringify({ walletAddress, guildId }),
     }),
 
-  getUnstakeRequest: (walletAddress: string) =>
-    apiRequest<import("@/types").UnstakeRequest | null>(`/api/blockchain/staking/unstake-request/${walletAddress}`),
+  getUnstakeRequest: (walletAddress: string, blockchainGuildId: string) =>
+    apiRequest<import("@/types").UnstakeRequest | null>(`/api/blockchain/staking/unstake-request/${walletAddress}/${blockchainGuildId}`),
+
+  getUnstakeRequestDetailed: (walletAddress: string, blockchainGuildId: string) =>
+    apiRequest<{ hasRequest: boolean; unlockTime?: string; amount?: string }>(`/api/blockchain/staking/unstake-request-detailed/${walletAddress}/${blockchainGuildId}`),
 
   getStakingStats: () =>
     apiRequest<import("@/types").StakingStats>("/api/blockchain/staking/stats"),
@@ -1005,8 +1095,19 @@ export const blockchainApi = {
       body: JSON.stringify({ applicationId, walletAddress, jobId, candidateId }),
     }),
 
-  getApplicationsForEndorsement: (guildId: string) =>
-    apiRequest<import("@/types").EndorsementApplication[]>(`/api/blockchain/endorsements/applications/${guildId}`),
+  getApplicationsForEndorsement: async (guildId: string, expertAddress?: string, page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (expertAddress) params.append('expert_address', expertAddress);
+    if (page) params.append('page', String(page));
+    if (limit) params.append('limit', String(limit));
+    const query = params.toString() ? `?${params.toString()}` : '';
+    // Use rawEnvelope to preserve `total` alongside `data` (auto-unwrap would strip it)
+    const json = await apiRequest<{ success?: boolean; data?: import("@/types").EndorsementApplication[]; total?: number }>(
+      `/api/blockchain/endorsements/applications/${guildId}${query}`,
+      { rawEnvelope: true }
+    );
+    return { data: json.data ?? [], total: json.total ?? (json.data?.length ?? 0) };
+  },
 
   getExpertEndorsements: async (walletAddress: string, params?: { status?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
@@ -1116,6 +1217,8 @@ function mapProposalToGuildApplication(raw: Record<string, unknown>): import("@/
       ? Number(raw.myReputationChange ?? raw.my_reputation_change) : undefined,
     my_reward_amount: raw.myRewardAmount != null || raw.my_reward_amount != null
       ? Number(raw.myRewardAmount ?? raw.my_reward_amount) : undefined,
+    // Item type
+    item_type: (raw.itemType ?? raw.item_type) as "proposal" | "guild_application" | undefined,
     // Consensus failure / tiebreaker fields
     consensus_failed: Boolean(raw.consensusFailed ?? raw.consensus_failed ?? false),
     tiebreaker_required: Boolean(raw.tiebreakerRequired ?? raw.tiebreaker_required ?? false),
@@ -1158,11 +1261,38 @@ export const guildApplicationsApi = {
     return data.map(mapProposalToGuildApplication);
   },
 
-  // Get guild application details
-  getDetails: async (applicationId: string, expertId?: string) => {
+  // Get guild application details (returns camelCase GuildApplicationDetail with votes)
+  getDetails: async (applicationId: string, expertId?: string): Promise<import("@/types").GuildApplicationDetail> => {
     const query = expertId ? `?expertId=${expertId}` : "";
-    const data = await apiRequest<Record<string, unknown>>(`/api/proposals/${applicationId}${query}`);
-    return mapProposalToGuildApplication(data);
+    const [data, votesRaw] = await Promise.all([
+      apiRequest<Record<string, unknown>>(`/api/proposals/${applicationId}${query}`),
+      apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`).catch(() => [] as Record<string, unknown>[]),
+    ]);
+    const app = mapProposalToGuildApplication(data);
+    const votes: import("@/types").GuildApplicationVote[] = votesRaw.map((v) => ({
+      id: (v.id ?? "") as string,
+      expertId: (v.expertId ?? v.expert_id ?? "") as string,
+      expertName: (v.expertName ?? v.expert_name ?? "Expert") as string,
+      expertWallet: (v.expertWallet ?? v.expert_wallet ?? "") as string,
+      vote: Number(v.score ?? 0) >= 6 ? "for" as const : "against" as const,
+      stakeAmount: Number(v.stakeAmount ?? v.stake_amount ?? 0),
+      comment: (v.comment ?? undefined) as string | undefined,
+      votedAt: (v.createdAt ?? v.created_at ?? "") as string,
+    }));
+    return {
+      id: app.id,
+      candidateId: app.candidate_id,
+      candidateName: app.candidate_name,
+      candidateEmail: app.candidate_email,
+      proposalText: app.proposal_text || "",
+      guildId: app.guild_id,
+      guildName: app.guild_name,
+      requiredStake: app.required_stake,
+      votingDeadline: app.voting_deadline,
+      status: app.status as "pending" | "ongoing" | "approved" | "rejected",
+      createdAt: app.created_at,
+      votes,
+    };
   },
 
   // Vote on a guild application (supports both legacy vote and new score)
@@ -1336,32 +1466,39 @@ export const messagingApi = {
       requiresAuth: true,
     }),
 
-  getCompanyConversations: (params?: {
+  getCompanyConversations: async (params?: {
     jobId?: string;
     status?: string;
     unreadOnly?: boolean;
     search?: string;
-  }) => {
+  }): Promise<import("@/types").Conversation[]> => {
     const queryParams = new URLSearchParams();
     if (params?.jobId) queryParams.append("jobId", params.jobId);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.unreadOnly) queryParams.append("unreadOnly", "true");
     if (params?.search) queryParams.append("search", params.search);
     const query = queryParams.toString();
-    return apiRequest<import("@/types").Conversation[] | { conversations: import("@/types").Conversation[] }>(`/api/messaging/conversations/company${query ? `?${query}` : ""}`, {
+    const data = await apiRequest<import("@/types").Conversation[] | { conversations: import("@/types").Conversation[] }>(`/api/messaging/conversations/company${query ? `?${query}` : ""}`, {
       requiresAuth: true,
     });
+    return Array.isArray(data) ? data : data?.conversations || [];
   },
 
-  getCandidateConversations: () =>
-    apiRequest<import("@/types").Conversation[] | { conversations: import("@/types").Conversation[] }>("/api/messaging/conversations/candidate", {
+  getCandidateConversations: async (): Promise<import("@/types").Conversation[]> => {
+    const data = await apiRequest<import("@/types").Conversation[] | { conversations: import("@/types").Conversation[] }>("/api/messaging/conversations/candidate", {
       requiresAuth: true,
-    }),
+    });
+    return Array.isArray(data) ? data : data?.conversations || [];
+  },
 
-  getConversation: (conversationId: string) =>
-    apiRequest<{ conversation?: import("@/types").Conversation; messages: import("@/types").Message[] } & import("@/types").Conversation>(`/api/messaging/conversations/${conversationId}`, {
+  getConversation: async (conversationId: string): Promise<{ conversation: import("@/types").Conversation; messages: import("@/types").Message[] }> => {
+    const data = await apiRequest<{ conversation?: import("@/types").Conversation; messages: import("@/types").Message[] }>(`/api/messaging/conversations/${conversationId}`, {
       requiresAuth: true,
-    }),
+    });
+    // Backend may return conversation at root level or nested — normalize
+    const conversation = data.conversation || (data as unknown as import("@/types").Conversation);
+    return { conversation, messages: data.messages || [] };
+  },
 
   getConversationByApplication: (applicationId: string) =>
     apiRequest<import("@/types").Conversation | null>(`/api/messaging/conversations/application/${applicationId}`, {
@@ -1440,14 +1577,15 @@ export const messagingApi = {
       }
     ),
 
-  getUpcomingMeetings: (params?: { limit?: number }) => {
+  getUpcomingMeetings: async (params?: { limit?: number }): Promise<import("@/types").UpcomingMeeting[]> => {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", String(params.limit));
     const query = queryParams.toString();
-    return apiRequest<import("@/types").UpcomingMeeting[] | { meetings: import("@/types").UpcomingMeeting[] }>(
+    const data = await apiRequest<import("@/types").UpcomingMeeting[] | { meetings: import("@/types").UpcomingMeeting[] }>(
       `/api/messaging/meetings/upcoming${query ? `?${query}` : ""}`,
       { requiresAuth: true }
     );
+    return Array.isArray(data) ? data : data?.meetings || [];
   },
 };
 

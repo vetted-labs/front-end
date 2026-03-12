@@ -31,6 +31,13 @@ export interface ExpertMembershipApplication {
   /** Consensus failure / tiebreaker fields */
   consensus_failed?: boolean;
   tiebreaker_required?: boolean;
+  /** On-chain vetting session fields */
+  votingPhase?: "direct" | "commit" | "reveal" | "finalized";
+  commitDeadline?: string;
+  revealDeadline?: string;
+  blockchainSessionId?: string;
+  blockchainSessionCreated?: boolean;
+  blockchainSessionTxHash?: string;
   /** Populated when aggregating across guilds */
   guildId?: string;
   guildName?: string;

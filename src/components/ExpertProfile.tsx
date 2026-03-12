@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
 import { getExplorerAddressUrl } from "@/lib/blockchain";
+import { formatDateMonthYear, formatTimeAgo, truncateAddress } from "@/lib/utils";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
@@ -174,12 +175,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
       .slice(0, 2) || "??";
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
-  };
+  const formatDate = (dateString: string) => formatDateMonthYear(dateString, "long");
 
   const calculateConsensusPercentage = () => {
     if (!profile) return 0;
@@ -198,14 +194,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         sum + guild.pendingProposals + guild.ongoingProposals + guild.closedProposals,
       0
     );
-  };
-
-  const formatTimeAgo = (timestamp: string) => {
-    const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
-    if (seconds < 60) return "Just now";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
   };
 
   // Loading state
@@ -390,7 +378,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted transition-all text-xs font-mono text-muted-foreground hover:text-foreground"
                   >
                     <Wallet className="w-3 h-3 text-primary" />
-                    {profile.walletAddress.slice(0, 6)}...{profile.walletAddress.slice(-4)}
+                    {truncateAddress(profile.walletAddress)}
                     <ExternalLink className="w-3 h-3 text-muted-foreground" />
                   </a>
                   <button

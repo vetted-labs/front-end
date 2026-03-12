@@ -12,6 +12,7 @@ import {
   ENDORSEMENT_BIDDING_ABI,
   REPUTATION_MANAGER_ABI,
   REWARD_DISTRIBUTOR_ABI,
+  VETTING_MANAGER_ABI,
   CONTRACT_ADDRESSES,
 } from '@/contracts/abis';
 
@@ -108,11 +109,11 @@ export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
 
-  // Read stake info for this guild
+  // Read stake info for this guild (use getStakeInfo getter, not the raw mapping)
   const { data: stakeInfo, refetch: refetchStake } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
-    functionName: 'stakes',
+    functionName: 'getStakeInfo',
     args: address && blockchainGuildId ? [address, blockchainGuildId] : undefined,
     query: {
       enabled: !!address && !!blockchainGuildId,
@@ -246,6 +247,101 @@ export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
     stakeWithPermit,
     requestUnstake,
     completeUnstake,
+  };
+}
+
+/**
+ * Hook for VettingManager contract interactions (commit-reveal voting).
+ * Reads session state and vote state, provides commitVote write function.
+ * @param sessionId - bytes32 session ID (from hashToBytes32(proposalId))
+ */
+export function useVettingManager(sessionId?: `0x${string}`) {
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  // Read session data
+  const { data: sessionData, refetch: refetchSession } = useReadContract({
+    address: CONTRACT_ADDRESSES.VETTING,
+    abi: VETTING_MANAGER_ABI,
+    functionName: 'sessions',
+    args: sessionId ? [sessionId] : undefined,
+    query: {
+      enabled: !!sessionId,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  // Read vote state for current user
+  const { data: voteData, refetch: refetchVote } = useReadContract({
+    address: CONTRACT_ADDRESSES.VETTING,
+    abi: VETTING_MANAGER_ABI,
+    functionName: 'getVote',
+    args: sessionId && address ? [sessionId, address] : undefined,
+    query: {
+      enabled: !!sessionId && !!address,
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  // Check if current user is a panel member
+  const { data: isPanelMember } = useReadContract({
+    address: CONTRACT_ADDRESSES.VETTING,
+    abi: VETTING_MANAGER_ABI,
+    functionName: 'isPanelMember',
+    args: sessionId && address ? [sessionId, address] : undefined,
+    query: {
+      enabled: !!sessionId && !!address,
+      refetchInterval: false,
+      staleTime: 30000,
+    },
+  });
+
+  // Parse session tuple
+  const session = sessionData as [
+    `0x${string}`, bigint, bigint, bigint, bigint, bigint, number, `0x${string}`
+  ] | undefined;
+
+  // Parse vote tuple
+  const vote = voteData as [
+    `0x${string}`, number, boolean, boolean
+  ] | undefined;
+
+  // Commit a vote on-chain
+  const commitVote = async (commitment: `0x${string}`) => {
+    if (!address) throw new Error('Wallet not connected');
+    if (!sessionId) throw new Error('No session ID');
+
+    const hash = await writeContractAsync({
+      address: CONTRACT_ADDRESSES.VETTING,
+      abi: VETTING_MANAGER_ABI,
+      functionName: 'commitVote',
+      args: [sessionId, commitment],
+      gas: 200000n,
+    });
+
+    return hash;
+  };
+
+  return {
+    // Session data
+    sessionPhase: session?.[6],
+    commitDeadline: session?.[1],
+    revealDeadline: session?.[2],
+    panelSize: session?.[3],
+    commitCount: session?.[4],
+    revealCount: session?.[5],
+    // Vote data
+    voteCommitment: vote?.[0],
+    voteScore: vote?.[1],
+    isCommitted: vote?.[2] ?? false,
+    isRevealed: vote?.[3] ?? false,
+    isPanelMember: (isPanelMember as boolean) ?? false,
+    // Actions
+    commitVote,
+    refetchSession,
+    refetchVote,
   };
 }
 
@@ -786,7 +882,7 @@ export function useRewardClaiming() {
   const { data: totalClaimed, refetch: refetchClaimed } = useReadContract({
     address: CONTRACT_ADDRESSES.REWARD,
     abi: REWARD_DISTRIBUTOR_ABI,
-    functionName: 'expertRewards',
+    functionName: 'getExpertTotalRewards',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,

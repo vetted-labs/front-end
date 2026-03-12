@@ -3,6 +3,7 @@
 import { useRef, ReactNode } from "react";
 import { User, LogOut, ChevronDown, Wallet } from "lucide-react";
 import { getNetworkName } from "@/lib/web3Utils";
+import { truncateAddress } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 
 export interface UserMenuItem {
@@ -56,7 +57,7 @@ export function UserMenu({
           </div>
           <div className="flex flex-col items-start">
             <span className="text-xs font-mono text-foreground font-medium">
-              {address.slice(0, 6)}...{address.slice(-4)}
+              {truncateAddress(address)}
             </span>
             <span className="text-[10px] text-muted-foreground">
               {getNetworkName(chainId)}
@@ -75,7 +76,7 @@ export function UserMenu({
           </div>
           <span className="text-sm font-medium text-foreground hidden sm:block">
             {address && !userEmail
-              ? `${address.slice(0, 6)}...${address.slice(-4)}`
+              ? truncateAddress(address)
               : userEmail || (userType === "company" ? "Company" : "Candidate")}
           </span>
         </button>
@@ -144,7 +145,7 @@ export function UserMenu({
               <div className="px-4 py-3 border-b border-border">
                 <p className="text-sm font-medium text-foreground font-mono">
                   {address && !userEmail
-                    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+                    ? truncateAddress(address)
                     : userEmail}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">

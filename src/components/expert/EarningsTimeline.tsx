@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { Coins, Vote, Award } from "lucide-react";
 import type { EarningsEntry, PaginationInfo } from "@/types";
@@ -39,12 +40,11 @@ interface EarningsTimelineProps {
 export function EarningsTimeline({ items, pagination, page, onPageChange }: EarningsTimelineProps) {
   if (items.length === 0) {
     return (
-      <Card className="text-center">
-        <div className="py-16">
-          <Coins className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">No earnings found for this period.</p>
-        </div>
-      </Card>
+      <EmptyState
+        icon={Coins}
+        title="No earnings yet"
+        description="No earnings found for this period."
+      />
     );
   }
 

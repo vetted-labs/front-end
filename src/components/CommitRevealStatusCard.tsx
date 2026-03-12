@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { formatDeadline } from "@/lib/utils";
+import { COMMIT_REVEAL_STATUS_LABELS } from "@/config/constants";
 
 interface CommitRevealStatusCardProps {
   phase: "commit" | "reveal" | "finalized";
@@ -20,12 +21,6 @@ export function CommitRevealStatusCard({
   revealCount,
   totalExpected,
 }: CommitRevealStatusCardProps) {
-  const statusLabels = {
-    pending: "Not Yet Committed",
-    committed: "Committed",
-    revealed: "Revealed",
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -45,7 +40,7 @@ export function CommitRevealStatusCard({
 
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Your Status</span>
-          <Badge variant="outline">{statusLabels[userStatus]}</Badge>
+          <Badge variant="outline">{COMMIT_REVEAL_STATUS_LABELS[userStatus]}</Badge>
         </div>
 
         <div className="pt-3 border-t border-border space-y-2">

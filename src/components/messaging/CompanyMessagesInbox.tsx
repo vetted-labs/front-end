@@ -47,7 +47,7 @@ export default function CompanyMessagesInbox() {
   const fetchConversations = async () => {
     try {
       const data = await messagingApi.getCompanyConversations();
-      setConversations(Array.isArray(data) ? data : data?.conversations || []);
+      setConversations(data);
     } catch (error) {
       logger.error("Error fetching conversations", error, { silent: true });
       toast.error("Failed to load conversations");
@@ -59,10 +59,12 @@ export default function CompanyMessagesInbox() {
   const fetchMessages = useCallback(async (conversationId: string) => {
     setMessagesLoading(true);
     try {
-      const data = await messagingApi.getConversation(conversationId);
-      setMessages(data?.messages || []);
+      const { messages: msgs } = await messagingApi.getConversation(conversationId);
+      setMessages(msgs || []);
       // Mark as read
-      await messagingApi.markAsRead(conversationId).catch(() => {});
+      await messagingApi.markAsRead(conversationId).catch((err: unknown) => {
+        logger.warn("Failed to mark conversation as read", err);
+      });
       window.dispatchEvent(new Event(MESSAGE_READ_EVENT));
       // Update local unread count
       setConversations((prev) =>
@@ -77,6 +79,8 @@ export default function CompanyMessagesInbox() {
   }, []);
 
   // Poll for new messages when a conversation is selected
+  // TODO: This 5s polling pattern is duplicated in CandidateConversationView and
+  // CompanyConversationView. Extract a shared useMessagePolling hook to deduplicate.
   useEffect(() => {
     if (!selectedConversation) return;
     fetchMessages(selectedConversation.id);

@@ -30,21 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "active":
-      return "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400";
-    case "paused":
-      return "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400";
-    case "closed":
-      return "bg-muted border border-border text-muted-foreground";
-    case "draft":
-      return "bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400";
-    default:
-      return "bg-muted border border-border text-muted-foreground";
-  }
-};
+import { JOB_STATUS_CONFIG } from "@/config/constants";
 
 interface JobDetailPageProps {
   dashboardContext?: boolean;
@@ -183,12 +169,11 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                     {job.title}
                   </h1>
                   <span
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${getStatusColor(
-                      job.status ?? "draft"
-                    )}`}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${
+                      (JOB_STATUS_CONFIG[job.status ?? "draft"] || JOB_STATUS_CONFIG.draft).className
+                    }`}
                   >
-                    {(job.status ?? "draft").charAt(0).toUpperCase() +
-                      (job.status ?? "draft").slice(1)}
+                    {(JOB_STATUS_CONFIG[job.status ?? "draft"] || JOB_STATUS_CONFIG.draft).label}
                   </span>
                 </div>
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">

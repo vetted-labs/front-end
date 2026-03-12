@@ -6,7 +6,7 @@ interface ApplicationsGridProps {
   applications: EndorsementApplication[];
   loading: boolean;
   onSelectApplication: (app: EndorsementApplication) => void;
-  onQuickEndorse: (app: EndorsementApplication) => void;
+  onQuickEndorse?: (app: EndorsementApplication) => void;
 }
 
 export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse }: ApplicationsGridProps) {

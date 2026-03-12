@@ -96,6 +96,8 @@ export interface GuildApplication {
   alignment_distance?: number;
   my_reputation_change?: number;
   my_reward_amount?: number;
+  // Item type: "proposal" (Schelling voting), "guild_application" (candidate membership), or "expert_application" (expert membership)
+  item_type?: "proposal" | "guild_application" | "expert_application";
   // Consensus failure / tiebreaker fields
   consensus_failed?: boolean;
   tiebreaker_required?: boolean;

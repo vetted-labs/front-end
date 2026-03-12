@@ -85,6 +85,16 @@ export function formatDate(dateString: string): string {
 }
 
 /**
+ * Format a date string to month + year (e.g. "Jan 2025" or "January 2025")
+ */
+export function formatDateMonthYear(dateString: string, monthFormat: "short" | "long" = "short"): string {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: monthFormat,
+    year: "numeric",
+  });
+}
+
+/**
  * Format a date string to a relative time (e.g. "2d ago", "Just now")
  */
 export function formatTimeAgo(dateString: string): string {

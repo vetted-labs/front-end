@@ -17,13 +17,14 @@ import {
   Edit,
 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { companyApi, dashboardApi, jobsApi, messagingApi } from "@/lib/api";
+import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from "@/lib/api";
 import type { CompanyActivityItem } from "@/types/api-responses";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatusBadge } from "@/components/ui/statusbadge";
 import { Alert } from "@/components/ui/alert";
 
+import { logger } from "@/lib/logger";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import type { Job, DashboardStats, CompanyApplication, Conversation, MeetingDetails } from "@/types";
 import type { LucideIcon } from "lucide-react";
@@ -94,23 +95,28 @@ export function CompanyDashboardOverview() {
 
     // Fire all non-critical fetches in parallel, updating state as each resolves
     companyApi.getApplications({ limit: 5 }).then((appsResult) => {
-      const appsList = Array.isArray(appsResult) ? appsResult : (appsResult?.applications ?? []);
+      const appsList = appsResult?.applications ?? [];
       setRecentApplications(appsList);
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.warn("Failed to load recent applications", extractApiError(err));
+    });
 
     companyApi.getActivity(10).then((feed) => {
       setActivityFeed(feed);
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.debug("Failed to load activity feed", extractApiError(err));
+    });
 
     messagingApi.getUnreadCounts().then((counts) => {
       setUnreadCount((counts as { total: number }).total ?? 0);
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.debug("Failed to load unread counts", extractApiError(err));
+    });
 
     // Meetings — heavier fetch (conversations + details)
     (async () => {
       try {
-        const allConvs = (await messagingApi.getCompanyConversations()) as Conversation[];
-        const convsList = Array.isArray(allConvs) ? allConvs : [];
+        const convsList = await messagingApi.getCompanyConversations();
         const toCheck = convsList.slice(0, 10);
         const convDetails = await Promise.all(
           toCheck.map((c) => messagingApi.getConversation(c.id).catch(() => null))
@@ -119,7 +125,7 @@ export function CompanyDashboardOverview() {
         const now = new Date();
         const upcomingMeetings: UpcomingMeeting[] = [];
         for (let i = 0; i < convDetails.length; i++) {
-          const detail = convDetails[i] as { messages?: Array<{ type: string; meetingDetails?: MeetingDetails }> } | null;
+          const detail = convDetails[i];
           if (!detail?.messages) continue;
           for (const msg of detail.messages) {
             if (msg.type === "meeting_scheduled" && msg.meetingDetails) {

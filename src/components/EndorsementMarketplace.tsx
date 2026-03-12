@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { formatEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
@@ -10,8 +10,8 @@ import {
 } from "@/lib/hooks/useVettedContracts";
 import { useEndorsementTransaction } from "@/lib/hooks/useEndorsementTransaction";
 import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransaction";
-import { apiRequest } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { blockchainApi } from "@/lib/api";
+import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
 import type { EndorsementApplication } from "@/types";
 
 import {
@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ApplicationsGrid } from "./endorsements/ApplicationsGrid";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 
 const CandidateDetailsModal = dynamic(
   () => import("./endorsements/CandidateDetailsModal").then(m => ({ default: m.CandidateDetailsModal })),
@@ -47,10 +48,11 @@ import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 interface EndorsementMarketplaceProps {
   guildId: string;
   guildName: string;
+  blockchainGuildId?: `0x${string}`;
   initialApplicationId?: string;
 }
 
-export function EndorsementMarketplace({ guildId, guildName, initialApplicationId }: EndorsementMarketplaceProps) {
+export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useAccount();
   const { switchChain } = useSwitchChain();
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
@@ -63,16 +65,28 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
   // Use backend API to get user's endorsements (more reliable than blockchain)
   const { endorsements: allUserEndorsements, isLoading: endorsementsLoading, refetch: refetchEndorsements } = useMyActiveEndorsements();
 
-  // Load applications via useFetch
-  const { data: applications, isLoading: loading, refetch: reloadApplications } = useFetch<EndorsementApplication[]>(
-    async () => {
-      if (!guildId || !address) return [];
-      const response = await apiRequest<EndorsementApplication[]>(
-        `/api/blockchain/endorsements/applications/${guildId}?expert_address=${address}`
-      );
-      return Array.isArray(response) ? response : [];
+  // Load applications with server-side pagination
+  const APPS_PER_PAGE = 12;
+  const fetchApplications = useCallback(
+    async (page: number, limit: number) => {
+      if (!guildId || !address) return { data: [] as EndorsementApplication[], total: 0 };
+      const response = await blockchainApi.getApplicationsForEndorsement(guildId, address, page, limit);
+      return { data: response.data ?? [], total: response.total ?? 0 };
     },
+    [guildId, address]
+  );
+  const {
+    data: applications,
+    isLoading: loading,
+    refetch: reloadApplications,
+    page: applicationsPage,
+    totalPages: applicationsTotalPages,
+    totalItems: applicationsTotalItems,
+    setPage: setApplicationsPage,
+  } = usePaginatedFetch<EndorsementApplication>(
+    fetchApplications,
     {
+      limit: APPS_PER_PAGE,
       skip: !guildId || !address,
       onError: (error) => {
         toast.error(error || "Failed to load applications");
@@ -96,7 +110,8 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
     refetchEndorsements,
   });
 
-  const blockchainGuildId = guildId ? hashToBytes32(guildId) : undefined;
+  // Use the on-chain guild ID from the API if available; fall back to local hash
+  const blockchainGuildId = blockchainGuildIdProp ?? (guildId ? hashToBytes32(guildId) : undefined);
   const { stakeInfo, minimumStake } = useGuildStaking(blockchainGuildId);
 
   // Filter endorsements for current guild
@@ -191,25 +206,10 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       })
     : null;
 
-  if (!meetsMinimumStake) {
-    return (
-      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
-        <CardContent className="p-12 text-center">
-          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-amber-500" />
-          <h3 className="text-lg font-semibold mb-2">Insufficient Stake</h3>
-          <p className="text-muted-foreground mb-2">
-            You need to stake at least {requiredStake} VETD tokens before you can endorse applications
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Current stake: {parseFloat(userStake).toFixed(2)} VETD
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Only show loading if we have an address and are actually loading
-  if ((loading || endorsementsLoading) && address) {
+  // Only show loading on initial load — never unmount mid-transaction.
+  // useFetch/usePaginatedFetch set isLoading=true on refetch too, which would
+  // destroy in-flight transaction state (txHash, txStep, etc.) if we returned null.
+  if ((loading || endorsementsLoading) && address && !transactionModalOpen && txStep === "idle") {
     return null;
   }
 
@@ -230,6 +230,18 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
         onSwitchToSepolia={() => switchChain({ chainId: sepolia.id })}
       />
 
+      {!meetsMinimumStake && (
+        <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/5">
+          <CardContent className="flex items-center gap-3 p-4">
+            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              You need to stake at least <strong className="text-foreground">{requiredStake} VETD</strong> in this guild to endorse applications.
+              Current stake: {parseFloat(userStake).toFixed(2)} VETD
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Stats */}
       <div className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -241,7 +253,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
       <EndorsementStatsGrid
         userStake={userStake}
         userEndorsementsCount={userEndorsements.length}
-        applicationsCount={(applications ?? []).length}
+        applicationsCount={applicationsTotalItems}
         minimumBid={minimumBidFormatted}
       />
 
@@ -271,7 +283,13 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
             applications={applications ?? []}
             loading={loading}
             onSelectApplication={handleViewDetails}
-            onQuickEndorse={handleQuickEndorse}
+            onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
+          />
+          <PaginationNav
+            page={applicationsPage}
+            totalPages={applicationsTotalPages}
+            onPageChange={setApplicationsPage}
+            className="mt-6"
           />
         </CardContent>
       </Card>
@@ -284,7 +302,7 @@ export function EndorsementMarketplace({ guildId, guildName, initialApplicationI
           setDetailsModalOpen(false);
           setSelectedApp(null);
         }}
-        onEndorseCandidate={handleEndorseFromDetails}
+        onEndorseCandidate={meetsMinimumStake ? handleEndorseFromDetails : undefined}
       />
 
       {/* Endorsement Transaction Modal */}

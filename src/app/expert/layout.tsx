@@ -4,15 +4,23 @@ import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { AppShell } from "@/components/layout/AppShell";
+import { PendingExpertShell } from "@/components/layout/PendingExpertShell";
 import { expertSidebarConfig } from "@/components/layout/sidebar-config";
 import { expertApi } from "@/lib/api";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
+import { useAuthContext } from "@/hooks/useAuthContext";
 
 /** Routes a pending expert is allowed to visit */
 const PENDING_ALLOWED_PREFIXES = [
   "/expert/application-pending",
   "/expert/apply",
   "/guilds",
+];
+
+/** Routes that should always render the chromeless shell (no sidebar) */
+const CHROMELESS_PREFIXES = [
+  "/expert/application-pending",
+  "/expert/apply",
 ];
 
 function isAllowedForPending(pathname: string) {
@@ -25,18 +33,20 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const router = useRouter();
   const { address } = useAccount();
-  const { expertStatus, setExpertStatus, clearExpertStatus } = useExpertStatus();
+  const { userId: expertId } = useAuthContext();
+  const { expertStatus, isHydrated, setExpertStatus, clearExpertStatus } = useExpertStatus();
   const [checked, setChecked] = useState(false);
   const verifiedRef = useRef(false);
 
-  // Quick check to block immediately (prevents flash)
+  // Quick check to block immediately (prevents flash) — wait for hydration first
   useEffect(() => {
+    if (!isHydrated) return;
     if (expertStatus === "pending" && !isAllowedForPending(pathname)) {
       router.replace("/expert/application-pending");
     } else {
       setChecked(true);
     }
-  }, [pathname, router, expertStatus]);
+  }, [pathname, router, expertStatus, isHydrated]);
 
   // Reset verification when wallet address changes
   useEffect(() => {
@@ -45,7 +55,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
 
   // Backend verification — source of truth, prevents localStorage tampering
   useEffect(() => {
-    if (!address || !localStorage.getItem("expertId") || verifiedRef.current || isAllowedForPending(pathname)) return;
+    if (!address || !expertId || verifiedRef.current || isAllowedForPending(pathname)) return;
     verifiedRef.current = true;
 
     let cancelled = false;
@@ -72,9 +82,19 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     return () => {
       cancelled = true;
     };
-  }, [address, pathname, router, setExpertStatus, clearExpertStatus]);
+  }, [address, expertId, pathname, router, setExpertStatus, clearExpertStatus]);
 
   if (!checked) return null;
+
+  const isChromeless =
+    expertStatus === "pending" ||
+    CHROMELESS_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
+    );
+
+  if (isChromeless) {
+    return <PendingExpertShell>{children}</PendingExpertShell>;
+  }
 
   return <AppShell config={expertSidebarConfig}>{children}</AppShell>;
 }

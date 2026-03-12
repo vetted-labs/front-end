@@ -19,6 +19,7 @@ import {
 import { logger } from "@/lib/logger";
 import { getExplorerTxUrl } from "@/lib/blockchain";
 import { useCountdown } from "@/lib/hooks/useCountdown";
+import { truncateAddress } from "@/lib/utils";
 import type { EndorsementApplication } from "@/types";
 
 interface EndorsementTransactionModalProps {
@@ -474,7 +475,7 @@ export function EndorsementTransactionModal({
                             <span className="text-muted-foreground">Approval</span>
                             <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
                               className="text-primary hover:underline flex items-center gap-1">
-                              {approvalTxHash.slice(0, 6)}...{approvalTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
+                              {truncateAddress(approvalTxHash)} <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
                         )}
@@ -483,7 +484,7 @@ export function EndorsementTransactionModal({
                             <span className="text-muted-foreground">Endorsement</span>
                             <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
                               className="text-primary hover:underline flex items-center gap-1">
-                              {bidTxHash.slice(0, 6)}...{bidTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
+                              {truncateAddress(bidTxHash)} <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
                         )}
@@ -526,7 +527,7 @@ export function EndorsementTransactionModal({
                           <span className="text-muted-foreground">Approval</span>
                           <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1">
-                            {approvalTxHash.slice(0, 6)}...{approvalTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
+                            {truncateAddress(approvalTxHash)} <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
                       )}
@@ -535,7 +536,7 @@ export function EndorsementTransactionModal({
                           <span className="text-muted-foreground">Endorsement</span>
                           <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1">
-                            {bidTxHash.slice(0, 6)}...{bidTxHash.slice(-4)} <ExternalLink className="w-3 h-3" />
+                            {truncateAddress(bidTxHash)} <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
                       )}

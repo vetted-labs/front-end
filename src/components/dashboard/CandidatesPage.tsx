@@ -13,12 +13,7 @@ import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpda
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
-import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption } from "@/types";
-
-interface GroupedJob {
-  job: CompanyApplication["job"];
-  applications: CompanyApplication[];
-}
+import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption, GroupedJob } from "@/types";
 
 export default function CandidatesPage() {
   const router = useRouter();

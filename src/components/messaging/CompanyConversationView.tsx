@@ -29,10 +29,12 @@ export default function CompanyConversationView() {
 
   const fetchConversation = useCallback(async () => {
     try {
-      const data = await messagingApi.getConversation(conversationId);
-      setConversation(data?.conversation || data);
-      setMessages(data?.messages || []);
-      await messagingApi.markAsRead(conversationId).catch(() => {});
+      const { conversation: conv, messages: msgs } = await messagingApi.getConversation(conversationId);
+      setConversation(conv);
+      setMessages(msgs);
+      await messagingApi.markAsRead(conversationId).catch((err: unknown) => {
+        logger.warn("Failed to mark conversation as read", err);
+      });
       window.dispatchEvent(new Event(MESSAGE_READ_EVENT));
     } catch (error) {
       logger.error("Error fetching conversation", error, { silent: true });
@@ -42,6 +44,8 @@ export default function CompanyConversationView() {
     }
   }, [conversationId]);
 
+  // TODO: This 5s polling pattern is duplicated in CandidateConversationView and
+  // CompanyMessagesInbox. Extract a shared useMessagePolling hook to deduplicate.
   useEffect(() => {
     fetchConversation();
     const interval = setInterval(fetchConversation, 5000);

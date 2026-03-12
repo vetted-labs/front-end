@@ -358,6 +358,23 @@ export interface DisputeDetail {
 }
 
 // --- Expert Earnings / Reputation ---
+
+/** Response shape from expertApi.getEarningsBreakdown — wraps EarningsSummary + paginated items. */
+export interface EarningsBreakdownResponse {
+  summary?: import("./earnings").EarningsSummary;
+  items?: {
+    items: import("./earnings").EarningsEntry[];
+    pagination: import("./pagination").PaginationInfo;
+  };
+  data?: {
+    summary?: import("./earnings").EarningsSummary;
+    items?: {
+      items: import("./earnings").EarningsEntry[];
+      pagination: import("./pagination").PaginationInfo;
+    };
+  };
+}
+
 export interface EarningsBreakdown {
   entries: Array<{
     id: string;
@@ -370,7 +387,6 @@ export interface EarningsBreakdown {
   total: number;
   page: number;
   limit: number;
-  data?: EarningsBreakdown;
   summary?: { totalVetd: number; totalUsd?: number };
 }
 
@@ -422,10 +438,30 @@ export interface CommitRevealPhaseStatus {
   revealDeadline?: string;
   commitCount?: number;
   revealCount?: number;
+  blockchainSessionId?: string;
+  blockchainSessionCreated?: boolean;
 }
 
 export interface CommitRevealHash {
   hash: string;
+}
+
+// --- Expert Application Commit-Reveal ---
+export interface ExpertCRPhaseStatus {
+  applicationId: string;
+  votingPhase: "direct" | "commit" | "reveal" | "finalized";
+  commitDeadline?: string;
+  revealDeadline?: string;
+  votingDeadline?: string;
+  commitTimeRemaining?: number;
+  revealTimeRemaining?: number;
+  totalAssigned: number;
+  totalCommitments: number;
+  revealedVotes: number;
+  unrevealedVotes: number;
+  blockchainSessionId?: string;
+  blockchainSessionCreated?: boolean;
+  blockchainSessionTxHash?: string;
 }
 
 // --- Guild Application Eligibility ---

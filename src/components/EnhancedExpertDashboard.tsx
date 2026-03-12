@@ -9,6 +9,7 @@ import {
   Coins,
   ClipboardList,
   Loader2,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
@@ -67,7 +68,7 @@ export function EnhancedExpertDashboard() {
         throw new Error("Failed to load profile data");
       }
 
-      const earningsData = earningsResult?.data ?? earningsResult;
+      const earningsData = earningsResult;
       if (earningsData?.summary?.totalVetd != null) {
         data.totalEarnings = earningsData.summary.totalVetd;
       }
@@ -102,7 +103,10 @@ export function EnhancedExpertDashboard() {
     () => guildApplicationsApi.getAssigned(profile!.id),
     {
       skip: !profile?.id,
-      onError: (msg) => logger.warn("Failed to load assigned applications", msg),
+      onError: (msg) => {
+        logger.warn("Failed to load assigned applications", msg);
+        toast.error("Failed to load assigned applications");
+      },
     }
   );
 
@@ -327,9 +331,13 @@ export function EnhancedExpertDashboard() {
               <div className="space-y-3">
                 {assignedApplications.slice(0, 5).map((app) => (
                   <button
-                    key={app.id}
+                    key={`${app.item_type ?? "proposal"}-${app.id}`}
                     onClick={() => {
-                      if (app.guild_id) {
+                      if (app.item_type === "guild_application") {
+                        router.push(`/expert/guild/${app.guild_id}?tab=membershipApplications&candidateApplicationId=${app.id}`);
+                      } else if (app.item_type === "expert_application") {
+                        router.push(`/expert/guild/${app.guild_id}?tab=applications&applicationId=${app.id}`);
+                      } else if (app.guild_id) {
                         router.push(`/expert/guild/${app.guild_id}?tab=membershipApplications&applicationId=${app.id}`);
                       }
                     }}
@@ -343,14 +351,21 @@ export function EnhancedExpertDashboard() {
                         {app.guild_name || "Guild"}
                       </p>
                     </div>
-                    {app.total_stake_for != null && (
+                    {app.item_type === "guild_application" || app.item_type === "expert_application" ? (
+                      <div className="flex items-center gap-1.5 ml-4 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <UserCheck className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="text-sm font-semibold text-blue-500">
+                          Review
+                        </span>
+                      </div>
+                    ) : app.total_stake_for != null ? (
                       <div className="flex items-center gap-1.5 ml-4 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
                         <Coins className="w-3.5 h-3.5 text-primary" />
                         <span className="text-sm font-semibold text-primary">
                           {Number(app.total_stake_for).toLocaleString()} VETD
                         </span>
                       </div>
-                    )}
+                    ) : null}
                   </button>
                 ))}
               </div>

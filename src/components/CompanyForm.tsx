@@ -18,6 +18,7 @@ import { Input, Textarea, Select, Button, Alert, Modal } from "./ui";
 import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
+import { truncateAddress } from "@/lib/utils";
 
 interface FormData {
   companyName: string;
@@ -145,7 +146,7 @@ export function CompanyForm() {
                   </h3>
                   {isConnected && address ? (
                     <p className="text-sm text-muted-foreground">
-                      Connected: {address.slice(0, 6)}...{address.slice(-4)}
+                      Connected: {truncateAddress(address)}
                     </p>
                   ) : (
                     <p className="text-sm text-destructive">Not connected</p>

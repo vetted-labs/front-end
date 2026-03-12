@@ -17,9 +17,10 @@ function fetchGuilds(): Promise<GuildRecord[]> {
     .getAll()
     .then((data: unknown) => {
       const list = Array.isArray(data) ? data : [];
-      cachedGuilds = list.map((g: { id: string; name: string }) => ({
+      cachedGuilds = list.map((g: { id: string; name: string; blockchainGuildId?: string }) => ({
         id: g.id,
         name: g.name,
+        blockchainGuildId: g.blockchainGuildId,
       }));
       return cachedGuilds;
     })

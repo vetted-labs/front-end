@@ -1,5 +1,10 @@
 import { Card } from "@/components/ui/card";
-import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import {
+  APPLICATION_STATUS_CONFIG,
+  APPLICATION_STATUS_TIMELINE_CONFIG,
+  APPLICATION_STATUS_TIMELINE_DEFAULT,
+  APPLICATION_STATUS_TIMELINE_NULL,
+} from "@/config/constants";
 import { formatTimeAgo, formatDate } from "@/lib/utils";
 import { isTerminalStatus } from "@/lib/statusTransitions";
 import type { StatusTransition, ApplicationStatus } from "@/types";
@@ -12,10 +17,8 @@ function getStatusColor(status: ApplicationStatus | null): {
   dotClass: string;
   textClass: string;
 } {
-  if (!status) return { dotClass: "bg-muted-foreground", textClass: "text-muted-foreground" };
-  if (status === "accepted") return { dotClass: "bg-green-500 shadow-sm shadow-green-500/30", textClass: "text-green-600 dark:text-green-400" };
-  if (status === "rejected") return { dotClass: "bg-red-500 shadow-sm shadow-red-500/30", textClass: "text-red-600 dark:text-red-400" };
-  return { dotClass: "bg-primary shadow-sm shadow-primary/30", textClass: "text-primary" };
+  if (!status) return APPLICATION_STATUS_TIMELINE_NULL;
+  return APPLICATION_STATUS_TIMELINE_CONFIG[status] ?? APPLICATION_STATUS_TIMELINE_DEFAULT;
 }
 
 function formatTime(dateStr: string) {

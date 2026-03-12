@@ -98,6 +98,8 @@ export function VotingInterface({
                 requiredStake={application.required_stake}
                 onSubmit={onCommitOrReveal}
                 onCancel={() => {}}
+                blockchainSessionId={crPhase?.blockchainSessionId}
+                blockchainSessionCreated={crPhase?.blockchainSessionCreated}
               />
             </div>
           )}

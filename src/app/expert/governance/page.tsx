@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { governanceApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,21 +79,19 @@ export default function GovernancePage() {
 
         {/* Proposals List */}
         {loading ? null : proposals.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-medium mb-2">No proposals found</p>
-              <p className="text-muted-foreground mb-6">
-                {filter === "active"
-                  ? "There are no active governance proposals right now."
-                  : `No ${filter} proposals to display.`}
-              </p>
-              <Button onClick={() => router.push("/expert/governance/create")}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Proposal
-              </Button>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={FileText}
+            title="No proposals found"
+            description={
+              filter === "active"
+                ? "There are no active governance proposals right now."
+                : `No ${filter} proposals to display.`
+            }
+            action={{
+              label: "Create Proposal",
+              onClick: () => router.push("/expert/governance/create"),
+            }}
+          />
         ) : (
           <div className="space-y-4">
             {proposals.map((proposal) => (

@@ -89,4 +89,38 @@ export interface ExpertGuildDetail extends ExpertGuild {
 export interface GuildRecord {
   id: string;
   name: string;
+  blockchainGuildId?: string;
+}
+
+/** Lightweight guild option for selector dropdowns. */
+export interface GuildOption {
+  id: string;
+  name: string;
+}
+
+/** Guild leaderboard expert — used in guild detail & leaderboard tab. */
+export interface LeaderboardExpert {
+  id: string;
+  name: string;
+  role: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
+  reputation: number;
+  totalReviews: number;
+  accuracy: number;
+  totalEarnings: number;
+  rank: number;
+  rankChange?: number;
+  reputationChange?: number;
+}
+
+/** Guild-level earnings overview shown in the guild detail earnings tab. */
+export interface GuildEarningsOverview {
+  totalPoints: number;
+  totalEndorsementEarnings: number;
+  recentEarnings: Array<{
+    id: string;
+    type: "proposal" | "endorsement";
+    amount: number;
+    description: string;
+    date: string;
+  }>;
 }

@@ -22,6 +22,7 @@ import { VotingPowerBar } from "@/components/governance/VotingPowerBar";
 import type { GovernanceProposalDetail } from "@/types";
 import { PROPOSAL_TYPE_LABELS } from "@/types";
 import { formatDate as formatDateShared, truncateAddress, formatDeadline } from "@/lib/utils";
+import { PROPOSAL_STATUS_CONFIG } from "@/config/constants";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 
@@ -49,16 +50,12 @@ function truncateWallet(wallet: string) {
 }
 
 function statusVariant(status: string): "default" | "secondary" | "destructive" {
-  if (status === "active") return "default";
-  if (status === "passed") return "default";
-  if (status === "rejected") return "destructive";
-  return "secondary";
+  return PROPOSAL_STATUS_CONFIG[status]?.variant ?? "secondary";
 }
 
 function statusLabel(status: string, finalized: boolean) {
   if (finalized) return status === "passed" ? "Passed" : "Rejected";
-  if (status === "active") return "Active";
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return PROPOSAL_STATUS_CONFIG[status]?.label ?? (status.charAt(0).toUpperCase() + status.slice(1));
 }
 
 /* ─── Component ────────────────────────────────────────────────── */

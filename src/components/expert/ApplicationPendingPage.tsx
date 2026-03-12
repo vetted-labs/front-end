@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import type { ExpertProfile, PendingGuildInfo } from "@/types";
@@ -29,11 +30,13 @@ function getTimeRemaining(deadline?: string) {
   if (diff <= 0) return { label: "Voting ended", color: "text-red-400" };
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 3) return { label: `${days}d ${hours}h left`, color: "text-green-400" };
-  if (days >= 1) return { label: `${days}d ${hours}h left`, color: "text-amber-400" };
-  if (hours > 0) return { label: `${hours}h left`, color: "text-red-400" };
+  if (days > 0) {
+    const color = days > 3 ? "text-green-400" : "text-amber-400";
+    return { label: hours > 0 ? `${days}d ${hours}h remaining` : `${days}d remaining`, color };
+  }
+  if (hours > 0) return { label: `${hours}h remaining`, color: "text-red-400" };
   const minutes = Math.floor(diff / (1000 * 60));
-  return { label: `${minutes}m left`, color: "text-red-400" };
+  return { label: `${minutes}m remaining`, color: "text-red-400" };
 }
 
 /**
@@ -175,8 +178,8 @@ export default function ApplicationPendingPage() {
                       {(() => {
                         const time = getTimeRemaining(guild.votingDeadline);
                         return time ? (
-                          <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium ${time.color}`}>
-                            <Timer className="w-3 h-3" />
+                          <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${time.color}`}>
+                            <Timer className="w-3 h-3 flex-shrink-0" />
                             {time.label}
                           </span>
                         ) : null;
@@ -197,7 +200,7 @@ export default function ApplicationPendingPage() {
             ))}
 
             {guildApplications.length === 0 && (
-              <p className="text-muted-foreground text-sm">No guild applications found.</p>
+              <EmptyState icon={Swords} title="No guild applications found" />
             )}
           </div>
 

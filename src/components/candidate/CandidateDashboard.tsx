@@ -18,11 +18,12 @@ import {
   ChevronRight,
   MessageSquare,
 } from "lucide-react";
-import { candidateApi, applicationsApi, messagingApi } from "@/lib/api";
+import { candidateApi, applicationsApi, messagingApi, extractApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { formatTimeAgo } from "@/lib/utils";
-import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { APPLICATION_STATUS_CONFIG, GUILD_APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
@@ -79,16 +80,15 @@ async function fetchDashboardData(): Promise<DashboardData> {
   try {
     const guildAppsData = await candidateApi.getGuildApplications();
     guildApps = Array.isArray(guildAppsData) ? guildAppsData : [];
-  } catch {
-    // Non-critical — proceed without guild applications
+  } catch (err) {
+    logger.debug("Non-critical: could not load guild applications", extractApiError(err));
   }
 
   let convos: Conversation[] = [];
   try {
-    const convosData = await messagingApi.getCandidateConversations();
-    convos = Array.isArray(convosData) ? convosData : (convosData as { conversations?: Conversation[] })?.conversations || [];
-  } catch {
-    // Non-critical — proceed without conversations
+    convos = await messagingApi.getCandidateConversations();
+  } catch (err) {
+    logger.debug("Non-critical: could not load conversations", extractApiError(err));
   }
 
   return {
@@ -323,19 +323,15 @@ export default function CandidateDashboard() {
               ) : (
                 <div className="divide-y divide-border/30">
                   {recentGuildApps.map((app) => {
-                    const statusColor = app.status === "approved"
-                      ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
-                      : app.status === "rejected"
-                      ? "text-red-500 bg-red-500/10 border-red-500/20"
-                      : "text-amber-500 bg-amber-500/10 border-amber-500/20";
+                    const guildStatusConfig = GUILD_APPLICATION_STATUS_CONFIG[app.status] || GUILD_APPLICATION_STATUS_CONFIG.pending;
                     return (
                       <div key={app.id} className="px-5 py-3.5">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-medium text-foreground truncate">
                             {app.guildName || app.guild?.name || "Guild"}
                           </p>
-                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border capitalize ${statusColor}`}>
-                            {app.status}
+                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${guildStatusConfig.className}`}>
+                            {guildStatusConfig.label}
                           </span>
                         </div>
                         {app.jobTitle && (

@@ -27,7 +27,7 @@ export default function CandidateMessagesInbox() {
   const fetchConversations = useCallback(async () => {
     try {
       const data = await messagingApi.getCandidateConversations();
-      setConversations(Array.isArray(data) ? data : data?.conversations || []);
+      setConversations(data);
     } catch (error) {
       logger.error("Error fetching conversations", error, { silent: true });
       toast.error("Failed to load conversations");

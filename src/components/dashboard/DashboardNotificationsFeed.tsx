@@ -29,7 +29,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
     () => notificationsApi.getNotifications(walletAddress, { limit: 10 }),
     {
       skip: !walletAddress,
-      onSuccess: (result) => setNotifications(Array.isArray(result) ? result : []),
+      onSuccess: (result) => setNotifications(result?.notifications ?? []),
     }
   );
 

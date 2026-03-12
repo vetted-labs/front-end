@@ -2,23 +2,12 @@
 
 import { useState } from "react";
 import { Coins, DollarSign, TrendingUp, FileText, Award, ChevronDown } from "lucide-react";
+import type { GuildEarningsOverview } from "@/types/guild";
 
 const EARNINGS_PER_PAGE = 10;
 
-interface Earnings {
-  totalPoints: number;
-  totalEndorsementEarnings: number;
-  recentEarnings: Array<{
-    id: string;
-    type: "proposal" | "endorsement";
-    amount: number;
-    description: string;
-    date: string;
-  }>;
-}
-
 interface GuildEarningsTabProps {
-  earnings: Earnings;
+  earnings: GuildEarningsOverview;
 }
 
 export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {

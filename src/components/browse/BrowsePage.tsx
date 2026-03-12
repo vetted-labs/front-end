@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
 import {
   ArrowRight,
-  Users,
   Briefcase,
-  TrendingUp,
   MapPin,
   DollarSign,
   Building2,
@@ -27,22 +24,7 @@ interface FeaturedJob {
   companyName?: string;
 }
 
-interface TalentMetrics {
-  totalHired: number;
-  activeJobs: number;
-  totalCandidates: number;
-  averageSalary: number;
-}
-
 export default function BrowsePage() {
-  const [metrics] = useState<TalentMetrics>({
-    // Mock metrics - in production, fetch from API
-    totalHired: 1247,
-    activeJobs: 89,
-    totalCandidates: 3542,
-    averageSalary: 125000,
-  });
-
   const { data: featuredJobs, isLoading } = useFetch<FeaturedJob[]>(
     () => jobsApi.getAll({ status: 'active' }).then((response) => {
       const jobs = Array.isArray(response) ? response : [];
@@ -69,9 +51,9 @@ export default function BrowsePage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      {/* Hero Section with Metrics */}
+      {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-5xl font-bold text-foreground mb-6">
             Find Your Next{" "}
             <span className="bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
@@ -89,61 +71,6 @@ export default function BrowsePage() {
             Find the Job for You
             <ArrowRight className="ml-2 w-5 h-5" />
           </Link>
-        </div>
-
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-          <div className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-border/60">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-muted/50 border border-border/60 rounded-xl">
-                <Users className="w-6 h-6 text-foreground" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground">
-              {metrics.totalHired.toLocaleString()}
-            </h3>
-            <p className="text-muted-foreground text-sm mt-1">Talent Hired</p>
-          </div>
-
-          <div className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-border/60">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-muted/50 border border-border/60 rounded-xl">
-                <Briefcase className="w-6 h-6 text-foreground" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground">
-              {metrics.activeJobs}
-            </h3>
-            <p className="text-muted-foreground text-sm mt-1">Active Jobs</p>
-          </div>
-
-          <div className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-border/60">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-muted/50 border border-border/60 rounded-xl">
-                <Users className="w-6 h-6 text-foreground" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground">
-              {metrics.totalCandidates.toLocaleString()}
-            </h3>
-            <p className="text-muted-foreground text-sm mt-1">Registered Candidates</p>
-          </div>
-
-          <div className="bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow border border-border/60">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-muted/50 border border-border/60 rounded-xl">
-                <DollarSign className="w-6 h-6 text-foreground" />
-              </div>
-              <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground">
-              ${(metrics.averageSalary / 1000).toFixed(0)}k
-            </h3>
-            <p className="text-muted-foreground text-sm mt-1">Average Salary</p>
-          </div>
         </div>
       </div>
 

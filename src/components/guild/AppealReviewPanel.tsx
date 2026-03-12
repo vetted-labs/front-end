@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
 import { guildAppealApi } from "@/lib/api";
+import { APPEAL_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationAppeal } from "@/types";
 
 interface AppealReviewPanelProps {
@@ -28,11 +29,11 @@ interface AppealReviewPanelProps {
   onVoteSubmitted?: () => void;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: "Pending Review", color: "text-amber-500", icon: Clock },
-  reviewing: { label: "Under Review", color: "text-blue-500", icon: Users },
-  upheld: { label: "Rejection Upheld", color: "text-red-500", icon: XCircle },
-  overturned: { label: "Overturned — Candidate Admitted", color: "text-emerald-500", icon: CheckCircle2 },
+const APPEAL_STATUS_ICONS: Record<string, typeof Clock> = {
+  pending: Clock,
+  reviewing: Users,
+  upheld: XCircle,
+  overturned: CheckCircle2,
 };
 
 export function AppealReviewPanel({
@@ -47,8 +48,8 @@ export function AppealReviewPanel({
 
   const hasVoted = appeal.votes.some((v) => v.expertId === expertId);
   const isResolved = appeal.status === "upheld" || appeal.status === "overturned";
-  const status = statusConfig[appeal.status] || statusConfig.pending;
-  const StatusIcon = status.icon;
+  const status = APPEAL_STATUS_CONFIG[appeal.status] || APPEAL_STATUS_CONFIG.pending;
+  const StatusIcon = APPEAL_STATUS_ICONS[appeal.status] || Clock;
 
   const handleSubmit = async () => {
     if (!decision) {

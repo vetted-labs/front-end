@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Users, Award, TrendingUp, CheckCircle, Star, Wallet, ChevronDown } from "lucide-react";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { truncateAddress } from "@/lib/utils";
 import type { ExpertMember, CandidateMember } from "@/types";
 
 const MEMBERS_PER_SECTION = 12;
@@ -33,10 +34,6 @@ export function GuildMembersTab({
   const displayExpertsCount = sortedExperts.length > 0 ? sortedExperts.length : expertsCount;
   const displayCandidatesCount = sortedCandidates.length > 0 ? sortedCandidates.length : candidatesCount;
 
-  // Truncate wallet address helper
-  const truncateAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   return (
     <div>

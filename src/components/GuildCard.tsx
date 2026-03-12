@@ -1,6 +1,7 @@
 "use client";
 
 import { getGuildIcon, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { formatDateMonthYear } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, Briefcase, UserCheck, ArrowRight, CheckCircle2, Calendar, DollarSign, Star, Coins } from "lucide-react";
 import type { Guild, ExpertGuild, ExpertRole } from "@/types";
@@ -34,12 +35,7 @@ export function GuildCard({
   if (variant === "membership") {
     const totalProposals =
       (guild.pendingProposals || 0) + (guild.ongoingProposals || 0) + (guild.closedProposals || 0);
-    const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      });
-    };
+    const formatDate = (dateString: string) => formatDateMonthYear(dateString);
 
     return (
       <div

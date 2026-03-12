@@ -56,7 +56,7 @@ export default function JobDetailView() {
   const [applicationError, setApplicationError] = useState("");
   const [existingApplication, setExistingApplication] = useState<CandidateApplication | null>(null);
   const [isGuildMember, setIsGuildMember] = useState(false);
-  const [guildMembershipStatus, setGuildMembershipStatus] = useState<"approved" | "pending" | "not_member">("not_member");
+  const [guildMembershipStatus, setGuildMembershipStatus] = useState<"approved" | "pending" | "not_member" | "unknown">("unknown");
 
   const isAuthenticated = auth.isAuthenticated;
 
@@ -166,10 +166,10 @@ export default function JobDetailView() {
         }
       },
       onError: (err) => {
-        // For any error, assume not a member for safety
+        // Don't assume "not_member" on transient errors (429, network) — the default
+        // state is already "not_member", and the !checkingGuildMembership guard on the
+        // warning banner means it won't show during loading. Only log the error.
         logger.error("Error checking guild membership", err, { silent: true });
-        setIsGuildMember(false);
-        setGuildMembershipStatus("not_member");
       },
     }
   );
@@ -560,7 +560,7 @@ export default function JobDetailView() {
               )}
 
               {/* Guild Membership Status */}
-              {isAuthenticated && guildMembershipStatus === "not_member" && job.guild && !job.guild.match(/^[0-9]+Guild$/) && job.guild.length >= 2 && (
+              {isAuthenticated && !checkingGuildMembership && guildMembershipStatus === "not_member" && job.guild && !job.guild.match(/^[0-9]+Guild$/) && job.guild.length >= 2 && (
                 <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/20 rounded-lg">
                   <div className="flex items-start gap-2 mb-2">
                     <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />

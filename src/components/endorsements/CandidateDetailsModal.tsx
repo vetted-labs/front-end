@@ -28,7 +28,7 @@ interface CandidateDetailsModalProps {
   application: EndorsementApplication | null;
   isOpen: boolean;
   onClose: () => void;
-  onEndorseCandidate: (application: EndorsementApplication) => void;
+  onEndorseCandidate?: (application: EndorsementApplication) => void;
 }
 
 export function CandidateDetailsModal({
@@ -65,7 +65,8 @@ export function CandidateDetailsModal({
     .toUpperCase()
     .substring(0, 2);
 
-  const guildScore = application.guild_score ? (parseFloat(application.guild_score.toString()) * 10).toFixed(0) : null;
+  // guild_score is already on a 0-100 scale from IQR consensus scoring
+  const guildScore = application.guild_score ? parseFloat(application.guild_score.toString()).toFixed(0) : null;
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: User },
@@ -436,11 +437,12 @@ export function CandidateDetailsModal({
               Close
             </Button>
             <button
+              disabled={!onEndorseCandidate}
               onClick={() => {
                 onClose();
-                onEndorseCandidate(application);
+                onEndorseCandidate?.(application);
               }}
-              className="flex-1 h-12 flex items-center justify-center gap-2 text-sm font-bold rounded-2xl bg-gradient-to-r from-primary via-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+              className="flex-1 h-12 flex items-center justify-center gap-2 text-sm font-bold rounded-2xl bg-gradient-to-r from-primary via-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               <Zap className="w-4 h-4" />
               Endorse Candidate

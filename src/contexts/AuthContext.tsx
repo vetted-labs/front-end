@@ -147,7 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
-      }).catch(() => {});
+      }).catch((err) => {
+        console.warn('Failed to revoke refresh token on logout:', err);
+      });
     }
   };
 

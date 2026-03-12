@@ -26,6 +26,7 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -46,11 +47,12 @@ export function NotificationBell() {
 
     const fetchRecent = async () => {
       setIsLoading(true);
+      setFetchError(false);
       try {
-        const result: unknown = await notificationsApi.getNotifications(address, { limit: 5 });
-        setNotifications(Array.isArray(result) ? result : []);
+        const result = await notificationsApi.getNotifications(address, { limit: 5 });
+        setNotifications(result?.notifications ?? []);
       } catch {
-        // Silently fail
+        setFetchError(true);
       } finally {
         setIsLoading(false);
       }
@@ -72,8 +74,9 @@ export function NotificationBell() {
         );
         window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
       }
-    } catch {
-      // Still navigate
+    } catch (err) {
+      // Don't block navigation, but log the failure
+      console.warn('Failed to mark notification as read:', err);
     }
 
     setIsOpen(false);
@@ -114,6 +117,11 @@ export function NotificationBell() {
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : fetchError ? (
+              <div className="py-8 text-center">
+                <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">Could not load notifications</p>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-8 text-center">

@@ -4,16 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Loader2, Users, ChevronsUpDown } from "lucide-react";
 import { CandidateJobGroup } from "./CandidateJobGroup";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { CompanyApplication, CandidateSortOption } from "@/types";
+import type { CompanyApplication, CandidateSortOption, GroupedJob } from "@/types";
 
 const GROUPS_PER_PAGE = 5;
 const INITIAL_CANDIDATES_PER_GROUP = 5;
 const SHOW_MORE_INCREMENT = 10;
-
-interface GroupedJob {
-  job: CompanyApplication["job"];
-  applications: CompanyApplication[];
-}
 
 interface CandidateListPanelProps {
   groupedJobs: GroupedJob[];

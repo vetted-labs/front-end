@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, AlertCircle, Clock, CheckCircle2, TrendingUp, Coins } from 'lucide-react';
-import { apiRequest, ApiError } from '@/lib/api';
+import { blockchainApi, ApiError } from '@/lib/api';
 import { useFetch } from '@/lib/hooks/useFetch';
 import { logger } from "@/lib/logger";
 import { getTransactionErrorMessage } from '@/lib/blockchain';
@@ -38,9 +38,7 @@ export function WithdrawalManager({
   const { data: unstakeRequest, isLoading: loadingRequest, refetch: refetchUnstakeRequest } = useFetch(
     async () => {
       try {
-        return await apiRequest<{ hasRequest: boolean; unlockTime?: string; amount?: string }>(
-          `/api/blockchain/staking/unstake-request-detailed/${walletAddress}`
-        );
+        return await blockchainApi.getUnstakeRequestDetailed(walletAddress, guildId);
       } catch (error: unknown) {
         // 404 is expected when no unstake request exists
         if (error instanceof ApiError && error.status === 404) {
@@ -51,7 +49,10 @@ export function WithdrawalManager({
     },
     {
       skip: !walletAddress,
-      onError: (msg) => logger.error('Failed to load unstake request', msg),
+      onError: (msg) => {
+        logger.error('Failed to load unstake request', msg);
+        toast.error('Failed to load unstake request');
+      },
     }
   );
 
@@ -131,7 +132,7 @@ export function WithdrawalManager({
       setUnstakeAmount('');
     } catch (error: unknown) {
       logger.error('Request unstake error', error, { silent: true });
-      toast.error(error instanceof Error ? error.message : 'Failed to request unstake');
+      toast.error(getTransactionErrorMessage(error, 'Failed to request unstake'));
     }
   };
 
@@ -145,7 +146,7 @@ export function WithdrawalManager({
       });
     } catch (error: unknown) {
       logger.error('Complete unstake error', error, { silent: true });
-      toast.error(error instanceof Error ? error.message : 'Failed to complete unstake');
+      toast.error(getTransactionErrorMessage(error, 'Failed to complete unstake'));
     }
   };
 
@@ -159,7 +160,7 @@ export function WithdrawalManager({
       });
     } catch (error: unknown) {
       logger.error('Cancel unstake error', error, { silent: true });
-      toast.error(error instanceof Error ? error.message : 'Failed to cancel unstake');
+      toast.error(getTransactionErrorMessage(error, 'Failed to cancel unstake'));
     }
   };
 

@@ -1,19 +1,7 @@
 "use client";
 
 import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
-
-interface LeaderboardExpert {
-  id: string;
-  name: string;
-  role: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
-  reputation: number;
-  totalReviews: number;
-  accuracy: number;
-  totalEarnings: number;
-  rank: number;
-  rankChange?: number; // Positive = moved up, negative = moved down
-  reputationChange?: number; // Change in reputation this period
-}
+import type { LeaderboardExpert } from "@/types/guild";
 
 interface GuildLeaderboardTabProps {
   leaderboardData: {

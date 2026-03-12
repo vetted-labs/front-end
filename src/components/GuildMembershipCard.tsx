@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { getGuildIcon } from "@/lib/guildHelpers";
+import { formatDateMonthYear } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Badge, getRankBadgeVariant } from "./ui/badge";
 import { Calendar, TrendingUp, DollarSign, Users } from "lucide-react";
@@ -22,12 +23,7 @@ const getRankExplanation = (role: string): string => {
 };
 
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
-};
+const formatDate = (dateString: string) => formatDateMonthYear(dateString);
 
 export function GuildMembershipCard({ guild, variant = "default" }: GuildMembershipCardProps) {
   const router = useRouter();

@@ -25,7 +25,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
   const router = useRouter();
   const { isCollapsed, isMobileOpen, hasMounted, toggle, closeMobile } = useSidebar();
   const { address, isConnected } = useAccount();
-  const { expertStatus } = useExpertStatus();
+  const { expertStatus, isHydrated } = useExpertStatus();
 
   const expertNotificationCount = useNotificationCount(
     address,
@@ -51,8 +51,6 @@ export function AppSidebar({ config }: AppSidebarProps) {
   );
 
   const badgeCounts = { notifications: notificationCount, messages: messageCount };
-
-  const isExpertPending = config.variant === "expert" && expertStatus === "pending";
 
   // Escape key closes mobile drawer
   useEffect(() => {
@@ -120,7 +118,6 @@ export function AppSidebar({ config }: AppSidebarProps) {
             key={group.label}
             group={group}
             badgeCounts={badgeCounts}
-            isExpertPending={isExpertPending}
           />
         ))}
       </nav>

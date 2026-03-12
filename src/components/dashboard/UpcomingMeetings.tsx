@@ -55,9 +55,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
     () => messagingApi.getUpcomingMeetings({ limit: 5 })
   );
 
-  const meetings: UpcomingMeeting[] = meetingsData
-    ? (Array.isArray(meetingsData) ? meetingsData : (meetingsData as { meetings?: UpcomingMeeting[] })?.meetings || [])
-    : [];
+  const meetings: UpcomingMeeting[] = meetingsData ?? [];
 
   const getConversationPath = (conversationId: string) =>
     userType === "candidate"

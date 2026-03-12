@@ -15,6 +15,7 @@ import {
   Zap,
   Info,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Modal } from "./ui/modal";
@@ -59,17 +60,10 @@ export function EndorsementBiddingUI({
 
     setIsSubmitting(true);
     try {
-      // API call to place bid
-      // await fetch(`/api/endorsements/bid`, {...})
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setShowBidModal(false);
-      setBidAmount("");
-      alert("Bid placed successfully!");
+      // TODO: Connect to on-chain endorsement bid transaction via useVettedContracts
+      throw new Error("Endorsement bidding is not yet connected to the blockchain");
     } catch (error) {
-      alert("Failed to place bid");
+      toast.error(error instanceof Error ? error.message : "Failed to place bid");
     } finally {
       setIsSubmitting(false);
     }

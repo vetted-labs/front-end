@@ -1,5 +1,5 @@
 export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
-export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, ExpertRole } from "./guild";
+export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, PendingGuildInfo } from "./expert";
 export type { CandidateProfile, CandidateMember, SocialLink } from "./candidate";
 export type {
@@ -112,11 +112,13 @@ export type {
   DisputePanelMember,
   DisputeDetail,
   EarningsBreakdown,
+  EarningsBreakdownResponse,
   ReputationTimeline,
   RewardDetail,
   LeaderboardEntry,
   CommitRevealPhaseStatus,
   CommitRevealHash,
+  ExpertCRPhaseStatus,
   VoteEligibility,
   CompanyProfile,
   GuildMembershipCheck,
@@ -136,6 +138,12 @@ export type {
 
 // --- Shared UI types ---
 export type CandidateSortOption = "endorsements" | "newest" | "oldest" | "name";
+
+/** Applications grouped by job — used in company candidates views. */
+export interface GroupedJob {
+  job: import("./application").CompanyApplication["job"];
+  applications: import("./application").CompanyApplication[];
+}
 export type {
   RubricCriterion,
   RubricQuestionEntry,
