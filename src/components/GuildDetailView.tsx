@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { Eye } from "lucide-react";
 import { Alert } from "./ui/alert";
+import { Modal } from "./ui/modal";
 import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
-import { expertApi, guildsApi, blockchainApi } from "@/lib/api";
+import { expertApi, guildsApi, blockchainApi, extractApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { GuildHeader } from "./guild/GuildHeader";
 // GuildApplicationSummarysTab removed - merged into Membership Reviews
@@ -26,6 +28,10 @@ const ReviewGuildApplicationModal = dynamic(
   () => import("./guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
   { ssr: false }
 );
+const ExpertRevealForm = dynamic(
+  () => import("./expert/ExpertRevealForm").then(m => ({ default: m.ExpertRevealForm })),
+  { ssr: false }
+);
 const StakingModal = dynamic(
   () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
   { ssr: false }
@@ -35,34 +41,7 @@ const ViewReviewModal = dynamic(
   { ssr: false }
 );
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
-import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, ExpertGuildDetail, LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
-
-interface Earnings {
-  totalPoints: number;
-  totalEndorsementEarnings: number;
-  recentEarnings: Array<{
-    id: string;
-    type: "proposal" | "endorsement";
-    amount: number;
-    description: string;
-    date: string;
-  }>;
-}
-
-// ExpertMembershipApplication imported from @/types
-
-interface LeaderboardExpert {
-  id: string;
-  name: string;
-  role: "recruit" | "apprentice" | "craftsman" | "officer" | "master";
-  reputation: number;
-  totalReviews: number;
-  accuracy: number;
-  totalEarnings: number;
-  rank: number;
-  rankChange?: number; // Positive = moved up, negative = moved down
-  reputationChange?: number; // Change in reputation this period
-}
+import type { Job, GuildApplicationSummary, GuildJobApplication, ExpertMember, CandidateMember, ExpertRole, ExpertGuildDetail, LeaderboardEntry, LeaderboardExpert, GuildEarningsOverview, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 interface Activity {
   id: string;
@@ -90,7 +69,7 @@ interface GuildDetail {
   };
   applications: GuildJobApplication[];
   guildApplications: ExpertMembershipApplication[];
-  earnings: Earnings;
+  earnings: GuildEarningsOverview;
   recentActivity: Activity[];
   experts: ExpertMember[];
   candidates: CandidateMember[];
@@ -153,6 +132,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   // Guild blockchain ID for staking checks
   const [guildBlockchainId, setGuildBlockchainId] = useState<string | null>(null);
 
+  // Commit-reveal phase status for the selected expert application
+  const [crPhaseStatus, setCrPhaseStatus] = useState<import("@/types").ExpertCRPhaseStatus | null>(null);
+  // Expert reveal form state
+  const [showRevealForm, setShowRevealForm] = useState(false);
+  const [revealAppId, setRevealAppId] = useState<string | null>(null);
+  // Current expert's ID (for commit-reveal localStorage key)
+  const [currentExpertId, setCurrentExpertId] = useState<string | null>(null);
+
   // Leaderboard state
   const [leaderboardData, setLeaderboardData] = useState<{
     topExperts: LeaderboardExpert[];
@@ -171,12 +158,12 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     const earningsRaw = data.earnings ?? {
       totalPoints: currentExpert?.reputation ?? 0,
       totalEndorsementEarnings: data.statistics?.totalEarningsFromEndorsements ?? 0,
-      recentEarnings: [] as Earnings["recentEarnings"],
+      recentEarnings: [] as GuildEarningsOverview["recentEarnings"],
     };
-    const earningsItems: Earnings["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
-      ? earningsRaw.recentEarnings as Earnings["recentEarnings"]
+    const earningsItems: GuildEarningsOverview["recentEarnings"] = Array.isArray(earningsRaw.recentEarnings)
+      ? earningsRaw.recentEarnings as GuildEarningsOverview["recentEarnings"]
       : [];
-    const earnings: Earnings = {
+    const earnings: GuildEarningsOverview = {
       totalPoints: earningsRaw.totalPoints || earningsItems.filter(e => e.type === "proposal").reduce((s, e) => s + e.amount, 0),
       totalEndorsementEarnings: earningsRaw.totalEndorsementEarnings || earningsItems.filter(e => e.type === "endorsement").reduce((s, e) => s + e.amount, 0),
       recentEarnings: earningsItems,
@@ -251,31 +238,52 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           normalized.totalProposalsReviewed ?? publicData.totalProposalsReviewed ?? 0;
         normalized.averageApprovalTime =
           normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "—";
-      } catch {
-        // Non-critical — public stats won't show but page is still usable
+      } catch (err) {
+        logger.warn("Public guild data fallback failed", err);
       }
     }
 
-    return { normalized, bcGuildId: normalized.blockchainGuildId || data.blockchainGuildId };
+    return { normalized, bcGuildId: normalized.blockchainGuildId || data.blockchainGuildId, currentExpertId: currentExpert?.id || null };
   };
 
   const { isLoading, error, refetch } = useFetch(
     async () => {
       if (!address) throw new Error("No wallet address");
 
-      const { normalized, bcGuildId } = await fetchGuildData(address);
+      const { normalized, bcGuildId, currentExpertId: expertId } = await fetchGuildData(address);
       setGuild(normalized);
+      if (expertId) setCurrentExpertId(expertId);
 
       // Store blockchain guild ID for staking checks
       if (bcGuildId) setGuildBlockchainId(bcGuildId);
 
       // Fetch staking status (pass guild-specific blockchain ID if available)
       try {
-        const stakeData = await blockchainApi.getStakeBalance(address, bcGuildId || undefined);
-        setStakingStatus({ meetsMinimum: !!stakeData?.meetsMinimum });
-      } catch {
-        setStakingStatus({ meetsMinimum: false });
-        toast.warning("Could not load staking status");
+        if (!bcGuildId) {
+          throw new Error("Guild has no blockchain ID configured");
+        }
+        const stakeData = await blockchainApi.getStakeBalance(address, bcGuildId);
+        // Use meetsMinimum from contract, fallback to checking stakedAmount > 0
+        const meetsMin = !!stakeData?.meetsMinimum
+          || (!!stakeData?.stakedAmount && parseFloat(stakeData.stakedAmount) > 0);
+        setStakingStatus({ meetsMinimum: meetsMin });
+      } catch (err) {
+        logger.warn("Primary staking check failed, trying fallback", err);
+        try {
+          const guildStakes = await blockchainApi.getExpertGuildStakes(address);
+          const thisGuildStake = Array.isArray(guildStakes)
+            ? guildStakes.find(s => s.guildId === guildId)
+            : null;
+          if (thisGuildStake && parseFloat(thisGuildStake.stakedAmount || "0") > 0) {
+            setStakingStatus({ meetsMinimum: true });
+          } else {
+            setStakingStatus({ meetsMinimum: false });
+            toast.warning("Could not verify staking status from blockchain");
+          }
+        } catch {
+          setStakingStatus({ meetsMinimum: false });
+          toast.warning("Could not load staking status");
+        }
       }
 
       // Fetch candidate guild applications
@@ -409,8 +417,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       setLeaderboardData({ topExperts, currentUser });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      toast.error(`Failed to fetch leaderboard: ${message}`);
+      toast.error(`Failed to fetch leaderboard: ${extractApiError(err)}`);
     } finally {
       setIsLoadingLeaderboard(false);
     }
@@ -437,8 +444,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       setSelectedApplication(null);
       refetch();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to stake on application";
-      toast.error(message);
+      toast.error(extractApiError(err, "Failed to stake on application"));
     } finally {
       setIsStaking(false);
     }
@@ -455,16 +461,33 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
       refetch();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to endorse candidate";
-      toast.error(message);
+      toast.error(extractApiError(err, "Failed to endorse candidate"));
     }
   };
 
-  const handleReviewApplication = (application: ExpertMembershipApplication) => {
+  const handleReviewApplication = async (application: ExpertMembershipApplication) => {
     if (!stakingStatus?.meetsMinimum) {
       toast.info("You need to stake VETD tokens first to unlock reviewing.");
       return;
     }
+
+    // Fetch commit-reveal phase status
+    try {
+      const phaseStatus = await expertApi.expertCommitReveal.getPhaseStatus(application.id);
+      setCrPhaseStatus(phaseStatus);
+
+      // If in reveal phase, show reveal form instead of review modal
+      if (phaseStatus.votingPhase === "reveal") {
+        setRevealAppId(application.id);
+        setShowRevealForm(true);
+        return;
+      }
+    } catch (err) {
+      // Commit-reveal not available for this application — fall back to direct voting
+      logger.warn("Commit-reveal status unavailable, falling back to direct voting", err);
+      setCrPhaseStatus(null);
+    }
+
     setSelectedExpertMembershipApplication(application);
     setApplicationReviewType("expert");
     setShowReviewModal(true);
@@ -544,13 +567,11 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         );
       }
 
-      refetch();
-      setTimeout(() => refetch(), 3000);
+      await refetch();
 
       return response;
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to submit review";
-      toast.error(message);
+      toast.error(extractApiError(err, "Failed to submit review"));
       throw err;
     } finally {
       setIsReviewing(false);
@@ -726,6 +747,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         guildId={guildId}
         onSubmitReview={handleSubmitReview}
         isReviewing={isReviewing}
+        commitRevealPhase={applicationReviewType === "expert" ? crPhaseStatus?.votingPhase : undefined}
+        blockchainSessionId={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
+        blockchainSessionCreated={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
+        reviewerId={currentExpertId || undefined}
       />
 
       <StakingModal
@@ -743,6 +768,25 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         reviewType={viewReviewType}
         walletAddress={address || ""}
       />
+
+      {/* Expert Reveal Form Dialog */}
+      {revealAppId && currentExpertId && (
+        <Modal isOpen={showRevealForm} onClose={() => setShowRevealForm(false)} title="Reveal Vote" size="sm">
+          <ExpertRevealForm
+            applicationId={revealAppId}
+            reviewerId={currentExpertId}
+            onSubmit={() => {
+              setShowRevealForm(false);
+              setRevealAppId(null);
+              refetch();
+            }}
+            onCancel={() => {
+              setShowRevealForm(false);
+              setRevealAppId(null);
+            }}
+          />
+        </Modal>
+      )}
       </div>
     </div>
   );

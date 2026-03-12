@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -22,7 +23,8 @@ import { Button, Alert, StatusBadge } from "./ui";
 import { Pagination } from "./ui/pagination";
 import { GuildSelector } from "./ui/guild-selector";
 import { jobsApi, dashboardApi } from "@/lib/api";
-import { useApi } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { toast } from "sonner";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { formatSalaryRange } from "@/lib/utils";
 import { JOB_STATUSES } from "@/config/constants";
@@ -38,37 +40,15 @@ export function HiringDashboard() {
   const [jobPostings, setJobPostings] = useState<Job[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterGuild, setFilterGuild] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const hasFetchedOnce = useRef(false);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { execute } = useApi();
 
-  // Debounce search input by 400ms
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (!ready) return;
-    fetchDashboardData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, debouncedSearch, filterStatus]);
-
-  const fetchDashboardData = async () => {
-    // Only show full-page loading on initial fetch
-    if (!hasFetchedOnce.current) {
-      setIsLoading(true);
-    }
-    setError(null);
-
-    try {
+  const { isLoading, error, data, refetch } = useFetch(
+    async () => {
       const companyId = auth.userId;
-
       const [jobsResponse, statsData] = await Promise.all([
         jobsApi.getAll({
           status: filterStatus !== "all" ? filterStatus : undefined,
@@ -77,38 +57,29 @@ export function HiringDashboard() {
         }),
         dashboardApi.getStats(companyId || undefined),
       ]);
-
       const jobsData = Array.isArray(jobsResponse) ? jobsResponse : [];
-      if (Array.isArray(jobsData)) {
-        setJobPostings(jobsData);
-      }
+      setJobPostings(jobsData);
       setStats(statsData as DashboardStats);
-    } catch (error: unknown) {
-      if ((error as { status?: number }).status === 401) {
-        auth.logout();
-        router.push("/auth/login?type=company&redirect=/dashboard");
-        return;
-      }
-      setError(
-        `Failed to load data. Ensure backend is running. Details: ${(error as Error).message}`
-      );
-    } finally {
-      setIsLoading(false);
-      hasFetchedOnce.current = true;
-    }
-  };
+      return { jobs: jobsData, stats: statsData };
+    },
+    { skip: !ready }
+  );
+
+  // Refetch when search or filter changes
+  useEffect(() => {
+    if (ready) refetch();
+  }, [debouncedSearch, filterStatus, ready, refetch]);
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm("Are you sure you want to delete this job posting?")) return;
+    // TODO: Replace window.confirm with a confirmation Modal component
+    if (!window.confirm("Are you sure you want to delete this job posting?")) return;
 
     await execute(() => jobsApi.delete(jobId), {
       onSuccess: () => {
         setJobPostings((prev) => prev.filter((job) => job.id !== jobId));
       },
       onError: (err) => {
-        if (err.includes("401")) {
-          router.push("/auth/login?type=company&redirect=/dashboard");
-        }
+        toast.error(err);
       },
     });
   };
@@ -136,11 +107,7 @@ export function HiringDashboard() {
     resetPage();
   }, [filterGuild, debouncedSearch, filterStatus, resetPage]);
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || (isLoading && !data)) return null;
 
   return (
     <div className="min-h-full relative animate-page-enter">

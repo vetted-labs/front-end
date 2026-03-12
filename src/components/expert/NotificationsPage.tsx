@@ -8,9 +8,9 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { notificationsApi } from "@/lib/api";
+import { notificationsApi, extractApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 
 const NOTIFICATIONS_PER_PAGE = 20;
@@ -32,17 +32,17 @@ export default function NotificationsPage() {
   const { address, isConnected } = useAccount();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
-  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { execute: executeLoadMore, isLoading: isLoadingMore } = useApi();
+  const { execute: executeMarkAllRead, isLoading: isMarkingAllRead } = useApi();
 
   const { isLoading, error } = useFetch(
     () => notificationsApi.getNotifications(address!, { limit: NOTIFICATIONS_PER_PAGE, offset: 0 }),
     {
       skip: !isConnected || !address,
       onSuccess: (result) => {
-        const notificationsData = Array.isArray(result) ? result : (result?.notifications ?? []);
+        const notificationsData = result?.notifications ?? [];
         setAllNotifications(notificationsData);
         setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
       },
@@ -52,27 +52,25 @@ export default function NotificationsPage() {
   const loadMore = useCallback(async () => {
     if (!address || isLoadingMore || !hasMore) return;
 
-    setIsLoadingMore(true);
-    try {
-      const result = await notificationsApi.getNotifications(address, {
+    await executeLoadMore(
+      () => notificationsApi.getNotifications(address, {
         limit: NOTIFICATIONS_PER_PAGE,
         offset: allNotifications.length,
-      });
-
-      const moreData = Array.isArray(result) ? result : (result?.notifications ?? []);
-      if (moreData.length === 0) {
-        setHasMore(false);
-      } else {
-        setAllNotifications((prev) => [...prev, ...moreData]);
-        setHasMore(moreData.length >= NOTIFICATIONS_PER_PAGE);
+      }),
+      {
+        onSuccess: (result) => {
+          const moreData = result?.notifications ?? [];
+          if (moreData.length === 0) {
+            setHasMore(false);
+          } else {
+            setAllNotifications((prev) => [...prev, ...moreData]);
+            setHasMore(moreData.length >= NOTIFICATIONS_PER_PAGE);
+          }
+        },
+        onError: (err) => toast.error(err),
       }
-    } catch (err) {
-      logger.error("Error loading more notifications", err, { silent: true });
-      toast.error(err instanceof Error ? err.message : "Failed to load more notifications");
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [address, isLoadingMore, hasMore, allNotifications.length]);
+    );
+  }, [address, isLoadingMore, hasMore, allNotifications.length, executeLoadMore]);
 
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -98,7 +96,7 @@ export default function NotificationsPage() {
       router.push(navUrl);
     } catch (err) {
       logger.error("Error marking notification as read", err, { silent: true });
-      toast.error(err instanceof Error ? err.message : "Failed to mark notification as read");
+      toast.error(extractApiError(err, "Failed to mark notification as read"));
       setClickedNotificationId(null);
       // Still navigate even if marking as read fails
       const navUrl = buildNotificationUrl(notification);
@@ -109,22 +107,18 @@ export default function NotificationsPage() {
   const handleMarkAllAsRead = async () => {
     if (!address) return;
 
-    setIsMarkingAllRead(true);
-
-    try {
-      await notificationsApi.markAllAsRead(address);
-
-      // Update local state
-      const updateFn = (n: Notification) => ({ ...n, isRead: true, readAt: new Date().toISOString() });
-
-      setAllNotifications((prev) => prev.map(updateFn));
-      window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
-    } catch (err) {
-      logger.error("Error marking all as read", err, { silent: true });
-      toast.error(err instanceof Error ? err.message : "Failed to mark all notifications as read");
-    } finally {
-      setIsMarkingAllRead(false);
-    }
+    await executeMarkAllRead(
+      () => notificationsApi.markAllAsRead(address),
+      {
+        onSuccess: () => {
+          setAllNotifications((prev) =>
+            prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
+          );
+          window.dispatchEvent(new Event(NOTIFICATION_READ_EVENT));
+        },
+        onError: (err) => toast.error(err),
+      }
+    );
   };
 
   if (isLoading) {

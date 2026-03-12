@@ -104,6 +104,10 @@ src/
 
 - Use `apiRequest()` or domain API namespaces — never raw `fetch`
 - Use `useFetch`/`useApi` hooks for data fetching in components
+- Use `useFetch()` for data loaded on mount or when dependencies change
+- Use `useApi()` for imperative operations (form submissions, button clicks, mutations)
+- Use `extractApiError(error, "Context-specific fallback")` in any remaining try/catch blocks
+- Always show user feedback on errors: `toast.error()` for transient, `<Alert>` for persistent
 - Import types from `@/types` — keep type definitions in `src/types/`
 - Keep `page.tsx` files as thin routing shells (import + render component)
 - Use `useAuthContext()` for auth state — never read `localStorage` directly
@@ -130,6 +134,11 @@ src/
 - Write manual pagination math — use `useClientPagination` from `@/lib/hooks/useClientPagination`
 - Write manual debounce logic — use `useDebounce` from `@/lib/hooks/useDebounce`
 - Catch errors with only `console.error` — always show user feedback via `Alert` or `toast`
+- Extract errors manually from ApiError — use `extractApiError(error, "fallback")` from `lib/api.ts`
+- Cast errors with `as { response?: ... }` — use `error instanceof ApiError` if you must check type
+- Duplicate status-code handling (401, 403, etc.) — `extractApiError()` already provides human-readable messages
+- Use `console.error`/`console.warn` in catch blocks — use `logger` from `lib/logger.ts` + show user feedback
+- Catch errors silently for user-facing operations — always provide feedback
 - Define inline types that exist in `@/types` — use `Pick<>` if you need a subset
 - Build custom modal overlays — use `Modal` from `@/components/ui/modal`
 - Define local `statusConfig` objects — use the shared config from `@/config/constants`

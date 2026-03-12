@@ -16,7 +16,7 @@ import { useAccount, useConnect } from "wagmi";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
-import { candidateApi, companyApi, expertApi, sanitizeErrorMessage, ApiError } from "@/lib/api";
+import { candidateApi, companyApi, expertApi, extractApiError, ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -131,36 +131,7 @@ function LoginForm() {
       }
     } catch (error: unknown) {
       logger.error("Login failed", error, { silent: true });
-
-      let errorMessage = "Something went wrong. Please try again.";
-
-      const apiErr = error as { response?: { status: number; data: { message?: string; error?: string } }; message?: string };
-      if (apiErr.response) {
-        const status = apiErr.response.status;
-        const data = apiErr.response.data;
-
-        if (status === 400) {
-          errorMessage = sanitizeErrorMessage(data.message || data.error) || "Invalid input. Please check your information.";
-        } else if (status === 401) {
-          errorMessage = "Invalid credentials. Please check your email and password.";
-        } else if (status === 403) {
-          errorMessage = "Access denied. Your account may be suspended.";
-        } else if (status === 404) {
-          errorMessage = "Account not found. Please check your email or sign up.";
-        } else if (status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        } else {
-          errorMessage = sanitizeErrorMessage(data.message || data.error) || errorMessage;
-        }
-      } else if (apiErr.message) {
-        if (apiErr.message.includes("Network Error") || apiErr.message.includes("fetch")) {
-          errorMessage = "Cannot connect to server. Please check your internet connection.";
-        } else {
-          errorMessage = sanitizeErrorMessage(apiErr.message);
-        }
-      }
-
-      setError(errorMessage);
+      setError(extractApiError(error, "Login failed. Please try again."));
     } finally {
       setIsLoading(false);
     }

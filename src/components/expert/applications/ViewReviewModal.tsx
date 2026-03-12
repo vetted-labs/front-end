@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Loader2, MessageSquare } from "lucide-react";
-import { expertApi, guildsApi } from "@/lib/api";
+import { useState } from "react";
+import { CheckCircle, XCircle, Loader2, MessageSquare, Link2, ShieldCheck, Eye, Lock } from "lucide-react";
+import { expertApi, guildsApi, commitRevealApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { logger } from "@/lib/logger";
 import { Modal } from "@/components/ui/modal";
-import type { MyReviewData } from "@/types";
+import type { ExpertCRPhaseStatus, CommitRevealPhaseStatus } from "@/types";
 
 interface ViewReviewModalProps {
   isOpen: boolean;
@@ -23,26 +25,34 @@ export function ViewReviewModal({
   reviewType,
   walletAddress,
 }: ViewReviewModalProps) {
-  const [review, setReview] = useState<MyReviewData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [crStatus, setCrStatus] = useState<ExpertCRPhaseStatus | CommitRevealPhaseStatus | null>(null);
 
-  useEffect(() => {
-    if (!isOpen || !applicationId || !walletAddress) return;
+  const shouldFetch = isOpen && !!applicationId && !!walletAddress;
 
-    setLoading(true);
-    setError(null);
-    setReview(null);
+  const { data: review, isLoading: loading, error } = useFetch(
+    () => reviewType === "expert"
+      ? expertApi.getMyExpertApplicationReview(applicationId!, walletAddress)
+      : guildsApi.getMyCandidateApplicationReview(applicationId!, walletAddress),
+    { skip: !shouldFetch }
+  );
 
-    const fetchReview = reviewType === "expert"
-      ? expertApi.getMyExpertApplicationReview(applicationId, walletAddress)
-      : guildsApi.getMyCandidateApplicationReview(applicationId, walletAddress);
-
-    fetchReview
-      .then((data) => setReview(data))
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load review"))
-      .finally(() => setLoading(false));
-  }, [isOpen, applicationId, walletAddress, reviewType]);
+  // Fetch commit-reveal phase status (non-critical — silent on failure)
+  useFetch(
+    () => {
+      const fetch = reviewType === "expert"
+        ? expertApi.expertCommitReveal.getPhaseStatus(applicationId!)
+        : commitRevealApi.getPhaseStatus(applicationId!);
+      return fetch;
+    },
+    {
+      skip: !shouldFetch,
+      onSuccess: (data) => setCrStatus(data),
+      onError: (msg) => {
+        logger.warn("Phase status not available — direct vote or no CR enabled", msg);
+        setCrStatus(null);
+      },
+    }
+  );
 
   if (!isOpen || !applicationId) return null;
 
@@ -100,6 +110,11 @@ export function ViewReviewModal({
                 {new Date(review.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
+
+            {/* Commit-Reveal & On-Chain Status */}
+            {crStatus && (
+              <CRStatusSection crStatus={crStatus} reviewType={reviewType} />
+            )}
 
             {/* Score Summary */}
             <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
@@ -219,5 +234,125 @@ export function ViewReviewModal({
         )}
       </div>
     </Modal>
+  );
+}
+
+/* ── Commit-Reveal & On-Chain Status Section ── */
+
+function CRStatusSection({
+  crStatus,
+  reviewType,
+}: {
+  crStatus: ExpertCRPhaseStatus | CommitRevealPhaseStatus;
+  reviewType: "expert" | "candidate";
+}) {
+  const isExpertCR = reviewType === "expert" && "votingPhase" in crStatus;
+  const phase = isExpertCR
+    ? (crStatus as ExpertCRPhaseStatus).votingPhase
+    : (crStatus as CommitRevealPhaseStatus).phase;
+
+  const isCommitReveal = phase !== "direct" && phase !== "none";
+  const blockchainSessionId = crStatus.blockchainSessionId;
+  const isOnChain = !!crStatus.blockchainSessionCreated && !!blockchainSessionId;
+  const txHash = "blockchainSessionTxHash" in crStatus ? (crStatus as ExpertCRPhaseStatus & { blockchainSessionTxHash?: string }).blockchainSessionTxHash : undefined;
+
+  const commitCount = isExpertCR
+    ? (crStatus as ExpertCRPhaseStatus).totalCommitments
+    : (crStatus as CommitRevealPhaseStatus).commitCount ?? 0;
+  const revealCount = isExpertCR
+    ? (crStatus as ExpertCRPhaseStatus).revealedVotes
+    : (crStatus as CommitRevealPhaseStatus).revealCount ?? 0;
+
+  const phaseLabel: Record<string, string> = {
+    commit: "Commit Phase",
+    reveal: "Reveal Phase",
+    finalized: "Finalized",
+    direct: "Direct Vote",
+    none: "No Commit-Reveal",
+  };
+
+  const phaseColor: Record<string, string> = {
+    commit: "text-amber-400",
+    reveal: "text-blue-400",
+    finalized: "text-green-400",
+    direct: "text-muted-foreground",
+    none: "text-muted-foreground",
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+      <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+        Verification Status
+      </h4>
+
+      <div className="grid grid-cols-2 gap-3">
+        {/* Voting Method */}
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
+          <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Method</p>
+            <p className="text-xs font-semibold text-foreground">
+              {isCommitReveal ? "Commit-Reveal" : "Direct Vote"}
+            </p>
+          </div>
+        </div>
+
+        {/* Phase */}
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
+          <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Phase</p>
+            <p className={`text-xs font-semibold ${phaseColor[phase] ?? "text-foreground"}`}>
+              {phaseLabel[phase] ?? phase}
+            </p>
+          </div>
+        </div>
+
+        {/* On-Chain Status */}
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
+          <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">On-Chain</p>
+            <p className={`text-xs font-semibold ${isOnChain ? "text-green-400" : "text-muted-foreground"}`}>
+              {isOnChain ? "Recorded" : "Off-chain only"}
+            </p>
+          </div>
+        </div>
+
+        {/* Vote Counts */}
+        {isCommitReveal && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
+            <CheckCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Votes</p>
+              <p className="text-xs font-semibold text-foreground">
+                {commitCount} committed · {revealCount} revealed
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Blockchain Session / Etherscan Link */}
+      {isOnChain && (
+        <div className="flex items-center gap-2 pt-1">
+          <Link2 className="w-3 h-3 text-muted-foreground shrink-0" />
+          {txHash ? (
+            <a
+              href={`https://sepolia.etherscan.io/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-primary/70 hover:text-primary font-mono truncate transition-colors"
+            >
+              View on Etherscan &rarr;
+            </a>
+          ) : blockchainSessionId ? (
+            <p className="text-[10px] text-muted-foreground font-mono truncate">
+              Session: {blockchainSessionId.slice(0, 10)}...{blockchainSessionId.slice(-8)}
+            </p>
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 }

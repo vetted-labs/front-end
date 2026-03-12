@@ -11,11 +11,13 @@ import {
   ArrowRight,
   Linkedin,
   Briefcase,
+  Github,
+  Globe,
 } from "lucide-react";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
-import { candidateApi, companyApi, ApiError } from "@/lib/api";
+import { candidateApi, companyApi, extractApiError } from "@/lib/api";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
@@ -65,6 +67,9 @@ function SignupForm() {
 
   // Candidate specific
   const [headline, setHeadline] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -85,12 +90,25 @@ function SignupForm() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
+    const urlPattern = /^https?:\/\/.+\..+/;
+
     if (userType === "candidate") {
       if (!fullName.trim()) {
         newErrors.fullName = "Full name is required";
       }
       if (!headline.trim()) {
         newErrors.headline = "Current occupation is required";
+      }
+      if (!linkedinUrl.trim()) {
+        newErrors.linkedinUrl = "LinkedIn profile is required";
+      } else if (!urlPattern.test(linkedinUrl)) {
+        newErrors.linkedinUrl = "Enter a valid URL (e.g. https://linkedin.com/in/...)";
+      }
+      if (githubUrl.trim() && !urlPattern.test(githubUrl)) {
+        newErrors.githubUrl = "Enter a valid URL (e.g. https://github.com/...)";
+      }
+      if (portfolioUrl.trim() && !urlPattern.test(portfolioUrl)) {
+        newErrors.portfolioUrl = "Enter a valid URL (e.g. https://...)";
       }
     } else {
       if (!companyName.trim()) {
@@ -110,6 +128,12 @@ function SignupForm() {
     setIsLoading(true);
     try {
       if (userType === "candidate") {
+        const socialLinks = [
+          { platform: "linkedin", label: "LinkedIn", url: linkedinUrl.trim() },
+          ...(githubUrl.trim() ? [{ platform: "github", label: "GitHub", url: githubUrl.trim() }] : []),
+          ...(portfolioUrl.trim() ? [{ platform: "portfolio", label: "Portfolio / Website", url: portfolioUrl.trim() }] : []),
+        ];
+
         const data = await candidateApi.signup({
           fullName,
           email,
@@ -117,6 +141,7 @@ function SignupForm() {
           phone,
           headline,
           experienceLevel: "mid",
+          socialLinks,
         });
 
         auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "", undefined, data.refreshToken);
@@ -133,35 +158,7 @@ function SignupForm() {
         router.push(redirectUrl || "/dashboard");
       }
     } catch (error: unknown) {
-      let errorMessage = "Something went wrong. Please try again.";
-
-      if (error instanceof ApiError) {
-        const { status, data } = error.response;
-        const errMsg = typeof data?.error === "string" ? data.error : undefined;
-        const dataMsg = typeof data?.message === "string" ? data.message : undefined;
-
-        if (status === 409) {
-          errorMessage = "This email is already registered. Please try logging in instead.";
-        } else if (status === 400) {
-          if (data?.details && Array.isArray(data.details)) {
-            errorMessage = data.details.map((d: { message: string }) => d.message).join(". ");
-          } else {
-            errorMessage = errMsg || dataMsg || "Invalid input. Please check your information.";
-          }
-        } else if (status === 500) {
-          errorMessage = "Server error. Please try again later.";
-        } else {
-          errorMessage = errMsg || dataMsg || errorMessage;
-        }
-      } else if (error instanceof Error) {
-        if (error.message.includes("Network error") || error.message.includes("fetch")) {
-          errorMessage = "Cannot connect to server. Please check your internet connection.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      setErrors({ submit: errorMessage });
+      setErrors({ submit: extractApiError(error, "Signup failed. Please try again.") });
     } finally {
       setIsLoading(false);
     }
@@ -264,6 +261,65 @@ function SignupForm() {
                 {errors.headline && (
                   <p className="text-destructive text-xs mt-1">{errors.headline}</p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  LinkedIn <span className="text-destructive">*</span>
+                </label>
+                <div className="relative">
+                  <Linkedin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className={inputClass}
+                    placeholder="https://linkedin.com/in/yourname"
+                  />
+                </div>
+                {errors.linkedinUrl && (
+                  <p className="text-destructive text-xs mt-1">{errors.linkedinUrl}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    GitHub <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Github className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="url"
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      className={inputClass}
+                      placeholder="https://github.com/you"
+                    />
+                  </div>
+                  {errors.githubUrl && (
+                    <p className="text-destructive text-xs mt-1">{errors.githubUrl}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">
+                    Portfolio <span className="text-muted-foreground font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="url"
+                      value={portfolioUrl}
+                      onChange={(e) => setPortfolioUrl(e.target.value)}
+                      className={inputClass}
+                      placeholder="https://yoursite.com"
+                    />
+                  </div>
+                  {errors.portfolioUrl && (
+                    <p className="text-destructive text-xs mt-1">{errors.portfolioUrl}</p>
+                  )}
+                </div>
               </div>
             </>
           )}
