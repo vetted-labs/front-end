@@ -76,13 +76,17 @@ export interface ExpertApplicationFinalization {
 
 /** The current expert's own review data, fetched via my-review endpoints */
 export interface MyReviewData {
-  vote: string;
-  criteriaScores: Record<string, unknown>;
-  criteriaJustifications: Record<string, unknown>;
-  overallScore: number;
+  vote: string | null;
+  criteriaScores: Record<string, unknown> | null;
+  criteriaJustifications: Record<string, unknown> | null;
+  overallScore: number | null;
   redFlagDeductions: number;
   feedback?: string;
   createdAt: string;
+  revealed?: boolean;
+  committedAt?: string;
+  commitHash?: string;
+  onChainCommitTxHash?: string;
 }
 
 /** Candidate applying to join a guild */

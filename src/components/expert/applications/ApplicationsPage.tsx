@@ -724,6 +724,7 @@ export default function ApplicationsPage() {
         applicantName={viewReviewApplicantName}
         reviewType={viewReviewType}
         walletAddress={address as string}
+        expertId={expertData?.id}
       />
 
       {/* Expert Reveal Form Dialog */}

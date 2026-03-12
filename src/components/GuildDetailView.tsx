@@ -767,6 +767,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         applicantName={viewReviewApplicantName}
         reviewType={viewReviewType}
         walletAddress={address || ""}
+        expertId={currentExpertId || undefined}
       />
 
       {/* Expert Reveal Form Dialog */}
