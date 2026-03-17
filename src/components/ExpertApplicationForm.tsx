@@ -2,13 +2,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
-import { Loader2, Send, Shield, CheckCircle } from "lucide-react";
+import { Loader2, Send, Shield, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
 import { expertApi, guildsApi, ApiError } from "@/lib/api";
+import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import type { GuildApplicationTemplate, GuildDomainLevel, GuildDomainTopic } from "@/types";
@@ -40,6 +41,17 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string[]>([]);
   const errorRef = useRef<HTMLDivElement | null>(null);
+
+  const {
+    isSigning,
+    error: verificationError,
+    pendingSignature,
+    checkVerification,
+    signChallenge,
+    submitVerification,
+  } = useWalletVerification();
+  const [walletAlreadyVerified, setWalletAlreadyVerified] = useState(false);
+  const walletSigned = !!pendingSignature || walletAlreadyVerified;
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const resumeInputRef = useRef<HTMLInputElement | null>(null);
@@ -108,6 +120,14 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     };
     checkExistingProfile();
   }, [mounted, isConnected, address, router, guildParam, applyNew]);
+
+  // Check if wallet is already verified (returning experts applying to new guild)
+  useEffect(() => {
+    if (!mounted || !isConnected || !address) return;
+    checkVerification(address).then((verified) => {
+      if (verified) setWalletAlreadyVerified(true);
+    });
+  }, [mounted, isConnected, address, checkVerification]);
 
   useEffect(() => {
     if (!error) return;
@@ -316,6 +336,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     if (!formData.currentCompany.trim()) return false;
     if (formData.expertiseAreas.length === 0) return false;
     if (!noAiDeclaration) return false;
+    if (!walletSigned) return false;
     if (formData.bio.length < 50) return false;
     if (formData.motivation.length < 50) return false;
     // General answers (min 50 chars each)
@@ -332,7 +353,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       }
     }
     return true;
-  }, [formData, selectedGuildId, noAiDeclaration, generalAnswers, levelAnswers, generalTemplate, levelTemplate]);
+  }, [formData, selectedGuildId, noAiDeclaration, walletSigned, generalAnswers, levelAnswers, generalTemplate, levelTemplate]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -428,6 +449,11 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     }));
   };
 
+  const handleVerifyWallet = async () => {
+    if (!address) return;
+    await signChallenge(address);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -489,10 +515,21 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
         },
       });
 
-      // Upload resume after expert record is created
       const expertId = (result as { id?: string; expertId?: string })?.expertId ?? (result as { id?: string })?.id;
+
+      // Submit the pre-signed SIWE signature now that the expert row exists
+      if (address && pendingSignature) {
+        await submitVerification(address);
+      }
+
+      // Upload resume (non-blocking — application already succeeded)
       if (expertId && resumeFile) {
-        await expertApi.uploadResume(expertId, resumeFile);
+        try {
+          await expertApi.uploadResume(expertId, resumeFile);
+        } catch (uploadErr) {
+          logger.warn("Resume upload failed — application still submitted", uploadErr);
+          toast.error("Resume upload failed. You can re-upload from your profile later.");
+        }
       }
 
       localStorage.setItem("expertStatus", "pending");
@@ -638,6 +675,64 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               fieldErrors={fieldErrors}
               onBlur={handleBlur}
             />
+
+            {/* Wallet Verification Section */}
+            <div className="p-8 border-t border-border">
+              <div className="flex items-start gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  walletSigned
+                    ? "bg-green-100 dark:bg-green-900/30"
+                    : "bg-primary/10"
+                }`}>
+                  {walletSigned ? (
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <Shield className="w-5 h-5 text-primary" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">
+                    Wallet Ownership Verification
+                  </h3>
+                  {walletSigned ? (
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      Wallet verified — you&apos;re good to go.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Sign a message to prove you own this wallet. This is a free signature — no gas fees.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleVerifyWallet}
+                        disabled={isSigning}
+                        className="gap-2"
+                      >
+                        {isSigning ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Waiting for signature...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-4 h-4" />
+                            Verify Wallet
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                  {verificationError && (
+                    <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-destructive">{verificationError}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Submit Section */}
             <div className="p-8 bg-gradient-to-r from-primary/5 to-accent/5">
