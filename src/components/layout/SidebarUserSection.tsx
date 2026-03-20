@@ -46,6 +46,9 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
   };
 
   const handleLogout = () => {
+    if (auth.userType === "expert") {
+      disconnect();
+    }
     auth.logout();
     router.push("/");
   };
@@ -256,7 +259,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
 
   return (
     <div className="border-t border-border px-3 py-3 space-y-2">
-      {auth.isAuthenticated ? (
+      {auth.isAuthenticated && !(auth.userType === "expert" && !isConnected) ? (
         <>
           {!isCollapsed && (
             <div className="rounded-lg bg-muted px-3 py-2 space-y-1">

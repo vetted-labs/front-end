@@ -60,24 +60,8 @@ export function ViewReviewModal({
 
   const isCommitPhase = review?.revealed === false && !review?.vote;
 
-  // During commit phase, try to restore scores from localStorage
-  const savedLocal = (() => {
-    if (!isCommitPhase || !applicationId || !expertId) return null;
-    try {
-      const raw = localStorage.getItem(`expertCR:${applicationId}:${expertId}`);
-      return raw ? JSON.parse(raw) as {
-        normalizedScore?: number;
-        criteriaScores?: Record<string, unknown>;
-        criteriaJustifications?: Record<string, unknown>;
-        overallScore?: number;
-        redFlagDeductions?: number;
-        feedback?: string;
-      } : null;
-    } catch { return null; }
-  })();
-
-  // Use localStorage data during commit phase, backend data otherwise
-  const scores = (isCommitPhase ? savedLocal?.criteriaScores : review?.criteriaScores) as Record<string, unknown> | undefined;
+  // Score data comes from the review (stored server-side during commit)
+  const scores = review?.criteriaScores as Record<string, unknown> | undefined;
   const generalScores = scores?.general as Record<string, unknown> | undefined;
   const domainScores = scores?.domain as Record<string, unknown> | undefined;
   const generalTotal = (generalScores?.total as number) ?? 0;
@@ -85,10 +69,10 @@ export function ViewReviewModal({
   const domainTotal = (domainScores?.total as number) ?? 0;
   const domainMax = (domainScores?.max as number) ?? 0;
   const overallMax = (scores?.overallMax as number) || (generalMax + domainMax) || 0;
-  const overallScore = (isCommitPhase ? savedLocal?.overallScore : review?.overallScore) ?? 0;
+  const overallScore = review?.overallScore ?? 0;
   const scorePercent = overallMax > 0 ? Math.round((overallScore / overallMax) * 100) : 0;
 
-  const justifications = (isCommitPhase ? savedLocal?.criteriaJustifications : review?.criteriaJustifications) as Record<string, unknown> | undefined;
+  const justifications = review?.criteriaJustifications as Record<string, unknown> | undefined;
   const generalJustifications = justifications?.general as Record<string, string> | undefined;
   const domainJustifications = justifications?.domain as Record<string, string> | undefined;
 
@@ -117,7 +101,7 @@ export function ViewReviewModal({
               {isCommitPhase ? (
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   <Lock className="w-4 h-4" />
-                  Committed (Hidden)
+                  Vote Submitted (Pending Reveal)
                 </div>
               ) : (
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
@@ -160,22 +144,7 @@ export function ViewReviewModal({
             )}
 
             {/* Score Summary */}
-            {isCommitPhase && !savedLocal ? (
-              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-3">
-                <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
-                  Score Summary
-                </h4>
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border">
-                  <Lock className="w-5 h-5 text-amber-400 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Scores not available</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Your saved review data was not found on this device. Scores will be visible after the reveal phase.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
+            {(
               <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
@@ -183,7 +152,7 @@ export function ViewReviewModal({
                   </h4>
                   {isCommitPhase && (
                     <span className="text-[10px] text-amber-400 font-medium uppercase tracking-wider">
-                      Only visible to you
+                      Hidden until all votes are in
                     </span>
                   )}
                 </div>
@@ -326,13 +295,9 @@ function CRStatusSection({
   const commitCount = isExpertCR
     ? (crStatus as ExpertCRPhaseStatus).totalCommitments
     : (crStatus as CommitRevealPhaseStatus).commitCount ?? 0;
-  const revealCount = isExpertCR
-    ? (crStatus as ExpertCRPhaseStatus).revealedVotes
-    : (crStatus as CommitRevealPhaseStatus).revealCount ?? 0;
 
   const phaseLabel: Record<string, string> = {
-    commit: "Commit Phase",
-    reveal: "Reveal Phase",
+    commit: "Voting In Progress",
     finalized: "Finalized",
     direct: "Direct Vote",
     none: "No Commit-Reveal",
@@ -340,7 +305,6 @@ function CRStatusSection({
 
   const phaseColor: Record<string, string> = {
     commit: "text-amber-400",
-    reveal: "text-blue-400",
     finalized: "text-green-400",
     direct: "text-muted-foreground",
     none: "text-muted-foreground",
@@ -393,7 +357,7 @@ function CRStatusSection({
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Votes</p>
               <p className="text-xs font-semibold text-foreground">
-                {commitCount} committed · {revealCount} revealed
+                {commitCount} voted
               </p>
             </div>
           </div>

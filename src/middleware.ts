@@ -12,6 +12,27 @@ export function middleware(_request: NextRequest) {
   // Use strict NODE_ENV check - only "development" enables dev mode
   const isDevelopment = process.env.NODE_ENV === "development";
 
+  // Shared RPC and wallet connect-src domains (centralized to avoid drift between dev/prod)
+  const rpcConnectSrc = [
+    "https://rpc.sepolia.org",
+    "https://eth.llamarpc.com",
+    "https://eth-sepolia.g.alchemy.com",
+    "https://*.alchemy.com",
+    "https://*.infura.io",
+    "https://eth.merkle.io",
+    "https://*.walletconnect.com",
+    "https://*.walletconnect.org",
+    "https://*.metamask.io",
+    "https://*.cx.metamask.io",
+    "https://polygon-rpc.com",
+    "https://arb1.arbitrum.io",
+    "https://*.drpc.org",
+    "https://cca-lite.coinbase.com",
+    "https://*.coinbase.com",
+    "https://rpc.ankr.com",
+    "https://*.publicnode.com",
+  ].join(" ");
+
   // Development CSP: More permissive for hot reload and dev tools
   // Note: 'unsafe-inline' is used instead of nonce in dev to avoid hydration mismatches
   // and allow wallet SDK inline scripts (Coinbase, MetaMask) to work without nonces
@@ -21,7 +42,7 @@ export function middleware(_request: NextRequest) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for CSS-in-JS libraries
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* https://rpc.sepolia.org https://eth.llamarpc.com https://eth-sepolia.g.alchemy.com https://*.alchemy.com https://*.walletconnect.com https://*.walletconnect.org https://*.metamask.io https://*.cx.metamask.io https://*.drpc.org https://cca-lite.coinbase.com https://*.coinbase.com https://rpc.ankr.com https://*.publicnode.com",
+    `connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* ${rpcConnectSrc}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -37,7 +58,7 @@ export function middleware(_request: NextRequest) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline still needed for Tailwind
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.up.railway.app https://rpc.sepolia.org https://eth.llamarpc.com https://eth-sepolia.g.alchemy.com https://*.alchemy.com https://*.infura.io https://eth.merkle.io https://*.walletconnect.com https://*.walletconnect.org https://*.metamask.io https://*.cx.metamask.io https://mainnet.infura.io https://polygon-rpc.com https://arb1.arbitrum.io https://*.drpc.org https://cca-lite.coinbase.com https://*.coinbase.com https://rpc.ankr.com https://*.publicnode.com",
+    `connect-src 'self' https://*.up.railway.app ${rpcConnectSrc}`,
     "frame-ancestors 'none'", // Prevent clickjacking
     "base-uri 'self'", // Prevent base tag injection
     "form-action 'self'", // Prevent form hijacking

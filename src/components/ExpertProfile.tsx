@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
 import { getExplorerAddressUrl } from "@/lib/blockchain";
-import { formatDateMonthYear, formatTimeAgo, truncateAddress } from "@/lib/utils";
+import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from "@/lib/utils";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
@@ -420,7 +420,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             <StatCard
               icon={DollarSign}
               label="Total Earnings"
-              value={`$${displayEarnings.toLocaleString()}`}
+              value={formatVetd(displayEarnings)}
               subtitle={mode === "public" ? "From endorsements" : undefined}
               colorScheme="emerald"
             />

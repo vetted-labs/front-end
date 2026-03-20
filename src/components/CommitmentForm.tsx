@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Loader2, ShieldAlert, Clock } from "lucide-react";
+import { Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { commitRevealApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
@@ -44,24 +44,16 @@ export function CommitmentForm({
   blockchainSessionCreated,
 }: CommitmentFormProps) {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
   const [score, setScore] = useState(50);
   const [nonce] = useState(generateNonce);
   const [stakeAmount, setStakeAmount] = useState(requiredStake.toString());
-  const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
-  const { commitVote } = useVettingManager(sessionIdBytes32);
+  const { commitVote, isCommitted } = useVettingManager(sessionIdBytes32);
 
   const hasOnChainSession = !!blockchainSessionId && blockchainSessionCreated;
-  const localStorageKey = `commitReveal:${applicationId}:${expertId}`;
-
-  const handleCopyNonce = async () => {
-    await navigator.clipboard.writeText(nonce);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    toast.success("Nonce copied to clipboard");
-  };
 
   const handleSubmit = async () => {
     try {
@@ -74,29 +66,44 @@ export function CommitmentForm({
 
       // Step 1: On-chain commit if blockchain session is ready
       if (hasOnChainSession && address && sessionIdBytes32) {
-        const salt = generateBytes32Salt();
-        onChainScore = mapScoreToChain(score);
-        onChainCommitHash = computeOnChainCommitHash(
-          sessionIdBytes32,
-          address,
-          onChainScore,
-          salt
-        );
-        onChainSalt = salt;
+        if (isCommitted) {
+          // Already committed on-chain — skip wallet interaction
+          logger.info("On-chain commit already exists", { silent: true });
+          toast.info("On-chain vote already committed — saving to backend.");
+        } else {
+          // Fresh commit
+          const salt = generateBytes32Salt();
+          onChainScore = mapScoreToChain(score);
+          onChainCommitHash = computeOnChainCommitHash(
+            sessionIdBytes32,
+            address,
+            onChainScore,
+            salt
+          );
+          onChainSalt = salt;
 
-        // Send on-chain TX (expert signs via wallet)
-        const txHash = await commitVote(onChainCommitHash as `0x${string}`);
-        onChainTxHash = txHash;
+          // Send on-chain TX and wait for confirmation
+          const txHash = await commitVote(onChainCommitHash as `0x${string}`);
+          onChainTxHash = txHash;
+
+          if (publicClient) {
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+            if (receipt.status === "reverted") {
+              throw new Error("On-chain commit transaction was reverted");
+            }
+          }
+        }
       }
 
       // Step 2: Generate off-chain hash via backend
       const hashResponse = await commitRevealApi.generateHash(score, nonce);
 
-      // Step 3: Submit commitment to backend (includes both hashes)
+      // Step 3: Submit commitment with score + nonce to backend (auto-reveal when all commit)
       await commitRevealApi.submitCommitment(applicationId, {
         expertId,
-        commitmentHash: hashResponse.hash,
         commitHash: hashResponse.hash,
+        score,
+        nonce,
         stakeAmount: parseFloat(stakeAmount),
         onChainCommitHash,
         onChainSalt,
@@ -104,12 +111,7 @@ export function CommitmentForm({
         onChainTxHash,
       });
 
-      // Step 4: Save to localStorage for reveal phase
-      localStorage.setItem(
-        localStorageKey,
-        JSON.stringify({ score, nonce, salt: onChainSalt, onChainScore })
-      );
-      toast.success("Commitment submitted! Save your nonce for the reveal phase.");
+      toast.success("Vote submitted! It will be revealed automatically when all reviewers have voted.");
       onSubmit();
     } catch (error: unknown) {
       if (isUserRejection(error)) {
@@ -164,33 +166,6 @@ export function CommitmentForm({
         </div>
       </div>
 
-      {/* Nonce */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Your Secret Nonce</label>
-          <Button variant="ghost" size="sm" onClick={handleCopyNonce}>
-            {copied ? (
-              <Check className="w-4 h-4 text-green-500" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-        <Input value={nonce} readOnly className="font-mono text-sm" />
-      </div>
-
-      {/* Save Warning */}
-      <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
-        <ShieldAlert className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-        <div className="text-sm">
-          <p className="font-medium text-foreground mb-1">Save your nonce!</p>
-          <p className="text-muted-foreground">
-            You will need this nonce to reveal your vote. It is saved locally, but
-            copy it somewhere safe as a backup. If you lose it, your vote cannot be revealed.
-          </p>
-        </div>
-      </div>
-
       {/* Stake */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Stake Amount (VETD)</label>
@@ -222,7 +197,7 @@ export function CommitmentForm({
           ) : hasOnChainSession ? (
             "Sign & Submit Vote"
           ) : (
-            "Generate Hash & Submit"
+            "Submit Vote"
           )}
         </Button>
       </div>

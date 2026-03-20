@@ -234,7 +234,7 @@ export default function VotingApplicationPage({
     }
   };
 
-  const handleCommitOrReveal = () => {
+  const handleCommit = () => {
     loadPhaseStatus();
     loadApplication();
   };
@@ -409,9 +409,7 @@ export default function VotingApplicationPage({
             <CommitRevealPhaseIndicator
               currentPhase={crPhase.phase}
               commitDeadline={crPhase.commitDeadline}
-              revealDeadline={crPhase.revealDeadline}
               commitCount={crPhase.commitCount}
-              revealCount={crPhase.revealCount}
               totalExpected={
                 crPhase.totalExpected || application.assigned_reviewer_count
               }
@@ -451,7 +449,7 @@ export default function VotingApplicationPage({
                 isSubmittingVote={isSubmittingVote}
                 onToggleVoting={setShowVoting}
                 onVote={handleVote}
-                onCommitOrReveal={handleCommitOrReveal}
+                onCommit={handleCommit}
               />
             )}
           </div>

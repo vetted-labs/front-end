@@ -69,13 +69,17 @@ interface ReviewGuildApplicationModalProps {
   /** When set, renders a staking input in the final step (used for proposal votes). */
   proposalContext?: { requiredStake: number };
   /** Commit-reveal voting phase for expert applications */
-  commitRevealPhase?: "direct" | "commit" | "reveal" | "finalized";
+  commitRevealPhase?: "direct" | "commit" | "finalized";
   /** On-chain blockchain session ID for commit-reveal */
   blockchainSessionId?: string;
   /** Whether the on-chain session has been created */
   blockchainSessionCreated?: boolean;
-  /** The expert reviewer's ID (needed for localStorage key) */
+  /** The expert reviewer's ID */
   reviewerId?: string;
+  /** Called after a successful review submission (including commit-reveal) to refresh parent data */
+  onReviewSuccess?: () => void;
+  /** Type of application being reviewed — controls modal title */
+  reviewType?: "expert" | "candidate" | "proposal";
 }
 
 const GENERAL_RESPONSE_KEY_MAP: Record<string, string> = {
@@ -227,6 +231,8 @@ export function ReviewGuildApplicationModal({
   blockchainSessionId,
   blockchainSessionCreated,
   reviewerId,
+  onReviewSuccess,
+  reviewType: reviewTypeProp,
 }: ReviewGuildApplicationModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -518,22 +524,11 @@ export function ReviewGuildApplicationModal({
         // Get backend hash
         const hashResult = await expertApi.expertCommitReveal.generateHash(normalizedScore, nonce);
 
-        // Submit commitment to backend
+        // Submit commitment with all review data to backend (auto-reveal when all commit)
         await expertApi.expertCommitReveal.submitCommitment(application.id, {
           commitHash: hashResult.hash,
-          onChainCommitHash: onChainCommitHash || undefined,
-          onChainSalt: onChainSalt || undefined,
-          onChainScore: onChainScore ?? undefined,
-          onChainTxHash: onChainTxHash || undefined,
-        });
-
-        // Save full review data to localStorage for reveal phase
-        const storageKey = `expertCR:${application.id}:${reviewerId || "unknown"}`;
-        localStorage.setItem(storageKey, JSON.stringify({
           normalizedScore,
           nonce,
-          salt: onChainSalt,
-          onChainScore,
           feedback: feedback || undefined,
           criteriaScores: {
             general: { ...generalScores, totals: generalTotals, total: generalTotal, max: generalMax },
@@ -548,11 +543,16 @@ export function ReviewGuildApplicationModal({
           },
           overallScore,
           redFlagDeductions,
-        }));
+          onChainCommitHash: onChainCommitHash || undefined,
+          onChainSalt: onChainSalt || undefined,
+          onChainScore: onChainScore ?? undefined,
+          onChainTxHash: onChainTxHash || undefined,
+        });
 
-        setApiResponse({ message: "Commitment submitted! Your review is hidden until the reveal phase." });
+        setApiResponse({ message: "Vote submitted! Scores will be revealed automatically when all reviewers have voted." });
         setCurrentStep(4);
         contentRef.current?.scrollTo(0, 0);
+        onReviewSuccess?.();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to submit commitment";
         toast.error(message);
@@ -771,7 +771,7 @@ export function ReviewGuildApplicationModal({
             <p className="font-medium text-foreground mb-1">What happens next?</p>
             <p>
               {isCommitPhase
-                ? "Your review is hidden until the reveal phase begins. When the commit deadline passes, you'll need to reveal your vote using the data saved in your browser. Keep this browser session — if you clear your data, you'll need your nonce to reveal manually."
+                ? "Your vote is hidden until all assigned reviewers have submitted theirs. Once everyone votes (or the deadline passes), all scores are revealed simultaneously and the application is finalized using IQR-based consensus."
                 : "Once all assigned reviewers submit their scores, the application will be finalized immediately using IQR-based consensus. If not all reviewers submit before the deadline, finalization runs automatically. Your alignment with the consensus will affect your reputation and rewards."}
             </p>
           </div>
@@ -801,7 +801,7 @@ export function ReviewGuildApplicationModal({
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
             <h2 className="text-lg font-bold text-foreground tracking-tight">
-              {proposalContext ? "Review Proposal" : "Review Expert Application"}
+              {proposalContext ? "Review Proposal" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
             </h2>
             <button
               onClick={onClose}

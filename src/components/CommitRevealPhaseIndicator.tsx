@@ -5,27 +5,22 @@ import { CheckCircle2, Circle } from "lucide-react";
 import { formatDeadline } from "@/lib/utils";
 
 interface CommitRevealPhaseIndicatorProps {
-  currentPhase: "direct" | "commit" | "reveal" | "finalized";
+  currentPhase: "direct" | "commit" | "finalized";
   commitDeadline?: string;
-  revealDeadline?: string;
   commitCount?: number;
-  revealCount?: number;
   totalExpected?: number;
 }
 
 const PHASES = [
   { key: "direct", label: "Open" },
   { key: "commit", label: "Commit" },
-  { key: "reveal", label: "Reveal" },
   { key: "finalized", label: "Finalized" },
 ] as const;
 
 export function CommitRevealPhaseIndicator({
   currentPhase,
   commitDeadline,
-  revealDeadline,
   commitCount = 0,
-  revealCount = 0,
   totalExpected = 0,
 }: CommitRevealPhaseIndicatorProps) {
   if (currentPhase === "direct") return null;
@@ -98,14 +93,8 @@ export function CommitRevealPhaseIndicator({
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         {currentPhase === "commit" && commitDeadline && (
           <>
-            <span>Commit ends in {formatDeadline(commitDeadline, "Ended")}</span>
-            <span>{commitCount}/{totalExpected} committed</span>
-          </>
-        )}
-        {currentPhase === "reveal" && revealDeadline && (
-          <>
-            <span>Reveal ends in {formatDeadline(revealDeadline, "Ended")}</span>
-            <span>{revealCount}/{totalExpected} revealed</span>
+            <span>Voting ends in {formatDeadline(commitDeadline, "Ended")}</span>
+            <span>{commitCount}/{totalExpected} voted</span>
           </>
         )}
         {currentPhase === "finalized" && (

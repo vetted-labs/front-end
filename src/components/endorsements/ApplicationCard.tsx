@@ -274,7 +274,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
             }}
           >
             <Zap className="w-4 h-4 mr-2" />
-            {isExpired ? "Bidding Closed" : "Endorse Now"}
+            {isExpired ? "Bidding Closed" : "Endorse"}
           </Button>
         </div>
       </CardContent>

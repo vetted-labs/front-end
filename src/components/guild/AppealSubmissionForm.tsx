@@ -49,7 +49,7 @@ export function AppealSubmissionForm({
   const [usedPermit, setUsedPermit] = useState(false);
 
   const publicClient = usePublicClient();
-  const { approveTokens, stakeForAppeal, stakeForAppealWithPermit, needsApproval } = useAppealStaking(guildId);
+  const { approveTokens, stakeForAppeal, stakeForAppealWithPermit } = useAppealStaking(guildId);
   const { executeWithPermit } = usePermitOrApprove();
 
   const isSubmitting = stakingStep !== "idle";
@@ -112,10 +112,8 @@ export function AppealSubmissionForm({
             // Fallback: approve → stake (2 TX)
             setUsedPermit(false);
 
-            if (needsApproval(amountStr)) {
-              setStakingStep("approving");
-              await approveTokens(amountStr);
-            }
+            setStakingStep("approving");
+            await approveTokens(amountStr);
 
             setStakingStep("staking");
             txHash = await stakeForAppeal(amountStr);

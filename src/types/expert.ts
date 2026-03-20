@@ -14,6 +14,8 @@ export interface PendingGuildInfo {
   approvalCount?: number;
   rejectionCount?: number;
   votingDeadline?: string;
+  blockchainSessionCreated?: boolean;
+  blockchainSessionTxHash?: string;
 }
 
 /** Expert profile — returned by expertApi.getProfile. */

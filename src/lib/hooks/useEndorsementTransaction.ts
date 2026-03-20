@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import {
-  useVettedToken,
+  useTokenBalance,
   useEndorsementBidding,
   useTransactionConfirmation,
 } from "@/lib/hooks/useVettedContracts";
@@ -68,7 +68,7 @@ export function useEndorsementTransaction(
 ): UseEndorsementTransactionReturn {
   const { address } = useAccount();
   const { balance, refetchBalance } =
-    useVettedToken();
+    useTokenBalance();
   const { placeBidWithPermit, minimumBid } = useEndorsementBidding();
   const { executeWithPermit } = usePermitOrApprove();
 

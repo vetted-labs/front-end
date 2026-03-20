@@ -11,15 +11,18 @@ import { blockchainApi } from "@/lib/api";
 import { toast } from "sonner";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { buttonVariants, Button } from "@/components/ui/button";
-import { useVettedToken } from "@/lib/hooks/useVettedContracts";
+import { useTokenBalance } from "@/lib/hooks/useVettedContracts";
 import { WithdrawalManager } from "@/components/WithdrawalManager";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import type { GuildStakeInfo } from "@/types";
 
 export default function WithdrawalsPage() {
-  const { address } = useAccount();
+  const { address: wagmiAddress } = useAccount();
+  const auth = useAuthContext();
+  const address = wagmiAddress || auth.walletAddress;
   const [selectedGuild, setSelectedGuild] = useState<GuildStakeInfo | null>(null);
 
-  const { balance, refetchBalance } = useVettedToken();
+  const { balance, refetchBalance } = useTokenBalance();
 
   const { data: guildStakes, isLoading: loading, refetch } = useFetch<GuildStakeInfo[]>(
     () => blockchainApi.getExpertGuildStakes(address!),

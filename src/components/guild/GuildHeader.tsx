@@ -2,6 +2,7 @@
 
 import { Users, Award, DollarSign, Target, Zap, Trophy, Shield } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
+import { formatVetd } from "@/lib/utils";
 
 interface GuildHeaderProps {
   guild: {
@@ -72,7 +73,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
               <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-center">
                 <p className="text-xs text-muted-foreground">Earnings</p>
                 <p className="text-xl font-semibold text-foreground">
-                  ${(guild.earnings?.totalEndorsementEarnings ?? 0).toLocaleString()}
+                  {formatVetd(guild.earnings?.totalEndorsementEarnings)}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-center">

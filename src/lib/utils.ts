@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { ApiError } from "@/lib/api"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -157,7 +158,26 @@ export function ensureHttps(url: string): string {
 }
 
 /**
+ * Check if an error is transient and worth retrying.
+ * Only retry on network errors and specific HTTP statuses (429, 502, 503, 504).
+ * Deterministic failures (400, 401, 403, 404, 500) fail immediately.
+ */
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    const retryableStatuses = [429, 502, 503, 504];
+    return retryableStatuses.includes(error.status);
+  }
+  // Network errors (fetch failed, timeout, etc.) are retryable
+  if (error instanceof TypeError && error.message.includes("fetch")) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Retry an async function with progressive backoff delays.
+ * Only retries on transient errors (network failures, 429, 502-504).
+ * Deterministic failures (400, 404, 500, etc.) fail immediately.
  * Returns the result on success, or calls `onExhausted` if all retries fail.
  */
 export async function retryWithBackoff<T>(
@@ -168,10 +188,12 @@ export async function retryWithBackoff<T>(
   for (let attempt = 0; attempt < delays.length; attempt++) {
     try {
       return await fn();
-    } catch {
-      if (attempt < delays.length - 1) {
-        await new Promise((r) => setTimeout(r, delays[attempt]));
+    } catch (error) {
+      if (!isRetryableError(error) || attempt >= delays.length - 1) {
+        onExhausted?.();
+        return undefined;
       }
+      await new Promise((r) => setTimeout(r, delays[attempt]));
     }
   }
   onExhausted?.();
@@ -181,6 +203,16 @@ export async function retryWithBackoff<T>(
 /**
  * Strip markdown syntax for plain-text previews
  */
+/**
+ * Format a VETD token / earnings amount as a whole number with commas.
+ * e.g. 525.037 → "$525", 1234 → "$1,234"
+ */
+export function formatVetd(amount: number | string | null | undefined, prefix = "$"): string {
+  const num = typeof amount === "string" ? parseFloat(amount) : (amount ?? 0);
+  if (isNaN(num)) return `${prefix}0`;
+  return `${prefix}${Math.round(num).toLocaleString()}`;
+}
+
 export function stripMarkdown(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, "$1")     // bold

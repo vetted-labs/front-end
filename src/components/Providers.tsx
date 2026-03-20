@@ -9,62 +9,24 @@ import { NavigationProgress } from "@/components/NavigationProgress";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { Suspense } from "react";
+import { sepolia } from "wagmi/chains";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 10_000,
+      gcTime: 5 * 60_000,
     },
   },
 });
-
-// Handle WalletConnect errors globally
-if (typeof window !== "undefined") {
-  // Check if handlers are already installed (store on window to persist across hot reloads)
-  if (!(window as unknown as Record<string, boolean>).__walletConnectErrorHandlersInstalled) {
-    // Suppress unhandled promise rejections from WalletConnect
-    window.addEventListener('unhandledrejection', (event) => {
-      const errorMessage = event.reason?.message || String(event.reason);
-      const errorStack = event.reason?.stack || '';
-
-      // Check for WalletConnect/WebSocket errors
-      if (
-        errorMessage.includes("Connection interrupted") ||
-        errorMessage.includes("WebSocket") ||
-        errorMessage.includes("subscribe") ||
-        errorStack.includes("walletconnect") ||
-        errorStack.includes("@walletconnect")
-      ) {
-        event.preventDefault();
-        return;
-      }
-    });
-
-    // Suppress console errors from WalletConnect
-    const originalError = console.error;
-    console.error = (...args: unknown[]) => {
-      const errorStr = args.map(String).join(' ');
-      if (
-        errorStr.includes("Connection interrupted") ||
-        errorStr.includes("WebSocket") ||
-        (errorStr.includes("walletconnect") && errorStr.includes("subscribe"))
-      ) {
-        return; // Silently ignore
-      }
-      originalError.apply(console, args);
-    };
-
-    // Mark as installed
-    (window as unknown as Record<string, boolean>).__walletConnectErrorHandlersInstalled = true;
-  }
-}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider initialChain={sepolia}>
           <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
             <AuthProvider>
               <Suspense>

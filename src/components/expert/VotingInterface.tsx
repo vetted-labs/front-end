@@ -2,7 +2,6 @@
 
 import { VotingScoreSlider } from "@/components/VotingScoreSlider";
 import { CommitmentForm } from "@/components/CommitmentForm";
-import { RevealForm } from "@/components/RevealForm";
 import { CommitRevealStatusCard } from "@/components/CommitRevealStatusCard";
 import { Button } from "@/components/ui/button";
 import type { GuildApplication } from "@/types";
@@ -18,7 +17,7 @@ interface VotingInterfaceProps {
   isSubmittingVote: boolean;
   onToggleVoting: (show: boolean) => void;
   onVote: (score: number, stakeAmount: number, comment: string) => Promise<void>;
-  onCommitOrReveal: () => void;
+  onCommit: () => void;
 }
 
 export function VotingInterface({
@@ -31,7 +30,7 @@ export function VotingInterface({
   isSubmittingVote,
   onToggleVoting,
   onVote,
-  onCommitOrReveal,
+  onCommit,
 }: VotingInterfaceProps) {
   return (
     <div className="lg:col-span-4 order-first lg:order-last">
@@ -87,41 +86,19 @@ export function VotingInterface({
           expertId && (
             <div className="bg-card border border-border border-t-2 border-t-primary rounded-xl p-6">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                Submit Commitment
+                Submit Your Vote
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Your score is hidden until the reveal phase.
+                Your score is hidden until all reviewers have voted.
               </p>
               <CommitmentForm
                 applicationId={application.id}
                 expertId={expertId}
                 requiredStake={application.required_stake}
-                onSubmit={onCommitOrReveal}
+                onSubmit={onCommit}
                 onCancel={() => {}}
                 blockchainSessionId={crPhase?.blockchainSessionId}
                 blockchainSessionCreated={crPhase?.blockchainSessionCreated}
-              />
-            </div>
-          )}
-
-        {/* Reveal phase */}
-        {crPhase?.phase === "reveal" &&
-          crPhase.userCommitted &&
-          !crPhase.userRevealed &&
-          expertId && (
-            <div className="bg-card border border-border border-t-2 border-t-primary rounded-xl p-6">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
-                Reveal Your Vote
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Enter the score and nonce from your commitment to reveal your
-                vote.
-              </p>
-              <RevealForm
-                applicationId={application.id}
-                expertId={expertId}
-                onSubmit={onCommitOrReveal}
-                onCancel={() => {}}
               />
             </div>
           )}
@@ -131,20 +108,9 @@ export function VotingInterface({
           <div className="bg-card border border-border rounded-xl p-6">
             <CommitRevealStatusCard
               phase={crPhase.phase}
-              deadline={
-                crPhase.phase === "commit"
-                  ? crPhase.commitDeadline
-                  : crPhase.revealDeadline
-              }
-              userStatus={
-                crPhase.userRevealed
-                  ? "revealed"
-                  : crPhase.userCommitted
-                    ? "committed"
-                    : "pending"
-              }
+              deadline={crPhase.commitDeadline}
+              userStatus={crPhase.userCommitted ? "committed" : "pending"}
               commitCount={crPhase.commitCount || 0}
-              revealCount={crPhase.revealCount || 0}
               totalExpected={
                 crPhase.totalExpected ||
                 application.assigned_reviewer_count ||

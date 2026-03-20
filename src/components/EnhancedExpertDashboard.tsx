@@ -25,12 +25,12 @@ import { blockchainApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
+import { formatVetd } from "@/lib/utils";
 import type { ExpertProfile, ExpertGuild } from "@/types";
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const { address, isConnected, isReconnecting } = useAccount();
   const [mounted, setMounted] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const {
@@ -45,14 +45,14 @@ export function EnhancedExpertDashboard() {
     setMounted(true);
   }, []);
 
-  // Redirect when disconnected (with debounce for chain switching)
+  // Redirect when disconnected (with grace period for reconnection)
   useEffect(() => {
     if (!mounted) return;
     if (isConnected && address) return;
-    if (isDisconnecting) return;
-    const timer = setTimeout(() => router.push("/"), 2000);
+    if (isReconnecting) return;
+    const timer = setTimeout(() => router.push("/"), 3000);
     return () => clearTimeout(timer);
-  }, [mounted, isConnected, address, isDisconnecting]);
+  }, [mounted, isConnected, address, isReconnecting, router]);
 
   // Phase 1: Fetch profile and earnings
   const { data: profile, isLoading, error, refetch } = useFetch(
@@ -73,7 +73,20 @@ export function EnhancedExpertDashboard() {
         data.totalEarnings = earningsData.summary.totalVetd;
       }
 
+      // Merge per-guild earnings from the breakdown API (real data from proposal_votes)
+      const guildEarningsMap: Record<string, number> = {};
+      if (earningsData?.summary?.byGuild) {
+        for (const ge of earningsData.summary.byGuild) {
+          guildEarningsMap[ge.guildId] = ge.total;
+        }
+      }
+
       const guilds = Array.isArray(data.guilds) ? data.guilds : [];
+      for (const g of guilds) {
+        if (guildEarningsMap[g.id] != null) {
+          g.totalEarnings = guildEarningsMap[g.id];
+        }
+      }
       return {
         ...data,
         guilds,
@@ -102,7 +115,7 @@ export function EnhancedExpertDashboard() {
   const { data: assignedApplications } = useFetch(
     () => guildApplicationsApi.getAssigned(profile!.id),
     {
-      skip: !profile?.id,
+      skip: !profile?.id || !!error,
       onError: (msg) => {
         logger.warn("Failed to load assigned applications", msg);
         toast.error("Failed to load assigned applications");
@@ -163,20 +176,33 @@ export function EnhancedExpertDashboard() {
         }
       }
 
-      // Sync stakes to database in background (fire-and-forget)
-      for (const guild of guilds) {
-        const blockchainGuildId = hashToBytes32(guild.id);
-        blockchainApi.syncStake(address, blockchainGuildId).catch((err) => {
-          logger.warn(`Background stake sync failed for guild ${guild.id}`, err);
-        });
-      }
-
       return { stakesMap, totalStaked };
     },
     {
-      skip: !mounted || !isConnected || !address || !profile?.guilds?.length,
+      skip: !mounted || !isConnected || !address || !profile?.guilds?.length || !!error,
     }
   );
+
+  // Background sync: fire-and-forget after stake data loads.
+  // Uses a probe-first pattern: try the first guild, only sync the rest if it succeeds.
+  useEffect(() => {
+    if (!stakesData || !address || !profile?.guilds?.length || error) return;
+
+    const guilds = profile.guilds;
+    const firstBlockchainGuildId = hashToBytes32(guilds[0].id);
+
+    blockchainApi.syncStake(address, firstBlockchainGuildId)
+      .then(() => {
+        // First succeeded — sync remaining guilds
+        for (let i = 1; i < guilds.length; i++) {
+          const blockchainGuildId = hashToBytes32(guilds[i].id);
+          blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
+        }
+      })
+      .catch(() => {
+        logger.warn("Stake sync endpoint unavailable, skipping background sync");
+      });
+  }, [stakesData, address, profile?.guilds]);
 
   const guildStakes = stakesData?.stakesMap ?? {};
   const stakesLoaded = !stakesLoading && !!stakesData;
@@ -202,11 +228,6 @@ export function EnhancedExpertDashboard() {
   const handleGuildClick = (guildId: string) => {
     router.push(`/expert/guild/${guildId}`);
   };
-
-  // Don't show any UI if disconnecting - just navigate away
-  if (isDisconnecting) {
-    return null;
-  }
 
   if (!isConnected || !address) {
     return (
@@ -294,7 +315,7 @@ export function EnhancedExpertDashboard() {
           />
           <StatCard
             title="Total Earnings"
-            value={`$${(profile.totalEarnings ?? 0).toLocaleString()}`}
+            value={formatVetd(profile.totalEarnings)}
             icon={DollarSign}
             iconBgColor="bg-green-500/10"
             iconColor="text-green-600 dark:text-green-400"

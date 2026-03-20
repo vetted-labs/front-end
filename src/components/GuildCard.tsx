@@ -1,7 +1,7 @@
 "use client";
 
 import { getGuildIcon, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
-import { formatDateMonthYear } from "@/lib/utils";
+import { formatDateMonthYear, formatVetd } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, Briefcase, UserCheck, ArrowRight, CheckCircle2, Calendar, DollarSign, Star, Coins } from "lucide-react";
 import type { Guild, ExpertGuild, ExpertRole } from "@/types";
@@ -79,7 +79,7 @@ export function GuildCard({
                 <DollarSign className="w-4 h-4" />
               </div>
               <p className="text-lg font-semibold text-foreground">
-                ${Number(guild.totalEarnings || 0).toLocaleString()}
+                {formatVetd(guild.totalEarnings)}
               </p>
               <p className="text-xs text-muted-foreground">Earned</p>
             </div>
@@ -178,7 +178,7 @@ export function GuildCard({
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
                 </div>
-                <p className="text-xl font-semibold text-foreground">${guild.totalEarnings || 0}</p>
+                <p className="text-xl font-semibold text-foreground">{formatVetd(guild.totalEarnings)}</p>
                 <p className="text-xs text-muted-foreground">Earned</p>
               </div>
             </>
@@ -254,7 +254,7 @@ export function GuildCard({
               <p className="text-muted-foreground">Staked</p>
             </div>
             <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">${guild.totalEarnings || 0}</p>
+              <p className="font-semibold text-foreground">{formatVetd(guild.totalEarnings)}</p>
               <p className="text-muted-foreground">Earned</p>
             </div>
           </div>

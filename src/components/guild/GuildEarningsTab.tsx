@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Coins, DollarSign, TrendingUp, FileText, Award, ChevronDown } from "lucide-react";
+import { formatVetd } from "@/lib/utils";
 import type { GuildEarningsOverview } from "@/types/guild";
 
 const EARNINGS_PER_PAGE = 10;
@@ -24,7 +25,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Points Earned</p>
           <p className="text-3xl font-bold text-foreground">
-            {earnings.totalPoints.toLocaleString()}
+            {formatVetd(earnings.totalPoints, "")}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             From application participation
@@ -38,7 +39,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
           </div>
           <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>
           <p className="text-3xl font-bold text-foreground">
-            ${earnings.totalEndorsementEarnings.toLocaleString()}
+            {formatVetd(earnings.totalEndorsementEarnings)}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             From successful endorsements

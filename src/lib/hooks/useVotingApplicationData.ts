@@ -18,17 +18,14 @@ import type {
   GuildStakeInfo,
 } from "@/types";
 
-type CommitRevealPhaseType = "direct" | "commit" | "reveal" | "finalized";
+type CommitRevealPhaseType = "direct" | "commit" | "finalized";
 
 export interface CommitRevealPhase {
   phase: CommitRevealPhaseType;
   commitDeadline?: string;
-  revealDeadline?: string;
   commitCount?: number;
-  revealCount?: number;
   totalExpected?: number;
   userCommitted?: boolean;
-  userRevealed?: boolean;
   blockchainSessionId?: string;
   blockchainSessionCreated?: boolean;
 }

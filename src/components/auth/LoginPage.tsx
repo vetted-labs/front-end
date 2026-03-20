@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAccount, useConnect } from "wagmi";
+import { sepolia } from "wagmi/chains";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
@@ -38,52 +39,32 @@ function LoginForm() {
   const userType: UserType = typeParam === "company" ? "company" : typeParam === "expert" ? "expert" : "candidate";
   const auth = useAuthContext();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connectAsync, connectors: allConnectors } = useConnect();
+  const connectors = allConnectors.filter(
+    (c) => c.id === "metaMaskSDK" || c.id === "metaMask" || c.id === "coinbaseWalletSDK"
+  );
   const [mounted, setMounted] = useState(false);
-  const [shouldCheckStatus, setShouldCheckStatus] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const autoLoginAttempted = useRef(false);
+
   useEffect(() => {
     clearTokenAuthState();
     setMounted(true);
   }, []);
 
-  const checkExpertStatus = useCallback(async (walletAddress: string) => {
-    try {
-      const result = await expertApi.getProfile(walletAddress);
-      if (result.status === "approved") {
-        auth.login("", "expert", result.id, result.email, walletAddress);
-        localStorage.setItem("expertId", result.id);
-        localStorage.setItem("expertStatus", "approved");
-        router.push("/expert/dashboard");
-        return;
-      } else if (result.status === "pending") {
-        localStorage.setItem("expertId", result.id);
-        localStorage.setItem("walletAddress", walletAddress);
-        localStorage.setItem("expertStatus", "pending");
-        router.push("/expert/application-pending");
-        return;
-      }
-      router.push("/expert/apply");
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        router.push("/expert/apply");
-        return;
-      }
-      setError("Failed to verify expert status. Please try again.");
-    }
-  }, [auth, router]);
-
+  // Auto-login: if wallet is already connected and expert tab is active, proceed without click
   useEffect(() => {
-    if (mounted && isConnected && address && shouldCheckStatus) {
-      checkExpertStatus(address);
-      setShouldCheckStatus(false);
+    if (!mounted || userType !== "expert" || autoLoginAttempted.current) return;
+    if (isConnected && address) {
+      autoLoginAttempted.current = true;
+      handleExpertLogin(address);
     }
-  }, [mounted, isConnected, address, shouldCheckStatus, checkExpertStatus]);
+  }, [mounted, userType, isConnected, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleUserTypeChange = (newType: string) => {
     setError("");
@@ -95,17 +76,49 @@ function LoginForm() {
     router.push(`/auth/login?${params.toString()}`);
   };
 
+  const handleExpertLogin = async (walletAddress: string) => {
+    try {
+      const profile = await expertApi.getProfile(walletAddress);
+      if (profile.status === "approved") {
+        auth.login("", "expert", profile.id, profile.email, walletAddress);
+        localStorage.setItem("expertId", profile.id);
+        localStorage.setItem("expertStatus", "approved");
+        router.push("/expert/dashboard");
+      } else if (profile.status === "pending") {
+        auth.login("", "expert", profile.id, profile.email, walletAddress);
+        localStorage.setItem("expertStatus", "pending");
+        router.push("/expert/application-pending");
+      } else {
+        router.push("/expert/apply");
+      }
+    } catch (apiError) {
+      if (apiError instanceof ApiError && apiError.status === 404) {
+        auth.logout();
+        router.push("/expert/apply");
+        return;
+      }
+      setError("Failed to verify expert status. Please try again.");
+    }
+  };
+
   const handleWalletConnect = async (connectorId: string) => {
     const connector = connectors.find((c) => c.id === connectorId);
-    if (connector) {
-      try {
-        clearTokenAuthState();
-        await connect({ connector });
-        setShouldCheckStatus(true);
-      } catch (error) {
-        logger.error("Failed to connect wallet", error, { silent: true });
-        setError("Failed to connect wallet. Please try again.");
+    if (!connector) return;
+
+    setError("");
+    clearTokenAuthState();
+
+    try {
+      // If already connected, use existing address directly
+      if (isConnected && address) {
+        await handleExpertLogin(address);
+        return;
       }
+      const result = await connectAsync({ connector, chainId: sepolia.id });
+      await handleExpertLogin(result.accounts[0]);
+    } catch (error) {
+      logger.error("Failed to connect wallet", error, { silent: true });
+      setError("Failed to connect wallet. Please try again.");
     }
   };
 

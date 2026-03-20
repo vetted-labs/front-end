@@ -68,6 +68,7 @@ export function extractApiError(err: unknown, fallback = "An error occurred"): s
     if (err.status === 404) return "The requested resource was not found.";
     if (err.status === 409) return "This action conflicts with the current state.";
     if (err.status === 429) return "Too many requests. Please try again shortly.";
+    if (err.status === 502) return "Blockchain service temporarily unavailable. Please try again.";
     return err.message || fallback;
   }
   if (err instanceof Error) {
@@ -713,12 +714,6 @@ export const expertApi = {
     submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
       apiRequest<{ success: boolean }>(
         `/api/experts/guild-applications/${applicationId}/commit`,
-        { method: "POST", body: JSON.stringify(data) }
-      ),
-
-    revealVote: (applicationId: string, data: Record<string, unknown>) =>
-      apiRequest<{ success: boolean }>(
-        `/api/experts/guild-applications/${applicationId}/reveal`,
         { method: "POST", body: JSON.stringify(data) }
       ),
   },
@@ -1602,12 +1597,6 @@ export const commitRevealApi = {
 
   submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/commit`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-  revealVote: (applicationId: string, data: Record<string, unknown>) =>
-    apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/reveal`, {
       method: "POST",
       body: JSON.stringify(data),
     }),

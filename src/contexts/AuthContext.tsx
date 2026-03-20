@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
+import { useAccount } from 'wagmi';
 import { clearAllAuthState } from '@/lib/auth';
 
 interface AuthState {
@@ -90,6 +91,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('auth-token-refreshed', handler);
     return () => window.removeEventListener('auth-token-refreshed', handler);
   }, []);
+
+  // When the wallet is disconnected (active disconnect OR failed reconnection),
+  // clear expert auth so there's no ghost session
+  const { status: walletStatus, address: wagmiAddress } = useAccount();
+
+  // Sync connected wallet address to localStorage so apiRequest can send X-Wallet-Address
+  useEffect(() => {
+    if (walletStatus === 'connected' && wagmiAddress) {
+      const stored = localStorage.getItem('walletAddress');
+      if (stored !== wagmiAddress) {
+        localStorage.setItem('walletAddress', wagmiAddress);
+        setAuthState(prev => ({ ...prev, walletAddress: wagmiAddress }));
+      }
+    }
+  }, [walletStatus, wagmiAddress]);
+
+  // When the wallet is disconnected (active disconnect OR failed reconnection),
+  // clear expert auth so there's no ghost session.
+  // Debounce: MetaMask can briefly emit "disconnected" before reconnecting,
+  // so wait before clearing auth — if wallet reconnects in time, cleanup cancels the timeout.
+  useEffect(() => {
+    if (walletStatus === 'reconnecting' || walletStatus === 'connecting') return;
+    if (walletStatus !== 'disconnected' || authState.userType !== 'expert') return;
+
+    const timer = setTimeout(() => {
+      clearAllAuthState();
+      setAuthState({ isAuthenticated: false, userType: null, userId: null, email: null, token: null, walletAddress: undefined });
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [walletStatus, authState.userType]);
 
   const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string, refreshToken?: string) => {
     // Store in localStorage — experts may not have a token

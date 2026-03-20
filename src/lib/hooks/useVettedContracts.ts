@@ -1,16 +1,13 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts, usePublicClient } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther } from 'viem';
 import { hashToBytes32 } from '@/lib/blockchain';
-import { useState, useEffect, useMemo } from 'react';
 import { blockchainApi } from '@/lib/api';
 import { useFetch } from '@/lib/hooks/useFetch';
-import { logger } from '@/lib/logger';
 import type { ActiveEndorsement } from '@/types';
 import {
   VETTED_TOKEN_ABI,
   EXPERT_STAKING_ABI,
   ENDORSEMENT_BIDDING_ABI,
-  REPUTATION_MANAGER_ABI,
   REWARD_DISTRIBUTOR_ABI,
   VETTING_MANAGER_ABI,
   CONTRACT_ADDRESSES,
@@ -102,6 +99,27 @@ export function useVettedToken() {
 }
 
 /**
+ * Lightweight hook for reading only the user's VETD token balance.
+ * Use this when you don't need allowances or mint — avoids 2 unnecessary reads.
+ */
+export function useTokenBalance() {
+  const { address } = useAccount();
+
+  const { data: balance, refetch: refetchBalance } = useReadContract({
+    address: CONTRACT_ADDRESSES.TOKEN,
+    abi: VETTED_TOKEN_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      refetchInterval: false,
+      staleTime: 10000,
+    },
+  });
+
+  return { balance, refetchBalance };
+}
+
+/**
  * Hook for per-guild staking operations (V2)
  * @param blockchainGuildId - bytes32 guild ID for the blockchain contract
  */
@@ -135,36 +153,40 @@ export function useGuildStaking(blockchainGuildId?: `0x${string}`) {
     },
   });
 
-  // Read minimum stake
+  // Read minimum stake (governance-controlled — changes rarely)
+  // Only read when a guild is selected (not needed before then)
   const { data: minimumStake } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
     functionName: 'minimumStake',
     query: {
+      enabled: !!blockchainGuildId,
       refetchInterval: false,
-      staleTime: 60000,
+      staleTime: 300_000,
     },
   });
 
-  // Read global total staked
+  // Read global total staked — only when a guild context exists
   const { data: totalStaked } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
     functionName: 'totalStaked',
     query: {
+      enabled: !!blockchainGuildId,
       refetchInterval: false,
       staleTime: 10000,
     },
   });
 
-  // Check if contract is paused
+  // Check if contract is paused (governance-controlled — changes rarely)
   const { data: isPaused } = useReadContract({
     address: CONTRACT_ADDRESSES.STAKING,
     abi: EXPERT_STAKING_ABI,
     functionName: 'paused',
     query: {
+      enabled: !!blockchainGuildId,
       refetchInterval: false,
-      staleTime: 30000,
+      staleTime: 300_000,
     },
   });
 
@@ -356,19 +378,6 @@ export function useAppealStaking(guildId?: string) {
   // Convert guild UUID to bytes32 for the blockchain contract
   const blockchainGuildId = guildId ? hashToBytes32(guildId) : undefined;
 
-  // Check current allowance for staking contract
-  const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    address: CONTRACT_ADDRESSES.TOKEN,
-    abi: VETTED_TOKEN_ABI,
-    functionName: 'allowance',
-    args: address ? [address, CONTRACT_ADDRESSES.STAKING] : undefined,
-    query: {
-      enabled: !!address,
-      refetchInterval: false,
-      staleTime: 10000,
-    },
-  });
-
   // Approve token transfer to staking contract
   const approveTokens = async (amount: string) => {
     if (!address) throw new Error('Wallet not connected');
@@ -422,18 +431,10 @@ export function useAppealStaking(guildId?: string) {
     return hash;
   };
 
-  // Check if approval is needed for a given amount
-  const needsApproval = (amount: string): boolean => {
-    if (!allowance) return true;
-    return (allowance as bigint) < parseEther(amount);
-  };
-
   return {
     approveTokens,
     stakeForAppeal,
     stakeForAppealWithPermit,
-    needsApproval,
-    refetchAllowance,
   };
 }
 
@@ -451,7 +452,7 @@ export function useEndorsementBidding() {
     functionName: 'minimumBid',
     query: {
       refetchInterval: false,
-      staleTime: 60000, // Minimum bid rarely changes, cache for 60s
+      staleTime: 300_000, // Governance-controlled — changes rarely
     },
   });
 
@@ -558,198 +559,18 @@ export function useEndorsementBidding() {
 }
 
 /**
- * Hook for reputation
- * Uses getExpertReputation which returns (globalScore: int256, lastActivityTimestamp, totalVotes, alignedVotes, alignmentRate)
- */
-export function useReputation() {
-  const { address } = useAccount();
-
-  const { data: reputationData, refetch: refetchReputation } = useReadContract({
-    address: CONTRACT_ADDRESSES.REPUTATION,
-    abi: REPUTATION_MANAGER_ABI,
-    functionName: 'getExpertReputation',
-    args: address ? [address] : undefined,
-    query: {
-      refetchInterval: false,
-      staleTime: 15000,
-    },
-  });
-
-  // Parse the tuple result: [globalScore, lastActivityTimestamp, totalVotes, alignedVotes, alignmentRate]
-  const parsed = reputationData as [bigint, bigint, bigint, bigint, bigint] | undefined;
-
-  return {
-    /** Global reputation score (signed — can be negative) */
-    reputationScore: parsed?.[0],
-    lastActivityTimestamp: parsed?.[1],
-    totalVotes: parsed?.[2],
-    alignedVotes: parsed?.[3],
-    /** Alignment rate as percentage (0-100) */
-    alignmentRate: parsed?.[4],
-    refetchReputation,
-  };
-}
-
-/**
  * Hook to wait for transaction confirmation
  */
 export function useTransactionConfirmation(hash: `0x${string}` | undefined) {
   return useWaitForTransactionReceipt({
     hash,
-  });
-}
-
-/**
- * Hook to read user's endorsements from blockchain
- * Queries getBidInfo for each application to find active bids
- *
- * PERFORMANCE OPTIMIZED: Only queries applications with current_bid to reduce RPC calls
- */
-export function useUserEndorsements(applications: Array<{
-  application_id: string;
-  candidate_id: string;
-  candidate_name: string;
-  job_id: string;
-  job_title: string;
-  company_name: string;
-  current_bid?: string;
-  rank?: number;
-}>) {
-  const { address } = useAccount();
-  const [endorsements, setEndorsements] = useState<Array<{
-    application_id: string;
-    candidate_id: string;
-    candidate_name: string;
-    job_id: string;
-    job_title: string;
-    company_name: string;
-    bid_amount: string;
-    rank: number;
-    total_endorsers: number;
-    created_at: string;
-  }>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // PERFORMANCE: Only query blockchain for applications where user has a bid (from API)
-  // This dramatically reduces RPC calls from potentially 100+ to just a few
-  // Use useMemo to prevent recalculation on every render
-  const applicationsWithBids = useMemo(
-    () => applications.filter(app => app.current_bid),
-    [applications]
-  );
-
-
-  // Build contract calls for getBidInfo and getTopEndorsers
-  // Only for applications where user has a bid
-  // Use useMemo to prevent recreating contract calls on every render
-  const contracts = useMemo(() => applicationsWithBids.flatMap((app) => {
-    const jobHash = hashToBytes32(app.job_id);
-    const candidateHash = hashToBytes32(app.candidate_id);
-
-    return [
-      {
-        address: CONTRACT_ADDRESSES.ENDORSEMENT,
-        abi: ENDORSEMENT_BIDDING_ABI,
-        functionName: 'getBidInfo',
-        args: address ? [jobHash, candidateHash, address] : undefined,
-      },
-      {
-        address: CONTRACT_ADDRESSES.ENDORSEMENT,
-        abi: ENDORSEMENT_BIDDING_ABI,
-        functionName: 'getTopEndorsers',
-        args: [jobHash, candidateHash],
-      },
-    ];
-  }), [applicationsWithBids, address]);
-
-  const { data: contractResults, refetch } = useReadContracts({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi's useReadContracts has strict generic constraints that don't accept dynamically-built contract arrays
-    contracts: contracts as any,
+    confirmations: 1,
+    pollingInterval: 3_000,
     query: {
-      enabled: applicationsWithBids.length > 0 && !!address, // Only run if there are apps with bids
-      refetchInterval: false,
-      staleTime: 15000,
+      retry: 6,
+      retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 15_000),
     },
   });
-
-  // Process contract results to build endorsements list
-  useEffect(() => {
-    if (!contractResults || !address || applicationsWithBids.length === 0) {
-      setEndorsements([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    const userEndorsements: typeof endorsements = [];
-
-    // Process results in pairs (getBidInfo, getTopEndorsers)
-    for (let i = 0; i < applicationsWithBids.length; i++) {
-      const app = applicationsWithBids[i];
-      const bidInfoIndex = i * 2;
-      const topEndorsersIndex = i * 2 + 1;
-
-      const bidInfoResult = contractResults[bidInfoIndex];
-      const topEndorsersResult = contractResults[topEndorsersIndex];
-
-
-      // Check if bid info is valid
-      if (bidInfoResult?.status === 'success' && bidInfoResult.result) {
-        const [amount, isActive] = bidInfoResult.result as [bigint, boolean];
-
-
-        if (isActive && amount > 0n) {
-          // User has an active bid on this application
-          let rank = 0;
-          let totalEndorsers = 0;
-
-          // Check user's rank in top endorsers
-          if (topEndorsersResult?.status === 'success' && topEndorsersResult.result) {
-            const [experts, amounts] = topEndorsersResult.result as [`0x${string}`[], bigint[]];
-
-            // Count total endorsers (non-zero amounts)
-            totalEndorsers = amounts.filter(amt => amt > 0n).length;
-
-            // Find user's rank (1-indexed)
-            const userIndex = experts.findIndex(
-              (expert) => expert?.toLowerCase() === address.toLowerCase()
-            );
-            if (userIndex !== -1 && amounts[userIndex] > 0n) {
-              rank = userIndex + 1; // Convert to 1-indexed rank
-            }
-
-          }
-
-          const endorsement = {
-            application_id: app.application_id,
-            candidate_id: app.candidate_id,
-            candidate_name: app.candidate_name,
-            job_id: app.job_id,
-            job_title: app.job_title,
-            company_name: app.company_name,
-            bid_amount: formatEther(amount),
-            rank: rank,
-            total_endorsers: totalEndorsers,
-            created_at: new Date().toISOString(), // We don't have exact timestamp from chain
-          };
-
-          userEndorsements.push(endorsement);
-        }
-      } else if (bidInfoResult?.status === 'failure') {
-        logger.debug(`[useUserEndorsements] Failed to get bid info for ${app.candidate_name}:`, bidInfoResult.error);
-      }
-    }
-
-    setEndorsements(userEndorsements);
-    setIsLoading(false);
-  }, [contractResults, address, applicationsWithBids.length]); // Use length to avoid deep comparison
-
-  return {
-    endorsements,
-    isLoading,
-    refetch,
-  };
 }
 
 /**
@@ -770,90 +591,6 @@ export function useMyActiveEndorsements() {
 
   return {
     endorsements: endorsements ?? [],
-    isLoading,
-    error,
-    refetch,
-  };
-}
-
-/**
- * Hook to fetch user's endorsement history from blockchain events
- * Queries BidPlaced events to find all historical endorsements
- */
-interface EndorsementHistoryEntry {
-  jobId: string;
-  candidateId: string;
-  bidAmount: string;
-  rank: number;
-  timestamp: number;
-  transactionHash: string;
-  blockNumber: bigint;
-}
-
-export function useMyEndorsementHistory() {
-  const { address } = useAccount();
-  const publicClient = usePublicClient();
-
-  const { data, isLoading, error, refetch } = useFetch<EndorsementHistoryEntry[]>(
-    async () => {
-      if (!address || !publicClient) return [];
-
-      const currentBlock = await publicClient.getBlockNumber();
-      const CHUNK_SIZE = 5000n;
-      const startBlock = currentBlock > 100000n ? currentBlock - 100000n : 0n;
-
-      interface BidPlacedArgs { jobId: `0x${string}`; candidateId: `0x${string}`; expert: `0x${string}`; bidAmount: bigint; rank: bigint }
-      const allLogs: Array<{ args: BidPlacedArgs; blockNumber: bigint | null; transactionHash: `0x${string}` | null }> = [];
-
-      for (let fromBlock = startBlock; fromBlock <= currentBlock; fromBlock += CHUNK_SIZE) {
-        const toBlock = fromBlock + CHUNK_SIZE - 1n > currentBlock ? currentBlock : fromBlock + CHUNK_SIZE - 1n;
-
-        const chunkLogs = await publicClient.getLogs({
-          address: CONTRACT_ADDRESSES.ENDORSEMENT,
-          event: {
-            anonymous: false,
-            inputs: [
-              { indexed: true, name: 'jobId', type: 'bytes32' },
-              { indexed: true, name: 'candidateId', type: 'bytes32' },
-              { indexed: true, name: 'expert', type: 'address' },
-              { indexed: false, name: 'bidAmount', type: 'uint256' },
-              { indexed: false, name: 'rank', type: 'uint256' },
-            ],
-            name: 'BidPlaced',
-            type: 'event',
-          },
-          args: { expert: address },
-          fromBlock,
-          toBlock,
-        });
-
-        for (const cl of chunkLogs) {
-          allLogs.push({ args: cl.args as BidPlacedArgs, blockNumber: cl.blockNumber, transactionHash: cl.transactionHash });
-        }
-      }
-
-      return allLogs
-        .map((log) => ({
-          jobId: log.args.jobId,
-          candidateId: log.args.candidateId,
-          bidAmount: formatEther(log.args.bidAmount),
-          rank: Number(log.args.rank),
-          timestamp: 0,
-          transactionHash: log.transactionHash || '0x',
-          blockNumber: log.blockNumber || 0n,
-        }))
-        .sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber));
-    },
-    { skip: !address || !publicClient }
-  );
-
-  // Refetch when address changes (useFetch only re-triggers on skip change)
-  useEffect(() => {
-    if (address && publicClient) refetch();
-  }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return {
-    endorsements: data ?? [],
     isLoading,
     error,
     refetch,

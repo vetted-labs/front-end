@@ -19,7 +19,7 @@ import { Button } from "./ui/button";
 import { EmptyState } from "./ui/empty-state";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { truncateAddress } from "@/lib/utils";
+import { formatVetd, truncateAddress } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/types";
 
 interface ReputationLeaderboardProps {
@@ -155,7 +155,7 @@ export function ReputationLeaderboard({
           </div>
           <p className="text-sm text-muted-foreground mb-1">Top Earnings</p>
           <p className="text-2xl font-bold text-foreground">
-            ${(entries[0]?.totalEarnings || 0).toLocaleString()}
+            {formatVetd(entries[0]?.totalEarnings)}
           </p>
         </div>
 
@@ -167,11 +167,7 @@ export function ReputationLeaderboard({
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
           <p className="text-2xl font-bold text-foreground">
-            ${entries.length > 0
-              ? Math.round(
-                  entries.reduce((sum, e) => sum + (e.totalEarnings || 0), 0)
-                ).toLocaleString()
-              : 0}
+            {formatVetd(entries.reduce((sum, e) => sum + (e.totalEarnings || 0), 0))}
           </p>
         </div>
       </div>
@@ -253,7 +249,7 @@ export function ReputationLeaderboard({
                     <div className="flex items-center gap-2">
                       <Coins className="w-5 h-5 text-green-600 dark:text-green-400" />
                       <span className="text-lg font-bold text-foreground">
-                        ${(entry.totalEarnings || 0).toLocaleString()}
+                        {formatVetd(entry.totalEarnings)}
                       </span>
                       {entry.rank <= 10 && (
                         <ChevronUp className="w-4 h-4 text-green-500" />

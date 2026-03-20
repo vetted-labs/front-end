@@ -36,6 +36,8 @@ import {
   useAppealStaking,
   useTransactionConfirmation,
 } from "@/lib/hooks/useVettedContracts";
+import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
+import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { TransactionModal } from "@/components/dashboard/TransactionModal";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 
@@ -121,9 +123,10 @@ export function CreateProposalForm() {
   const [txErrorMessage, setTxErrorMessage] = useState("");
 
   const needsGuild = GUILD_REQUIRED_TYPES.includes(proposalType);
-  const { approveTokens, stakeForAppeal, needsApproval } = useAppealStaking(
+  const { approveTokens, stakeForAppeal, stakeForAppealWithPermit } = useAppealStaking(
     guildId || undefined
   );
+  const { executeWithPermit } = usePermitOrApprove();
   const {
     isSuccess: txConfirmed,
     isError: txError,
@@ -244,14 +247,31 @@ export function CreateProposalForm() {
 
     try {
       if (guildId) {
-        // Guild-related proposal: approve → stake → wait for confirmation → create
-        if (needsApproval(stakeAmount)) {
-          setSubmitStep("approving");
+        // Guild-related proposal: permit → stake (or fallback: approve → stake)
+        setSubmitStep("approving");
+
+        const result = await executeWithPermit(
+          CONTRACT_ADDRESSES.STAKING,
+          stakeAmount,
+          (permit) => stakeForAppealWithPermit(
+            stakeAmount,
+            permit.deadline,
+            permit.v,
+            permit.r,
+            permit.s,
+          ),
+        );
+
+        let hash: `0x${string}`;
+        if (result.path === "permit") {
+          hash = result.hash;
+        } else {
+          // Fallback: approve → stake (2 TX)
           await approveTokens(stakeAmount);
+          setSubmitStep("staking");
+          hash = await stakeForAppeal(stakeAmount);
         }
 
-        setSubmitStep("staking");
-        const hash = await stakeForAppeal(stakeAmount);
         setTxHash(hash);
         setSubmitStep("confirming");
         setShowTxModal(true);

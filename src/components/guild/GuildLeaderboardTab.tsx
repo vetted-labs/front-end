@@ -1,6 +1,7 @@
 "use client";
 
 import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
+import { formatVetd } from "@/lib/utils";
 import type { LeaderboardExpert } from "@/types/guild";
 
 interface GuildLeaderboardTabProps {
@@ -173,7 +174,7 @@ export function GuildLeaderboardTab({
                       </td>
                       <td className="px-3 py-3 text-right">
                         <span className="font-semibold text-foreground text-sm">
-                          ${expert.totalEarnings.toLocaleString()}
+                          {formatVetd(expert.totalEarnings)}
                         </span>
                       </td>
                     </tr>
@@ -226,7 +227,7 @@ export function GuildLeaderboardTab({
                     <span className="text-muted-foreground">
                       Earnings:{" "}
                       <strong className="text-foreground">
-                        ${leaderboardData.currentUser.totalEarnings.toLocaleString()}
+                        {formatVetd(leaderboardData.currentUser.totalEarnings)}
                       </strong>
                     </span>
                   </div>

@@ -11,8 +11,10 @@ import {
   Users,
   Plus,
   Shield,
+  ShieldCheck,
   Swords,
   Timer,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,6 +68,8 @@ function buildGuildApplications(expert: ExpertProfile): PendingGuildInfo[] {
   return [];
 }
 
+const MIN_REVIEWS = parseInt(process.env.NEXT_PUBLIC_MIN_REVIEWERS || '5', 10);
+
 export default function ApplicationPendingPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
@@ -107,7 +111,7 @@ export default function ApplicationPendingPage() {
   }
 
   if (error || !expert) {
-    const isInsufficientMembers = error?.includes("minimum") || error?.includes("enough members") || error?.includes("5 members");
+    const isInsufficientMembers = error?.includes("minimum") || error?.includes("enough members") || error?.includes("members to process");
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         {isInsufficientMembers ? (
@@ -115,7 +119,7 @@ export default function ApplicationPendingPage() {
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-lg font-semibold text-foreground mb-2">Not Enough Guild Members</h2>
             <p className="text-sm text-muted-foreground">
-              This guild needs at least 5 members to process applications. Your application will be reviewed once more experts join.
+              This guild needs at least {MIN_REVIEWS} members to process applications. Your application will be reviewed once more experts join.
             </p>
           </div>
         ) : (
@@ -222,7 +226,7 @@ export default function ApplicationPendingPage() {
               <div>
                 <p className="font-semibold text-foreground mb-1">Auto-Approval System</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Your application needs <strong className="text-foreground">5 reviews</strong> from guild members to be
+                  Your application needs <strong className="text-foreground">{MIN_REVIEWS} reviews</strong> from guild members to be
                   evaluated. Once the consensus threshold is met, you&apos;ll get instant access to the expert
                   dashboard and join the guild as a &quot;Recruit&quot;.
                 </p>
@@ -241,6 +245,34 @@ export default function ApplicationPendingPage() {
                 </p>
               </div>
             </div>
+
+            {/* Blockchain Verification */}
+            {(() => {
+              const onChainApp = guildApplications.find((g) => g.blockchainSessionCreated);
+              if (!onChainApp) return null;
+              const txHash = onChainApp.blockchainSessionTxHash;
+              return (
+                <div className="flex items-start text-left p-4 rounded-lg border border-green-500/30 bg-green-500/5">
+                  <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-foreground mb-0.5">On-Chain Voting Session Created</p>
+                    <p className="text-sm text-muted-foreground">
+                      Your application review is secured on the blockchain.
+                    </p>
+                    {txHash && (
+                      <a
+                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-1.5 text-sm text-green-500 hover:text-green-400 transition-colors"
+                      >
+                        View on Etherscan <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex items-start text-left p-4 rounded-lg border border-primary/30 bg-primary/5">
               <Clock className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />

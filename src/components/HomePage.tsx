@@ -47,7 +47,7 @@ export function HomePage() {
   }, [mounted, isConnected, address, auth.isAuthenticated, auth.userType]);
 
   const handleExpertJoin = () => {
-    if (auth.isAuthenticated && auth.userType === "expert") {
+    if (auth.isAuthenticated && auth.userType === "expert" && isConnected) {
       router.push("/expert/dashboard");
     } else {
       router.push("/auth/login?type=expert");

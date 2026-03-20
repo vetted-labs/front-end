@@ -94,12 +94,14 @@ export function ActionButtonPanel({ stakingStatus, hasGuilds = false, onRefresh 
         </button>
       </div>
 
-      {/* Staking Modal */}
-      <StakingModal
-        isOpen={showStakingModal}
-        onClose={() => setShowStakingModal(false)}
-        onSuccess={handleStakingSuccess}
-      />
+      {/* Staking Modal — only mount when open to avoid unnecessary RPC calls */}
+      {showStakingModal && (
+        <StakingModal
+          isOpen={showStakingModal}
+          onClose={() => setShowStakingModal(false)}
+          onSuccess={handleStakingSuccess}
+        />
+      )}
     </>
   );
 }

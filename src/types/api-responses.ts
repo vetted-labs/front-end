@@ -387,7 +387,7 @@ export interface EarningsBreakdown {
   total: number;
   page: number;
   limit: number;
-  summary?: { totalVetd: number; totalUsd?: number };
+  summary?: import("./earnings").EarningsSummary;
 }
 
 export interface ReputationTimeline {
@@ -433,11 +433,10 @@ export interface LeaderboardEntry {
 
 // --- Commit-Reveal ---
 export interface CommitRevealPhaseStatus {
-  phase: "commit" | "reveal" | "finalized" | "none";
+  phase: "commit" | "finalized" | "none";
   commitDeadline?: string;
-  revealDeadline?: string;
   commitCount?: number;
-  revealCount?: number;
+  totalActive?: number;
   blockchainSessionId?: string;
   blockchainSessionCreated?: boolean;
 }
@@ -449,16 +448,13 @@ export interface CommitRevealHash {
 // --- Expert Application Commit-Reveal ---
 export interface ExpertCRPhaseStatus {
   applicationId: string;
-  votingPhase: "direct" | "commit" | "reveal" | "finalized";
+  votingPhase: "direct" | "commit" | "finalized";
   commitDeadline?: string;
-  revealDeadline?: string;
   votingDeadline?: string;
   commitTimeRemaining?: number;
-  revealTimeRemaining?: number;
   totalAssigned: number;
   totalCommitments: number;
-  revealedVotes: number;
-  unrevealedVotes: number;
+  reassignmentRound?: number;
   blockchainSessionId?: string;
   blockchainSessionCreated?: boolean;
   blockchainSessionTxHash?: string;

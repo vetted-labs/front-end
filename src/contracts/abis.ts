@@ -1341,12 +1341,26 @@ export const VETTING_MANAGER_ABI = [
   },
   {
     inputs: [],
+    name: 'getMinPanelSize',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'paused',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
   },
   // Write functions
+  {
+    inputs: [{ name: '_minPanelSize', type: 'uint256' }],
+    name: 'setMinPanelSize',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   {
     inputs: [
       { name: 'sessionId', type: 'bytes32' },
@@ -1465,6 +1479,14 @@ export const VETTING_MANAGER_ABI = [
     name: 'AllVotesRevealed',
     type: 'event',
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, name: 'newMinPanelSize', type: 'uint256' },
+    ],
+    name: 'MinPanelSizeUpdated',
+    type: 'event',
+  },
   // Custom errors
   { inputs: [], name: 'ZeroAddress', type: 'error' },
   { inputs: [], name: 'ZeroSessionId', type: 'error' },
@@ -1503,14 +1525,14 @@ export const VETTING_MANAGER_ABI = [
   },
 ] as const;
 
-// Contract addresses on Sepolia (deployed 2026-03-11)
+// Contract addresses on Sepolia — env vars override hardcoded fallbacks
 export const CONTRACT_ADDRESSES: Record<string, `0x${string}`> = {
-  TOKEN: '0x5A49219f10A7937AEe8450c6183C864991271990',
-  STAKING: '0xdD16a22058Fc26db25A8822Ee54aFDdD311407db',
-  ENDORSEMENT: '0xc88EDE023a349D397C55Cac1BAda4A30828D7eB4',
-  REPUTATION: '0x94285F74358f541Ec4BCCae4176c825DDc1c144C',
-  REWARD: '0x5B3185dB16d01A297512c7b7f2c07D0AB399E6D5',
-  SLASHING: '0x925E3Eb09FDD72e7a46Fcf1590878405c6D82037',
-  GUILD_REGISTRY: '0x76C937498A97109CF7852FD840028D584643fd3f',
-  VETTING: '0xD8fc961b0080622e66dDee8C3409BE442f635104',
+  TOKEN: (process.env.NEXT_PUBLIC_CONTRACT_TOKEN || '0x8dCf707675c128C41893895BD4812492561a12DF') as `0x${string}`,
+  STAKING: (process.env.NEXT_PUBLIC_CONTRACT_STAKING || '0x853721Ba89f0fB85A29475A47625765A7fB2A73e') as `0x${string}`,
+  ENDORSEMENT: (process.env.NEXT_PUBLIC_CONTRACT_ENDORSEMENT || '0xEeF16B2e925210dB41D37752B946934CC2Cf30eA') as `0x${string}`,
+  REPUTATION: (process.env.NEXT_PUBLIC_CONTRACT_REPUTATION || '0x9A44d4B72B0D59ec21BA2e91A9C01e98d385e8B8') as `0x${string}`,
+  REWARD: (process.env.NEXT_PUBLIC_CONTRACT_REWARD || '0x7Ef871a05B2cd430be8B89A51030c0Bcb21978Dc') as `0x${string}`,
+  SLASHING: (process.env.NEXT_PUBLIC_CONTRACT_SLASHING || '0xb4d4b2D0d946634e1449A426a61d43c8564F5C36') as `0x${string}`,
+  GUILD_REGISTRY: (process.env.NEXT_PUBLIC_CONTRACT_GUILD_REGISTRY || '0xa4dd3750dfF7205387250Edb6e045fa3A835e508') as `0x${string}`,
+  VETTING: (process.env.NEXT_PUBLIC_CONTRACT_VETTING || '0xE68a768Cc18039b50382d64405Fb4C7700966054') as `0x${string}`,
 };

@@ -28,10 +28,6 @@ const ReviewGuildApplicationModal = dynamic(
   () => import("./guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
   { ssr: false }
 );
-const ExpertRevealForm = dynamic(
-  () => import("./expert/ExpertRevealForm").then(m => ({ default: m.ExpertRevealForm })),
-  { ssr: false }
-);
 const StakingModal = dynamic(
   () => import("./dashboard/StakingModal").then(m => ({ default: m.StakingModal })),
   { ssr: false }
@@ -134,10 +130,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   // Commit-reveal phase status for the selected expert application
   const [crPhaseStatus, setCrPhaseStatus] = useState<import("@/types").ExpertCRPhaseStatus | null>(null);
-  // Expert reveal form state
-  const [showRevealForm, setShowRevealForm] = useState(false);
-  const [revealAppId, setRevealAppId] = useState<string | null>(null);
-  // Current expert's ID (for commit-reveal localStorage key)
+  // Current expert's ID
   const [currentExpertId, setCurrentExpertId] = useState<string | null>(null);
 
   // Leaderboard state
@@ -476,12 +469,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       const phaseStatus = await expertApi.expertCommitReveal.getPhaseStatus(application.id);
       setCrPhaseStatus(phaseStatus);
 
-      // If in reveal phase, show reveal form instead of review modal
-      if (phaseStatus.votingPhase === "reveal") {
-        setRevealAppId(application.id);
-        setShowRevealForm(true);
-        return;
-      }
     } catch (err) {
       // Commit-reveal not available for this application — fall back to direct voting
       logger.warn("Commit-reveal status unavailable, falling back to direct voting", err);
@@ -530,8 +517,14 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     setIsReviewing(true);
 
     try {
+      // Normalize rubric score to 0-100 for the review API
+      const scores = payload.criteriaScores as { overallMax?: number };
+      const overallMax = (scores?.overallMax as number) || 1;
+      const normalizedScore = Math.round((payload.overallScore / overallMax) * 100);
+
       const reviewData = {
         walletAddress: address,
+        score: Math.min(100, Math.max(0, normalizedScore)),
         feedback: payload.feedback || undefined,
         criteriaScores: payload.criteriaScores,
         criteriaJustifications: payload.criteriaJustifications,
@@ -556,7 +549,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         recentActivity: [newActivity, ...(prev.recentActivity || [])],
       } : prev);
 
-      // Optimistically mark candidate as reviewed so button updates immediately
+      // Optimistically mark application as reviewed so button updates immediately
       if (applicationReviewType === "candidate") {
         setCandidateApplications(prev =>
           prev.map(app =>
@@ -565,6 +558,15 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               : app
           )
         );
+      } else {
+        setGuild(prev => prev ? {
+          ...prev,
+          guildApplications: prev.guildApplications.map(app =>
+            app.id === selectedExpertMembershipApplication.id
+              ? { ...app, expertHasReviewed: true, reviewCount: (app.reviewCount || 0) + 1 }
+              : app
+          ),
+        } : prev);
       }
 
       await refetch();
@@ -581,6 +583,21 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const handleReviewModalClose = () => {
     setShowReviewModal(false);
     setSelectedExpertMembershipApplication(null);
+  };
+
+  const handleReviewSuccess = () => {
+    // Optimistically mark the expert application as reviewed
+    if (selectedExpertMembershipApplication && applicationReviewType === "expert") {
+      setGuild(prev => prev ? {
+        ...prev,
+        guildApplications: prev.guildApplications.map(app =>
+          app.id === selectedExpertMembershipApplication.id
+            ? { ...app, expertHasReviewed: true, reviewCount: (app.reviewCount || 0) + 1 }
+            : app
+        ),
+      } : prev);
+    }
+    refetch();
   };
 
   if (isLoading && !guild) {
@@ -751,14 +768,18 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         blockchainSessionId={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
         blockchainSessionCreated={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
         reviewerId={currentExpertId || undefined}
+        onReviewSuccess={handleReviewSuccess}
+        reviewType={applicationReviewType}
       />
 
-      <StakingModal
-        isOpen={showVetdStakingModal}
-        onClose={() => setShowVetdStakingModal(false)}
-        onSuccess={() => refetch()}
-        preselectedGuildId={guildId}
-      />
+      {showVetdStakingModal && (
+        <StakingModal
+          isOpen={showVetdStakingModal}
+          onClose={() => setShowVetdStakingModal(false)}
+          onSuccess={() => refetch()}
+          preselectedGuildId={guildId}
+        />
+      )}
 
       <ViewReviewModal
         isOpen={showViewReview}
@@ -770,24 +791,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         expertId={currentExpertId || undefined}
       />
 
-      {/* Expert Reveal Form Dialog */}
-      {revealAppId && currentExpertId && (
-        <Modal isOpen={showRevealForm} onClose={() => setShowRevealForm(false)} title="Reveal Vote" size="sm">
-          <ExpertRevealForm
-            applicationId={revealAppId}
-            reviewerId={currentExpertId}
-            onSubmit={() => {
-              setShowRevealForm(false);
-              setRevealAppId(null);
-              refetch();
-            }}
-            onCancel={() => {
-              setShowRevealForm(false);
-              setRevealAppId(null);
-            }}
-          />
-        </Modal>
-      )}
       </div>
     </div>
   );

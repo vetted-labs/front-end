@@ -32,21 +32,35 @@ function isAllowedForPending(pathname: string) {
 export default function ExpertLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected, status } = useAccount();
   const { userId: expertId } = useAuthContext();
   const { expertStatus, isHydrated, setExpertStatus, clearExpertStatus } = useExpertStatus();
   const [checked, setChecked] = useState(false);
   const verifiedRef = useRef(false);
 
-  // Quick check to block immediately (prevents flash) — wait for hydration first
+  // Quick check to block immediately (prevents flash) — wait for hydration + wallet reconnection
   useEffect(() => {
     if (!isHydrated) return;
+    // Wait for wagmi to finish reconnecting before deciding
+    if (status === "reconnecting" || status === "connecting") return;
+
+    // Wallet not connected after reconnection settled — redirect to login.
+    // Debounce: MetaMask can briefly show "disconnected" before reconnecting,
+    // so delay the redirect. If the wallet reconnects in time, cleanup cancels it.
+    if (!isConnected && !address) {
+      const timer = setTimeout(() => {
+        setChecked(false);
+        router.replace("/auth/login?type=expert");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+
     if (expertStatus === "pending" && !isAllowedForPending(pathname)) {
       router.replace("/expert/application-pending");
     } else {
       setChecked(true);
     }
-  }, [pathname, router, expertStatus, isHydrated]);
+  }, [pathname, router, expertStatus, isHydrated, status, isConnected, address]);
 
   // Reset verification when wallet address changes
   useEffect(() => {
@@ -84,7 +98,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     };
   }, [address, expertId, pathname, router, setExpertStatus, clearExpertStatus]);
 
-  if (!checked) return null;
+  if (!checked || status === "reconnecting" || status === "connecting") return null;
 
   const isChromeless =
     expertStatus === "pending" ||

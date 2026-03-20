@@ -5,6 +5,7 @@ import { CheckCircle, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Ti
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getAssetUrl } from "@/lib/api";
+import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -41,19 +42,16 @@ function useCountdown(deadline: string | undefined) {
 export function ExpertReviewCard({ application, onReview, onViewReview, showGuildBadge }: ExpertReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
   const phase = application.votingPhase;
-  const isCommitReveal = phase === "commit" || phase === "reveal" || phase === "finalized";
+  const isCommitReveal = phase === "commit" || phase === "finalized";
 
   const activeDeadline = phase === "commit"
     ? application.commitDeadline
-    : phase === "reveal"
-    ? application.revealDeadline
     : undefined;
 
   const countdown = useCountdown(activeDeadline);
 
   const phaseLabel: Record<string, string> = {
-    commit: "Commit phase",
-    reveal: "Reveal phase",
+    commit: "Voting open",
     finalized: "Finalized",
   };
 
@@ -125,7 +123,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 href={
                   application.blockchainSessionTxHash
                     ? `${ETHERSCAN_BASE}/tx/${application.blockchainSessionTxHash}`
-                    : `${ETHERSCAN_BASE}/address/0xD8fc961b0080622e66dDee8C3409BE442f635104`
+                    : `${ETHERSCAN_BASE}/address/${CONTRACT_ADDRESSES.VETTING}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"

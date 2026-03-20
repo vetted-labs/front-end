@@ -32,9 +32,8 @@ export interface ExpertMembershipApplication {
   consensus_failed?: boolean;
   tiebreaker_required?: boolean;
   /** On-chain vetting session fields */
-  votingPhase?: "direct" | "commit" | "reveal" | "finalized";
+  votingPhase?: "direct" | "commit" | "finalized";
   commitDeadline?: string;
-  revealDeadline?: string;
   blockchainSessionId?: string;
   blockchainSessionCreated?: boolean;
   blockchainSessionTxHash?: string;

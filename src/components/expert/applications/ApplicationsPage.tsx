@@ -44,10 +44,6 @@ const ReviewGuildApplicationModal = dynamic(
   () => import("@/components/guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
   { ssr: false },
 );
-const ExpertRevealForm = dynamic(
-  () => import("@/components/expert/ExpertRevealForm").then(m => ({ default: m.ExpertRevealForm })),
-  { ssr: false },
-);
 
 const ALL_GUILDS = { id: "all", name: "All Guilds" } as const;
 
@@ -80,8 +76,6 @@ export default function ApplicationsPage() {
 
   // Commit-reveal state
   const [crPhaseStatus, setCrPhaseStatus] = useState<ExpertCRPhaseStatus | null>(null);
-  const [showRevealForm, setShowRevealForm] = useState(false);
-  const [revealAppId, setRevealAppId] = useState<string | null>(null);
 
   const isAllGuilds = selectedGuild.id === "all";
 
@@ -232,20 +226,30 @@ export default function ApplicationsPage() {
 
   const proposals = proposalsRaw ?? [];
 
-  // History: combine finalized proposals + reviewed candidate apps
+  // History: finalized expert membership apps the expert has reviewed
+  const historyExpertApps = useMemo(() => {
+    return (expertAppsRaw ?? []).filter((a) => a.finalized && a.expertHasReviewed);
+  }, [expertAppsRaw]);
+
+  // History: combine finalized proposals + reviewed candidate apps + finalized expert apps
   const historyItems = useMemo(() => {
     const finalized = historyProposalsRaw ?? [];
     const reviewedCandidateApps = historyCandidateAppsRaw ?? [];
-    return { proposals: finalized, candidateApps: reviewedCandidateApps };
-  }, [historyProposalsRaw, historyCandidateAppsRaw]);
+    return { proposals: finalized, candidateApps: reviewedCandidateApps, expertApps: historyExpertApps };
+  }, [historyProposalsRaw, historyCandidateAppsRaw, historyExpertApps]);
 
-  const historyCount = historyItems.proposals.length + historyItems.candidateApps.length;
+  const historyCount = historyItems.proposals.length + historyItems.candidateApps.length + historyItems.expertApps.length;
 
-  // Unified history list for pagination (proposals first, then candidate reviews, both by date desc)
+  // Unified history list for pagination (sorted by date desc)
   const historyList = useMemo(() => {
-    const items: Array<{ type: "proposal"; data: GuildApplication; sortDate: string } | { type: "candidate"; data: CandidateGuildApplication; sortDate: string }> = [
+    const items: Array<
+      | { type: "proposal"; data: GuildApplication; sortDate: string }
+      | { type: "candidate"; data: CandidateGuildApplication; sortDate: string }
+      | { type: "expert"; data: ExpertMembershipApplication; sortDate: string }
+    > = [
       ...historyItems.proposals.map((p) => ({ type: "proposal" as const, data: p, sortDate: p.created_at })),
       ...historyItems.candidateApps.map((a) => ({ type: "candidate" as const, data: a, sortDate: a.submittedAt })),
+      ...historyItems.expertApps.map((a) => ({ type: "expert" as const, data: a, sortDate: a.finalizedAt || a.appliedAt })),
     ];
     return items.sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime());
   }, [historyItems]);
@@ -312,11 +316,6 @@ export default function ApplicationsPage() {
       const phaseStatus = await expertApi.expertCommitReveal.getPhaseStatus(application.id);
       setCrPhaseStatus(phaseStatus);
 
-      if (phaseStatus.votingPhase === "reveal") {
-        setRevealAppId(application.id);
-        setShowRevealForm(true);
-        return;
-      }
     } catch {
       setCrPhaseStatus(null);
     }
@@ -394,8 +393,14 @@ export default function ApplicationsPage() {
         return { message: "Your vote has been recorded with structured review data." };
       }
 
+      // Normalize rubric score to 0-100 for the review API
+      const scores = payload.criteriaScores as { overallMax?: number; overallScore?: number };
+      const overallMax = (scores?.overallMax as number) || 1;
+      const normalizedScore = Math.round((payload.overallScore / overallMax) * 100);
+
       const reviewData = {
         walletAddress: address,
+        score: normalizedScore,
         feedback: payload.feedback || undefined,
         criteriaScores: payload.criteriaScores,
         criteriaJustifications: payload.criteriaJustifications,
@@ -680,6 +685,14 @@ export default function ApplicationsPage() {
                     meetsStakingRequirement={false}
                     showGuildBadge={isAllGuilds}
                   />
+                ) : item.type === "expert" ? (
+                  <ExpertReviewCard
+                    key={`expert-${item.data.id}`}
+                    application={item.data}
+                    onReview={handleReviewExpert}
+                    onViewReview={handleViewExpertReview}
+                    showGuildBadge={isAllGuilds}
+                  />
                 ) : (
                   <CandidateReviewCard
                     key={`candidate-${item.data.id}`}
@@ -714,6 +727,7 @@ export default function ApplicationsPage() {
         blockchainSessionId={reviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
         blockchainSessionCreated={reviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
         reviewerId={expertData?.id}
+        reviewType={reviewType}
       />
 
       {/* View Review Modal (read-only) */}
@@ -727,24 +741,6 @@ export default function ApplicationsPage() {
         expertId={expertData?.id}
       />
 
-      {/* Expert Reveal Form Dialog */}
-      {revealAppId && expertData?.id && (
-        <Modal isOpen={showRevealForm} onClose={() => setShowRevealForm(false)} title="Reveal Vote" size="sm">
-          <ExpertRevealForm
-            applicationId={revealAppId}
-            reviewerId={expertData.id}
-            onSubmit={() => {
-              setShowRevealForm(false);
-              setRevealAppId(null);
-              refetchExpertApps();
-            }}
-            onCancel={() => {
-              setShowRevealForm(false);
-              setRevealAppId(null);
-            }}
-          />
-        </Modal>
-      )}
     </div>
   );
 }

@@ -144,9 +144,8 @@ export const GUILD_APPLICATION_STATUS_CONFIG: Record<string, { label: string; cl
  * Shared commit-reveal user status labels.
  */
 export const COMMIT_REVEAL_STATUS_LABELS: Record<string, string> = {
-  pending: "Not Yet Committed",
-  committed: "Committed",
-  revealed: "Revealed",
+  pending: "Not Yet Voted",
+  committed: "Vote Submitted",
 };
 
 /**

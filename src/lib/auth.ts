@@ -34,5 +34,6 @@ export function clearAllAuthState() {
   localStorage.removeItem("companyWallet");
   localStorage.removeItem("walletAddress");
   localStorage.removeItem("userType");
+  localStorage.removeItem("expertStatus");
 }
 
