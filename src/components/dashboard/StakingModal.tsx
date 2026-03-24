@@ -16,11 +16,7 @@ import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TransactionModal } from "./TransactionModal";
-import type { GuildOption } from "@/types/guild";
-
-interface StakingGuildOption extends GuildOption {
-  blockchainGuildId: `0x${string}`;
-}
+import type { StakingGuildOption } from "@/types";
 
 interface StakingModalProps {
   isOpen: boolean;

@@ -492,6 +492,8 @@ export interface CompanyProfile {
   address?: string;
   verified?: boolean;
   createdAt?: string;
+  updatedAt?: string;
+  walletAddress?: string;
 }
 
 // --- Guild Membership ---

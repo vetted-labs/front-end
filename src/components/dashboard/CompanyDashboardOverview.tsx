@@ -46,7 +46,7 @@ function getActivityIcon(actionType: string): { icon: LucideIcon; bg: string; co
   }
 }
 
-interface UpcomingMeeting {
+interface DashboardMeeting {
   conversationId: string;
   candidateName: string;
   details: MeetingDetails;
@@ -86,7 +86,7 @@ export function CompanyDashboardOverview() {
   const [recentApplications, setRecentApplications] = useState<CompanyApplication[]>([]);
   const [activityFeed, setActivityFeed] = useState<CompanyActivityItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [meetings, setMeetings] = useState<UpcomingMeeting[]>([]);
+  const [meetings, setMeetings] = useState<DashboardMeeting[]>([]);
   const nonCriticalFetched = useRef(false);
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export function CompanyDashboardOverview() {
         );
 
         const now = new Date();
-        const upcomingMeetings: UpcomingMeeting[] = [];
+        const upcomingMeetings: DashboardMeeting[] = [];
         for (let i = 0; i < convDetails.length; i++) {
           const detail = convDetails[i];
           if (!detail?.messages) continue;

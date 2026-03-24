@@ -30,6 +30,26 @@ export interface GuildPublicDetail extends Guild {
   totalVetdStaked?: number;
 }
 
+/** Fully-resolved guild detail used by the public guild detail page (GuildDetailPage). */
+export interface GuildPageDetail extends GuildPublicDetail {
+  expertCount: number;
+  candidateCount: number;
+  totalMembers: number;
+  experts: import("./expert").ExpertMember[];
+  candidates: import("./candidate").CandidateMember[];
+  openPositions: number;
+  recentJobs: import("./job").Job[];
+  totalProposalsReviewed: number;
+  averageApprovalTime: string;
+  recentActivity: GuildActivity[];
+  establishedDate: string;
+}
+
+/** Guild option with blockchain guild ID for staking operations. */
+export interface StakingGuildOption extends GuildOption {
+  blockchainGuildId: `0x${string}`;
+}
+
 /** Leaderboard entry from guild context — extends the shared LeaderboardEntry. */
 export interface GuildLeaderboardEntry {
   rank: number;

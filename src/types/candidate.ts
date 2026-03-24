@@ -4,6 +4,9 @@ export interface SocialLink {
   url: string;
 }
 
+/** Subset of CandidateProfile used for job application flows (resume + social info). */
+export type CandidateUserProfile = Pick<CandidateProfile, "resumeUrl" | "resumeFileName" | "bio" | "socialLinks" | "linkedIn" | "github">;
+
 export interface CandidateProfile {
   id: string;
   fullName: string;

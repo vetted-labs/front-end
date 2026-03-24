@@ -18,16 +18,14 @@ import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { candidateApi, applicationsApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
-import type { Job, CandidateApplication, CandidateProfile, SocialLink } from "@/types";
-
-type UserProfile = Pick<CandidateProfile, "resumeUrl" | "resumeFileName" | "bio" | "socialLinks" | "linkedIn" | "github">;
+import type { Job, CandidateApplication, CandidateUserProfile, SocialLink } from "@/types";
 
 interface JobApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   job: Job;
   candidateId: string;
-  profileResume: UserProfile | null;
+  profileResume: CandidateUserProfile | null;
   profileSocialLinks: SocialLink[];
   onSubmitSuccess: (application: CandidateApplication) => void;
 }

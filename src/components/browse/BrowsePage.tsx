@@ -11,35 +11,13 @@ import { jobsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-
-interface FeaturedJob {
-  id: string;
-  title: string;
-  department: string | null;
-  location: string;
-  type: "Full-time" | "Part-time" | "Contract" | "Freelance";
-  salary: { min: number | null; max: number | null; currency: string };
-  guild: string;
-  description: string;
-  companyName?: string;
-}
+import type { Job } from "@/types";
 
 export default function BrowsePage() {
-  const { data: featuredJobs, isLoading } = useFetch<FeaturedJob[]>(
+  const { data: featuredJobs, isLoading } = useFetch<Job[]>(
     () => jobsApi.getAll({ status: 'active' }).then((response) => {
       const jobs = Array.isArray(response) ? response : [];
-      const normalizedJobs: FeaturedJob[] = jobs.map((job) => ({
-        id: job.id,
-        title: job.title || 'Untitled Position',
-        description: job.description || '',
-        guild: job.guild || '',
-        department: job.department || null,
-        location: job.location,
-        type: job.type,
-        salary: job.salary,
-        companyName: job.companyName,
-      }));
-      return normalizedJobs.slice(0, 6); // Show top 6 featured jobs
+      return jobs.slice(0, 6); // Show top 6 featured jobs
     }),
     {
       onError: (err) => {

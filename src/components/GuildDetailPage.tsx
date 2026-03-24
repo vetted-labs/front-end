@@ -30,32 +30,7 @@ import { GuildPublicOverviewTab } from "@/components/guild/GuildPublicOverviewTa
 import { GuildExpertsListTab } from "@/components/guild/GuildExpertsListTab";
 import { GuildCandidatesListTab } from "@/components/guild/GuildCandidatesListTab";
 import { GuildLeaderboardContent } from "@/components/guild/GuildLeaderboardContent";
-import type { GuildPublicDetail, GuildLeaderboardEntry, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity } from "@/types";
-
-
-/** Extended guild detail with resolved members, jobs, and activity for the page. */
-interface GuildDetail extends GuildPublicDetail {
-  expertCount: number;
-  candidateCount: number;
-  totalMembers: number;
-  experts: ExpertMember[];
-  candidates: CandidateMember[];
-  openPositions: number;
-  recentJobs: Job[];
-  totalProposalsReviewed: number;
-  averageApprovalTime: string;
-  recentActivity: GuildActivity[];
-  establishedDate: string;
-}
-
-interface MembershipStatus {
-  isMember: boolean;
-  status?: "pending" | "approved" | "rejected";
-  appliedAt?: string;
-  role?: ExpertRole;
-}
-
-type LeaderboardEntry = GuildLeaderboardEntry;
+import type { GuildPageDetail, GuildLeaderboardEntry, GuildMembershipCheck, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity } from "@/types";
 
 
 
@@ -67,11 +42,11 @@ export default function GuildDetailPage() {
   const guildId = decodeURIComponent(params.guildId as string);
 
   const [activeTab, setActiveTab] = useState<"feed" | "overview" | "experts" | "candidates" | "jobs" | "activity" | "leaderboard">("feed");
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboard, setLeaderboard] = useState<GuildLeaderboardEntry[]>([]);
 
   const isAuthenticated = auth.isAuthenticated || isConnected;
 
-  const { data: guildData, isLoading, error } = useFetch<{ guild: GuildDetail; membership: MembershipStatus }>(
+  const { data: guildData, isLoading, error } = useFetch<{ guild: GuildPageDetail; membership: GuildMembershipCheck }>(
     async () => {
       // Fetch public guild details
       const raw = await guildsApi.getPublicDetail(guildId);
@@ -168,7 +143,7 @@ export default function GuildDetailPage() {
         recentActivity = derived.slice(0, 50);
       }
 
-      const guild: GuildDetail = {
+      const guild: GuildPageDetail = {
         ...raw,
         experts,
         candidates,
@@ -184,7 +159,7 @@ export default function GuildDetailPage() {
       };
 
       // If authenticated, check membership status
-      let membershipResult: MembershipStatus = { isMember: false };
+      let membershipResult: GuildMembershipCheck = { isMember: false };
       const userId = auth.userId || address;
       if (userId) {
         try {
@@ -425,7 +400,7 @@ export default function GuildDetailPage() {
             <GuildFeedTab
               guildId={guildId}
               isMember={membership?.isMember ?? false}
-              membershipRole={membership?.role}
+              membershipRole={membership?.role as ExpertRole | undefined}
               userType={auth.userType}
             />
           )}

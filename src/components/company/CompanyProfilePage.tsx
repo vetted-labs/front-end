@@ -25,18 +25,7 @@ import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { CompanyProfile } from "@/types";
 
-/**
- * The shared CompanyProfile type does not include these fields
- * that the API actually returns for the /companies/me endpoint.
- */
-interface CompanyProfileFull extends CompanyProfile {
-  verified: boolean;
-  createdAt: string;
-  updatedAt: string;
-  walletAddress?: string;
-}
-
-interface FormData {
+interface CompanyProfileFormData {
   name: string;
   website: string;
   location: string;
@@ -45,7 +34,7 @@ interface FormData {
   description: string;
 }
 
-function profileToFormData(profile: CompanyProfileFull): FormData {
+function profileToFormData(profile: CompanyProfile): CompanyProfileFormData {
   return {
     name: profile.name || "",
     website: profile.website || "",
@@ -64,7 +53,7 @@ export default function CompanyProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CompanyProfileFormData>({
     name: "",
     website: "",
     location: "",
@@ -74,7 +63,7 @@ export default function CompanyProfilePage() {
   });
 
   const fetchProfile = useCallback(
-    () => companyApi.getProfile() as Promise<CompanyProfileFull>,
+    () => companyApi.getProfile() as Promise<CompanyProfile>,
     []
   );
 
@@ -83,7 +72,7 @@ export default function CompanyProfilePage() {
     isLoading,
     error: fetchError,
     refetch,
-  } = useFetch<CompanyProfileFull>(fetchProfile, {
+  } = useFetch<CompanyProfile>(fetchProfile, {
     skip: !ready,
     onSuccess: (data) => {
       setFormData(profileToFormData(data));
@@ -94,7 +83,7 @@ export default function CompanyProfilePage() {
     execute: executeSave,
     isLoading: isSaving,
     error: saveError,
-  } = useApi<CompanyProfileFull>();
+  } = useApi<CompanyProfile>();
 
   const error = fetchError || saveError;
 
@@ -104,7 +93,7 @@ export default function CompanyProfilePage() {
 
   const handleSave = async () => {
     const updatedProfile = await executeSave(
-      () => companyApi.updateProfile({ ...formData }) as Promise<CompanyProfileFull>,
+      () => companyApi.updateProfile({ ...formData }) as Promise<CompanyProfile>,
       {
         onSuccess: (data) => {
           setFormData(profileToFormData(data));
@@ -436,13 +425,13 @@ export default function CompanyProfilePage() {
             <div>
               <label className="text-muted-foreground">Member Since</label>
               <p className="text-foreground font-medium">
-                {new Date(profile.createdAt).toLocaleDateString()}
+                {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "—"}
               </p>
             </div>
             <div>
               <label className="text-muted-foreground">Last Updated</label>
               <p className="text-foreground font-medium">
-                {new Date(profile.updatedAt).toLocaleDateString()}
+                {profile.updatedAt ? new Date(profile.updatedAt).toLocaleDateString() : "—"}
               </p>
             </div>
           </div>

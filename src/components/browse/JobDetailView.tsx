@@ -27,9 +27,7 @@ import { logger } from "@/lib/logger";
 import JobHeader from "./JobHeader";
 import JobRequirements from "./JobRequirements";
 import JobApplicationModal from "./JobApplicationModal";
-import type { Job, CandidateApplication, CandidateProfile, SocialLink } from "@/types";
-
-type UserProfile = Pick<CandidateProfile, "resumeUrl" | "resumeFileName" | "bio" | "socialLinks" | "linkedIn" | "github">;
+import type { Job, CandidateApplication, CandidateUserProfile, SocialLink } from "@/types";
 
 export default function JobDetailView() {
   const params = useParams();
@@ -94,7 +92,7 @@ export default function JobDetailView() {
   );
 
   // Fetch user profile to get existing resume, bio, and social links
-  const { data: profileResume } = useFetch<UserProfile | null>(
+  const { data: profileResume } = useFetch<CandidateUserProfile | null>(
     () =>
       candidateApi.getById(auth.userId as string).then((data) => ({
         resumeUrl: data.resumeUrl,
