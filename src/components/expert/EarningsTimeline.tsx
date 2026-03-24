@@ -10,6 +10,11 @@ const typeLabels: Record<string, string> = {
   endorsement: "Endorsement Reward",
 };
 
+const typeSubLabels: Record<string, string> = {
+  voting_reward: "Candidate review",
+  endorsement: "Endorsement payout",
+};
+
 const typeIcons: Record<string, typeof Vote> = {
   voting_reward: Vote,
   endorsement: Award,
@@ -38,13 +43,20 @@ interface EarningsTimelineProps {
 }
 
 export function EarningsTimeline({ items, pagination, page, onPageChange }: EarningsTimelineProps) {
+  const totalCount = pagination?.total ?? items.length;
+
   if (items.length === 0) {
     return (
-      <EmptyState
-        icon={Coins}
-        title="No earnings yet"
-        description="No earnings found for this period."
-      />
+      <>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold tracking-tight">Earnings History</h2>
+        </div>
+        <EmptyState
+          icon={Coins}
+          title="No earnings yet"
+          description="No earnings found for this period."
+        />
+      </>
     );
   }
 
@@ -52,6 +64,16 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
 
   return (
     <>
+      {/* Section heading */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-tight">Earnings History</h2>
+        {totalCount > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {totalCount} {totalCount === 1 ? "entry" : "entries"}
+          </span>
+        )}
+      </div>
+
       <div className="space-y-6">
         {Object.entries(grouped).map(([date, entries]) => {
           return (
@@ -65,6 +87,8 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                 <div className="divide-y divide-border/40 dark:divide-white/[0.04]">
                   {entries.map((entry, i) => {
                     const TypeIcon = typeIcons[entry.type] || Coins;
+                    const subLabel = typeSubLabels[entry.type];
+                    const currency = entry.currency || "VETD";
                     return (
                       <div key={i} className="px-5 py-3.5 flex items-center gap-4 hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
@@ -72,7 +96,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-medium">
                               {typeLabels[entry.type] || entry.type}
                             </p>
@@ -82,16 +106,17 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                               </Badge>
                             )}
                           </div>
-                          {entry.candidate_name && (
-                            <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">
-                              {entry.candidate_name}
-                            </p>
-                          )}
+                          <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">
+                            {entry.candidate_name
+                              ? `${subLabel ?? "For"} · ${entry.candidate_name}`
+                              : (subLabel ?? null)}
+                          </p>
                         </div>
 
                         <div className="text-right flex-shrink-0">
                           <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                            +{Number(entry.amount).toFixed(2)}
+                            +{Number(entry.amount).toFixed(2)}{" "}
+                            <span className="text-[10px] font-normal text-muted-foreground/60">{currency}</span>
                           </p>
                           <p className="text-[10px] text-muted-foreground/40 tabular-nums">
                             {new Date(entry.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
