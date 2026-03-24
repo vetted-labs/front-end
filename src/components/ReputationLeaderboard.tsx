@@ -14,6 +14,7 @@ import {
   Filter,
   DollarSign,
   Coins,
+  Info,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { EmptyState } from "./ui/empty-state";
@@ -117,6 +118,21 @@ export function ReputationLeaderboard({
             </Button>
           </div>
         )}
+      </div>
+
+      {/* About the Leaderboard */}
+      <div className="rounded-lg border bg-muted/30 p-4">
+        <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+          <Info className="h-4 w-4 text-primary" />
+          How Rankings Work
+        </h3>
+        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+          <li>Rankings are determined by total VETD token earnings from completed reviews</li>
+          <li><span className="font-medium text-foreground">Earnings</span> accumulate each time you submit a review and the reveal phase resolves</li>
+          <li><span className="font-medium text-foreground">Consensus rate</span> shows the balance between your approval and rejection decisions — a higher rate means more varied, balanced reviewing</li>
+          <li>Review more candidates and maintain consistent quality to increase your earnings and climb the ranks</li>
+          <li>Members of multiple guilds contribute all their review earnings to their global rank</li>
+        </ul>
       </div>
 
       {/* Stats Overview */}
