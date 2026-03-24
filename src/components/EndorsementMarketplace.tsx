@@ -179,6 +179,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [refetchEndorsements, refetchTokenData]);
 
+  // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
+  useEffect(() => {
+    const handler = () => refetchEndorsements();
+    window.addEventListener("vetted:endorsement-refresh", handler);
+    return () => window.removeEventListener("vetted:endorsement-refresh", handler);
+  }, [refetchEndorsements]);
+
   // ── Early returns ──
 
   if (!isConnected) {

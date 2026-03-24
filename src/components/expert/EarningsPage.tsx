@@ -125,6 +125,13 @@ export default function EarningsPage() {
     }
   }, [timeRange, guildFilter, page, address, refetch]);
 
+  // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
+  useEffect(() => {
+    const handler = () => refetch();
+    window.addEventListener("vetted:reputation-refresh", handler);
+    return () => window.removeEventListener("vetted:reputation-refresh", handler);
+  }, [refetch]);
+
   const handleTimeChange = (range: TimeRange) => {
     setTimeRange(range);
     setPage(1);

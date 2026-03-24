@@ -68,6 +68,13 @@ export default function ReputationPage() {
     }
   }, [page, address, refetch]);
 
+  // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
+  useEffect(() => {
+    const handler = () => refetch();
+    window.addEventListener("vetted:reputation-refresh", handler);
+    return () => window.removeEventListener("vetted:reputation-refresh", handler);
+  }, [refetch]);
+
   // Compute stats from timeline
   const totalGains = timeline.filter((e) => e.change_amount > 0).reduce((s, e) => s + e.change_amount, 0);
   const totalLosses = timeline.filter((e) => e.change_amount < 0).reduce((s, e) => s + e.change_amount, 0);
