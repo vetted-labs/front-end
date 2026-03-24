@@ -9,6 +9,7 @@ import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
+import { ExpertApplicationProgress } from "./expert/ExpertApplicationProgress";
 import { expertApi, guildsApi, ApiError } from "@/lib/api";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { logger } from "@/lib/logger";
@@ -361,6 +362,32 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     return true;
   }, [formData, selectedGuildId, noAiDeclaration, walletSigned, generalAnswers, levelAnswers, generalTemplate, levelTemplate]);
 
+  // Derive current step from form progress for the step indicator
+  const currentStep = useMemo(() => {
+    if (!walletSigned) return 0;
+
+    const hasPersonalInfo =
+      formData.fullName.trim().length >= 2 &&
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email);
+    if (!hasPersonalInfo) return 1;
+
+    const hasProfessionalBackground =
+      !!selectedGuildId &&
+      !!formData.expertiseLevel &&
+      formData.currentTitle.trim().length >= 2 &&
+      formData.currentCompany.trim().length >= 2 &&
+      formData.expertiseAreas.length > 0;
+    if (!hasProfessionalBackground) return 2;
+
+    const hasApplicationQuestions =
+      formData.bio.length >= 50 &&
+      formData.motivation.length >= 50 &&
+      noAiDeclaration;
+    if (!hasApplicationQuestions) return 3;
+
+    return 4;
+  }, [walletSigned, formData, selectedGuildId, noAiDeclaration]);
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -629,6 +656,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
             talent.
           </p>
         </div>
+
+        <ExpertApplicationProgress currentStep={currentStep} />
 
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <form onSubmit={handleSubmit}>
