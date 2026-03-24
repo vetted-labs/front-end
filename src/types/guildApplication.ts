@@ -1,3 +1,32 @@
+// --- Guild Application Flow types (used by GuildApplicationFlow component) ---
+
+export interface GuildApplicationGuild {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface GuildApplicationJobData {
+  id: string;
+  title: string;
+  screeningQuestions: string[];
+  experienceLevel: string | null;
+}
+
+export interface GuildApplicationProfileResume {
+  resumeUrl?: string;
+  resumeFileName?: string;
+}
+
+/** Map job experience levels to guild template level IDs */
+export const JOB_LEVEL_TO_GUILD_LEVEL: Record<string, string> = {
+  junior: "entry",
+  mid: "experienced",
+  senior: "expert",
+  lead: "expert",
+  executive: "expert",
+};
+
 // --- Guild Application Template types (used by the multi-step application flow) ---
 
 export interface GuildApplicationTemplate {

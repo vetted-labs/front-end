@@ -30,8 +30,11 @@ export type {
   AppealVote,
   AppealOutcome,
   AppealStatus,
+  GuildApplicationGuild,
+  GuildApplicationJobData,
+  GuildApplicationProfileResume,
 } from "./guildApplication";
-export { mapAppealResponse } from "./guildApplication";
+export { mapAppealResponse, JOB_LEVEL_TO_GUILD_LEVEL } from "./guildApplication";
 export type {
   Conversation,
   Message,
