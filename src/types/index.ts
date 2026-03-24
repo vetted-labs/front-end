@@ -90,6 +90,8 @@ export type {
   GovernanceVote,
   GovernanceProposalDetail,
   GovernanceOutcome,
+  GovernanceFilterStatus,
+  ProposalSubmitStep,
 } from "./governance";
 export { PROPOSAL_TYPE_LABELS } from "./governance";
 export type {

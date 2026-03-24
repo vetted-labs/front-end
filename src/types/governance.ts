@@ -54,6 +54,10 @@ export interface GovernanceProposalDetail {
 
 export type GovernanceOutcome = "passed" | "rejected";
 
+export type GovernanceFilterStatus = "active" | "passed" | "rejected" | "all";
+
+export type ProposalSubmitStep = "idle" | "approving" | "staking" | "confirming" | "creating";
+
 export const PROPOSAL_TYPE_LABELS: Record<string, string> = {
   parameter_change: "Parameter Change",
   guild_master_election: "Guild Master Election",
