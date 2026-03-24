@@ -68,6 +68,20 @@ export interface ExpertActivity {
   amount?: number;
 }
 
+/** Answers for the general section of the expert/guild application form. */
+export interface GeneralAnswers {
+  learningFromFailure: string;
+  decisionUnderUncertainty: string;
+  motivationAndConflict: string;
+  guildImprovement: string;
+}
+
+/** Expertise level option used in the expert application form. */
+export interface ExpertiseLevel {
+  value: string;
+  label: string;
+}
+
 /** Expert as listed in guild member lists. */
 export interface ExpertMember {
   id: string;

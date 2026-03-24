@@ -10,6 +10,7 @@ import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
 import type {
   ReputationTimelineEntry,
+  ReputationTimelineResponse,
   ExpertProfile,
   PaginationInfo,
 } from "@/types";
@@ -18,15 +19,6 @@ import { ReputationScoreCards } from "./ReputationScoreCards";
 import { RewardTierCard } from "./RewardTierCard";
 import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
-
-interface ReputationTimelineResponse {
-  items?: ReputationTimelineEntry[];
-  pagination?: PaginationInfo;
-  data?: {
-    items?: ReputationTimelineEntry[];
-    pagination?: PaginationInfo;
-  };
-}
 
 export default function ReputationPage() {
   const { address: wagmiAddress } = useAccount();

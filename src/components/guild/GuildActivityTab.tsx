@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatTimeAgo } from "@/lib/utils";
+import type { GuildActivity } from "@/types";
 import {
   FileText,
   CheckCircle,
@@ -14,31 +15,6 @@ import {
   Send,
   ClipboardCheck,
 } from "lucide-react";
-
-/* ── Shared types ── */
-
-export type ActivityType =
-  | "proposal_submitted"
-  | "candidate_approved"
-  | "job_posted"
-  | "endorsement_given"
-  | "expert_joined"
-  | "candidate_joined"
-  | "application_submitted"
-  | "expert_applied"
-  | "candidate_applied"
-  | "application_reviewed"
-  | "member_approved"
-  | "member_rejected";
-
-export interface GuildActivity {
-  id: string;
-  type: ActivityType;
-  actor: string;
-  target?: string;
-  timestamp: string;
-  details: string;
-}
 
 /* ── Activity metadata (icon + colors per type) ── */
 

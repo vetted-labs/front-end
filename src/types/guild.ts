@@ -125,10 +125,25 @@ export interface GuildEarningsOverview {
   }>;
 }
 
+/** All known guild activity event types. */
+export type ActivityType =
+  | "proposal_submitted"
+  | "candidate_approved"
+  | "job_posted"
+  | "endorsement_given"
+  | "expert_joined"
+  | "candidate_joined"
+  | "application_submitted"
+  | "expert_applied"
+  | "candidate_applied"
+  | "application_reviewed"
+  | "member_approved"
+  | "member_rejected";
+
 /** Activity entry shown in the guild activity feed. */
 export interface GuildActivity {
   id: string;
-  type: "proposal_submitted" | "candidate_approved" | "job_posted" | "endorsement_given" | "expert_applied" | "candidate_applied" | "application_reviewed" | "member_approved" | "member_rejected";
+  type: ActivityType;
   actor: string;
   target?: string;
   timestamp: string;
@@ -165,3 +180,77 @@ export interface GuildDetailData {
 /** Valid tab values for the guild detail view. */
 export const GUILD_DETAIL_TABS = ["feed", "membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
 export type GuildDetailTab = (typeof GUILD_DETAIL_TABS)[number];
+
+// --- My Stats page types ---
+
+/** Personal stats returned by the /my-stats endpoint for a guild member. */
+export interface GuildPersonalStats {
+  memberId: string;
+  fullName: string;
+  email: string;
+  role: "recruit" | "craftsman" | "master" | "candidate";
+  reputation: number;
+  guildReputation: number;
+  joinedAt: string;
+
+  // Review Stats
+  reviewsGiven: number;
+  reviewsReceived: number;
+  approvalRate: number;
+  rejectionRate: number;
+  averageConfidenceLevel: number;
+
+  // Endorsement Stats
+  endorsementsGiven: number;
+  endorsementsReceived: number;
+
+  // Application Stats (for experts)
+  applicationsReviewed: number;
+  candidatesApproved: number;
+  candidatesRejected: number;
+
+  // Job Application Stats (for candidates)
+  jobsAppliedTo: number;
+  interviewsReceived: number;
+  offersReceived: number;
+
+  // Performance Metrics
+  responseTime: string;
+  activityScore: number;
+  contributionScore: number;
+
+  // Progression
+  nextRole?: string;
+  progressToNextRole?: number;
+  requirementsForNextRole?: string[];
+}
+
+/** Guild-wide averages for the my-stats comparison view. */
+export interface GuildMyStatsAverages {
+  averageReputation: number;
+  averageReviews: number;
+  averageApprovalRate: number;
+  averageResponseTime: string;
+}
+
+/** Recent activity entry on the guild my-stats page. */
+export interface GuildRecentActivity {
+  id: string;
+  type:
+    | "review_submitted"
+    | "endorsement_given"
+    | "application_submitted"
+    | "job_applied"
+    | "role_upgraded";
+  title: string;
+  details: string;
+  timestamp: string;
+  outcome?: "positive" | "neutral" | "negative";
+}
+
+/** Combined data returned by the guild my-stats endpoint. */
+export interface GuildMyStatsData {
+  stats: GuildPersonalStats;
+  guildAverages: GuildMyStatsAverages;
+  recentActivity: GuildRecentActivity[];
+}

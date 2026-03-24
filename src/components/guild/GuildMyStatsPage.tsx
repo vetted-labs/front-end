@@ -24,79 +24,12 @@ import { Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useFetch } from "@/lib/hooks/useFetch";
-
-/**
- * The /my-stats endpoint returns a richer membership payload than
- * GuildMembershipCheck declares.  These local interfaces capture the
- * actual shape until the shared types are updated.
- */
-interface PersonalStats {
-  memberId: string;
-  fullName: string;
-  email: string;
-  role: "recruit" | "craftsman" | "master" | "candidate";
-  reputation: number;
-  guildReputation: number;
-  joinedAt: string;
-
-  // Review Stats
-  reviewsGiven: number;
-  reviewsReceived: number;
-  approvalRate: number;
-  rejectionRate: number;
-  averageConfidenceLevel: number;
-
-  // Endorsement Stats
-  endorsementsGiven: number;
-  endorsementsReceived: number;
-
-  // Application Stats (for experts)
-  applicationsReviewed: number;
-  candidatesApproved: number;
-  candidatesRejected: number;
-
-  // Job Application Stats (for candidates)
-  jobsAppliedTo: number;
-  interviewsReceived: number;
-  offersReceived: number;
-
-  // Performance Metrics
-  responseTime: string;
-  activityScore: number;
-  contributionScore: number;
-
-  // Progression
-  nextRole?: string;
-  progressToNextRole?: number;
-  requirementsForNextRole?: string[];
-}
-
-interface MyStatsGuildAverages {
-  averageReputation: number;
-  averageReviews: number;
-  averageApprovalRate: number;
-  averageResponseTime: string;
-}
-
-interface RecentActivity {
-  id: string;
-  type:
-    | "review_submitted"
-    | "endorsement_given"
-    | "application_submitted"
-    | "job_applied"
-    | "role_upgraded";
-  title: string;
-  details: string;
-  timestamp: string;
-  outcome?: "positive" | "neutral" | "negative";
-}
-
-interface MyStatsData {
-  stats: PersonalStats;
-  guildAverages: MyStatsGuildAverages;
-  recentActivity: RecentActivity[];
-}
+import type {
+  GuildPersonalStats,
+  GuildMyStatsAverages,
+  GuildRecentActivity,
+  GuildMyStatsData,
+} from "@/types";
 
 function getRoleBadgeColor(role: string) {
   switch (role) {
@@ -137,16 +70,16 @@ export default function GuildMyStatsPage() {
   const auth = useAuthContext();
   const candidateId = auth.userId;
 
-  const { data, isLoading, error } = useFetch<MyStatsData>(
+  const { data, isLoading, error } = useFetch<GuildMyStatsData>(
     async () => {
       const membership = await guildsApi.checkMembership(candidateId!, guildId);
-      // checkMembership returns basic data; map to PersonalStats shape
+      // checkMembership returns basic data; map to GuildPersonalStats shape
       // Advanced stats (averages, activity) require backend endpoints not yet implemented
-      const stats: PersonalStats = {
+      const stats: GuildPersonalStats = {
         memberId: candidateId!,
         fullName: "",
         email: "",
-        role: (membership.role as PersonalStats["role"]) || "candidate",
+        role: (membership.role as GuildPersonalStats["role"]) || "candidate",
         reputation: 0,
         guildReputation: 0,
         joinedAt: membership.joinedAt || "",
@@ -168,17 +101,17 @@ export default function GuildMyStatsPage() {
         contributionScore: 0,
       };
       // Try fetching averages and activity, but don't fail if endpoints are unavailable
-      let guildAverages: MyStatsGuildAverages = { averageReputation: 0, averageReviews: 0, averageApprovalRate: 0, averageResponseTime: "N/A" };
-      let recentActivity: RecentActivity[] = [];
+      let guildAverages: GuildMyStatsAverages = { averageReputation: 0, averageReviews: 0, averageApprovalRate: 0, averageResponseTime: "N/A" };
+      let recentActivity: GuildRecentActivity[] = [];
       try {
         const avg = await guildsApi.getAverages(guildId);
-        guildAverages = avg as unknown as MyStatsGuildAverages;
+        guildAverages = avg as unknown as GuildMyStatsAverages;
       } catch (err) {
         console.warn("Guild averages endpoint unavailable:", err);
       }
       try {
         const activity = await guildsApi.getMemberActivity(guildId, candidateId!);
-        recentActivity = (activity as unknown as RecentActivity[]) || [];
+        recentActivity = (activity as unknown as GuildRecentActivity[]) || [];
       } catch (err) {
         console.warn("Guild member activity endpoint unavailable:", err);
       }

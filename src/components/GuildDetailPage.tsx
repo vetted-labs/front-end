@@ -25,13 +25,12 @@ import { getGuildIcon, getGuildColor, getGuildBgColor } from "@/lib/guildHelpers
 import { formatSalaryRange } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { GuildActivityFeed } from "@/components/guild/GuildActivityTab";
-import type { GuildActivity } from "@/components/guild/GuildActivityTab";
 import { GuildFeedTab } from "@/components/guild/GuildFeedTab";
 import { GuildPublicOverviewTab } from "@/components/guild/GuildPublicOverviewTab";
 import { GuildExpertsListTab } from "@/components/guild/GuildExpertsListTab";
 import { GuildCandidatesListTab } from "@/components/guild/GuildCandidatesListTab";
 import { GuildLeaderboardContent } from "@/components/guild/GuildLeaderboardContent";
-import type { GuildPublicDetail, GuildLeaderboardEntry, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication } from "@/types";
+import type { GuildPublicDetail, GuildLeaderboardEntry, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity } from "@/types";
 
 
 /** Extended guild detail with resolved members, jobs, and activity for the page. */

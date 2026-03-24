@@ -405,6 +405,16 @@ export interface ReputationTimeline {
   limit: number;
 }
 
+/** Paginated response shape from expertApi.getReputationTimeline. */
+export interface ReputationTimelineResponse {
+  items?: import("./reputation").ReputationTimelineEntry[];
+  pagination?: import("./pagination").PaginationInfo;
+  data?: {
+    items?: import("./reputation").ReputationTimelineEntry[];
+    pagination?: import("./pagination").PaginationInfo;
+  };
+}
+
 export interface RewardDetail {
   proposalId: string;
   guildName: string;

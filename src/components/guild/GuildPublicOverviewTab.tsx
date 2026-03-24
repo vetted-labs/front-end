@@ -15,8 +15,7 @@ import { Button } from "@/components/ui";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
 import { formatSalaryRange } from "@/lib/utils";
 import { GuildActivityFeed } from "@/components/guild/GuildActivityTab";
-import type { GuildActivity } from "@/components/guild/GuildActivityTab";
-import type { ExpertMember, Job } from "@/types";
+import type { ExpertMember, Job, GuildActivity } from "@/types";
 
 interface GuildPublicOverviewTabProps {
   guild: {

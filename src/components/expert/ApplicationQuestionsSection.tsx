@@ -2,21 +2,15 @@
 
 import { Shield, FileText, Briefcase } from "lucide-react";
 import { Textarea } from "../ui/textarea";
-import type { FieldErrors } from "@/types";
 import type {
+  FieldErrors,
+  GeneralAnswers,
   GuildApplicationTemplate,
   GuildApplicationQuestion,
   GuildDomainLevel,
   GuildDomainTopic,
   QuestionPart,
 } from "@/types";
-
-export interface GeneralAnswers {
-  learningFromFailure: string;
-  decisionUnderUncertainty: string;
-  motivationAndConflict: string;
-  guildImprovement: string;
-}
 
 export interface ApplicationQuestionsSectionProps {
   generalTemplate: GuildApplicationTemplate | null;

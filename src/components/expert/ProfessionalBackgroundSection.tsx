@@ -4,13 +4,8 @@ import { Briefcase, Award, X } from "lucide-react";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { Button } from "../ui/button";
-import type { FieldErrors } from "@/types";
+import type { FieldErrors, ExpertiseLevel } from "@/types";
 import type { GuildOption } from "@/types/guild";
-
-interface ExpertiseLevel {
-  value: string;
-  label: string;
-}
 
 export interface ProfessionalBackgroundSectionProps {
   selectedGuildId: string;
