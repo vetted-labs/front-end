@@ -26,6 +26,7 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
+  // eslint-disable-next-line no-restricted-syntax -- body overflow depends on open runtime value
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -44,20 +45,104 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   );
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 interface DialogContentProps {
   children: React.ReactNode;
   className?: string;
+  "aria-label"?: string;
 }
 
-export function DialogContent({ children, className }: DialogContentProps) {
+export function DialogContent({ children, className, "aria-label": ariaLabel }: DialogContentProps) {
   const { open, onOpenChange } = useDialog();
   const [mounted, setMounted] = React.useState(false);
+  const [visible, setVisible] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<Element | null>(null);
 
+  // eslint-disable-next-line no-restricted-syntax -- mount detection for portal rendering
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!open || !mounted) return null;
+  // Animation: toggle visible state with delay on close for exit animation
+  // eslint-disable-next-line no-restricted-syntax -- animation timing depends on open runtime value
+  React.useEffect(() => {
+    if (open) {
+      previousFocusRef.current = document.activeElement;
+      setVisible(true);
+    } else {
+      const timer = setTimeout(() => setVisible(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  // Focus restoration on close
+  // eslint-disable-next-line no-restricted-syntax -- must restore focus when visible transitions to false
+  React.useEffect(() => {
+    if (!visible && !open && previousFocusRef.current) {
+      const el = previousFocusRef.current as HTMLElement;
+      if (typeof el.focus === "function") {
+        el.focus();
+      }
+      previousFocusRef.current = null;
+    }
+  }, [visible, open]);
+
+  // Focus first focusable element when opened
+  // eslint-disable-next-line no-restricted-syntax -- must focus into dialog after open + visible render
+  React.useEffect(() => {
+    if (open && visible && contentRef.current) {
+      const focusable = contentRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }
+  }, [open, visible]);
+
+  // Escape key to close + focus trap
+  const handleKeyDown = React.useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onOpenChange(false);
+        return;
+      }
+
+      if (e.key === "Tab" && contentRef.current) {
+        const focusable = contentRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    },
+    [onOpenChange]
+  );
+
+  // eslint-disable-next-line no-restricted-syntax -- keyboard listener depends on open runtime value
+  React.useEffect(() => {
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [open, handleKeyDown]);
+
+  if (!mounted || (!open && !visible)) return null;
+
+  const isAnimatingIn = open && visible;
 
   // Portal to document.body so parent transforms (e.g. animate-page-enter)
   // don't break fixed positioning
@@ -65,16 +150,26 @@ export function DialogContent({ children, className }: DialogContentProps) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity"
+        className={`fixed inset-0 bg-black/50 dark:bg-black/70 transition-opacity duration-200 ${
+          isAnimatingIn ? "opacity-100" : "opacity-0"
+        }`}
         onClick={() => onOpenChange(false)}
       />
 
       {/* Dialog */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
+          ref={contentRef}
+          role="dialog"
+          aria-modal="true"
+          {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
           className={cn(
             "relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] border border-border/60",
             "dark:bg-card/95 dark:backdrop-blur-xl dark:border-white/[0.08]",
+            "transition-all duration-200",
+            isAnimatingIn
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95",
             className
           )}
           onClick={(e) => e.stopPropagation()}
