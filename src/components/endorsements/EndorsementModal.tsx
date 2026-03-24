@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { getAssetUrl } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import type { EndorsementApplication } from "@/types";
@@ -38,7 +39,7 @@ export function EndorsementModal({
   onPlaceEndorsement
 }: EndorsementModalProps) {
   const [bidAmount, setBidAmount] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: submitEndorsement, isLoading: isSubmitting } = useApi();
   const [showConfirm, setShowConfirm] = useState(false);
 
   const skillMatch = useMemo(() => {
@@ -75,19 +76,20 @@ export function EndorsementModal({
   const handleEndorse = async () => {
     if (!application) return;
 
-    setIsSubmitting(true);
-
-    try {
-      await onPlaceEndorsement(application, bidAmount);
-      setBidAmount('');
-      onEndorsementPlaced();
-      onClose();
-    } catch (error: unknown) {
-      logger.error("Endorsement failed", error, { silent: true });
-      // Error is already handled by parent component
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submitEndorsement(
+      () => onPlaceEndorsement(application, bidAmount),
+      {
+        onSuccess: () => {
+          setBidAmount('');
+          onEndorsementPlaced();
+          onClose();
+        },
+        onError: (error) => {
+          logger.error("Endorsement failed", error, { silent: true });
+          // Error is already handled by parent component
+        },
+      }
+    );
   };
 
   if (!application) return null;

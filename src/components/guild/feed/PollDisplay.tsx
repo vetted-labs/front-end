@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { guildFeedApi } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import type { PostPoll } from "@/types";
 
@@ -34,7 +35,7 @@ export function PollDisplay({
 }: PollDisplayProps) {
   const [poll, setPoll] = useState<PostPoll>(initialPoll);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [submitting, setSubmitting] = useState(false);
+  const { execute: castVote, isLoading: submitting } = useApi<{ poll: PostPoll }>();
 
   const expired = isPollExpired(poll);
   const showResults = poll.hasVoted || expired;
@@ -66,18 +67,18 @@ export function PollDisplay({
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const result = await guildFeedApi.castPollVote(guildId, postId, {
+    await castVote(
+      () => guildFeedApi.castPollVote(guildId, postId, {
         optionIds: [...selected],
-      });
-      setPoll(result.poll);
-      toast.success("Vote cast!");
-    } catch {
-      toast.error("Failed to cast vote");
-    } finally {
-      setSubmitting(false);
-    }
+      }),
+      {
+        onSuccess: (result) => {
+          if (result) setPoll(result.poll);
+          toast.success("Vote cast!");
+        },
+        onError: () => toast.error("Failed to cast vote"),
+      }
+    );
   };
 
   return (

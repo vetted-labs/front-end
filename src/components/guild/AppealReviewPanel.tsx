@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
 import { guildAppealApi } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 import { APPEAL_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationAppeal } from "@/types";
 
@@ -44,7 +45,7 @@ export function AppealReviewPanel({
 }: AppealReviewPanelProps) {
   const [decision, setDecision] = useState<"uphold" | "overturn" | null>(null);
   const [reasoning, setReasoning] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: submitVote, isLoading: isSubmitting } = useApi();
 
   const hasVoted = appeal.votes.some((v) => v.expertId === expertId);
   const isResolved = appeal.status === "upheld" || appeal.status === "overturned";
@@ -61,20 +62,20 @@ export function AppealReviewPanel({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      await guildAppealApi.voteOnAppeal(appeal.id, {
+    await submitVote(
+      () => guildAppealApi.voteOnAppeal(appeal.id, {
         wallet,
         decision,
         reasoning,
-      });
-      toast.success("Vote submitted");
-      onVoteSubmitted?.();
-    } catch {
-      toast.error("Failed to submit vote");
-    } finally {
-      setIsSubmitting(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          toast.success("Vote submitted");
+          onVoteSubmitted?.();
+        },
+        onError: () => toast.error("Failed to submit vote"),
+      }
+    );
   };
 
   return (

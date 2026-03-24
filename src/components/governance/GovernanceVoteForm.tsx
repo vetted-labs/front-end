@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Crown, Info } from "lucide-react";
+import { useApi } from "@/lib/hooks/useFetch";
 
 interface GovernanceVoteFormProps {
   /** Merit-weighted vote weight (1.0 – 4.5) */
@@ -25,16 +26,11 @@ export function GovernanceVoteForm({
 }: GovernanceVoteFormProps) {
   const [selectedVote, setSelectedVote] = useState<"for" | "against" | "abstain" | null>(null);
   const [reason, setReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: submitVote, isLoading: isSubmitting } = useApi();
 
   const handleSubmit = async () => {
     if (!selectedVote) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit(selectedVote, reason);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submitVote(() => onSubmit(selectedVote, reason));
   };
 
   return (

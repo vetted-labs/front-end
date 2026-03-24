@@ -103,7 +103,7 @@ function ReplyNode({
   const [inlineReplyText, setInlineReplyText] = useState("");
   const [showChildren, setShowChildren] = useState(true);
   const [loadedChildren, setLoadedChildren] = useState<GuildPostReply[]>(reply.children ?? []);
-  const [loadingChildren, setLoadingChildren] = useState(false);
+  const { execute: loadChildren, isLoading: loadingChildren } = useApi<{ data: GuildPostReply[] }>();
   const { execute: submitReply, isLoading: isSubmitting } = useApi<GuildPostReply>();
 
   const childCount = reply.childCount ?? 0;
@@ -114,20 +114,22 @@ function ReplyNode({
 
   const handleLoadChildren = async () => {
     if (loadingChildren) return;
-    setLoadingChildren(true);
-    try {
-      const res = await guildFeedApi.getReplies(guildId, postId, {
+    await loadChildren(
+      () => guildFeedApi.getReplies(guildId, postId, {
         parentReplyId: reply.id,
         sort: "new",
         limit: 50,
-      });
-      setLoadedChildren(res.data);
-      setShowChildren(true);
-    } catch {
-      toast.error("Failed to load replies");
-    } finally {
-      setLoadingChildren(false);
-    }
+      }),
+      {
+        onSuccess: (res) => {
+          if (res) {
+            setLoadedChildren(res.data);
+            setShowChildren(true);
+          }
+        },
+        onError: () => toast.error("Failed to load replies"),
+      }
+    );
   };
 
   const handleInlineReply = async (e: React.FormEvent) => {

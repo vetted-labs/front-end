@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { MoreHorizontal, Pin, PinOff, Lock, Unlock, Trash2 } from "lucide-react";
 import { guildFeedApi } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { toast } from "sonner";
 import type { FeedPrivileges, ModerationAction } from "@/types";
@@ -25,7 +26,7 @@ export function ModerationMenu({
   onModerated,
 }: ModerationMenuProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { execute: moderate, isLoading: loading } = useApi();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setOpen(false), []);
@@ -40,29 +41,32 @@ export function ModerationMenu({
     e.stopPropagation();
     if (loading) return;
 
-    setLoading(true);
-    try {
-      await guildFeedApi.moderatePost(guildId, postId, { action });
-      onModerated(action);
-      toast.success(
-        action === "pin"
-          ? "Post pinned"
-          : action === "unpin"
-          ? "Post unpinned"
-          : action === "close"
-          ? "Post closed"
-          : action === "reopen"
-          ? "Post reopened"
-          : action === "delete"
-          ? "Post deleted"
-          : "Action completed"
-      );
-    } catch {
-      toast.error("Moderation action failed");
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
+    await moderate(
+      () => guildFeedApi.moderatePost(guildId, postId, { action }),
+      {
+        onSuccess: () => {
+          onModerated(action);
+          toast.success(
+            action === "pin"
+              ? "Post pinned"
+              : action === "unpin"
+              ? "Post unpinned"
+              : action === "close"
+              ? "Post closed"
+              : action === "reopen"
+              ? "Post reopened"
+              : action === "delete"
+              ? "Post deleted"
+              : "Action completed"
+          );
+          setOpen(false);
+        },
+        onError: () => {
+          toast.error("Moderation action failed");
+          setOpen(false);
+        },
+      }
+    );
   };
 
   return (

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useApi } from "@/lib/hooks/useFetch";
 
 interface DisputeVoteFormProps {
   onSubmit: (decision: "uphold" | "dismiss", reasoning: string) => Promise<void>;
@@ -14,16 +15,11 @@ interface DisputeVoteFormProps {
 export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormProps) {
   const [decision, setDecision] = useState<"uphold" | "dismiss" | null>(null);
   const [reasoning, setReasoning] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: submitVote, isLoading: isSubmitting } = useApi();
 
   const handleSubmit = async () => {
     if (!decision || !reasoning.trim()) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit(decision, reasoning);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await submitVote(() => onSubmit(decision, reasoning));
   };
 
   return (
