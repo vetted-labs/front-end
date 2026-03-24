@@ -82,7 +82,7 @@ export function NotificationBell() {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        aria-label="Notifications"
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -107,8 +107,9 @@ export function NotificationBell() {
           {/* Notification list */}
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-8" role="status">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="sr-only">Loading notifications</span>
               </div>
             ) : fetchError ? (
               <div className="py-8 text-center">

@@ -68,6 +68,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
             isCollapsed && "justify-center px-2"
           )}
+          {...(isCollapsed ? { "aria-label": "My Profile" } : {})}
         >
           <User className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span>My Profile</span>}
@@ -82,6 +83,8 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
                 "flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 hover:border-primary/50 transition-colors",
                 isCollapsed && "justify-center px-2"
               )}
+              aria-expanded={showWalletMenu}
+              {...(isCollapsed ? { "aria-label": "Wallet menu" } : {})}
             >
               <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary/10">
                 <Wallet className="h-4 w-4 text-primary" />
@@ -151,6 +154,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
             isCollapsed && "justify-center px-2"
           )}
+          {...(isCollapsed ? { "aria-label": "Dashboard" } : {})}
         >
           <User className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span>Dashboard</span>}
@@ -182,7 +186,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center rounded-lg px-2 py-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Logout"
+            aria-label="Logout"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -202,6 +206,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
             isCollapsed && "justify-center px-2"
           )}
+          {...(isCollapsed ? { "aria-label": "My Profile" } : {})}
         >
           <User className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span>My Profile</span>}
@@ -233,7 +238,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center rounded-lg px-2 py-2 text-destructive hover:bg-destructive/10 transition-colors"
-            title="Logout"
+            aria-label="Logout"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -282,6 +287,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
                 "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
                 isCollapsed && "justify-center px-2"
               )}
+              {...(isCollapsed ? { "aria-label": "My Profile" } : {})}
             >
               <User className="h-4 w-4 flex-shrink-0" />
               {!isCollapsed && <span>My Profile</span>}
@@ -303,7 +309,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             <button
               onClick={handleLogout}
               className="flex w-full items-center justify-center rounded-lg px-2 py-2 text-destructive hover:bg-destructive/10 transition-colors"
-              title="Sign Out"
+              aria-label="Sign Out"
             >
               <LogOut className="h-5 w-5" />
             </button>
@@ -322,7 +328,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             <button
               onClick={() => router.push("/auth/login")}
               className="flex w-full items-center justify-center rounded-lg px-2 py-2 text-primary hover:bg-primary/10 transition-colors"
-              title="Sign In"
+              aria-label="Sign In"
             >
               <User className="h-5 w-5" />
             </button>
