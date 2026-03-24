@@ -11,7 +11,7 @@ interface AlertProps {
 export function Alert({ variant = "info", children, onClose, className = "" }: AlertProps) {
   const styles = {
     error: {
-      container: "bg-destructive/10 border-destructive/20 text-red-800 dark:text-red-300",
+      container: "bg-destructive/10 border-destructive/20 text-destructive",
       icon: <XCircle className="w-5 h-5 text-destructive" />
     },
     success: {
