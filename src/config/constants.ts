@@ -149,6 +149,17 @@ export const COMMIT_REVEAL_STATUS_LABELS: Record<string, string> = {
 };
 
 /**
+ * Shared vetting review state badge configuration.
+ * Maps the expert's review progress through commit-reveal phases.
+ */
+export const VETTING_REVIEW_STATE_CONFIG: Record<string, { label: string; className: string }> = {
+  needs_review: { label: "Needs Review", className: "bg-primary/10 text-primary border-primary/20" },
+  committed: { label: "Committed", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
+  revealed: { label: "Revealed", className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" },
+  finalized: { label: "Finalized", className: "bg-muted text-muted-foreground border-border" },
+};
+
+/**
  * Shared governance proposal status configuration.
  */
 export const PROPOSAL_STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {

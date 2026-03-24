@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Sparkles } from "lucide-react";
+import { CheckCircle, CheckCircle2, Sparkles } from "lucide-react";
 import type { ReviewSubmitResponse } from "@/types";
 
 export interface ReviewSuccessStepProps {
@@ -43,6 +43,17 @@ export function ReviewSuccessStep({
           {apiResponse?.message || "Your review has been recorded. Thanks for voting!"}
         </p>
       </div>
+
+      {/* Vote Locked Confirmation (commit-reveal only) */}
+      {isCommitPhase && (
+        <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4 text-center">
+          <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-2" />
+          <p className="font-semibold text-foreground">Vote committed!</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            You&apos;ll need to reveal it during the reveal phase.
+          </p>
+        </div>
+      )}
 
       {/* Score Summary */}
       <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">

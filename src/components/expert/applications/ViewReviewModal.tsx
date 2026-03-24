@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, MessageSquare, Link2, ShieldCheck, Eye, Lock } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, MessageSquare, Link2, ShieldCheck, Eye, Lock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { expertApi, guildsApi, commitRevealApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
 import { Modal } from "@/components/ui/modal";
-import type { ExpertCRPhaseStatus, CommitRevealPhaseStatus } from "@/types";
+import { Alert } from "@/components/ui/alert";
+import type { ExpertCRPhaseStatus, CommitRevealPhaseStatus, ExpertApplicationFinalization } from "@/types";
 
 interface ViewReviewModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function ViewReviewModal({
   expertId,
 }: ViewReviewModalProps) {
   const [crStatus, setCrStatus] = useState<ExpertCRPhaseStatus | CommitRevealPhaseStatus | null>(null);
+  const [finalization, setFinalization] = useState<ExpertApplicationFinalization | null>(null);
 
   const shouldFetch = isOpen && !!applicationId && !!walletAddress;
 
@@ -56,9 +58,33 @@ export function ViewReviewModal({
     }
   );
 
+  // Fetch finalization data for consensus results (non-critical — silent on failure)
+  useFetch<ExpertApplicationFinalization>(
+    () => expertApi.getExpertApplicationFinalization(applicationId!),
+    {
+      skip: !shouldFetch || reviewType !== "expert",
+      onSuccess: (data) => setFinalization(data),
+      onError: () => setFinalization(null),
+    }
+  );
+
   if (!isOpen || !applicationId) return null;
 
   const isCommitPhase = review?.revealed === false && !review?.vote;
+
+  // Derive the phase from crStatus
+  const crPhase = crStatus
+    ? ("votingPhase" in crStatus ? (crStatus as ExpertCRPhaseStatus).votingPhase : (crStatus as CommitRevealPhaseStatus).phase)
+    : null;
+
+  // Missed reveal: application is finalized but the expert never revealed
+  const missedReveal = crPhase === "finalized" && review?.revealed === false;
+
+  // Consensus result data for finalized applications
+  const isFinalized = crPhase === "finalized" && !!finalization;
+  const expertVote = finalization?.votes?.find(
+    (v) => expertId && v.reviewerId === expertId
+  );
 
   // Score data comes from the review (stored server-side during commit)
   const scores = review?.criteriaScores as Record<string, unknown> | undefined;
@@ -122,6 +148,14 @@ export function ViewReviewModal({
                 {new Date(review.committedAt || review.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
+
+            {/* Missed Reveal Warning */}
+            {missedReveal && (
+              <Alert variant="error">
+                You missed the reveal window. Your vote will not count toward consensus.
+                This may affect your reputation score.
+              </Alert>
+            )}
 
             {/* Commit TX Link */}
             {isCommitPhase && review.onChainCommitTxHash && (
@@ -206,6 +240,74 @@ export function ViewReviewModal({
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 text-right">{scorePercent}%</p>
+                </div>
+              </div>
+            )}
+
+            {/* Consensus Result (shown when finalized) */}
+            {isFinalized && finalization && (
+              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
+                <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+                  Consensus Result
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 rounded-lg bg-card border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Your Score</p>
+                    <p className="text-lg font-bold text-foreground">{scorePercent}%</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-card border border-border">
+                    <p className="text-xs text-muted-foreground mb-1">Consensus Score</p>
+                    <p className="text-lg font-bold text-foreground">{finalization.consensusScore}%</p>
+                  </div>
+                </div>
+
+                {expertVote && (
+                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                    expertVote.cluster === "majority"
+                      ? "bg-green-500/[0.06] border-green-500/20"
+                      : expertVote.cluster === "minority"
+                      ? "bg-red-500/[0.06] border-red-500/20"
+                      : "bg-muted/30 border-border"
+                  }`}>
+                    {expertVote.cluster === "majority" ? (
+                      <TrendingUp className="w-5 h-5 text-green-500 shrink-0" />
+                    ) : expertVote.cluster === "minority" ? (
+                      <TrendingDown className="w-5 h-5 text-red-500 shrink-0" />
+                    ) : (
+                      <Minus className="w-5 h-5 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {expertVote.cluster === "majority" ? "Aligned with consensus" : expertVote.cluster === "minority" ? "Deviated from consensus" : "Neutral"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Distance from consensus: {expertVote.alignmentDistance.toFixed(1)} points
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-sm font-bold ${
+                        expertVote.reputationChange > 0
+                          ? "text-green-500"
+                          : expertVote.reputationChange < 0
+                          ? "text-red-500"
+                          : "text-muted-foreground"
+                      }`}>
+                        {expertVote.reputationChange > 0 ? "+" : ""}{expertVote.reputationChange}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">reputation</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Outcome */}
+                <div className="pt-3 border-t border-border flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Application Outcome</span>
+                  <span className={`text-sm font-semibold ${
+                    finalization.outcome === "approved" ? "text-green-500" : "text-red-500"
+                  }`}>
+                    {finalization.outcome === "approved" ? "Approved" : "Rejected"}
+                  </span>
                 </div>
               </div>
             )}

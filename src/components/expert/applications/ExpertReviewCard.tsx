@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
+import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -36,6 +37,17 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
     reveal: "text-blue-400",
     finalized: "text-green-400",
   };
+
+  // Derive vetting review state for the status badge
+  const vettingState = phase === "finalized"
+    ? "finalized"
+    : isReviewed && phase === "commit"
+    ? "committed"
+    : isReviewed
+    ? "revealed"
+    : "needs_review";
+
+  const stateConfig = VETTING_REVIEW_STATE_CONFIG[vettingState];
 
   return (
     <div className="group rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 transition-all hover:border-primary/30 dark:bg-card/40 dark:border-white/[0.06] dark:hover:border-white/[0.12]">
@@ -127,20 +139,29 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
         </div>
 
         {/* Action */}
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          {/* Vetting state badge */}
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg ${stateConfig.className}`}>
+            {vettingState === "finalized" ? (
+              <CheckCircle className="w-3.5 h-3.5" />
+            ) : vettingState === "revealed" ? (
+              <Eye className="w-3.5 h-3.5" />
+            ) : vettingState === "committed" ? (
+              <ShieldCheck className="w-3.5 h-3.5" />
+            ) : (
+              <Clock className="w-3.5 h-3.5" />
+            )}
+            {stateConfig.label}
+          </span>
+
+          {/* Action buttons */}
           {isReviewed ? (
-            <>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">
-                <CheckCircle className="w-3.5 h-3.5" />
-                Reviewed
-              </span>
-              {onViewReview && (
-                <Button variant="outline" size="sm" onClick={() => onViewReview(application)} className="text-xs">
-                  <Eye className="w-3.5 h-3.5 mr-1" />
-                  View
-                </Button>
-              )}
-            </>
+            onViewReview && (
+              <Button variant="outline" size="sm" onClick={() => onViewReview(application)} className="text-xs">
+                <Eye className="w-3.5 h-3.5 mr-1" />
+                View
+              </Button>
+            )
           ) : (
             <Button onClick={() => onReview(application)} size="sm">
               Review
