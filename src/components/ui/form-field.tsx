@@ -19,7 +19,7 @@ export function FormField({
   className,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("space-y-2", className)} data-field-error={!!error || undefined}>
       {label && (
         <label className="text-sm font-medium text-foreground">
           {label}
