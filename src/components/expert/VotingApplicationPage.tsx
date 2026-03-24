@@ -144,6 +144,7 @@ function CandidateQuickLinks({
           rel="noopener noreferrer"
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-border hover:border-primary/30 hover:text-primary transition-colors text-muted-foreground"
           title="LinkedIn"
+          aria-label="LinkedIn profile"
         >
           <Linkedin className="w-4 h-4" />
         </a>
@@ -155,6 +156,7 @@ function CandidateQuickLinks({
           rel="noopener noreferrer"
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-border hover:border-primary/30 hover:text-primary transition-colors text-muted-foreground"
           title="GitHub"
+          aria-label="GitHub profile"
         >
           <Github className="w-4 h-4" />
         </a>
@@ -166,6 +168,7 @@ function CandidateQuickLinks({
           rel="noopener noreferrer"
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-border hover:border-primary/30 hover:text-primary transition-colors text-muted-foreground"
           title="Resume / CV"
+          aria-label="View resume"
         >
           <FileText className="w-4 h-4" />
         </a>
@@ -242,7 +245,7 @@ export default function VotingApplicationPage({
   /* -- loading state -- */
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center" role="status" aria-label="Loading application">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );

@@ -273,7 +273,7 @@ export function AppealSubmissionForm({
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Justification <span className="text-red-500">*</span>
+                  Justification <span className="text-destructive">*</span>
                 </label>
                 <textarea
                   value={justification}

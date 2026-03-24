@@ -78,6 +78,7 @@ export function ModerationMenu({
         }}
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         title="Moderation actions"
+        aria-label="Moderation actions"
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
@@ -124,7 +125,7 @@ export function ModerationMenu({
             <button
               onClick={(e) => handleAction(e, "delete")}
               disabled={loading}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete
             </button>

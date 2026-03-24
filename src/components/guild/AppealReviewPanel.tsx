@@ -260,7 +260,7 @@ export function AppealReviewPanel({
 
             <div className="mb-3">
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                Reasoning <span className="text-red-500">*</span>
+                Reasoning <span className="text-destructive">*</span>
               </label>
               <textarea
                 value={reasoning}

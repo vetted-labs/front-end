@@ -139,6 +139,7 @@ export function PersonalInfoSection({
                 onResumeChange(null);
                 if (resumeInputRef.current) resumeInputRef.current.value = "";
               }}
+              aria-label="Remove resume"
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />

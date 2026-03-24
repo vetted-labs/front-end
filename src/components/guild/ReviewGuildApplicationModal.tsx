@@ -392,6 +392,7 @@ export function ReviewGuildApplicationModal({
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close review modal"
               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
             >
               <X className="w-4 h-4" />

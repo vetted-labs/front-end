@@ -108,7 +108,7 @@ export function ViewReviewModal({
 
       <div className="space-y-6">
         {loading && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12" role="status" aria-label="Loading review">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
           </div>
         )}

@@ -196,6 +196,7 @@ export default function ResumeAndGeneralStep({
               <button
                 type="button"
                 onClick={onRemoveResume}
+                aria-label="Remove resume"
                 className="p-1 hover:bg-background rounded"
               >
                 <X className="w-4 h-4 text-muted-foreground" />

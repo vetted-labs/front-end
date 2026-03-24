@@ -133,7 +133,7 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40"
           />
           {fieldErrors.title && (
-            <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.title}</p>
           )}
           <p className="mt-1 text-xs text-muted-foreground text-right">
             {title.length}/200
@@ -161,7 +161,7 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
             className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 resize-y"
           />
           {fieldErrors.body && (
-            <p className="mt-1 text-xs text-red-500">{fieldErrors.body}</p>
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.body}</p>
           )}
           <p className="mt-1 text-xs text-muted-foreground text-right">
             {body.length}/5000
@@ -171,7 +171,7 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
         {/* Poll Creator */}
         <PollCreator poll={poll} onChange={setPoll} />
         {fieldErrors.poll && (
-          <p className="text-xs text-red-500">{fieldErrors.poll}</p>
+          <p className="text-xs text-destructive">{fieldErrors.poll}</p>
         )}
 
         {/* Actions */}

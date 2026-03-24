@@ -115,7 +115,7 @@ export function GovernanceProposalDetailPage() {
   /* ─── Loading ─── */
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh]" role="status" aria-label="Loading proposal">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );

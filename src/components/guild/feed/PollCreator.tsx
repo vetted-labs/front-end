@@ -126,7 +126,8 @@ export function PollCreator({ poll, onChange }: PollCreatorProps) {
                   <button
                     type="button"
                     onClick={() => handleRemoveOption(i)}
-                    className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                    aria-label="Remove poll option"
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>

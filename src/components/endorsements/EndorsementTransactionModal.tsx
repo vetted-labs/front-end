@@ -139,6 +139,7 @@ export function EndorsementTransactionModal({
               <button
                 onClick={onClose}
                 disabled={txStep === 'signing' || txStep === 'approving' || txStep === 'bidding'}
+                aria-label="Close endorsement modal"
                 className="group w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
                 <X className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />

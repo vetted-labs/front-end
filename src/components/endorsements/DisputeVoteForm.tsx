@@ -54,7 +54,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
 
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Reasoning <span className="text-red-500">*</span>
+            Reasoning <span className="text-destructive">*</span>
           </label>
           <Textarea
             value={reasoning}

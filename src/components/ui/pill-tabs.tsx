@@ -21,10 +21,12 @@ export function PillTabs<T extends string>({
   className,
 }: PillTabsProps<T>) {
   return (
-    <div className={`flex flex-wrap gap-2 overflow-x-auto ${className ?? ""}`}>
+    <div role="tablist" className={`flex flex-wrap gap-2 overflow-x-auto ${className ?? ""}`}>
       {tabs.map((tab) => (
         <button
           key={tab.value}
+          role="tab"
+          aria-selected={activeTab === tab.value}
           onClick={() => onTabChange(tab.value)}
           className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
             activeTab === tab.value

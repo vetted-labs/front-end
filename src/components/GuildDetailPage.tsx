@@ -419,7 +419,7 @@ export default function GuildDetailPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="pb-12">
+        <div className="pb-12" role="tabpanel">
           {/* Feed Tab */}
           {activeTab === "feed" && (
             <GuildFeedTab

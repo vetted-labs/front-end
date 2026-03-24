@@ -192,6 +192,7 @@ export function ProfessionalBackgroundSection({
                 <button
                   type="button"
                   onClick={() => onRemoveExpertiseArea(index)}
+                  aria-label="Remove expertise area"
                   className="hover:text-primary"
                 >
                   <X className="w-4 h-4" />

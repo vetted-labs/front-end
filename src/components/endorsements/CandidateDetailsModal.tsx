@@ -133,6 +133,7 @@ export function CandidateDetailsModal({
 
             <button
               onClick={onClose}
+              aria-label="Close candidate details"
               className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all flex-shrink-0"
             >
               <X className="w-4 h-4 text-muted-foreground" />
@@ -160,18 +161,21 @@ export function CandidateDetailsModal({
             <div className="flex gap-2">
               {application.linkedin && (
                 <a href={ensureHttps(application.linkedin)} target="_blank" rel="noopener noreferrer"
+                  aria-label="LinkedIn profile"
                   className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
                   <Linkedin className="w-4 h-4 text-muted-foreground" />
                 </a>
               )}
               {application.github && (
                 <a href={ensureHttps(application.github)} target="_blank" rel="noopener noreferrer"
+                  aria-label="GitHub profile"
                   className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
                   <Github className="w-4 h-4 text-muted-foreground" />
                 </a>
               )}
               {application.resume_url && (
                 <a href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`} target="_blank" rel="noopener noreferrer"
+                  aria-label="View resume"
                   className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
                   <FileText className="w-4 h-4 text-muted-foreground" />
                 </a>

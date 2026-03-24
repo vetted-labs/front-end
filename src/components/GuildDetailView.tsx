@@ -409,7 +409,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               />
             </div>
 
-            <div className="p-6">
+            <div className="p-6" role="tabpanel">
               {activeTab === "feed" && (
                 <GuildFeedTab guildId={guildId} isMember={true} membershipRole={guild.expertRole as ExpertRole} userType="expert" />
               )}

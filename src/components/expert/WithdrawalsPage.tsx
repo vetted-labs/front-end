@@ -59,7 +59,7 @@ export default function WithdrawalsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-20" role="status" aria-label="Loading withdrawals">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
