@@ -3,8 +3,57 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, ArrowRight } from "lucide-react";
+import { Award, ArrowRight, CheckCircle2, Clock, XCircle, TrendingUp } from "lucide-react";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
+
+/** Returns a contextual status message for the endorsement lifecycle based on application status. */
+function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): {
+  icon: React.ReactNode;
+  message: string;
+  className: string;
+} | null {
+  const status = endorsement.application?.status;
+  const candidateName = endorsement.candidate?.name ?? "this candidate";
+
+  switch (status) {
+    case "hired":
+      return {
+        icon: <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />,
+        message: "Reward pending — waiting for on-chain confirmation",
+        className: "text-emerald-600 dark:text-emerald-400",
+      };
+    case "offered":
+      return {
+        icon: <TrendingUp className="w-3.5 h-3.5 shrink-0" />,
+        message: `${candidateName} received an offer — outcome pending`,
+        className: "text-blue-600 dark:text-blue-400",
+      };
+    case "rejected":
+    case "withdrawn":
+      return {
+        icon: <XCircle className="w-3.5 h-3.5 shrink-0" />,
+        message: status === "rejected"
+          ? "Candidate not selected — slashing may apply"
+          : "Candidate withdrew — stake returned",
+        className: "text-red-600 dark:text-red-400",
+      };
+    case "interviewing":
+      return {
+        icon: <Clock className="w-3.5 h-3.5 shrink-0" />,
+        message: `${candidateName} is interviewing`,
+        className: "text-purple-600 dark:text-purple-400",
+      };
+    case "accepted":
+      return {
+        icon: <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />,
+        message: `${candidateName} accepted — awaiting hire confirmation`,
+        className: "text-emerald-600 dark:text-emerald-400",
+      };
+    default:
+      // "pending", "reviewing", or unknown — no extra messaging needed
+      return null;
+  }
+}
 
 interface MyActiveEndorsementsProps {
   /** Endorsements filtered for the current guild */
@@ -136,46 +185,55 @@ export function MyActiveEndorsements({
           </div>
         ) : (
           <div className="divide-y divide-border/30">
-            {userEndorsements.map((endorsement) => (
-              <div
-                key={endorsement.application?.id || endorsement.endorsementId}
-                onClick={() => handleEndorsementClick(endorsement)}
-                className="px-1 py-3.5 hover:bg-muted/30 cursor-pointer transition-colors group flex items-center justify-between first:pt-0 last:pb-0"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-semibold group-hover:text-primary transition-colors">
-                      {endorsement.candidate?.name}
-                    </h4>
-                    {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && endorsement.blockchainData.rank <= 3 && (
-                      <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
-                        Rank #{endorsement.blockchainData.rank}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {endorsement.job?.title} at {endorsement.job?.companyName}
-                  </p>
-                  <p className="text-sm font-medium text-primary mt-1">
-                    Your Bid: {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VETD
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right text-sm text-muted-foreground">
-                    {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && (
-                      <p>Rank #{endorsement.blockchainData.rank}</p>
-                    )}
-                    <p className="text-xs mt-1">
-                      {endorsement.createdAt
-                        ? new Date(endorsement.createdAt).toLocaleDateString()
-                        : 'N/A'
-                      }
+            {userEndorsements.map((endorsement) => {
+              const lifecycle = getEndorsementLifecycleInfo(endorsement);
+              return (
+                <div
+                  key={endorsement.application?.id || endorsement.endorsementId}
+                  onClick={() => handleEndorsementClick(endorsement)}
+                  className="px-1 py-3.5 hover:bg-muted/30 cursor-pointer transition-colors group flex items-center justify-between first:pt-0 last:pb-0"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h4 className="font-semibold group-hover:text-primary transition-colors">
+                        {endorsement.candidate?.name}
+                      </h4>
+                      {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && endorsement.blockchainData.rank <= 3 && (
+                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
+                          Rank #{endorsement.blockchainData.rank}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {endorsement.job?.title} at {endorsement.job?.companyName}
                     </p>
+                    <p className="text-sm font-medium text-primary mt-1">
+                      Your Bid: {parseFloat(endorsement.stakeAmount || '0').toFixed(2)} VETD
+                    </p>
+                    {lifecycle && (
+                      <p className={`text-xs mt-1.5 flex items-center gap-1.5 ${lifecycle.className}`}>
+                        {lifecycle.icon}
+                        {lifecycle.message}
+                      </p>
+                    )}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  <div className="flex items-center gap-4">
+                    <div className="text-right text-sm text-muted-foreground">
+                      {endorsement.blockchainData?.rank != null && endorsement.blockchainData.rank > 0 && (
+                        <p>Rank #{endorsement.blockchainData.rank}</p>
+                      )}
+                      <p className="text-xs mt-1">
+                        {endorsement.createdAt
+                          ? new Date(endorsement.createdAt).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

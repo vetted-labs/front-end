@@ -117,7 +117,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   // Filter endorsements for current guild
   const userEndorsements = allUserEndorsements.filter((e) => e.guild?.id === guildId);
 
-  // Auto-open endorsement modal when navigated with ?applicationId=
+  // eslint-disable-next-line no-restricted-syntax -- runtime deps: auto-open modal once applications finish loading with a matching applicationId
   useEffect(() => {
     if (
       initialApplicationId &&
@@ -166,8 +166,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     await submitEndorsement(app, amount);
   };
 
-  // Auto-refresh wallet/endorsement data when user returns to the tab
-  // (applications already re-fetch when guildId changes via useFetch)
+  // eslint-disable-next-line no-restricted-syntax -- DOM visibilitychange subscription with runtime callback deps
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === "visible") {
