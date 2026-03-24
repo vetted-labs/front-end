@@ -1,3 +1,9 @@
+/** Tab type for the expert applications/reviews page. */
+export type ApplicationsTabType = "expert" | "candidate" | "proposals" | "history";
+
+/** Filter mode for assigned vs all items on the applications page. */
+export type ApplicationsFilterMode = "assigned" | "all";
+
 export type ApplicationStatus =
   | "pending"
   | "reviewing"

@@ -4,6 +4,8 @@ export { GUILD_DETAIL_TABS } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, PendingGuildInfo, FieldErrors } from "./expert";
 export type { CandidateProfile, CandidateMember, SocialLink, CandidateRejectionFeedback } from "./candidate";
 export type {
+  ApplicationsTabType,
+  ApplicationsFilterMode,
   CandidateApplication,
   CompanyApplication,
   GuildJobApplication,
