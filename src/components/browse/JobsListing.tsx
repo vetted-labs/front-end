@@ -1,35 +1,32 @@
 "use client";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Filter,
   MapPin,
-  DollarSign,
   Briefcase,
-  Building2,
   X,
-  CheckCircle2,
-  Star,
 } from "lucide-react";
-import { jobsApi, applicationsApi, getAssetUrl } from "@/lib/api";
+import { jobsApi, applicationsApi } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import type { Job } from "@/types";
-
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { JobCard } from "./JobCard";
+import { JobsFilterModal } from "./JobsFilterModal";
+
+const JOB_TYPES = ["Full-time", "Part-time", "Contract", "Freelance"];
+const LOCATION_TYPES = ["Remote", "Onsite", "Hybrid"];
 
 export default function JobsListing() {
-  const router = useRouter();
-  const { resolveGuildId } = useGuilds();
+  useGuilds();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuilds, setSelectedGuilds] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -37,7 +34,7 @@ export default function JobsListing() {
     [],
   );
   const auth = useAuthContext();
-  const isCandidate = auth.isAuthenticated && auth.userType === 'candidate';
+  const isCandidate = auth.isAuthenticated && auth.userType === "candidate";
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const [locationQuery, setLocationQuery] = useState("");
@@ -47,64 +44,57 @@ export default function JobsListing() {
   const [showAllGuildsModal, setShowAllGuildsModal] = useState(false);
 
   // Fetch candidate's applications if authenticated as candidate
-  useFetch(
-    () => applicationsApi.getAll(),
-    {
-      skip: !isCandidate,
-      onSuccess: (data) => {
-        const applications = data?.applications || [];
-        const jobIds = new Set<string>(applications.map((app) => app.jobId));
-        setAppliedJobIds(jobIds);
-      },
-      onError: (err) => {
-        toast.error("Failed to fetch applications");
-        logger.error("Failed to fetch applications", err, { silent: true });
-      },
-    }
-  );
-
+  useFetch(() => applicationsApi.getAll(), {
+    skip: !isCandidate,
+    onSuccess: (data) => {
+      const applications = data?.applications || [];
+      const jobIds = new Set<string>(applications.map((app) => app.jobId));
+      setAppliedJobIds(jobIds);
+    },
+    onError: (err) => {
+      toast.error("Failed to fetch applications");
+      logger.error("Failed to fetch applications", err, { silent: true });
+    },
+  });
 
   // Fetch jobs listing
   const { data: jobs, isLoading } = useFetch<Job[]>(
-    () => jobsApi.getAll({ status: 'active' }).then((data) => {
-      const jobsList = Array.isArray(data) ? data : [];
-      return jobsList.map((job) => ({
-        ...job,
-        title: job.title || 'Untitled Position',
-        description: job.description || '',
-        guild: job.guild || '',
-        department: job.department || null,
-        requirements: job.requirements || [],
-        skills: job.skills || [],
-        screeningQuestions: job.screeningQuestions || [],
-      }));
-    }),
+    () =>
+      jobsApi.getAll({ status: "active" }).then((data) => {
+        const jobsList = Array.isArray(data) ? data : [];
+        return jobsList.map((job) => ({
+          ...job,
+          title: job.title || "Untitled Position",
+          description: job.description || "",
+          guild: job.guild || "",
+          department: job.department || null,
+          requirements: job.requirements || [],
+          skills: job.skills || [],
+          screeningQuestions: job.screeningQuestions || [],
+        }));
+      }),
     {
       onError: (err) => {
         toast.error("Failed to load jobs");
         logger.error("Failed to load jobs", err, { silent: true });
       },
-    }
+    },
   );
 
   // Get unique guilds from actual jobs data
   const allGuilds = Array.from(
     new Set(
       (jobs || [])
-        .map((job) => job.guild?.replace(/ Guild$/i, ''))
-        .filter((g): g is string => Boolean(g))
-    )
+        .map((job) => job.guild?.replace(/ Guild$/i, ""))
+        .filter((g): g is string => Boolean(g)),
+    ),
   ).sort();
 
   const visibleGuilds = allGuilds.slice(0, 6);
 
-  const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
-  const locationTypes = ["Remote", "Onsite", "Hybrid"];
-
   const filteredJobs = useMemo(() => {
     let filtered = jobs || [];
 
-    // Filter by search query (debounced)
     if (debouncedSearch) {
       const query = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
@@ -117,7 +107,6 @@ export default function JobsListing() {
       );
     }
 
-    // Filter by location (debounced)
     if (debouncedLocation) {
       const query = debouncedLocation.toLowerCase();
       filtered = filtered.filter(
@@ -127,35 +116,42 @@ export default function JobsListing() {
       );
     }
 
-    // Filter by guilds
     if (selectedGuilds.length > 0) {
       filtered = filtered.filter((job) => {
         if (!job.guild) return false;
-        // Match guild name with or without " Guild" suffix
-        const jobGuild = job.guild.replace(/ Guild$/i, '');
-        return selectedGuilds.some(selectedGuild => {
-          const cleanSelected = selectedGuild.replace(/ Guild$/i, '');
+        const jobGuild = job.guild.replace(/ Guild$/i, "");
+        return selectedGuilds.some((selectedGuild) => {
+          const cleanSelected = selectedGuild.replace(/ Guild$/i, "");
           return jobGuild.toLowerCase() === cleanSelected.toLowerCase();
         });
       });
     }
 
-    // Filter by job types
     if (selectedJobTypes.length > 0) {
-      filtered = filtered.filter((job) => job.type && selectedJobTypes.includes(job.type));
+      filtered = filtered.filter(
+        (job) => job.type && selectedJobTypes.includes(job.type),
+      );
     }
 
-    // Filter by location types (case-insensitive)
     if (selectedLocationTypes.length > 0) {
-      filtered = filtered.filter((job) =>
-        job.locationType && selectedLocationTypes.some(
-          type => type.toLowerCase() === job.locationType!.toLowerCase()
-        ),
+      filtered = filtered.filter(
+        (job) =>
+          job.locationType &&
+          selectedLocationTypes.some(
+            (type) => type.toLowerCase() === job.locationType!.toLowerCase(),
+          ),
       );
     }
 
     return filtered;
-  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
+  }, [
+    debouncedSearch,
+    debouncedLocation,
+    selectedGuilds,
+    selectedJobTypes,
+    selectedLocationTypes,
+    jobs,
+  ]);
 
   const {
     paginatedItems: currentJobs,
@@ -166,20 +162,34 @@ export default function JobsListing() {
   } = useClientPagination(filteredJobs, 5);
 
   // Reset to page 1 when filters change
+  // eslint-disable-next-line no-restricted-syntax -- resetPage is a stable ref from useClientPagination, needs effect to sync with filter changes
   useEffect(() => {
     resetPage();
-  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, resetPage]);
+  }, [
+    debouncedSearch,
+    debouncedLocation,
+    selectedGuilds,
+    selectedJobTypes,
+    selectedLocationTypes,
+    resetPage,
+  ]);
 
-  const toggleFilter = (
-    filterArray: string[],
-    setFilter: (filters: string[]) => void,
-    value: string,
-  ) => {
-    if (filterArray.includes(value)) {
-      setFilter(filterArray.filter((item) => item !== value));
-    } else {
-      setFilter([...filterArray, value]);
-    }
+  const toggleGuild = (guild: string) => {
+    setSelectedGuilds((prev) =>
+      prev.includes(guild) ? prev.filter((g) => g !== guild) : [...prev, guild],
+    );
+  };
+
+  const toggleJobType = (type: string) => {
+    setSelectedJobTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
+  };
+
+  const toggleLocationType = (type: string) => {
+    setSelectedLocationTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
   };
 
   const clearAllFilters = () => {
@@ -190,38 +200,16 @@ export default function JobsListing() {
     setLocationQuery("");
   };
 
+  const clearFilterSelections = () => {
+    setSelectedGuilds([]);
+    setSelectedJobTypes([]);
+    setSelectedLocationTypes([]);
+  };
+
   const activeFilterCount =
     selectedGuilds.length +
     selectedJobTypes.length +
     selectedLocationTypes.length;
-
-  const toggleGuild = (guild: string) => {
-    if (selectedGuilds.includes(guild)) {
-      setSelectedGuilds(selectedGuilds.filter((g) => g !== guild));
-    } else {
-      setSelectedGuilds([...selectedGuilds, guild]);
-    }
-  };
-
-  const toggleJobType = (type: string) => {
-    if (selectedJobTypes.includes(type)) {
-      setSelectedJobTypes(selectedJobTypes.filter((t) => t !== type));
-    } else {
-      setSelectedJobTypes([...selectedJobTypes, type]);
-    }
-  };
-
-  const toggleLocationType = (type: string) => {
-    if (selectedLocationTypes.includes(type)) {
-      setSelectedLocationTypes(selectedLocationTypes.filter((t) => t !== type));
-    } else {
-      setSelectedLocationTypes([...selectedLocationTypes, type]);
-    }
-  };
-
-  const selectAllGuilds = () => {
-    setSelectedGuilds([...allGuilds]);
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -234,7 +222,6 @@ export default function JobsListing() {
         {/* Two-Column Search Bar */}
         <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Role/Keywords Search */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
@@ -245,8 +232,6 @@ export default function JobsListing() {
                 className="w-full pl-12 pr-4 py-3.5 border border-border/60 rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary/40 bg-card/70 backdrop-blur-sm text-foreground placeholder:text-muted-foreground"
               />
             </div>
-
-            {/* Location Search */}
             <div className="relative">
               <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
@@ -283,13 +268,9 @@ export default function JobsListing() {
               <Filter className="w-4 h-4" />
               Filter
             </button>
-            {(selectedGuilds.length > 0 || selectedJobTypes.length > 0 || selectedLocationTypes.length > 0) && (
+            {activeFilterCount > 0 && (
               <button
-                onClick={() => {
-                  setSelectedGuilds([]);
-                  setSelectedJobTypes([]);
-                  setSelectedLocationTypes([]);
-                }}
+                onClick={clearFilterSelections}
                 className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-destructive transition-all flex items-center gap-1"
               >
                 <X className="w-4 h-4" />
@@ -299,141 +280,18 @@ export default function JobsListing() {
           </div>
         </div>
 
-        {/* Jobs List - Full Width */}
+        {/* Jobs List */}
         <div>
-
-          {isLoading ? (
-            null
-          ) : filteredJobs.length > 0 ? (
+          {isLoading ? null : filteredJobs.length > 0 ? (
             <>
               <div className="space-y-3">
                 {currentJobs.map((job) => (
-                  <Link
+                  <JobCard
                     key={job.id}
-                    href={`/browse/jobs/${job.id}`}
-                    className="block bg-card/70 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group relative"
-                  >
-                    {/* Posted Date - Top Right Corner */}
-                    <div className="absolute top-4 right-5 text-xs text-muted-foreground">
-                      {getTimeAgo(job.createdAt)}
-                    </div>
-
-                    <div className="flex gap-5">
-                      {/* Company Logo - Left Side */}
-                      <div className="flex-shrink-0">
-                        {job.companyLogo ? (
-                          <img
-                            src={getAssetUrl(job.companyLogo)}
-                            alt={job.companyName || "Company"}
-                            className="w-16 h-16 rounded-lg object-cover border border-border"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.style.display = 'none';
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className={`w-16 h-16 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center ${job.companyLogo ? 'hidden' : 'flex'}`}
-                        >
-                          <Building2 className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                      </div>
-
-                      {/* Job Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Job Title and Featured Badge */}
-                        <div className="flex items-start gap-2 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                                {job.title}
-                              </h3>
-                              {job.featured && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded text-xs font-bold">
-                                  <Star className="w-3 h-3 fill-white" />
-                                  FEATURED
-                                </span>
-                              )}
-                              {isCandidate && appliedJobIds.has(job.id) && (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium flex items-center gap-1">
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  Applied
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Company Name and Location on same line */}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mb-3">
-                          {job.companyName && (
-                            <span className="font-medium text-foreground">
-                              {job.companyName}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="w-3.5 h-3.5" />
-                            {job.location}
-                            {job.locationType && job.locationType.toLowerCase() !== job.location.toLowerCase() && (
-                              <span className="capitalize"> • {job.locationType}</span>
-                            )}
-                          </span>
-                        </div>
-
-                        {/* Tags: Guild, Job Type, Salary */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          {job.guild && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const guildUuid = resolveGuildId(job.guild!);
-                                if (guildUuid) router.push(`/guilds/${guildUuid}`);
-                              }}
-                              className="px-2.5 py-1 bg-muted/50 text-foreground border border-border/60 rounded-md text-xs font-medium hover:bg-muted transition-colors"
-                            >
-                              {job.guild}
-                            </button>
-                          )}
-                          <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground rounded-md text-xs font-medium">
-                            {job.type}
-                          </span>
-                          {(job.salary.min || job.salary.max) && (
-                            <span className="px-2.5 py-1 bg-muted/50 text-foreground rounded-md text-xs font-semibold">
-                              {formatSalaryRange(job.salary)}
-                            </span>
-                          )}
-                          {job.experienceLevel && (
-                            <span className="px-2.5 py-1 bg-muted/50 text-muted-foreground rounded-md text-xs font-medium capitalize">
-                              {job.experienceLevel}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Skills */}
-                        {job.skills && job.skills.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-border">
-                            <div className="flex flex-wrap gap-1.5">
-                              {job.skills.slice(0, 5).map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-0.5 bg-muted/30 text-muted-foreground rounded-md text-xs"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                              {job.skills.length > 5 && (
-                                <span className="px-2 py-0.5 text-muted-foreground text-xs">
-                                  +{job.skills.length - 5} more
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
+                    job={job}
+                    hasApplied={appliedJobIds.has(job.id)}
+                    showAppliedBadge={isCandidate}
+                  />
                 ))}
               </div>
 
@@ -480,9 +338,7 @@ export default function JobsListing() {
             .map((guild) => (
               <button
                 key={guild}
-                onClick={() => {
-                  toggleGuild(guild);
-                }}
+                onClick={() => toggleGuild(guild)}
                 className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
                   selectedGuilds.includes(guild)
                     ? "bg-foreground text-background"
@@ -504,92 +360,20 @@ export default function JobsListing() {
       </Modal>
 
       {/* Filter Modal */}
-      <Modal
+      <JobsFilterModal
         isOpen={showAllGuildsModal}
         onClose={() => setShowAllGuildsModal(false)}
-        title="Filter Jobs"
-      >
-        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Guilds Section */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Guilds</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {allGuilds.map((guild) => (
-                <button
-                  key={guild}
-                  onClick={() => toggleGuild(guild)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                    selectedGuilds.includes(guild)
-                      ? "bg-foreground text-background"
-                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
-                  }`}
-                >
-                  {guild}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Job Types Section */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Job Type</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {jobTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => toggleJobType(type)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                    selectedJobTypes.includes(type)
-                      ? "bg-foreground text-background"
-                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Location Types Section */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Work Location</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {locationTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => toggleLocationType(type)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                    selectedLocationTypes.includes(type)
-                      ? "bg-foreground text-background"
-                      : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() => {
-              setSelectedGuilds([]);
-              setSelectedJobTypes([]);
-              setSelectedLocationTypes([]);
-            }}
-            className="flex-1 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            Clear All
-          </button>
-          <button
-            onClick={() => setShowAllGuildsModal(false)}
-            className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            Apply Filters
-          </button>
-        </div>
-      </Modal>
+        allGuilds={allGuilds}
+        selectedGuilds={selectedGuilds}
+        onToggleGuild={toggleGuild}
+        jobTypes={JOB_TYPES}
+        selectedJobTypes={selectedJobTypes}
+        onToggleJobType={toggleJobType}
+        locationTypes={LOCATION_TYPES}
+        selectedLocationTypes={selectedLocationTypes}
+        onToggleLocationType={toggleLocationType}
+        onClearAll={clearFilterSelections}
+      />
     </div>
   );
 }
