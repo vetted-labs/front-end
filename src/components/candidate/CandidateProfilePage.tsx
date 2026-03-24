@@ -1,38 +1,23 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  User,
-  FileText,
-  Upload,
   Loader2,
   Save,
-  CheckCircle,
-  Download,
-  X,
   Link2,
   Pencil,
   ExternalLink,
-  Mail,
-  Phone,
-  Briefcase,
-  Award,
 } from "lucide-react";
 import { toast } from "sonner";
-import { candidateApi, getAssetUrl } from "@/lib/api";
+import { candidateApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import type { CandidateProfile, SocialLink } from "@/types";
 import SocialLinksEditor from "./SocialLinksEditor";
-
-const EXPERIENCE_LABELS: Record<string, string> = {
-  junior: "Junior (0-2 years)",
-  mid: "Mid-level (2-5 years)",
-  senior: "Senior (5-8 years)",
-  lead: "Lead (8+ years)",
-  executive: "Executive",
-};
+import ResumeSection from "./ResumeSection";
+import PersonalInfoSection from "./PersonalInfoSection";
 
 export default function CandidateProfilePage() {
   const router = useRouter();
@@ -234,285 +219,25 @@ export default function CandidateProfilePage() {
         </div>
 
         <div className="space-y-6">
-          {/* Resume Section */}
-          <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border/40">
-              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-                Resume / CV
-              </h2>
-            </div>
-            <div className="p-6">
-              {profile.resumeUrl ? (
-                <div className="flex items-center justify-between p-4 bg-green-500/5 border border-green-500/15 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/10 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {profile.resumeFileName || "resume.pdf"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Uploaded</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <a
-                      href={getAssetUrl(profile.resumeUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                      title="Download"
-                    >
-                      <Download className="w-4 h-4" />
-                    </a>
-                    {isEditing && (
-                      <button
-                        onClick={() =>
-                          setProfile({ ...profile, resumeUrl: undefined })
-                        }
-                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                        title="Remove"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : isEditing ? (
-                <>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 transition-colors">
-                    <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      Upload your resume
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      PDF or Word document, max 5MB
-                    </p>
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="resume-upload"
-                    />
-                    <label
-                      htmlFor="resume-upload"
-                      className="inline-flex items-center px-5 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 cursor-pointer transition-colors"
-                    >
-                      Choose File
-                    </label>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6">
-                  <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground">No resume uploaded yet</p>
-                </div>
-              )}
+          <ResumeSection
+            resumeUrl={profile.resumeUrl}
+            resumeFileName={profile.resumeFileName}
+            isEditing={isEditing}
+            isSaving={isSaving}
+            resumeFile={resumeFile}
+            uploadProgress={uploadProgress}
+            error={errors.resume}
+            onFileChange={handleFileChange}
+            onUpload={handleResumeUpload}
+            onRemoveFile={() => setResumeFile(null)}
+            onClearResume={() => setProfile({ ...profile, resumeUrl: undefined })}
+          />
 
-              {resumeFile && (
-                <div className="mt-4 p-4 bg-primary/5 border border-primary/15 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-foreground">
-                        {resumeFile.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ({(resumeFile.size / 1024).toFixed(1)} KB)
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setResumeFile(null)}
-                      className="p-1 text-muted-foreground hover:text-foreground rounded"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {uploadProgress > 0 && (
-                    <div className="w-full bg-muted rounded-full h-1.5 mb-3">
-                      <div
-                        className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                  )}
-                  <button
-                    onClick={handleResumeUpload}
-                    disabled={isSaving}
-                    className="w-full py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4" />
-                        Upload Resume
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {errors.resume && (
-                <p className="text-destructive text-sm mt-3">{errors.resume}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Personal Information */}
-          <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border/40">
-              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-foreground" />
-                Personal Information
-              </h2>
-            </div>
-
-            {isEditing ? (
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.fullName ?? ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, fullName: e.target.value })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={profile.email ?? ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, email: e.target.value })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                      Phone
-                    </label>
-                    <input
-                      type="tel"
-                      value={profile.phone ?? ""}
-                      onChange={(e) =>
-                        setProfile({ ...profile, phone: e.target.value })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                      Experience Level
-                    </label>
-                    <select
-                      value={profile.experienceLevel}
-                      onChange={(e) =>
-                        setProfile({
-                          ...profile,
-                          experienceLevel: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
-                    >
-                      <option value="junior">Junior (0-2 years)</option>
-                      <option value="mid">Mid-level (2-5 years)</option>
-                      <option value="senior">Senior (5-8 years)</option>
-                      <option value="lead">Lead (8+ years)</option>
-                      <option value="executive">Executive</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                    Professional Headline
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.headline ?? ""}
-                    onChange={(e) =>
-                      setProfile({ ...profile, headline: e.target.value })
-                    }
-                    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-                    Bio
-                  </label>
-                  <textarea
-                    value={profile.bio ?? ""}
-                    onChange={(e) =>
-                      setProfile({ ...profile, bio: e.target.value })
-                    }
-                    rows={4}
-                    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground resize-none"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Full Name</p>
-                    <p className="text-sm text-foreground">{profile.fullName || "—"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</p>
-                    <div className="flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                      <p className="text-sm text-foreground">{profile.email || "—"}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</p>
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                      <p className="text-sm text-foreground">{profile.phone || "—"}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Experience</p>
-                    <div className="flex items-center gap-1.5">
-                      <Award className="w-3.5 h-3.5 text-muted-foreground" />
-                      <p className="text-sm text-foreground">
-                        {(profile.experienceLevel && EXPERIENCE_LABELS[profile.experienceLevel]) || profile.experienceLevel || "—"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-1 md:col-span-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Headline</p>
-                    <div className="flex items-center gap-1.5">
-                      <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
-                      <p className="text-sm text-foreground">{profile.headline || "—"}</p>
-                    </div>
-                  </div>
-                  {profile.bio && (
-                    <div className="space-y-1 md:col-span-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bio</p>
-                      <p className="text-sm text-foreground whitespace-pre-line">{profile.bio}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <PersonalInfoSection
+            profile={profile}
+            isEditing={isEditing}
+            onProfileChange={setProfile}
+          />
 
           {/* Social Links */}
           <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
