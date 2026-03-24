@@ -92,6 +92,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
         candidateCount={guild.candidateCount}
         totalVetdStaked={guild.totalVetdStaked}
         description={guild.description}
+        memberCount={guild.memberCount}
       />
     </>
   );

@@ -25,9 +25,8 @@ export default function ApplicationSuccess({
           Application Submitted!
         </h2>
         <p className="text-muted-foreground mb-6">
-          Your application to join <strong>{guildName}</strong> has been
-          submitted successfully. Our expert members will review it and get back
-          to you soon.
+          Your application to join <strong>{guildName}</strong> is under review
+          by guild members. You&apos;ll be notified when voting concludes.
         </p>
 
         {jobId && (

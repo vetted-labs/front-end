@@ -2,21 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, CheckCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote, Eye, Timer, BarChart3 } from "lucide-react";
+import { UserPlus, CheckCircle, Users, FileText, ExternalLink, Clock, Briefcase, Coins, Shield, ArrowRight, ChevronDown, Vote, Eye, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
-import { formatDeadline } from "@/lib/utils";
 import type { GuildApplication, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 
 const ITEMS_PER_SECTION = 10;
-
-function formatDeadlineCountdown(deadline: string): string {
-  const result = formatDeadline(deadline, "Voting ended");
-  return result === "Voting ended" ? result : `${result} left`;
-}
 
 interface GuildMembershipApplicationsTabProps {
   guildId: string;
@@ -199,10 +194,10 @@ export function GuildMembershipApplicationsTab({
                           {new Date(application.appliedAt).toLocaleDateString()}
                         </span>
                         {application.votingDeadline && !application.finalized && (
-                          <span className="flex items-center text-amber-500">
-                            <Timer className="w-3.5 h-3.5 mr-1" />
-                            {formatDeadlineCountdown(application.votingDeadline)}
-                          </span>
+                          <CountdownBadge
+                            deadline={application.votingDeadline}
+                            label="Voting ends"
+                          />
                         )}
                         {application.consensusScore != null && (
                           <span className="flex items-center text-muted-foreground">
