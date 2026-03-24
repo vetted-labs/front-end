@@ -1,5 +1,6 @@
 export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
-export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole } from "./guild";
+export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole, GuildActivity, GuildDetailData, GuildDetailTab } from "./guild";
+export { GUILD_DETAIL_TABS } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, PendingGuildInfo, FieldErrors } from "./expert";
 export type { CandidateProfile, CandidateMember, SocialLink, CandidateRejectionFeedback } from "./candidate";
 export type {

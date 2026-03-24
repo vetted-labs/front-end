@@ -124,3 +124,44 @@ export interface GuildEarningsOverview {
     date: string;
   }>;
 }
+
+/** Activity entry shown in the guild activity feed. */
+export interface GuildActivity {
+  id: string;
+  type: "proposal_submitted" | "candidate_approved" | "job_posted" | "endorsement_given" | "expert_applied" | "candidate_applied" | "application_reviewed" | "member_approved" | "member_rejected";
+  actor: string;
+  target?: string;
+  timestamp: string;
+  details: string;
+}
+
+/** Normalized guild detail used inside the expert guild detail view. */
+export interface GuildDetailData {
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  expertRole: string;
+  reputation: number;
+  proposals: {
+    pending: import("./guildApplication").GuildApplicationSummary[];
+    ongoing: import("./guildApplication").GuildApplicationSummary[];
+    closed: import("./guildApplication").GuildApplicationSummary[];
+  };
+  applications: import("./application").GuildJobApplication[];
+  guildApplications: import("./review").ExpertMembershipApplication[];
+  earnings: GuildEarningsOverview;
+  recentActivity: GuildActivity[];
+  experts: import("./expert").ExpertMember[];
+  candidates: import("./candidate").CandidateMember[];
+  recentJobs: import("./job").Job[];
+  totalProposalsReviewed: number;
+  averageApprovalTime: string;
+  candidateCount: number;
+  openPositions: number;
+  totalVetdStaked?: number;
+}
+
+/** Valid tab values for the guild detail view. */
+export const GUILD_DETAIL_TABS = ["feed", "membershipApplications", "jobs", "activity", "earnings", "members", "leaderboard"] as const;
+export type GuildDetailTab = (typeof GUILD_DETAIL_TABS)[number];

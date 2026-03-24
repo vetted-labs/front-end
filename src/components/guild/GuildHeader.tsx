@@ -1,8 +1,9 @@
 "use client";
 
-import { Users, Award, DollarSign, Target, Zap, Trophy, Shield } from "lucide-react";
+import { Users, Award, Target, Shield } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
 import { formatVetd } from "@/lib/utils";
+import { GuildStatsPanel } from "./GuildStatsPanel";
 
 interface GuildHeaderProps {
   guild: {
@@ -85,49 +86,13 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
         </div>
       </div>
 
-      {/* Guild Overview */}
-      <div className="border-b border-border bg-card/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Guild Overview</h2>
-          <p className="text-base md:text-lg text-muted-foreground mb-6 line-clamp-3">
-            {guild.description}
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-                <Target className="w-4 h-4" />
-                <p className="text-xl font-semibold text-foreground">{guild.totalProposalsReviewed || 0}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">Applications Reviewed</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-                <Zap className="w-4 h-4" />
-                <p className="text-xl font-semibold text-foreground">{guild.averageApprovalTime || "—"}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">Avg Approval Time</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-                <Trophy className="w-4 h-4" />
-                <p className="text-xl font-semibold text-foreground">{guild.candidateCount || 0}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">Active Candidates</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-                <Shield className="w-4 h-4" />
-                <p className="text-xl font-semibold text-foreground">
-                  {guild.totalVetdStaked != null
-                    ? Number(guild.totalVetdStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })
-                    : "0"}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">Total VETD Staked</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <GuildStatsPanel
+        totalProposalsReviewed={guild.totalProposalsReviewed}
+        averageApprovalTime={guild.averageApprovalTime}
+        candidateCount={guild.candidateCount}
+        totalVetdStaked={guild.totalVetdStaked}
+        description={guild.description}
+      />
     </>
   );
 }
