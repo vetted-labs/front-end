@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { useFormPersistence } from "@/lib/hooks/useFormPersistence";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
-import { Loader2, Send, CheckCircle } from "lucide-react";
+import { Loader2, Send, CheckCircle, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
@@ -19,6 +20,33 @@ import type { FieldErrors, GuildApplicationTemplate, GuildDomainLevel, GuildDoma
 
 interface ExpertApplicationFormProps {
   onSuccess?: () => void;
+}
+
+interface PersistedDraft {
+  formData: {
+    fullName: string;
+    email: string;
+    linkedinUrl: string;
+    portfolioUrl: string;
+    guild: string;
+    expertiseLevel: string;
+    yearsOfExperience: string;
+    currentTitle: string;
+    currentCompany: string;
+    bio: string;
+    motivation: string;
+    expertiseAreas: string[];
+    newExpertiseArea: string;
+  };
+  generalAnswers: {
+    learningFromFailure: string;
+    decisionUnderUncertainty: string;
+    motivationAndConflict: string;
+    guildImprovement: string;
+  };
+  levelAnswers: Record<string, string>;
+  selectedGuildId: string;
+  noAiDeclaration: boolean;
 }
 
 const EXPERTISE_LEVELS = [
@@ -202,6 +230,30 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
 
   const [levelAnswers, setLevelAnswers] = useState<Record<string, string>>({});
   const [noAiDeclaration, setNoAiDeclaration] = useState(false);
+
+  // --- Draft persistence ---
+  const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
+    useFormPersistence<PersistedDraft>((draft) => {
+      setFormData(draft.formData);
+      setGeneralAnswers(draft.generalAnswers);
+      setLevelAnswers(draft.levelAnswers);
+      if (draft.selectedGuildId) setSelectedGuildId(draft.selectedGuildId);
+      setNoAiDeclaration(draft.noAiDeclaration);
+    });
+
+  // Save draft whenever user-editable fields change
+  // eslint-disable-next-line no-restricted-syntax -- persists form draft to localStorage on field changes
+  useEffect(() => {
+    // Skip the initial render before mount is complete
+    if (!mounted) return;
+    saveDraft({
+      formData,
+      generalAnswers,
+      levelAnswers,
+      selectedGuildId,
+      noAiDeclaration,
+    });
+  }, [formData, generalAnswers, levelAnswers, selectedGuildId, noAiDeclaration, mounted, saveDraft]);
 
   // Touched state: tracks which fields have been interacted with
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -573,6 +625,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
         }
       }
 
+      clearDraft();
       localStorage.setItem("expertStatus", "pending");
       setSuccess(true);
       setTimeout(() => {
@@ -691,6 +744,21 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
                   Your wallet disconnected. Please reconnect using the button in the top navigation to continue.
                   Your form data has been preserved.
                 </Alert>
+              </div>
+            )}
+            {draftRestored && (
+              <div className="mx-8 mt-8 flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+                <span className="flex items-center gap-2">
+                  <Info className="h-4 w-4 shrink-0" />
+                  We restored your previous draft. You can pick up where you left off.
+                </span>
+                <button
+                  type="button"
+                  onClick={dismissRestored}
+                  className="shrink-0 text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
             <PersonalInfoSection
