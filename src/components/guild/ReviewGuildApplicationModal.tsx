@@ -21,6 +21,9 @@ import { StepIndicator } from "@/components/guild/review/StepIndicator";
 import { ReviewSuccessStep } from "@/components/guild/review/ReviewSuccessStep";
 import { ReviewSubmitSection } from "@/components/guild/review/ReviewSubmitSection";
 import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
+import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer";
+import { TransactionStatus } from "@/components/ui/transaction-status";
+import type { TransactionPhase } from "@/components/ui/transaction-status";
 import { GENERAL_RESPONSE_KEY_MAP, FALLBACK_GENERAL_QUESTIONS } from "@/components/guild/review/constants";
 import type {
   GeneralReviewTemplate,
@@ -450,6 +453,20 @@ export function ReviewGuildApplicationModal({
                   onRedFlagsChange={setRedFlags}
                   onFeedbackChange={setFeedback}
                 />
+                {isCommitPhase && (
+                  <div className="mt-4 space-y-3">
+                    <CommitRevealExplainer />
+                    <TransactionStatus
+                      phase={
+                        (isCommitting
+                          ? commitTxHash ? "confirmed" : "awaiting-signature"
+                          : commitTxHash ? "confirmed" : "idle") as TransactionPhase
+                      }
+                      txHash={commitTxHash ?? undefined}
+                      chainExplorerUrl="https://sepolia.etherscan.io"
+                    />
+                  </div>
+                )}
                 <ReviewSubmitSection
                   proposalContext={proposalContext}
                   stakeAmount={stakeAmount}

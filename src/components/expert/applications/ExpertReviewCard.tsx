@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CheckCircle, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Timer } from "lucide-react";
+import { CheckCircle, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import type { ExpertMembershipApplication } from "@/types";
@@ -17,28 +17,6 @@ interface ExpertReviewCardProps {
   showGuildBadge?: boolean;
 }
 
-function useCountdown(deadline: string | undefined) {
-  const [remaining, setRemaining] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!deadline) return;
-
-    function calc() {
-      const diff = new Date(deadline!).getTime() - Date.now();
-      if (diff <= 0) return setRemaining("Expired");
-      const h = Math.floor(diff / 3_600_000);
-      const m = Math.floor((diff % 3_600_000) / 60_000);
-      setRemaining(h > 0 ? `${h}h ${m}m` : `${m}m`);
-    }
-
-    calc();
-    const id = setInterval(calc, 60_000);
-    return () => clearInterval(id);
-  }, [deadline]);
-
-  return remaining;
-}
-
 export function ExpertReviewCard({ application, onReview, onViewReview, showGuildBadge }: ExpertReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
   const phase = application.votingPhase;
@@ -47,8 +25,6 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const activeDeadline = phase === "commit"
     ? application.commitDeadline
     : undefined;
-
-  const countdown = useCountdown(activeDeadline);
 
   const phaseLabel: Record<string, string> = {
     commit: "Voting open",
@@ -143,11 +119,8 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 <ShieldCheck className="w-3 h-3" />
                 {phaseLabel[phase!] ?? phase}
               </span>
-              {countdown && phase !== "finalized" && (
-                <span className="inline-flex items-center gap-1 text-muted-foreground">
-                  <Timer className="w-3 h-3" />
-                  {countdown} remaining
-                </span>
+              {activeDeadline && phase !== "finalized" && (
+                <CountdownBadge deadline={activeDeadline} label="Commit" />
               )}
             </div>
           )}

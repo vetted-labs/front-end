@@ -1,8 +1,8 @@
 import { useRouter } from "next/navigation";
-import { Clock, Users, ArrowRight, CheckCircle, Lock } from "lucide-react";
+import { Users, ArrowRight, CheckCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatDeadline } from "@/lib/utils";
+import { CountdownBadge } from "@/components/ui/countdown-badge";
 import type { GuildApplication } from "@/types";
 
 interface ProposalCardProps {
@@ -110,11 +110,8 @@ export function ProposalCard({
 
       {/* Metadata row */}
       <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
-        {!isFinalized && (
-          <span className="inline-flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            {formatDeadline(proposal.voting_deadline)}
-          </span>
+        {!isFinalized && proposal.voting_deadline && (
+          <CountdownBadge deadline={proposal.voting_deadline} label="Vote" />
         )}
         {isFinalized && proposal.finalized_at && (
           <span className="inline-flex items-center gap-1">

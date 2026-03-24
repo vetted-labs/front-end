@@ -10,6 +10,7 @@ import { ArrowRight, Coins, Shield } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
+import { FirstTimeReviewerGuide } from "@/components/expert/FirstTimeReviewerGuide";
 import { ViewReviewModal } from "./ViewReviewModal";
 import { ApplicationsStatsRow } from "./ApplicationsStatsRow";
 import { ApplicationsFilters } from "./ApplicationsFilters";
@@ -208,6 +209,9 @@ export default function ApplicationsPage() {
             Review expert applications, candidate applications, and vote on proposals across your guilds.
           </p>
         </div>
+
+        {/* Onboarding guide for first-time reviewers */}
+        <FirstTimeReviewerGuide />
 
         {/* Stats */}
         <ApplicationsStatsRow
