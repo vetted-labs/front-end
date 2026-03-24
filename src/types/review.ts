@@ -1,4 +1,49 @@
-import type { ApplicationResponses } from "./rubric";
+import type { ApplicationResponses, ReviewSubmitPayload, ReviewSubmitResponse } from "./rubric";
+
+// --- Types used by ReviewGuildApplicationModal ---
+
+/** Application shape consumed by the multi-step review modal. */
+export interface ReviewModalApplication {
+  id: string;
+  fullName: string;
+  email: string;
+  expertiseLevel?: string;
+  applicationResponses?: ApplicationResponses;
+  resumeUrl?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  socialLinks?: { platform: string; label: string; url: string }[];
+  currentTitle?: string;
+  currentCompany?: string;
+  yearsOfExperience?: number;
+  bio?: string;
+  motivation?: string;
+  expertiseAreas?: string[];
+}
+
+/** Props for the ReviewGuildApplicationModal component. */
+export interface ReviewGuildApplicationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  application: ReviewModalApplication | null;
+  guildId: string;
+  onSubmitReview: (payload: ReviewSubmitPayload) => Promise<ReviewSubmitResponse | void>;
+  isReviewing: boolean;
+  /** When set, renders a staking input in the final step (used for proposal votes). */
+  proposalContext?: { requiredStake: number };
+  /** Commit-reveal voting phase for expert applications */
+  commitRevealPhase?: "direct" | "commit" | "finalized";
+  /** On-chain blockchain session ID for commit-reveal */
+  blockchainSessionId?: string;
+  /** Whether the on-chain session has been created */
+  blockchainSessionCreated?: boolean;
+  /** The expert reviewer's ID */
+  reviewerId?: string;
+  /** Called after a successful review submission (including commit-reveal) to refresh parent data */
+  onReviewSuccess?: () => void;
+  /** Type of application being reviewed — controls modal title */
+  reviewType?: "expert" | "candidate" | "proposal";
+}
 
 /** Expert applying to join a guild as a member */
 export interface ExpertMembershipApplication {

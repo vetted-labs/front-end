@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Sparkles } from "lucide-react";
-import { ScoreButtons, renderPromptLines } from "@/components/guild/ReviewGuildApplicationModal";
+import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,

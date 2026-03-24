@@ -162,4 +162,4 @@ export type {
   ReviewSubmitResponse,
 } from "./rubric";
 export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";
-export type { ExpertMembershipApplication, CandidateGuildApplication, MyReviewData, ExpertApplicationFinalization } from "./review";
+export type { ExpertMembershipApplication, CandidateGuildApplication, MyReviewData, ExpertApplicationFinalization, ReviewModalApplication, ReviewGuildApplicationModalProps } from "./review";
