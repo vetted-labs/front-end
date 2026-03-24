@@ -1,22 +1,12 @@
 "use client";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  User,
-  Mail,
-  Phone,
-  Building2,
-  Lock,
-  Loader2,
-  ArrowRight,
-  Linkedin,
-  Briefcase,
-  Github,
-  Globe,
-} from "lucide-react";
+import { Mail, Phone, Lock, Loader2, ArrowRight, Linkedin, User, Building2 } from "lucide-react";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
+import { CandidateSignupFields } from "@/components/auth/CandidateSignupFields";
+import { CompanySignupFields } from "@/components/auth/CompanySignupFields";
 import { candidateApi, companyApi, extractApiError } from "@/lib/api";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -184,8 +174,6 @@ function SignupForm() {
 
   const inputClass =
     "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
-  const inputClassNoIcon =
-    "w-full px-4 py-2.5 text-sm bg-background/50 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
 
   return (
     <AuthPageLayout
@@ -225,141 +213,30 @@ function SignupForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Candidate Fields */}
           {userType === "candidate" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Full Name <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className={inputClass}
-                    placeholder="John Doe"
-                  />
-                </div>
-                {errors.fullName && (
-                  <p className="text-destructive text-xs mt-1">{errors.fullName}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Current Occupation <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
-                    className={inputClass}
-                    placeholder="Senior Software Engineer"
-                  />
-                </div>
-                {errors.headline && (
-                  <p className="text-destructive text-xs mt-1">{errors.headline}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  LinkedIn <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <Linkedin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="url"
-                    value={linkedinUrl}
-                    onChange={(e) => setLinkedinUrl(e.target.value)}
-                    className={inputClass}
-                    placeholder="https://linkedin.com/in/yourname"
-                  />
-                </div>
-                {errors.linkedinUrl && (
-                  <p className="text-destructive text-xs mt-1">{errors.linkedinUrl}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    GitHub <span className="text-muted-foreground font-normal">(optional)</span>
-                  </label>
-                  <div className="relative">
-                    <Github className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      type="url"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      className={inputClass}
-                      placeholder="https://github.com/you"
-                    />
-                  </div>
-                  {errors.githubUrl && (
-                    <p className="text-destructive text-xs mt-1">{errors.githubUrl}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    Portfolio <span className="text-muted-foreground font-normal">(optional)</span>
-                  </label>
-                  <div className="relative">
-                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      type="url"
-                      value={portfolioUrl}
-                      onChange={(e) => setPortfolioUrl(e.target.value)}
-                      className={inputClass}
-                      placeholder="https://yoursite.com"
-                    />
-                  </div>
-                  {errors.portfolioUrl && (
-                    <p className="text-destructive text-xs mt-1">{errors.portfolioUrl}</p>
-                  )}
-                </div>
-              </div>
-            </>
+            <CandidateSignupFields
+              fullName={fullName}
+              onFullNameChange={setFullName}
+              headline={headline}
+              onHeadlineChange={setHeadline}
+              linkedinUrl={linkedinUrl}
+              onLinkedinUrlChange={setLinkedinUrl}
+              githubUrl={githubUrl}
+              onGithubUrlChange={setGithubUrl}
+              portfolioUrl={portfolioUrl}
+              onPortfolioUrlChange={setPortfolioUrl}
+              errors={errors}
+            />
           )}
 
           {/* Company Fields */}
           {userType === "company" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Company Name <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className={inputClass}
-                    placeholder="Acme Inc."
-                  />
-                </div>
-                {errors.companyName && (
-                  <p className="text-destructive text-xs mt-1">{errors.companyName}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Website <span className="text-muted-foreground font-normal">(optional)</span>
-                </label>
-                <input
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className={inputClassNoIcon}
-                  placeholder="https://example.com"
-                />
-              </div>
-            </>
+            <CompanySignupFields
+              companyName={companyName}
+              onCompanyNameChange={setCompanyName}
+              website={website}
+              onWebsiteChange={setWebsite}
+              errors={errors}
+            />
           )}
 
           {/* Common Fields */}
