@@ -22,6 +22,7 @@ import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { useApi } from "@/lib/hooks/useFetch";
 
 type UserType = "candidate" | "company" | "expert";
 
@@ -48,7 +49,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { execute: executeLogin, isLoading } = useApi();
   const [error, setError] = useState("");
 
   const autoLoginAttempted = useRef(false);
@@ -137,23 +138,26 @@ function LoginForm() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      if (userType === "candidate") {
-        const data = await candidateApi.login(email, password);
-        auth.login(data.token, "candidate", data.candidate!.id, data.candidate!.email, undefined, data.refreshToken);
-        router.push(redirectUrl || "/candidate/dashboard");
-      } else {
-        const data = await companyApi.login(email, password);
-        auth.login(data.token, "company", data.company!.id, data.company!.email, undefined, data.refreshToken);
-        router.push(redirectUrl || "/dashboard");
+    await executeLogin(
+      async () => {
+        if (userType === "candidate") {
+          const data = await candidateApi.login(email, password);
+          auth.login(data.token, "candidate", data.candidate!.id, data.candidate!.email, undefined, data.refreshToken);
+          router.push(redirectUrl || "/candidate/dashboard");
+        } else {
+          const data = await companyApi.login(email, password);
+          auth.login(data.token, "company", data.company!.id, data.company!.email, undefined, data.refreshToken);
+          router.push(redirectUrl || "/dashboard");
+        }
+        return null;
+      },
+      {
+        onError: (errorMsg) => {
+          logger.error("Login failed", errorMsg, { silent: true });
+          setError(errorMsg);
+        },
       }
-    } catch (error: unknown) {
-      logger.error("Login failed", error, { silent: true });
-      setError(extractApiError(error, "Login failed. Please try again."));
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   const handleLinkedInLogin = () => {

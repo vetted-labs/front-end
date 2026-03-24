@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -16,6 +16,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Alert } from "./ui/alert";
 import { expertApi } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 
 interface Question {
   id: string;
@@ -45,8 +46,7 @@ export function GuildApplicationTemplateBuilder({
 }: GuildApplicationTemplateBuilderProps) {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { execute: executeSave, isLoading, error, setError } = useApi();
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState<TemplateFormData>({
@@ -143,30 +143,26 @@ export function GuildApplicationTemplateBuilder({
       }
     }
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await expertApi.saveGuildTemplate(guildId, {
+    await executeSave(
+      () => expertApi.saveGuildTemplate(guildId, {
         walletAddress: address,
         templateName: formData.templateName,
         description: formData.description,
         questions: formData.questions.map(({ id, ...rest }) => rest), // Remove temporary IDs
-      });
-
-      setSuccess(true);
-      setTimeout(() => {
-        if (onBack) {
-          onBack();
-        } else {
-          router.push("/expert/dashboard");
-        }
-      }, 2000);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          setSuccess(true);
+          setTimeout(() => {
+            if (onBack) {
+              onBack();
+            } else {
+              router.push("/expert/dashboard");
+            }
+          }, 2000);
+        },
+      }
+    );
   };
 
   if (!isConnected || !address) {

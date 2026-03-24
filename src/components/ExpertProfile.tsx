@@ -34,7 +34,7 @@ import {
   getActivityIconBgColor,
   getActivityIconColor,
 } from "@/lib/activityHelpers";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { ExpertProfile as ExpertProfileData, ExpertActivity, ExpertGuild } from "@/types";
 
 interface ExpertProfileProps {
@@ -97,7 +97,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const effectiveAddress = mode === "public" ? walletAddress : connectedAddress;
 
   const [copiedAddress, setCopiedAddress] = useState(false);
-  const [isTogglingEmail, setIsTogglingEmail] = useState(false);
+  const { execute: executeToggleEmail, isLoading: isTogglingEmail } = useApi();
 
   // Validate wallet address format for public mode upfront
   const isInvalidPublicAddress =
@@ -151,17 +151,19 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
   const toggleEmailVisibility = async () => {
     if (!profile || !effectiveAddress) return;
-    setIsTogglingEmail(true);
-    try {
-      const newValue = !profile.showEmail;
-      await expertApi.updateProfile(effectiveAddress, { showEmail: newValue });
-      refetch();
-      toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
-    } catch {
-      toast.error("Failed to update email visibility");
-    } finally {
-      setIsTogglingEmail(false);
-    }
+    const newValue = !profile.showEmail;
+    await executeToggleEmail(
+      () => expertApi.updateProfile(effectiveAddress, { showEmail: newValue }),
+      {
+        onSuccess: () => {
+          refetch();
+          toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
+        },
+        onError: () => {
+          toast.error("Failed to update email visibility");
+        },
+      }
+    );
   };
 
   const getInitials = (fullName: string | undefined) => {

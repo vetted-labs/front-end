@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
+import { useApi } from "@/lib/hooks/useFetch";
 import type { Conversation, Message } from "@/types";
 import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
@@ -25,7 +26,7 @@ export default function CandidateConversationView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [proposeModalMeetingId, setProposeModalMeetingId] = useState<string | null>(null);
-  const [isProposing, setIsProposing] = useState(false);
+  const { execute: executePropose, isLoading: isProposing } = useApi<Message>();
 
   const fetchConversation = useCallback(async () => {
     try {
@@ -84,24 +85,26 @@ export default function CandidateConversationView() {
 
   const handleSubmitProposedTime = async (proposedTime: string, note?: string) => {
     if (!proposeModalMeetingId) return;
-    setIsProposing(true);
-    try {
-      const result = await messagingApi.respondToMeeting(
+    await executePropose(
+      () => messagingApi.respondToMeeting(
         conversationId,
         proposeModalMeetingId,
         { status: "new_time_proposed", proposedTime, proposedNote: note }
-      );
-      if (result) {
-        setMessages((prev) => [...prev, result]);
+      ),
+      {
+        onSuccess: async (result) => {
+          if (result) {
+            setMessages((prev) => [...prev, result]);
+          }
+          setProposeModalMeetingId(null);
+          await fetchConversation();
+        },
+        onError: (errorMsg) => {
+          logger.error("Error proposing new time", errorMsg, { silent: true });
+          toast.error("Failed to propose new time. Please try again.");
+        },
       }
-      setProposeModalMeetingId(null);
-      await fetchConversation();
-    } catch (error) {
-      logger.error("Error proposing new time", error, { silent: true });
-      toast.error("Failed to propose new time. Please try again.");
-    } finally {
-      setIsProposing(false);
-    }
+    );
   };
 
   if (!ready) return null;

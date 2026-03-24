@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Send, Loader2 } from "lucide-react";
-import { messagingApi } from "@/lib/api";
-import { ApiError } from "@/lib/api";
+import { messagingApi, ApiError } from "@/lib/api";
 import { toast } from "sonner";
 
 interface StartConversationButtonProps {

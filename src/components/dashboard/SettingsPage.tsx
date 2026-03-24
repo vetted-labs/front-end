@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -14,6 +14,7 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { CompanyNotificationPreferences } from "@/types";
 
 export default function SettingsPage() {
@@ -30,36 +31,30 @@ export default function SettingsPage() {
     jobUpdates: true,
     weeklyReports: false,
   });
-  const [isLoadingPrefs, setIsLoadingPrefs] = useState(true);
-  const [isSavingPrefs, setIsSavingPrefs] = useState(false);
 
-  const fetchPreferences = useCallback(async () => {
-    try {
-      const result = await companyNotificationsApi.getPreferences();
-      setPrefs(result);
-    } catch {
-      // Use defaults on error
-    } finally {
-      setIsLoadingPrefs(false);
+  const { isLoading: isLoadingPrefs } = useFetch(
+    () => companyNotificationsApi.getPreferences(),
+    {
+      skip: !ready,
+      onSuccess: (result) => setPrefs(result),
     }
-  }, []);
+  );
 
-  // eslint-disable-next-line no-restricted-syntax -- fetches on auth readiness
-  useEffect(() => {
-    if (ready) fetchPreferences();
-  }, [ready, fetchPreferences]);
+  const { execute: executeSave, isLoading: isSavingPrefs } = useApi<CompanyNotificationPreferences>();
 
   const handleSavePreferences = async () => {
-    setIsSavingPrefs(true);
-    try {
-      const result = await companyNotificationsApi.updatePreferences(prefs);
-      setPrefs(result);
-      toast.success("Notification preferences saved");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save preferences");
-    } finally {
-      setIsSavingPrefs(false);
-    }
+    await executeSave(
+      () => companyNotificationsApi.updatePreferences(prefs),
+      {
+        onSuccess: (result) => {
+          setPrefs(result);
+          toast.success("Notification preferences saved");
+        },
+        onError: (errorMsg) => {
+          toast.error(errorMsg || "Failed to save preferences");
+        },
+      }
+    );
   };
 
   const updatePref = (key: keyof CompanyNotificationPreferences, value: boolean) => {

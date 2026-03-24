@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { guildApplicationsApi } from "@/lib/api";
+import { useApi } from "@/lib/hooks/useFetch";
 import { formatDeadline, ensureHttps } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useVotingApplicationData } from "@/lib/hooks/useVotingApplicationData";
@@ -190,7 +191,7 @@ export default function VotingApplicationPage({
 
   // UI state that changes based on user actions (not initial data loading)
   const [showVoting, setShowVoting] = useState(false);
-  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
+  const { execute: executeVote, isLoading: isSubmittingVote } = useApi();
   const {
     application,
     expertData,
@@ -217,24 +218,24 @@ export default function VotingApplicationPage({
       toast.error("You must stake VETD tokens in this guild to vote");
       return;
     }
-    try {
-      setIsSubmittingVote(true);
-      await guildApplicationsApi.vote(applicationId, {
+    await executeVote(
+      () => guildApplicationsApi.vote(applicationId, {
         expertId: expertData.id,
         score,
         stakeAmount,
         comment,
-      });
-      toast.success("Score submitted successfully!");
-      setShowVoting(false);
-      loadApplication();
-    } catch (error: unknown) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to submit score"
-      );
-    } finally {
-      setIsSubmittingVote(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          toast.success("Score submitted successfully!");
+          setShowVoting(false);
+          loadApplication();
+        },
+        onError: (errorMsg) => {
+          toast.error(errorMsg || "Failed to submit score");
+        },
+      }
+    );
   };
 
   const handleCommit = () => {

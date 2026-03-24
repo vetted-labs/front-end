@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
+import { useApi } from "@/lib/hooks/useFetch";
 
 interface StructuredProposalFormProps {
   guildId: string;
@@ -53,7 +54,7 @@ export function StructuredProposalForm({
   });
 
   const [currentAchievement, setCurrentAchievement] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: executeSubmit, isLoading: isSubmitting } = useApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
@@ -89,12 +90,7 @@ export function StructuredProposalForm({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      await onSubmit(formData);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await executeSubmit(() => onSubmit(formData));
   };
 
   const addAchievement = () => {

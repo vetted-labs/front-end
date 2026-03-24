@@ -12,7 +12,7 @@ import {
 import { toast } from "sonner";
 import { candidateApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import type { CandidateProfile, SocialLink } from "@/types";
 import SocialLinksEditor from "./SocialLinksEditor";
@@ -24,7 +24,7 @@ export default function CandidateProfilePage() {
   const { auth, ready } = useRequireAuth("candidate");
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const { execute: executeSave, isLoading: isSaving } = useApi();
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -105,32 +105,34 @@ export default function CandidateProfilePage() {
       return;
     }
 
-    setIsSaving(true);
     setUploadProgress(0);
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
+    }, 200);
 
-    try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
-      }, 200);
-
-      const data = await candidateApi.uploadResume(candidateId, resumeFile);
-
-      clearInterval(progressInterval);
-
-      setUploadProgress(100);
-      setProfile({
-        ...profile,
-        resumeUrl: data.resumeUrl,
-        resumeFileName: (data as { resumeUrl: string; fileName?: string }).fileName,
-      });
-      toast.success("Resume uploaded successfully!");
-      setResumeFile(null);
-    } catch {
-      setErrors({ resume: "Failed to upload resume. Please try again." });
-    } finally {
-      setIsSaving(false);
-      setUploadProgress(0);
-    }
+    await executeSave(
+      () => candidateApi.uploadResume(candidateId, resumeFile),
+      {
+        onSuccess: (result) => {
+          const data = result as { resumeUrl: string; fileName?: string };
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+          setProfile({
+            ...profile,
+            resumeUrl: data.resumeUrl,
+            resumeFileName: data.fileName,
+          });
+          toast.success("Resume uploaded successfully!");
+          setResumeFile(null);
+          setUploadProgress(0);
+        },
+        onError: () => {
+          clearInterval(progressInterval);
+          setErrors({ resume: "Failed to upload resume. Please try again." });
+          setUploadProgress(0);
+        },
+      }
+    );
   };
 
   const handleSaveProfile = async () => {
@@ -146,9 +148,8 @@ export default function CandidateProfilePage() {
     const filledLinks = socialLinks.filter((l) => l.url.trim());
 
     setErrors({});
-    setIsSaving(true);
-    try {
-      const payload: Record<string, unknown> = {
+    await executeSave(
+      () => candidateApi.updateProfile(candidateId, {
         fullName: profile.fullName,
         email: profile.email,
         phone: profile.phone || "",
@@ -156,16 +157,18 @@ export default function CandidateProfilePage() {
         headline: profile.headline,
         bio: profile.bio || "",
         socialLinks: filledLinks,
-      };
-      await candidateApi.updateProfile(candidateId, payload);
-      toast.success("Profile updated successfully!");
-      setIsEditing(false);
-      setEditSnapshot(null);
-    } catch {
-      setErrors({ submit: "Failed to update profile" });
-    } finally {
-      setIsSaving(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          toast.success("Profile updated successfully!");
+          setIsEditing(false);
+          setEditSnapshot(null);
+        },
+        onError: () => {
+          setErrors({ submit: "Failed to update profile" });
+        },
+      }
+    );
   };
 
   if (!ready) return null;

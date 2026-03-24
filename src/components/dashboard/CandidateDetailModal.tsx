@@ -11,7 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { applicationsApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
@@ -56,7 +56,7 @@ export function CandidateDetailModal({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>("profile");
   const [notes, setNotes] = useState(application.notes ?? "");
-  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const { execute: executeSaveNotes, isLoading: isSavingNotes } = useApi();
   const [message, setMessage] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
 
@@ -97,20 +97,16 @@ export function CandidateDetailModal({
   };
 
   const handleSaveNotes = async () => {
-    setIsSavingNotes(true);
-    try {
-      await applicationsApi.updateStatus(
-        application.id,
-        application.status,
-        notes
-      );
-      toast.success("Notes saved!");
-    } catch (error) {
-      logger.error("Error saving notes", error, { silent: true });
-      toast.error("Failed to save notes");
-    } finally {
-      setIsSavingNotes(false);
-    }
+    await executeSaveNotes(
+      () => applicationsApi.updateStatus(application.id, application.status, notes),
+      {
+        onSuccess: () => toast.success("Notes saved!"),
+        onError: (errorMsg) => {
+          logger.error("Error saving notes", errorMsg, { silent: true });
+          toast.error("Failed to save notes");
+        },
+      }
+    );
   };
 
   const resumeUrl = application.resumeUrl

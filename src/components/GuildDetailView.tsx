@@ -8,7 +8,7 @@ import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, blockchainApi, extractApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Breadcrumb } from "./ui/breadcrumb";
 import { GuildHeader } from "./guild/GuildHeader";
 import { GuildApplicationCTA } from "./guild/GuildApplicationCTA";
@@ -63,7 +63,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<GuildApplicationSummary | null>(null);
   const [stakeAmount, setStakeAmount] = useState("");
-  const [isStaking, setIsStaking] = useState(false);
   // Review modal
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedExpertMembershipApplication, setSelectedExpertMembershipApplication] =
@@ -87,7 +86,8 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     topExperts: LeaderboardExpert[]; currentUser: LeaderboardExpert | null;
   }>({ topExperts: [], currentUser: null });
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
-  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  const { execute: executeLeaderboard, isLoading: isLoadingLeaderboard } = useApi();
+  const { execute: executeStake, isLoading: isStaking } = useApi();
 
   const { isLoading, error, refetch } = useFetch(
     async () => {
@@ -172,39 +172,43 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
   const fetchLeaderboard = async () => {
     if (!address || isLoadingLeaderboard) return;
-    setIsLoadingLeaderboard(true);
-    try {
-      const result = await expertApi.getLeaderboard({ guildId, limit: 50 });
-      const entries: LeaderboardEntry[] = Array.isArray(result) ? result : [];
-      const transformed = transformLeaderboardData(entries, address, {
-        expertRole: guild?.expertRole || "recruit",
-        reputation: guild?.reputation || 0,
-        totalEndorsementEarnings: guild?.earnings?.totalEndorsementEarnings || 0,
-      });
-      setLeaderboardData(transformed);
-    } catch (err: unknown) {
-      toast.error(`Failed to fetch leaderboard: ${extractApiError(err)}`);
-    } finally {
-      setIsLoadingLeaderboard(false);
-    }
+    await executeLeaderboard(
+      () => expertApi.getLeaderboard({ guildId, limit: 50 }),
+      {
+        onSuccess: (result) => {
+          const entries: LeaderboardEntry[] = Array.isArray(result) ? result : [];
+          const transformed = transformLeaderboardData(entries, address, {
+            expertRole: guild?.expertRole || "recruit",
+            reputation: guild?.reputation || 0,
+            totalEndorsementEarnings: guild?.earnings?.totalEndorsementEarnings || 0,
+          });
+          setLeaderboardData(transformed);
+        },
+        onError: (errorMsg) => {
+          toast.error(`Failed to fetch leaderboard: ${errorMsg}`);
+        },
+      }
+    );
   };
 
   const handleConfirmStake = async () => {
     if (!selectedApplication || !address) return;
-    setIsStaking(true);
-    try {
-      await expertApi.stakeOnApplication(selectedApplication.id, {
+    await executeStake(
+      () => expertApi.stakeOnApplication(selectedApplication.id, {
         walletAddress: address,
         stakeAmount: parseFloat(stakeAmount),
-      });
-      setShowStakeModal(false);
-      setSelectedApplication(null);
-      refetch();
-    } catch (err: unknown) {
-      toast.error(extractApiError(err, "Failed to stake on application"));
-    } finally {
-      setIsStaking(false);
-    }
+      }),
+      {
+        onSuccess: () => {
+          setShowStakeModal(false);
+          setSelectedApplication(null);
+          refetch();
+        },
+        onError: (errorMsg) => {
+          toast.error(errorMsg || "Failed to stake on application");
+        },
+      }
+    );
   };
 
   const handleEndorseCandidate = async (applicationId: string, endorse: boolean) => {

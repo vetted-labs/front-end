@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserPlus, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { useApi } from "@/lib/hooks/useFetch";
 import type { TeamMemberRole } from "@/types";
 
 interface InviteTeamMemberDialogProps {
@@ -16,22 +17,23 @@ export function InviteTeamMemberDialog({ isOpen, onClose, onInvite }: InviteTeam
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<TeamMemberRole>("recruiter");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { execute: executeInvite, isLoading: isSubmitting } = useApi();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !fullName.trim()) return;
 
-    setIsSubmitting(true);
-    try {
-      await onInvite({ email: email.trim(), fullName: fullName.trim(), role });
-      setEmail("");
-      setFullName("");
-      setRole("recruiter");
-      onClose();
-    } finally {
-      setIsSubmitting(false);
-    }
+    await executeInvite(
+      () => onInvite({ email: email.trim(), fullName: fullName.trim(), role }),
+      {
+        onSuccess: () => {
+          setEmail("");
+          setFullName("");
+          setRole("recruiter");
+          onClose();
+        },
+      }
+    );
   };
 
   return (

@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
+import { useApi } from "@/lib/hooks/useFetch";
 import type { Conversation, Message } from "@/types";
 import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
@@ -38,7 +39,7 @@ export default function CompanyMessagesInbox() {
 
   // Schedule modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [isScheduling, setIsScheduling] = useState(false);
+  const { execute: executeSchedule, isLoading: isScheduling } = useApi<Message>();
 
   // eslint-disable-next-line no-restricted-syntax -- fetches on auth readiness
   useEffect(() => {
@@ -126,17 +127,19 @@ export default function CompanyMessagesInbox() {
     meetingUrl: string;
   }) => {
     if (!selectedConversation) return;
-    setIsScheduling(true);
-    try {
-      const result = await messagingApi.scheduleMeeting(selectedConversation.id, data);
-      if (result) setMessages((prev) => [...prev, result]);
-      setShowScheduleModal(false);
-    } catch (error) {
-      logger.error("Error scheduling meeting", error, { silent: true });
-      toast.error("Failed to schedule meeting");
-    } finally {
-      setIsScheduling(false);
-    }
+    await executeSchedule(
+      () => messagingApi.scheduleMeeting(selectedConversation.id, data),
+      {
+        onSuccess: (result) => {
+          if (result) setMessages((prev) => [...prev, result]);
+          setShowScheduleModal(false);
+        },
+        onError: (errorMsg) => {
+          logger.error("Error scheduling meeting", errorMsg, { silent: true });
+          toast.error("Failed to schedule meeting");
+        },
+      }
+    );
   };
 
   // Derive unique jobs for filter dropdown

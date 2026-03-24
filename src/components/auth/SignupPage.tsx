@@ -7,10 +7,11 @@ import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
 import { CandidateSignupFields } from "@/components/auth/CandidateSignupFields";
 import { CompanySignupFields } from "@/components/auth/CompanySignupFields";
-import { candidateApi, companyApi, extractApiError } from "@/lib/api";
+import { candidateApi, companyApi } from "@/lib/api";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { useApi } from "@/lib/hooks/useFetch";
 
 type UserType = "candidate" | "company";
 
@@ -28,7 +29,7 @@ function SignupForm() {
   const userType: UserType = typeParam === "company" ? "company" : "candidate";
   const auth = useAuthContext();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const { execute: executeSignup, isLoading } = useApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useMountEffect(() => {
@@ -116,43 +117,46 @@ function SignupForm() {
 
     if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      if (userType === "candidate") {
-        const socialLinks = [
-          { platform: "linkedin", label: "LinkedIn", url: linkedinUrl.trim() },
-          ...(githubUrl.trim() ? [{ platform: "github", label: "GitHub", url: githubUrl.trim() }] : []),
-          ...(portfolioUrl.trim() ? [{ platform: "portfolio", label: "Portfolio / Website", url: portfolioUrl.trim() }] : []),
-        ];
+    await executeSignup(
+      async () => {
+        if (userType === "candidate") {
+          const socialLinks = [
+            { platform: "linkedin", label: "LinkedIn", url: linkedinUrl.trim() },
+            ...(githubUrl.trim() ? [{ platform: "github", label: "GitHub", url: githubUrl.trim() }] : []),
+            ...(portfolioUrl.trim() ? [{ platform: "portfolio", label: "Portfolio / Website", url: portfolioUrl.trim() }] : []),
+          ];
 
-        const data = await candidateApi.signup({
-          fullName,
-          email,
-          password,
-          phone,
-          headline,
-          experienceLevel: "mid",
-          socialLinks,
-        });
+          const data = await candidateApi.signup({
+            fullName,
+            email,
+            password,
+            phone,
+            headline,
+            experienceLevel: "mid",
+            socialLinks,
+          });
 
-        auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "", undefined, data.refreshToken);
-        router.push(redirectUrl || "/candidate/dashboard");
-      } else {
-        const data = await companyApi.create({
-          companyName,
-          email,
-          password,
-          website,
-        });
+          auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "", undefined, data.refreshToken);
+          router.push(redirectUrl || "/candidate/dashboard");
+        } else {
+          const data = await companyApi.create({
+            companyName,
+            email,
+            password,
+            website,
+          });
 
-        auth.login(data.token, "company", data.company?.id || "", data.company?.email || "", undefined, data.refreshToken);
-        router.push(redirectUrl || "/dashboard");
+          auth.login(data.token, "company", data.company?.id || "", data.company?.email || "", undefined, data.refreshToken);
+          router.push(redirectUrl || "/dashboard");
+        }
+        return null;
+      },
+      {
+        onError: (errorMsg) => {
+          setErrors({ submit: errorMsg || "Signup failed. Please try again." });
+        },
       }
-    } catch (error: unknown) {
-      setErrors({ submit: extractApiError(error, "Signup failed. Please try again.") });
-    } finally {
-      setIsLoading(false);
-    }
+    );
   };
 
   const handleLinkedInSignup = () => {

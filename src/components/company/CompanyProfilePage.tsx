@@ -51,7 +51,7 @@ export default function CompanyProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const { execute: executeUploadLogo, isLoading: isUploadingLogo } = useApi();
 
   const [formData, setFormData] = useState<CompanyProfileFormData>({
     name: "",
@@ -126,18 +126,18 @@ export default function CompanyProfilePage() {
       return;
     }
 
-    setIsUploadingLogo(true);
-
-    try {
-      await companyApi.uploadLogo(file);
-      refetch();
-      toast.success("Logo uploaded successfully!");
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to upload logo";
-      toast.error(message);
-    } finally {
-      setIsUploadingLogo(false);
-    }
+    await executeUploadLogo(
+      () => companyApi.uploadLogo(file),
+      {
+        onSuccess: () => {
+          refetch();
+          toast.success("Logo uploaded successfully!");
+        },
+        onError: (errorMsg) => {
+          toast.error(errorMsg || "Failed to upload logo");
+        },
+      }
+    );
   };
 
   const handleCancel = () => {

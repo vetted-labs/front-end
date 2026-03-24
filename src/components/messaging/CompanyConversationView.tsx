@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Loader2, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
+import { useApi } from "@/lib/hooks/useFetch";
 import type { Conversation, Message } from "@/types";
 import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
@@ -26,7 +27,7 @@ export default function CompanyConversationView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [isScheduling, setIsScheduling] = useState(false);
+  const { execute: executeSchedule, isLoading: isScheduling } = useApi<Message>();
 
   const fetchConversation = useCallback(async () => {
     try {
@@ -75,17 +76,19 @@ export default function CompanyConversationView() {
     provider: "google_meet" | "calendly" | "custom";
     meetingUrl: string;
   }) => {
-    setIsScheduling(true);
-    try {
-      const result = await messagingApi.scheduleMeeting(conversationId, data);
-      if (result) setMessages((prev) => [...prev, result]);
-      setShowScheduleModal(false);
-    } catch (error) {
-      logger.error("Error scheduling meeting", error, { silent: true });
-      toast.error("Failed to schedule meeting");
-    } finally {
-      setIsScheduling(false);
-    }
+    await executeSchedule(
+      () => messagingApi.scheduleMeeting(conversationId, data),
+      {
+        onSuccess: (result) => {
+          if (result) setMessages((prev) => [...prev, result]);
+          setShowScheduleModal(false);
+        },
+        onError: (errorMsg) => {
+          logger.error("Error scheduling meeting", errorMsg, { silent: true });
+          toast.error("Failed to schedule meeting");
+        },
+      }
+    );
   };
 
   if (!ready) return null;

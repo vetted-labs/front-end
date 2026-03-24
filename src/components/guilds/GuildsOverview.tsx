@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Shield, Search, ArrowRight, Zap, AlertCircle, Plus, Users, Loader2 } from "lucide-react";
 import { expertApi, guildsApi } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Alert } from "../ui/alert";
 import { Modal } from "../ui/modal";
@@ -25,7 +25,7 @@ export function GuildsOverview() {
   // Guild picker modal state
   const [showGuildPicker, setShowGuildPicker] = useState(false);
   const [availableGuilds, setAvailableGuilds] = useState<Guild[]>([]);
-  const [loadingGuilds, setLoadingGuilds] = useState(false);
+  const { execute: executeLoadGuilds, isLoading: loadingGuilds } = useApi();
   const [guildSearchQuery, setGuildSearchQuery] = useState("");
   const debouncedGuildSearch = useDebounce(guildSearchQuery, 300);
 
@@ -39,18 +39,20 @@ export function GuildsOverview() {
   const openGuildPicker = async () => {
     setShowGuildPicker(true);
     setGuildSearchQuery("");
-    setLoadingGuilds(true);
-    try {
-      const allGuilds = await guildsApi.getAll();
-      if (Array.isArray(allGuilds)) {
-        const memberGuildIds = new Set(profileGuilds.map((g) => g.id));
-        setAvailableGuilds(allGuilds.filter((g: Guild) => !memberGuildIds.has(g.id)));
+    await executeLoadGuilds(
+      () => guildsApi.getAll(),
+      {
+        onSuccess: (allGuilds) => {
+          if (Array.isArray(allGuilds)) {
+            const memberGuildIds = new Set(profileGuilds.map((g) => g.id));
+            setAvailableGuilds(allGuilds.filter((g: Guild) => !memberGuildIds.has(g.id)));
+          }
+        },
+        onError: () => {
+          setAvailableGuilds([]);
+        },
       }
-    } catch {
-      setAvailableGuilds([]);
-    } finally {
-      setLoadingGuilds(false);
-    }
+    );
   };
 
   const filteredAvailableGuilds = availableGuilds.filter((guild) => {

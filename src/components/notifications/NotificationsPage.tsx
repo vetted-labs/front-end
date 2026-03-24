@@ -9,7 +9,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
@@ -63,7 +63,7 @@ export function NotificationsPage<T extends BaseNotification>({
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState(filters[0]?.key ?? "all");
   const [allNotifications, setAllNotifications] = useState<T[]>([]);
-  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const { execute: executeMarkAll, isLoading: isMarkingAllRead } = useApi();
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -125,19 +125,21 @@ export function NotificationsPage<T extends BaseNotification>({
   };
 
   const handleMarkAllAsRead = async () => {
-    setIsMarkingAllRead(true);
-    try {
-      await markAllAsReadApi();
-      setAllNotifications((prev) =>
-        prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
-      );
-      window.dispatchEvent(new Event(readEventName));
-    } catch (err) {
-      logger.error("Error marking all as read", err, { silent: true });
-      toast.error(err instanceof Error ? err.message : "Failed to mark all notifications as read");
-    } finally {
-      setIsMarkingAllRead(false);
-    }
+    await executeMarkAll(
+      () => markAllAsReadApi(),
+      {
+        onSuccess: () => {
+          setAllNotifications((prev) =>
+            prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
+          );
+          window.dispatchEvent(new Event(readEventName));
+        },
+        onError: (errorMsg) => {
+          logger.error("Error marking all as read", errorMsg, { silent: true });
+          toast.error(errorMsg || "Failed to mark all notifications as read");
+        },
+      }
+    );
   };
 
   if (!ready || isLoading) return null;
