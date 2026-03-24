@@ -19,13 +19,15 @@ import {
   type Notification,
   getNotificationIcon,
   getNotificationColor,
+  isDeadlineNotification,
   getApplicantTypeTag,
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
+import { CountdownBadge } from "@/components/ui/countdown-badge";
 
-type FilterType = "all" | "unread" | "vetting_reviews" | "applications" | "reward_earned";
+type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -138,21 +140,40 @@ export default function NotificationsPage() {
 
   // Calculate badge counts from ALL notifications (not filtered)
   const unreadCount = allNotifications.filter((n) => !n.isRead).length;
-  const vettingCount = allNotifications.filter((n) => n.type === "proposal_new" || n.type === "proposal_deadline" || n.type === "application_new" || n.type === "application_deadline").length;
-  const applicationCount = allNotifications.filter((n) => n.type === "application_status" || n.type === "guild_application").length;
+  const reviewsCount = allNotifications.filter((n) =>
+    n.type === "proposal_new" || n.type === "proposal_deadline" ||
+    n.type === "application_new" || n.type === "application_deadline" ||
+    n.type === "application_status"
+  ).length;
   const rewardCount = allNotifications.filter((n) => n.type === "reward_earned").length;
+  const guildCount = allNotifications.filter((n) => n.type === "guild_application").length;
+  const systemCount = allNotifications.filter((n) =>
+    n.type !== "proposal_new" && n.type !== "proposal_deadline" &&
+    n.type !== "application_new" && n.type !== "application_deadline" &&
+    n.type !== "application_status" && n.type !== "reward_earned" &&
+    n.type !== "guild_application"
+  ).length;
 
   // Filter notifications for display only (client-side filtering)
   const filteredNotifications =
     activeFilter === "all"
       ? allNotifications
-      : activeFilter === "unread"
-      ? allNotifications.filter((n) => !n.isRead)
-      : activeFilter === "vetting_reviews"
-      ? allNotifications.filter((n) => n.type === "proposal_new" || n.type === "proposal_deadline" || n.type === "application_new" || n.type === "application_deadline")
-      : activeFilter === "applications"
-      ? allNotifications.filter((n) => n.type === "application_status" || n.type === "guild_application")
-      : allNotifications.filter((n) => n.type === activeFilter);
+      : activeFilter === "reviews"
+      ? allNotifications.filter((n) =>
+          n.type === "proposal_new" || n.type === "proposal_deadline" ||
+          n.type === "application_new" || n.type === "application_deadline" ||
+          n.type === "application_status"
+        )
+      : activeFilter === "rewards"
+      ? allNotifications.filter((n) => n.type === "reward_earned")
+      : activeFilter === "guild"
+      ? allNotifications.filter((n) => n.type === "guild_application")
+      : allNotifications.filter((n) =>
+          n.type !== "proposal_new" && n.type !== "proposal_deadline" &&
+          n.type !== "application_new" && n.type !== "application_deadline" &&
+          n.type !== "application_status" && n.type !== "reward_earned" &&
+          n.type !== "guild_application"
+        );
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -188,81 +209,38 @@ export default function NotificationsPage() {
 
         {/* Filter Navigation */}
         <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
-          <button
-            onClick={() => setActiveFilter("all")}
-            className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === "all"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
-            }`}
-          >
-            All
-            {allNotifications.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-primary-foreground/20 text-xs font-semibold rounded-full">
-                {allNotifications.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveFilter("unread")}
-            className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === "unread"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
-            }`}
-          >
-            Unread
-            {unreadCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded-full">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveFilter("vetting_reviews")}
-            className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === "vetting_reviews"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
-            }`}
-          >
-            Vetting Reviews
-            {vettingCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-primary-foreground/20 text-xs font-semibold rounded-full">
-                {vettingCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveFilter("applications")}
-            className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === "applications"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
-            }`}
-          >
-            Applications
-            {applicationCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-primary-foreground/20 text-xs font-semibold rounded-full">
-                {applicationCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveFilter("reward_earned")}
-            className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
-              activeFilter === "reward_earned"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
-            }`}
-          >
-            Rewards
-            {rewardCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-primary-foreground/20 text-xs font-semibold rounded-full">
-                {rewardCount}
-              </span>
-            )}
-          </button>
+          {(
+            [
+              { key: "all", label: "All", count: allNotifications.length },
+              { key: "reviews", label: "Reviews", count: reviewsCount },
+              { key: "rewards", label: "Rewards", count: rewardCount },
+              { key: "guild", label: "Guild", count: guildCount },
+              { key: "system", label: "System", count: systemCount },
+            ] as { key: FilterType; label: string; count: number }[]
+          ).map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setActiveFilter(key)}
+              className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
+                activeFilter === key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
+              }`}
+            >
+              {label}
+              {count > 0 && (
+                <span
+                  className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
+                    key === "all" && unreadCount > 0
+                      ? "bg-red-500 text-white"
+                      : "bg-primary-foreground/20"
+                  }`}
+                >
+                  {key === "all" ? unreadCount > 0 ? unreadCount : count : count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Notifications List */}
@@ -272,9 +250,9 @@ export default function NotificationsPage() {
               <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No notifications</h3>
               <p className="text-muted-foreground">
-                {activeFilter === "unread"
-                  ? "All caught up! No unread notifications."
-                  : `No ${activeFilter === "all" ? "" : activeFilter + " "}notifications found.`}
+                {activeFilter === "all"
+                  ? "You have no notifications yet."
+                  : `No ${activeFilter} notifications found.`}
               </p>
             </div>
           ) : (
@@ -282,6 +260,7 @@ export default function NotificationsPage() {
               const Icon = getNotificationIcon(notification.type);
               const isUnread = !notification.isRead;
               const isClicked = clickedNotificationId === notification.id;
+              const isDeadline = isDeadlineNotification(notification.type);
 
               const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
 
@@ -290,10 +269,12 @@ export default function NotificationsPage() {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   disabled={isClicked}
-                  className={`w-full bg-card rounded-2xl p-6 border transition-all text-left hover:shadow-lg hover:border-primary/50 ${
-                    isUnread
-                      ? "border-primary/20 bg-card"
-                      : "border-border opacity-75 hover:opacity-100"
+                  className={`w-full rounded-2xl p-6 border transition-all text-left hover:shadow-lg ${
+                    isDeadline
+                      ? "bg-amber-500/5 border-amber-500/30 hover:border-amber-500/60"
+                      : isUnread
+                      ? "bg-card border-primary/20 hover:border-primary/50"
+                      : "bg-card border-border opacity-75 hover:opacity-100 hover:border-primary/50"
                   } ${isClicked ? "opacity-60 cursor-wait" : ""}`}
                 >
                   <div className="flex items-start gap-4">
@@ -310,11 +291,11 @@ export default function NotificationsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between mb-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3
                             className={`text-base font-semibold text-foreground ${
                               isUnread ? "font-bold" : ""
-                            }`}
+                            } ${isDeadline ? "text-amber-700 dark:text-amber-400" : ""}`}
                           >
                             {notification.title}
                           </h3>
@@ -323,14 +304,21 @@ export default function NotificationsPage() {
                               {applicantTag.label}
                             </span>
                           )}
+                          {isDeadline && notification.expiresAt && (
+                            <CountdownBadge deadline={notification.expiresAt} label="Due" />
+                          )}
                         </div>
                         {isUnread && (
-                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-2 mt-1.5" />
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1.5 ${isDeadline ? "bg-amber-500" : "bg-primary"}`} />
                         )}
                       </div>
                       <p
-                        className={`text-sm text-muted-foreground mb-2 ${
-                          isUnread ? "font-medium" : ""
+                        className={`text-sm mb-2 ${
+                          isDeadline
+                            ? "text-amber-700/80 dark:text-amber-300/80 font-medium"
+                            : isUnread
+                            ? "text-muted-foreground font-medium"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {notification.message}

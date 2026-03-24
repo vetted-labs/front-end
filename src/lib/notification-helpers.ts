@@ -29,12 +29,18 @@ export function getNotificationIcon(type: string): LucideIcon {
   }
 }
 
+/** Returns true for notification types that represent an approaching deadline. */
+export function isDeadlineNotification(type: string): boolean {
+  return type === "proposal_deadline" || type === "application_deadline";
+}
+
 export function getNotificationColor(type: string): string {
   switch (type) {
-    case "proposal_new":
     case "proposal_deadline":
-    case "application_new":
     case "application_deadline":
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
+    case "proposal_new":
+    case "application_new":
       return "bg-blue-500/10 text-blue-600 dark:text-blue-400";
     case "application_status":
       return "bg-purple-500/10 text-purple-600 dark:text-purple-400";
