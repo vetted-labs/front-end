@@ -3,7 +3,7 @@
 import { RefObject } from "react";
 import { User, Upload, Paperclip, X } from "lucide-react";
 import { Input } from "../ui/input";
-import type { FieldErrors } from "../ExpertApplicationForm";
+import type { FieldErrors } from "@/types";
 
 export interface PersonalInfoSectionProps {
   fullName: string;

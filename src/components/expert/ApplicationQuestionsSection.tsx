@@ -2,7 +2,7 @@
 
 import { Shield, FileText, Briefcase } from "lucide-react";
 import { Textarea } from "../ui/textarea";
-import type { FieldErrors } from "../ExpertApplicationForm";
+import type { FieldErrors } from "@/types";
 import type {
   GuildApplicationTemplate,
   GuildApplicationQuestion,

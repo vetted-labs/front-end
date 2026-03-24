@@ -3,20 +3,19 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
-import { Loader2, Send, Shield, CheckCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Send, CheckCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Alert } from "./ui/alert";
 import { PersonalInfoSection } from "./expert/PersonalInfoSection";
 import { ProfessionalBackgroundSection } from "./expert/ProfessionalBackgroundSection";
 import { ApplicationQuestionsSection } from "./expert/ApplicationQuestionsSection";
 import { ExpertApplicationProgress } from "./expert/ExpertApplicationProgress";
+import { WalletVerificationStep } from "./expert/WalletVerificationStep";
 import { expertApi, guildsApi, ApiError } from "@/lib/api";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
-import type { GuildApplicationTemplate, GuildDomainLevel, GuildDomainTopic } from "@/types";
-
-export type FieldErrors = Record<string, string>;
+import type { FieldErrors, GuildApplicationTemplate, GuildDomainLevel, GuildDomainTopic } from "@/types";
 
 interface ExpertApplicationFormProps {
   onSuccess?: () => void;
@@ -83,6 +82,8 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   const guildParam = searchParams.get("guild");
   const applyNew = searchParams.get("apply") === "new";
 
+  // This check is intentionally NOT using useRequireAuth — it verifies expert profile
+  // existence and application status (approved/pending), not just authentication.
   // eslint-disable-next-line no-restricted-syntax -- redirects existing experts, depends on wagmi state
   useEffect(() => {
     if (!mounted || !isConnected || !address) return;
@@ -711,63 +712,12 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
               onBlur={handleBlur}
             />
 
-            {/* Wallet Verification Section */}
-            <div className="p-8 border-t border-border">
-              <div className="flex items-start gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  walletSigned
-                    ? "bg-green-100 dark:bg-green-900/30"
-                    : "bg-primary/10"
-                }`}>
-                  {walletSigned ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <Shield className="w-5 h-5 text-primary" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">
-                    Wallet Ownership Verification
-                  </h3>
-                  {walletSigned ? (
-                    <p className="text-sm text-green-600 dark:text-green-400">
-                      Wallet verified — you&apos;re good to go.
-                    </p>
-                  ) : (
-                    <>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Sign a message to prove you own this wallet. This is a free signature — no gas fees.
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleVerifyWallet}
-                        disabled={isSigning}
-                        className="gap-2"
-                      >
-                        {isSigning ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Waiting for signature...
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="w-4 h-4" />
-                            Verify Wallet
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  )}
-                  {verificationError && (
-                    <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                      <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-destructive">{verificationError}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <WalletVerificationStep
+              isVerified={walletSigned}
+              isSigning={isSigning}
+              signingError={verificationError}
+              onVerify={handleVerifyWallet}
+            />
 
             {/* Submit Section */}
             <div className="p-8 bg-gradient-to-r from-primary/5 to-accent/5">

@@ -2,6 +2,9 @@ import type { ExpertGuild } from "./guild";
 
 export type ExpertStatus = "pending" | "approved" | "rejected";
 
+/** Validation errors keyed by field name. */
+export type FieldErrors = Record<string, string>;
+
 /** Guild application info returned for pending experts. */
 export interface PendingGuildInfo {
   id: string;
