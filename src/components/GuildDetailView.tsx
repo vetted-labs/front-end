@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, blockchainApi, extractApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { Breadcrumb } from "./ui/breadcrumb";
 import { GuildHeader } from "./guild/GuildHeader";
 import { GuildApplicationCTA } from "./guild/GuildApplicationCTA";
 import { GuildLeaderboardTab } from "./guild/GuildLeaderboardTab";
@@ -368,6 +369,13 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       </div>
 
       <div className="relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <Breadcrumb items={[
+            { label: "Dashboard", href: "/expert/dashboard" },
+            { label: "Guilds", href: "/expert/guilds" },
+            { label: guild?.name ?? "Guild" },
+          ]} />
+        </div>
         <GuildHeader guild={guild} onStakeClick={() => setShowVetdStakingModal(true)} />
         <GuildApplicationCTA guildId={guildId} onNavigateToPublicPage={() => router.push(`/guilds/${guildId}`)} />
 

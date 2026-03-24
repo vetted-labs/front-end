@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { GovernanceVoteForm } from "@/components/governance/GovernanceVoteForm";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { GovernanceResultsBanner } from "@/components/governance/GovernanceResultsBanner";
 import { VotingPowerBar } from "@/components/governance/VotingPowerBar";
 import type { GovernanceProposalDetail } from "@/types";
@@ -157,6 +158,10 @@ export function GovernanceProposalDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Breadcrumb items={[
+        { label: "Governance", href: "/expert/governance" },
+        { label: proposal?.title ?? "Proposal" },
+      ]} />
       {/* ─── Back link ─── */}
       <button
         onClick={() => router.back()}

@@ -10,6 +10,7 @@ import { ArrowRight, Coins, Shield } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { FirstTimeReviewerGuide } from "@/components/expert/FirstTimeReviewerGuide";
 import { ViewReviewModal } from "./ViewReviewModal";
 import { ApplicationsStatsRow } from "./ApplicationsStatsRow";
@@ -202,6 +203,10 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-5xl mx-auto py-10 px-6 lg:px-8 space-y-8">
+        <Breadcrumb items={[
+          { label: "Dashboard", href: "/expert/dashboard" },
+          { label: "Applications" },
+        ]} />
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Reviews</h1>
