@@ -23,6 +23,15 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector:
+            "CallExpression[callee.name='useEffect'], CallExpression[callee.object.name='React'][callee.property.name='useEffect']",
+          message:
+            "Avoid direct useEffect. Derive state inline, use useFetch for data fetching, use event handlers for actions, or use useMountEffect for mount-only external system sync.",
+        },
+      ],
     },
   },
 ];

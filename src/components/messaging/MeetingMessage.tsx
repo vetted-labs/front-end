@@ -38,7 +38,7 @@ export function MeetingMessage({
   // Normalize meeting ID — backend may return _id (MongoDB) instead of id
   const meetingId =
     meeting.id ||
-    (meeting as Record<string, unknown>)._id as string | undefined ||
+    (meeting as unknown as Record<string, unknown>)._id as string | undefined ||
     message.id; // fallback to message ID
 
   const status: MeetingStatus = meeting.status ?? "pending";

@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Filter,
@@ -30,7 +30,6 @@ import { useGuilds } from "@/lib/hooks/useGuilds";
 export default function JobsListing() {
   const router = useRouter();
   const { resolveGuildId } = useGuilds();
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuilds, setSelectedGuilds] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -40,14 +39,6 @@ export default function JobsListing() {
   const auth = useAuthContext();
   const isCandidate = auth.isAuthenticated && auth.userType === 'candidate';
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
-
-  const {
-    paginatedItems: currentJobs,
-    currentPage,
-    totalPages,
-    setCurrentPage,
-    resetPage,
-  } = useClientPagination(filteredJobs, 5);
 
   const [locationQuery, setLocationQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -72,6 +63,7 @@ export default function JobsListing() {
     }
   );
 
+
   // Fetch jobs listing
   const { data: jobs, isLoading } = useFetch<Job[]>(
     () => jobsApi.getAll({ status: 'active' }).then((data) => {
@@ -88,9 +80,6 @@ export default function JobsListing() {
       }));
     }),
     {
-      onSuccess: (normalizedJobs) => {
-        setFilteredJobs(normalizedJobs);
-      },
       onError: (err) => {
         toast.error("Failed to load jobs");
         logger.error("Failed to load jobs", err, { silent: true });
@@ -112,7 +101,7 @@ export default function JobsListing() {
   const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance"];
   const locationTypes = ["Remote", "Onsite", "Hybrid"];
 
-  useEffect(() => {
+  const filteredJobs = useMemo(() => {
     let filtered = jobs || [];
 
     // Filter by search query (debounced)
@@ -165,9 +154,21 @@ export default function JobsListing() {
       );
     }
 
-    setFilteredJobs(filtered);
+    return filtered;
+  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs]);
+
+  const {
+    paginatedItems: currentJobs,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+    resetPage,
+  } = useClientPagination(filteredJobs, 5);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
     resetPage();
-  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, jobs, resetPage]);
+  }, [debouncedSearch, debouncedLocation, selectedGuilds, selectedJobTypes, selectedLocationTypes, resetPage]);
 
   const toggleFilter = (
     filterArray: string[],

@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
   // Re-sync auth state when tokens are refreshed by the API layer
+  // eslint-disable-next-line no-restricted-syntax -- subscribes to custom DOM event
   useEffect(() => {
     const handler = () => {
       const newState = getInitialAuthState();
@@ -96,13 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // clear expert auth so there's no ghost session
   const { status: walletStatus, address: wagmiAddress } = useAccount();
 
-  // Sync connected wallet address to localStorage so apiRequest can send X-Wallet-Address
+  // Sync connected wallet address to localStorage so apiRequest can send X-Wallet-Address.
+  // Components should read wallet address from useAccount() directly — authState.walletAddress
+  // is only kept as a fallback for non-wagmi consumers.
+  // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi wallet status changes
   useEffect(() => {
     if (walletStatus === 'connected' && wagmiAddress) {
       const stored = localStorage.getItem('walletAddress');
       if (stored !== wagmiAddress) {
         localStorage.setItem('walletAddress', wagmiAddress);
-        setAuthState(prev => ({ ...prev, walletAddress: wagmiAddress }));
       }
     }
   }, [walletStatus, wagmiAddress]);
@@ -111,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // clear expert auth so there's no ghost session.
   // Debounce: MetaMask can briefly emit "disconnected" before reconnecting,
   // so wait before clearing auth — if wallet reconnects in time, cleanup cancels the timeout.
+  // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi wallet status changes
   useEffect(() => {
     if (walletStatus === 'reconnecting' || walletStatus === 'connecting') return;
     if (walletStatus !== 'disconnected' || authState.userType !== 'expert') return;

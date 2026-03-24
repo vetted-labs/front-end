@@ -303,7 +303,8 @@ export default function JobDetailView() {
         });
       },
       {
-        onSuccess: (newApplication) => {
+        onSuccess: (data) => {
+          const newApplication = data as { id: string };
           setExistingApplication({
             id: newApplication.id,
             jobId: job?.id || "",

@@ -15,6 +15,7 @@ import {
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
@@ -30,18 +31,9 @@ export function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen]);
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
-  // Fetch recent notifications when dropdown opens
+  // eslint-disable-next-line no-restricted-syntax -- fetches on dropdown open with optimistic read updates
   useEffect(() => {
     if (!isOpen || !address) return;
 

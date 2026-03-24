@@ -73,10 +73,10 @@ export function useVotingApplicationData(
 
       // 3. Fetch candidate profile + vote history in parallel (depend on application)
       const [candidate, votes] = await Promise.all([
-        app.candidate_id
-          ? candidateApi.getById(app.candidate_id).catch(() => null)
+        app.candidateId
+          ? candidateApi.getById(app.candidateId).catch(() => null)
           : Promise.resolve(null),
-        app.finalized
+        app.status === "approved" || app.status === "rejected"
           ? guildApplicationsApi.getVotes(applicationId).catch(() => [])
           : Promise.resolve([]),
       ]);
@@ -86,7 +86,7 @@ export function useVotingApplicationData(
     {
       onSuccess: (result) => {
         if (!result) return;
-        setApplication(result.app);
+        setApplication(result.app as unknown as GuildApplication);
         setCrPhase(result.phase as CommitRevealPhase | null);
         setVoteHistory(result.votes);
       },
@@ -123,8 +123,8 @@ export function useVotingApplicationData(
         applicationId,
         expertData?.id
       );
-      setApplication(response);
-      if (response.finalized) {
+      setApplication(response as unknown as GuildApplication);
+      if (response.status === "approved" || response.status === "rejected") {
         const votes = await guildApplicationsApi
           .getVotes(applicationId)
           .catch(() => []);

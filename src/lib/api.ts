@@ -587,6 +587,18 @@ export const candidateApi = {
 
   getGuildApplications: () =>
     apiRequest<import("@/types").GuildApplicationSummary[]>("/api/candidates/me/guild-applications", { requiresAuth: true }),
+
+  /** Fetch aggregated rejection feedback for a guild application (reviewer scores + summary). */
+  getGuildApplicationFeedback: (applicationId: string) =>
+    apiRequest<import("@/types").CandidateRejectionFeedback>(`/api/candidates/me/guild-applications/${applicationId}/feedback`, { requiresAuth: true }),
+
+  /** Resubmit a rejected guild application (1 resubmission allowed). */
+  resubmitGuildApplication: (applicationId: string, data: Record<string, unknown>) =>
+    apiRequest<{ id: string }>(`/api/candidates/me/guild-applications/${applicationId}/resubmit`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      requiresAuth: true,
+    }),
 };
 
 // Expert API

@@ -41,7 +41,8 @@ export function useApplicationStatusUpdate() {
         () => applicationsApi.updateStatus(applicationId, newStatus, note),
         {
           onSuccess: (data) => {
-            options?.onSuccess?.(data.transition);
+            const result = data as { transition: import("@/types").StatusTransition };
+            options?.onSuccess?.(result.transition);
 
             // Fire-and-forget hire outcome when status is "accepted"
             if (newStatus === "accepted") {

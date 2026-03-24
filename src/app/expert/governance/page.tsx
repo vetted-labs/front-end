@@ -22,6 +22,7 @@ export default function GovernancePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>("active");
 
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on filter change
   useEffect(() => {
     loadProposals();
   }, [filter]);

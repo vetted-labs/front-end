@@ -61,12 +61,12 @@ export default function ReputationPage() {
     }
   );
 
-  // Refetch when page changes
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on page change (useFetch doesn't support custom deps)
   useEffect(() => {
     if (address) {
       refetch();
     }
-  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, address, refetch]);
 
   // Compute stats from timeline
   const totalGains = timeline.filter((e) => e.change_amount > 0).reduce((s, e) => s + e.change_amount, 0);

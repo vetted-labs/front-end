@@ -17,7 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Textarea, Select, Alert } from "@/components/ui";
+import { Button, Input, Textarea, NativeSelect, Alert } from "@/components/ui";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { companyApi, getAssetUrl } from "@/lib/api";
 import { TeamManagement } from "./TeamManagement";
@@ -275,7 +275,6 @@ export default function CompanyProfilePage() {
                 value={formData.website}
                 onChange={(e) => handleInputChange("website", e.target.value)}
                 placeholder="https://example.com"
-                icon={<Globe className="w-4 h-4" />}
               />
 
               <Input
@@ -283,24 +282,29 @@ export default function CompanyProfilePage() {
                 value={formData.location}
                 onChange={(e) => handleInputChange("location", e.target.value)}
                 placeholder="San Francisco, CA"
-                icon={<MapPin className="w-4 h-4" />}
               />
 
-              <Select
+              <NativeSelect
                 label="Company Size"
                 value={formData.size}
                 onChange={(e) => handleInputChange("size", e.target.value)}
-                options={COMPANY_SIZES}
-                placeholder="Select company size"
-              />
+              >
+                <option value="">Select company size</option>
+                {COMPANY_SIZES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </NativeSelect>
 
-              <Select
+              <NativeSelect
                 label="Industry"
                 value={formData.industry}
                 onChange={(e) => handleInputChange("industry", e.target.value)}
-                options={INDUSTRIES}
-                placeholder="Select industry"
-              />
+              >
+                <option value="">Select industry</option>
+                {INDUSTRIES.map((i) => (
+                  <option key={i.value} value={i.value}>{i.label}</option>
+                ))}
+              </NativeSelect>
 
               <Textarea
                 label="Company Description"

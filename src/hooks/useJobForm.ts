@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { jobsApi, guildsApi } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
 import type { Guild } from "@/types";
@@ -44,70 +45,52 @@ export function useJobForm(jobId?: string) {
     companyId: "",
   });
 
-  const [guilds, setGuilds] = useState<Guild[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch guilds on mount
-  useEffect(() => {
-    const fetchGuilds = async () => {
-      try {
-        const guildsData = await guildsApi.getAll();
-        setGuilds(Array.isArray(guildsData) ? guildsData : []);
-      } catch (error) {
-        logger.error("Failed to fetch guilds", error, { silent: true });
-      }
-    };
-    fetchGuilds();
-  }, []);
+  const { data: guildsData } = useFetch<Guild[]>(
+    () => guildsApi.getAll(),
+    { onError: (msg) => logger.error("Failed to fetch guilds", msg, { silent: true }) }
+  );
+  const guilds = guildsData ?? [];
 
-  // Set companyId from auth context
   const auth = useAuthContext();
-  useEffect(() => {
-    if (auth.userId && auth.userType === "company") {
-      setFormData((prev) => ({ ...prev, companyId: auth.userId! }));
-    }
-  }, [auth.userId, auth.userType]);
+  const effectiveCompanyId = auth.userType === "company" && auth.userId ? auth.userId : formData.companyId;
 
   // Fetch job data if editing
-  useEffect(() => {
-    if (isEditing && jobId) {
-      const fetchJob = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const data = await jobsApi.getById(jobId);
-          setFormData({
-            title: data.title || "",
-            department: data.department || "",
-            description: data.description || "",
-            requirements: data.requirements || [],
-            skills: data.skills || [],
-            location: data.location || "",
-            locationType: data.locationType || "remote",
-            jobType: data.type || "Full-time",
-            experienceLevel: (data.experienceLevel as JobFormData["experienceLevel"]) || undefined,
-            salaryMin: data.salary?.min || undefined,
-            salaryMax: data.salary?.max || undefined,
-            salaryCurrency: data.salary?.currency || "USD",
-            guild: data.guild || "",
-            status: data.status || "draft",
-            screeningQuestions: data.screeningQuestions || [],
-            companyId: data.companyId || "00000000-0000-0000-0000-000000000000",
-          });
-        } catch (error: unknown) {
-          setError(
-            `Failed to load job data. Details: ${(error as Error).message}`
-          );
-          logger.error("Failed to load job data", error, { silent: true });
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchJob();
+  const { isLoading: isLoadingJob } = useFetch(
+    () => jobsApi.getById(jobId!),
+    {
+      skip: !isEditing || !jobId,
+      onSuccess: (data) => {
+        setFormData({
+          title: data.title || "",
+          department: data.department || "",
+          description: data.description || "",
+          requirements: data.requirements || [],
+          skills: data.skills || [],
+          location: data.location || "",
+          locationType: data.locationType || "remote",
+          jobType: data.type || "Full-time",
+          experienceLevel: (data.experienceLevel as JobFormData["experienceLevel"]) || undefined,
+          salaryMin: data.salary?.min || undefined,
+          salaryMax: data.salary?.max || undefined,
+          salaryCurrency: data.salary?.currency || "USD",
+          guild: data.guild || "",
+          status: data.status || "draft",
+          screeningQuestions: data.screeningQuestions || [],
+          companyId: data.companyId || "00000000-0000-0000-0000-000000000000",
+        });
+      },
+      onError: (msg) => {
+        setError(`Failed to load job data. Details: ${msg}`);
+      },
     }
-  }, [isEditing, jobId]);
+  );
+
+  const isLoading = isSubmitting || isLoadingJob;
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -126,7 +109,7 @@ export function useJobForm(jobId?: string) {
       errors.guild = "Please select a guild";
     }
 
-    if (!formData.companyId) {
+    if (!effectiveCompanyId) {
       errors.companyId = "Company ID is missing. Please log in again.";
     }
 
@@ -172,7 +155,7 @@ export function useJobForm(jobId?: string) {
     const titleErr = validateMinLength(formData.title, 3, "Job title");
     if (titleErr) errors.title = titleErr;
 
-    if (!formData.companyId) {
+    if (!effectiveCompanyId) {
       errors.companyId = "Company ID is missing. Please log in again.";
     }
 
@@ -200,18 +183,18 @@ export function useJobForm(jobId?: string) {
     screeningQuestions: formData.screeningQuestions?.length
       ? formData.screeningQuestions
       : undefined,
-    companyId: formData.companyId,
+    companyId: effectiveCompanyId,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError(null);
     setFieldErrors({});
 
     // Validate form
     if (!validateForm()) {
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
 
@@ -230,17 +213,17 @@ export function useJobForm(jobId?: string) {
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleSaveDraft = async () => {
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError(null);
     setFieldErrors({});
 
     if (!validateDraft()) {
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
 
@@ -252,7 +235,7 @@ export function useJobForm(jobId?: string) {
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 

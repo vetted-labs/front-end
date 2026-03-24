@@ -3,16 +3,23 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, Crown, Info } from "lucide-react";
 
 interface GovernanceVoteFormProps {
-  votingPower: number;
+  /** Merit-weighted vote weight (1.0 – 4.5) */
+  voteWeight: number;
+  /** Raw reputation score */
+  reputation: number;
+  /** Whether the voter is a Guild Master (1.5x multiplier) */
+  isGuildMaster?: boolean;
   onSubmit: (vote: "for" | "against" | "abstain", reason: string) => Promise<void>;
   disabled?: boolean;
 }
 
 export function GovernanceVoteForm({
-  votingPower,
+  voteWeight,
+  reputation,
+  isGuildMaster = false,
   onSubmit,
   disabled = false,
 }: GovernanceVoteFormProps) {
@@ -36,8 +43,20 @@ export function GovernanceVoteForm({
         <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
           Cast Your Vote
         </h3>
-        <p className="text-sm text-muted-foreground">
-          Voting power: <span className="font-semibold text-foreground tabular-nums">{votingPower.toLocaleString()}</span> VETD
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">
+            Vote weight: <span className="font-semibold text-foreground tabular-nums">{voteWeight.toFixed(2)}x</span>
+          </p>
+          {isGuildMaster && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
+              <Crown className="w-3 h-3" />
+              1.5x Master
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+          <Info className="w-3 h-3 mt-0.5 shrink-0" />
+          <span>Based on your reputation ({reputation.toLocaleString()} pts). Formula: 1 + min(rep/1000, 2.0){isGuildMaster ? " × 1.5" : ""}.</span>
         </p>
       </div>
 

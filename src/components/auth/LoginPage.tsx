@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -21,6 +21,7 @@ import { candidateApi, companyApi, expertApi, extractApiError, ApiError } from "
 import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 
 type UserType = "candidate" | "company" | "expert";
 
@@ -51,20 +52,8 @@ function LoginForm() {
   const [error, setError] = useState("");
 
   const autoLoginAttempted = useRef(false);
-
-  useEffect(() => {
-    clearTokenAuthState();
-    setMounted(true);
-  }, []);
-
-  // Auto-login: if wallet is already connected and expert tab is active, proceed without click
-  useEffect(() => {
-    if (!mounted || userType !== "expert" || autoLoginAttempted.current) return;
-    if (isConnected && address) {
-      autoLoginAttempted.current = true;
-      handleExpertLogin(address);
-    }
-  }, [mounted, userType, isConnected, address]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Ref for auto-login — set after handleExpertLogin is defined below
+  const handleExpertLoginRef = useRef<((addr: string) => Promise<void>) | undefined>(undefined);
 
   const handleUserTypeChange = (newType: string) => {
     setError("");
@@ -100,6 +89,23 @@ function LoginForm() {
       setError("Failed to verify expert status. Please try again.");
     }
   };
+
+  // Keep ref current for the mount effect
+  handleExpertLoginRef.current = handleExpertLogin;
+
+  useMountEffect(() => {
+    clearTokenAuthState();
+    setMounted(true);
+
+    // Auto-login: if wallet is already connected and expert tab is active, proceed once
+    const timer = setTimeout(() => {
+      if (userType === "expert" && !autoLoginAttempted.current && isConnected && address) {
+        autoLoginAttempted.current = true;
+        handleExpertLoginRef.current?.(address);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  });
 
   const handleWalletConnect = async (connectorId: string) => {
     const connector = connectors.find((c) => c.id === connectorId);

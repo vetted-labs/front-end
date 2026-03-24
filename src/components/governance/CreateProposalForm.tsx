@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { useRequireWallet } from "@/lib/hooks/useRequireWallet";
 import { governanceApi, extractApiError } from "@/lib/api";
+import { GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD } from "@/config/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +29,7 @@ import {
   Shield,
   CheckCircle2,
   Circle,
+  Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
@@ -123,7 +125,7 @@ export function CreateProposalForm() {
   const [txErrorMessage, setTxErrorMessage] = useState("");
 
   const needsGuild = GUILD_REQUIRED_TYPES.includes(proposalType);
-  const { approveTokens, stakeForAppeal, stakeForAppealWithPermit } = useAppealStaking(
+  const { stakeForAppealWithPermit } = useAppealStaking(
     guildId || undefined
   );
   const { executeWithPermit } = usePermitOrApprove();
@@ -262,17 +264,7 @@ export function CreateProposalForm() {
           ),
         );
 
-        let hash: `0x${string}`;
-        if (result.path === "permit") {
-          hash = result.hash;
-        } else {
-          // Fallback: approve → stake (2 TX)
-          await approveTokens(stakeAmount);
-          setSubmitStep("staking");
-          hash = await stakeForAppeal(stakeAmount);
-        }
-
-        setTxHash(hash);
+        setTxHash(result.hash);
         setSubmitStep("confirming");
         setShowTxModal(true);
         setTxModalStatus("pending");
@@ -422,6 +414,21 @@ export function CreateProposalForm() {
                 );
               })}
             </div>
+
+            {/* Threshold info based on selected type */}
+            {(() => {
+              const t = GOVERNANCE_THRESHOLDS[proposalType] ?? DEFAULT_GOVERNANCE_THRESHOLD;
+              return (
+                <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 flex items-center gap-3 text-sm">
+                  <Scale className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground">
+                    This proposal type requires <span className="font-semibold text-foreground">{t.threshold}% approval</span> to pass
+                    {t.threshold > 51 && " (major change — higher threshold)"}.
+                    Voting power is merit-weighted based on reputation.
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Conditional: Parameter Change Details */}
             {proposalType === "parameter_change" && (

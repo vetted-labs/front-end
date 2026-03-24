@@ -171,7 +171,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       recentJobs: Array.isArray(data.recentJobs) ? data.recentJobs : [],
       guildApplications: Array.isArray(data.guildApplications) ? data.guildApplications : [],
       applications: Array.isArray(data.applications) ? data.applications : [],
-      recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : [],
+      recentActivity: Array.isArray(data.recentActivity) ? (data.recentActivity as Activity[]) : [],
       memberCount: data.memberCount ?? data.totalMembers ?? 0,
       expertRole: data.expertRole ?? currentExpert?.role ?? "member",
       reputation: data.reputation ?? currentExpert?.reputation ?? 0,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn, formatSalaryRange } from '@/lib/utils';
@@ -38,37 +38,21 @@ export function EndorsementModal({
 }: EndorsementModalProps) {
   const [bidAmount, setBidAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [skillMatch, setSkillMatch] = useState<number>(0);
 
-  useEffect(() => {
-    if (application) {
-      calculateSkillMatch();
-    }
-  }, [application]);
-
-  const calculateSkillMatch = () => {
-    if (!application?.job_skills || !application?.candidate_bio) {
-      setSkillMatch(0);
-      return;
-    }
-
+  const skillMatch = useMemo(() => {
+    if (!application?.job_skills || !application?.candidate_bio) return 0;
     try {
       const jobSkills = typeof application.job_skills === 'string'
         ? application.job_skills.toLowerCase().split(',').map((s: string) => s.trim())
         : application.job_skills.map((s: string) => s.toLowerCase().trim());
-
       const candidateBio = application.candidate_bio.toLowerCase();
-
-      const matchedSkills = jobSkills.filter((skill: string) =>
-        candidateBio.includes(skill)
-      );
-
-      setSkillMatch(Math.round((matchedSkills.length / jobSkills.length) * 100));
+      const matchedSkills = jobSkills.filter((skill: string) => candidateBio.includes(skill));
+      return Math.round((matchedSkills.length / jobSkills.length) * 100);
     } catch (error) {
       logger.error("Failed to calculate skill match", error);
-      setSkillMatch(0);
+      return 0;
     }
-  };
+  }, [application]);
 
   const handleEndorse = async () => {
     if (!application) return;

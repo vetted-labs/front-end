@@ -11,19 +11,19 @@ interface CandidateProfileViewProps {
   profile: {
     id: string;
     fullName: string;
-    headline: string;
+    headline?: string;
     bio?: string;
-    experienceLevel: string;
+    experienceLevel?: string;
     linkedIn?: string;
     github?: string;
     resumeUrl?: string;
-    applicationCount: number;
-    endorsementCount: number;
+    applicationCount?: number;
+    endorsementCount?: number;
     avgGuildScore?: number | null;
     email?: string;
     phone?: string;
     walletAddress?: string;
-    createdAt: string;
+    createdAt?: string;
   };
   isOwner: boolean;
 }
@@ -38,10 +38,10 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
     .substring(0, 2);
 
   // Format date
-  const joinDate = new Date(profile.createdAt).toLocaleDateString('en-US', {
+  const joinDate = profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric'
-  });
+  }) : null;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

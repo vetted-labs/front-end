@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
 import type { Conversation, Message } from "@/types";
 import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
@@ -43,13 +44,7 @@ export default function CandidateConversationView() {
     }
   }, [conversationId]);
 
-  // TODO: This 5s polling pattern is duplicated in CompanyConversationView and
-  // CompanyMessagesInbox. Extract a shared useMessagePolling hook to deduplicate.
-  useEffect(() => {
-    fetchConversation();
-    const interval = setInterval(fetchConversation, 5000);
-    return () => clearInterval(interval);
-  }, [fetchConversation]);
+  useMessagePolling(fetchConversation, 5000);
 
   const handleSendMessage = async (content: string) => {
     try {

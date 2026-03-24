@@ -53,7 +53,7 @@ export default function EarningsPage() {
     hash: claimTxHash,
   });
 
-  // Refetch after confirmed
+  // eslint-disable-next-line no-restricted-syntax -- reacts to blockchain transaction confirmation
   useEffect(() => {
     if (isConfirmed && claimTxHash) {
       toast.success("Rewards claimed successfully!");
@@ -62,7 +62,7 @@ export default function EarningsPage() {
     }
   }, [isConfirmed, claimTxHash, refetchAll]);
 
-  // Handle claim failure
+  // eslint-disable-next-line no-restricted-syntax -- reacts to blockchain transaction failure
   useEffect(() => {
     if (claimFailed && claimTxHash) {
       toast.error(getTransactionErrorMessage(claimError, "Failed to claim rewards on-chain"));
@@ -118,12 +118,12 @@ export default function EarningsPage() {
     }
   );
 
-  // Refetch when filters or page change
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on filter/page change (useFetch doesn't support custom deps)
   useEffect(() => {
     if (address) {
       refetch();
     }
-  }, [timeRange, guildFilter, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [timeRange, guildFilter, page, address, refetch]);
 
   const handleTimeChange = (range: TimeRange) => {
     setTimeRange(range);

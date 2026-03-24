@@ -4,10 +4,10 @@ import { Shield, FileText, Briefcase } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import type { FieldErrors } from "../ExpertApplicationForm";
 import type {
-  GeneralReviewTemplate,
-  GeneralReviewQuestion,
-  LevelReviewTemplate,
-  ReviewDomainTopic,
+  GuildApplicationTemplate,
+  GuildApplicationQuestion,
+  GuildDomainLevel,
+  GuildDomainTopic,
   QuestionPart,
 } from "@/types";
 
@@ -19,8 +19,8 @@ export interface GeneralAnswers {
 }
 
 export interface ApplicationQuestionsSectionProps {
-  generalTemplate: GeneralReviewTemplate | null;
-  levelTemplate: LevelReviewTemplate | null;
+  generalTemplate: GuildApplicationTemplate | null;
+  levelTemplate: GuildDomainLevel | null;
   loadingTemplates: boolean;
   generalAnswers: GeneralAnswers;
   levelAnswers: Record<string, string>;
@@ -116,7 +116,7 @@ export function ApplicationQuestionsSection({
         ) : !generalTemplate ? (
           <p className="text-sm text-muted-foreground">Select a guild to load the questions.</p>
         ) : (
-          (generalTemplate.questions || []).map((question: GeneralReviewQuestion, index: number) => {
+          (generalTemplate.generalQuestions || []).map((question: GuildApplicationQuestion, index: number) => {
             const answerKey =
               question.id === "learning_from_failure" ? "learningFromFailure"
               : question.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"
@@ -196,7 +196,7 @@ export function ApplicationQuestionsSection({
         {loadingTemplates && !levelTemplate ? (
           <p className="text-sm text-muted-foreground">Loading level questions...</p>
         ) : levelTemplate?.topics?.length ? (
-          levelTemplate.topics.map((topic: ReviewDomainTopic) => (
+          levelTemplate.topics.map((topic: GuildDomainTopic) => (
             <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
               <div>
                 <h3 className="text-base font-semibold text-foreground">{topic.title}</h3>

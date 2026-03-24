@@ -39,7 +39,7 @@ export function ViewReviewModal({
   );
 
   // Fetch commit-reveal phase status (non-critical — silent on failure)
-  useFetch(
+  useFetch<ExpertCRPhaseStatus | CommitRevealPhaseStatus>(
     () => {
       const fetch = reviewType === "expert"
         ? expertApi.expertCommitReveal.getPhaseStatus(applicationId!)

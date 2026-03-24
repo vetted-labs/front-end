@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { Loader2, Send, Shield, CheckCircle, AlertTriangle } from "lucide-react";
@@ -72,15 +73,16 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     newExpertiseArea: "",
   });
 
-  useEffect(() => {
+  useMountEffect(() => {
     setMounted(true);
-  }, []);
+  });
 
   // Redirect existing experts unless they're applying to a new guild.
   // Both approved and pending experts can apply to additional guilds.
   const guildParam = searchParams.get("guild");
   const applyNew = searchParams.get("apply") === "new";
 
+  // eslint-disable-next-line no-restricted-syntax -- redirects existing experts, depends on wagmi state
   useEffect(() => {
     if (!mounted || !isConnected || !address) return;
     const checkExistingProfile = async () => {
@@ -122,6 +124,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   }, [mounted, isConnected, address, router, guildParam, applyNew]);
 
   // Check if wallet is already verified (returning experts applying to new guild)
+  // eslint-disable-next-line no-restricted-syntax -- checks wallet verification after mount
   useEffect(() => {
     if (!mounted || !isConnected || !address) return;
     checkVerification(address).then((verified) => {
@@ -129,6 +132,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     });
   }, [mounted, isConnected, address, checkVerification]);
 
+  // eslint-disable-next-line no-restricted-syntax -- scrolls to error on change
   useEffect(() => {
     if (!error) return;
     requestAnimationFrame(() => {
@@ -141,7 +145,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     setErrorDetails(details);
   };
 
-  useEffect(() => {
+  useMountEffect(() => {
     const loadGuilds = async () => {
       try {
         const response = await guildsApi.getAll();
@@ -166,13 +170,15 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     };
 
     loadGuilds();
-  }, []);
+  });
 
+  // eslint-disable-next-line no-restricted-syntax -- loads template when guild selection changes
   useEffect(() => {
     if (!selectedGuildId) return;
     loadGeneralTemplate(selectedGuildId);
   }, [selectedGuildId]);
 
+  // eslint-disable-next-line no-restricted-syntax -- loads level template when expertise level changes
   useEffect(() => {
     if (!selectedGuildId || !formData.expertiseLevel) return;
     loadLevelTemplate(selectedGuildId, formData.expertiseLevel);

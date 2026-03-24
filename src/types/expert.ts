@@ -49,6 +49,11 @@ export interface ExpertProfile {
   } | null;
   /** Present when expert has applied to multiple guilds. */
   guildApplications?: PendingGuildInfo[];
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  currentTitle?: string;
+  currentCompany?: string;
+  expertiseAreas?: string[];
 }
 
 export interface ExpertActivity {

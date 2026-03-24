@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, MessageSquare } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
 import type { Conversation, Message } from "@/types";
 import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
@@ -39,6 +40,7 @@ export default function CompanyMessagesInbox() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
 
+  // eslint-disable-next-line no-restricted-syntax -- fetches on auth readiness
   useEffect(() => {
     if (!ready) return;
     fetchConversations();
@@ -79,14 +81,11 @@ export default function CompanyMessagesInbox() {
   }, []);
 
   // Poll for new messages when a conversation is selected
-  // TODO: This 5s polling pattern is duplicated in CandidateConversationView and
-  // CompanyConversationView. Extract a shared useMessagePolling hook to deduplicate.
-  useEffect(() => {
-    if (!selectedConversation) return;
-    fetchMessages(selectedConversation.id);
-    const interval = setInterval(() => fetchMessages(selectedConversation.id), 5000);
-    return () => clearInterval(interval);
-  }, [selectedConversation, fetchMessages]);
+  useMessagePolling(
+    () => fetchMessages(selectedConversation!.id),
+    5000,
+    !!selectedConversation,
+  );
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);

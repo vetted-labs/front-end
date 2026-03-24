@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { HelpCircle } from "lucide-react";
 
@@ -14,10 +14,6 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-
-  if (!content) {
-    return null;
-  }
 
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return;
@@ -49,6 +45,10 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
 
     setCoords({ top, left });
   }, [side]);
+
+  if (!content) {
+    return null;
+  }
 
   const handleShow = () => {
     updatePosition();

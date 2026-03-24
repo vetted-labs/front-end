@@ -113,7 +113,7 @@ export function MyActiveEndorsements({
           <div className="text-center py-8">
             <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-2">
-              You haven't endorsed any candidates in {guildName} yet
+              You haven&apos;t endorsed any candidates in {guildName} yet
             </p>
             {allUserEndorsements.length > 0 ? (
               <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-md">

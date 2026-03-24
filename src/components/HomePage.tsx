@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAccount, useDisconnect } from "wagmi";
@@ -33,12 +34,13 @@ export function HomePage() {
     { onError: () => {} }
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     setMounted(true);
-  }, []);
+  });
 
   // Safety net: if token-based auth (candidate/company) AND wallet are present, disconnect wallet
   // Don't disconnect for experts — they authenticate via wallet
+  // eslint-disable-next-line no-restricted-syntax -- disconnects wallet for non-expert auth users
   useEffect(() => {
     if (!mounted) return;
     if (auth.isAuthenticated && auth.userType !== 'expert' && isConnected && address) {

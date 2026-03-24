@@ -60,6 +60,8 @@ src/
 │       ├── useVettedContracts.ts  # On-chain contract interactions
 │       ├── useGuilds.ts    # Guild data hook
 │       ├── useClickOutside.ts
+│       ├── useMountEffect.ts
+│       ├── useMessagePolling.ts
 │       └── useWalletVerification.ts
 └── types/                  # All TypeScript types (job, guild, expert, candidate, application, proposal)
 ```
@@ -97,6 +99,22 @@ src/
 ### Provider Stack (layout.tsx)
 
 `WagmiProvider` → `QueryClientProvider` → `RainbowKitProvider` → `ThemeProvider` → `AuthProvider` + `ErrorBoundary` + `RouteChangeOverlay`
+
+## useEffect Rules
+
+Direct `useEffect` is restricted via ESLint (`no-restricted-syntax`, warn level). Use these alternatives instead:
+
+1. **Derived state** — Compute inline or `useMemo`, never `useEffect(() => setX(f(y)), [y])`
+2. **Data fetching** — Use `useFetch` / `useApi` from `lib/hooks/useFetch.ts`
+3. **User actions** — Handle in event callbacks, not effects
+4. **External system sync on mount** — Use `useMountEffect` from `lib/hooks/useMountEffect.ts`
+5. **Click outside** — Use `useClickOutside` from `lib/hooks/useClickOutside.ts`
+6. **Message polling** — Use `useMessagePolling` from `lib/hooks/useMessagePolling.ts`
+
+Legitimate uses of raw `useEffect` (add `// eslint-disable-next-line no-restricted-syntax` with a comment explaining why):
+- Effects with runtime dependencies (blockchain confirmations, wagmi status changes, theme, pathname)
+- Effects inside shared hooks (`useFetch`, `useClickOutside`, etc.) that _are_ the abstraction
+- Subscribing to DOM/window events that depend on changing state
 
 ## Code Quality Rules
 
@@ -144,6 +162,10 @@ src/
 - Define local `statusConfig` objects — use the shared config from `@/config/constants`
 - Write inline empty states — use `EmptyState` from `@/components/ui/empty-state`
 - Manually handle 401 in components — `apiRequest` handles token refresh automatically
+- Use `useEffect` directly — use `useMountEffect` for mount effects, `useFetch` for data, inline computation for derived state, event handlers for actions
+- Write `useEffect(() => setX(deriveFromY(y)), [y])` — compute inline or use `useMemo`
+- Write click-outside effects — use `useClickOutside` from `@/lib/hooks/useClickOutside`
+- Suppress `react-hooks/exhaustive-deps` with eslint-disable — fix the dependencies
 
 ## Common Tasks
 

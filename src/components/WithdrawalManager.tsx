@@ -69,8 +69,9 @@ export function WithdrawalManager({
   // Update time remaining
   useEffect(() => {
     if (unstakeRequest?.hasRequest && unstakeRequest.unlockTime) {
+      const unlockTime = unstakeRequest.unlockTime;
       const interval = setInterval(() => {
-        const remaining = new Date(unstakeRequest.unlockTime).getTime() - Date.now();
+        const remaining = new Date(unlockTime).getTime() - Date.now();
         setTimeRemaining(Math.max(0, remaining));
       }, 1000);
 
@@ -237,7 +238,7 @@ export function WithdrawalManager({
                     />
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    You can complete your unstake on {new Date(unstakeRequest.unlockTime).toLocaleDateString()}
+                    You can complete your unstake on {unstakeRequest.unlockTime ? new Date(unstakeRequest.unlockTime).toLocaleDateString() : "—"}
                   </p>
                 </div>
               ) : (
@@ -297,7 +298,7 @@ export function WithdrawalManager({
 
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-xs text-muted-foreground">
-                  <strong>Note:</strong> After requesting an unstake, you'll need to wait 7 days before you can complete the unstake and receive your tokens back.
+                  <strong>Note:</strong> After requesting an unstake, you&apos;ll need to wait 7 days before you can complete the unstake and receive your tokens back.
                 </p>
               </div>
             </div>

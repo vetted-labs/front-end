@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -24,10 +24,11 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG, GUILD_APPLICATION_STATUS_CONFIG } from "@/config/constants";
-import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary } from "@/types";
+import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary, CandidateRejectionFeedback } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
+import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
 
 
 const STATUS_ICONS: Record<string, typeof Clock> = {
@@ -66,6 +67,7 @@ interface DashboardData {
   stats: ApplicationStats;
   guildApplications: GuildApplicationSummary[];
   conversations: Conversation[];
+  rejectionFeedback: Record<string, CandidateRejectionFeedback>;
 }
 
 async function fetchDashboardData(): Promise<DashboardData> {
@@ -91,6 +93,20 @@ async function fetchDashboardData(): Promise<DashboardData> {
     logger.debug("Non-critical: could not load conversations", extractApiError(err));
   }
 
+  // Fetch rejection feedback for rejected guild applications
+  const rejectionFeedback: Record<string, CandidateRejectionFeedback> = {};
+  const rejectedGuildApps = guildApps.filter((a) => a.status === "rejected" || a.status === "finalized");
+  await Promise.all(
+    rejectedGuildApps.map(async (app) => {
+      try {
+        const feedback = await candidateApi.getGuildApplicationFeedback(app.id);
+        if (feedback) rejectionFeedback[app.id] = feedback;
+      } catch {
+        // Feedback may not be available — silently skip
+      }
+    })
+  );
+
   return {
     profile: profileData,
     applications: apps,
@@ -104,6 +120,7 @@ async function fetchDashboardData(): Promise<DashboardData> {
     },
     guildApplications: guildApps,
     conversations: convos,
+    rejectionFeedback,
   };
 }
 
@@ -120,25 +137,23 @@ export default function CandidateDashboard() {
   const stats = data?.stats ?? { total: 0, pending: 0, reviewing: 0, interviewed: 0, accepted: 0, rejected: 0 };
   const guildApplications = data?.guildApplications ?? [];
   const conversations = data?.conversations ?? [];
+  const rejectionFeedback = data?.rejectionFeedback ?? {};
 
-  const [celebrationApp, setCelebrationApp] = useState<CandidateApplication | null>(null);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (applications.length === 0) return;
+  const celebrationApp = useMemo(() => {
+    if (applications.length === 0) return null;
     const celebrated = getCelebratedIds();
-    const uncelebrated = applications.find(
-      (app) => app.status === "accepted" && !celebrated.includes(app.id)
-    );
-    if (uncelebrated) {
-      setCelebrationApp(uncelebrated);
-    }
-  }, [applications]);
+    return applications.find(
+      (app) => app.status === "accepted" && !celebrated.includes(app.id) && !dismissedIds.has(app.id)
+    ) ?? null;
+  }, [applications, dismissedIds]);
 
   const handleDismissCelebration = () => {
     if (celebrationApp) {
       markCelebrated(celebrationApp.id);
+      setDismissedIds(prev => new Set(prev).add(celebrationApp.id));
     }
-    setCelebrationApp(null);
   };
 
   if (!ready) return null;
@@ -324,21 +339,29 @@ export default function CandidateDashboard() {
                 <div className="divide-y divide-border/30">
                   {recentGuildApps.map((app) => {
                     const guildStatusConfig = GUILD_APPLICATION_STATUS_CONFIG[app.status] || GUILD_APPLICATION_STATUS_CONFIG.pending;
+                    const feedback = rejectionFeedback[app.id];
                     return (
-                      <div key={app.id} className="px-5 py-3.5">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {app.guildName || app.guild?.name || "Guild"}
-                          </p>
-                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${guildStatusConfig.className}`}>
-                            {guildStatusConfig.label}
-                          </span>
+                      <div key={app.id}>
+                        <div className="px-5 py-3.5">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {app.guildName || app.guild?.name || "Guild"}
+                            </p>
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${guildStatusConfig.className}`}>
+                              {guildStatusConfig.label}
+                            </span>
+                          </div>
+                          {app.jobTitle && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Briefcase className="w-3 h-3" />
+                              {app.jobTitle}
+                            </p>
+                          )}
                         </div>
-                        {app.jobTitle && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Briefcase className="w-3 h-3" />
-                            {app.jobTitle}
-                          </p>
+                        {feedback && (
+                          <div className="px-3 pb-3">
+                            <RejectionFeedbackCard feedback={feedback} />
+                          </div>
                         )}
                       </div>
                     );

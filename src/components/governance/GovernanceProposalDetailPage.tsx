@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
+  Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import { GovernanceVoteForm } from "@/components/governance/GovernanceVoteForm";
@@ -22,7 +23,7 @@ import { VotingPowerBar } from "@/components/governance/VotingPowerBar";
 import type { GovernanceProposalDetail } from "@/types";
 import { PROPOSAL_TYPE_LABELS } from "@/types";
 import { formatDate as formatDateShared, truncateAddress, formatDeadline } from "@/lib/utils";
-import { PROPOSAL_STATUS_CONFIG } from "@/config/constants";
+import { PROPOSAL_STATUS_CONFIG, GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD, computeVoteWeight } from "@/config/constants";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 
@@ -74,14 +75,24 @@ export function GovernanceProposalDetailPage() {
     () => governanceApi.getProposal(proposalId) as Promise<GovernanceProposalDetail>,
   );
 
-  const { data: stakeData } = useFetch(
-    () => blockchainApi.getStakeBalance(address as string),
+  // Merit-weighted voting: fetch reputation score instead of staked VETD
+  const { data: reputationData } = useFetch(
+    () => blockchainApi.getReputation(address as string),
     { skip: !address },
+  );
+
+  // Check if voter is guild master for the relevant guild (1.5x multiplier)
+  const { data: guildMasterData } = useFetch(
+    () => governanceApi.getGuildMaster(proposal?.guild_id as string),
+    { skip: !proposal?.guild_id || !address },
   );
 
   const { execute: submitVote } = useApi();
 
-  const votingPower = parseFloat(stakeData?.stakedAmount || "0");
+  const reputation = reputationData?.score ?? 0;
+  const isGuildMaster = !!guildMasterData && guildMasterData.walletAddress?.toLowerCase() === address?.toLowerCase();
+  const voteWeight = computeVoteWeight(reputation, isGuildMaster);
+  const thresholdConfig = GOVERNANCE_THRESHOLDS[proposal?.proposal_type ?? ""] ?? DEFAULT_GOVERNANCE_THRESHOLD;
 
   const handleVote = async (vote: "for" | "against" | "abstain", reason: string) => {
     if (!address) {
@@ -89,7 +100,7 @@ export function GovernanceProposalDetailPage() {
       return;
     }
     await submitVote(
-      () => governanceApi.vote(proposalId, { vote, reason }, address),
+      () => governanceApi.vote(proposalId, { vote, votingPower: voteWeight, reason }, address),
       {
         onSuccess: () => {
           toast.success("Vote submitted successfully!");
@@ -188,6 +199,10 @@ export function GovernanceProposalDetailPage() {
             by {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
           </span>
           <span className="tabular-nums">{formatVETD(proposal.stake_amount)} VETD staked</span>
+          <span className="inline-flex items-center gap-1">
+            <Scale className="w-3.5 h-3.5" />
+            Approval: {thresholdConfig.label}
+          </span>
           {createdDate && <span>{createdDate}</span>}
         </div>
 
@@ -212,7 +227,7 @@ export function GovernanceProposalDetailPage() {
             </span>
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
               <Zap className="w-4 h-4" />
-              {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} VETD quorum
+              {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} vote weight quorum
             </span>
           </div>
         )}
@@ -236,13 +251,13 @@ export function GovernanceProposalDetailPage() {
         <div className="space-y-6">
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard label="For" value={`${forPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_for)} VETD`} color="text-green-500" />
-            <StatCard label="Against" value={`${againstPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_against)} VETD`} color="text-red-500" />
-            <StatCard label="Abstain" value={`${abstainPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_abstain)} VETD`} color="text-muted-foreground" />
+            <StatCard label="For" value={`${forPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_for)} weight`} color="text-green-500" />
+            <StatCard label="Against" value={`${againstPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_against)} weight`} color="text-red-500" />
+            <StatCard label="Abstain" value={`${abstainPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_abstain)} weight`} color="text-muted-foreground" />
             <StatCard
               label="Quorum"
               value={quorumPercent >= 100 ? "Reached" : `${Math.min(quorumPercent, 100).toFixed(0)}%`}
-              sub={`${formatVETD(proposal.total_voting_power)} / ${formatVETD(proposal.quorum_required)}`}
+              sub={`${formatVETD(proposal.total_voting_power)} / ${formatVETD(proposal.quorum_required)} weight`}
               color={quorumPercent >= 100 ? "text-green-500" : "text-amber-500"}
             />
           </div>
@@ -365,12 +380,18 @@ export function GovernanceProposalDetailPage() {
                 </span>
               </div>
 
+              {/* Threshold */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Threshold</span>
+                <span className="text-sm font-semibold">{thresholdConfig.label}</span>
+              </div>
+
               {/* Quorum */}
               <div>
                 <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                   <span>Quorum</span>
                   <span className="tabular-nums font-medium">
-                    {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} VETD
+                    {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} weight
                   </span>
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
@@ -402,7 +423,9 @@ export function GovernanceProposalDetailPage() {
             {canVote && (
               <div className="rounded-xl border border-border bg-card p-5">
                 <GovernanceVoteForm
-                  votingPower={votingPower}
+                  voteWeight={voteWeight}
+                  reputation={reputation}
+                  isGuildMaster={isGuildMaster}
                   onSubmit={handleVote}
                 />
               </div>
@@ -533,7 +556,7 @@ function VoteHistorySection({ votes }: { votes: GovernanceProposalDetail["votes"
                 {v.vote}
               </Badge>
               <span className="text-xs text-muted-foreground tabular-nums">
-                {formatVETD(v.voting_power)} VETD
+                {(v.vote_weight ?? v.voting_power).toFixed(2)}x weight
               </span>
             </div>
           </div>

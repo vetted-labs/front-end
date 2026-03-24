@@ -176,7 +176,6 @@ const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
   ExpireGracePeriodNotElapsed: "Grace period for expiration has not elapsed",
   NotAuthorizedToExpire: "Not authorized to expire this session",
   NotAuthorizedRevealer: "Not authorized as a batch revealer for this session",
-  ArrayLengthMismatch: "Input arrays must have the same length",
   InsufficientReveals: "Not enough votes were revealed to finalize",
   InsufficientPanelistStake: "Panelist does not meet the minimum stake requirement",
   ZeroSessionId: "Session ID cannot be zero",

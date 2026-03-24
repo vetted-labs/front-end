@@ -1,7 +1,7 @@
 export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
 export type { Guild, GuildPublicDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, PendingGuildInfo } from "./expert";
-export type { CandidateProfile, CandidateMember, SocialLink } from "./candidate";
+export type { CandidateProfile, CandidateMember, SocialLink, CandidateRejectionFeedback } from "./candidate";
 export type {
   CandidateApplication,
   CompanyApplication,

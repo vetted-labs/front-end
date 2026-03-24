@@ -31,3 +31,27 @@ export interface CandidateMember {
   endorsements?: number;
   joinedAt?: string;
 }
+
+/** Aggregated rejection feedback shown to candidates after a guild application is rejected. */
+export interface CandidateRejectionFeedback {
+  applicationId: string;
+  guildName: string;
+  outcome: "rejected";
+  overallScore: number;
+  maxScore: number;
+  /** Anonymized per-criterion aggregate scores (averages across reviewers). */
+  criteriaAverages: Array<{
+    criterion: string;
+    averageScore: number;
+    maxScore: number;
+  }>;
+  /** Aggregated text feedback from reviewers (anonymized — no reviewer names). */
+  feedbackSummary: string[];
+  /** Specific improvement suggestions. */
+  improvementAreas: string[];
+  /** Whether the candidate can resubmit. */
+  canResubmit: boolean;
+  /** Number of resubmissions already used. */
+  resubmissionCount: number;
+  finalizedAt?: string;
+}

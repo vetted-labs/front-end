@@ -4,6 +4,8 @@ export interface GovernanceVote {
   voter_name?: string;
   vote: "for" | "against" | "abstain";
   voting_power: number;
+  /** Merit-weighted vote weight (reputation-based). Falls back to voting_power if absent. */
+  vote_weight?: number;
   reason?: string;
   created_at: string;
 }
@@ -35,6 +37,8 @@ export interface GovernanceProposalDetail {
   total_voting_power: number;
   quorum_required: number;
   voter_count: number;
+  // Threshold
+  approval_threshold?: number;
   // Results
   finalized: boolean;
   outcome?: "passed" | "rejected";
@@ -43,6 +47,7 @@ export interface GovernanceProposalDetail {
   // User state
   has_voted?: boolean;
   my_vote?: string;
+  my_vote_weight?: number;
   // Vote history
   votes?: GovernanceVote[];
 }

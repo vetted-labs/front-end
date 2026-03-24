@@ -2,9 +2,10 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users } from "lucide-react";
+import { Clock, Users, Scale } from "lucide-react";
 import { formatDeadline } from "@/lib/utils";
 import { VotingPowerBar } from "./VotingPowerBar";
+import { GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD } from "@/config/constants";
 
 interface GovernanceProposalCardProps {
   proposal: {
@@ -67,6 +68,7 @@ export function GovernanceProposalCard({
   const againstPercent = totalVotes > 0 ? (proposal.votes_against / totalVotes) * 100 : 0;
   const abstainPercent = totalVotes > 0 ? (proposal.votes_abstain / totalVotes) * 100 : 0;
   const borderColor = typeColors[proposal.proposal_type] || "border-l-purple-500";
+  const threshold = GOVERNANCE_THRESHOLDS[proposal.proposal_type] ?? DEFAULT_GOVERNANCE_THRESHOLD;
 
   return (
     <Card
@@ -113,8 +115,9 @@ export function GovernanceProposalCard({
               {formatDeadline(proposal.voting_deadline)}
             </span>
           </div>
-          <span className="text-xs">
-            Quorum: {proposal.total_voting_power}/{proposal.quorum_required}
+          <span className="flex items-center gap-1 text-xs">
+            <Scale className="w-3 h-3" />
+            {threshold.threshold}% to pass
           </span>
         </div>
       </CardContent>

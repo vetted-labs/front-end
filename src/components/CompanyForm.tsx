@@ -14,7 +14,7 @@ import {
   Users,
   Briefcase,
 } from "lucide-react";
-import { Input, Textarea, Select, Button, Alert, Modal } from "./ui";
+import { Input, Textarea, NativeSelect, Button, Alert, Modal } from "./ui";
 import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
@@ -200,12 +200,7 @@ export function CompanyForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label={
-                    <div className="flex items-center gap-1">
-                      <Globe className="w-4 h-4" />
-                      Website
-                    </div>
-                  }
+                  label="Website"
                   type="url"
                   value={formData.website}
                   onChange={(e) => handleInputChange("website", e.target.value)}
@@ -213,42 +208,33 @@ export function CompanyForm() {
                 />
 
                 <Input
-                  label={
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </div>
-                  }
+                  label="Location"
                   value={formData.location}
                   onChange={(e) => handleInputChange("location", e.target.value)}
                   placeholder="San Francisco, CA"
                 />
 
-                <Select
-                  label={
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Company Size
-                    </div>
-                  }
+                <NativeSelect
+                  label="Company Size"
                   value={formData.size}
                   onChange={(e) => handleInputChange("size", e.target.value)}
-                  options={COMPANY_SIZES}
-                  placeholder="Select size"
-                />
+                >
+                  <option value="">Select size</option>
+                  {COMPANY_SIZES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </NativeSelect>
 
-                <Select
-                  label={
-                    <div className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                      Industry
-                    </div>
-                  }
+                <NativeSelect
+                  label="Industry"
                   value={formData.industry}
                   onChange={(e) => handleInputChange("industry", e.target.value)}
-                  options={INDUSTRIES}
-                  placeholder="Select industry"
-                />
+                >
+                  <option value="">Select industry</option>
+                  {INDUSTRIES.map((i) => (
+                    <option key={i.value} value={i.value}>{i.label}</option>
+                  ))}
+                </NativeSelect>
               </div>
             </div>
 
@@ -261,7 +247,6 @@ export function CompanyForm() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                icon={<Mail className="h-5 w-5" />}
                 placeholder="john@acme.com"
                 error={errors.email}
               />
@@ -271,10 +256,9 @@ export function CompanyForm() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                icon={<Lock className="h-5 w-5" />}
                 placeholder="••••••••"
                 error={errors.password}
-                helperText="Min 8 characters with uppercase, number, and special character"
+                description="Min 8 characters with uppercase, number, and special character"
               />
             </div>
 

@@ -31,7 +31,7 @@ import { GuildPublicOverviewTab } from "@/components/guild/GuildPublicOverviewTa
 import { GuildExpertsListTab } from "@/components/guild/GuildExpertsListTab";
 import { GuildCandidatesListTab } from "@/components/guild/GuildCandidatesListTab";
 import { GuildLeaderboardContent } from "@/components/guild/GuildLeaderboardContent";
-import type { GuildPublicDetail, GuildLeaderboardEntry, GuildApplicationSummary, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole } from "@/types";
+import type { GuildPublicDetail, GuildLeaderboardEntry, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication } from "@/types";
 
 
 /** Extended guild detail with resolved members, jobs, and activity for the page. */
@@ -84,7 +84,7 @@ export default function GuildDetailPage() {
         : [];
 
       // Fetch guild applications (candidate + expert proposals) for activity
-      let candidateApps: GuildApplicationSummary[] = [];
+      let candidateApps: CandidateGuildApplication[] = [];
       let guildProposals: GuildApplication[] = [];
       try {
         const [candResult, proposalResult] = await Promise.allSettled([
@@ -139,7 +139,7 @@ export default function GuildDetailPage() {
         });
         // Candidate guild applications (pending/approved/rejected)
         candidateApps.forEach((app) => {
-          const ts = app.submittedAt || app.createdAt;
+          const ts = app.submittedAt;
           if (!ts) return;
           const statusLabel = app.status === "approved" ? "approved" : app.status === "rejected" ? "rejected" : "pending review";
           derived.push({

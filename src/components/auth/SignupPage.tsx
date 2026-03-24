@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   User,
@@ -20,6 +20,7 @@ import type { AuthTab } from "@/components/auth/AuthTabSelector";
 import { candidateApi, companyApi, extractApiError } from "@/lib/api";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 
 type UserType = "candidate" | "company";
 
@@ -40,9 +41,9 @@ function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  useMountEffect(() => {
     clearTokenAuthState();
-  }, []);
+  });
 
   const handleUserTypeChange = (newType: string) => {
     setErrors({});

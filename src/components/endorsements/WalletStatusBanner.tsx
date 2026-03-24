@@ -43,7 +43,7 @@ export function WalletStatusBanner({
                 Test Mode
               </h3>
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                You're connected with the backend test wallet ({backendWalletAddress.substring(0, 6)}...{backendWalletAddress.substring(38)}). Use this for development testing only.
+                You&apos;re connected with the backend test wallet ({backendWalletAddress.substring(0, 6)}...{backendWalletAddress.substring(38)}). Use this for development testing only.
               </p>
             </div>
           </CardContent>

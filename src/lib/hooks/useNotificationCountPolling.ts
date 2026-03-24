@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 
 /**
  * Generic notification unread-count polling hook.
@@ -30,13 +31,14 @@ export function useNotificationCountPolling(
     }
   }, [enabled, fetchFn]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  });
 
+  // eslint-disable-next-line no-restricted-syntax -- manages polling lifecycle based on enabled state
   useEffect(() => {
     if (!enabled) {
       setCount(0);

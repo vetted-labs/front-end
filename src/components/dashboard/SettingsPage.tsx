@@ -44,6 +44,7 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // eslint-disable-next-line no-restricted-syntax -- fetches on auth readiness
   useEffect(() => {
     if (ready) fetchPreferences();
   }, [ready, fetchPreferences]);

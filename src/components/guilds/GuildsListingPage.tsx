@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { GuildCard } from "@/components/GuildCard";
 import { getGuildDetailedInfo, getGuildIcon } from "@/lib/guildHelpers";
@@ -29,7 +30,7 @@ export default function GlobalGuildsPage() {
   const { paginatedItems: currentGuilds, currentPage, totalPages, setCurrentPage } = useClientPagination(guilds ?? [], 6);
 
   // Restore scroll position when coming back to this page
-  useEffect(() => {
+  useMountEffect(() => {
     const savedScrollPosition = sessionStorage.getItem('guildsScrollPosition');
     if (savedScrollPosition) {
       setTimeout(() => {
@@ -37,7 +38,7 @@ export default function GlobalGuildsPage() {
         sessionStorage.removeItem('guildsScrollPosition');
       }, 100);
     }
-  }, []);
+  });
 
   const handleInfoClick = (guildId: string) => {
     setOpenTooltipId(openTooltipId === guildId ? null : guildId);

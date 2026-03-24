@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Mail,
   Phone,
@@ -58,15 +58,12 @@ export function CandidateDetailPanel({
 }: CandidateDetailPanelProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>("profile");
+  // Notes are reset when application changes via the `key` prop on the parent —
+  // callers should render <CandidateDetailPanel key={application.id} ... />
   const [notes, setNotes] = useState(application.notes ?? "");
   const [message, setMessage] = useState("");
   const { execute: executeSaveNotes, isLoading: isSavingNotes } = useApi();
   const { execute: executeSendMessage, isLoading: isSendingMessage } = useApi();
-
-  // Sync notes when the selected application changes
-  useEffect(() => {
-    setNotes(application.notes ?? "");
-  }, [application.id, application.notes]);
 
   const { candidate, job } = application;
 
@@ -114,7 +111,8 @@ export function CandidateDetailPanel({
         onSuccess: (data) => {
           toast.success("Message sent!");
           setMessage("");
-          router.push(`/dashboard/messages/${data.id}`);
+          const result = data as { id: string };
+          router.push(`/dashboard/messages/${result.id}`);
         },
         onError: () => toast.error("Failed to send message"),
       }

@@ -480,6 +480,8 @@ export interface CompanyProfile {
   logoUrl?: string;
   location?: string;
   address?: string;
+  verified?: boolean;
+  createdAt?: string;
 }
 
 // --- Guild Membership ---

@@ -59,7 +59,8 @@ export default function NotificationsPage() {
       }),
       {
         onSuccess: (result) => {
-          const moreData = result?.notifications ?? [];
+          const typed = result as { notifications?: Notification[] } | undefined;
+          const moreData = typed?.notifications ?? [];
           if (moreData.length === 0) {
             setHasMore(false);
           } else {

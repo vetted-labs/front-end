@@ -158,6 +158,53 @@ export const PROPOSAL_STATUS_CONFIG: Record<string, { label: string; variant: "d
 };
 
 /**
+ * Governance approval thresholds by proposal type (whitepaper §3).
+ * Standard = 51%, Major = 67%, Emergency = 75%.
+ */
+export const GOVERNANCE_THRESHOLDS: Record<string, { threshold: number; label: string; quorumPercent: number }> = {
+  guild_policy:          { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
+  guild_creation:        { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
+  guild_master_election: { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
+  general:               { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
+  parameter_change:      { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
+  protocol_upgrade:      { threshold: 67, label: "Major (67%)",     quorumPercent: 15 },
+  treasury_spend:        { threshold: 67, label: "Major (67%)",     quorumPercent: 15 },
+  emergency:             { threshold: 75, label: "Emergency (75%)", quorumPercent: 5 },
+};
+
+export const DEFAULT_GOVERNANCE_THRESHOLD = { threshold: 51, label: "Standard (51%)", quorumPercent: 10 };
+
+/**
+ * Compute merit-weighted vote weight (whitepaper §3 governance formula).
+ * Vote Weight = 1 * (1 + min(reputation / 1000, 2.0)), capped at 3.0.
+ * Guild Masters get 1.5x multiplier, capped at 4.5.
+ */
+export function computeVoteWeight(reputation: number, isGuildMaster: boolean = false): number {
+  const base = 1;
+  const repBonus = Math.min(reputation / 1000, 2.0);
+  const weight = base * (1 + repBonus);
+  const capped = Math.min(weight, 3.0);
+  return isGuildMaster ? Math.min(capped * 1.5, 4.5) : capped;
+}
+
+/**
+ * Guild hierarchy ranks with promotion criteria (whitepaper §5).
+ */
+export const GUILD_RANK_CRITERIA: Record<string, { minReviews: number; minConsensus: number; minEndorsements: number; requiresElection: boolean }> = {
+  recruit:    { minReviews: 0,   minConsensus: 0,  minEndorsements: 0, requiresElection: false },
+  apprentice: { minReviews: 10,  minConsensus: 70, minEndorsements: 0, requiresElection: false },
+  craftsman:  { minReviews: 50,  minConsensus: 75, minEndorsements: 5, requiresElection: false },
+  officer:    { minReviews: 100, minConsensus: 80, minEndorsements: 10, requiresElection: false },
+  master:     { minReviews: 100, minConsensus: 80, minEndorsements: 10, requiresElection: true },
+};
+
+export const GUILD_RANK_ORDER: string[] = ["recruit", "apprentice", "craftsman", "officer", "master"];
+
+/** Reputation decay: days of inactivity before decay warning / actual decay. */
+export const REPUTATION_DECAY_WARNING_DAYS = 21;
+export const REPUTATION_DECAY_CYCLE_DAYS = 30;
+
+/**
  * Shared application status timeline dot/text color configuration.
  * Used specifically for timeline visualization where dot + text colors are needed.
  */

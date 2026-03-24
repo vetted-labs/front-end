@@ -44,7 +44,7 @@ export function ReputationLeaderboard({
     },
   );
 
-  // Re-fetch when viewMode changes (useFetch only auto-runs on mount)
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on viewMode change (useFetch doesn't support custom deps)
   useEffect(() => {
     refetch();
   }, [viewMode]);
@@ -104,13 +104,13 @@ export function ReputationLeaderboard({
         {guildId && (
           <div className="flex gap-2">
             <Button
-              variant={viewMode === "global" ? "primary" : "outline"}
+              variant={viewMode === "global" ? "default" : "outline"}
               onClick={() => setViewMode("global")}
             >
               Global
             </Button>
             <Button
-              variant={viewMode === "guild" ? "primary" : "outline"}
+              variant={viewMode === "guild" ? "default" : "outline"}
               onClick={() => setViewMode("guild")}
             >
               Guild Only

@@ -75,13 +75,12 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
 
   const applications = applicationsData?.applications ?? [];
 
-  // Refetch applications when statusFilter changes
+  // eslint-disable-next-line no-restricted-syntax -- triggers re-fetch on filter change (useFetch doesn't support custom deps)
   useEffect(() => {
     if (jobId) {
       refetchApps();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, jobId, refetchApps]);
 
   // Status update mutation
   const { updateStatus } = useApplicationStatusUpdate();

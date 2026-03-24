@@ -10,6 +10,7 @@ import { useSidebar } from "./SidebarProvider";
 import { truncateAddress } from "@/lib/utils";
 import { getNetworkName } from "@/lib/web3Utils";
 import { cn } from "@/lib/utils";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import type { SidebarConfig } from "./sidebar-config";
 
 interface SidebarUserSectionProps {
@@ -26,9 +27,10 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
   const [mounted, setMounted] = useState(false);
   const [showWalletMenu, setShowWalletMenu] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useMountEffect(() => setMounted(true));
 
   // Close wallet menu on outside click
+  // eslint-disable-next-line no-restricted-syntax -- uses attribute selector, not ref-based
   useEffect(() => {
     if (!showWalletMenu) return;
     const handler = (e: MouseEvent) => {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bell, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/notification-helpers";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import type { BaseNotification } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
@@ -36,18 +37,10 @@ export function NotificationBellDropdown<T extends BaseNotification>({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [isOpen]);
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
   // Fetch recent notifications when dropdown opens
+  // eslint-disable-next-line no-restricted-syntax -- fetches on dropdown open
   useEffect(() => {
     if (!isOpen) return;
     setIsLoading(true);

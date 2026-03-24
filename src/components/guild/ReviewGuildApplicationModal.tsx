@@ -590,8 +590,9 @@ export function ReviewGuildApplicationModal({
   };
 
   // ── Step 1: Review Profile ───────────────────────────────────
+  // Anonymize PII per whitepaper §6 — reviewers should evaluate skills/content, not identity
   const renderStep1 = () => (
-    <ReviewProfileStep application={application} level={level} />
+    <ReviewProfileStep application={application} level={level} anonymized />
   );
 
   // ── Step 2: General Questions ────────────────────────────────

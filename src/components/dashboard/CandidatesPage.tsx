@@ -121,7 +121,6 @@ export default function CandidatesPage() {
     }
 
     return groups;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allApplications, endorsementData, sortBy]);
 
   // Apply search, status, and job filters
@@ -314,6 +313,7 @@ export default function CandidatesPage() {
         >
           {selectedApplication ? (
             <CandidateDetailPanel
+              key={selectedApplication.id}
               application={selectedApplication}
               onStatusChange={handleStatusChange}
               isUpdatingStatus={isUpdatingStatus}

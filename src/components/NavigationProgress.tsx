@@ -12,8 +12,8 @@ export function NavigationProgress() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [state, setState] = useState<"idle" | "loading" | "completing">("idle");
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const startTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const startTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Track current URL so we know when navigation completes
   const currentUrl = useRef(`${pathname}?${searchParams}`);

@@ -39,6 +39,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   const verifiedRef = useRef(false);
 
   // Quick check to block immediately (prevents flash) — wait for hydration + wallet reconnection
+  // eslint-disable-next-line no-restricted-syntax -- guards route access based on wagmi + expert status
   useEffect(() => {
     if (!isHydrated) return;
     // Wait for wagmi to finish reconnecting before deciding
@@ -63,11 +64,13 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   }, [pathname, router, expertStatus, isHydrated, status, isConnected, address]);
 
   // Reset verification when wallet address changes
+  // eslint-disable-next-line no-restricted-syntax -- resets verification when wallet changes
   useEffect(() => {
     verifiedRef.current = false;
   }, [address]);
 
   // Backend verification — source of truth, prevents localStorage tampering
+  // eslint-disable-next-line no-restricted-syntax -- verifies expert status against backend
   useEffect(() => {
     if (!address || !expertId || verifiedRef.current || isAllowedForPending(pathname)) return;
     verifiedRef.current = true;

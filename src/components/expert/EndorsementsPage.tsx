@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
 import { Badge } from "@/components/ui/badge";
@@ -21,23 +21,27 @@ export default function EndorsementsPage() {
   const guildIdParam = searchParams.get("guildId");
   const { guilds: guildRecords } = useGuilds();
 
-  const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string } | null>(null);
+  const [manualGuildId, setManualGuildId] = useState<string | null>(null);
 
-  // Auto-select guild once data loads or URL params change
-  useEffect(() => {
-    if (guildRecords.length === 0) return;
+  const selectedGuild = useMemo(() => {
+    if (guildRecords.length === 0) return null;
 
+    // Manual selection takes priority
+    if (manualGuildId) {
+      const match = guildRecords.find(g => g.id === manualGuildId);
+      if (match) return match;
+    }
+
+    // URL param
     if (guildIdParam) {
       const match = guildRecords.find(g => g.id === guildIdParam);
-      if (match) { setSelectedGuild(match); return; }
+      if (match) return match;
     }
 
     // Default to Engineering Guild, or first guild
-    if (!selectedGuild) {
-      const eng = guildRecords.find(g => g.name === "Engineering Guild");
-      setSelectedGuild(eng || guildRecords[0]);
-    }
-  }, [guildRecords, guildIdParam, selectedGuild]);
+    const eng = guildRecords.find(g => g.name === "Engineering Guild");
+    return eng || guildRecords[0];
+  }, [guildRecords, guildIdParam, manualGuildId]);
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -82,8 +86,7 @@ export default function EndorsementsPage() {
                 <Select
                   value={selectedGuild?.id ?? ""}
                   onValueChange={(value) => {
-                    const guild = guildRecords.find((g) => g.id === value);
-                    if (guild) setSelectedGuild(guild);
+                    setManualGuildId(value);
                   }}
                 >
                   <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-background/70 text-base shadow-sm transition hover:border-orange-500/40">

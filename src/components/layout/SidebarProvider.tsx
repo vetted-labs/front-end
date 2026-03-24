@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { usePathname } from "next/navigation";
 
 interface SidebarContextValue {
@@ -39,11 +40,12 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [hasMounted, setHasMounted] = useState(false);
 
   // Mark as mounted so CSS transitions only apply after first paint
-  useEffect(() => {
+  useMountEffect(() => {
     setHasMounted(true);
-  }, []);
+  });
 
   // Auto-close mobile drawer on route change
+  // eslint-disable-next-line no-restricted-syntax -- auto-closes mobile drawer on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);

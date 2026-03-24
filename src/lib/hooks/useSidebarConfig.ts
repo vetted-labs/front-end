@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import {
   browseSidebarConfig,
@@ -42,7 +43,7 @@ export function useSidebarConfig(override?: SidebarConfig): SidebarConfig {
   const { isAuthenticated, userType } = useAuthContext();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useMountEffect(() => setMounted(true));
 
   if (!mounted) return override ?? browseSidebarConfig;
 

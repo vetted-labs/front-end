@@ -117,7 +117,7 @@ export function HiringDashboard() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="mb-6">
-            <Alert variant="error" onClose={() => setError(null)}>
+            <Alert variant="error">
               {error}
             </Alert>
           </div>

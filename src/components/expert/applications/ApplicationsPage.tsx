@@ -262,7 +262,7 @@ export default function ApplicationsPage() {
     totalPages,
     setCurrentPage,
     resetPage,
-  } = useClientPagination(activeItems, 10);
+  } = useClientPagination(activeItems as unknown[], 10);
 
   // Pre-select guild from URL query param
   useEffect(() => {

@@ -21,8 +21,11 @@ import { GuildCard } from "@/components/GuildCard";
 import { WalletVerificationModal } from "@/components/WalletVerificationModal";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { DashboardNotificationsFeed } from "@/components/dashboard/DashboardNotificationsFeed";
+import { InactivityWarningBanner } from "@/components/expert/InactivityWarningBanner";
+import { PromotionProgressCard } from "@/components/expert/PromotionProgressCard";
 import { blockchainApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
 import { formatVetd } from "@/lib/utils";
@@ -41,11 +44,12 @@ export function EnhancedExpertDashboard() {
     requestVerification,
   } = useWalletVerification();
 
-  useEffect(() => {
+  useMountEffect(() => {
     setMounted(true);
-  }, []);
+  });
 
   // Redirect when disconnected (with grace period for reconnection)
+  // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi connection state
   useEffect(() => {
     if (!mounted) return;
     if (isConnected && address) return;
@@ -185,6 +189,7 @@ export function EnhancedExpertDashboard() {
 
   // Background sync: fire-and-forget after stake data loads.
   // Uses a probe-first pattern: try the first guild, only sync the rest if it succeeds.
+  // eslint-disable-next-line no-restricted-syntax -- fire-and-forget sync after blockchain data loads
   useEffect(() => {
     if (!stakesData || !address || !profile?.guilds?.length || error) return;
 
@@ -209,13 +214,6 @@ export function EnhancedExpertDashboard() {
   const stakingStatus = stakesData
     ? { stakedAmount: stakesData.totalStaked.toString(), meetsMinimum: stakesData.totalStaked > 0 }
     : null;
-
-  // Refetch when address changes
-  useEffect(() => {
-    if (mounted && isConnected && address) {
-      refetch();
-    }
-  }, [address]);
 
   const handleVerifyWallet = async () => {
     if (!address) return;
@@ -295,8 +293,11 @@ export function EnhancedExpertDashboard() {
           </p>
         </div>
 
+        {/* Inactivity decay warning */}
+        <InactivityWarningBanner recentActivity={profile.recentActivity} />
+
         {/* Action Button Panel */}
-        <div className="mb-6">
+        <div className="mb-6 mt-4">
           <ActionButtonPanel
             stakingStatus={stakingStatus ?? undefined}
             hasGuilds={profile.guilds.length > 0}
@@ -335,6 +336,26 @@ export function EnhancedExpertDashboard() {
             iconColor="text-orange-600 dark:text-orange-400"
           />
         </div>
+
+        {/* Guild Rank Promotion Progress */}
+        {profile.guilds.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {profile.guilds.slice(0, 3).map((guild) => (
+              <div key={guild.id}>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">{guild.name}</p>
+                <PromotionProgressCard
+                  currentRole={guild.expertRole}
+                  reviewCount={profile.reviewCount ?? 0}
+                  consensusRate={profile.approvalCount && profile.reviewCount
+                    ? Math.round((profile.approvalCount / profile.reviewCount) * 100)
+                    : null
+                  }
+                  endorsementCount={profile.endorsementCount ?? 0}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Assigned to Me */}
         {assignedApplications && assignedApplications.length > 0 && (
