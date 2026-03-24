@@ -52,6 +52,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
     submitVerification,
   } = useWalletVerification();
   const [walletAlreadyVerified, setWalletAlreadyVerified] = useState(false);
+  const [wasEverConnected, setWasEverConnected] = useState(false);
   const walletSigned = !!pendingSignature || walletAlreadyVerified;
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -133,6 +134,12 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
       if (verified) setWalletAlreadyVerified(true);
     });
   }, [mounted, isConnected, address, checkVerification]);
+
+  // Track whether wallet was ever connected so we can show disconnect recovery instead of hard-blocking
+  // eslint-disable-next-line no-restricted-syntax -- tracks runtime connection state change
+  useEffect(() => {
+    if (isConnected) setWasEverConnected(true);
+  }, [isConnected]);
 
   // eslint-disable-next-line no-restricted-syntax -- scrolls to error on change
   useEffect(() => {
@@ -616,7 +623,7 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
   // Remove auto-redirect check - allow pending users to apply to new guilds
   // If approved users land here, they can apply to new guilds too
 
-  if (!isConnected || !address) {
+  if ((!isConnected || !address) && !wasEverConnected) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
         <Alert variant="warning">
@@ -660,8 +667,32 @@ export function ExpertApplicationForm({ onSuccess }: ExpertApplicationFormProps)
 
         <ExpertApplicationProgress currentStep={currentStep} />
 
+        {currentStep <= 1 && (
+          <div className="rounded-xl border bg-muted/30 p-6 mb-6">
+            <h3 className="font-semibold mb-2">Become a Vetted Expert</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Experts review and vet candidates for companies. You&apos;ll join a guild,
+              review applications using structured rubrics, and earn reputation and
+              token rewards for quality reviews.
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Join a guild that matches your expertise</li>
+              <li>Review candidate applications with blind voting</li>
+              <li>Earn reputation and token rewards</li>
+            </ul>
+          </div>
+        )}
+
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <form onSubmit={handleSubmit}>
+            {!isConnected && mounted && (
+              <div className="p-8 pb-0">
+                <Alert variant="warning">
+                  Your wallet disconnected. Please reconnect using the button in the top navigation to continue.
+                  Your form data has been preserved.
+                </Alert>
+              </div>
+            )}
             <PersonalInfoSection
               fullName={formData.fullName}
               email={formData.email}
