@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { getAssetUrl } from "@/lib/api";
 import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import type { EndorsementApplication } from "@/types";
 
 interface EndorsementModalProps {
@@ -38,6 +39,7 @@ export function EndorsementModal({
 }: EndorsementModalProps) {
   const [bidAmount, setBidAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const skillMatch = useMemo(() => {
     if (!application?.job_skills || !application?.candidate_bio) return 0;
@@ -54,7 +56,7 @@ export function EndorsementModal({
     }
   }, [application]);
 
-  const handleEndorse = async () => {
+  const validateAndConfirm = () => {
     if (!application) return;
 
     if (!bidAmount || parseFloat(bidAmount) < parseFloat(minimumBid)) {
@@ -66,6 +68,12 @@ export function EndorsementModal({
       toast.error(`Insufficient balance. You have ${userBalance} VETD`);
       return;
     }
+
+    setShowConfirm(true);
+  };
+
+  const handleEndorse = async () => {
+    if (!application) return;
 
     setIsSubmitting(true);
 
@@ -334,7 +342,7 @@ export function EndorsementModal({
 
             <div className="flex gap-2">
               <Button
-                onClick={handleEndorse}
+                onClick={validateAndConfirm}
                 disabled={isSubmitting || !bidAmount || parseFloat(bidAmount) < parseFloat(minimumBid)}
                 className="flex-1"
               >
@@ -348,6 +356,20 @@ export function EndorsementModal({
           </div>
         </div>
       </DialogContent>
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleEndorse();
+        }}
+        title="Confirm Endorsement"
+        message={`You are about to stake ${bidAmount} tokens on this candidate. If they are not hired, your stake may be partially slashed.`}
+        confirmLabel="Stake"
+        variant="default"
+        isLoading={isSubmitting}
+      />
     </Dialog>
   );
 }

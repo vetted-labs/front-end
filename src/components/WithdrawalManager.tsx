@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,13 @@ import { blockchainApi, ApiError } from '@/lib/api';
 import { useFetch } from '@/lib/hooks/useFetch';
 import { logger } from "@/lib/logger";
 import { getTransactionErrorMessage } from '@/lib/blockchain';
+import { TransactionStatus, type TransactionPhase } from '@/components/ui/transaction-status';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { CONTRACT_ADDRESSES, EXPERT_STAKING_ABI } from '@/contracts/abis';
+
+const CHAIN_EXPLORER_URL =
+  process.env.NEXT_PUBLIC_EXPLORER_URL || "https://sepolia.etherscan.io";
 
 interface WithdrawalManagerProps {
   walletAddress: string;
@@ -65,6 +69,31 @@ export function WithdrawalManager({
   const { isSuccess: requestSuccess, isError: requestFailed, error: requestError } = useWaitForTransactionReceipt({ hash: requestTxHash });
   const { isSuccess: completeSuccess, isError: completeFailed, error: completeError } = useWaitForTransactionReceipt({ hash: completeTxHash });
   const { isSuccess: cancelSuccess, isError: cancelFailed, error: cancelError } = useWaitForTransactionReceipt({ hash: cancelTxHash });
+
+  // Derive transaction phases from wagmi states
+  const requestPhase = useMemo((): TransactionPhase => {
+    if (requestFailed) return "failed";
+    if (requestSuccess) return "confirmed";
+    if (requestTxHash) return "confirming";
+    if (isRequesting) return "awaiting-signature";
+    return "idle";
+  }, [isRequesting, requestTxHash, requestSuccess, requestFailed]);
+
+  const completePhase = useMemo((): TransactionPhase => {
+    if (completeFailed) return "failed";
+    if (completeSuccess) return "confirmed";
+    if (completeTxHash) return "confirming";
+    if (isCompleting) return "awaiting-signature";
+    return "idle";
+  }, [isCompleting, completeTxHash, completeSuccess, completeFailed]);
+
+  const cancelPhase = useMemo((): TransactionPhase => {
+    if (cancelFailed) return "failed";
+    if (cancelSuccess) return "confirmed";
+    if (cancelTxHash) return "confirming";
+    if (isCanceling) return "awaiting-signature";
+    return "idle";
+  }, [isCanceling, cancelTxHash, cancelSuccess, cancelFailed]);
 
   // Update time remaining
   useEffect(() => {
@@ -268,6 +297,19 @@ export function WithdrawalManager({
                   Cancel
                 </Button>
               </div>
+
+              <TransactionStatus
+                phase={completePhase}
+                txHash={completeTxHash}
+                chainExplorerUrl={CHAIN_EXPLORER_URL}
+                errorMessage={completeError ? getTransactionErrorMessage(completeError, 'Unstake completion failed') : undefined}
+              />
+              <TransactionStatus
+                phase={cancelPhase}
+                txHash={cancelTxHash}
+                chainExplorerUrl={CHAIN_EXPLORER_URL}
+                errorMessage={cancelError ? getTransactionErrorMessage(cancelError, 'Unstake cancellation failed') : undefined}
+              />
             </div>
           ) : (
             <div className="space-y-3">
@@ -295,6 +337,13 @@ export function WithdrawalManager({
                 {isRequesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Request Unstake (7-day cooldown)
               </Button>
+
+              <TransactionStatus
+                phase={requestPhase}
+                txHash={requestTxHash}
+                chainExplorerUrl={CHAIN_EXPLORER_URL}
+                errorMessage={requestError ? getTransactionErrorMessage(requestError, 'Unstake request failed') : undefined}
+              />
 
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-xs text-muted-foreground">
