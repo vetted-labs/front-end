@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button, Alert, StatusBadge } from "./ui";
 import { Pagination } from "./ui/pagination";
+import { ConfirmationModal } from "./ui/confirmation-modal";
 import { GuildSelector } from "./ui/guild-selector";
 import { jobsApi, dashboardApi } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
@@ -44,6 +45,7 @@ export function HiringDashboard() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterGuild, setFilterGuild] = useState<string>("all");
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ action: () => void; message: string } | null>(null);
   const { execute } = useApi();
 
   const { isLoading, error, data, refetch } = useFetch(
@@ -70,16 +72,19 @@ export function HiringDashboard() {
     if (ready) refetch();
   }, [debouncedSearch, filterStatus, ready, refetch]);
 
-  const handleDeleteJob = async (jobId: string) => {
-    // TODO: Replace window.confirm with a confirmation Modal component
-    if (!window.confirm("Are you sure you want to delete this job posting?")) return;
-
-    await execute(() => jobsApi.delete(jobId), {
-      onSuccess: () => {
-        setJobPostings((prev) => prev.filter((job) => job.id !== jobId));
-      },
-      onError: (err) => {
-        toast.error(err);
+  const handleDeleteJob = (jobId: string) => {
+    setConfirmAction({
+      message: "Are you sure you want to delete this job posting?",
+      action: async () => {
+        setConfirmAction(null);
+        await execute(() => jobsApi.delete(jobId), {
+          onSuccess: () => {
+            setJobPostings((prev) => prev.filter((job) => job.id !== jobId));
+          },
+          onError: (err) => {
+            toast.error(err);
+          },
+        });
       },
     });
   };
@@ -311,6 +316,17 @@ export function HiringDashboard() {
           />
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={confirmAction !== null}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => confirmAction?.action()}
+        title="Delete Job Posting"
+        message={confirmAction?.message ?? ""}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 }
