@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem } from "@/components/ui/breadcrumb";
 
 interface PageShellProps {
   title: string;
@@ -11,6 +12,7 @@ interface PageShellProps {
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 export function PageShell({
@@ -20,6 +22,7 @@ export function PageShell({
   actions,
   children,
   className,
+  breadcrumbs,
 }: PageShellProps) {
   const router = useRouter();
 
@@ -27,6 +30,7 @@ export function PageShell({
     <div
       className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${className ?? ""}`}
     >
+      {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           {backHref && (
