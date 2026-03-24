@@ -43,23 +43,31 @@ export function useApplicationStatusUpdate() {
           onSuccess: (data) => {
             const result = data as { transition: import("@/types").StatusTransition };
             options?.onSuccess?.(result.transition);
-
-            // Fire-and-forget hire outcome when status is "accepted"
-            if (newStatus === "accepted") {
-              endorsementAccountabilityApi
-                .recordHireOutcome({ applicationId, candidateId, jobId, outcome: "hired" })
-                .catch(() => {
-                  toast.warning(
-                    "Candidate accepted but hire outcome recording failed. Expert rewards may need manual processing."
-                  );
-                });
-            }
           },
           onError: (msg) => {
             options?.onError?.(msg);
           },
         }
       );
+
+      if (result && newStatus === "accepted") {
+        try {
+          await endorsementAccountabilityApi.recordHireOutcome({
+            applicationId,
+            candidateId,
+            jobId,
+            outcome: "hired",
+          });
+          // Dispatch events for immediate UI refresh across the app
+          window.dispatchEvent(new Event("vetted:notification-refresh"));
+          window.dispatchEvent(new Event("vetted:reputation-refresh"));
+          window.dispatchEvent(new Event("vetted:endorsement-refresh"));
+        } catch {
+          toast.warning(
+            "Candidate accepted but hire outcome recording failed. Expert rewards may need manual processing."
+          );
+        }
+      }
 
       return result;
     },
