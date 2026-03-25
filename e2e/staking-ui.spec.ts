@@ -20,7 +20,7 @@ test.describe("Staking requirement UI", () => {
     await page.goto("/expert/voting", { waitUntil: "networkidle" });
 
     await expect(page.getByText("Guild Applications & Voting").first()).toBeVisible({ timeout: 15000 });
-    await expect
+  });
 
   test("voting detail shows staking warning when insufficient stake", async ({ page }) => {
     await setupVotingDetailMocks(page, APPLICATION_ID, {

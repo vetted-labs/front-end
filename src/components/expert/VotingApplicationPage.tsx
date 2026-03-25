@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { guildApplicationsApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { formatDeadline, ensureHttps } from "@/lib/utils";
@@ -185,7 +185,7 @@ export default function VotingApplicationPage({
   applicationId,
 }: VotingApplicationPageProps) {
   const router = useRouter();
-  const { address: wagmiAddress } = useAccount();
+  const { address: wagmiAddress } = useExpertAccount();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
 

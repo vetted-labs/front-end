@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { Shield, Loader2, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
@@ -21,7 +21,7 @@ import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
 
 export default function ReputationPage() {
-  const { address: wagmiAddress } = useAccount();
+  const { address: wagmiAddress } = useExpertAccount();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
   const [profile, setProfile] = useState<ExpertProfile | null>(null);

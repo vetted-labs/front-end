@@ -1,7 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   Check,
   CheckCheck,
@@ -31,7 +31,7 @@ type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useExpertAccount();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);

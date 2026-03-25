@@ -34,7 +34,7 @@ export async function signupCandidate(page: Page): Promise<CandidateCredentials>
   await page.getByRole("button", { name: "Create Account" }).click();
 
   // Wait for redirect to candidate profile
-  await page.waitForURL("**/candidate/profile", { timeout: 15000 });
+  await page.waitForURL("**/candidate/dashboard", { timeout: 15000 });
 
   return { email, password };
 }
@@ -57,7 +57,7 @@ export async function loginCandidate(
 
   await page.getByRole("button", { name: "Sign In", exact: true }).click();
 
-  await page.waitForURL("**/candidate/profile", { timeout: 15000 });
+  await page.waitForURL("**/candidate/dashboard", { timeout: 15000 });
 }
 
 /**

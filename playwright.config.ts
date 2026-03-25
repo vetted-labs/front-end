@@ -1,7 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const testFrontendPort = 3031;
-const baseURL = `http://localhost:${testFrontendPort}`;
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3030";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -24,9 +23,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `PORT=${testFrontendPort} npm run dev`,
+    command: `NEXT_PUBLIC_E2E_MODE=true dotenv -e .env.local -- next dev --turbopack --port 3030`,
     url: baseURL,
     reuseExistingServer: true,
-    timeout: 60000,
+    timeout: 120000,
   },
 });

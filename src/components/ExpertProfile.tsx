@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   User,
   Mail,
@@ -90,7 +90,7 @@ function StatCard({ icon: Icon, label, value, subtitle, colorScheme }: StatCardP
 
 export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertProfileProps) {
   const router = useRouter();
-  const { address: connectedAddress, isConnected } = useAccount();
+  const { address: connectedAddress, isConnected } = useExpertAccount();
 
   // Determine mode
   const mode = walletAddress ? "public" : "private";

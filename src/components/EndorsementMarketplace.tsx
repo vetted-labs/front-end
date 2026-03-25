@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
 import { sepolia } from "wagmi/chains";
@@ -53,7 +54,7 @@ interface EndorsementMarketplaceProps {
 }
 
 export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId }: EndorsementMarketplaceProps) {
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);

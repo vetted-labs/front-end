@@ -32,8 +32,12 @@ function isAllowedForPending(pathname: string) {
 export default function ExpertLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { address, isConnected, status } = useAccount();
-  const { userId: expertId } = useAuthContext();
+  const { address: wagmiAddress, isConnected, status } = useAccount();
+  const auth = useAuthContext();
+  const expertId = auth.userId;
+  // In E2E mode, fall back to localStorage wallet address when wagmi isn't connected
+  const isE2E = process.env.NEXT_PUBLIC_E2E_MODE === "true";
+  const address = wagmiAddress || (isE2E ? auth.walletAddress : undefined);
   const { expertStatus, isHydrated, setExpertStatus, clearExpertStatus } = useExpertStatus();
   const [checked, setChecked] = useState(false);
   const verifiedRef = useRef(false);
@@ -48,7 +52,8 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     // Wallet not connected after reconnection settled — redirect to login.
     // Debounce: MetaMask can briefly show "disconnected" before reconnecting,
     // so delay the redirect. If the wallet reconnects in time, cleanup cancels it.
-    if (!isConnected && !address) {
+    // In E2E test mode, skip the wallet check — tests use localStorage auth instead.
+    if (!isConnected && !address && process.env.NEXT_PUBLIC_E2E_MODE !== "true") {
       const timer = setTimeout(() => {
         setChecked(false);
         router.replace("/auth/login?type=expert");
@@ -70,8 +75,10 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   }, [address]);
 
   // Backend verification — source of truth, prevents localStorage tampering
+  // Skip in E2E mode — tests use mocked APIs and fake wallet addresses
   // eslint-disable-next-line no-restricted-syntax -- verifies expert status against backend
   useEffect(() => {
+    if (isE2E) return;
     if (!address || !expertId || verifiedRef.current || isAllowedForPending(pathname)) return;
     verifiedRef.current = true;
 
@@ -101,7 +108,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     };
   }, [address, expertId, pathname, router, setExpertStatus, clearExpertStatus]);
 
-  if (!checked || status === "reconnecting" || status === "connecting") return null;
+  if (!checked || (!isE2E && (status === "reconnecting" || status === "connecting"))) return null;
 
   const isChromeless =
     expertStatus === "pending" ||

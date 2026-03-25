@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWaitForTransactionReceipt } from "wagmi";
+import { useWaitForTransactionReceipt } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -36,7 +37,7 @@ function getDateFrom(range: TimeRange): string | undefined {
 }
 
 export default function EarningsPage() {
-  const { address: wagmiAddress } = useAccount();
+  const { address: wagmiAddress } = useExpertAccount();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
   const [summary, setSummary] = useState<EarningsSummary | null>(null);

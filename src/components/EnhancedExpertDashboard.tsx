@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   Shield,
   Star,
@@ -33,7 +33,7 @@ import type { ExpertProfile, ExpertGuild } from "@/types";
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
-  const { address, isConnected, isReconnecting } = useAccount();
+  const { address, isConnected, isReconnecting } = useExpertAccount();
   const [mounted, setMounted] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const {

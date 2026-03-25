@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { toast } from "sonner";
 import {
   Users,
@@ -37,7 +37,7 @@ import type { GuildPageDetail, GuildLeaderboardEntry, GuildMembershipCheck, Guil
 export default function GuildDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useExpertAccount();
   const auth = useAuthContext();
   const guildId = decodeURIComponent(params.guildId as string);
 
