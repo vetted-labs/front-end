@@ -1,6 +1,8 @@
 // API Configuration
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+import { STATUS_COLORS } from "./colors";
+
 export const EXPERIENCE_LEVELS = [
   { value: "entry", label: "Entry Level (0-2 years)" },
   { value: "mid", label: "Mid Level (2-5 years)" },
@@ -89,15 +91,15 @@ export const SOCIAL_PLATFORMS = [
  * Use this everywhere you need status colors/labels instead of defining local statusConfig objects.
  */
 export const APPLICATION_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  reviewing: { label: "Reviewing", className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  interviewed: { label: "Interviewed", className: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
-  interviewing: { label: "Interviewing", className: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
-  accepted: { label: "Accepted", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  offered: { label: "Offered", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
-  rejected: { label: "Rejected", className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
-  hired: { label: "Hired", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  withdrawn: { label: "Withdrawn", className: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400" },
+  pending: { label: "Pending", className: STATUS_COLORS.pending.badge },
+  reviewing: { label: "Reviewing", className: STATUS_COLORS.info.badge },
+  interviewed: { label: "Interviewed", className: STATUS_COLORS.info.badge },
+  interviewing: { label: "Interviewing", className: STATUS_COLORS.info.badge },
+  accepted: { label: "Accepted", className: STATUS_COLORS.positive.badge },
+  offered: { label: "Offered", className: STATUS_COLORS.positive.badge },
+  rejected: { label: "Rejected", className: STATUS_COLORS.negative.badge },
+  hired: { label: "Hired", className: STATUS_COLORS.positive.badge },
+  withdrawn: { label: "Withdrawn", className: STATUS_COLORS.neutral.badge },
 };
 
 /**
@@ -105,10 +107,10 @@ export const APPLICATION_STATUS_CONFIG: Record<string, { label: string; classNam
  * Use this instead of local getStatusColor() functions for job status badges.
  */
 export const JOB_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  active: { label: "Active", className: "bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400" },
-  paused: { label: "Paused", className: "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400" },
+  active: { label: "Active", className: STATUS_COLORS.positive.badge },
+  paused: { label: "Paused", className: STATUS_COLORS.warning.badge },
   closed: { label: "Closed", className: "bg-muted border border-border text-muted-foreground" },
-  draft: { label: "Draft", className: "bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400" },
+  draft: { label: "Draft", className: STATUS_COLORS.info.badge },
 };
 
 /**
@@ -116,18 +118,18 @@ export const JOB_STATUS_CONFIG: Record<string, { label: string; className: strin
  * Maps appeal statuses to labels and text color classes.
  */
 export const APPEAL_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pending Review", color: "text-amber-500" },
-  reviewing: { label: "Under Review", color: "text-blue-500" },
-  upheld: { label: "Rejection Upheld", color: "text-red-500" },
-  overturned: { label: "Overturned — Candidate Admitted", color: "text-emerald-500" },
+  pending: { label: "Pending Review", color: STATUS_COLORS.warning.text },
+  reviewing: { label: "Under Review", color: STATUS_COLORS.info.text },
+  upheld: { label: "Rejection Upheld", color: STATUS_COLORS.negative.text },
+  overturned: { label: "Overturned — Candidate Admitted", color: STATUS_COLORS.positive.text },
 };
 
 /**
  * Shared team member status badge configuration.
  */
 export const TEAM_MEMBER_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  active: { label: "Active", className: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20" },
-  pending: { label: "Pending", className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  active: { label: "Active", className: STATUS_COLORS.positive.badge },
+  pending: { label: "Pending", className: STATUS_COLORS.warning.badge },
   inactive: { label: "Inactive", className: "text-muted-foreground bg-muted/30 border-border/40" },
 };
 
@@ -135,9 +137,9 @@ export const TEAM_MEMBER_STATUS_CONFIG: Record<string, { label: string; classNam
  * Shared guild application status badge configuration.
  */
 export const GUILD_APPLICATION_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  approved: { label: "Approved", className: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-  rejected: { label: "Rejected", className: "text-red-500 bg-red-500/10 border-red-500/20" },
-  pending: { label: "Pending", className: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+  approved: { label: "Approved", className: STATUS_COLORS.positive.badge },
+  rejected: { label: "Rejected", className: STATUS_COLORS.negative.badge },
+  pending: { label: "Pending", className: STATUS_COLORS.pending.badge },
 };
 
 /**
@@ -153,9 +155,9 @@ export const COMMIT_REVEAL_STATUS_LABELS: Record<string, string> = {
  * Maps the expert's review progress through commit-reveal phases.
  */
 export const VETTING_REVIEW_STATE_CONFIG: Record<string, { label: string; className: string }> = {
-  needs_review: { label: "Needs Review", className: "bg-primary/10 text-primary border-primary/20" },
-  committed: { label: "Committed", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
-  revealed: { label: "Revealed", className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" },
+  needs_review: { label: "Needs Review", className: STATUS_COLORS.pending.badge },
+  committed: { label: "Committed", className: STATUS_COLORS.warning.badge },
+  revealed: { label: "Revealed", className: STATUS_COLORS.positive.badge },
   finalized: { label: "Finalized", className: "bg-muted text-muted-foreground border-border" },
 };
 
