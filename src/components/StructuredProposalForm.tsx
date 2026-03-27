@@ -134,7 +134,7 @@ export function StructuredProposalForm({
           {/* Section 1: Basic Information */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">1. Basic Information</h3>
+              <h3 className="text-xl font-bold">1. Basic Information</h3>
               <Badge variant={getFieldStatus("candidateName") === "complete" ? "default" : "secondary"}>
                 {getFieldStatus("candidateName") === "complete" ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
                 {getFieldStatus("candidateName") === "complete" ? "Complete" : "Required"}
@@ -183,7 +183,7 @@ export function StructuredProposalForm({
           {/* Section 2: Skills Summary */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">2. Skills Summary</h3>
+              <h3 className="text-xl font-bold">2. Skills Summary</h3>
               <Badge variant={getFieldStatus("skillsSummary", 50) === "complete" ? "default" : "secondary"}>
                 {getFieldStatus("skillsSummary", 50) === "complete" ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
                 {formData.skillsSummary.length}/50+ characters
@@ -213,7 +213,7 @@ export function StructuredProposalForm({
           {/* Section 3: Experience Summary */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">3. Experience Summary</h3>
+              <h3 className="text-xl font-bold">3. Experience Summary</h3>
               <Badge variant={getFieldStatus("experienceSummary", 100) === "complete" ? "default" : "secondary"}>
                 {getFieldStatus("experienceSummary", 100) === "complete" ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
                 {formData.experienceSummary.length}/100+ characters
@@ -243,7 +243,7 @@ export function StructuredProposalForm({
           {/* Section 4: Motivation Statement */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">4. Motivation Statement</h3>
+              <h3 className="text-xl font-bold">4. Motivation Statement</h3>
               <Badge variant={getFieldStatus("motivationStatement", 50) === "complete" ? "default" : "secondary"}>
                 {getFieldStatus("motivationStatement", 50) === "complete" ? <CheckCircle2 className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
                 {formData.motivationStatement.length}/50+ characters
@@ -273,7 +273,7 @@ export function StructuredProposalForm({
           {/* Section 5: Credibility Evidence */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">5. Credibility Evidence</h3>
+              <h3 className="text-xl font-bold">5. Credibility Evidence</h3>
               <Badge variant="secondary">Optional</Badge>
             </div>
 
@@ -296,7 +296,7 @@ export function StructuredProposalForm({
           {/* Section 6: Key Achievements */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">6. Key Achievements</h3>
+              <h3 className="text-xl font-bold">6. Key Achievements</h3>
               <Badge variant="secondary">
                 {formData.achievements.length} {formData.achievements.length === 1 ? "achievement" : "achievements"}
               </Badge>
@@ -348,7 +348,7 @@ export function StructuredProposalForm({
 
           {/* Section 7: Voting Parameters */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-            <h3 className="text-lg font-semibold">7. Voting Parameters</h3>
+            <h3 className="text-xl font-bold">7. Voting Parameters</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>

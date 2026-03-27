@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
+  ArrowUpRight,
   Users,
-  Award,
+  FileCheck,
   Briefcase,
-  X,
+  Sparkles,
 } from "lucide-react";
 import { Alert } from "@/components/ui";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,154 +15,202 @@ import { guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { GuildCard } from "@/components/GuildCard";
-import { getGuildDetailedInfo, getGuildIcon } from "@/lib/guildHelpers";
+import { getGuildIcon, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import type { Guild } from "@/types";
 
 export default function GlobalGuildsPage() {
   const router = useRouter();
-  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
 
   const { data: guilds, isLoading, error } = useFetch<Guild[]>(
     () => guildsApi.getAll(),
   );
 
-  const { paginatedItems: currentGuilds, currentPage, totalPages, setCurrentPage } = useClientPagination(guilds ?? [], 6);
+  const {
+    paginatedItems: currentGuilds,
+    currentPage,
+    totalPages,
+    setCurrentPage,
+  } = useClientPagination(guilds ?? [], 12);
 
-  // Restore scroll position when coming back to this page
   useMountEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('guildsScrollPosition');
-    if (savedScrollPosition) {
+    const saved = sessionStorage.getItem("guildsScrollPosition");
+    if (saved) {
       setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition));
-        sessionStorage.removeItem('guildsScrollPosition');
+        window.scrollTo(0, parseInt(saved));
+        sessionStorage.removeItem("guildsScrollPosition");
       }, 100);
     }
   });
 
-  const handleInfoClick = (guildId: string) => {
-    setOpenTooltipId(openTooltipId === guildId ? null : guildId);
+  const navigateToGuild = (guildId: string) => {
+    sessionStorage.setItem("guildsScrollPosition", window.scrollY.toString());
+    router.push(`/guilds/${guildId}`);
   };
 
-  const closeTooltip = () => {
-    setOpenTooltipId(null);
-  };
+  const allGuilds = guilds ?? [];
+  const totalExperts = allGuilds.reduce(
+    (s, g) => s + (g.expertCount || 0),
+    0,
+  );
+  const totalOpenJobs = allGuilds.reduce(
+    (s, g) => s + (g.openPositions || 0),
+    0,
+  );
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground animate-page-enter">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
-        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-primary/8 dark:bg-primary/15 blur-3xl" />
-        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-primary/6 dark:bg-primary/12 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-transparent to-transparent" />
+    <div className="relative min-h-screen bg-background text-foreground animate-page-enter">
+      {/* ── Ambient — single warm glow, not heavy ── */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 overflow-hidden"
+      >
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.07] blur-[120px]" />
       </div>
 
-      <div className="relative z-10">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.10),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.22),transparent_60%)]" />
-        <div className="absolute -bottom-20 left-1/2 h-40 w-96 -translate-x-1/2 bg-primary/5 dark:bg-primary/10 blur-3xl" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-muted/50 text-[11px] uppercase tracking-[0.3em] text-primary mb-6">
-              Noble Protocol Guilds
-            </div>
-            <h1 className="text-5xl md:text-6xl font-semibold mb-4 bg-gradient-to-r from-primary via-accent to-primary dark:from-amber-200 dark:via-orange-200 dark:to-amber-100 bg-clip-text text-transparent">
-              Guilds
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Elite communities where vetted experts stake reputation, curate talent, and steer the frontier of crypto work.
-            </p>
-          </div>
-        </div>
-      </div>
+      <div className="relative z-10 max-w-[920px] mx-auto px-5 sm:px-8">
+        {/* ── Hero ── */}
+        <header className="pt-16 pb-14 md:pt-20 md:pb-16">
+          {/* Overline */}
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-4">
+            <Sparkles className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
+            Noble Protocol Guilds
+          </p>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Global Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-border bg-muted/50 mb-3">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-3xl font-semibold text-foreground mb-1">
-              {(guilds ?? []).length}
-            </p>
-            <p className="text-sm text-muted-foreground font-medium">Active Guilds</p>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-border bg-muted/50 mb-3">
-              <Award className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-3xl font-semibold text-foreground mb-1">
-              {(guilds ?? []).reduce((sum, g) => sum + (g.expertCount || 0), 0)}
-            </p>
-            <p className="text-sm text-muted-foreground font-medium">Expert Reviewers</p>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-border bg-muted/50 mb-3">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-3xl font-semibold text-foreground mb-1">
-              {(guilds ?? []).reduce((sum, g) => sum + (g.totalMembers || 0), 0)}
-            </p>
-            <p className="text-sm text-muted-foreground font-medium">Total Members</p>
-          </div>
-          <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur">
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/0 via-orange-400/70 to-amber-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl border border-border bg-muted/50 mb-3">
-              <Briefcase className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-3xl font-semibold text-foreground mb-1">
-              {(guilds ?? []).reduce((sum, g) => sum + (g.openPositions || 0), 0)}
-            </p>
-            <p className="text-sm text-muted-foreground font-medium">Open Positions</p>
-          </div>
-        </div>
+          <h1 className="font-display font-bold text-[clamp(2.5rem,6vw,4rem)] leading-[1.05] tracking-tight text-foreground mb-4">
+            Where Experts
+            <br />
+            Shape Hiring
+          </h1>
 
-        {/* All Guilds */}
-        <div>
-          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-8 font-serif">
-            All Guilds
-          </h2>
+          <p className="text-sm text-muted-foreground max-w-md leading-relaxed mb-8">
+            Verified communities stake reputation to vet talent.
+            Join the guild that matches your craft.
+          </p>
 
+          {/* Stats — understated, horizontal */}
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span className="tabular-nums">
+              <span className="font-medium text-foreground">
+                {allGuilds.length}
+              </span>{" "}
+              guilds
+            </span>
+            <span className="tabular-nums">
+              <span className="font-medium text-foreground">
+                {totalExperts.toLocaleString()}
+              </span>{" "}
+              experts
+            </span>
+            <span className="tabular-nums">
+              <span className="font-medium text-foreground">
+                {totalOpenJobs.toLocaleString()}
+              </span>{" "}
+              open roles
+            </span>
+          </div>
+        </header>
+
+        {/* ── Divider ── */}
+        <div className="h-px bg-border/60 mb-10" />
+
+        {/* ── Guild cards ── */}
+        <section className="pb-16">
           {error && (
-            <Alert variant="error" className="mb-6">{error}</Alert>
+            <Alert variant="error" className="mb-6">
+              {error}
+            </Alert>
           )}
 
-          {(guilds ?? []).length > 0 ? (
+          {allGuilds.length > 0 ? (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentGuilds.map((guild) => (
-                  <GuildCard
-                    key={guild.id}
-                    guild={{
-                      id: guild.id,
-                      name: guild.name,
-                      description: guild.description,
-                      memberCount: guild.totalMembers || guild.candidateCount || 0,
-                      expertCount: guild.expertCount,
-                      jobCount: guild.openPositions,
-                      totalProposalsReviewed: guild.totalProposalsReviewed,
-                    }}
-                    variant="browse"
-                    onViewDetails={(guildId) => {
-                      sessionStorage.setItem('guildsScrollPosition', window.scrollY.toString());
-                      router.push(`/guilds/${guildId}`);
-                    }}
-                    showDescription={true}
-                  />
-                ))}
+              <div className="grid gap-4 md:gap-5">
+                {currentGuilds.map((guild) => {
+                  const GuildIcon = getGuildIcon(guild.name);
+                  const description =
+                    guild.description || getGuildPreviewDescription(guild.name);
+                  const members =
+                    guild.totalMembers || guild.candidateCount || 0;
+                  const reviews = guild.totalProposalsReviewed || 0;
+                  const jobs = guild.openPositions || 0;
+
+                  return (
+                    <article
+                      key={guild.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigateToGuild(guild.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigateToGuild(guild.id);
+                        }
+                      }}
+                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      {/* Left: Icon with subtle container */}
+                      <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-[14px] bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06]">
+                        <GuildIcon
+                          className="w-[22px] h-[22px] md:w-6 md:h-6 text-foreground/70"
+                          strokeWidth={1.8}
+                        />
+                        {/* Hover glow — single orange, not per-guild */}
+                        <div className="absolute inset-0 rounded-[14px] bg-primary/0 transition-colors duration-300 group-hover:bg-primary/[0.06]" />
+                      </div>
+
+                      {/* Center: Text content */}
+                      <div className="min-w-0 py-0.5">
+                        <div className="flex items-baseline gap-3 mb-1">
+                          <h2 className="font-display font-bold text-xl md:text-xl tracking-tight text-foreground truncate">
+                            {guild.name}
+                          </h2>
+                          {jobs > 0 && (
+                            <span className="hidden sm:inline-flex shrink-0 text-xs font-semibold text-primary/80 bg-primary/[0.07] px-2 py-0.5 rounded-md">
+                              {jobs} {jobs === 1 ? "role" : "roles"} open
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-sm md:text-sm text-muted-foreground leading-relaxed line-clamp-1 mb-2">
+                          {description}
+                        </p>
+
+                        {/* Metrics — compact, icon-led */}
+                        <div className="flex items-center gap-5 text-xs text-muted-foreground/80">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Users className="w-3 h-3" />
+                            <span className="font-medium tabular-nums text-foreground/70">
+                              {members}
+                            </span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <FileCheck className="w-3 h-3" />
+                            <span className="font-medium tabular-nums text-foreground/70">
+                              {reviews}
+                            </span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Briefcase className="w-3 h-3" />
+                            <span className="font-medium tabular-nums text-foreground/70">
+                              {jobs}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Arrow */}
+                      <div className="shrink-0 hidden sm:flex items-center justify-center w-9 h-9 rounded-full border border-border/40 dark:border-white/[0.06] bg-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/[0.06]">
+                        <ArrowUpRight className="w-[14px] h-[14px] text-muted-foreground/50 transition-all duration-300 group-hover:text-primary group-hover:translate-x-[1px] group-hover:-translate-y-[1px]" />
+                      </div>
+
+                      {/* Hover overlay — very subtle border brightening + lift */}
+                      <div className="absolute inset-0 rounded-2xl border border-transparent transition-all duration-300 pointer-events-none group-hover:border-primary/[0.12] group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]" />
+                    </article>
+                  );
+                })}
               </div>
 
-              {/* Pagination Controls */}
               <PaginationNav
                 page={currentPage}
                 totalPages={totalPages}
@@ -178,67 +226,28 @@ export default function GlobalGuildsPage() {
               className="py-16 rounded-2xl border border-border bg-card"
             />
           )}
-        </div>
+        </section>
 
-        {/* Mobile tooltip modal */}
-        {openTooltipId && (
-          <div className="md:hidden fixed inset-0 z-50 flex items-end">
-            <div className="absolute inset-0 bg-black/50" onClick={closeTooltip} />
-            <div className="relative rounded-t-2xl p-6 w-full max-h-[80vh] overflow-y-auto border border-border bg-card">
-              <button onClick={closeTooltip} className="absolute top-4 right-4 p-2 hover:bg-muted rounded-lg transition-colors">
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-              {(() => {
-                const guild = (guilds ?? []).find(g => g.id === openTooltipId);
-                if (!guild) return null;
-                const GuildIcon = getGuildIcon(guild.name);
-                const detailedInfo = getGuildDetailedInfo(guild.name);
-                return (
-                  <>
-                    <div className="flex items-start gap-3 mb-4 pr-8">
-                      <div className="w-12 h-12 rounded-xl border border-border bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <GuildIcon className="w-6 h-6 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-foreground mb-1">{guild.name}</h3>
-                        <p className="text-sm text-primary font-medium">{detailedInfo.focus}</p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {detailedInfo.details}
-                      </p>
-                    </div>
-
-                    <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
-                      <p className="text-xs font-semibold text-foreground mb-2">Common Roles:</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {detailedInfo.examples}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
-                      <div className="text-center">
-                        <p className="text-2xl font-semibold text-foreground mb-1">{guild.expertCount}</p>
-                        <p className="text-xs text-muted-foreground">Expert Reviewers</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-semibold text-foreground mb-1">{guild.totalMembers}</p>
-                        <p className="text-xs text-muted-foreground">Total Members</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-semibold text-foreground mb-1">{guild.openPositions}</p>
-                        <p className="text-xs text-muted-foreground">Open Positions</p>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
+        {/* ── CTA ── */}
+        <section className="pb-24">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-border/50 bg-card/40 px-8 py-7">
+            <div>
+              <p className="font-display font-bold text-xl text-foreground tracking-tight">
+                Ready to join a guild?
+              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Apply as an expert and start earning from reviews.
+              </p>
             </div>
+            <button
+              onClick={() => router.push("/expert/register")}
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium transition-all duration-200 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/15"
+            >
+              Apply as Expert
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-        )}
-      </div>
+        </section>
       </div>
     </div>
   );

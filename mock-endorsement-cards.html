@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Endorsement Cards Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #06060b;
+    --bg-surface: #0e0e14;
+    --bg-card: #131319;
+    --bg-card-hover: #17171f;
+    --border-subtle: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text-primary: #e8e6f0;
+    --text-secondary: #8a879a;
+    --text-tertiary: #5c596b;
+    --accent-green: #22c55e;
+    --accent-green-glow: rgba(34,197,94,0.15);
+    --accent-green-soft: rgba(34,197,94,0.08);
+    --accent-amber: #f59e0b;
+    --accent-amber-glow: rgba(245,158,11,0.15);
+    --accent-amber-soft: rgba(245,158,11,0.08);
+    --accent-rose: #f43f5e;
+    --accent-rose-glow: rgba(244,63,94,0.15);
+    --accent-rose-soft: rgba(244,63,94,0.08);
+    --accent-primary: #f59e0b;
+    --accent-primary-soft: rgba(245,158,11,0.10);
+    --radius: 16px;
+    --radius-sm: 8px;
+    --radius-pill: 100px;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Section Header */
+  .section-header {
+    margin-bottom: 36px;
+  }
+
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .section-label svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+  }
+
+  .section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 1024px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Card */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.4),
+      0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* Accent Bar */
+  .accent-bar {
+    height: 3px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .accent-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover .accent-bar::after {
+    opacity: 1;
+  }
+
+  .accent-bar.tier-high {
+    background: linear-gradient(90deg, var(--accent-green) 0%, rgba(34,197,94,0.3) 100%);
+  }
+  .accent-bar.tier-high::after {
+    background: linear-gradient(90deg, var(--accent-green), #4ade80, var(--accent-green));
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  .accent-bar.tier-mid {
+    background: linear-gradient(90deg, var(--accent-amber) 0%, rgba(245,158,11,0.3) 100%);
+  }
+  .accent-bar.tier-mid::after {
+    background: linear-gradient(90deg, var(--accent-amber), #fbbf24, var(--accent-amber));
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  .accent-bar.tier-low {
+    background: linear-gradient(90deg, var(--accent-rose) 0%, rgba(244,63,94,0.3) 100%);
+  }
+  .accent-bar.tier-low::after {
+    background: linear-gradient(90deg, var(--accent-rose), #fb7185, var(--accent-rose));
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Card Body */
+  .card-body {
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  /* Header Row */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* Avatar */
+  .avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    flex-shrink: 0;
+    position: relative;
+    color: var(--text-primary);
+  }
+
+  .avatar.tier-high {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  .avatar.tier-mid {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .avatar.tier-low {
+    background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.05));
+    border: 1px solid rgba(244,63,94,0.2);
+  }
+
+  /* Info */
+  .card-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .candidate-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+
+  .candidate-headline {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+  }
+
+  .experience-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    font-family: 'Outfit', sans-serif;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+  }
+
+  /* Score Ring */
+  .score-ring-container {
+    flex-shrink: 0;
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-ring-glow {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    filter: blur(8px);
+  }
+
+  .card:hover .score-ring-glow {
+    opacity: 1;
+  }
+
+  .score-ring-glow.tier-high { background: var(--accent-green-glow); }
+  .score-ring-glow.tier-mid { background: var(--accent-amber-glow); }
+  .score-ring-glow.tier-low { background: var(--accent-rose-glow); }
+
+  .score-ring-svg {
+    width: 50px;
+    height: 50px;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.06);
+    stroke-width: 3;
+  }
+
+  .score-ring-fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .score-ring-fill.tier-high { stroke: var(--accent-green); }
+  .score-ring-fill.tier-mid { stroke: var(--accent-amber); }
+  .score-ring-fill.tier-low { stroke: var(--accent-rose); }
+
+  .score-value {
+    position: absolute;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .score-value.tier-high { color: var(--accent-green); }
+  .score-value.tier-mid { color: var(--accent-amber); }
+  .score-value.tier-low { color: var(--accent-rose); }
+
+  /* Skills */
+  .skills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .skill-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.2s ease;
+  }
+
+  .card:hover .skill-chip {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.10);
+  }
+
+  .skill-more {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+  }
+
+  /* Divider */
+  .card-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin-bottom: 14px;
+  }
+
+  /* Job Section */
+  .job-section {
+    margin-bottom: 14px;
+  }
+
+  .job-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .job-meta {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .job-meta .dot {
+    margin: 0 5px;
+    opacity: 0.4;
+  }
+
+  /* Footer Row */
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .applied-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .countdown-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .countdown-pill svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .countdown-pill.time-plenty {
+    background: var(--accent-green-soft);
+    color: var(--accent-green);
+    border: 1px solid rgba(34,197,94,0.15);
+  }
+
+  .countdown-pill.time-mid {
+    background: var(--accent-amber-soft);
+    color: var(--accent-amber);
+    border: 1px solid rgba(245,158,11,0.15);
+  }
+
+  .countdown-pill.time-urgent {
+    background: var(--accent-rose-soft);
+    color: var(--accent-rose);
+    border: 1px solid rgba(244,63,94,0.15);
+    animation: urgentPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes urgentPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Action Buttons */
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-details {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.10);
+    color: var(--text-secondary);
+  }
+
+  .btn-details:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.18);
+    color: var(--text-primary);
+  }
+
+  .btn-endorse {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+    color: #1a1207;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-endorse::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn-endorse:hover::before {
+    opacity: 1;
+  }
+
+  .btn-endorse span {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Entry Animations */
+  .card {
+    animation: cardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.1s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.2s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.3s; }
+
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Score ring animation */
+  .score-ring-fill {
+    animation: ringFill 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card:nth-child(1) .score-ring-fill { animation-delay: 0.3s; }
+  .card:nth-child(2) .score-ring-fill { animation-delay: 0.35s; }
+  .card:nth-child(3) .score-ring-fill { animation-delay: 0.4s; }
+  .card:nth-child(4) .score-ring-fill { animation-delay: 0.45s; }
+  .card:nth-child(5) .score-ring-fill { animation-delay: 0.5s; }
+  .card:nth-child(6) .score-ring-fill { animation-delay: 0.55s; }
+
+  @keyframes ringFill {
+    from { stroke-dashoffset: 119.38; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Section Header -->
+  <div class="section-header">
+    <div class="section-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Applications in Design
+    </div>
+    <div class="section-title">Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when candidate is hired.</div>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
+
+<script>
+  const CIRCUMFERENCE = 2 * Math.PI * 19; // r=19 for our ring
+
+  const candidates = [
+    {
+      name: "Jennie Johnson",
+      initials: "JJ",
+      headline: "Future Sales Lead at TechCorp",
+      experience: "entry",
+      score: 81,
+      skills: ["Account Management", "Sales Strategy", "Salesforce", "Negotiation"],
+      jobTitle: "Regional Accountability Manager",
+      company: "Vetted Inc",
+      location: "South Kassandra, MT",
+      jobType: "Freelance",
+      salary: "$140k – $190k",
+      appliedAgo: "2h ago",
+      countdown: "22h 20m",
+      countdownClass: "time-plenty"
+    },
+    {
+      name: "Alfonso Keebler",
+      initials: "AK",
+      headline: "Principal Brand Strategist",
+      experience: "mid",
+      score: 86,
+      skills: ["Brand Strategy", "Analytics", "Email Marketing", "Content Marketing"],
+      jobTitle: "Internal Operations Administrator",
+      company: "Vetted Inc",
+      location: "Willowberg, MN",
+      jobType: "Contract",
+      salary: "$140k – $180k",
+      appliedAgo: "2h ago",
+      countdown: "22h 20m",
+      countdownClass: "time-plenty"
+    },
+    {
+      name: "Jo Labadie",
+      initials: "JL",
+      headline: "Chief Innovation Officer",
+      experience: "senior",
+      score: 66,
+      skills: ["Negotiation", "Salesforce", "CRM"],
+      jobTitle: "Human Data Orchestrator",
+      company: "Vetted Inc",
+      location: "Remote",
+      jobType: "Freelance",
+      salary: "$140k – $220k",
+      appliedAgo: "2h ago",
+      countdown: "22h 20m",
+      countdownClass: "time-plenty"
+    },
+    {
+      name: "Kent Fadel",
+      initials: "KF",
+      headline: "Corporate Strategy Analyst",
+      experience: "staff",
+      score: 49,
+      skills: ["Financial Analysis", "Strategy", "Excel"],
+      jobTitle: "Senior Data Engineer",
+      company: "Acme Corp",
+      location: "New York, NY",
+      jobType: "Full-time",
+      salary: "$160k – $200k",
+      appliedAgo: "5h ago",
+      countdown: "19h 15m",
+      countdownClass: "time-mid"
+    },
+    {
+      name: "Jasmine Mueller",
+      initials: "JM",
+      headline: "Forward Operations Coordinator",
+      experience: "entry",
+      score: 92,
+      skills: ["Project Management", "Agile", "Jira", "Communication"],
+      jobTitle: "Operations Lead",
+      company: "BlockFi",
+      location: "San Francisco, CA",
+      jobType: "Full-time",
+      salary: "$120k – $160k",
+      appliedAgo: "1h ago",
+      countdown: "23h 05m",
+      countdownClass: "time-plenty"
+    },
+    {
+      name: "Darin Rippin",
+      initials: "DR",
+      headline: "Regional Sales Director",
+      experience: "principal",
+      score: 34,
+      skills: ["Enterprise Sales", "Pipeline Mgmt", "HubSpot"],
+      jobTitle: "VP of Sales",
+      company: "CryptoHire",
+      location: "Austin, TX",
+      jobType: "Full-time",
+      salary: "$180k – $250k",
+      appliedAgo: "8h ago",
+      countdown: "16h 30m",
+      countdownClass: "time-urgent"
+    }
+  ];
+
+  function getTier(score) {
+    if (score >= 70) return 'high';
+    if (score >= 40) return 'mid';
+    return 'low';
+  }
+
+  function buildCard(c) {
+    const tier = getTier(c.score);
+    const dashoffset = CIRCUMFERENCE - (c.score / 100) * CIRCUMFERENCE;
+    const skillsToShow = c.skills.slice(0, 3);
+    const moreCount = c.skills.length - 3;
+
+    const clockIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+
+    return `
+      <div class="card">
+        <div class="accent-bar tier-${tier}"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="avatar tier-${tier}">${c.initials}</div>
+            <div class="card-info">
+              <div class="candidate-name">${c.name}</div>
+              <div class="candidate-headline">${c.headline}</div>
+              <span class="experience-badge">${c.experience}</span>
+            </div>
+            <div class="score-ring-container">
+              <div class="score-ring-glow tier-${tier}"></div>
+              <svg class="score-ring-svg" viewBox="0 0 44 44">
+                <circle class="score-ring-bg" cx="22" cy="22" r="19"/>
+                <circle class="score-ring-fill tier-${tier}" cx="22" cy="22" r="19"
+                  stroke-dasharray="${CIRCUMFERENCE}"
+                  stroke-dashoffset="${dashoffset}"/>
+              </svg>
+              <span class="score-value tier-${tier}">${c.score}</span>
+            </div>
+          </div>
+
+          <div class="skills-row">
+            ${skillsToShow.map(s => `<span class="skill-chip">${s}</span>`).join('')}
+            ${moreCount > 0 ? `<span class="skill-more">+${moreCount}</span>` : ''}
+          </div>
+
+          <div class="card-divider"></div>
+
+          <div class="job-section">
+            <div class="job-title">${c.jobTitle}</div>
+            <div class="job-meta">
+              ${c.company}<span class="dot">·</span>${c.location}<span class="dot">·</span>${c.salary}
+            </div>
+          </div>
+
+          <div class="card-footer-row">
+            <span class="applied-time">Applied ${c.appliedAgo}</span>
+            <span class="countdown-pill ${c.countdownClass}">
+              ${clockIcon}
+              ${c.countdown}
+            </span>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn btn-details">Details</button>
+            <button class="btn btn-endorse"><span>Endorse</span></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('cardsGrid').innerHTML = candidates.map(buildCard).join('');
+</script>
+
+</body>
+</html>

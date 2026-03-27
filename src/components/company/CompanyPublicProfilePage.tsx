@@ -85,7 +85,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-semibold text-foreground">{profile.name}</h1>
+                <h1 className="text-2xl font-medium text-foreground">{profile.name}</h1>
                 {profile.verified && (
                   <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon} flex-shrink-0`} />
                 )}
@@ -137,14 +137,14 @@ export default function CompanyPublicProfilePage({ params }: Props) {
         {/* About */}
         {profile.description && (
           <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06] mb-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">About</h2>
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">About</h2>
             <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{profile.description}</p>
           </div>
         )}
 
         {/* Active Jobs */}
         <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06]">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-4">
             Open Positions {jobs && jobs.length > 0 && <span className="text-xs text-muted-foreground/60 ml-1">({jobs.length})</span>}
           </h2>
 

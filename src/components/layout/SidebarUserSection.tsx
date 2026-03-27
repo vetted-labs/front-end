@@ -115,7 +115,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
                   </p>
                   <div className="mt-1 flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-positive" />
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {getNetworkName(chainId)}
                     </span>
                   </div>
@@ -163,7 +163,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
         {/* User card */}
         {!isCollapsed && auth.email && (
           <div className="rounded-lg bg-muted px-3 py-2 space-y-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <p className="text-xs font-medium uppercase tracking-wider text-primary">
               Hiring Manager
             </p>
             <p className="truncate text-xs text-muted-foreground">{auth.email}</p>
@@ -215,7 +215,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
         {/* User card */}
         {!isCollapsed && auth.email && (
           <div className="rounded-lg bg-muted px-3 py-2 space-y-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <p className="text-xs font-medium uppercase tracking-wider text-primary">
               Candidate
             </p>
             <p className="truncate text-xs text-muted-foreground">{auth.email}</p>
@@ -271,7 +271,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           {!isCollapsed && (
             <div className="rounded-lg bg-muted px-3 py-2 space-y-1">
               {userTypeLabel && (
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                <p className="text-xs font-medium uppercase tracking-wider text-primary">
                   {userTypeLabel}
                 </p>
               )}
@@ -320,7 +320,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           {!isCollapsed ? (
             <button
               onClick={() => router.push("/auth/login")}
-              className="w-full rounded-full bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-semibold text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+              className="w-full rounded-full bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-medium text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
             >
               Sign In
             </button>

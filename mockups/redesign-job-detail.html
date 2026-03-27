@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Senior Solidity Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0f;
+    --card:rgba(255,255,255,0.03);
+    --card-hover:rgba(255,255,255,0.05);
+    --border:rgba(255,255,255,0.06);
+    --border-hover:rgba(255,255,255,0.1);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --t4:#475569;
+    --orange:#f97316;
+    --orange-soft:rgba(249,115,22,0.08);
+    --orange-border:rgba(249,115,22,0.2);
+    --orange-glow:rgba(249,115,22,0.12);
+    --emerald:#34d399;
+    --emerald-soft:rgba(52,211,153,0.08);
+    --emerald-border:rgba(52,211,153,0.2);
+    --cyan:#22d3ee;
+    --cyan-soft:rgba(34,211,238,0.08);
+    --cyan-border:rgba(34,211,238,0.15);
+    --violet:#a78bfa;
+    --violet-soft:rgba(167,139,250,0.08);
+    --violet-border:rgba(167,139,250,0.15);
+    --r:20px;
+    --fh:'Bricolage Grotesque',sans-serif;
+    --fb:'Inter',sans-serif;
+  }
+
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--t1);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6}
+
+  /* ── Background Effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx .orb1{position:absolute;width:900px;height:900px;top:-15%;left:-5%;background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 60%);animation:drift 22s ease-in-out infinite alternate}
+  .bg-fx .orb2{position:absolute;width:600px;height:600px;bottom:-10%;right:-5%;background:radial-gradient(circle,rgba(234,88,12,0.04) 0%,transparent 55%);animation:drift 28s ease-in-out infinite alternate-reverse}
+  .bg-fx .orb3{position:absolute;width:400px;height:400px;top:40%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(249,115,22,0.025) 0%,transparent 60%);animation:pulse 15s ease-in-out infinite}
+  @keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,25px) scale(1.06)}}
+  @keyframes pulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}
+  .dots{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,0.018) 1px,transparent 1px);background-size:28px 28px}
+
+  /* ── Layout ── */
+  .page{position:relative;z-index:2;padding-bottom:80px}
+  .container{max-width:1240px;margin:0 auto;padding:0 24px}
+
+  /* ── Nav ── */
+  .nav{padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:32px;backdrop-filter:blur(12px)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between}
+  .nav-logo{font-family:var(--fh);font-size:22px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .nav-links{display:flex;align-items:center;gap:24px}
+  .nav-links a{color:var(--t3);font-size:13px;font-weight:500;text-decoration:none;transition:color .2s}
+  .nav-links a:hover{color:var(--t1)}
+  .nav-wallet{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border);font-size:12px;color:var(--t2);font-weight:500;cursor:pointer;transition:all .2s}
+  .nav-wallet:hover{border-color:var(--orange-border);color:var(--t1)}
+  .nav-wallet .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald)}
+
+  /* ── Breadcrumb ── */
+  .bc{padding:0 0 24px;font-size:13px;color:var(--t3);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .bc a{color:var(--t3);text-decoration:none;transition:color .2s}.bc a:hover{color:var(--t2)}
+  .bc .cur{color:var(--t2);font-weight:500}
+  .bc .sep{opacity:.3}
+
+  /* ── Grid ── */
+  .grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+  @media(max-width:960px){.grid{grid-template-columns:1fr}}
+
+  /* ── Glass Card ── */
+  .glass{background:var(--card);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:relative;overflow:hidden;transition:border-color .3s}
+  .glass:hover{border-color:var(--border-hover)}
+
+  /* ── Left Column ── */
+  .left{display:flex;flex-direction:column;gap:24px}
+
+  /* Job Header Card */
+  .job-header{padding:36px}
+  .job-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+  .company-row{display:flex;align-items:center;gap:14px}
+  .company-logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1e1b4b,#4c1d95,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--fh);font-size:18px;font-weight:700;color:#fff;box-shadow:0 4px 16px rgba(124,58,237,0.2)}
+  .company-info{display:flex;flex-direction:column;gap:2px}
+  .company-name{font-size:14px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:8px}
+  .verified-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;background:var(--emerald-soft);border:1px solid var(--emerald-border);font-size:10px;font-weight:600;color:var(--emerald);text-transform:uppercase;letter-spacing:.5px}
+  .verified-badge svg{width:10px;height:10px}
+  .company-type{font-size:12px;color:var(--t3)}
+  .share-btn{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);transition:all .2s;flex-shrink:0}
+  .share-btn:hover{border-color:var(--orange-border);color:var(--orange);background:var(--orange-soft)}
+
+  .job-title{font-family:var(--fh);font-size:36px;font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:16px;background:linear-gradient(135deg,#ffffff,#cbd5e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+  .job-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:100px;font-size:12px;font-weight:500}
+  .tag-type{background:var(--orange-soft);border:1px solid var(--orange-border);color:var(--orange)}
+  .tag-remote{background:var(--emerald-soft);border:1px solid var(--emerald-border);color:var(--emerald)}
+  .tag-guild{background:var(--violet-soft);border:1px solid var(--violet-border);color:var(--violet)}
+  .tag-guild svg{width:12px;height:12px}
+
+  .job-meta{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding-top:20px;border-top:1px solid var(--border)}
+  .meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2)}
+  .meta-item svg{width:14px;height:14px;color:var(--t3)}
+  .meta-item.salary{font-weight:600;color:var(--emerald)}
+  .meta-item.salary svg{color:var(--emerald)}
+  .meta-divider{width:1px;height:14px;background:var(--border)}
+
+  /* Job Description */
+  .job-desc{padding:36px}
+  .section-title{font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:20px;color:var(--t1)}
+  .desc-section{margin-bottom:28px}
+  .desc-section:last-child{margin-bottom:0}
+  .desc-subtitle{font-family:var(--fh);font-size:16px;font-weight:600;color:var(--t1);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .desc-subtitle svg{width:16px;height:16px;color:var(--orange)}
+  .desc-text{font-size:14px;color:var(--t2);line-height:1.8;margin-bottom:16px}
+  .desc-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .desc-list li{font-size:14px;color:var(--t2);line-height:1.6;padding-left:20px;position:relative}
+  .desc-list li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--orange);opacity:.6}
+
+  /* Skills */
+  .skills-card{padding:36px}
+  .skills-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .skill-pill{padding:8px 18px;border-radius:100px;background:rgba(255,255,255,0.04);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--t2);transition:all .2s;cursor:default}
+  .skill-pill:hover{border-color:var(--orange-border);color:var(--orange);background:var(--orange-soft)}
+  .skill-pill.required{border-color:var(--orange-border);color:var(--orange);background:var(--orange-soft)}
+
+  /* Screening Questions */
+  .screening{padding:36px}
+  .question{padding:20px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);margin-bottom:12px}
+  .question:last-child{margin-bottom:0}
+  .question-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--orange);margin-bottom:8px}
+  .question-text{font-size:14px;color:var(--t1);font-weight:500;line-height:1.5}
+  .question-hint{font-size:12px;color:var(--t3);margin-top:6px}
+
+  /* ── Right Column ── */
+  .right{position:sticky;top:24px;display:flex;flex-direction:column;gap:20px}
+  @media(max-width:960px){.right{position:static}}
+
+  /* Apply Card */
+  .apply-card{padding:0;overflow:hidden}
+  .apply-gradient{height:3px;background:linear-gradient(90deg,#f97316,#ea580c,#f59e0b,#f97316);background-size:200% 100%;animation:shimmer 3s linear infinite}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .apply-inner{padding:28px 24px}
+  .apply-price{font-family:var(--fh);font-size:28px;font-weight:800;letter-spacing:-.5px;color:var(--t1);margin-bottom:2px}
+  .apply-token{font-size:13px;color:var(--orange);font-weight:500;margin-bottom:20px;display:flex;align-items:center;gap:6px}
+  .apply-token svg{width:14px;height:14px}
+  .btn-apply{width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-family:var(--fh);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 4px 24px rgba(249,115,22,0.3);position:relative;overflow:hidden;letter-spacing:-.2px}
+  .btn-apply::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent 50%);opacity:0;transition:opacity .3s}
+  .btn-apply:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(249,115,22,0.4)}
+  .btn-apply:hover::before{opacity:1}
+  .btn-apply:active{transform:translateY(0)}
+  .btn-save{width:100%;padding:12px;border-radius:12px;background:transparent;border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;margin-top:10px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-save:hover{border-color:var(--orange-border);color:var(--t1);background:rgba(255,255,255,0.02)}
+  .btn-save svg{width:14px;height:14px}
+  .deadline{margin-top:18px;padding-top:18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .deadline-icon{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .deadline-icon svg{width:18px;height:18px;color:#fbbf24}
+  .deadline-info{display:flex;flex-direction:column;gap:1px}
+  .deadline-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .deadline-value{font-size:14px;color:var(--t1);font-weight:600}
+  .deadline-countdown{font-size:12px;color:#fbbf24;font-weight:500}
+
+  /* Company Mini Card */
+  .company-card{padding:24px}
+  .company-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .company-card-logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#1e1b4b,#4c1d95,#7c3aed);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+  .company-card-name{font-size:15px;font-weight:600;color:var(--t1)}
+  .company-card-label{font-size:11px;color:var(--t3)}
+  .company-details{display:flex;flex-direction:column;gap:12px}
+  .company-detail{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2)}
+  .company-detail svg{width:14px;height:14px;color:var(--t3);flex-shrink:0}
+  .company-link{display:flex;align-items:center;gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--orange);text-decoration:none;font-weight:500;transition:gap .2s}
+  .company-link:hover{gap:10px}
+  .company-link svg{width:14px;height:14px}
+
+  /* Guild Mini Card */
+  .guild-card{padding:24px}
+  .guild-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .guild-icon{width:40px;height:40px;border-radius:12px;background:var(--violet-soft);border:1px solid var(--violet-border);display:flex;align-items:center;justify-content:center;color:var(--violet);flex-shrink:0}
+  .guild-icon svg{width:18px;height:18px}
+  .guild-name{font-size:15px;font-weight:600;color:var(--t1)}
+  .guild-members{font-size:12px;color:var(--t3)}
+  .guild-desc-text{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:14px}
+  .guild-stat{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);font-size:12px;color:var(--t2);margin-bottom:8px}
+  .guild-stat svg{width:14px;height:14px;color:var(--orange)}
+  .guild-stat strong{color:var(--t1);font-weight:600}
+
+  /* Similar Jobs */
+  .similar-card{padding:24px}
+  .similar-header{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--t1);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .similar-header svg{width:16px;height:16px;color:var(--orange)}
+  .similar-job{padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all .2s}
+  .similar-job:last-child{margin-bottom:0}
+  .similar-job:hover{border-color:var(--orange-border);background:var(--orange-soft)}
+  .similar-job-title{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px}
+  .similar-job-company{font-size:12px;color:var(--t3);margin-bottom:8px}
+  .similar-job-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .similar-job-tag{font-size:11px;color:var(--t2);padding:3px 10px;border-radius:100px;background:rgba(255,255,255,0.04);border:1px solid var(--border)}
+  .similar-job-salary{font-size:12px;color:var(--emerald);font-weight:600}
+
+  /* ── Responsive ── */
+  @media(max-width:960px){
+    .grid{grid-template-columns:1fr}
+    .right{position:static;order:1}
+    .left{order:2}
+    .job-title{font-size:28px}
+    .apply-price{font-size:24px}
+    .job-header{padding:24px}
+    .job-desc{padding:24px}
+    .skills-card{padding:24px}
+    .screening{padding:24px}
+    .nav-links{display:none}
+  }
+  @media(max-width:480px){
+    .container{padding:0 16px}
+    .job-title{font-size:24px}
+    .job-header-top{flex-direction:column}
+    .job-meta{flex-direction:column;align-items:flex-start;gap:10px}
+    .meta-divider{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-fx">
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+  <div class="orb3"></div>
+</div>
+<div class="dots"></div>
+
+<div class="page">
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="nav-logo">vetted</div>
+      <div class="nav-links">
+        <a href="#">Browse Jobs</a>
+        <a href="#">Guilds</a>
+        <a href="#">Leaderboard</a>
+        <a href="#">Dashboard</a>
+      </div>
+      <div class="nav-wallet">
+        <span class="dot"></span>
+        0x7a3B...e92F
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <div class="bc">
+      <a href="#">Jobs</a>
+      <span class="sep">/</span>
+      <a href="#">Engineering</a>
+      <span class="sep">/</span>
+      <span class="cur">Senior Solidity Engineer</span>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid">
+
+      <!-- ═══ LEFT COLUMN ═══ -->
+      <div class="left">
+
+        <!-- Job Header -->
+        <div class="glass job-header">
+          <div class="job-header-top">
+            <div class="company-row">
+              <div class="company-logo">N</div>
+              <div class="company-info">
+                <div class="company-name">
+                  Nexus Protocol
+                  <span class="verified-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    Verified
+                  </span>
+                </div>
+                <div class="company-type">DeFi Infrastructure</div>
+              </div>
+            </div>
+            <div class="share-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+          </div>
+
+          <h1 class="job-title">Senior Solidity Engineer</h1>
+
+          <div class="job-tags">
+            <span class="tag tag-type">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              Full-time
+            </span>
+            <span class="tag tag-remote">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              Remote
+            </span>
+            <span class="tag tag-guild">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+              Engineering Guild
+            </span>
+          </div>
+
+          <div class="job-meta">
+            <div class="meta-item salary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              $150k &ndash; $200k + Token Allocation
+            </div>
+            <div class="meta-divider"></div>
+            <div class="meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Posted 3 days ago
+            </div>
+            <div class="meta-divider"></div>
+            <div class="meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              28 applicants
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="glass job-desc">
+          <h2 class="section-title">Job Description</h2>
+
+          <div class="desc-section">
+            <div class="desc-subtitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              About the Role
+            </div>
+            <p class="desc-text">
+              Nexus Protocol is building the next generation of decentralized financial infrastructure. We're looking for a Senior Solidity Engineer to lead the development of our core smart contract suite, including lending pools, automated market makers, and cross-chain bridge contracts. You'll work closely with our security team and auditors to deliver battle-tested code that secures hundreds of millions in TVL.
+            </p>
+            <p class="desc-text">
+              This is a high-impact role where you'll shape the architecture of protocols that power real economic activity on-chain. You'll have significant ownership over technical decisions and direct influence on our product roadmap.
+            </p>
+          </div>
+
+          <div class="desc-section">
+            <div class="desc-subtitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              What You'll Do
+            </div>
+            <ul class="desc-list">
+              <li>Design and implement core DeFi protocol smart contracts (Solidity 0.8+) including lending markets, liquidity pools, and governance modules</li>
+              <li>Lead smart contract architecture decisions, optimizing for gas efficiency, upgradeability, and composability across multiple EVM chains</li>
+              <li>Collaborate with external auditors (Trail of Bits, OpenZeppelin) on security reviews, writing comprehensive test suites with >95% coverage</li>
+              <li>Build and maintain deployment pipelines using Foundry and Hardhat, with automated testing on forked mainnets</li>
+              <li>Mentor junior engineers on Solidity best practices, common vulnerability patterns, and EVM internals</li>
+              <li>Contribute to protocol governance proposals and tokenomics modeling</li>
+            </ul>
+          </div>
+
+          <div class="desc-section">
+            <div class="desc-subtitle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              Requirements
+            </div>
+            <ul class="desc-list">
+              <li>4+ years of professional Solidity development with production deployments on Ethereum mainnet</li>
+              <li>Deep understanding of EVM internals, gas optimization patterns, and common vulnerability classes (reentrancy, flash loan attacks, oracle manipulation)</li>
+              <li>Experience with DeFi primitives: AMMs, lending protocols, yield aggregators, or bridge contracts</li>
+              <li>Proficiency with Foundry (forge, cast, anvil) and/or Hardhat development frameworks</li>
+              <li>Strong understanding of formal verification tools (Certora, Echidna, Slither) and invariant testing</li>
+              <li>Excellent written communication skills for technical documentation and governance proposals</li>
+              <li>Comfort working asynchronously in a distributed, remote-first team across time zones</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Required Skills -->
+        <div class="glass skills-card">
+          <h2 class="section-title">Required Skills</h2>
+          <div class="skills-grid">
+            <span class="skill-pill required">Solidity</span>
+            <span class="skill-pill required">Smart Contracts</span>
+            <span class="skill-pill required">DeFi</span>
+            <span class="skill-pill required">Foundry</span>
+            <span class="skill-pill">EVM</span>
+            <span class="skill-pill">Hardhat</span>
+            <span class="skill-pill">TypeScript</span>
+            <span class="skill-pill">Ethereum</span>
+            <span class="skill-pill">Security Auditing</span>
+            <span class="skill-pill">OpenZeppelin</span>
+            <span class="skill-pill">Gas Optimization</span>
+            <span class="skill-pill">Cross-chain</span>
+          </div>
+        </div>
+
+        <!-- Screening Questions -->
+        <div class="glass screening">
+          <h2 class="section-title">Screening Questions</h2>
+          <div class="question">
+            <div class="question-num">Question 1</div>
+            <div class="question-text">Describe a production smart contract you've deployed that handles significant TVL. What architectural decisions did you make and why?</div>
+            <div class="question-hint">Expected: 200-400 words. Focus on trade-offs.</div>
+          </div>
+          <div class="question">
+            <div class="question-num">Question 2</div>
+            <div class="question-text">Walk us through how you'd design an upgradeable lending protocol that supports multiple collateral types. What proxy pattern would you choose and how would you handle storage layout?</div>
+            <div class="question-hint">Expected: Technical depth with code examples welcome.</div>
+          </div>
+          <div class="question">
+            <div class="question-num">Question 3</div>
+            <div class="question-text">You discover a critical vulnerability in a live contract with $50M TVL. Walk us through your incident response process from discovery to resolution.</div>
+            <div class="question-hint">Expected: Show your security mindset and communication skills.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ RIGHT COLUMN ═══ -->
+      <div class="right">
+
+        <!-- Apply Card -->
+        <div class="glass apply-card">
+          <div class="apply-gradient"></div>
+          <div class="apply-inner">
+            <div class="apply-price">$150k &ndash; $200k</div>
+            <div class="apply-token">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              + Token Allocation (0.15% vested over 3 years)
+            </div>
+            <button class="btn-apply">Apply Now</button>
+            <button class="btn-save">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              Save for Later
+            </button>
+            <div class="deadline">
+              <div class="deadline-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="deadline-info">
+                <div class="deadline-label">Application Deadline</div>
+                <div class="deadline-value">April 15, 2026</div>
+                <div class="deadline-countdown">19 days remaining</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Company Info -->
+        <div class="glass company-card">
+          <div class="company-card-header">
+            <div class="company-card-logo">N</div>
+            <div>
+              <div class="company-card-name">Nexus Protocol</div>
+              <div class="company-card-label">About the Company</div>
+            </div>
+          </div>
+          <div class="company-details">
+            <div class="company-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              DeFi / Financial Infrastructure
+            </div>
+            <div class="company-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              25-50 employees
+            </div>
+            <div class="company-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              Remote-first &middot; Global
+            </div>
+            <div class="company-detail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              Ethereum, Arbitrum, Base
+            </div>
+          </div>
+          <a href="#" class="company-link">
+            View Company Profile
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+
+        <!-- Guild Info -->
+        <div class="glass guild-card">
+          <div class="guild-card-head">
+            <div class="guild-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+            </div>
+            <div>
+              <div class="guild-name">Engineering Guild</div>
+              <div class="guild-members">142 active members</div>
+            </div>
+          </div>
+          <p class="guild-desc-text">Expert reviews for this position are conducted by verified members of the Engineering Guild, ensuring deep technical evaluation.</p>
+          <div class="guild-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <strong>96%</strong> review accuracy rate
+          </div>
+          <div class="guild-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <strong>~2.4 days</strong> average review time
+          </div>
+        </div>
+
+        <!-- Similar Jobs -->
+        <div class="glass similar-card">
+          <div class="similar-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Similar Jobs
+          </div>
+
+          <div class="similar-job">
+            <div class="similar-job-title">Lead Smart Contract Developer</div>
+            <div class="similar-job-company">Aave Labs</div>
+            <div class="similar-job-meta">
+              <span class="similar-job-tag">Full-time</span>
+              <span class="similar-job-tag">Remote</span>
+              <span class="similar-job-salary">$170k - $220k</span>
+            </div>
+          </div>
+
+          <div class="similar-job">
+            <div class="similar-job-title">Protocol Engineer</div>
+            <div class="similar-job-company">Uniswap Foundation</div>
+            <div class="similar-job-meta">
+              <span class="similar-job-tag">Full-time</span>
+              <span class="similar-job-tag">Remote</span>
+              <span class="similar-job-salary">$160k - $210k</span>
+            </div>
+          </div>
+
+          <div class="similar-job">
+            <div class="similar-job-title">Security-Focused Solidity Dev</div>
+            <div class="similar-job-company">OpenZeppelin</div>
+            <div class="similar-job-meta">
+              <span class="similar-job-tag">Contract</span>
+              <span class="similar-job-tag">Remote</span>
+              <span class="similar-job-salary">$140k - $180k</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /grid -->
+  </div><!-- /container -->
+</div><!-- /page -->
+
+</body>
+</html>

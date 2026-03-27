@@ -276,6 +276,22 @@ export function getMatchScoreColors(pct: number) {
   return STATUS_COLORS.negative;
 }
 
+// ─── Candidate Status Dot Colors ─────────────────────────────────────
+// Small 8px colored dots — the ONLY status indicator on candidate rows.
+
+export const CANDIDATE_STATUS_DOT: Record<string, string> = {
+  pending: "bg-primary",           // orange
+  reviewing: "bg-info-blue",       // blue
+  interviewed: "bg-rank-officer",  // purple
+  accepted: "bg-positive",         // green
+  rejected: "bg-negative",         // red
+};
+
+/** Return the dot class for a candidate application status */
+export function getCandidateStatusDot(status: string): string {
+  return CANDIDATE_STATUS_DOT[status] ?? "bg-neutral";
+}
+
 // ─── Surface Utilities (dark mode hierarchy) ────────────────────────
 // Use these instead of bg-white/[0.0X] opacity hacks.
 
@@ -286,6 +302,56 @@ export const SURFACE = {
   hover: "bg-surface-3",
   border: "border-surface-border",
 } as const;
+
+// ─── Guild Badge Colors (Job Listings) ─────────────────────────────
+// Color-coded guild badges for job cards and detail pages.
+// Uses semantic CSS vars where available, falls back to primary for unknowns.
+
+export const GUILD_BADGE_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  engineering: {
+    bg: "bg-info-blue/10",
+    text: "text-info-blue",
+    border: "border-info-blue/15",
+    dot: "bg-info-blue",
+  },
+  design: {
+    bg: "bg-primary/10",
+    text: "text-primary",
+    border: "border-primary/15",
+    dot: "bg-primary",
+  },
+  data: {
+    bg: "bg-positive/10",
+    text: "text-positive",
+    border: "border-positive/15",
+    dot: "bg-positive",
+  },
+  security: {
+    bg: "bg-negative/10",
+    text: "text-negative",
+    border: "border-negative/15",
+    dot: "bg-negative",
+  },
+  marketing: {
+    bg: "bg-primary/10",
+    text: "text-primary",
+    border: "border-primary/15",
+    dot: "bg-primary",
+  },
+};
+
+const DEFAULT_GUILD_BADGE = {
+  bg: "bg-primary/10",
+  text: "text-primary",
+  border: "border-primary/15",
+  dot: "bg-primary",
+};
+
+/** Get guild badge colors by guild name (case-insensitive, strips "Guild" suffix) */
+export function getGuildBadgeColors(guildName: string) {
+  const key = guildName.replace(/ Guild$/i, "").toLowerCase().trim();
+  return GUILD_BADGE_COLORS[key] ?? DEFAULT_GUILD_BADGE;
+}
 
 // ─── Stat Icon Colors ───────────────────────────────────────────────
 // All stat icons use brand primary — NO per-metric rainbow.
@@ -320,6 +386,49 @@ export const PODIUM_COLORS = {
     label: "text-rank-craftsman",
   },
 } as const;
+
+// ─── Guild Accent Colors (listing page) ─────────────────────────────
+// Each guild gets a unique accent.  The `data-guild` attribute on the card
+// element drives CSS custom properties (--gc / --gc-rgb) defined in
+// globals.css — these are the Tailwind-friendly tokens used in JSX.
+
+export type GuildAccent = {
+  /** data-guild attribute value for the CSS hook */
+  dataGuild: string;
+  /** Tailwind text color — uses the CSS var */
+  text: string;
+  /** Badge label for optional featured badges */
+  badge?: { label: string; variant: "info" | "negative" | "positive" };
+};
+
+const GUILD_ACCENT_MAP: Record<string, GuildAccent> = {
+  engineering:  { dataGuild: "engineering",  text: "text-[hsl(var(--gc))]", badge: { label: "Most Active",  variant: "info" } },
+  design:       { dataGuild: "design",       text: "text-[hsl(var(--gc))]" },
+  data:         { dataGuild: "data",         text: "text-[hsl(var(--gc))]" },
+  security:     { dataGuild: "security",     text: "text-[hsl(var(--gc))]", badge: { label: "High Demand",  variant: "negative" } },
+  marketing:    { dataGuild: "marketing",    text: "text-[hsl(var(--gc))]" },
+  devops:       { dataGuild: "devops",       text: "text-[hsl(var(--gc))]", badge: { label: "Growing Fast", variant: "positive" } },
+  product:      { dataGuild: "product",      text: "text-[hsl(var(--gc))]" },
+  operations:   { dataGuild: "operations",   text: "text-[hsl(var(--gc))]" },
+  finance:      { dataGuild: "finance",      text: "text-[hsl(var(--gc))]" },
+  people:       { dataGuild: "people",       text: "text-[hsl(var(--gc))]" },
+  sales:        { dataGuild: "sales",        text: "text-[hsl(var(--gc))]" },
+};
+
+/** Resolve a guild name to its accent config.  Falls back to brand orange. */
+export function getGuildAccent(guildName: string): GuildAccent {
+  const key = guildName.toLowerCase().replace(/ guild$/i, "").split(/\s/)[0];
+  return GUILD_ACCENT_MAP[key] ?? { dataGuild: key, text: "text-primary" };
+}
+
+// ─── Guild Detail Accent (for guild detail page) ────────────────────
+// Returns the data-guild attribute value for the CSS-var-driven accents
+// used by the .guild-detail-page class in globals.css.
+
+export function getGuildDetailAccent(guildName: string): string {
+  const key = guildName.toLowerCase().replace(/ guild$/i, "").split(/\s/)[0];
+  return key;
+}
 
 // ─── Reward Tier Colors ─────────────────────────────────────────────
 

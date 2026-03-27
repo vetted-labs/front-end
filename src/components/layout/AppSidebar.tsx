@@ -91,7 +91,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
               <Logo size="sm" onClick={() => router.push("/")} />
               {config.variant !== "browse" && (
                 <span className={cn(
-                  "text-[10px] font-medium uppercase tracking-widest pt-0.5",
+                  "text-xs font-medium uppercase tracking-widest pt-0.5",
                   config.variant === "expert" || config.variant === "candidate"
                     ? "text-primary/60"
                     : "text-muted-foreground/40"

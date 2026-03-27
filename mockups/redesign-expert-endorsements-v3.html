@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Endorsement Marketplace V3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#07070b;
+    --surface:rgba(255,255,255,0.025);
+    --surface-2:rgba(255,255,255,0.04);
+    --surface-3:rgba(255,255,255,0.06);
+    --glass:rgba(255,255,255,0.03);
+    --glass-border:rgba(255,255,255,0.06);
+    --glass-hover:rgba(255,255,255,0.10);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --t4:#475569;
+    --orange:#f97316;
+    --orange-dim:rgba(249,115,22,0.12);
+    --orange-glow:rgba(249,115,22,0.06);
+    --green:#22c55e;
+    --green-dim:rgba(34,197,94,0.10);
+    --amber:#fbbf24;
+    --amber-dim:rgba(251,191,36,0.10);
+    --red:#ef4444;
+    --red-dim:rgba(239,68,68,0.10);
+    --r:14px;
+    --r-sm:10px;
+    --r-lg:20px;
+    --heading:'Bricolage Grotesque',system-ui,sans-serif;
+    --body:'DM Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    line-height:1.55;
+  }
+
+  /* ── Background effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{
+    content:'';position:absolute;
+    top:-25%;left:50%;transform:translateX(-50%);
+    width:900px;height:900px;
+    background:radial-gradient(circle,rgba(249,115,22,0.04) 0%,transparent 65%);
+    border-radius:50%;
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 70% 50% at 50% 30%,black 20%,transparent 100%);
+  }
+
+  /* ── Sticky Header Bar ── */
+  .market-header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(7,7,11,0.88);
+    backdrop-filter:blur(24px) saturate(1.2);
+    border-bottom:1px solid var(--glass-border);
+  }
+  .market-header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;max-width:1280px;margin:0 auto;
+    gap:16px;flex-wrap:wrap;
+  }
+  .header-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .market-title{
+    display:flex;align-items:center;gap:10px;
+    font-family:var(--heading);font-weight:800;font-size:1.3rem;
+    letter-spacing:-0.02em;white-space:nowrap;
+  }
+
+  .live-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.62rem;font-weight:600;
+    color:var(--green);letter-spacing:0.1em;text-transform:uppercase;
+    background:var(--green-dim);
+    padding:3px 10px 3px 8px;border-radius:100px;
+    border:1px solid rgba(34,197,94,0.2);
+  }
+  .live-badge::before{
+    content:'';width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}
+    50%{opacity:0.6;box-shadow:0 0 0 5px rgba(34,197,94,0)}
+  }
+
+  /* Guild selector */
+  .guild-select{
+    position:relative;display:inline-flex;
+  }
+  .guild-select select{
+    appearance:none;
+    font-family:var(--body);font-size:0.82rem;font-weight:600;
+    color:var(--t1);background:var(--surface-2);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-sm);
+    padding:8px 34px 8px 12px;
+    cursor:pointer;transition:border-color 0.15s;
+  }
+  .guild-select select:hover{border-color:var(--glass-hover)}
+  .guild-select select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-dim)}
+  .guild-select::after{
+    content:'';position:absolute;right:12px;top:50%;
+    transform:translateY(-50%);
+    width:0;height:0;
+    border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:5px solid var(--t3);
+    pointer-events:none;
+  }
+
+  /* Stake info */
+  .stake-info{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.78rem;color:var(--t3);
+    white-space:nowrap;
+  }
+  .stake-info .val{color:var(--t1);font-weight:600}
+  .stake-info .sep{color:var(--t4);margin:0 2px}
+
+  /* ── Container ── */
+  .container{max-width:1280px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ── Section shared ── */
+  .section{padding:40px 0 0}
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;flex-wrap:wrap;gap:12px;
+  }
+  .section-title{
+    font-family:var(--heading);font-weight:800;font-size:1.25rem;
+    letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;
+  }
+  .section-title .count{
+    font-family:var(--mono);font-size:0.72rem;font-weight:600;
+    color:var(--orange);background:var(--orange-dim);
+    padding:2px 8px;border-radius:100px;
+  }
+
+  /* ── Collapsible ── */
+  .collapse-toggle{
+    font-family:var(--body);font-size:0.78rem;font-weight:500;
+    color:var(--t3);background:none;border:none;
+    cursor:pointer;display:flex;align-items:center;gap:6px;
+    transition:color 0.15s;
+  }
+  .collapse-toggle:hover{color:var(--t2)}
+  .collapse-toggle .chevron{
+    display:inline-block;transition:transform 0.3s;font-size:0.7rem;
+  }
+  .collapse-toggle.collapsed .chevron{transform:rotate(-90deg)}
+  .collapsible{overflow:hidden;transition:max-height 0.4s ease,opacity 0.3s}
+  .collapsible.hidden{max-height:0!important;opacity:0;pointer-events:none}
+
+  /* ── Active Endorsements Row ── */
+  .active-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  @media(max-width:860px){.active-row{grid-template-columns:1fr}}
+
+  .active-card{
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r);
+    padding:18px 20px;
+    display:flex;flex-direction:column;gap:10px;
+    transition:border-color 0.2s,box-shadow 0.3s;
+    position:relative;
+  }
+  .active-card:hover{
+    border-color:var(--glass-hover);
+    box-shadow:0 4px 20px -6px rgba(0,0,0,0.3);
+  }
+  .active-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .active-candidate{display:flex;flex-direction:column;gap:2px}
+  .active-candidate .name{font-weight:600;font-size:0.9rem}
+  .active-candidate .job{font-size:0.78rem;color:var(--t3)}
+  .active-candidate .company{font-size:0.72rem;color:var(--t4)}
+
+  .active-status{
+    font-size:0.68rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.06em;padding:3px 10px;border-radius:100px;
+    white-space:nowrap;
+  }
+  .status-interviewing{color:var(--green);background:var(--green-dim);border:1px solid rgba(34,197,94,0.2)}
+  .status-review{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2)}
+  .status-pending{color:var(--t2);background:var(--surface-3);border:1px solid var(--glass-border)}
+
+  .active-card-bottom{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:10px;border-top:1px solid var(--glass-border);
+  }
+  .bid-amount{
+    font-family:var(--mono);font-weight:700;font-size:0.95rem;
+    color:var(--orange);
+  }
+  .bid-rank{
+    font-family:var(--mono);font-size:0.75rem;font-weight:600;
+    display:flex;align-items:center;gap:5px;
+  }
+  .rank-num{
+    background:var(--orange-dim);color:var(--orange);
+    width:24px;height:24px;border-radius:6px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:0.72rem;
+  }
+  .rank-blind{
+    color:var(--t4);font-style:italic;font-weight:400;
+    font-family:var(--body);font-size:0.75rem;
+  }
+
+  .staked-summary{
+    font-family:var(--mono);font-size:0.78rem;color:var(--t3);
+    padding:14px 0 0;
+  }
+  .staked-summary .val{color:var(--t1);font-weight:600}
+
+  /* ── Filter Tabs ── */
+  .filter-bar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .filter-tabs{
+    display:flex;gap:3px;
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-sm);
+    padding:3px;
+  }
+  .filter-tab{
+    font-family:var(--body);font-size:0.78rem;font-weight:500;
+    color:var(--t3);padding:6px 14px;border-radius:7px;
+    cursor:pointer;transition:all 0.15s;border:none;background:none;
+    white-space:nowrap;
+  }
+  .filter-tab:hover{color:var(--t2)}
+  .filter-tab.active{
+    background:var(--orange-dim);color:var(--orange);font-weight:600;
+  }
+
+  .app-count{
+    font-family:var(--mono);font-size:0.75rem;color:var(--t3);
+    white-space:nowrap;
+  }
+  .app-count .num{color:var(--t2);font-weight:600}
+
+  /* ── Application Cards Grid ── */
+  .app-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+    margin-top:20px;
+  }
+  @media(max-width:860px){.app-grid{grid-template-columns:1fr}}
+
+  .app-card{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    padding:0;overflow:hidden;
+    display:flex;flex-direction:column;
+    transition:transform 0.28s cubic-bezier(.22,.68,.32,1.1),
+               border-color 0.25s,
+               box-shadow 0.35s;
+    cursor:default;
+  }
+  .app-card:hover{
+    transform:translateY(-6px);
+    border-color:rgba(249,115,22,0.2);
+    box-shadow:
+      0 16px 48px -12px rgba(0,0,0,0.45),
+      0 0 0 1px rgba(249,115,22,0.08),
+      0 0 32px -8px rgba(249,115,22,0.06);
+  }
+
+  .card-top{
+    display:flex;align-items:flex-start;gap:14px;
+    padding:22px 22px 0;
+  }
+
+  /* Avatar with match score ring */
+  .avatar-wrap{position:relative;flex-shrink:0}
+  .avatar{
+    width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:1rem;
+    background:var(--surface-3);
+    color:var(--t1);
+    position:relative;z-index:2;
+  }
+  .match-ring{
+    position:absolute;inset:-4px;border-radius:50%;z-index:1;
+  }
+  .match-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .match-ring circle{fill:none;stroke-width:3}
+  .match-ring .ring-bg{stroke:rgba(255,255,255,0.06)}
+  .match-ring .ring-fill{stroke-linecap:round;transition:stroke-dashoffset 0.6s ease}
+
+  .match-label{
+    position:absolute;bottom:-4px;right:-4px;z-index:3;
+    font-family:var(--mono);font-size:0.58rem;font-weight:700;
+    padding:1px 5px;border-radius:4px;
+    border:1px solid;
+    line-height:1.3;
+  }
+  .match-high{color:var(--green);background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.3)}
+  .match-mid{color:var(--amber);background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.3)}
+  .match-low{color:var(--red);background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3)}
+
+  .card-info{flex:1;min-width:0}
+  .card-name{font-weight:600;font-size:0.95rem;line-height:1.3}
+  .card-headline{font-size:0.78rem;color:var(--t3);margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card-skills{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+  .skill-tag{
+    font-size:0.68rem;font-weight:500;
+    color:var(--t2);
+    background:var(--surface-2);
+    border:1px solid var(--glass-border);
+    padding:2px 8px;border-radius:100px;
+    white-space:nowrap;
+  }
+
+  /* Job info row */
+  .card-job{
+    padding:14px 22px;
+    border-top:1px solid var(--glass-border);
+    margin-top:14px;
+  }
+  .job-title{font-weight:600;font-size:0.85rem;color:var(--t1)}
+  .job-company{font-size:0.75rem;color:var(--t3);margin-top:1px}
+  .job-salary{
+    font-family:var(--mono);font-size:0.72rem;color:var(--t4);
+    margin-top:4px;
+  }
+
+  /* Bidding deadline */
+  .card-deadline{
+    padding:10px 22px;
+    background:var(--surface);
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+  }
+  .deadline-text{
+    font-family:var(--mono);font-size:0.72rem;font-weight:600;
+    display:flex;align-items:center;gap:6px;
+  }
+  .deadline-icon{font-size:0.85rem}
+  .deadline-normal{color:var(--t2)}
+  .deadline-urgent{color:var(--orange)}
+  .deadline-blind{
+    display:inline-flex;align-items:center;gap:6px;
+    color:var(--amber);
+  }
+  .blind-label{
+    font-family:var(--mono);font-size:0.6rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.08em;
+    background:var(--amber-dim);
+    padding:2px 7px;border-radius:4px;
+    border:1px solid rgba(251,191,36,0.2);
+  }
+  .applied-date{
+    font-size:0.68rem;color:var(--t4);white-space:nowrap;
+  }
+
+  /* Card actions */
+  .card-actions{
+    padding:14px 22px 18px;
+    display:flex;gap:10px;
+  }
+  .btn{
+    flex:1;
+    font-family:var(--body);font-size:0.8rem;font-weight:600;
+    padding:10px 16px;border-radius:var(--r-sm);
+    cursor:pointer;transition:all 0.15s;
+    text-align:center;
+  }
+  .btn-outline{
+    background:transparent;
+    border:1px solid var(--glass-border);
+    color:var(--t2);
+  }
+  .btn-outline:hover{
+    border-color:var(--glass-hover);
+    color:var(--t1);
+    background:var(--surface-2);
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);
+    border:1px solid rgba(249,115,22,0.3);
+    color:#fff;
+    box-shadow:0 2px 12px -3px rgba(249,115,22,0.3);
+  }
+  .btn-primary:hover{
+    box-shadow:0 4px 20px -4px rgba(249,115,22,0.45);
+    transform:translateY(-1px);
+  }
+
+  /* ── Empty State ── */
+  .empty-state{
+    text-align:center;
+    padding:80px 20px;
+    display:none;
+  }
+  .empty-state.visible{display:block}
+  .empty-icon{
+    font-size:3rem;margin-bottom:16px;
+    opacity:0.3;
+  }
+  .empty-title{
+    font-family:var(--heading);font-weight:700;font-size:1.15rem;
+    color:var(--t2);margin-bottom:8px;
+  }
+  .empty-desc{
+    font-size:0.85rem;color:var(--t4);
+    max-width:360px;margin:0 auto;
+  }
+
+  /* ── Bottom padding ── */
+  .page-bottom{height:80px}
+
+  /* ── Responsive ── */
+  @media(max-width:640px){
+    .market-header-inner{padding:12px 16px}
+    .market-title{font-size:1.1rem}
+    .stake-info{font-size:0.7rem}
+    .container{padding:0 16px}
+    .section-title{font-size:1.1rem}
+    .app-grid{gap:12px}
+    .card-top{padding:18px 18px 0}
+    .card-job{padding:12px 18px}
+    .card-deadline{padding:8px 18px}
+    .card-actions{padding:12px 18px 16px}
+    .active-row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<!-- ═══════════════════════════════════════════
+     STICKY HEADER
+     ═══════════════════════════════════════════ -->
+<header class="market-header">
+  <div class="market-header-inner">
+    <div class="header-left">
+      <div class="market-title">
+        Endorsement Marketplace
+        <span class="live-badge">LIVE MARKET</span>
+      </div>
+      <div class="guild-select">
+        <select id="guildSelector">
+          <option value="engineering">Engineering Guild</option>
+          <option value="design">Design Guild</option>
+          <option value="data">Data Science Guild</option>
+          <option value="product">Product Guild</option>
+        </select>
+      </div>
+    </div>
+    <div class="stake-info">
+      Your Stake: <span class="val">450 VETD</span>
+      <span class="sep">&middot;</span>
+      VETD Balance: <span class="val">1,200</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════
+       YOUR ACTIVE ENDORSEMENTS
+       ═══════════════════════════════════════════ -->
+  <section class="section" id="activeSection">
+    <div class="section-head">
+      <h2 class="section-title">
+        Your Active Endorsements
+        <span class="count">3</span>
+      </h2>
+      <button class="collapse-toggle" id="collapseBtn" onclick="toggleActive()">
+        <span class="chevron">&#9660;</span> Collapse
+      </button>
+    </div>
+
+    <div class="collapsible" id="activeContent">
+      <div class="active-row">
+
+        <!-- Active Endorsement 1 -->
+        <div class="active-card">
+          <div class="active-card-top">
+            <div class="active-candidate">
+              <div class="name">Sarah Chen</div>
+              <div class="job">Senior Backend Engineer</div>
+              <div class="company">at Stripe</div>
+            </div>
+            <span class="active-status status-interviewing">Interviewing</span>
+          </div>
+          <div class="active-card-bottom">
+            <span class="bid-amount">150 VETD</span>
+            <span class="bid-rank">Rank <span class="rank-num">#1</span></span>
+          </div>
+        </div>
+
+        <!-- Active Endorsement 2 -->
+        <div class="active-card">
+          <div class="active-card-top">
+            <div class="active-candidate">
+              <div class="name">James Park</div>
+              <div class="job">Full Stack Developer</div>
+              <div class="company">at Vercel</div>
+            </div>
+            <span class="active-status status-review">Under Review</span>
+          </div>
+          <div class="active-card-bottom">
+            <span class="bid-amount">120 VETD</span>
+            <span class="bid-rank">Rank <span class="rank-num">#2</span></span>
+          </div>
+        </div>
+
+        <!-- Active Endorsement 3 (blind period) -->
+        <div class="active-card">
+          <div class="active-card-top">
+            <div class="active-candidate">
+              <div class="name">Priya Sharma</div>
+              <div class="job">Platform Engineer</div>
+              <div class="company">at Datadog</div>
+            </div>
+            <span class="active-status status-pending">Pending</span>
+          </div>
+          <div class="active-card-bottom">
+            <span class="bid-amount">150 VETD</span>
+            <span class="bid-rank"><span class="rank-blind">Blind period</span></span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="staked-summary">
+        Total staked: <span class="val">420 VETD</span> across 3 endorsements
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       AVAILABLE APPLICATIONS
+       ═══════════════════════════════════════════ -->
+  <section class="section" id="availableSection">
+    <div class="section-head">
+      <h2 class="section-title">Available Applications</h2>
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter(this)">All</button>
+          <button class="filter-tab" onclick="setFilter(this)">Expiring Soon</button>
+          <button class="filter-tab" onclick="setFilter(this)">New Today</button>
+        </div>
+        <span class="app-count"><span class="num">6</span> applications</span>
+      </div>
+    </div>
+
+    <div class="app-grid" id="appGrid">
+
+      <!-- ── Card 1: Blind bidding, high match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);color:#fff">MK</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="15.3"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">91%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Marcus Kim</div>
+            <div class="card-headline">Staff Engineer, 8y distributed systems</div>
+            <div class="card-skills">
+              <span class="skill-tag">Go</span>
+              <span class="skill-tag">Kubernetes</span>
+              <span class="skill-tag">gRPC</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Principal Backend Engineer</div>
+          <div class="job-company">Coinbase</div>
+          <div class="job-salary">$220k - $280k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-blind">
+            <span class="blind-label">Blind Bidding</span>
+            <span>18h 42m left</span>
+          </div>
+          <span class="applied-date">Applied 6h ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- ── Card 2: Normal bidding, high match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#6366f1 0%,#4f46e5 100%);color:#fff">AJ</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="27.1"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">84%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Aisha Johnson</div>
+            <div class="card-headline">Senior SRE, ex-Google, ex-Netflix</div>
+            <div class="card-skills">
+              <span class="skill-tag">Terraform</span>
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">Python</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Senior Site Reliability Engineer</div>
+          <div class="job-company">Figma</div>
+          <div class="job-salary">$190k - $240k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-normal">
+            <span class="deadline-icon">&#9200;</span>
+            2d 14h left
+          </div>
+          <span class="applied-date">Applied 1d ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- ── Card 3: Urgent, medium match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff">RT</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#fbbf24"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="52.6"/>
+              </svg>
+            </div>
+            <span class="match-label match-mid">69%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Raj Trivedi</div>
+            <div class="card-headline">Backend dev, 4y Node.js + TypeScript</div>
+            <div class="card-skills">
+              <span class="skill-tag">TypeScript</span>
+              <span class="skill-tag">PostgreSQL</span>
+              <span class="skill-tag">Redis</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Backend Engineer</div>
+          <div class="job-company">Linear</div>
+          <div class="job-salary">$160k - $200k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-urgent">
+            <span class="deadline-icon">&#9888;&#65039;</span>
+            3h 18m left
+          </div>
+          <span class="applied-date">Applied 4d ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- ── Card 4: Blind bidding, medium match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#f43f5e 0%,#e11d48 100%);color:#fff">LW</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#fbbf24"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="44.0"/>
+              </svg>
+            </div>
+            <span class="match-label match-mid">74%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Li Wei</div>
+            <div class="card-headline">ML infrastructure, PyTorch, CUDA</div>
+            <div class="card-skills">
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag">CUDA</span>
+              <span class="skill-tag">MLOps</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">ML Infrastructure Engineer</div>
+          <div class="job-company">Anthropic</div>
+          <div class="job-salary">$250k - $350k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-blind">
+            <span class="blind-label">Blind Bidding</span>
+            <span>22h 05m left</span>
+          </div>
+          <span class="applied-date">Applied 2h ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- ── Card 5: Normal, high match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);color:#fff">EB</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="20.4"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">88%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Elena Brandt</div>
+            <div class="card-headline">Systems architect, Rust + C++, 10y</div>
+            <div class="card-skills">
+              <span class="skill-tag">Rust</span>
+              <span class="skill-tag">C++</span>
+              <span class="skill-tag">Systems</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Staff Systems Engineer</div>
+          <div class="job-company">Cloudflare</div>
+          <div class="job-salary">$200k - $260k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-normal">
+            <span class="deadline-icon">&#9200;</span>
+            4d 6h left
+          </div>
+          <span class="applied-date">Applied 12h ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- ── Card 6: Normal, lower match ── -->
+      <div class="app-card">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#a855f7 0%,#9333ea 100%);color:#fff">DO</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#ef4444"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="84.8"/>
+              </svg>
+            </div>
+            <span class="match-label match-low">50%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">David Okafor</div>
+            <div class="card-headline">Junior developer, bootcamp grad</div>
+            <div class="card-skills">
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">React</span>
+              <span class="skill-tag">Node.js</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Software Engineer</div>
+          <div class="job-company">Notion</div>
+          <div class="job-salary">$140k - $170k / year</div>
+        </div>
+        <div class="card-deadline">
+          <div class="deadline-text deadline-normal">
+            <span class="deadline-icon">&#9200;</span>
+            5d 22h left
+          </div>
+          <span class="applied-date">Applied 2d ago</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       EMPTY STATE (hidden by default)
+       ═══════════════════════════════════════════ -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">&#128203;</div>
+    <div class="empty-title">No applications in this guild</div>
+    <div class="empty-desc">
+      There are no candidate applications awaiting endorsement in the selected guild right now. Check back soon or switch guilds.
+    </div>
+  </div>
+
+  <div class="page-bottom"></div>
+</div>
+
+<script>
+  // Collapse / expand active endorsements
+  function toggleActive() {
+    const content = document.getElementById('activeContent');
+    const btn = document.getElementById('collapseBtn');
+    content.classList.toggle('hidden');
+    if (content.classList.contains('hidden')) {
+      btn.classList.add('collapsed');
+      btn.innerHTML = '<span class="chevron">&#9660;</span> Expand';
+    } else {
+      btn.classList.remove('collapsed');
+      btn.innerHTML = '<span class="chevron">&#9660;</span> Collapse';
+    }
+  }
+
+  // Set collapsible max-height on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const content = document.getElementById('activeContent');
+    content.style.maxHeight = content.scrollHeight + 40 + 'px';
+  });
+
+  // Filter tabs
+  function setFilter(el) {
+    el.parentElement.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Guild selector — show/hide empty state for demo
+  document.getElementById('guildSelector').addEventListener('change', function() {
+    const grid = document.getElementById('appGrid');
+    const empty = document.getElementById('emptyState');
+    const section = document.getElementById('availableSection');
+
+    if (this.value === 'product') {
+      grid.style.display = 'none';
+      section.querySelector('.section-head').style.display = 'none';
+      empty.classList.add('visible');
+    } else {
+      grid.style.display = '';
+      section.querySelector('.section-head').style.display = '';
+      empty.classList.remove('visible');
+    }
+  });
+
+  // Countdown timers — parse deadline text and tick down
+  (function() {
+    const deadlines = document.querySelectorAll('.deadline-text');
+    deadlines.forEach(el => {
+      const text = el.textContent;
+      let totalSeconds = 0;
+
+      // Parse days
+      const dMatch = text.match(/(\d+)d/);
+      if (dMatch) totalSeconds += parseInt(dMatch[1]) * 86400;
+
+      // Parse hours
+      const hMatch = text.match(/(\d+)h/);
+      if (hMatch) totalSeconds += parseInt(hMatch[1]) * 3600;
+
+      // Parse minutes
+      const mMatch = text.match(/(\d+)m/);
+      if (mMatch) totalSeconds += parseInt(mMatch[1]) * 60;
+
+      if (totalSeconds <= 0) return;
+
+      el.dataset.seconds = totalSeconds;
+
+      setInterval(() => {
+        let s = parseInt(el.dataset.seconds);
+        if (s <= 0) return;
+        s--;
+        el.dataset.seconds = s;
+
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+
+        let timeStr;
+        if (d > 0) {
+          timeStr = d + 'd ' + h + 'h left';
+        } else if (h > 0) {
+          timeStr = h + 'h ' + String(m).padStart(2, '0') + 'm left';
+        } else {
+          timeStr = m + 'm ' + String(sec).padStart(2, '0') + 's left';
+        }
+
+        // Preserve the prefix content (blind label or clock icon)
+        const prefix = el.querySelector('.blind-label, .deadline-icon');
+        if (prefix) {
+          // Keep existing child nodes except last text
+          const children = Array.from(el.childNodes);
+          // Find the text span or text node at the end
+          const lastChild = children[children.length - 1];
+          if (lastChild.nodeType === 3) {
+            lastChild.textContent = timeStr;
+          } else if (lastChild.tagName === 'SPAN' && !lastChild.classList.contains('blind-label') && !lastChild.classList.contains('deadline-icon')) {
+            lastChild.textContent = timeStr;
+          }
+        } else {
+          el.textContent = timeStr;
+        }
+
+        // Switch to urgent styling when under 1 hour
+        if (s < 3600 && !el.classList.contains('deadline-blind')) {
+          el.classList.remove('deadline-normal');
+          el.classList.add('deadline-urgent');
+        }
+      }, 1000);
+    });
+  })();
+</script>
+
+</body>
+</html>

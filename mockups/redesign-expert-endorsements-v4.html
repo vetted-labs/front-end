@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Endorsement Marketplace V4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#07070b;
+    --surface:rgba(255,255,255,0.025);
+    --surface-2:rgba(255,255,255,0.04);
+    --surface-3:rgba(255,255,255,0.06);
+    --glass:rgba(255,255,255,0.03);
+    --glass-border:rgba(255,255,255,0.06);
+    --glass-hover:rgba(255,255,255,0.10);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --t4:#475569;
+    --orange:#f97316;
+    --orange-dim:rgba(249,115,22,0.12);
+    --orange-glow:rgba(249,115,22,0.06);
+    --green:#22c55e;
+    --green-dim:rgba(34,197,94,0.10);
+    --green-bright:#4ade80;
+    --amber:#fbbf24;
+    --amber-dim:rgba(251,191,36,0.10);
+    --red:#ef4444;
+    --red-dim:rgba(239,68,68,0.10);
+    --r:14px;
+    --r-sm:10px;
+    --r-lg:20px;
+    --heading:'Bricolage Grotesque',system-ui,sans-serif;
+    --body:'DM Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    line-height:1.55;
+  }
+
+  /* ── Background effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{
+    content:'';position:absolute;
+    top:-25%;left:50%;transform:translateX(-50%);
+    width:900px;height:900px;
+    background:radial-gradient(circle,rgba(249,115,22,0.04) 0%,transparent 65%);
+    border-radius:50%;
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 70% 50% at 50% 30%,black 20%,transparent 100%);
+  }
+
+  /* ── Sticky Header Bar ── */
+  .market-header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(7,7,11,0.88);
+    backdrop-filter:blur(24px) saturate(1.2);
+    border-bottom:1px solid var(--glass-border);
+  }
+  .market-header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;max-width:1280px;margin:0 auto;
+    gap:16px;flex-wrap:wrap;
+  }
+  .header-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .market-title{
+    display:flex;align-items:center;gap:10px;
+    font-family:var(--heading);font-weight:800;font-size:1.3rem;
+    letter-spacing:-0.02em;white-space:nowrap;
+  }
+
+  .live-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.62rem;font-weight:600;
+    color:var(--green);letter-spacing:0.1em;text-transform:uppercase;
+    background:var(--green-dim);
+    padding:3px 10px 3px 8px;border-radius:100px;
+    border:1px solid rgba(34,197,94,0.2);
+  }
+  .live-badge::before{
+    content:'';width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}
+    50%{opacity:0.6;box-shadow:0 0 0 5px rgba(34,197,94,0)}
+  }
+
+  /* Guild selector */
+  .guild-select{position:relative;display:inline-flex}
+  .guild-select select{
+    appearance:none;
+    font-family:var(--body);font-size:0.82rem;font-weight:600;
+    color:var(--t1);background:var(--surface-2);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-sm);
+    padding:8px 34px 8px 12px;
+    cursor:pointer;transition:border-color 0.15s;
+  }
+  .guild-select select:hover{border-color:var(--glass-hover)}
+  .guild-select select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-dim)}
+  .guild-select::after{
+    content:'';position:absolute;right:12px;top:50%;
+    transform:translateY(-50%);
+    width:0;height:0;
+    border-left:4px solid transparent;border-right:4px solid transparent;
+    border-top:5px solid var(--t3);
+    pointer-events:none;
+  }
+
+  /* Stake info */
+  .stake-info{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.78rem;color:var(--t3);
+    white-space:nowrap;
+  }
+  .stake-info .val{color:var(--t1);font-weight:600}
+  .stake-info .sep{color:var(--t4);margin:0 2px}
+
+  /* ── Container ── */
+  .container{max-width:1280px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ── Section shared ── */
+  .section{padding:32px 0 0}
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;flex-wrap:wrap;gap:12px;
+  }
+  .section-title{
+    font-family:var(--heading);font-weight:800;font-size:1.25rem;
+    letter-spacing:-0.02em;display:flex;align-items:center;gap:10px;
+  }
+  .section-title .count{
+    font-family:var(--mono);font-size:0.72rem;font-weight:600;
+    color:var(--orange);background:var(--orange-dim);
+    padding:2px 8px;border-radius:100px;
+  }
+
+  /* ═══════════════════════════════════════════
+     STATS CARDS — The visual centerpiece
+     ═══════════════════════════════════════════ */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+  @media(max-width:860px){.stats-grid{grid-template-columns:1fr}}
+
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+    transition:border-color 0.2s,box-shadow 0.3s;
+  }
+  .stat-card:hover{
+    border-color:var(--glass-hover);
+    box-shadow:0 8px 32px -8px rgba(0,0,0,0.3);
+  }
+  .stat-card-label{
+    font-size:0.75rem;font-weight:600;color:var(--t3);
+    text-transform:uppercase;letter-spacing:0.06em;
+    margin-bottom:16px;
+  }
+  .stat-card-content{
+    display:flex;align-items:center;gap:20px;
+  }
+  .stat-visual{flex-shrink:0;position:relative}
+  .stat-detail{flex:1;min-width:0}
+  .stat-big{
+    font-family:var(--mono);font-weight:700;font-size:1.8rem;
+    line-height:1;color:var(--t1);
+    margin-bottom:4px;
+  }
+  .stat-sub{
+    font-size:0.78rem;color:var(--t3);line-height:1.4;
+  }
+  .stat-sub .val{color:var(--t2);font-weight:600}
+
+  /* Success Rate gauge */
+  .gauge-ring{position:relative;width:100px;height:100px}
+  .gauge-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .gauge-ring .gauge-bg{fill:none;stroke:rgba(255,255,255,0.04);stroke-width:8}
+  .gauge-ring .gauge-fill{
+    fill:none;stroke-width:8;stroke-linecap:round;
+    transition:stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .gauge-center{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .gauge-pct{
+    font-family:var(--mono);font-weight:700;font-size:1.5rem;
+    color:var(--t1);line-height:1;
+  }
+  .gauge-pct-sym{font-size:0.85rem;color:var(--t3)}
+
+  /* Earnings mini chart */
+  .mini-chart{position:relative;width:100%;height:80px}
+  .mini-chart svg{width:100%;height:100%}
+  .chart-area{
+    fill:url(#chartGradient);
+    opacity:0.6;
+  }
+  .chart-line{
+    fill:none;stroke:var(--green);stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .chart-dot{fill:var(--green);r:3.5}
+  .chart-dot-glow{fill:var(--green);r:6;opacity:0.2}
+  .chart-labels{
+    display:flex;justify-content:space-between;
+    font-family:var(--mono);font-size:0.58rem;color:var(--t4);
+    margin-top:6px;
+  }
+  .earnings-row{
+    display:flex;align-items:baseline;gap:8px;
+    margin-bottom:12px;
+  }
+  .earnings-big{
+    font-family:var(--mono);font-weight:700;font-size:1.5rem;
+    color:var(--green-bright);line-height:1;
+  }
+  .earnings-unit{
+    font-family:var(--mono);font-size:0.75rem;color:var(--t3);
+    font-weight:500;
+  }
+  .earnings-delta{
+    font-family:var(--mono);font-size:0.68rem;font-weight:600;
+    color:var(--green);
+    display:inline-flex;align-items:center;gap:3px;
+  }
+
+  /* Active endorsements spinning ring card */
+  .spin-ring-wrap{
+    position:relative;width:100px;height:100px;
+    flex-shrink:0;
+  }
+  .spin-ring-outer{
+    position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(
+      var(--orange) 0deg,
+      transparent 60deg,
+      rgba(249,115,22,0.15) 120deg,
+      transparent 180deg,
+      var(--orange) 240deg,
+      transparent 300deg,
+      rgba(249,115,22,0.15) 360deg
+    );
+    animation:spin-ring 4s linear infinite;
+  }
+  @keyframes spin-ring{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+  }
+  .spin-ring-inner{
+    position:absolute;inset:4px;border-radius:50%;
+    background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:2;
+  }
+  .spin-ring-num{
+    font-family:var(--mono);font-weight:700;font-size:1.6rem;
+    color:var(--orange);line-height:1;
+  }
+  .spin-ring-label{
+    font-size:0.65rem;color:var(--t3);margin-top:2px;
+  }
+
+  /* ═══════════════════════════════════════════
+     ACTIVE ENDORSEMENTS — Cards with spinning borders
+     ═══════════════════════════════════════════ */
+  .active-scroll{
+    display:flex;gap:16px;
+    overflow-x:auto;
+    padding-bottom:8px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .active-scroll::-webkit-scrollbar{height:4px}
+  .active-scroll::-webkit-scrollbar-track{background:transparent}
+  .active-scroll::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:4px}
+
+  .endorsement-card{
+    flex:0 0 340px;
+    scroll-snap-align:start;
+    position:relative;
+    border-radius:calc(var(--r-lg) + 2px);
+    padding:2px;
+    background:conic-gradient(
+      from var(--spin-angle, 0deg),
+      var(--orange),
+      rgba(249,115,22,0.1),
+      transparent,
+      rgba(249,115,22,0.1),
+      var(--orange)
+    );
+    animation:card-spin 3s linear infinite;
+  }
+  .endorsement-card:nth-child(2){animation-delay:-1s}
+  .endorsement-card:nth-child(3){animation-delay:-2s}
+
+  @property --spin-angle{
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes card-spin{
+    from{--spin-angle:0deg}
+    to{--spin-angle:360deg}
+  }
+  /* Fallback for browsers without @property */
+  @supports not (background: paint(something)) {
+    .endorsement-card{
+      background:var(--glass-border);
+      box-shadow:0 0 0 1px rgba(249,115,22,0.15), inset 0 0 0 1px rgba(249,115,22,0.05);
+      position:relative;
+      overflow:hidden;
+    }
+    .endorsement-card::before{
+      content:'';
+      position:absolute;inset:-50%;
+      background:conic-gradient(
+        var(--orange),
+        transparent 40%,
+        transparent 60%,
+        var(--orange)
+      );
+      animation:card-spin-fallback 3s linear infinite;
+      z-index:0;
+    }
+    .endorsement-card:nth-child(2)::before{animation-delay:-1s}
+    .endorsement-card:nth-child(3)::before{animation-delay:-2s}
+    @keyframes card-spin-fallback{
+      from{transform:rotate(0deg)}
+      to{transform:rotate(360deg)}
+    }
+  }
+
+  .endorsement-card-inner{
+    background:var(--bg);
+    border-radius:var(--r-lg);
+    padding:20px;
+    position:relative;
+    z-index:1;
+    display:flex;flex-direction:column;gap:14px;
+    height:100%;
+  }
+
+  .endo-top{
+    display:flex;align-items:center;gap:14px;
+  }
+
+  /* Avatar with spinning ring */
+  .endo-avatar-wrap{
+    position:relative;width:56px;height:56px;flex-shrink:0;
+  }
+  .endo-avatar-ring{
+    position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(
+      from var(--spin-angle, 0deg),
+      var(--ring-color, var(--orange)),
+      transparent 50%,
+      var(--ring-color, var(--orange))
+    );
+    animation:card-spin 3s linear infinite;
+  }
+  @supports not (background: paint(something)) {
+    .endo-avatar-ring{
+      background:none;
+      border:2px solid var(--ring-color, var(--orange));
+      opacity:0.6;
+    }
+    .endo-avatar-ring::before{
+      content:'';position:absolute;inset:-8px;
+      background:conic-gradient(
+        var(--ring-color, var(--orange)),
+        transparent 40%,
+        transparent 60%,
+        var(--ring-color, var(--orange))
+      );
+      border-radius:50%;
+      animation:card-spin-fallback 3s linear infinite;
+      z-index:-1;
+      mask:radial-gradient(circle, transparent 54%, black 56%, black 100%);
+      -webkit-mask:radial-gradient(circle, transparent 54%, black 56%, black 100%);
+    }
+  }
+  .endo-avatar{
+    position:absolute;inset:3px;border-radius:50%;
+    background:var(--surface-3);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:0.9rem;color:var(--t1);
+    z-index:2;
+  }
+
+  .endo-info{flex:1;min-width:0}
+  .endo-name{font-weight:600;font-size:0.92rem}
+  .endo-job{font-size:0.76rem;color:var(--t3);margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .endo-company{font-size:0.7rem;color:var(--t4)}
+
+  .endo-meta{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:12px;border-top:1px solid var(--glass-border);
+  }
+  .endo-bid{
+    font-family:var(--mono);font-weight:700;font-size:1rem;
+    color:var(--orange);
+  }
+  .endo-rank{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.75rem;font-weight:600;
+  }
+  .rank-badge{
+    background:var(--orange-dim);color:var(--orange);
+    width:26px;height:26px;border-radius:7px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:0.72rem;font-weight:700;
+  }
+  .rank-blind-tag{
+    color:var(--t4);font-style:italic;font-weight:400;
+    font-family:var(--body);font-size:0.75rem;
+  }
+
+  .endo-status{
+    font-size:0.66rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.06em;padding:3px 10px;border-radius:100px;
+    white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+  }
+  .endo-status::before{
+    content:'';width:5px;height:5px;border-radius:50%;
+    display:inline-block;
+  }
+  .status-interviewing{color:var(--green);background:var(--green-dim);border:1px solid rgba(34,197,94,0.2)}
+  .status-interviewing::before{background:var(--green)}
+  .status-review{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2)}
+  .status-review::before{background:var(--amber)}
+  .status-pending{color:var(--t2);background:var(--surface-3);border:1px solid var(--glass-border)}
+  .status-pending::before{background:var(--t3)}
+
+  .endo-bottom{
+    display:flex;align-items:center;justify-content:space-between;
+  }
+
+  .staked-summary{
+    font-family:var(--mono);font-size:0.78rem;color:var(--t3);
+    padding:8px 0 0;
+  }
+  .staked-summary .val{color:var(--t1);font-weight:600}
+
+  /* ═══════════════════════════════════════════
+     AVAILABLE APPLICATIONS
+     ═══════════════════════════════════════════ */
+  .filter-bar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .filter-tabs{
+    display:flex;gap:3px;
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-sm);
+    padding:3px;
+  }
+  .filter-tab{
+    font-family:var(--body);font-size:0.78rem;font-weight:500;
+    color:var(--t3);padding:6px 14px;border-radius:7px;
+    cursor:pointer;transition:all 0.15s;border:none;background:none;
+    white-space:nowrap;
+  }
+  .filter-tab:hover{color:var(--t2)}
+  .filter-tab.active{
+    background:var(--orange-dim);color:var(--orange);font-weight:600;
+  }
+
+  .app-count{
+    font-family:var(--mono);font-size:0.75rem;color:var(--t3);
+    white-space:nowrap;
+  }
+  .app-count .num{color:var(--t2);font-weight:600}
+
+  .app-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+    margin-top:20px;
+  }
+  @media(max-width:860px){.app-grid{grid-template-columns:1fr}}
+
+  .app-card{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    padding:0;overflow:hidden;
+    display:flex;flex-direction:column;
+    transition:transform 0.28s cubic-bezier(.22,.68,.32,1.1),
+               border-color 0.25s,
+               box-shadow 0.35s;
+    cursor:default;
+  }
+  .app-card:hover{
+    transform:translateY(-4px);
+    border-color:rgba(249,115,22,0.2);
+    box-shadow:
+      0 16px 48px -12px rgba(0,0,0,0.45),
+      0 0 0 1px rgba(249,115,22,0.08),
+      0 0 32px -8px rgba(249,115,22,0.06);
+  }
+
+  .card-top{
+    display:flex;align-items:flex-start;gap:14px;
+    padding:22px 22px 0;
+  }
+
+  /* Avatar with match score ring */
+  .avatar-wrap{position:relative;flex-shrink:0}
+  .avatar{
+    width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:1rem;
+    background:var(--surface-3);
+    color:var(--t1);
+    position:relative;z-index:2;
+  }
+  .match-ring{
+    position:absolute;inset:-4px;border-radius:50%;z-index:1;
+  }
+  .match-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .match-ring circle{fill:none;stroke-width:3}
+  .match-ring .ring-bg{stroke:rgba(255,255,255,0.06)}
+  .match-ring .ring-fill{stroke-linecap:round;transition:stroke-dashoffset 0.6s ease}
+
+  .match-label{
+    position:absolute;bottom:-4px;right:-4px;z-index:3;
+    font-family:var(--mono);font-size:0.58rem;font-weight:700;
+    padding:1px 5px;border-radius:4px;
+    border:1px solid;
+    line-height:1.3;
+  }
+  .match-high{color:var(--green);background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.3)}
+  .match-mid{color:var(--amber);background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.3)}
+  .match-low{color:var(--red);background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3)}
+
+  .card-info{flex:1;min-width:0}
+  .card-name{font-weight:600;font-size:0.95rem;line-height:1.3}
+  .card-headline{font-size:0.78rem;color:var(--t3);margin-top:1px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card-skills{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+  .skill-tag{
+    font-size:0.68rem;font-weight:500;
+    color:var(--t2);
+    background:var(--surface-2);
+    border:1px solid var(--glass-border);
+    padding:2px 8px;border-radius:100px;
+    white-space:nowrap;
+  }
+
+  .card-job{
+    padding:14px 22px;
+    border-top:1px solid var(--glass-border);
+    margin-top:14px;
+  }
+  .job-title{font-weight:600;font-size:0.85rem;color:var(--t1)}
+  .job-company{font-size:0.75rem;color:var(--t3);margin-top:1px}
+  .job-salary{
+    font-family:var(--mono);font-size:0.72rem;color:var(--t4);
+    margin-top:4px;
+  }
+
+  .card-deadline{
+    padding:10px 22px;
+    background:var(--surface);
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+  }
+  .deadline-text{
+    font-family:var(--mono);font-size:0.72rem;font-weight:600;
+    display:flex;align-items:center;gap:6px;
+  }
+  .deadline-icon{font-size:0.85rem}
+  .deadline-normal{color:var(--t2)}
+  .deadline-urgent{color:var(--orange)}
+  .deadline-blind{
+    display:inline-flex;align-items:center;gap:6px;
+    color:var(--amber);
+  }
+  .blind-label{
+    font-family:var(--mono);font-size:0.6rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.08em;
+    background:var(--amber-dim);
+    padding:2px 7px;border-radius:4px;
+    border:1px solid rgba(251,191,36,0.2);
+  }
+  .applied-date{
+    font-size:0.68rem;color:var(--t4);white-space:nowrap;
+  }
+
+  .card-actions{
+    padding:14px 22px 18px;
+    display:flex;gap:10px;
+  }
+  .btn{
+    flex:1;
+    font-family:var(--body);font-size:0.8rem;font-weight:600;
+    padding:10px 16px;border-radius:var(--r-sm);
+    cursor:pointer;transition:all 0.15s;
+    text-align:center;border:none;
+  }
+  .btn-outline{
+    background:transparent;
+    border:1px solid var(--glass-border);
+    color:var(--t2);
+  }
+  .btn-outline:hover{
+    border-color:var(--glass-hover);
+    color:var(--t1);
+    background:var(--surface-2);
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);
+    border:1px solid rgba(249,115,22,0.3);
+    color:#fff;
+    box-shadow:0 2px 12px -3px rgba(249,115,22,0.3);
+  }
+  .btn-primary:hover{
+    box-shadow:0 4px 20px -4px rgba(249,115,22,0.45);
+    transform:translateY(-1px);
+  }
+
+  /* ── Bottom padding ── */
+  .page-bottom{height:80px}
+
+  /* ── Responsive ── */
+  @media(max-width:640px){
+    .market-header-inner{padding:12px 16px}
+    .market-title{font-size:1.1rem}
+    .stake-info{font-size:0.7rem}
+    .container{padding:0 16px}
+    .section-title{font-size:1.1rem}
+    .stats-grid{grid-template-columns:1fr}
+    .app-grid{gap:12px}
+    .card-top{padding:18px 18px 0}
+    .card-job{padding:12px 18px}
+    .card-deadline{padding:8px 18px}
+    .card-actions{padding:12px 18px 16px}
+    .endorsement-card{flex:0 0 290px}
+    .stat-card{padding:20px}
+    .gauge-ring{width:80px;height:80px}
+    .spin-ring-wrap{width:80px;height:80px}
+  }
+
+  /* ── Entry animations ── */
+  @keyframes fade-up{
+    from{opacity:0;transform:translateY(16px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .animate-in{animation:fade-up 0.5s ease-out both}
+  .animate-in:nth-child(1){animation-delay:0.05s}
+  .animate-in:nth-child(2){animation-delay:0.12s}
+  .animate-in:nth-child(3){animation-delay:0.19s}
+  .animate-in:nth-child(4){animation-delay:0.26s}
+  .animate-in:nth-child(5){animation-delay:0.33s}
+  .animate-in:nth-child(6){animation-delay:0.40s}
+
+  /* SVG gauge animated stroke */
+  @keyframes gauge-draw{
+    from{stroke-dashoffset:251.3}
+    to{stroke-dashoffset:var(--target-offset)}
+  }
+  .gauge-animate{
+    animation:gauge-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards;
+    animation-delay:0.3s;
+    stroke-dashoffset:251.3;
+  }
+
+  /* Chart line draw animation */
+  @keyframes line-draw{
+    from{stroke-dashoffset:500}
+    to{stroke-dashoffset:0}
+  }
+  .chart-line-animate{
+    stroke-dasharray:500;
+    animation:line-draw 2s ease forwards;
+    animation-delay:0.5s;
+    stroke-dashoffset:500;
+  }
+
+  /* Chart area fade */
+  @keyframes area-fade{
+    from{opacity:0}
+    to{opacity:0.6}
+  }
+  .chart-area-animate{
+    opacity:0;
+    animation:area-fade 1s ease forwards;
+    animation-delay:1.2s;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<!-- ═══════════════════════════════════════════
+     STICKY HEADER
+     ═══════════════════════════════════════════ -->
+<header class="market-header">
+  <div class="market-header-inner">
+    <div class="header-left">
+      <div class="market-title">
+        Endorsement Marketplace
+        <span class="live-badge">LIVE</span>
+      </div>
+      <div class="guild-select">
+        <select id="guildSelector">
+          <option value="engineering">Engineering Guild</option>
+          <option value="design">Design Guild</option>
+          <option value="data">Data Science Guild</option>
+          <option value="product">Product Guild</option>
+        </select>
+      </div>
+    </div>
+    <div class="stake-info">
+      450 <span class="val">VETD</span> staked
+      <span class="sep">&middot;</span>
+      Balance: <span class="val">1,200 VETD</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════
+       YOUR ENDORSEMENT STATS — Visual Cards
+       ═══════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">Your Endorsement Stats</h2>
+    </div>
+
+    <div class="stats-grid">
+
+      <!-- STAT 1: Success Rate Gauge -->
+      <div class="stat-card animate-in">
+        <div class="stat-card-label">Success Rate</div>
+        <div class="stat-card-content">
+          <div class="stat-visual">
+            <div class="gauge-ring">
+              <svg viewBox="0 0 100 100">
+                <defs>
+                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4ade80"/>
+                    <stop offset="100%" stop-color="#22c55e"/>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                <circle class="gauge-fill gauge-animate"
+                  cx="50" cy="50" r="40"
+                  stroke="url(#gaugeGrad)"
+                  stroke-dasharray="251.3"
+                  style="--target-offset:15.1"/>
+              </svg>
+              <div class="gauge-center">
+                <span class="gauge-pct">94<span class="gauge-pct-sym">%</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="stat-detail">
+            <div style="font-size:0.85rem;color:var(--t2);font-weight:600;margin-bottom:6px">16 of 17 successful</div>
+            <div style="font-size:0.72rem;color:var(--t4);line-height:1.5">
+              Candidates you endorsed who were ultimately hired. Top 5% of guild endorsers.
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
+              <span style="font-family:var(--mono);font-size:0.68rem;color:var(--green);font-weight:600;display:inline-flex;align-items:center;gap:3px">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L5 9M5 1L2 4M5 1L8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                +3%
+              </span>
+              <span style="font-size:0.66rem;color:var(--t4)">vs last quarter</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAT 2: Earnings Chart -->
+      <div class="stat-card animate-in">
+        <div class="stat-card-label">Earnings from Endorsements</div>
+        <div class="earnings-row">
+          <span class="earnings-big">324</span>
+          <span class="earnings-unit">VETD earned</span>
+          <span class="earnings-delta">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L5 9M5 1L2 4M5 1L8 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            +18%
+          </span>
+        </div>
+        <div class="mini-chart">
+          <svg viewBox="0 0 280 80" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- Area fill -->
+            <path class="chart-area chart-area-animate"
+              d="M0,65 L47,52 L93,58 L140,38 L187,30 L233,22 L280,10 L280,80 L0,80 Z"/>
+            <!-- Line -->
+            <path class="chart-line chart-line-animate"
+              d="M0,65 L47,52 L93,58 L140,38 L187,30 L233,22 L280,10"/>
+            <!-- Data dots -->
+            <circle class="chart-dot" cx="0" cy="65" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:1.8s"/>
+            <circle class="chart-dot" cx="47" cy="52" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:1.9s"/>
+            <circle class="chart-dot" cx="93" cy="58" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.0s"/>
+            <circle class="chart-dot" cx="140" cy="38" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.1s"/>
+            <circle class="chart-dot" cx="187" cy="30" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.2s"/>
+            <circle class="chart-dot" cx="233" cy="22" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.3s"/>
+            <circle class="chart-dot" cx="280" cy="10" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.4s"/>
+            <!-- Glow on last dot -->
+            <circle class="chart-dot-glow" cx="280" cy="10" style="opacity:0;animation:area-fade 0.3s ease forwards;animation-delay:2.4s"/>
+          </svg>
+        </div>
+        <div class="chart-labels">
+          <span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span>
+        </div>
+      </div>
+
+      <!-- STAT 3: Active Endorsements Spinning Ring -->
+      <div class="stat-card animate-in">
+        <div class="stat-card-label">Active Endorsements</div>
+        <div class="stat-card-content">
+          <div class="stat-visual">
+            <div class="spin-ring-wrap">
+              <div class="spin-ring-outer"></div>
+              <div class="spin-ring-inner">
+                <span class="spin-ring-num">7</span>
+                <span class="spin-ring-label">active</span>
+              </div>
+            </div>
+          </div>
+          <div class="stat-detail">
+            <div style="font-family:var(--mono);font-weight:700;font-size:1.2rem;color:var(--orange);margin-bottom:6px">420 VETD</div>
+            <div style="font-size:0.78rem;color:var(--t3);margin-bottom:10px">Total staked across active endorsements</div>
+            <div style="display:flex;gap:12px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
+                <span style="font-size:0.7rem;color:var(--t3)">3 Interviewing</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--amber);display:inline-block"></span>
+                <span style="font-size:0.7rem;color:var(--t3)">2 In Review</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--t3);display:inline-block"></span>
+                <span style="font-size:0.7rem;color:var(--t3)">2 Pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       YOUR ACTIVE ENDORSEMENTS — Spinning border cards
+       ═══════════════════════════════════════════ -->
+  <section class="section" id="activeSection">
+    <div class="section-head">
+      <h2 class="section-title">
+        Your Active Endorsements
+        <span class="count">3</span>
+      </h2>
+      <div class="staked-summary">
+        Total: <span class="val">420 VETD</span> staked
+      </div>
+    </div>
+
+    <div class="active-scroll">
+
+      <!-- Active Endorsement 1 — Interviewing -->
+      <div class="endorsement-card" style="--ring-color:var(--green)">
+        <div class="endorsement-card-inner">
+          <div class="endo-top">
+            <div class="endo-avatar-wrap">
+              <div class="endo-avatar-ring" style="--ring-color:var(--green)"></div>
+              <div class="endo-avatar" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff">SC</div>
+            </div>
+            <div class="endo-info">
+              <div class="endo-name">Sarah Chen</div>
+              <div class="endo-job">Senior Backend Engineer</div>
+              <div class="endo-company">applying at Stripe</div>
+            </div>
+          </div>
+          <div class="endo-bottom">
+            <span class="endo-status status-interviewing">Interviewing</span>
+          </div>
+          <div class="endo-meta">
+            <span class="endo-bid">150 VETD</span>
+            <span class="endo-rank">Rank <span class="rank-badge">#1</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Endorsement 2 — Under Review -->
+      <div class="endorsement-card" style="--ring-color:var(--amber)">
+        <div class="endorsement-card-inner">
+          <div class="endo-top">
+            <div class="endo-avatar-wrap">
+              <div class="endo-avatar-ring" style="--ring-color:var(--amber)"></div>
+              <div class="endo-avatar" style="background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff">JP</div>
+            </div>
+            <div class="endo-info">
+              <div class="endo-name">James Park</div>
+              <div class="endo-job">Full Stack Developer</div>
+              <div class="endo-company">applying at Vercel</div>
+            </div>
+          </div>
+          <div class="endo-bottom">
+            <span class="endo-status status-review">Under Review</span>
+          </div>
+          <div class="endo-meta">
+            <span class="endo-bid">120 VETD</span>
+            <span class="endo-rank">Rank <span class="rank-badge">#2</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Endorsement 3 — Blind Period -->
+      <div class="endorsement-card">
+        <div class="endorsement-card-inner">
+          <div class="endo-top">
+            <div class="endo-avatar-wrap">
+              <div class="endo-avatar-ring"></div>
+              <div class="endo-avatar" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff">PS</div>
+            </div>
+            <div class="endo-info">
+              <div class="endo-name">Priya Sharma</div>
+              <div class="endo-job">Platform Engineer</div>
+              <div class="endo-company">applying at Datadog</div>
+            </div>
+          </div>
+          <div class="endo-bottom">
+            <span class="endo-status status-pending">Pending</span>
+          </div>
+          <div class="endo-meta">
+            <span class="endo-bid">150 VETD</span>
+            <span class="endo-rank"><span class="rank-blind-tag">Blind period</span></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       AVAILABLE APPLICATIONS
+       ═══════════════════════════════════════════ -->
+  <section class="section" id="availableSection">
+    <div class="section-head">
+      <h2 class="section-title">Available Applications</h2>
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter(this)">All</button>
+          <button class="filter-tab" onclick="setFilter(this)">Expiring Soon</button>
+          <button class="filter-tab" onclick="setFilter(this)">New Today</button>
+        </div>
+        <span class="app-count"><span class="num">6</span> applications</span>
+      </div>
+    </div>
+
+    <div class="app-grid" id="appGrid">
+
+      <!-- Card 1: Blind bidding, high match -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);color:#fff">MK</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="15.3"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">91%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Maya Kim</div>
+            <div class="card-headline">Staff Engineer, ex-Google Cloud Platform</div>
+            <div class="card-skills">
+              <span class="skill-tag">Go</span>
+              <span class="skill-tag">Kubernetes</span>
+              <span class="skill-tag">System Design</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Principal Backend Engineer</div>
+          <div class="job-company">Stripe &middot; Remote</div>
+          <div class="job-salary">$220k–$280k + equity</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-blind">
+            <span class="deadline-icon">&#128065;</span>
+            <span class="blind-label">BLIND BIDDING</span>
+            2d 14h left
+          </span>
+          <span class="applied-date">Applied Mar 25</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- Card 2: Urgent deadline -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#fff">AL</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="25.4"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">85%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Alex Lee</div>
+            <div class="card-headline">Senior SRE, ex-Netflix Infrastructure</div>
+            <div class="card-skills">
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">Terraform</span>
+              <span class="skill-tag">Python</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Lead Site Reliability Engineer</div>
+          <div class="job-company">Datadog &middot; New York, NY</div>
+          <div class="job-salary">$195k–$245k</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-urgent">
+            <span class="deadline-icon">&#9202;</span>
+            4h 22m left
+          </span>
+          <span class="applied-date">Applied Mar 22</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- Card 3: Mid match, blind -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);color:#fff">RJ</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#fbbf24"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="50.9"/>
+              </svg>
+            </div>
+            <span class="match-label match-mid">70%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Ravi Joshi</div>
+            <div class="card-headline">Backend Developer, 4yr distributed systems</div>
+            <div class="card-skills">
+              <span class="skill-tag">Rust</span>
+              <span class="skill-tag">gRPC</span>
+              <span class="skill-tag">PostgreSQL</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Systems Engineer</div>
+          <div class="job-company">Cloudflare &middot; Remote</div>
+          <div class="job-salary">$170k–$210k</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-blind">
+            <span class="deadline-icon">&#128065;</span>
+            <span class="blind-label">BLIND BIDDING</span>
+            1d 8h left
+          </span>
+          <span class="applied-date">Applied Mar 24</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- Card 4: High match, normal deadline -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#14b8a6 0%,#0d9488 100%);color:#fff">TN</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="10.2"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">94%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Tara Nguyen</div>
+            <div class="card-headline">Principal Eng, ex-Meta Infra, 12yr exp</div>
+            <div class="card-skills">
+              <span class="skill-tag">C++</span>
+              <span class="skill-tag">Distributed Systems</span>
+              <span class="skill-tag">Leadership</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">VP of Engineering</div>
+          <div class="job-company">Scale AI &middot; San Francisco, CA</div>
+          <div class="job-salary">$280k–$350k + equity</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-normal">
+            <span class="deadline-icon">&#9202;</span>
+            5d 2h left
+          </span>
+          <span class="applied-date">Applied Mar 26</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- Card 5: Lower match -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#ec4899 0%,#db2777 100%);color:#fff">LW</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#fbbf24"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="59.4"/>
+              </svg>
+            </div>
+            <span class="match-label match-mid">65%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Lena Wu</div>
+            <div class="card-headline">Full Stack Dev, React + Node.js specialist</div>
+            <div class="card-skills">
+              <span class="skill-tag">React</span>
+              <span class="skill-tag">Node.js</span>
+              <span class="skill-tag">TypeScript</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Senior Frontend Engineer</div>
+          <div class="job-company">Vercel &middot; Remote</div>
+          <div class="job-salary">$160k–$200k</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-normal">
+            <span class="deadline-icon">&#9202;</span>
+            3d 18h left
+          </span>
+          <span class="applied-date">Applied Mar 23</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+      <!-- Card 6: New today, blind -->
+      <div class="app-card animate-in">
+        <div class="card-top">
+          <div class="avatar-wrap">
+            <div class="avatar" style="background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#fff">KM</div>
+            <div class="match-ring">
+              <svg viewBox="0 0 60 60">
+                <circle class="ring-bg" cx="30" cy="30" r="27"/>
+                <circle class="ring-fill" cx="30" cy="30" r="27"
+                  stroke="#22c55e"
+                  stroke-dasharray="169.6"
+                  stroke-dashoffset="20.4"/>
+              </svg>
+            </div>
+            <span class="match-label match-high">88%</span>
+          </div>
+          <div class="card-info">
+            <div class="card-name">Kai Martinez</div>
+            <div class="card-headline">DevOps Lead, AWS Solutions Architect cert</div>
+            <div class="card-skills">
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">Docker</span>
+              <span class="skill-tag">CI/CD</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-job">
+          <div class="job-title">Staff DevOps Engineer</div>
+          <div class="job-company">Figma &middot; San Francisco, CA</div>
+          <div class="job-salary">$200k–$250k + equity</div>
+        </div>
+        <div class="card-deadline">
+          <span class="deadline-text deadline-blind">
+            <span class="deadline-icon">&#128065;</span>
+            <span class="blind-label">BLIND BIDDING</span>
+            6d 23h left
+          </span>
+          <span class="applied-date">Applied today</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline">View Details</button>
+          <button class="btn btn-primary">Endorse</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="page-bottom"></div>
+</div>
+
+<script>
+  // Filter tabs
+  function setFilter(el) {
+    el.parentElement.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+</body>
+</html>

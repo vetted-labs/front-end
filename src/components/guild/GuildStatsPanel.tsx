@@ -50,34 +50,34 @@ export function GuildStatsPanel({
             <Target className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="font-mono text-xl font-bold text-foreground">{totalProposalsReviewed || 0}</div>
-          <div className="text-[10px] text-muted-foreground">Reviewed</div>
+          <div className="text-xs text-muted-foreground">Reviewed</div>
         </div>
         <div className="flex-1 text-center px-2">
           <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center mx-auto mb-1.5">
             <Zap className="w-3.5 h-3.5 text-warning" />
           </div>
           <div className="font-mono text-xl font-bold text-foreground">{averageApprovalTime || "\u2014"}</div>
-          <div className="text-[10px] text-muted-foreground">Avg Time</div>
+          <div className="text-xs text-muted-foreground">Avg Time</div>
         </div>
         <div className="flex-1 text-center px-2">
           <div className="w-7 h-7 rounded-lg bg-positive/10 flex items-center justify-center mx-auto mb-1.5">
             <Trophy className="w-3.5 h-3.5 text-positive" />
           </div>
           <div className="font-mono text-xl font-bold text-foreground">{candidateCount || 0}</div>
-          <div className="text-[10px] text-muted-foreground">Candidates</div>
+          <div className="text-xs text-muted-foreground">Candidates</div>
         </div>
         <div className="flex-1 text-center px-2">
           <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center mx-auto mb-1.5">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
           <div className="font-mono text-xl font-bold text-foreground">{memberCount || 0}</div>
-          <div className="text-[10px] text-muted-foreground">Members</div>
+          <div className="text-xs text-muted-foreground">Members</div>
         </div>
       </div>
 
       {/* Why join callout */}
       <div className="glass-card rounded-2xl border border-border/60 p-6 animate-fade-up animate-delay-300">
-        <h2 className="text-lg font-bold font-display text-foreground mb-3">Guild Overview</h2>
+        <h2 className="text-xl font-bold font-display text-foreground mb-3">Guild Overview</h2>
         <p className="text-sm text-muted-foreground mb-5 leading-relaxed line-clamp-3">{description}</p>
 
         <div className="rounded-xl border border-primary/15 bg-primary/[0.04] px-5 py-4">

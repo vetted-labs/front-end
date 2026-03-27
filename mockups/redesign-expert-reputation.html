@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted - Expert Reputation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-bright: rgba(255,255,255,0.1);
+    --text: #e5e5e5;
+    --text-dim: rgba(255,255,255,0.5);
+    --text-muted: rgba(255,255,255,0.35);
+    --orange: #f97316;
+    --amber: #f59e0b;
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --red: #ef4444;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Background ambient orbs */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -300px;
+    left: -200px;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    margin-bottom: 48px;
+  }
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .accent-bar {
+    margin-top: 12px;
+    width: 64px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--orange), var(--amber));
+  }
+
+  /* ─── Glass Card ─── */
+  .glass {
+    background: var(--surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .glass-hover:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-bright);
+  }
+
+  /* ─── Score Hero ─── */
+  .score-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 56px 24px 48px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .score-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .ring-container {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin-bottom: 28px;
+  }
+
+  .ring-glow {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(249,115,22,0.15) 40%, transparent 70%);
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.06); }
+  }
+
+  .ring-svg {
+    width: 220px;
+    height: 220px;
+    transform: rotate(-90deg);
+  }
+  .ring-track {
+    fill: none;
+    stroke: rgba(255,255,255,0.04);
+    stroke-width: 10;
+  }
+  .ring-fill {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke: url(#ringGradient);
+    stroke-dasharray: 597; /* 2 * PI * 95 */
+    stroke-dashoffset: 597;
+    animation: fillRing 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+  }
+  @keyframes fillRing {
+    to { stroke-dashoffset: 90; /* ~85% fill: 597 - (597 * 0.847) */ }
+  }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-number {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 30%, var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .score-max {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.25);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--orange);
+    box-shadow: 0 0 20px rgba(249,115,22,0.1);
+    margin-bottom: 16px;
+  }
+  .tier-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .trend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--green);
+  }
+  .trend svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ─── Score Breakdown Grid ─── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 600px) {
+    .breakdown-grid { grid-template-columns: 1fr; }
+  }
+
+  .breakdown-card {
+    padding: 20px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .breakdown-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .breakdown-card .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .breakdown-card .card-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .breakdown-card .card-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .breakdown-card .card-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .progress-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transform-origin: left;
+    animation: growBar 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+    transform: scaleX(0);
+  }
+  @keyframes growBar {
+    to { transform: scaleX(1); }
+  }
+
+  .fill-green { background: linear-gradient(90deg, var(--green), #4ade80); }
+  .fill-blue { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+  .fill-purple { background: linear-gradient(90deg, var(--purple), #c084fc); }
+  .fill-amber { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+
+  .icon-green { background: rgba(34,197,94,0.1); color: var(--green); }
+  .icon-blue { background: rgba(59,130,246,0.1); color: var(--blue); }
+  .icon-purple { background: rgba(168,85,247,0.1); color: var(--purple); }
+  .icon-amber { background: rgba(245,158,11,0.1); color: var(--amber); }
+
+  /* ─── Tier Progression ─── */
+  .tier-section {
+    margin-bottom: 40px;
+  }
+  .tier-track {
+    padding: 32px 24px;
+    margin-bottom: 12px;
+  }
+  .tier-nodes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 28px;
+  }
+  /* connector line behind nodes */
+  .tier-nodes::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 28px;
+    right: 28px;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+  .tier-nodes::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 28px;
+    width: calc((100% - 56px) * 0.667); /* 2 out of 3 segments filled */
+    height: 2px;
+    background: linear-gradient(90deg, var(--orange), var(--amber));
+    transform: translateY(-50%);
+    z-index: 1;
+    animation: growLine 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+    transform-origin: left;
+  }
+  @keyframes growLine {
+    from { transform: translateY(-50%) scaleX(0); }
+    to { transform: translateY(-50%) scaleX(1); }
+  }
+
+  .tier-node {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tier-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: var(--bg);
+    border: 2px solid rgba(255,255,255,0.08);
+    transition: all 0.3s;
+  }
+  .tier-node.completed .tier-circle {
+    border-color: var(--orange);
+    background: rgba(249,115,22,0.1);
+  }
+  .tier-node.current .tier-circle {
+    width: 56px;
+    height: 56px;
+    border-color: var(--orange);
+    background: rgba(249,115,22,0.15);
+    box-shadow: 0 0 24px rgba(249,115,22,0.2), 0 0 48px rgba(249,115,22,0.08);
+    animation: tierPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes tierPulse {
+    0%, 100% { box-shadow: 0 0 24px rgba(249,115,22,0.2), 0 0 48px rgba(249,115,22,0.08); }
+    50% { box-shadow: 0 0 32px rgba(249,115,22,0.3), 0 0 64px rgba(249,115,22,0.12); }
+  }
+  .tier-node.future .tier-circle {
+    opacity: 0.4;
+  }
+  .tier-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+  .tier-node.completed .tier-label,
+  .tier-node.current .tier-label {
+    color: var(--text-dim);
+  }
+  .tier-node.current .tier-label {
+    color: var(--orange);
+  }
+
+  .progress-to-next {
+    margin-top: 4px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-meta span {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .progress-meta strong {
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .tier-progress-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .tier-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--amber));
+    width: 0%;
+    animation: fillTierBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
+  }
+  @keyframes fillTierBar {
+    to { width: 72%; }
+  }
+
+  /* Benefits card */
+  .benefits-card {
+    padding: 24px;
+  }
+  .benefits-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .benefits-card h3 span {
+    color: var(--orange);
+  }
+  .benefits-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 600px) {
+    .benefits-list { grid-template-columns: 1fr; }
+  }
+  .benefits-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .benefits-list li svg {
+    width: 14px;
+    height: 14px;
+    color: var(--orange);
+    flex-shrink: 0;
+  }
+
+  /* ─── History Chart ─── */
+  .history-section {
+    margin-bottom: 40px;
+  }
+  .history-card {
+    padding: 28px 24px 20px;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .chart-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .chart-range {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+  }
+
+  .chart-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+  }
+  .chart-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .chart-grid-line {
+    stroke: rgba(255,255,255,0.04);
+    stroke-width: 1;
+  }
+  .chart-line {
+    fill: none;
+    stroke: url(#chartGradient);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+  }
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+  .chart-area {
+    opacity: 0;
+    animation: fadeIn 1s ease 1.5s forwards;
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  .chart-dot {
+    opacity: 0;
+    animation: fadeIn 0.5s ease 2s forwards;
+  }
+  .chart-label {
+    font-size: 11px;
+    fill: rgba(255,255,255,0.3);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+  }
+  .chart-y-label {
+    font-size: 10px;
+    fill: rgba(255,255,255,0.2);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    text-anchor: end;
+  }
+
+  /* ─── How It Works ─── */
+  .info-section {
+    margin-bottom: 40px;
+  }
+  .info-card {
+    overflow: hidden;
+  }
+  .info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  .info-header:hover {
+    background: var(--surface-hover);
+  }
+  .info-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .info-header h3 svg {
+    width: 16px;
+    height: 16px;
+    color: var(--orange);
+  }
+  .info-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+  }
+  .info-card.open .info-chevron {
+    transform: rotate(180deg);
+  }
+  .info-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .info-card.open .info-body {
+    max-height: 600px;
+  }
+  .info-content {
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+  .info-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .info-item:last-child { margin-bottom: 0; }
+  .info-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(249,115,22,0.1);
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .info-item p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .info-item p strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Reputation</h1>
+    <div class="accent-bar"></div>
+  </div>
+
+  <!-- Score Hero -->
+  <div class="score-hero glass">
+    <div class="ring-container">
+      <div class="ring-glow"></div>
+      <svg class="ring-svg" viewBox="0 0 220 220">
+        <defs>
+          <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f97316"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-track" cx="110" cy="110" r="95"/>
+        <circle class="ring-fill" cx="110" cy="110" r="95"/>
+      </svg>
+      <div class="ring-center">
+        <div class="score-number">847</div>
+        <div class="score-max">/ 1,000</div>
+      </div>
+    </div>
+
+    <div class="tier-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Expert Tier
+    </div>
+
+    <div class="trend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      +12 this month
+    </div>
+  </div>
+
+  <!-- Score Breakdown -->
+  <div class="section-label">Score Breakdown</div>
+  <div class="breakdown-grid">
+
+    <!-- Review Accuracy -->
+    <div class="breakdown-card glass glass-hover">
+      <div class="card-header">
+        <div class="card-icon icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="card-label">Review Accuracy</div>
+      </div>
+      <div class="card-value">92%</div>
+      <div class="progress-track">
+        <div class="progress-fill fill-green" style="width:92%"></div>
+      </div>
+    </div>
+
+    <!-- Consistency Score -->
+    <div class="breakdown-card glass glass-hover">
+      <div class="card-header">
+        <div class="card-icon icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </div>
+        <div class="card-label">Consistency Score</div>
+      </div>
+      <div class="card-value">88%</div>
+      <div class="progress-track">
+        <div class="progress-fill fill-blue" style="width:88%"></div>
+      </div>
+    </div>
+
+    <!-- Timeliness -->
+    <div class="breakdown-card glass glass-hover">
+      <div class="card-header">
+        <div class="card-icon icon-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="card-label">Timeliness</div>
+      </div>
+      <div class="card-value">95%</div>
+      <div class="progress-track">
+        <div class="progress-fill fill-purple" style="width:95%"></div>
+      </div>
+    </div>
+
+    <!-- Community Trust -->
+    <div class="breakdown-card glass glass-hover">
+      <div class="card-header">
+        <div class="card-icon icon-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="card-label">Community Trust</div>
+      </div>
+      <div class="card-value">85%</div>
+      <div class="progress-track">
+        <div class="progress-fill fill-amber" style="width:85%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Reward Tier Section -->
+  <div class="tier-section">
+    <div class="section-label">Reward Tier</div>
+
+    <div class="tier-track glass">
+      <div class="tier-nodes">
+        <div class="tier-node completed">
+          <div class="tier-circle">&#x1F944;</div>
+          <div class="tier-label">Bronze</div>
+        </div>
+        <div class="tier-node completed">
+          <div class="tier-circle">&#x1FA99;</div>
+          <div class="tier-label">Silver</div>
+        </div>
+        <div class="tier-node current">
+          <div class="tier-circle">&#x1F3C6;</div>
+          <div class="tier-label">Gold</div>
+        </div>
+        <div class="tier-node future">
+          <div class="tier-circle">&#x1F48E;</div>
+          <div class="tier-label">Diamond</div>
+        </div>
+      </div>
+
+      <div class="progress-to-next">
+        <div class="progress-meta">
+          <span>Progress to <strong>Diamond</strong></span>
+          <span><strong>72%</strong></span>
+        </div>
+        <div class="tier-progress-track">
+          <div class="tier-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="benefits-card glass" style="margin-top: 12px;">
+      <h3>
+        <span>&#x1F3C6;</span>
+        Gold Tier Benefits
+      </h3>
+      <ul class="benefits-list">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          2x review reward multiplier
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Priority job assignments
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Gold badge on profile
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Governance voting weight: 3x
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Access to premium guilds
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Reduced staking minimum
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Reputation History -->
+  <div class="history-section">
+    <div class="section-label">Reputation History</div>
+    <div class="history-card glass">
+      <div class="chart-header">
+        <h3>Score Trend</h3>
+        <span class="chart-range">Last 6 months</span>
+      </div>
+      <div class="chart-container">
+        <!--
+          Data points (month, score):
+          Oct: 780, Nov: 795, Dec: 810, Jan: 818, Feb: 835, Mar: 847
+          Chart area: x 50-880 (830px), y 20-170 (150px range)
+          Score range: 750-900 (150pt range)
+          Scale: x-step ~166px, y: (score-750)/150 * 150 inverted
+        -->
+        <svg class="chart-svg" viewBox="0 0 900 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#f59e0b"/>
+            </linearGradient>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="rgba(249,115,22,0.15)"/>
+              <stop offset="100%" stop-color="rgba(249,115,22,0)"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Grid lines -->
+          <line class="chart-grid-line" x1="50" y1="20" x2="880" y2="20"/>
+          <line class="chart-grid-line" x1="50" y1="57.5" x2="880" y2="57.5"/>
+          <line class="chart-grid-line" x1="50" y1="95" x2="880" y2="95"/>
+          <line class="chart-grid-line" x1="50" y1="132.5" x2="880" y2="132.5"/>
+          <line class="chart-grid-line" x1="50" y1="170" x2="880" y2="170"/>
+
+          <!-- Y-axis labels -->
+          <text class="chart-y-label" x="42" y="24">900</text>
+          <text class="chart-y-label" x="42" y="61">862</text>
+          <text class="chart-y-label" x="42" y="99">825</text>
+          <text class="chart-y-label" x="42" y="136">787</text>
+          <text class="chart-y-label" x="42" y="174">750</text>
+
+          <!-- Area fill -->
+          <path class="chart-area" d="M 50,140 216,125 382,110 548,98 714,80 880,67 L 880,170 50,170 Z" fill="url(#areaGradient)"/>
+
+          <!-- Line -->
+          <polyline class="chart-line" points="50,140 216,125 382,110 548,98 714,80 880,67"/>
+
+          <!-- Dots -->
+          <circle class="chart-dot" cx="50" cy="140" r="4" fill="#f97316"/>
+          <circle class="chart-dot" cx="216" cy="125" r="4" fill="#f97316"/>
+          <circle class="chart-dot" cx="382" cy="110" r="4" fill="#f97316"/>
+          <circle class="chart-dot" cx="548" cy="98" r="4" fill="#f97316"/>
+          <circle class="chart-dot" cx="714" cy="80" r="4" fill="#f97316"/>
+          <circle class="chart-dot" cx="880" cy="67" r="5" fill="#f59e0b" stroke="#0a0a0f" stroke-width="2"/>
+
+          <!-- X-axis labels -->
+          <text class="chart-label" x="50" y="195" text-anchor="middle">Oct</text>
+          <text class="chart-label" x="216" y="195" text-anchor="middle">Nov</text>
+          <text class="chart-label" x="382" y="195" text-anchor="middle">Dec</text>
+          <text class="chart-label" x="548" y="195" text-anchor="middle">Jan</text>
+          <text class="chart-label" x="714" y="195" text-anchor="middle">Feb</text>
+          <text class="chart-label" x="880" y="195" text-anchor="middle">Mar</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- How Reputation Works -->
+  <div class="info-section">
+    <div class="section-label">Learn More</div>
+    <div class="info-card glass open" id="infoCard">
+      <div class="info-header" onclick="document.getElementById('infoCard').classList.toggle('open')">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          How Reputation Works
+        </h3>
+        <svg class="info-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="info-body">
+        <div class="info-content">
+          <div class="info-item">
+            <div class="info-num">1</div>
+            <p><strong>Complete reviews</strong> -- Each candidate review you submit is evaluated for accuracy by comparing your assessment against the consensus of other guild experts.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-num">2</div>
+            <p><strong>Build consistency</strong> -- Your consistency score reflects how reliably your reviews align with outcomes. Experts who maintain steady quality earn higher reputation over time.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-num">3</div>
+            <p><strong>Stay timely</strong> -- Completing reviews before their deadlines boosts your timeliness metric. Late reviews reduce your score and may affect job assignment priority.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-num">4</div>
+            <p><strong>Earn community trust</strong> -- Endorsements from other experts, successful dispute resolutions, and governance participation all contribute to your community trust score.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-num">5</div>
+            <p><strong>Unlock tiers</strong> -- As your composite score increases, you advance through reward tiers. Each tier unlocks higher multipliers, priority assignments, and governance weight on-chain.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

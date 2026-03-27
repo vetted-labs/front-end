@@ -36,15 +36,15 @@ export function GovernanceVoteForm({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
           Cast Your Vote
         </h3>
         <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
-            Vote weight: <span className="font-semibold text-foreground tabular-nums">{voteWeight.toFixed(2)}x</span>
+            Vote weight: <span className="font-medium text-foreground tabular-nums">{voteWeight.toFixed(2)}x</span>
           </p>
           {isGuildMaster && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
               <Crown className="w-3 h-3" />
               1.5x Master
             </span>

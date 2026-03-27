@@ -23,7 +23,7 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-foreground text-lg mb-2 group-hover:text-primary transition-colors">{expert.fullName}</h3>
+                <h3 className="font-medium text-foreground text-xl mb-2 group-hover:text-primary transition-colors">{expert.fullName}</h3>
                 <span
                   className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(
                     expert.role
@@ -35,7 +35,7 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
               <div className="text-right">
                 <div className="flex items-center gap-1 text-primary mb-1">
                   <Star className="w-5 h-5 fill-current" />
-                  <span className="font-bold text-lg">{expert.reputation}</span>
+                  <span className="font-bold text-xl">{expert.reputation}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">reputation</p>
               </div>
@@ -54,11 +54,11 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Reviews</p>
-                  <p className="font-semibold text-foreground">{expert.totalReviews || 0}</p>
+                  <p className="font-medium text-foreground">{expert.totalReviews || 0}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Success Rate</p>
-                  <p className="font-semibold text-foreground">{expert.successRate || 0}%</p>
+                  <p className="font-medium text-foreground">{expert.successRate || 0}%</p>
                 </div>
               </div>
               {expert.joinedAt && (

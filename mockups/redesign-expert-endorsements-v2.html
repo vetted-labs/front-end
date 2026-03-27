@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Endorsement Market V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#07070b;
+    --surface:rgba(255,255,255,0.025);
+    --surface-2:rgba(255,255,255,0.04);
+    --surface-3:rgba(255,255,255,0.06);
+    --glass:rgba(255,255,255,0.03);
+    --glass-border:rgba(255,255,255,0.06);
+    --glass-border-hover:rgba(255,255,255,0.12);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --t4:#475569;
+    --orange:#f97316;
+    --orange-dim:rgba(249,115,22,0.15);
+    --orange-glow:rgba(249,115,22,0.08);
+    --green:#22c55e;
+    --green-dim:rgba(34,197,94,0.12);
+    --green-glow:rgba(34,197,94,0.06);
+    --red:#ef4444;
+    --red-dim:rgba(239,68,68,0.12);
+    --amber:#fbbf24;
+    --amber-dim:rgba(251,191,36,0.1);
+    --r:14px;
+    --r-sm:10px;
+    --r-lg:20px;
+    --heading:'Bricolage Grotesque',system-ui,sans-serif;
+    --body:'DM Sans',system-ui,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    line-height:1.5;
+  }
+
+  /* ── BG effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{
+    content:'';position:absolute;
+    top:-30%;left:50%;transform:translateX(-50%);
+    width:900px;height:900px;
+    background:radial-gradient(circle,rgba(249,115,22,0.04) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  .bg-fx::after{
+    content:'';position:absolute;
+    bottom:-20%;right:-10%;
+    width:700px;height:700px;
+    background:radial-gradient(circle,rgba(34,197,94,0.03) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+    background-size:60px 60px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 20%,transparent 100%);
+  }
+
+  .container{max-width:1360px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ── Market Header Bar ── */
+  .market-header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(7,7,11,0.85);
+    backdrop-filter:blur(24px) saturate(1.3);
+    border-bottom:1px solid var(--glass-border);
+  }
+  .market-header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 24px;max-width:1360px;margin:0 auto;
+    gap:20px;flex-wrap:wrap;
+  }
+  .market-title{
+    display:flex;align-items:center;gap:12px;
+    font-family:var(--heading);font-weight:800;font-size:1.35rem;
+    letter-spacing:-0.02em;
+  }
+  .live-dot{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.65rem;font-weight:600;
+    color:var(--green);letter-spacing:0.1em;
+    background:var(--green-dim);
+    padding:3px 10px 3px 8px;border-radius:100px;
+    border:1px solid rgba(34,197,94,0.2);
+  }
+  .live-dot::before{
+    content:'';width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}
+    50%{opacity:0.6;box-shadow:0 0 0 4px rgba(34,197,94,0)}
+  }
+
+  .portfolio-summary{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:0.82rem;color:var(--t2);
+  }
+  .portfolio-summary .sep{color:var(--t4);margin:0 2px}
+  .portfolio-summary .val{color:var(--t1);font-weight:600}
+  .portfolio-summary .gain{color:var(--green);font-weight:600}
+
+  /* ── Ticker Tape ── */
+  .ticker-wrap{
+    overflow:hidden;
+    background:rgba(255,255,255,0.015);
+    border-bottom:1px solid var(--glass-border);
+    height:34px;
+  }
+  .ticker{
+    display:flex;align-items:center;
+    white-space:nowrap;
+    animation:ticker-scroll 45s linear infinite;
+    height:34px;
+  }
+  .ticker:hover{animation-play-state:paused}
+  .ticker-item{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:0 28px;
+    font-family:var(--mono);font-size:0.72rem;color:var(--t3);
+    letter-spacing:0.01em;
+  }
+  .ticker-item .ico{font-size:0.85rem}
+  .ticker-item.pos .ico{color:var(--green)}
+  .ticker-item.neg .ico{color:var(--red)}
+  .ticker-item.neu .ico{color:var(--amber)}
+  .ticker-item .name{color:var(--t2);font-weight:500}
+  .ticker-item .result{font-weight:600}
+  .ticker-item.pos .result{color:var(--green)}
+  .ticker-item.neg .result{color:var(--red)}
+  .ticker-item.neu .result{color:var(--amber)}
+  @keyframes ticker-scroll{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(-50%)}
+  }
+
+  /* ── Section ── */
+  .section{padding:48px 0}
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:28px;flex-wrap:wrap;gap:16px;
+  }
+  .section-title{
+    font-family:var(--heading);font-weight:800;font-size:1.4rem;
+    letter-spacing:-0.02em;
+  }
+  .section-title .accent{color:var(--orange)}
+
+  /* ── Portfolio Grid (asymmetric) ── */
+  .portfolio-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:16px;
+  }
+  @media(max-width:900px){
+    .portfolio-grid{grid-template-columns:1fr;gap:12px}
+  }
+
+  .pf-card{
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    padding:28px;
+    position:relative;overflow:hidden;
+    transition:border-color 0.2s;
+  }
+  .pf-card:hover{border-color:var(--glass-border-hover)}
+
+  .pf-card.hero{
+    grid-row:span 1;
+    background:linear-gradient(135deg,rgba(249,115,22,0.04) 0%,rgba(34,197,94,0.02) 100%);
+    border-color:rgba(249,115,22,0.1);
+  }
+  .pf-card.hero:hover{border-color:rgba(249,115,22,0.2)}
+
+  .pf-label{
+    font-size:0.75rem;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.08em;color:var(--t3);margin-bottom:8px;
+    font-family:var(--mono);
+  }
+  .pf-value{
+    font-family:var(--mono);font-weight:700;font-size:2.4rem;
+    letter-spacing:-0.03em;line-height:1.1;
+  }
+  .pf-value.small{font-size:2rem}
+  .pf-sub{
+    font-family:var(--mono);font-size:0.85rem;color:var(--t3);
+    margin-top:4px;
+  }
+  .pf-change{
+    display:inline-flex;align-items:center;gap:4px;
+    font-family:var(--mono);font-size:0.85rem;font-weight:600;
+    margin-top:10px;padding:4px 10px;border-radius:6px;
+  }
+  .pf-change.up{color:var(--green);background:var(--green-dim)}
+  .pf-change.down{color:var(--red);background:var(--red-dim)}
+
+  /* Mini chart in hero card */
+  .mini-chart{
+    margin-top:20px;height:80px;position:relative;
+  }
+  .mini-chart svg{width:100%;height:100%}
+
+  /* Gauge */
+  .gauge-wrap{display:flex;justify-content:center;margin:16px 0 8px}
+  .gauge-svg{width:130px;height:75px}
+
+  /* Breakdown pills */
+  .breakdown{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .breakdown-pill{
+    font-family:var(--mono);font-size:0.7rem;font-weight:500;
+    padding:4px 10px;border-radius:100px;
+    background:var(--surface-2);color:var(--t2);
+    border:1px solid var(--glass-border);
+  }
+
+  /* ── Filter Tabs ── */
+  .filter-tabs{
+    display:flex;gap:4px;
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-sm);
+    padding:3px;
+  }
+  .filter-tab{
+    font-family:var(--body);font-size:0.8rem;font-weight:500;
+    color:var(--t3);padding:7px 16px;border-radius:8px;
+    cursor:pointer;transition:all 0.15s;border:none;background:none;
+    white-space:nowrap;
+  }
+  .filter-tab:hover{color:var(--t2)}
+  .filter-tab.active{
+    background:var(--orange-dim);color:var(--orange);
+    font-weight:600;
+  }
+
+  /* ── Trading Cards Grid ── */
+  .opp-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+  }
+  @media(max-width:1100px){.opp-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:780px){.opp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:500px){.opp-grid{grid-template-columns:1fr}}
+
+  .trade-card{
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    padding:0;overflow:hidden;
+    transition:transform 0.25s cubic-bezier(.2,.8,.3,1),
+               border-color 0.25s,
+               box-shadow 0.35s;
+    cursor:default;
+    display:flex;flex-direction:column;
+  }
+  .trade-card:hover{
+    transform:translateY(-8px) scale(1.02);
+    border-color:rgba(249,115,22,0.25);
+    box-shadow:
+      0 20px 60px -12px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(249,115,22,0.1),
+      0 0 40px -10px rgba(249,115,22,0.08);
+  }
+
+  .tc-top{
+    padding:24px 20px 16px;text-align:center;
+    background:linear-gradient(180deg,rgba(255,255,255,0.02) 0%,transparent 100%);
+    border-bottom:1px solid var(--glass-border);
+  }
+  .tc-avatar{
+    width:56px;height:56px;border-radius:50%;
+    margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:1.1rem;color:var(--bg);
+    position:relative;
+  }
+  .tc-avatar::before{
+    content:'';position:absolute;inset:-3px;border-radius:50%;
+    background:conic-gradient(var(--orange),var(--green),var(--orange));
+    z-index:-1;
+    animation:avatar-spin 6s linear infinite;
+  }
+  @keyframes avatar-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .tc-avatar-inner{
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:1.1rem;
+    background:var(--bg);
+    position:relative;z-index:1;
+  }
+  .tc-name{font-weight:600;font-size:0.95rem;margin-bottom:2px}
+  .tc-role{font-size:0.78rem;color:var(--t3)}
+
+  .tc-metrics{
+    padding:16px 20px;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .tc-metric{
+    background:var(--surface-2);
+    border-radius:var(--r-sm);
+    padding:10px 12px;
+  }
+  .tc-metric-label{
+    font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--t4);font-family:var(--mono);font-weight:500;
+    margin-bottom:4px;
+  }
+  .tc-metric-val{
+    font-family:var(--mono);font-weight:700;font-size:0.95rem;
+  }
+  .tc-metric-val.green{color:var(--green)}
+  .tc-metric-val.amber{color:var(--amber)}
+  .tc-metric-val.red{color:var(--red)}
+
+  /* Risk bar */
+  .risk-bar{
+    height:4px;border-radius:2px;margin-top:6px;
+    background:var(--surface-3);overflow:hidden;
+  }
+  .risk-fill{height:100%;border-radius:2px;transition:width 0.5s}
+  .risk-fill.low{width:25%;background:var(--green)}
+  .risk-fill.med{width:55%;background:var(--amber)}
+  .risk-fill.high{width:85%;background:var(--red)}
+
+  .tc-tags{
+    padding:0 20px 16px;
+    display:flex;flex-wrap:wrap;gap:5px;
+  }
+  .tc-tag{
+    font-size:0.68rem;font-weight:500;
+    padding:3px 9px;border-radius:100px;
+    background:var(--surface-2);color:var(--t3);
+    border:1px solid var(--glass-border);
+  }
+  .tc-guild{
+    font-size:0.68rem;font-weight:600;
+    padding:3px 9px;border-radius:100px;
+    background:var(--orange-glow);color:var(--orange);
+    border:1px solid rgba(249,115,22,0.15);
+  }
+
+  .tc-action{
+    padding:12px 20px 20px;margin-top:auto;
+  }
+  .stake-btn{
+    width:100%;padding:12px;border:none;border-radius:var(--r-sm);
+    font-family:var(--mono);font-weight:700;font-size:0.85rem;
+    cursor:pointer;transition:all 0.2s;
+    background:linear-gradient(135deg,var(--orange) 0%,#ea580c 100%);
+    color:white;letter-spacing:0.02em;
+    position:relative;overflow:hidden;
+  }
+  .stake-btn::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.1) 100%);
+  }
+  .stake-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 24px -4px rgba(249,115,22,0.3);
+  }
+
+  /* ── Positions Table ── */
+  .positions-table-wrap{
+    background:var(--surface);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    overflow:hidden;
+  }
+  .positions-table{width:100%;border-collapse:collapse}
+  .positions-table th{
+    font-family:var(--mono);font-size:0.68rem;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--t4);padding:14px 18px;text-align:left;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--glass-border);
+    white-space:nowrap;
+  }
+  .positions-table td{
+    padding:16px 18px;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:0.88rem;vertical-align:middle;
+  }
+  .positions-table tr:last-child td{border-bottom:none}
+  .positions-table tr:hover td{background:rgba(255,255,255,0.015)}
+
+  .pos-candidate{display:flex;align-items:center;gap:10px}
+  .pos-avatar{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.7rem;font-weight:700;color:var(--bg);
+    flex-shrink:0;
+  }
+  .pos-name{font-weight:600;font-size:0.88rem;white-space:nowrap}
+  .pos-role{font-size:0.72rem;color:var(--t3)}
+
+  .pos-mono{font-family:var(--mono);font-weight:600;font-size:0.85rem;white-space:nowrap}
+  .pos-mono.green{color:var(--green)}
+  .pos-mono.red{color:var(--red)}
+
+  .status-badge{
+    font-family:var(--mono);font-size:0.7rem;font-weight:600;
+    padding:4px 10px;border-radius:100px;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .status-badge.active{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.2)}
+  .status-badge.review{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+  .status-badge.resolving{background:rgba(139,92,246,0.1);color:#a78bfa;border:1px solid rgba(139,92,246,0.2)}
+  .status-badge.claimable{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.3);animation:claim-pulse 2s ease-in-out infinite}
+  @keyframes claim-pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.2)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+
+  .progress-bar{
+    width:80px;height:4px;border-radius:2px;
+    background:var(--surface-3);overflow:hidden;
+    display:inline-block;vertical-align:middle;margin-left:8px;
+  }
+  .progress-fill{height:100%;border-radius:2px}
+
+  .claim-btn{
+    font-family:var(--mono);font-size:0.75rem;font-weight:600;
+    padding:6px 14px;border-radius:8px;border:none;cursor:pointer;
+    background:var(--green);color:var(--bg);transition:all 0.15s;
+  }
+  .claim-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,0.3)}
+  .claim-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none}
+
+  .view-btn{
+    font-family:var(--mono);font-size:0.75rem;font-weight:600;
+    padding:6px 14px;border-radius:8px;border:1px solid var(--glass-border);
+    cursor:pointer;background:transparent;color:var(--t2);transition:all 0.15s;
+  }
+  .view-btn:hover{border-color:var(--glass-border-hover);color:var(--t1)}
+
+  /* Portfolio total row */
+  .portfolio-total td{
+    background:var(--surface-2)!important;
+    font-weight:700;
+    border-top:2px solid var(--glass-border);
+  }
+
+  /* ── Market Stats Footer ── */
+  .market-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--glass-border);
+    border:1px solid var(--glass-border);
+    border-radius:var(--r-lg);
+    overflow:hidden;
+    margin-bottom:60px;
+  }
+  @media(max-width:700px){.market-stats{grid-template-columns:repeat(2,1fr)}}
+  .mstat{
+    background:var(--bg);
+    padding:24px;text-align:center;
+  }
+  .mstat-label{
+    font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--t4);font-family:var(--mono);font-weight:500;
+    margin-bottom:6px;
+  }
+  .mstat-val{
+    font-family:var(--mono);font-weight:700;font-size:1.3rem;
+    color:var(--t1);
+  }
+  .mstat-sub{font-size:0.72rem;color:var(--t3);margin-top:3px;font-family:var(--mono)}
+
+  /* ── Table responsive ── */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── Utility ── */
+  .text-green{color:var(--green)}
+  .text-red{color:var(--red)}
+  .text-amber{color:var(--amber)}
+  .text-orange{color:var(--orange)}
+  .text-muted{color:var(--t3)}
+  .mono{font-family:var(--mono)}
+  .flex-center{display:flex;align-items:center;justify-content:center}
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.15)}
+
+  /* ── Responsive tweaks ── */
+  @media(max-width:640px){
+    .market-header-inner{padding:12px 16px}
+    .market-title{font-size:1.1rem}
+    .portfolio-summary{font-size:0.72rem;flex-wrap:wrap}
+    .container{padding:0 16px}
+    .section{padding:32px 0}
+    .pf-value{font-size:1.8rem}
+    .pf-value.small{font-size:1.5rem}
+    .section-title{font-size:1.2rem}
+    .positions-table th,.positions-table td{padding:10px 12px;font-size:0.8rem}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+
+<!-- ═══════════════ MARKET HEADER ═══════════════ -->
+<header class="market-header">
+  <div class="market-header-inner">
+    <div class="market-title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Endorsement Market
+      <span class="live-dot">LIVE</span>
+    </div>
+    <div class="portfolio-summary">
+      <span class="val">7</span> positions
+      <span class="sep">&middot;</span>
+      <span class="val">3.2 ETH</span> staked
+      <span class="sep">&middot;</span>
+      <span class="gain">+14.2% ROI</span>
+    </div>
+  </div>
+
+  <!-- Ticker Tape -->
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker"></div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ═══════════════ PORTFOLIO OVERVIEW ═══════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">Portfolio <span class="accent">Overview</span></h2>
+    </div>
+
+    <div class="portfolio-grid">
+      <!-- HERO: Total Portfolio Value -->
+      <div class="pf-card hero">
+        <div class="pf-label">Total Portfolio Value</div>
+        <div class="pf-value">3.2 <span style="font-size:0.5em;color:var(--t3)">ETH</span></div>
+        <div class="pf-sub">$7,680.00</div>
+        <div class="pf-change up">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          +0.48 ETH (+15.0%)
+        </div>
+        <div class="mini-chart">
+          <svg viewBox="0 0 400 80" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(34,197,94,0.2)"/>
+                <stop offset="100%" stop-color="rgba(34,197,94,0)"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,65 Q20,60 40,58 T80,50 T120,52 T160,40 T200,38 T240,30 T280,25 T320,20 T360,18 T400,12" fill="none" stroke="var(--green)" stroke-width="2"/>
+            <path d="M0,65 Q20,60 40,58 T80,50 T120,52 T160,40 T200,38 T240,30 T280,25 T320,20 T360,18 T400,12 V80 H0 Z" fill="url(#chartGrad)"/>
+          </svg>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:0.65rem;color:var(--t4);margin-top:4px">
+          <span>30d ago</span><span>Today</span>
+        </div>
+      </div>
+
+      <!-- Success Rate -->
+      <div class="pf-card">
+        <div class="pf-label">Success Rate</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 130 75">
+            <path d="M10 70 A55 55 0 0 1 120 70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M10 70 A55 55 0 0 1 120 70" fill="none" stroke="var(--green)" stroke-width="8" stroke-linecap="round" stroke-dasharray="173" stroke-dashoffset="10.4" style="transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)"/>
+            <text x="65" y="55" text-anchor="middle" font-family="var(--mono)" font-weight="700" font-size="22" fill="var(--t1)">94%</text>
+            <text x="65" y="70" text-anchor="middle" font-family="var(--mono)" font-weight="500" font-size="9" fill="var(--t3)">17 of 18</text>
+          </svg>
+        </div>
+        <div style="text-align:center;font-size:0.78rem;color:var(--t3)">
+          Lifetime placement rate
+        </div>
+      </div>
+
+      <!-- Active Positions -->
+      <div class="pf-card">
+        <div class="pf-label">Active Positions</div>
+        <div class="pf-value small" style="text-align:center;margin-top:12px">7</div>
+        <div class="pf-sub" style="text-align:center">across 4 guilds</div>
+        <div class="breakdown">
+          <span class="breakdown-pill" style="background:var(--green-dim);color:var(--green);border-color:rgba(34,197,94,0.15)">3 Early</span>
+          <span class="breakdown-pill" style="background:var(--amber-dim);color:var(--amber);border-color:rgba(251,191,36,0.15)">2 Review</span>
+          <span class="breakdown-pill" style="background:rgba(139,92,246,0.1);color:#a78bfa;border-color:rgba(139,92,246,0.15)">2 Resolving</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ OPEN POSITIONS ═══════════════ -->
+  <section class="section" style="padding-top:0">
+    <div class="section-head">
+      <h2 class="section-title">Open <span class="accent">Positions</span></h2>
+      <div class="filter-tabs">
+        <button class="filter-tab active">All</button>
+        <button class="filter-tab">Low Risk</button>
+        <button class="filter-tab">High Yield</button>
+        <button class="filter-tab">Expiring Soon</button>
+      </div>
+    </div>
+
+    <div class="opp-grid" id="opp-grid"></div>
+  </section>
+
+  <!-- ═══════════════ YOUR ACTIVE POSITIONS ═══════════════ -->
+  <section class="section" style="padding-top:0">
+    <div class="section-head">
+      <h2 class="section-title">Your <span class="accent">Positions</span></h2>
+    </div>
+
+    <div class="positions-table-wrap">
+      <div class="table-scroll">
+        <table class="positions-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Entry</th>
+              <th>Current Value</th>
+              <th>P&amp;L</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="positions-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MARKET STATS FOOTER ═══════════════ -->
+  <section class="section" style="padding-top:0">
+    <div class="market-stats">
+      <div class="mstat">
+        <div class="mstat-label">Total Market TVL</div>
+        <div class="mstat-val">847.3 ETH</div>
+        <div class="mstat-sub text-green">+12.4% this week</div>
+      </div>
+      <div class="mstat">
+        <div class="mstat-label">24h Volume</div>
+        <div class="mstat-val">23.8 ETH</div>
+        <div class="mstat-sub">142 transactions</div>
+      </div>
+      <div class="mstat">
+        <div class="mstat-label">Avg Return Rate</div>
+        <div class="mstat-val text-green">+12.7%</div>
+        <div class="mstat-sub">across all positions</div>
+      </div>
+      <div class="mstat">
+        <div class="mstat-label">Positions Filled Today</div>
+        <div class="mstat-val">18</div>
+        <div class="mstat-sub text-green">+5 from yesterday</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ═══════ TICKER DATA ═══════
+const tickerItems = [
+  { type: 'pos', name: 'Marcus K.', result: 'Hired — backers earned 16%', ico: '&#x2713;' },
+  { type: 'neg', name: 'Sarah L.', result: 'Rejected — stakes returned', ico: '&#x2717;' },
+  { type: 'pos', name: 'David R.', result: 'Hired — backers earned 22%', ico: '&#x2713;' },
+  { type: 'pos', name: 'Priya M.', result: 'Hired — backers earned 11%', ico: '&#x2713;' },
+  { type: 'neu', name: 'James T.', result: 'Under review — 3d remaining', ico: '&#x25CF;' },
+  { type: 'neg', name: 'Olivia N.', result: 'Withdrew — stakes returned', ico: '&#x2717;' },
+  { type: 'pos', name: 'Chen W.', result: 'Hired — backers earned 19%', ico: '&#x2713;' },
+  { type: 'pos', name: 'Elena S.', result: 'Hired — backers earned 14%', ico: '&#x2713;' },
+  { type: 'neu', name: 'Alex B.', result: 'Final round — resolution pending', ico: '&#x25CF;' },
+  { type: 'pos', name: 'Fatima H.', result: 'Hired — backers earned 25%', ico: '&#x2713;' },
+  { type: 'neg', name: 'Ryan P.', result: 'Rejected — 90% stake returned', ico: '&#x2717;' },
+  { type: 'pos', name: 'Yuki T.', result: 'Hired — backers earned 18%', ico: '&#x2713;' },
+];
+
+const tickerEl = document.getElementById('ticker');
+// Double the items for seamless loop
+const allItems = [...tickerItems, ...tickerItems];
+tickerEl.innerHTML = allItems.map(t =>
+  `<span class="ticker-item ${t.type}"><span class="ico">${t.ico}</span> <span class="name">${t.name}</span> <span class="result">${t.result}</span></span>`
+).join('');
+
+// ═══════ OPPORTUNITY CARDS ═══════
+const opportunities = [
+  {
+    initials: 'AK', name: 'Aisha Khan', role: 'Senior Solidity Engineer',
+    bg: '#f97316', stake: '0.5 ETH', potential: '+16%', potClass: 'green',
+    risk: 'low', riskLabel: 'Low', time: '2d 14h',
+    tags: ['Solidity', 'EVM', 'Auditing'], guild: 'Smart Contract Guild'
+  },
+  {
+    initials: 'TN', name: 'Tomas Novak', role: 'Full-Stack DeFi Developer',
+    bg: '#22c55e', stake: '0.35 ETH', potential: '+22%', potClass: 'green',
+    risk: 'med', riskLabel: 'Medium', time: '1d 8h',
+    tags: ['React', 'Node.js', 'DeFi'], guild: 'Web3 Frontend Guild'
+  },
+  {
+    initials: 'LW', name: 'Lena Weiss', role: 'DevOps & Infrastructure Lead',
+    bg: '#a78bfa', stake: '0.8 ETH', potential: '+11%', potClass: 'green',
+    risk: 'low', riskLabel: 'Low', time: '5d 2h',
+    tags: ['AWS', 'Docker', 'Terraform'], guild: 'Infrastructure Guild'
+  },
+  {
+    initials: 'MJ', name: 'Marcus Johnson', role: 'Smart Contract Auditor',
+    bg: '#ef4444', stake: '1.2 ETH', potential: '+28%', potClass: 'green',
+    risk: 'high', riskLabel: 'High', time: '0d 19h',
+    tags: ['Security', 'Formal Verification'], guild: 'Smart Contract Guild'
+  },
+  {
+    initials: 'RG', name: 'Rosa Garcia', role: 'Protocol Researcher',
+    bg: '#fbbf24', stake: '0.25 ETH', potential: '+14%', potClass: 'green',
+    risk: 'low', riskLabel: 'Low', time: '4d 6h',
+    tags: ['Cryptography', 'ZK-Proofs'], guild: 'Research Guild'
+  },
+  {
+    initials: 'KP', name: 'Kai Park', role: 'Frontend Engineer (React)',
+    bg: '#60a5fa', stake: '0.4 ETH', potential: '+18%', potClass: 'green',
+    risk: 'med', riskLabel: 'Medium', time: '3d 0h',
+    tags: ['React', 'TypeScript', 'Design Systems'], guild: 'Web3 Frontend Guild'
+  },
+  {
+    initials: 'DN', name: 'Dimitri Nakamura', role: 'Tokenomics Analyst',
+    bg: '#34d399', stake: '0.6 ETH', potential: '+9%', potClass: 'amber',
+    risk: 'low', riskLabel: 'Low', time: '6d 18h',
+    tags: ['Economics', 'Modeling', 'Python'], guild: 'Research Guild'
+  },
+  {
+    initials: 'SO', name: 'Sana Okafor', role: 'Rust / Substrate Developer',
+    bg: '#f472b6', stake: '0.75 ETH', potential: '+31%', potClass: 'green',
+    risk: 'high', riskLabel: 'High', time: '0d 6h',
+    tags: ['Rust', 'Substrate', 'Polkadot'], guild: 'Infrastructure Guild'
+  },
+];
+
+const oppGrid = document.getElementById('opp-grid');
+oppGrid.innerHTML = opportunities.map(o => `
+  <div class="trade-card">
+    <div class="tc-top">
+      <div class="tc-avatar">
+        <div class="tc-avatar-inner" style="background:${o.bg};color:#07070b">${o.initials}</div>
+      </div>
+      <div class="tc-name">${o.name}</div>
+      <div class="tc-role">${o.role}</div>
+    </div>
+    <div class="tc-metrics">
+      <div class="tc-metric">
+        <div class="tc-metric-label">Stake</div>
+        <div class="tc-metric-val">${o.stake}</div>
+      </div>
+      <div class="tc-metric">
+        <div class="tc-metric-label">Potential</div>
+        <div class="tc-metric-val ${o.potClass}">${o.potential}</div>
+      </div>
+      <div class="tc-metric">
+        <div class="tc-metric-label">Risk</div>
+        <div class="tc-metric-val ${o.risk === 'low' ? 'green' : o.risk === 'med' ? 'amber' : 'red'}">${o.riskLabel}</div>
+        <div class="risk-bar"><div class="risk-fill ${o.risk}"></div></div>
+      </div>
+      <div class="tc-metric">
+        <div class="tc-metric-label">Expires</div>
+        <div class="tc-metric-val" style="color:${o.time.startsWith('0d') ? 'var(--red)' : 'var(--t1)'}">${o.time}</div>
+      </div>
+    </div>
+    <div class="tc-tags">
+      ${o.tags.map(t => `<span class="tc-tag">${t}</span>`).join('')}
+      <span class="tc-guild">${o.guild}</span>
+    </div>
+    <div class="tc-action">
+      <button class="stake-btn">Stake ${o.stake}</button>
+    </div>
+  </div>
+`).join('');
+
+// ═══════ POSITIONS TABLE ═══════
+const positions = [
+  {
+    initials: 'CW', name: 'Chen Wei', role: 'Backend Engineer', bg: '#f97316',
+    entry: '0.5 ETH', current: '0.58 ETH', pnl: '+0.08', pnlPct: '+16.0%', pnlDir: 'green',
+    status: 'claimable', statusLabel: 'Claimable', progress: 100, progressColor: 'var(--green)',
+    action: 'claim'
+  },
+  {
+    initials: 'PM', name: 'Priya Mehta', role: 'Solidity Developer', bg: '#22c55e',
+    entry: '0.4 ETH', current: '0.44 ETH', pnl: '+0.04', pnlPct: '+11.0%', pnlDir: 'green',
+    status: 'claimable', statusLabel: 'Claimable', progress: 100, progressColor: 'var(--green)',
+    action: 'claim'
+  },
+  {
+    initials: 'JF', name: 'Jake Foster', role: 'DevOps Lead', bg: '#60a5fa',
+    entry: '0.6 ETH', current: '0.6 ETH', pnl: '0.00', pnlPct: '0.0%', pnlDir: '',
+    status: 'review', statusLabel: 'In Review', progress: 65, progressColor: 'var(--amber)',
+    action: 'view'
+  },
+  {
+    initials: 'LS', name: 'Laura Santos', role: 'UX Researcher', bg: '#a78bfa',
+    entry: '0.3 ETH', current: '0.3 ETH', pnl: '0.00', pnlPct: '0.0%', pnlDir: '',
+    status: 'review', statusLabel: 'In Review', progress: 40, progressColor: 'var(--amber)',
+    action: 'view'
+  },
+  {
+    initials: 'AF', name: 'Amir Farouk', role: 'Protocol Engineer', bg: '#34d399',
+    entry: '0.45 ETH', current: '0.45 ETH', pnl: '0.00', pnlPct: '0.0%', pnlDir: '',
+    status: 'active', statusLabel: 'Screening', progress: 20, progressColor: 'var(--green)',
+    action: 'view'
+  },
+  {
+    initials: 'YT', name: 'Yuki Tanaka', role: 'Frontend Engineer', bg: '#fbbf24',
+    entry: '0.35 ETH', current: '0.35 ETH', pnl: '0.00', pnlPct: '0.0%', pnlDir: '',
+    status: 'active', statusLabel: 'Screening', progress: 15, progressColor: 'var(--green)',
+    action: 'view'
+  },
+  {
+    initials: 'NR', name: 'Nina Rossi', role: 'Data Scientist', bg: '#f472b6',
+    entry: '0.6 ETH', current: '0.6 ETH', pnl: '0.00', pnlPct: '0.0%', pnlDir: '',
+    status: 'resolving', statusLabel: 'Resolving', progress: 85, progressColor: '#a78bfa',
+    action: 'view'
+  },
+];
+
+const posBody = document.getElementById('positions-body');
+let posHTML = positions.map(p => `
+  <tr>
+    <td>
+      <div class="pos-candidate">
+        <div class="pos-avatar" style="background:${p.bg}">${p.initials}</div>
+        <div>
+          <div class="pos-name">${p.name}</div>
+          <div class="pos-role">${p.role}</div>
+        </div>
+      </div>
+    </td>
+    <td class="pos-mono">${p.entry}</td>
+    <td class="pos-mono">${p.current}</td>
+    <td class="pos-mono ${p.pnlDir}">${p.pnl} ETH <span style="opacity:0.7">(${p.pnlPct})</span></td>
+    <td>
+      <span class="status-badge ${p.status}">${p.statusLabel}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%;background:${p.progressColor}"></div></div>
+    </td>
+    <td>
+      ${p.action === 'claim'
+        ? '<button class="claim-btn">Claim</button>'
+        : '<button class="view-btn">View</button>'}
+    </td>
+  </tr>
+`).join('');
+
+// Total row
+posHTML += `
+  <tr class="portfolio-total">
+    <td style="font-family:var(--mono);font-size:0.82rem;color:var(--t2)">PORTFOLIO TOTAL</td>
+    <td class="pos-mono">3.20 ETH</td>
+    <td class="pos-mono">3.32 ETH</td>
+    <td class="pos-mono green">+0.12 ETH <span style="opacity:0.7">(+3.75%)</span></td>
+    <td></td>
+    <td></td>
+  </tr>
+`;
+
+posBody.innerHTML = posHTML;
+
+// ═══════ FILTER TAB INTERACTION ═══════
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// ═══════ COUNTDOWN TIMER ═══════
+function updateCountdowns() {
+  document.querySelectorAll('.tc-metric-val[data-countdown]').forEach(el => {
+    // Simplified: just flash the expiring ones
+  });
+}
+
+// ═══════ CARD TILT EFFECT ═══════
+document.querySelectorAll('.trade-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `translateY(-8px) scale(1.02) perspective(600px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+
+// ═══════ GAUGE ANIMATION ON SCROLL ═══════
+const gaugeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const arc = entry.target.querySelector('path:nth-child(2)');
+      if (arc) {
+        arc.style.strokeDashoffset = '10.4'; // 94% of 173
+      }
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.gauge-svg').forEach(g => gaugeObserver.observe(g));
+</script>
+
+</body>
+</html>

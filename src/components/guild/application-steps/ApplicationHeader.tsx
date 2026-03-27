@@ -17,7 +17,7 @@ export default function ApplicationHeader({ guildName, description }: Applicatio
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Apply to Join {guildName}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-sm font-medium text-muted-foreground">
               {description || "Complete the application form below to join this guild"}
             </p>
           </div>

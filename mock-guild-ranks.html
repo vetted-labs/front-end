@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guild Rank Progression — Vetted</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0e14;
+    --bg-card: rgba(22, 25, 35, 0.7);
+    --bg-card-solid: #161923;
+    --border: rgba(255,255,255,0.06);
+    --border-60: rgba(255,255,255,0.04);
+    --text: #e8eaed;
+    --text-muted: #8b8f9a;
+    --text-muted-60: rgba(139,143,154,0.6);
+    --primary: #ff6a00;
+    --primary-10: rgba(255,106,0,0.1);
+    --emerald: #10b981;
+    --emerald-10: rgba(16,185,129,0.1);
+    --emerald-20: rgba(16,185,129,0.2);
+    --emerald-30: rgba(16,185,129,0.3);
+    --emerald-40: rgba(16,185,129,0.4);
+    --cyan: #06b6d4;
+    --cyan-10: rgba(6,182,212,0.1);
+    --cyan-15: rgba(6,182,212,0.15);
+    --cyan-20: rgba(6,182,212,0.2);
+    --orange: #f97316;
+    --orange-10: rgba(249,115,22,0.1);
+    --orange-15: rgba(249,115,22,0.15);
+    --orange-20: rgba(249,115,22,0.2);
+    --blue: #3b82f6;
+    --blue-10: rgba(59,130,246,0.1);
+    --blue-15: rgba(59,130,246,0.15);
+    --blue-20: rgba(59,130,246,0.2);
+    --amber: #f59e0b;
+    --amber-10: rgba(245,158,11,0.1);
+    --amber-15: rgba(245,158,11,0.15);
+    --amber-20: rgba(245,158,11,0.2);
+    --amber-30: rgba(245,158,11,0.3);
+    --muted-50: rgba(255,255,255,0.04);
+    --muted-bg: rgba(255,255,255,0.06);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* ─── Cards ─────────────────────────── */
+  .card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+
+  /* ─── Typography helpers ─────────────── */
+  .label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Page Header ──────────────────── */
+  .page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ─── Stats Grid ───────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--primary-10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon-wrap svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+  }
+
+  /* ─── Hero Card ────────────────────── */
+  .hero-card {
+    position: relative;
+    overflow: hidden;
+    border-color: var(--amber-20);
+    margin-top: 24px;
+  }
+  .hero-glow {
+    position: absolute;
+    top: -96px;
+    right: -96px;
+    width: 256px;
+    height: 256px;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.04;
+    filter: blur(48px);
+    pointer-events: none;
+  }
+  .hero-content {
+    position: relative;
+    padding: 24px;
+  }
+  .hero-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .rank-icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 24px var(--amber-30);
+    background: var(--amber-15);
+  }
+  .rank-icon-box svg {
+    width: 32px;
+    height: 32px;
+    color: var(--amber);
+  }
+  .rank-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .rank-title-row h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+  .badge-master {
+    background: rgba(245,158,11,0.12);
+    color: #fbbf24;
+    border-color: rgba(245,158,11,0.3);
+  }
+  .badge-recruit {
+    background: rgba(6,182,212,0.12);
+    color: #22d3ee;
+    border-color: rgba(6,182,212,0.3);
+  }
+  .badge-apprentice {
+    background: rgba(16,185,129,0.12);
+    color: #34d399;
+    border-color: rgba(16,185,129,0.3);
+  }
+  .badge-craftsman {
+    background: rgba(249,115,22,0.12);
+    color: #fb923c;
+    border-color: rgba(249,115,22,0.3);
+  }
+  .badge-officer {
+    background: rgba(59,130,246,0.12);
+    color: #60a5fa;
+    border-color: rgba(59,130,246,0.3);
+  }
+  .rank-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ─── Divider ────────────────────────── */
+  .section-divider {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── Term Rules ─────────────────────── */
+  .term-rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 24px;
+    margin-top: 10px;
+  }
+  .term-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .term-rule-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(139,143,154,0.4);
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ─── Reward Tier ───────────────────── */
+  .reward-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .reward-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--primary-10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .reward-icon-wrap svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+  }
+  .reward-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .reward-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .reward-tier-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+  .reward-multiplier {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--muted-bg);
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s ease;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    margin-bottom: 2px;
+  }
+
+  /* ─── Rank Ladder ──────────────────── */
+  .ladder-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-top: 24px;
+    margin-bottom: 16px;
+  }
+  .ladder-wrapper {
+    position: relative;
+  }
+  .ladder-line {
+    position: absolute;
+    left: 23px;
+    top: 24px;
+    bottom: 24px;
+    width: 1px;
+    background: var(--border);
+  }
+  .ladder-line-achieved {
+    position: absolute;
+    left: 23px;
+    top: 24px;
+    width: 1px;
+    background: var(--emerald-40);
+  }
+  .ladder-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ladder-item {
+    position: relative;
+  }
+  .ladder-node {
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 47px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .ladder-node-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .ladder-node-circle.achieved {
+    background: var(--emerald-10);
+    box-shadow: 0 0 0 2px var(--emerald-30);
+  }
+  .ladder-node-circle.current-master {
+    background: var(--amber-15);
+    box-shadow: 0 0 0 2px var(--amber), 0 4px 20px var(--amber-30);
+  }
+  .ladder-node-circle.current-recruit { background: var(--cyan-15); box-shadow: 0 0 0 2px var(--cyan); }
+  .ladder-node-circle.current-apprentice { background: var(--emerald-10); box-shadow: 0 0 0 2px var(--emerald); }
+  .ladder-node-circle.current-craftsman { background: var(--orange-15); box-shadow: 0 0 0 2px var(--orange); }
+  .ladder-node-circle.current-officer { background: var(--blue-15); box-shadow: 0 0 0 2px var(--blue); }
+  .ladder-node-circle.locked {
+    background: var(--muted-50);
+  }
+  .ladder-node-circle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .ladder-card {
+    margin-left: 48px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .ladder-card:hover {
+    border-color: rgba(255,255,255,0.1);
+  }
+  .ladder-card.current-master {
+    border-color: var(--amber-20);
+    box-shadow: 0 4px 20px rgba(245,158,11,0.12);
+  }
+  .ladder-card.locked-card {
+    opacity: 0.7;
+  }
+
+  .ladder-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .ladder-name {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ladder-name svg {
+    width: 12px;
+    height: 12px;
+    color: rgba(139,143,154,0.4);
+  }
+  .ladder-desc {
+    font-size: 12px;
+    color: var(--text-muted-60);
+    margin-top: 2px;
+  }
+  .ladder-status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+  .badge-achieved {
+    background: var(--emerald-10);
+    color: #34d399;
+    border-color: var(--emerald-20);
+  }
+  .badge-current-amber {
+    background: var(--amber-10);
+    color: #fbbf24;
+    border-color: var(--amber-20);
+  }
+  .chevron {
+    width: 16px;
+    height: 16px;
+    color: rgba(139,143,154,0.4);
+    transition: transform 0.2s, color 0.2s;
+    flex-shrink: 0;
+  }
+  .chevron.open {
+    transform: rotate(180deg);
+  }
+  .ladder-btn:hover .chevron {
+    color: var(--text-muted);
+  }
+
+  /* ─── Expanded Detail Panel ─────────── */
+  .detail-panel {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .detail-section-title {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .detail-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-req {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .req-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .req-check.met {
+    background: var(--emerald-10);
+  }
+  .req-check.met svg {
+    width: 12px;
+    height: 12px;
+    color: var(--emerald);
+  }
+  .req-check.unmet {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(139,143,154,0.2);
+    margin-top: 2px;
+  }
+  .req-label.met {
+    color: var(--text-muted);
+  }
+  .unlock-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+  .unlock-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ─── SVG Icons ─────────────────────── */
+  .icon { display: inline-block; vertical-align: middle; }
+
+  /* ─── Animations ────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeUp 0.4s ease both;
+  }
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Page Header -->
+  <div class="page-header animate-in">
+    <h1>Advance Your Guild Rank</h1>
+    <p>Build reputation, complete reviews, and climb from Recruit to Guild Master.</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid animate-in delay-1">
+    <div class="card stat-card">
+      <div class="stat-card-inner">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <div>
+          <p class="label">Reputation</p>
+          <p class="stat-value">500</p>
+        </div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-card-inner">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <div>
+          <p class="label">Reviews</p>
+          <p class="stat-value">0</p>
+        </div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-card-inner">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <p class="label">Consensus</p>
+          <p class="stat-value">N/A</p>
+        </div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-card-inner">
+        <div class="stat-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+        </div>
+        <div>
+          <p class="label">Endorsements</p>
+          <p class="stat-value">8</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current Rank Hero -->
+  <div class="card hero-card animate-in delay-2">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-top">
+        <div class="rank-icon-box">
+          <!-- Crown icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+        </div>
+        <div>
+          <div class="rank-title-row">
+            <h2>Guild Master</h2>
+            <span class="badge badge-master">master</span>
+          </div>
+          <p class="rank-desc">Elected leader representing the guild in platform governance. Only one per guild.</p>
+        </div>
+      </div>
+
+      <!-- Term Rules -->
+      <div class="section-divider">
+        <p class="label" style="margin-bottom: 10px;">Term Rules</p>
+        <div class="term-rules-grid">
+          <div class="term-rule"><span class="term-rule-dot"></span>3-month term (1 quarter)</div>
+          <div class="term-rule"><span class="term-rule-dot"></span>Can be re-elected for a second consecutive term</div>
+          <div class="term-rule"><span class="term-rule-dot"></span>Must step down after 2 consecutive terms</div>
+          <div class="term-rule"><span class="term-rule-dot"></span>Eligible to run again after sitting out one term</div>
+        </div>
+      </div>
+
+      <!-- Reward Tier -->
+      <div class="section-divider">
+        <div class="reward-row">
+          <div class="reward-icon-wrap">
+            <!-- Gift icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="reward-header">
+              <div class="reward-header-left">
+                <span class="label">Reward Tier</span>
+                <span class="reward-tier-name">Foundation</span>
+              </div>
+              <span class="reward-multiplier">1x rewards</span>
+            </div>
+            <div class="progress-meta">
+              <span>Progress to Established</span>
+              <span>500 / 1000</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:50%;background:var(--amber);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL RANKS -->
+  <h3 class="ladder-title animate-in delay-3">All Ranks</h3>
+
+  <div class="ladder-wrapper animate-in delay-4">
+    <!-- Base line (full height) -->
+    <div class="ladder-line"></div>
+    <!-- Achieved line (up to guild master = 100%) -->
+    <div class="ladder-line-achieved" style="height: calc(100% - 48px);"></div>
+
+    <div class="ladder-items">
+
+      <!-- 1. Recruit — Achieved -->
+      <div class="ladder-item">
+        <div class="ladder-node">
+          <div class="ladder-node-circle achieved">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="card ladder-card">
+          <button class="ladder-btn" onclick="toggleRank(this)">
+            <div style="flex:1;min-width:0;">
+              <div class="ladder-name">Recruit</div>
+              <p class="ladder-desc">Entry-level guild member who has passed initial vetting</p>
+            </div>
+            <span class="ladder-status-badge badge-achieved">Achieved</span>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="detail-panel" style="display:none;">
+            <div class="detail-grid">
+              <div>
+                <p class="detail-section-title">Requirements</p>
+                <ul class="detail-list">
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Pass guild application review</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Receive approval from guild members</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Complete profile verification</span></li>
+                </ul>
+              </div>
+              <div>
+                <p class="detail-section-title">Unlocks</p>
+                <ul class="detail-list">
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--cyan);"></span>Reply to feed posts</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--cyan);"></span>View guild discussions</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Apprentice — Achieved + EXPANDED -->
+      <div class="ladder-item">
+        <div class="ladder-node">
+          <div class="ladder-node-circle achieved">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="card ladder-card">
+          <button class="ladder-btn" onclick="toggleRank(this)">
+            <div style="flex:1;min-width:0;">
+              <div class="ladder-name">Apprentice</div>
+              <p class="ladder-desc">Active participant building reputation through reviews</p>
+            </div>
+            <span class="ladder-status-badge badge-achieved">Achieved</span>
+            <svg class="chevron open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="detail-panel" style="display:block;">
+            <div class="detail-grid">
+              <div>
+                <p class="detail-section-title">Requirements</p>
+                <ul class="detail-list">
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Complete 10+ reviews</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Maintain 70%+ consensus</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Reputation score 50+</span></li>
+                </ul>
+              </div>
+              <div>
+                <p class="detail-section-title">Unlocks</p>
+                <ul class="detail-list">
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--emerald);"></span>Create feed posts</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--emerald);"></span>Participate in discussions</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Craftsman — Achieved -->
+      <div class="ladder-item">
+        <div class="ladder-node">
+          <div class="ladder-node-circle achieved">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="card ladder-card">
+          <button class="ladder-btn" onclick="toggleRank(this)">
+            <div style="flex:1;min-width:0;">
+              <div class="ladder-name">Craftsman</div>
+              <p class="ladder-desc">Trusted reviewer eligible to endorse candidates</p>
+            </div>
+            <span class="ladder-status-badge badge-achieved">Achieved</span>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="detail-panel" style="display:none;">
+            <div class="detail-grid">
+              <div>
+                <p class="detail-section-title">Requirements</p>
+                <ul class="detail-list">
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Complete 50+ reviews</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Maintain 75%+ consensus</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Reputation score 150+</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Endorse 5+ candidates</span></li>
+                </ul>
+              </div>
+              <div>
+                <p class="detail-section-title">Unlocks</p>
+                <ul class="detail-list">
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--orange);"></span>Edit others' posts</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--orange);"></span>Mark duplicates</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--orange);"></span>Endorse candidates</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Officer — Achieved -->
+      <div class="ladder-item">
+        <div class="ladder-node">
+          <div class="ladder-node-circle achieved">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="card ladder-card">
+          <button class="ladder-btn" onclick="toggleRank(this)">
+            <div style="flex:1;min-width:0;">
+              <div class="ladder-name">Officer</div>
+              <p class="ladder-desc">Senior guild member overseeing governance</p>
+            </div>
+            <span class="ladder-status-badge badge-achieved">Achieved</span>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="detail-panel" style="display:none;">
+            <div class="detail-grid">
+              <div>
+                <p class="detail-section-title">Requirements</p>
+                <ul class="detail-list">
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Complete 100+ reviews</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Maintain 80%+ consensus</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Reputation score 300+</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Participate in guild governance</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Mentor 3+ lower-rank members</span></li>
+                </ul>
+              </div>
+              <div>
+                <p class="detail-section-title">Unlocks</p>
+                <ul class="detail-list">
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--blue);"></span>Pin/unpin posts</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--blue);"></span>Close/reopen threads</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--blue);"></span>Accept answers on behalf</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Guild Master — Current -->
+      <div class="ladder-item">
+        <div class="ladder-node">
+          <div class="ladder-node-circle current-master">
+            <!-- Crown icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+          </div>
+        </div>
+        <div class="card ladder-card current-master">
+          <button class="ladder-btn" onclick="toggleRank(this)">
+            <div style="flex:1;min-width:0;">
+              <div class="ladder-name">Guild Master</div>
+              <p class="ladder-desc">Elected leader representing the guild in platform governance. Only one per guild.</p>
+            </div>
+            <span class="ladder-status-badge badge-current-amber">Current</span>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="detail-panel" style="display:none;">
+            <div class="detail-grid">
+              <div>
+                <p class="detail-section-title">Requirements</p>
+                <ul class="detail-list">
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Elected by guild members (1 per guild)</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Complete 200+ reviews</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Maintain 85%+ consensus</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Reputation score 500+</span></li>
+                  <li class="detail-req"><span class="req-check met"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="req-label met">Proven leadership</span></li>
+                </ul>
+              </div>
+              <div>
+                <p class="detail-section-title">Unlocks</p>
+                <ul class="detail-list">
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--amber);"></span>Full delete/moderation</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--amber);"></span>Full guild control</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--amber);"></span>3-month term (1 quarter), re-electable once</li>
+                  <li class="unlock-item"><span class="unlock-dot" style="background:var(--amber);"></span>Must step down after 2 consecutive terms</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleRank(btn) {
+  const panel = btn.nextElementSibling;
+  const chevron = btn.querySelector('.chevron');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    chevron.classList.add('open');
+  } else {
+    panel.style.display = 'none';
+    chevron.classList.remove('open');
+  }
+}
+</script>
+
+</body>
+</html>

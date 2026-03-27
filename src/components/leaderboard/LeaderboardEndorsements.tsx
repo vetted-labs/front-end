@@ -40,22 +40,22 @@ export function LeaderboardEndorsements({
         <table className="w-full">
           <thead>
             <tr className="border-b border-border/40 bg-muted/30 dark:bg-white/[0.02]">
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-12">
                 #
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Expert
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-primary uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">
                 Endorsements
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Total Bid
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Success Rate
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
                 Active Bids
               </th>
             </tr>
@@ -76,17 +76,17 @@ export function LeaderboardEndorsements({
                   )}
                 >
                   <td className="px-4 py-3">
-                    <span className="text-sm font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
+                    <span className="text-sm font-medium text-muted-foreground tabular-nums">{i + 1}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold truncate">{entry.fullName}</span>
+                      <span className="text-sm font-medium truncate">{entry.fullName}</span>
                       {isCurrentUser && (
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
+                        <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
                           You
                         </span>
                       )}
-                      <Badge variant={getRankBadgeVariant(entry.role)} className="text-[9px] px-1.5 py-0 capitalize">
+                      <Badge variant={getRankBadgeVariant(entry.role)} className="text-xs px-1.5 py-0 capitalize">
                         {entry.role}
                       </Badge>
                     </div>
@@ -100,7 +100,7 @@ export function LeaderboardEndorsements({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <Coins className="w-3.5 h-3.5 text-positive shrink-0" />
-                      <span className="text-sm font-semibold tabular-nums">
+                      <span className="text-sm font-medium tabular-nums">
                         {formatVetd(bidVetd)}
                       </span>
                     </div>

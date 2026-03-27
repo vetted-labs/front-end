@@ -52,7 +52,7 @@ export function AuthorBadge({
     <div className={`flex items-center gap-2 flex-wrap ${className}`}>
       {/* Role Badge */}
       <span
-        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border ${roleColor}`}
+        className={`inline-flex items-center px-2 py-0.5 text-xs font-bold rounded-full border ${roleColor}`}
       >
         {roleLabel}
       </span>

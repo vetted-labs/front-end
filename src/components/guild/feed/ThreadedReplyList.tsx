@@ -178,7 +178,7 @@ function ReplyNode({
               {formatTimeAgo(reply.createdAt)}
             </span>
             {reply.isAccepted && (
-              <span className={`flex items-center gap-1 text-xs font-semibold ${STATUS_COLORS.positive.text}`}>
+              <span className={`flex items-center gap-1 text-xs font-medium ${STATUS_COLORS.positive.text}`}>
                 <CheckCircle2 className="w-3 h-3" />
                 Accepted
               </span>

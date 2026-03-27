@@ -111,7 +111,7 @@ export function GuildsOverview() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-extrabold font-display tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent mb-1">
+          <h1 className="text-3xl font-bold font-display tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent mb-1">
             My Guilds
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -140,7 +140,7 @@ export function GuildsOverview() {
           >
             My Guilds
             {profileGuilds.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 font-mono text-[10px] font-semibold rounded-full bg-primary/[0.08] text-primary border border-primary/20">
+              <span className="ml-2 px-2 py-0.5 font-mono text-xs font-semibold rounded-full bg-primary/[0.08] text-primary border border-primary/20">
                 {profileGuilds.length}
               </span>
             )}
@@ -184,7 +184,7 @@ export function GuildsOverview() {
                   </div>
                   <div>
                     <h3 className="text-base font-bold font-display text-foreground mb-0.5">Action Required</h3>
-                    <p className="text-[13px] text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {totalPendingApplications} application{totalPendingApplications !== 1 ? "s" : ""} waiting for your review
                     </p>
                   </div>
@@ -212,8 +212,8 @@ export function GuildsOverview() {
                             <GIcon className="w-3.5 h-3.5 text-primary" />
                           </div>
                           <div className="text-left">
-                            <p className="text-[13px] font-semibold text-foreground">{guild.name}</p>
-                            <p className="text-xs font-semibold text-warning">
+                            <p className="text-sm font-medium text-foreground">{guild.name}</p>
+                            <p className="text-xs font-medium text-warning">
                               {guild.pendingProposals} pending application{guild.pendingProposals !== 1 ? "s" : ""}
                             </p>
                           </div>
@@ -319,7 +319,7 @@ export function GuildsOverview() {
                     <GIcon className="w-[18px] h-[18px] text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
                       {guild.name}
                     </h3>
                     <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

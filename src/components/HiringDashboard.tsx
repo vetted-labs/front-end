@@ -134,22 +134,22 @@ export function HiringDashboard() {
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
             <Briefcase className="w-4 h-4 text-primary" />
             <span className="text-xs text-muted-foreground">Total Jobs</span>
-            <span className="text-sm font-semibold text-foreground">{stats?.totalJobs || 0}</span>
+            <span className="text-sm font-medium text-foreground">{stats?.totalJobs || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
             <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
             <span className="text-xs text-muted-foreground">Active</span>
-            <span className="text-sm font-semibold text-foreground">{stats?.activeJobs || 0}</span>
+            <span className="text-sm font-medium text-foreground">{stats?.activeJobs || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
             <Users className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
             <span className="text-xs text-muted-foreground">Applicants</span>
-            <span className="text-sm font-semibold text-foreground">{stats?.totalApplicants || 0}</span>
+            <span className="text-sm font-medium text-foreground">{stats?.totalApplicants || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
             <Clock className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
             <span className="text-xs text-muted-foreground">Avg. Days</span>
-            <span className="text-sm font-semibold text-foreground">{stats?.averageTimeToHire || 0}</span>
+            <span className="text-sm font-medium text-foreground">{stats?.averageTimeToHire || 0}</span>
           </div>
         </div>
 
@@ -162,7 +162,7 @@ export function HiringDashboard() {
         <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
           <div className="px-5 py-4 border-b border-border/40">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Job Postings</h2>
+              <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Job Postings</h2>
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -214,7 +214,7 @@ export function HiringDashboard() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h3 className="text-base font-semibold text-foreground mb-1">
+                          <h3 className="text-base font-medium text-foreground mb-1">
                             {job.title}
                           </h3>
                           <div className="flex items-center gap-4 text-sm text-card-foreground">

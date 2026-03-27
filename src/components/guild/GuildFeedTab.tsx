@@ -128,7 +128,7 @@ export function GuildFeedTab({
                 <button
                   key={mode}
                   onClick={() => setSortMode(mode)}
-                  className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-[12px] font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                     sortMode === mode
                       ? "bg-primary/[0.08] text-primary border border-primary/15"
                       : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
@@ -145,7 +145,7 @@ export function GuildFeedTab({
               <select
                 value={timeWindow}
                 onChange={(e) => setTimeWindow(e.target.value as TopTimeWindow)}
-                className="px-2.5 py-[6px] rounded-[8px] text-[12px] font-medium border border-border/60 bg-transparent text-foreground"
+                className="px-2.5 py-[6px] rounded-[8px] text-xs font-medium border border-border/60 bg-transparent text-foreground"
               >
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
@@ -157,7 +157,7 @@ export function GuildFeedTab({
             {bookmarkCount > 0 && (
               <button
                 onClick={() => setShowBookmarked((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-[12px] font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                   showBookmarked
                     ? "bg-primary/[0.08] text-primary border border-primary/15"
                     : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
@@ -178,7 +178,7 @@ export function GuildFeedTab({
               <button
                 key={tag.value}
                 onClick={() => setTagFilter(tag.value)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   tagFilter === tag.value
                     ? "bg-primary/[0.08] text-primary border border-primary/20"
                     : "text-muted-foreground border border-border/60 hover:text-foreground hover:border-border"
@@ -194,7 +194,7 @@ export function GuildFeedTab({
         {showNewPostButton && (
           <button
             onClick={() => setShowNewPost(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-[10px] font-display text-[12px] font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-[10px] font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             New Post

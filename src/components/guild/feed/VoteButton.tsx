@@ -76,7 +76,7 @@ export function VoteButton({
       <ChevronUp
         className={`w-5 h-5 ${voted ? "text-primary" : ""}`}
       />
-      <span className="text-xs font-semibold leading-none">
+      <span className="text-xs font-medium leading-none">
         {scoreHidden ? "Vote" : count}
       </span>
     </button>

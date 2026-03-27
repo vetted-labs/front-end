@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — My Guilds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#060a14;--card:rgba(12,18,33,0.6);--stat:rgba(255,255,255,0.025);
+    --border:rgba(255,255,255,0.06);--t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;
+    --gc:#f97316;--gc-soft:rgba(249,115,22,0.08);--gc-border:rgba(249,115,22,0.2);--gc-glow:rgba(249,115,22,0.12);
+    --gc-line:linear-gradient(90deg,transparent,#f97316 30%,#fbbf24 70%,transparent);
+    --emerald:#34d399;--emerald-s:rgba(52,211,153,0.08);
+    --amber:#fbbf24;--amber-s:rgba(251,191,36,0.06);--amber-b:rgba(251,191,36,0.15);
+    --r:20px;--fd:'Outfit',sans-serif;--fb:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;
+  }
+  body{background:var(--bg);color:var(--t1);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{content:'';position:absolute;width:800px;height:800px;top:-15%;left:-8%;background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 65%);animation:drift 20s ease-in-out infinite alternate}
+  .bg-fx::after{content:'';position:absolute;width:600px;height:600px;bottom:-10%;right:-5%;background:radial-gradient(circle,rgba(234,88,12,0.04) 0%,transparent 60%);animation:drift 24s ease-in-out infinite alternate-reverse}
+  @keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(50px,25px) scale(1.06)}}
+  .dots{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,0.022) 1px,transparent 1px);background-size:28px 28px}
+
+  .page{position:relative;z-index:2}
+  .container{max-width:1200px;margin:0 auto;padding:40px 24px 80px}
+
+  .glass{background:var(--card);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:relative;overflow:hidden}
+  .glass::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--gc-line);opacity:.5}
+  .glass-shim::after{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--gc-border),transparent 40%,transparent 60%,rgba(251,191,36,0.1));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .4s;pointer-events:none}
+  .glass-shim:hover::after{opacity:1}
+
+  /* ═══ HEADER ═══ */
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+  .page-title{font-family:var(--fd);font-size:32px;font-weight:800;letter-spacing:-.7px;background:linear-gradient(135deg,#f8fafc,#cbd5e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+  .page-sub{font-size:14px;color:var(--t3);max-width:480px}
+  .btn-join{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:12px;background:linear-gradient(135deg,var(--gc),#ea580c);color:#0a0a0a;font-family:var(--fd);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .25s;box-shadow:0 4px 16px rgba(249,115,22,0.25)}
+  .btn-join:hover{box-shadow:0 6px 24px rgba(249,115,22,0.35);transform:translateY(-1px)}
+  .btn-join svg{width:14px;height:14px}
+
+  /* ═══ TABS ═══ */
+  .tab-bar{border-bottom:1px solid var(--border);margin-bottom:24px}
+  .tabs{display:flex;gap:0}
+  .tab{padding:12px 20px;font-size:14px;font-weight:500;color:var(--t3);cursor:pointer;transition:color .25s;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab:hover{color:var(--t2)}
+  .tab.active{color:var(--gc);font-weight:700;border-bottom-color:var(--gc)}
+  .tab .badge{font-family:var(--fm);font-size:10px;padding:2px 8px;border-radius:100px;background:var(--gc-soft);color:var(--gc);margin-left:6px;font-weight:600;border:1px solid var(--gc-border)}
+
+  /* ═══ SEARCH ═══ */
+  .search-wrap{position:relative;margin-bottom:24px}
+  .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--t3);pointer-events:none}
+  .search-input{width:100%;padding:12px 16px 12px 44px;background:var(--card);border:1px solid var(--border);border-radius:14px;font-family:var(--fb);font-size:14px;color:var(--t1);outline:none;transition:border-color .3s,box-shadow .3s;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .search-input::placeholder{color:var(--t3)}
+  .search-input:focus{border-color:var(--gc-border);box-shadow:0 0 20px rgba(249,115,22,0.06)}
+
+  /* ═══ ACTION REQUIRED ═══ */
+  .action-panel{border-radius:var(--r);padding:24px;margin-bottom:24px;background:rgba(251,191,36,0.04);border:1px solid var(--amber-b);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden}
+  .action-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.4) 30%,rgba(249,115,22,0.3) 70%,transparent);opacity:.8}
+  .action-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .action-info{display:flex;align-items:flex-start;gap:12px}
+  .action-icon{width:38px;height:38px;border-radius:11px;background:var(--amber-s);border:1px solid var(--amber-b);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .action-icon svg{width:18px;height:18px;color:var(--amber)}
+  .action-title{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--t1);margin-bottom:2px}
+  .action-sub{font-size:13px;color:var(--t2)}
+  .btn-review{padding:8px 18px;border-radius:10px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);color:var(--amber);font-family:var(--fd);font-size:12px;font-weight:700;cursor:pointer;transition:all .3s;white-space:nowrap}
+  .btn-review:hover{background:rgba(251,191,36,0.2);box-shadow:0 0 14px rgba(251,191,36,0.1)}
+  .action-list{display:flex;flex-direction:column;gap:6px}
+  .action-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:all .25s}
+  .action-row:hover{border-color:var(--amber-b);background:rgba(251,191,36,0.03)}
+  .action-row-left{display:flex;align-items:center;gap:10px}
+  .action-row-icon{width:30px;height:30px;border-radius:8px;background:var(--gc-soft);border:1px solid var(--gc-border);display:flex;align-items:center;justify-content:center;color:var(--gc)}
+  .action-row-icon svg{width:14px;height:14px}
+  .action-row-name{font-size:13px;font-weight:600;color:var(--t1)}
+  .action-row-count{font-size:12px;color:var(--amber);font-weight:600}
+  .action-row-arrow{width:20px;height:20px;color:var(--t3);transition:all .2s}
+  .action-row:hover .action-row-arrow{color:var(--gc);transform:translateX(2px)}
+
+  /* ═══ GUILD GRID ═══ */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+  /* Card */
+  .card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.25,.46,.45,.94),border-color .4s,box-shadow .4s}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--gc-line);opacity:.5}
+  .card::after{content:'';position:absolute;inset:0;border-radius:var(--r);padding:1px;background:linear-gradient(135deg,var(--gc-border),transparent 40%,transparent 60%,rgba(251,191,36,0.1));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .4s;pointer-events:none}
+  .card:hover::after{opacity:1}
+  .card:hover{transform:translateY(-3px);border-color:var(--gc-border);box-shadow:0 12px 40px -8px var(--gc-glow)}
+  .card.urgent{border-color:rgba(251,191,36,0.2);box-shadow:0 0 30px rgba(251,191,36,0.05)}
+  .card.urgent:hover{border-color:rgba(251,191,36,0.35);box-shadow:0 0 40px rgba(251,191,36,0.1)}
+  .card-body{position:relative;padding:18px 20px}
+
+  .urgent-banner{display:flex;align-items:center;gap:8px;padding:10px 14px;margin:-18px -20px 14px;border-bottom:1px solid var(--amber-b);background:linear-gradient(135deg,rgba(251,191,36,0.05),rgba(249,115,22,0.02))}
+  .urgent-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(251,191,36,0.5);animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(251,191,36,0.3)}50%{box-shadow:0 0 14px rgba(251,191,36,0.6)}}
+  .urgent-text{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--amber)}
+  .urgent-text span{font-family:var(--fm);font-weight:600}
+
+  .dh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .gi{width:40px;height:40px;border-radius:11px;background:var(--gc-soft);border:1px solid var(--gc-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gc);transition:box-shadow .3s}
+  .gi svg{width:20px;height:20px}
+  .card:hover .gi{box-shadow:0 0 12px var(--gc-glow)}
+  .hi{flex:1;min-width:0}
+  .gn{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--t1);margin-bottom:2px;transition:color .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card:hover .gn{color:var(--gc)}
+  .gm{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:5px}
+  .arrow{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;color:var(--t3);transition:all .3s;flex-shrink:0}
+  .arrow svg{width:13px;height:13px}
+  .card:hover .arrow{background:var(--gc-soft);border-color:var(--gc-border);color:var(--gc);transform:translateX(2px)}
+
+  .ds{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .db{text-align:center;padding:10px 4px;border-radius:9px;background:var(--stat);border:1px solid rgba(255,255,255,0.04)}
+  .db .di{margin:0 auto 5px;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+  .db .di svg{width:11px;height:11px}
+  .db .sv{font-family:var(--fm);font-size:16px;font-weight:700;color:var(--t1);margin-bottom:1px}
+  .db .sv.gc{color:var(--gc)}
+  .db .sv.em{color:var(--emerald)}
+  .db .sl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)}
+  .db .vetd{font-family:var(--fm);font-size:8px;color:var(--t3);margin-top:1px;letter-spacing:.5px}
+
+  /* ═══ MODAL ═══ */
+  .modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fade-in .3s ease}
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  .modal{width:100%;max-width:520px;background:rgba(14,20,40,0.95);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);overflow:hidden;animation:modal-in .35s cubic-bezier(.16,1,.3,1);box-shadow:0 25px 80px rgba(0,0,0,0.5)}
+  @keyframes modal-in{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal-header{padding:24px 24px 0;display:flex;align-items:flex-start;justify-content:space-between}
+  .modal-title{font-family:var(--fd);font-size:20px;font-weight:700;color:var(--t1);margin-bottom:4px}
+  .modal-sub{font-size:13px;color:var(--t3)}
+  .modal-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t3);cursor:pointer;transition:all .2s;flex-shrink:0}
+  .modal-close:hover{border-color:var(--gc-border);color:var(--t1);background:rgba(255,255,255,0.06)}
+  .modal-close svg{width:16px;height:16px}
+  .modal-search{padding:16px 24px}
+  .modal-search-input{width:100%;padding:10px 14px 10px 38px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;font-family:var(--fb);font-size:13px;color:var(--t1);outline:none;transition:border-color .3s}
+  .modal-search-input::placeholder{color:var(--t3)}
+  .modal-search-input:focus{border-color:var(--gc-border)}
+  .modal-search{position:relative}
+  .modal-search-icon{position:absolute;left:38px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--t3);pointer-events:none}
+  .modal-list{padding:0 16px 20px;display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+  .modal-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.015);cursor:pointer;transition:all .25s}
+  .modal-row:hover{border-color:var(--gc-border);background:rgba(249,115,22,0.03);box-shadow:0 0 16px rgba(249,115,22,0.04)}
+  .modal-row .gi{width:38px;height:38px;border-radius:10px}
+  .modal-row .gi svg{width:18px;height:18px}
+  .modal-row-info{flex:1;min-width:0}
+  .modal-row-name{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--t1);transition:color .2s}
+  .modal-row:hover .modal-row-name{color:var(--gc)}
+  .modal-row-meta{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:4px;margin-top:2px}
+  .modal-row-meta svg{width:12px;height:12px;opacity:.5}
+  .modal-row-arrow{width:20px;height:20px;color:var(--t3);transition:all .2s;flex-shrink:0}
+  .modal-row:hover .modal-row-arrow{color:var(--gc);transform:translateX(2px)}
+
+  @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .a{animation:fade-up .5s ease forwards;opacity:0}
+  .a1{animation-delay:.04s}.a2{animation-delay:.08s}.a3{animation-delay:.12s}
+  .a4{animation-delay:.16s}.a5{animation-delay:.2s}.a6{animation-delay:.24s}
+  .a7{animation-delay:.28s}.a8{animation-delay:.32s}.a9{animation-delay:.36s}
+  .a10{animation-delay:.4s}.a11{animation-delay:.44s}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="dots"></div>
+
+<div class="page">
+<div class="container">
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="page-header a a1">
+    <div>
+      <h1 class="page-title">My Guilds</h1>
+      <p class="page-sub">Manage your guild memberships, review applications, and track rankings</p>
+    </div>
+    <button class="btn-join" onclick="document.getElementById('modal').style.display='flex'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      Join Guild
+    </button>
+  </div>
+
+  <!-- ═══ TABS ═══ -->
+  <div class="tab-bar a a2">
+    <div class="tabs">
+      <div class="tab active">My Guilds<span class="badge">6</span></div>
+      <div class="tab">Leaderboard</div>
+    </div>
+  </div>
+
+  <!-- ═══ SEARCH ═══ -->
+  <div class="search-wrap a a3">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" class="search-input" placeholder="Search guilds...">
+  </div>
+
+  <!-- ═══ ACTION REQUIRED ═══ -->
+  <div class="action-panel a a4">
+    <div class="action-top">
+      <div class="action-info">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div>
+          <div class="action-title">Action Required</div>
+          <div class="action-sub">3 applications waiting for your review</div>
+        </div>
+      </div>
+      <button class="btn-review">Review All</button>
+    </div>
+    <div class="action-list">
+      <div class="action-row">
+        <div class="action-row-left">
+          <div class="action-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <div>
+            <div class="action-row-name">Engineering</div>
+            <div class="action-row-count">2 pending applications</div>
+          </div>
+        </div>
+        <svg class="action-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+      <div class="action-row">
+        <div class="action-row-left">
+          <div class="action-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
+          <div>
+            <div class="action-row-name">Product</div>
+            <div class="action-row-count">1 pending application</div>
+          </div>
+        </div>
+        <svg class="action-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GUILD GRID ═══ -->
+  <div class="grid">
+
+    <!-- Engineering — URGENT -->
+    <div class="card urgent a a5">
+      <div class="card-body">
+        <div class="urgent-banner"><span class="urgent-dot"></span><span class="urgent-text"><span>2</span> pending reviews</span></div>
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <div class="hi"><div class="gn">Engineering</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>3 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">200</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$45</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product — URGENT (1) -->
+    <div class="card urgent a a6">
+      <div class="card-body">
+        <div class="urgent-banner"><span class="urgent-dot"></span><span class="urgent-text"><span>1</span> pending review</span></div>
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
+          <div class="hi"><div class="gn">Product</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>2 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">100</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$0</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales & Success — calm -->
+    <div class="card a a7">
+      <div class="card-body">
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          <div class="hi"><div class="gn">Sales & Success</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>2 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">50</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$0</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Design — calm -->
+    <div class="card a a8">
+      <div class="card-body">
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></div>
+          <div class="hi"><div class="gn">Design</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>2 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">100</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$0</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations — calm -->
+    <div class="card a a9">
+      <div class="card-body">
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="hi"><div class="gn">Operations & Strategy</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>2 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">80</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$0</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finance — calm -->
+    <div class="card a a10">
+      <div class="card-body">
+        <div class="dh">
+          <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+          <div class="hi"><div class="gn">Finance, Legal & Compliance</div><div class="gm"><span>Master</span><span style="opacity:.3">·</span><span>2 members</span></div></div>
+          <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </div>
+        <div class="ds">
+          <div class="db"><div class="di" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div><div class="sv gc">60</div><div class="sl">Staked</div><div class="vetd">VETD</div></div>
+          <div class="db"><div class="di" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sv em">$0</div><div class="sl">Earned</div></div>
+          <div class="db"><div class="di" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21"/></svg></div><div class="sv">500</div><div class="sl">Rep</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal" style="display:flex" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Join a Guild</div>
+        <div class="modal-sub">Choose a guild to apply for membership</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-search">
+      <svg class="modal-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="modal-search-input" placeholder="Search available guilds..." style="padding-left:38px">
+    </div>
+    <div class="modal-list">
+      <div class="modal-row">
+        <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="modal-row-info">
+          <div class="modal-row-name">People, HR & Recruitment</div>
+          <div class="modal-row-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>2 members</div>
+        </div>
+        <svg class="modal-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+      <div class="modal-row">
+        <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
+        <div class="modal-row-info">
+          <div class="modal-row-name">Data & Analytics</div>
+          <div class="modal-row-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>3 members</div>
+        </div>
+        <svg class="modal-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+      <div class="modal-row">
+        <div class="gi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="modal-row-info">
+          <div class="modal-row-name">Marketing & Growth</div>
+          <div class="modal-row-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>2 members</div>
+        </div>
+        <svg class="modal-row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

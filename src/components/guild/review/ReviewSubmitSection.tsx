@@ -18,7 +18,7 @@ export function ReviewSubmitSection({
 
   return (
     <div className="mt-6 rounded-xl border border-border bg-muted/20 p-5 space-y-3">
-      <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase flex items-center gap-2">
+      <h4 className="text-sm font-bold text-foreground tracking-wide uppercase flex items-center gap-2">
         <Coins className="w-4 h-4 text-primary" />
         Stake VETD
       </h4>

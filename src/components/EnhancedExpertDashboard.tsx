@@ -260,7 +260,7 @@ export function EnhancedExpertDashboard() {
   if (!mounted || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -295,10 +295,10 @@ export function EnhancedExpertDashboard() {
       {/* Section 1: Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-50 tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Dashboard
           </h1>
-          <p className="text-sm text-zinc-600 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
             {profile.guilds?.length ?? 0} guilds
           </p>

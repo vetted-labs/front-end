@@ -192,7 +192,7 @@ export default function CompanyMessagesInbox() {
               Back
             </button>
           ) : (
-            <h1 className="text-lg font-semibold text-foreground">Messages</h1>
+            <h1 className="text-xl font-bold text-foreground">Messages</h1>
           )}
         </div>
 
@@ -205,11 +205,11 @@ export default function CompanyMessagesInbox() {
           >
             <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] hidden md:block">
               <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                <h1 className="text-sm font-medium text-foreground uppercase tracking-wider">
                   Messages
                 </h1>
                 {conversations.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-muted/60 dark:bg-white/[0.06] text-[10px] font-medium text-muted-foreground tabular-nums">
+                  <span className="px-1.5 py-0.5 rounded-full bg-muted/60 dark:bg-white/[0.06] text-xs font-medium text-muted-foreground tabular-nums">
                     {conversations.length}
                   </span>
                 )}
@@ -250,7 +250,7 @@ export default function CompanyMessagesInbox() {
                 <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] flex items-center justify-between gap-3 bg-card/30 dark:bg-card/15">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary font-semibold text-xs">
+                      <span className="text-primary font-medium text-xs">
                         {selectedConversation.candidateName.charAt(0).toUpperCase()}
                       </span>
                     </div>

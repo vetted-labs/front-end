@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,14 +11,10 @@ import {
 } from "@/components/ui/select";
 import {
   AlertTriangle,
-  Wallet,
-  Copy,
-  Check,
 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 import type { GuildRecord } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
+import { EndorsementStatsGrid } from "./EndorsementStatsGrid";
 
 interface EndorsementHeaderProps {
   // Wallet
@@ -41,12 +36,6 @@ interface EndorsementHeaderProps {
   userStake: string;
 }
 
-function formatCompact(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toLocaleString();
-}
-
 export function EndorsementHeader({
   address,
   shortAddress,
@@ -62,23 +51,10 @@ export function EndorsementHeader({
   applicationsCount,
   userStake,
 }: EndorsementHeaderProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      toast.success("Address copied");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Failed to copy address");
-    }
-  };
-
+  const stakeNum = parseFloat(userStake);
   const balanceNum = formattedBalance
     ? parseFloat(formattedBalance.replace(/,/g, ""))
     : 0;
-  const stakeNum = parseFloat(userStake);
 
   return (
     <>
@@ -88,7 +64,7 @@ export function EndorsementHeader({
           <CardContent className="p-4 flex items-start gap-4">
             <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-2`}>
+              <h3 className={`text-xl font-bold ${STATUS_COLORS.warning.text} mb-2`}>
                 Wrong Network Detected
               </h3>
               <p className={`text-sm ${STATUS_COLORS.warning.text} mb-3`}>
@@ -106,39 +82,21 @@ export function EndorsementHeader({
         </Card>
       )}
 
-      {/* Merged Card */}
+      {/* Sticky header bar */}
       {address && (
-        <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-          {/* Top row: Wallet + Guild Selector + Network */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 py-4">
-            {/* Left: Wallet info */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-                <Wallet className="h-[18px] w-[18px] text-primary" />
-              </div>
-              <div className="flex items-center gap-2">
-                <code className="text-sm font-semibold text-foreground">{shortAddress}</code>
-                <button
-                  onClick={handleCopyAddress}
-                  className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/50 border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  title="Copy address"
-                >
-                  {copied ? (
-                    <Check className={`h-3 w-3 ${STATUS_COLORS.positive.icon}`} />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                </button>
-                <Badge className="border-primary/30 bg-primary/10 text-primary text-[10px] px-2 py-0">
-                  Vault
-                </Badge>
-              </div>
-            </div>
-
-            {/* Right: Guild Selector + Network */}
-            <div className="flex items-center gap-2.5">
+        <div className="sticky top-0 z-30 bg-background/88 backdrop-blur-xl border-b border-white/[0.06] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+          <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
+            {/* Left: Title + LIVE badge + Guild selector */}
+            <div className="flex items-center gap-3.5 flex-wrap">
+              <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+                Endorsement Marketplace
+                <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-positive uppercase tracking-[0.1em] bg-positive/10 border border-positive/20 px-2.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-positive animate-pulse" />
+                  LIVE
+                </span>
+              </h2>
               <Select value={selectedGuildId ?? ""} onValueChange={onGuildChange}>
-                <SelectTrigger className="h-9 w-44 rounded-lg border-border/60 bg-background/70 text-sm">
+                <SelectTrigger className="h-9 w-44 rounded-[10px] border-white/[0.06] bg-white/[0.04] text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
                   <SelectValue placeholder="Select guild" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,65 +107,31 @@ export function EndorsementHeader({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
 
-              <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/50 px-3 py-2">
-                <span
-                  className={`h-[7px] w-[7px] rounded-full ${
-                    isOnSepolia
-                      ? `${STATUS_COLORS.positive.dot} shadow-[0_0_6px_hsl(var(--positive)/0.4)]`
-                      : `${STATUS_COLORS.warning.dot} shadow-[0_0_6px_hsl(var(--warning)/0.4)]`
-                  }`}
-                />
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {chainName || "Unknown"}
-                </span>
-              </div>
+            {/* Right: Stake info */}
+            <div className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
+              {stakeNum > 0 && (
+                <>
+                  <span className="font-medium text-foreground">{stakeNum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <span className="font-medium text-foreground">VETD</span>
+                  <span>staked</span>
+                  <span className="text-muted-foreground/40 mx-1">·</span>
+                </>
+              )}
+              <span>Balance:</span>
+              <span className="font-medium text-foreground">{balanceNum.toLocaleString(undefined, { maximumFractionDigits: 0 })} VETD</span>
             </div>
           </div>
-
-          {/* Divider */}
-          <div className="border-t border-border/40" />
-
-          {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-5">
-            <StatCell label="Balance" value={formatCompact(balanceNum)} sub="VETD" />
-            <StatCell label="Staked" value={formatCompact(stakeNum)} sub="VETD locked" />
-            <StatCell label="Total" value={totalEndorsementsCount.toString()} sub="endorsements" />
-            <StatCell label="Mine" value={userEndorsementsCount.toString()} sub="endorsements" highlight />
-            <StatCell label="Available" value={applicationsCount.toString()} sub="applications" last />
-          </div>
-        </Card>
+        </div>
       )}
-    </>
-  );
-}
 
-function StatCell({
-  label,
-  value,
-  sub,
-  highlight,
-  last,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  highlight?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <div className={`px-5 py-4 ${last ? "" : "border-r border-border/40"}`}>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={`text-xl font-extrabold tabular-nums mt-1 ${
-          highlight ? "text-primary" : "text-foreground"
-        }`}
-      >
-        {value}
-      </p>
-      <p className="text-[11px] text-muted-foreground/60">{sub}</p>
-    </div>
+      {/* Visual stat cards */}
+      <EndorsementStatsGrid
+        totalEndorsementsCount={totalEndorsementsCount}
+        userEndorsementsCount={userEndorsementsCount}
+        applicationsCount={applicationsCount}
+      />
+    </>
   );
 }

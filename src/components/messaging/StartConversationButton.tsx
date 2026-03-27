@@ -89,7 +89,7 @@ export function StartConversationButton({
 
         {/* Actions */}
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {message.trim() ? `${message.trim().length} chars` : "Ctrl+Enter to send"}
           </p>
           <div className="flex items-center gap-2">

@@ -60,7 +60,7 @@ export function GuildPublicOverviewTab({
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{expert.fullName}</h3>
+                    <h3 className="font-medium text-foreground mb-1 group-hover:text-primary transition-colors">{expert.fullName}</h3>
                     <span
                       className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(
                         expert.role
@@ -120,7 +120,7 @@ export function GuildPublicOverviewTab({
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground mb-2">{job.title}</h3>
+                      <h3 className="font-medium text-foreground mb-2">{job.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />
@@ -168,7 +168,7 @@ export function GuildPublicOverviewTab({
       <div className="space-y-6">
         {/* Why Join */}
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
-          <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Why Join This Guild?
           </h3>
@@ -215,7 +215,7 @@ export function GuildPublicOverviewTab({
         {/* Recent Activity */}
         {guild.recentActivity && guild.recentActivity.length > 0 && (
           <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
-            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
               Recent Activity
             </h3>
@@ -232,7 +232,7 @@ export function GuildPublicOverviewTab({
         {/* CTA */}
         {showCta && (
           <div className="bg-gradient-to-br from-primary/15 via-primary/10 to-accent/10 rounded-2xl border border-primary/30 p-6 shadow-[0_0_30px_rgba(255,122,0,0.12)]">
-            <h3 className="text-lg font-bold text-foreground mb-2">Ready to Join?</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">Ready to Join?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Submit your application and get vetted by our expert community
             </p>

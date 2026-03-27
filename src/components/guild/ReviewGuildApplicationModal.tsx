@@ -389,7 +389,7 @@ export function ReviewGuildApplicationModal({
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
             <div>
-              <h2 className="text-xl font-extrabold text-foreground">
+              <h2 className="text-xl font-bold text-foreground">
                 {proposalContext ? "Review Proposal" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
               </h2>
               <p className="text-sm text-muted-foreground">

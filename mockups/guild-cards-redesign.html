@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Guild Cards Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #060a14;
+    --bg-surface: #0c1221;
+    --bg-card: rgba(12, 18, 33, 0.65);
+    --bg-card-hover: rgba(16, 24, 44, 0.8);
+    --bg-stat: rgba(255, 255, 255, 0.025);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(249, 115, 22, 0.35);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #f97316;
+    --accent-glow: rgba(249, 115, 22, 0.35);
+    --accent-soft: rgba(249, 115, 22, 0.08);
+    --emerald: #34d399;
+    --emerald-soft: rgba(52, 211, 153, 0.08);
+    --amber: #fbbf24;
+    --amber-soft: rgba(251, 191, 36, 0.1);
+    --cyan: #22d3ee;
+    --cyan-soft: rgba(34, 211, 238, 0.06);
+    --card-radius: 20px;
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Background effects ── */
+  .bg-effects {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .bg-effects::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    top: -15%; left: -8%;
+    background: radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 65%);
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+  .bg-effects::after {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    bottom: -10%; right: -5%;
+    background: radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 60%);
+    animation: drift 24s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 30px) scale(1.08); }
+  }
+  .dot-grid {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ── Container ── */
+  .container {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Section headers ── */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .section-header h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+  .section-header .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    padding: 3px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(249,115,22,0.2);
+    background: rgba(249,115,22,0.06);
+  }
+  .section-header .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-subtle), transparent);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+
+  /* ── Card grid ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 580px) { .card-grid { grid-template-columns: 1fr; } }
+
+  /* ── Base card ── */
+  .card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--card-radius);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94),
+                border-color 0.4s ease,
+                box-shadow 0.4s ease;
+  }
+  /* Top accent line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 5%, rgba(249,115,22,0.4) 30%, rgba(251,191,36,0.25) 70%, transparent 95%);
+    opacity: 0.6;
+  }
+  /* Gradient border shimmer on hover */
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: var(--card-radius);
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(249,115,22,0.3), transparent 40%, transparent 60%, rgba(251,191,36,0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+  .card:hover::after { opacity: 1; }
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-hover);
+    box-shadow: 0 12px 40px -8px rgba(249,115,22,0.08), 0 0 0 1px rgba(249,115,22,0.05);
+  }
+  /* Inner radial glow */
+  .card-glow {
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 120px;
+    background: radial-gradient(ellipse, rgba(249,115,22,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── VARIANT 1: Membership cards ── */
+  .membership-card .card-body {
+    position: relative;
+    padding: 24px;
+  }
+  .membership-card .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .guild-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(249,115,22,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent);
+    transition: box-shadow 0.3s ease;
+  }
+  .card:hover .guild-icon {
+    box-shadow: 0 0 16px rgba(249,115,22,0.15);
+  }
+  .guild-name {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+    transition: color 0.3s;
+  }
+  .card:hover .guild-name { color: var(--accent); }
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 12px;
+    border-radius: 100px;
+    background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(251,191,36,0.08));
+    border: 1px solid rgba(249,115,22,0.2);
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+  }
+  .rank-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-block {
+    text-align: center;
+    padding: 12px 6px;
+    border-radius: 12px;
+    background: var(--bg-stat);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: border-color 0.3s;
+  }
+  .card:hover .stat-block {
+    border-color: rgba(255,255,255,0.06);
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.emerald { color: var(--emerald); }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+  }
+
+  /* Footer */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .card-footer span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .card-footer svg { width: 12px; height: 12px; opacity: 0.5; }
+
+  /* ── VARIANT 2: Dashboard/Browse cards ── */
+  .dashboard-card .card-body {
+    position: relative;
+    padding: 20px 22px;
+  }
+  .dashboard-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .dashboard-card .guild-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+  }
+  .dashboard-card .header-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .dashboard-card .guild-name {
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+  .dashboard-card .guild-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dashboard-card .guild-meta .capitalize { text-transform: capitalize; }
+  .dashboard-card .arrow {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .card:hover .arrow {
+    background: var(--accent-soft);
+    border-color: rgba(249,115,22,0.2);
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  /* Pending pulse */
+  .pending-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    border-radius: 100px;
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.25);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+  .pending-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.5; box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+    50% { opacity: 1; box-shadow: 0 0 8px 2px rgba(251,191,36,0.3); }
+  }
+
+  /* Dashboard stats */
+  .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .dashboard-stat {
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    background: var(--bg-stat);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .dashboard-stat .stat-icon {
+    margin: 0 auto 6px;
+    width: 24px; height: 24px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dashboard-stat .stat-value {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .dashboard-stat .stat-label {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  /* ── VARIANT 3: Public browse cards ── */
+  .browse-card .card-body {
+    position: relative;
+    padding: 24px;
+  }
+  .browse-card .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .browse-card .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .browse-card .guild-name {
+    font-size: 18px;
+    margin-bottom: 0;
+  }
+  .browse-card .info-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .browse-card:hover .info-btn {
+    border-color: rgba(249,115,22,0.2);
+    color: var(--accent);
+  }
+  .browse-card .guild-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .browse-card .cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .browse-card .view-link {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: all 0.35s ease;
+  }
+  .browse-card:hover .view-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .browse-card .member-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .browse-card .member-count svg { width: 13px; height: 13px; opacity: 0.5; }
+
+  /* ── Entrance animation ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: fade-up 0.6s ease forwards; opacity: 0; }
+  .d1 { animation-delay: 0.08s; }
+  .d2 { animation-delay: 0.16s; }
+  .d3 { animation-delay: 0.24s; }
+  .d4 { animation-delay: 0.32s; }
+  .d5 { animation-delay: 0.4s; }
+  .d6 { animation-delay: 0.48s; }
+  .d7 { animation-delay: 0.06s; }
+  .d8 { animation-delay: 0.14s; }
+  .d9 { animation-delay: 0.22s; }
+
+  /* page title */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #f8fafc, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .page-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-effects"></div>
+<div class="dot-grid"></div>
+
+<div class="container">
+
+  <h1 class="page-title anim">Guild Cards — Redesign</h1>
+  <p class="page-subtitle anim d1">Three variants for different contexts across Vetted</p>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- VARIANT 1: MEMBERSHIP CARDS                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header anim d2">
+      <h2>Membership Cards</h2>
+      <span class="tag">variant: membership</span>
+      <div class="line"></div>
+    </div>
+    <p class="section-desc anim d3">Shown on the expert profile page under "Guild Positions." Displays the expert's stats within each guild.</p>
+
+    <div class="card-grid">
+      <!-- Product -->
+      <div class="card membership-card anim d4">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            </div>
+            <div>
+              <div class="guild-name">Product</div>
+              <span class="rank-badge"><span class="rank-dot"></span> Master</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value accent">500</div>
+              <div class="stat-label">Rep</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value emerald">$0</div>
+              <div class="stat-label">Earned</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Proposals</div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              2 members
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+              Since Mar 2026
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engineering -->
+      <div class="card membership-card anim d5">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div>
+              <div class="guild-name">Engineering</div>
+              <span class="rank-badge"><span class="rank-dot"></span> Master</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value accent">500</div>
+              <div class="stat-label">Rep</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value emerald">$45</div>
+              <div class="stat-label">Earned</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">3</div>
+              <div class="stat-label">Proposals</div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              3 members
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+              Since Mar 2026
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Design -->
+      <div class="card membership-card anim d6">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            </div>
+            <div>
+              <div class="guild-name">Design</div>
+              <span class="rank-badge"><span class="rank-dot"></span> Master</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value accent">500</div>
+              <div class="stat-label">Rep</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value emerald">$0</div>
+              <div class="stat-label">Earned</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">0</div>
+              <div class="stat-label">Proposals</div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              2 members
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+              Since Mar 2026
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- VARIANT 2: DASHBOARD / MY GUILDS           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header anim d7">
+      <h2>Dashboard Cards</h2>
+      <span class="tag">variant: browse (expert)</span>
+      <div class="line"></div>
+    </div>
+    <p class="section-desc anim d8">Shown on the expert dashboard under "My Guilds." Displays operational data — pending reviews, staked tokens, earnings.</p>
+
+    <div class="card-grid">
+      <!-- Product -->
+      <div class="card dashboard-card anim d4">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            </div>
+            <div class="header-info">
+              <div class="guild-name">Product</div>
+              <div class="guild-meta">
+                <span class="capitalize">Master</span>
+                <span style="opacity:0.3">·</span>
+                <span>2 members</span>
+              </div>
+            </div>
+            <div class="arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+          </div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: rgba(255,255,255,0.03);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+              <div class="stat-value">0</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--accent-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="stat-value accent">100</div>
+              <div class="stat-label">Staked</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--emerald-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="stat-value emerald">$0</div>
+              <div class="stat-label">Earned</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales & Success -->
+      <div class="card dashboard-card anim d5">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            <div class="header-info">
+              <div class="guild-name">Sales & Success</div>
+              <div class="guild-meta">
+                <span class="capitalize">Master</span>
+                <span style="opacity:0.3">·</span>
+                <span>2 members</span>
+              </div>
+            </div>
+            <div class="arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+          </div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: rgba(255,255,255,0.03);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+              <div class="stat-value">0</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--accent-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="stat-value accent">50</div>
+              <div class="stat-label">Staked</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--emerald-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="stat-value emerald">$0</div>
+              <div class="stat-label">Earned</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engineering (with pending!) -->
+      <div class="card dashboard-card anim d6">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="guild-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="header-info">
+              <div class="guild-name">Engineering</div>
+              <div class="guild-meta">
+                <span class="capitalize">Master</span>
+                <span style="opacity:0.3">·</span>
+                <span>3 members</span>
+                <span style="opacity:0.3">·</span>
+                <span class="pending-indicator"><span class="pending-dot"></span> 2 pending</span>
+              </div>
+            </div>
+            <div class="arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+          </div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat" style="border-color: rgba(251,191,36,0.15);">
+              <div class="stat-icon" style="background: var(--amber-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+              <div class="stat-value" style="color: var(--amber);">2</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--accent-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="stat-value accent">200</div>
+              <div class="stat-label">Staked</div>
+            </div>
+            <div class="dashboard-stat">
+              <div class="stat-icon" style="background: var(--emerald-soft);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="stat-value emerald">$45</div>
+              <div class="stat-label">Earned</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- VARIANT 3: PUBLIC BROWSE CARDS             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header anim d7">
+      <h2>Public Browse Cards</h2>
+      <span class="tag">variant: browse (public)</span>
+      <div class="line"></div>
+    </div>
+    <p class="section-desc anim d8">Shown on the public /guilds listing page. For non-members discovering guilds to join.</p>
+
+    <div class="card-grid">
+      <!-- Product -->
+      <div class="card browse-card anim d4">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="header-left">
+              <div class="guild-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              </div>
+              <div class="guild-name">Product</div>
+            </div>
+            <div class="info-btn">?</div>
+          </div>
+          <p class="guild-desc">Product managers and strategists who evaluate candidates for product leadership, roadmap planning, and cross-functional coordination roles.</p>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value">5</div>
+              <div class="stat-label">Experts</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">12</div>
+              <div class="stat-label">Reviewed</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value accent">3</div>
+              <div class="stat-label">Open Jobs</div>
+            </div>
+          </div>
+          <div class="cta-row">
+            <span class="member-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              7 total members
+            </span>
+            <span class="view-link">
+              View Guild
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engineering -->
+      <div class="card browse-card anim d5">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="header-left">
+              <div class="guild-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <div class="guild-name">Engineering</div>
+            </div>
+            <div class="info-btn">?</div>
+          </div>
+          <p class="guild-desc">Software engineers and architects who vet candidates for technical roles across full-stack development, infrastructure, and systems design.</p>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Experts</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">45</div>
+              <div class="stat-label">Reviewed</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value accent">7</div>
+              <div class="stat-label">Open Jobs</div>
+            </div>
+          </div>
+          <div class="cta-row">
+            <span class="member-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              11 total members
+            </span>
+            <span class="view-link">
+              View Guild
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Design -->
+      <div class="card browse-card anim d6">
+        <div class="card-glow"></div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="header-left">
+              <div class="guild-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <div class="guild-name">Design</div>
+            </div>
+            <div class="info-btn">?</div>
+          </div>
+          <p class="guild-desc">Designers and UX professionals who evaluate candidates for design roles spanning product design, visual systems, and user research.</p>
+          <div class="stats-row">
+            <div class="stat-block">
+              <div class="stat-value">3</div>
+              <div class="stat-label">Experts</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Reviewed</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-value accent">2</div>
+              <div class="stat-label">Open Jobs</div>
+            </div>
+          </div>
+          <div class="cta-row">
+            <span class="member-count">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              5 total members
+            </span>
+            <span class="view-link">
+              View Guild
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

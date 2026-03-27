@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Candidate Dashboard - Vetted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+  :root {
+    --bg: #07070b;
+    --surface: rgba(255,255,255,0.025);
+    --surface-hover: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --text-dim: #52525b;
+    --primary: #f97316;
+    --primary-glow: rgba(249,115,22,0.15);
+    --primary-glow-strong: rgba(249,115,22,0.3);
+    --teal: #2dd4bf;
+    --teal-glow: rgba(45,212,191,0.15);
+    --blue: #3b82f6;
+    --blue-glow: rgba(59,130,246,0.15);
+    --green: #22c55e;
+    --green-glow: rgba(34,197,94,0.15);
+    --gold: #eab308;
+    --gold-glow: rgba(234,179,8,0.2);
+    --gold-glow-strong: rgba(234,179,8,0.35);
+    --red: #ef4444;
+    --red-glow: rgba(239,68,68,0.15);
+    --purple: #a855f7;
+    --purple-glow: rgba(168,85,247,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+  }
+
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---- Ambient background ---- */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: 0;
+  }
+  .orb-1 { width: 650px; height: 650px; top: -200px; left: -120px; background: rgba(249,115,22,0.06); }
+  .orb-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: rgba(45,212,191,0.045); }
+  .orb-3 { width: 400px; height: 400px; top: 35%; left: 50%; background: rgba(168,85,247,0.035); }
+
+  /* ---- Layout ---- */
+  .page { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---- Glass card ---- */
+  .glass {
+    background: var(--surface);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .glass:hover { border-color: var(--border-hover); }
+  .glass-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+  /* ---- Entrance animations ---- */
+  .anim-in {
+    opacity: 0; transform: translateY(20px);
+    animation: fadeSlideIn 0.6s ease forwards;
+  }
+  @keyframes fadeSlideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+  .delay-5 { animation-delay: 0.4s; }
+  .delay-6 { animation-delay: 0.48s; }
+  .delay-7 { animation-delay: 0.56s; }
+  .delay-8 { animation-delay: 0.64s; }
+  .delay-9 { animation-delay: 0.72s; }
+  .delay-10 { animation-delay: 0.8s; }
+
+  /* ---- Welcome Header ---- */
+  .welcome-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+  }
+  .welcome-left { display: flex; align-items: center; gap: 18px; }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), #fb923c);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bricolage Grotesque', serif; font-weight: 800; font-size: 1.3rem; color: #fff;
+    box-shadow: 0 0 24px var(--primary-glow);
+    flex-shrink: 0;
+  }
+  .welcome-text h1 {
+    font-family: 'Bricolage Grotesque', serif; font-weight: 800; font-size: 1.85rem;
+    letter-spacing: -0.03em; line-height: 1.2;
+  }
+  .welcome-text h1 span {
+    background: linear-gradient(135deg, #fff 20%, var(--primary) 70%, var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .welcome-text .last-login { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
+  .welcome-right { display: flex; gap: 10px; }
+  .header-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .header-btn:hover { border-color: var(--border-hover); background: var(--surface-hover); }
+  .header-btn-primary {
+    background: linear-gradient(135deg, var(--primary), #ea580c);
+    border-color: transparent; color: #fff;
+  }
+  .header-btn-primary:hover { box-shadow: 0 0 20px var(--primary-glow-strong); transform: translateY(-1px); }
+
+  /* ---- Quick Stats Strip ---- */
+  .stats-strip {
+    display: flex; gap: 12px; margin-bottom: 32px; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+    padding-bottom: 4px;
+  }
+  .stats-strip::-webkit-scrollbar { display: none; }
+
+  .stat-pill {
+    flex: 1; min-width: 160px;
+    padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+    cursor: default;
+  }
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 1.1rem;
+  }
+  .stat-icon-apps { background: var(--primary-glow); color: var(--primary); }
+  .stat-icon-interviews { background: var(--teal-glow); color: var(--teal); }
+  .stat-icon-offers { background: var(--gold-glow); color: var(--gold); }
+  .stat-icon-views { background: var(--green-glow); color: var(--green); }
+
+  .stat-info { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-family: 'Bricolage Grotesque', serif; font-weight: 700; font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1; }
+  .stat-label { color: var(--text-muted); font-size: 0.78rem; font-weight: 500; }
+  .stat-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 0.72rem; font-weight: 600; }
+  .trend-up { color: var(--green); }
+  .trend-neutral { color: var(--text-muted); }
+
+  /* Offer glow */
+  .stat-pill-offer {
+    border-color: rgba(234,179,8,0.2) !important;
+    box-shadow: 0 0 24px var(--gold-glow), inset 0 0 24px rgba(234,179,8,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-pill-offer::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(234,179,8,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .stat-pill-offer .stat-value { color: var(--gold); }
+
+  /* Profile strength ring */
+  .stat-pill-profile { position: relative; }
+  .profile-ring-mini {
+    width: 40px; height: 40px; position: relative; flex-shrink: 0;
+  }
+  .profile-ring-mini svg { width: 40px; height: 40px; transform: rotate(-90deg); }
+  .profile-ring-mini .ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 3; }
+  .profile-ring-mini .ring-fill { fill: none; stroke: var(--primary); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease; }
+  .profile-ring-mini .ring-pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; font-weight: 700; color: var(--primary);
+    font-family: 'Bricolage Grotesque', serif;
+  }
+
+  /* ---- Two column layout ---- */
+  .main-grid {
+    display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 32px;
+  }
+
+  /* ---- Card sections ---- */
+  .card { padding: 24px; }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Bricolage Grotesque', serif; font-weight: 700; font-size: 1.1rem;
+    letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px;
+  }
+  .card-title .icon { font-size: 1rem; opacity: 0.7; }
+  .card-link {
+    color: var(--primary); font-size: 0.8rem; font-weight: 600;
+    text-decoration: none; transition: color 0.2s; display: flex; align-items: center; gap: 4px;
+  }
+  .card-link:hover { color: #fb923c; }
+
+  /* ---- Applications list ---- */
+  .app-item {
+    display: flex; align-items: center; gap: 16px; padding: 16px;
+    border-radius: var(--radius-sm); background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.03);
+    margin-bottom: 10px; transition: all 0.2s; cursor: pointer;
+  }
+  .app-item:last-child { margin-bottom: 0; }
+  .app-item:hover { background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.08); transform: translateX(4px); }
+
+  .app-logo {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9rem; color: #fff;
+  }
+  .app-details { flex: 1; min-width: 0; }
+  .app-job-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app-company { color: var(--text-muted); font-size: 0.8rem; }
+  .app-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .app-timestamp { color: var(--text-dim); font-size: 0.72rem; }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-badge .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .status-reviewing { background: var(--blue-glow); color: var(--blue); }
+  .status-reviewing .dot { background: var(--blue); }
+  .status-interview { background: var(--teal-glow); color: var(--teal); }
+  .status-interview .dot { background: var(--teal); }
+  .status-offer { background: var(--gold-glow); color: var(--gold); }
+  .status-offer .dot { background: var(--gold); animation: pulse-dot 2s infinite; }
+  .status-applied { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+  .status-applied .dot { background: var(--text-muted); }
+
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.5)} }
+
+  /* ---- Progress pipeline ---- */
+  .pipeline {
+    display: flex; align-items: center; gap: 0; margin-top: 10px;
+  }
+  .pipeline-step {
+    display: flex; align-items: center; gap: 0;
+  }
+  .pipeline-node {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55rem; font-weight: 700; position: relative;
+    border: 2px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-dim);
+    transition: all 0.3s;
+  }
+  .pipeline-node.completed {
+    background: var(--primary); border-color: var(--primary);
+    color: #fff; box-shadow: 0 0 10px var(--primary-glow);
+  }
+  .pipeline-node.current {
+    border-color: var(--primary); color: var(--primary);
+    box-shadow: 0 0 12px var(--primary-glow);
+    animation: pulse-ring 2.5s infinite;
+  }
+  .pipeline-node.offer-node.completed {
+    background: var(--gold); border-color: var(--gold);
+    box-shadow: 0 0 14px var(--gold-glow-strong);
+  }
+  .pipeline-node.offer-node.current {
+    border-color: var(--gold); color: var(--gold);
+    box-shadow: 0 0 14px var(--gold-glow-strong);
+  }
+  @keyframes pulse-ring {
+    0%,100% { box-shadow: 0 0 12px var(--primary-glow); }
+    50% { box-shadow: 0 0 20px var(--primary-glow-strong); }
+  }
+
+  .pipeline-line {
+    width: 28px; height: 2px; background: rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+  }
+  .pipeline-line.filled { background: var(--primary); box-shadow: 0 0 6px var(--primary-glow); }
+  .pipeline-line.filled.gold { background: var(--gold); box-shadow: 0 0 6px var(--gold-glow); }
+  .pipeline-label {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    font-size: 0.55rem; color: var(--text-dim); white-space: nowrap;
+    font-weight: 500;
+  }
+  .pipeline-node.completed .pipeline-label, .pipeline-node.current .pipeline-label { color: var(--text-muted); }
+
+  /* ---- Upcoming events ---- */
+  .event-item {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    border-radius: var(--radius-sm); background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(255,255,255,0.03);
+    margin-bottom: 10px; transition: all 0.2s; cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  .event-item:last-child { margin-bottom: 0; }
+  .event-item:hover { background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.08); }
+  .event-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+  .event-interview::before { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); }
+  .event-assessment::before { background: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+  .event-deadline::before { background: var(--red); box-shadow: 0 0 8px var(--red-glow); }
+
+  .event-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; flex-shrink: 0;
+  }
+  .event-icon-interview { background: var(--teal-glow); color: var(--teal); }
+  .event-icon-assessment { background: var(--primary-glow); color: var(--primary); }
+  .event-icon-deadline { background: var(--red-glow); color: var(--red); }
+
+  .event-details { flex: 1; }
+  .event-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 2px; }
+  .event-time { color: var(--text-muted); font-size: 0.78rem; }
+  .event-countdown {
+    font-size: 0.72rem; font-weight: 600; padding: 3px 10px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .countdown-soon { background: var(--teal-glow); color: var(--teal); }
+  .countdown-days { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+  /* ---- Profile completion ring ---- */
+  .profile-ring-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+  .profile-ring {
+    width: 130px; height: 130px; position: relative; margin-bottom: 12px;
+  }
+  .profile-ring svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+  .profile-ring .ring-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; }
+  .profile-ring .ring-fill {
+    fill: none; stroke: url(#ringGradient); stroke-width: 6; stroke-linecap: round;
+    transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .profile-ring .ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-pct-big {
+    font-family: 'Bricolage Grotesque', serif; font-weight: 800; font-size: 2rem;
+    letter-spacing: -0.03em; line-height: 1;
+    background: linear-gradient(135deg, var(--primary), var(--teal));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .ring-label { color: var(--text-muted); font-size: 0.72rem; font-weight: 500; margin-top: 2px; }
+
+  .checklist { width: 100%; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 0.85rem;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon {
+    width: 22px; height: 22px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0;
+  }
+  .check-done { background: var(--green-glow); color: var(--green); }
+  .check-todo { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+  .check-item.done .check-label { color: var(--text-muted); }
+  .check-item.todo .check-label { color: var(--text); }
+
+  .btn-complete {
+    display: block; width: 100%; padding: 12px; margin-top: 16px;
+    border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
+    background: linear-gradient(135deg, var(--primary), #ea580c);
+    color: #fff; border: none; cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .btn-complete:hover { box-shadow: 0 0 20px var(--primary-glow-strong); transform: translateY(-1px); }
+
+  /* ---- Guild memberships ---- */
+  .guild-card {
+    border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 10px;
+    background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03);
+    transition: all 0.2s; cursor: pointer;
+  }
+  .guild-card:last-child { margin-bottom: 0; }
+  .guild-card:hover { border-color: rgba(255,255,255,0.08); transform: translateY(-1px); }
+  .guild-banner { height: 48px; position: relative; }
+  .guild-banner-eng { background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(99,102,241,0.2)); }
+  .guild-banner-design { background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(236,72,153,0.2)); }
+  .guild-body { padding: 14px 16px; }
+  .guild-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+  .guild-meta { display: flex; align-items: center; gap: 12px; }
+  .guild-meta span { color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
+  .guild-meta .member-badge {
+    background: var(--green-glow); color: var(--green); padding: 2px 8px;
+    border-radius: 999px; font-size: 0.68rem; font-weight: 600;
+  }
+
+  /* ---- Messages preview ---- */
+  .msg-item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .msg-item:last-child { border-bottom: none; }
+  .msg-item:hover .msg-name { color: var(--primary); }
+  .msg-avatar {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.75rem; color: #fff;
+    position: relative;
+  }
+  .msg-unread-dot {
+    position: absolute; top: -2px; right: -2px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--primary); border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--primary-glow);
+  }
+  .msg-content { flex: 1; min-width: 0; }
+  .msg-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+  .msg-name { font-weight: 600; font-size: 0.85rem; transition: color 0.15s; }
+  .msg-time { color: var(--text-dim); font-size: 0.7rem; white-space: nowrap; }
+  .msg-snippet { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msg-snippet.unread { color: var(--text); font-weight: 500; }
+
+  /* ---- Recommended jobs ---- */
+  .jobs-scroll-container { margin-bottom: 32px; }
+  .jobs-scroll {
+    display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .jobs-scroll::-webkit-scrollbar { display: none; }
+
+  .job-card {
+    min-width: 300px; flex: 1; padding: 0; overflow: hidden;
+    position: relative; cursor: pointer;
+  }
+  .job-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .job-card-1::after { background: linear-gradient(90deg, var(--primary), var(--teal)); }
+  .job-card-2::after { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+  .job-card-3::after { background: linear-gradient(90deg, var(--teal), var(--green)); }
+
+  .job-card-inner { padding: 22px; }
+  .job-card-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+  .job-match-ring {
+    width: 48px; height: 48px; position: relative; flex-shrink: 0;
+  }
+  .job-match-ring svg { width: 48px; height: 48px; transform: rotate(-90deg); }
+  .job-match-ring .ring-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 3.5; }
+  .job-match-ring .ring-fill { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+  .job-match-ring .match-pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Bricolage Grotesque', serif; font-weight: 700; font-size: 0.72rem;
+    letter-spacing: -0.02em;
+  }
+  .job-info { flex: 1; }
+  .job-company { color: var(--text-muted); font-size: 0.78rem; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .job-title-text { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; line-height: 1.3; }
+  .job-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .job-tag {
+    padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 500;
+    background: rgba(255,255,255,0.04); color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .job-footer { display: flex; align-items: center; justify-content: space-between; }
+  .job-salary { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+  .job-salary span { color: var(--text-muted); font-weight: 400; font-size: 0.75rem; }
+  .btn-quick-apply {
+    padding: 8px 18px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+    background: var(--primary-glow); color: var(--primary);
+    border: 1px solid rgba(249,115,22,0.2); cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  .btn-quick-apply:hover {
+    background: var(--primary); color: #fff;
+    box-shadow: 0 0 16px var(--primary-glow-strong);
+  }
+
+  /* ---- Section headers for bottom ---- */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+  }
+  .section-title {
+    font-family: 'Bricolage Grotesque', serif; font-weight: 700; font-size: 1.2rem;
+    letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px;
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-strip { flex-wrap: nowrap; }
+    .stat-pill { min-width: 150px; }
+  }
+  @media (max-width: 600px) {
+    .welcome-header { flex-direction: column; align-items: flex-start; }
+    .welcome-text h1 { font-size: 1.5rem; }
+    .stats-strip { gap: 8px; }
+    .stat-pill { padding: 12px 14px; min-width: 140px; }
+    .stat-value { font-size: 1.1rem; }
+    .page { padding: 24px 16px 60px; }
+    .job-card { min-width: 260px; }
+  }
+
+  /* ---- Glow pulse for offer ---- */
+  @keyframes goldenPulse {
+    0%, 100% { box-shadow: 0 0 24px var(--gold-glow), inset 0 0 24px rgba(234,179,8,0.04); }
+    50% { box-shadow: 0 0 36px var(--gold-glow-strong), inset 0 0 36px rgba(234,179,8,0.06); }
+  }
+  .stat-pill-offer { animation: goldenPulse 3s ease-in-out infinite; }
+
+  /* ---- Floating confetti-like particles for offer ---- */
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+    100% { transform: translateY(-60px) rotate(180deg); opacity: 0; }
+  }
+  .offer-sparkle {
+    position: absolute; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--gold); pointer-events: none;
+  }
+
+  /* ---- Ring animation ---- */
+  @keyframes ringFillAnim {
+    from { stroke-dashoffset: 339.292; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="page">
+
+  <!-- Welcome Header -->
+  <div class="welcome-header anim-in delay-1">
+    <div class="welcome-left">
+      <div class="avatar">A</div>
+      <div class="welcome-text">
+        <h1>Welcome back, <span>Alex</span></h1>
+        <div class="last-login">Last login: Today at 9:42 AM &middot; 3 new updates</div>
+      </div>
+    </div>
+    <div class="welcome-right">
+      <button class="header-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Profile
+      </button>
+      <button class="header-btn header-btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Browse Jobs
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick Stats Strip -->
+  <div class="stats-strip anim-in delay-2">
+    <div class="stat-pill glass glass-lift">
+      <div class="stat-icon stat-icon-apps">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">8</div>
+        <div class="stat-label">Active Applications</div>
+      </div>
+    </div>
+
+    <div class="stat-pill glass glass-lift">
+      <div class="stat-icon stat-icon-interviews">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">2</div>
+        <div class="stat-label">Interviews Scheduled</div>
+      </div>
+    </div>
+
+    <div class="stat-pill glass glass-lift stat-pill-offer">
+      <div class="stat-icon stat-icon-offers">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Offer Received!</div>
+      </div>
+    </div>
+
+    <div class="stat-pill glass glass-lift">
+      <div class="stat-icon stat-icon-views">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value">34</div>
+        <div class="stat-label">
+          Profile Views
+          <span class="stat-trend trend-up">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +12%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-pill glass glass-lift stat-pill-profile">
+      <div class="profile-ring-mini">
+        <svg viewBox="0 0 40 40">
+          <circle class="ring-bg" cx="20" cy="20" r="16"/>
+          <circle class="ring-fill" cx="20" cy="20" r="16"
+            stroke-dasharray="100.531"
+            stroke-dashoffset="15.08" />
+        </svg>
+        <div class="ring-pct">85%</div>
+      </div>
+      <div class="stat-info">
+        <div class="stat-value" style="font-size:1.1rem;">85%</div>
+        <div class="stat-label">Profile Strength</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column main area -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- Active Applications -->
+      <div class="card glass anim-in delay-3" style="margin-bottom: 20px;">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </span>
+            Active Applications
+          </div>
+          <a href="#" class="card-link">View All (8) <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+
+        <!-- Application 1: Offer stage -->
+        <div class="app-item">
+          <div class="app-logo" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">U</div>
+          <div class="app-details">
+            <div class="app-job-title">Senior Smart Contract Engineer</div>
+            <div class="app-company">Uniswap Labs</div>
+            <div class="pipeline" style="margin-top:10px;">
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Applied"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Review"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Interview"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled gold"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node offer-node completed" title="Offer">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="app-meta" style="margin-top:10px;">
+              <span class="status-badge status-offer"><span class="dot"></span>Offer</span>
+              <span class="app-timestamp">Updated 1h ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application 2: Interview stage -->
+        <div class="app-item">
+          <div class="app-logo" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">A</div>
+          <div class="app-details">
+            <div class="app-job-title">Full Stack Developer - DeFi</div>
+            <div class="app-company">Aave</div>
+            <div class="pipeline" style="margin-top:10px;">
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Applied"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Review"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node current" title="Interview">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node offer-node" title="Offer">4</div>
+              </div>
+            </div>
+            <div class="app-meta" style="margin-top:10px;">
+              <span class="status-badge status-interview"><span class="dot"></span>Interview</span>
+              <span class="app-timestamp">Updated 5h ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application 3: Review stage -->
+        <div class="app-item">
+          <div class="app-logo" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">C</div>
+          <div class="app-details">
+            <div class="app-job-title">Protocol Engineer</div>
+            <div class="app-company">Chainlink Labs</div>
+            <div class="pipeline" style="margin-top:10px;">
+              <div class="pipeline-step">
+                <div class="pipeline-node completed" title="Applied"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="pipeline-line filled"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node current" title="Review">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node" title="Interview">3</div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node offer-node" title="Offer">4</div>
+              </div>
+            </div>
+            <div class="app-meta" style="margin-top:10px;">
+              <span class="status-badge status-reviewing"><span class="dot"></span>In Review</span>
+              <span class="app-timestamp">Updated 2d ago</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application 4: Applied stage -->
+        <div class="app-item">
+          <div class="app-logo" style="background: linear-gradient(135deg, #f97316, #eab308);">O</div>
+          <div class="app-details">
+            <div class="app-job-title">Frontend Engineer - Web3</div>
+            <div class="app-company">Optimism</div>
+            <div class="pipeline" style="margin-top:10px;">
+              <div class="pipeline-step">
+                <div class="pipeline-node current" title="Applied">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node" title="Review">2</div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node" title="Interview">3</div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-node offer-node" title="Offer">4</div>
+              </div>
+            </div>
+            <div class="app-meta" style="margin-top:10px;">
+              <span class="status-badge status-applied"><span class="dot"></span>Applied</span>
+              <span class="app-timestamp">Applied 3d ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Events -->
+      <div class="card glass anim-in delay-5">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            Upcoming Events
+          </div>
+        </div>
+
+        <div class="event-item event-interview">
+          <div class="event-icon event-icon-interview">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14M5 18h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>
+          </div>
+          <div class="event-details">
+            <div class="event-title">Interview with Uniswap</div>
+            <div class="event-time">Tomorrow, 2:00 PM EST &middot; Video Call</div>
+          </div>
+          <span class="event-countdown countdown-soon">Tomorrow</span>
+        </div>
+
+        <div class="event-item event-interview">
+          <div class="event-icon event-icon-interview">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="event-details">
+            <div class="event-title">Panel Interview - Aave</div>
+            <div class="event-time">Mar 30, 11:00 AM EST &middot; 3 panelists</div>
+          </div>
+          <span class="event-countdown countdown-days">3 days</span>
+        </div>
+
+        <div class="event-item event-assessment">
+          <div class="event-icon event-icon-assessment">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="event-details">
+            <div class="event-title">Technical Assessment Deadline</div>
+            <div class="event-time">Chainlink Labs &middot; Solidity & EVM</div>
+          </div>
+          <span class="event-countdown countdown-days">5 days</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <!-- Profile Completion -->
+      <div class="card glass anim-in delay-4" style="margin-bottom: 20px;">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            Profile Completion
+          </div>
+        </div>
+
+        <div class="profile-ring-container">
+          <div class="profile-ring">
+            <svg viewBox="0 0 130 130">
+              <defs>
+                <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="var(--primary)" />
+                  <stop offset="100%" stop-color="var(--teal)" />
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="65" cy="65" r="54"/>
+              <circle class="ring-fill" cx="65" cy="65" r="54"
+                stroke-dasharray="339.292"
+                stroke-dashoffset="339.292"
+                id="profileRing" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-pct-big" id="ringPct">0%</div>
+              <div class="ring-label">Complete</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="checklist">
+          <div class="check-item done">
+            <div class="check-icon check-done">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="check-label">Resume uploaded</span>
+          </div>
+          <div class="check-item done">
+            <div class="check-icon check-done">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="check-label">Skills added (12)</span>
+          </div>
+          <div class="check-item done">
+            <div class="check-icon check-done">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="check-label">LinkedIn connected</span>
+          </div>
+          <div class="check-item todo">
+            <div class="check-icon check-todo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <span class="check-label">Portfolio / GitHub link</span>
+          </div>
+          <div class="check-item todo">
+            <div class="check-icon check-todo">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <span class="check-label">Professional bio</span>
+          </div>
+        </div>
+
+        <button class="btn-complete">Complete Your Profile</button>
+      </div>
+
+      <!-- Guild Memberships -->
+      <div class="card glass anim-in delay-6" style="margin-bottom: 20px;">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+            </span>
+            Guild Memberships
+          </div>
+          <a href="#" class="card-link">Explore Guilds <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+
+        <div class="guild-card">
+          <div class="guild-banner guild-banner-eng">
+            <div style="padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span style="color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 600;">ENGINEERING</span>
+            </div>
+          </div>
+          <div class="guild-body">
+            <div class="guild-name">Smart Contract Engineering</div>
+            <div class="guild-meta">
+              <span class="member-badge">Active Member</span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                14 reviews
+              </span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.8 rating
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="guild-card">
+          <div class="guild-banner guild-banner-design">
+            <div style="padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+              <span style="color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 600;">DESIGN</span>
+            </div>
+          </div>
+          <div class="guild-body">
+            <div class="guild-name">Product & UX Design</div>
+            <div class="guild-meta">
+              <span class="member-badge">Active Member</span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                6 reviews
+              </span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.6 rating
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="card glass anim-in delay-8">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+            Messages
+            <span style="background: var(--primary); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; font-family: 'DM Sans', sans-serif;">2</span>
+          </div>
+          <a href="#" class="card-link">View Inbox <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+
+        <div class="msg-item">
+          <div class="msg-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+            SL
+            <div class="msg-unread-dot"></div>
+          </div>
+          <div class="msg-content">
+            <div class="msg-top">
+              <div class="msg-name">Sarah Lee</div>
+              <div class="msg-time">10m ago</div>
+            </div>
+            <div class="msg-snippet unread">Hi Alex! We'd love to schedule a follow-up call to discuss the offer...</div>
+          </div>
+        </div>
+
+        <div class="msg-item">
+          <div class="msg-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
+            MK
+            <div class="msg-unread-dot"></div>
+          </div>
+          <div class="msg-content">
+            <div class="msg-top">
+              <div class="msg-name">Maya Kumar</div>
+              <div class="msg-time">2h ago</div>
+            </div>
+            <div class="msg-snippet unread">Your technical assessment has been received. The team will review...</div>
+          </div>
+        </div>
+
+        <div class="msg-item">
+          <div class="msg-avatar" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">
+            JC
+          </div>
+          <div class="msg-content">
+            <div class="msg-top">
+              <div class="msg-name">James Chen</div>
+              <div class="msg-time">1d ago</div>
+            </div>
+            <div class="msg-snippet">Thanks for your interest! Let me know if you have any questions about...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row: Recommended Jobs -->
+  <div class="anim-in delay-9">
+    <div class="section-header">
+      <div class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Recommended For You
+      </div>
+      <a href="#" class="card-link">View All Jobs <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></a>
+    </div>
+  </div>
+
+  <div class="jobs-scroll-container anim-in delay-10">
+    <div class="jobs-scroll">
+
+      <!-- Job 1 -->
+      <div class="job-card glass glass-lift job-card-1">
+        <div class="job-card-inner">
+          <div class="job-card-top">
+            <div class="job-match-ring">
+              <svg viewBox="0 0 48 48">
+                <circle class="ring-bg" cx="24" cy="24" r="20"/>
+                <circle class="ring-fill" cx="24" cy="24" r="20"
+                  stroke="var(--green)" stroke-dasharray="125.664" stroke-dashoffset="11.31" />
+              </svg>
+              <div class="match-pct" style="color: var(--green);">91%</div>
+            </div>
+            <div class="job-info">
+              <div class="job-company">
+                <span style="width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#f97316,#eab308);display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;">M</span>
+                MakerDAO
+              </div>
+              <div class="job-title-text">Senior Solidity Developer</div>
+            </div>
+          </div>
+          <div class="job-tags">
+            <span class="job-tag">Solidity</span>
+            <span class="job-tag">DeFi</span>
+            <span class="job-tag">Remote</span>
+          </div>
+          <div class="job-footer">
+            <div class="job-salary">$180k - $220k <span>/ year</span></div>
+            <button class="btn-quick-apply">Quick Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Job 2 -->
+      <div class="job-card glass glass-lift job-card-2">
+        <div class="job-card-inner">
+          <div class="job-card-top">
+            <div class="job-match-ring">
+              <svg viewBox="0 0 48 48">
+                <circle class="ring-bg" cx="24" cy="24" r="20"/>
+                <circle class="ring-fill" cx="24" cy="24" r="20"
+                  stroke="var(--green)" stroke-dasharray="125.664" stroke-dashoffset="21.76" />
+              </svg>
+              <div class="match-pct" style="color: var(--green);">83%</div>
+            </div>
+            <div class="job-info">
+              <div class="job-company">
+                <span style="width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;">P</span>
+                Polygon Labs
+              </div>
+              <div class="job-title-text">ZK Protocol Engineer</div>
+            </div>
+          </div>
+          <div class="job-tags">
+            <span class="job-tag">Rust</span>
+            <span class="job-tag">ZK Proofs</span>
+            <span class="job-tag">L2</span>
+          </div>
+          <div class="job-footer">
+            <div class="job-salary">$160k - $200k <span>/ year</span></div>
+            <button class="btn-quick-apply">Quick Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Job 3 -->
+      <div class="job-card glass glass-lift job-card-3">
+        <div class="job-card-inner">
+          <div class="job-card-top">
+            <div class="job-match-ring">
+              <svg viewBox="0 0 48 48">
+                <circle class="ring-bg" cx="24" cy="24" r="20"/>
+                <circle class="ring-fill" cx="24" cy="24" r="20"
+                  stroke="var(--primary)" stroke-dasharray="125.664" stroke-dashoffset="30.96" />
+              </svg>
+              <div class="match-pct" style="color: var(--primary);">75%</div>
+            </div>
+            <div class="job-info">
+              <div class="job-company">
+                <span style="width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#2dd4bf,#22c55e);display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#fff;">A</span>
+                Arbitrum (Offchain Labs)
+              </div>
+              <div class="job-title-text">Frontend Engineer - Bridge UI</div>
+            </div>
+          </div>
+          <div class="job-tags">
+            <span class="job-tag">React</span>
+            <span class="job-tag">TypeScript</span>
+            <span class="job-tag">Web3</span>
+          </div>
+          <div class="job-footer">
+            <div class="job-salary">$140k - $180k <span>/ year</span></div>
+            <button class="btn-quick-apply">Quick Apply</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Animate the profile completion ring on load
+document.addEventListener('DOMContentLoaded', () => {
+  const pct = 85;
+  const circumference = 2 * Math.PI * 54; // 339.292
+  const offset = circumference - (pct / 100) * circumference;
+  const ring = document.getElementById('profileRing');
+  const pctEl = document.getElementById('ringPct');
+
+  // Delay for entrance animation
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+
+    // Animate percentage counter
+    let current = 0;
+    const step = pct / 40;
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= pct) {
+        current = pct;
+        clearInterval(interval);
+      }
+      pctEl.textContent = Math.round(current) + '%';
+    }, 30);
+  }, 800);
+
+  // Add sparkle particles to the offer stat pill
+  const offerPill = document.querySelector('.stat-pill-offer');
+  if (offerPill) {
+    offerPill.style.position = 'relative';
+    offerPill.style.overflow = 'hidden';
+
+    function createSparkle() {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'offer-sparkle';
+      sparkle.style.left = Math.random() * 100 + '%';
+      sparkle.style.bottom = '0';
+      sparkle.style.animation = `floatUp ${1.5 + Math.random() * 1.5}s ease-out forwards`;
+      sparkle.style.width = (2 + Math.random() * 3) + 'px';
+      sparkle.style.height = sparkle.style.width;
+      sparkle.style.opacity = 0.5 + Math.random() * 0.5;
+      offerPill.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 3000);
+    }
+
+    // Burst of sparkles on load
+    setTimeout(() => {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(createSparkle, i * 150);
+      }
+    }, 600);
+
+    // Periodic sparkles
+    setInterval(() => {
+      if (Math.random() > 0.5) createSparkle();
+    }, 800);
+  }
+
+  // Animate mini profile ring in stats strip
+  const miniRingFill = document.querySelector('.profile-ring-mini .ring-fill');
+  if (miniRingFill) {
+    const miniCircumference = 2 * Math.PI * 16; // 100.531
+    const miniOffset = miniCircumference - (pct / 100) * miniCircumference;
+    setTimeout(() => {
+      miniRingFill.style.strokeDashoffset = miniOffset;
+    }, 400);
+  }
+});
+</script>
+
+</body>
+</html>

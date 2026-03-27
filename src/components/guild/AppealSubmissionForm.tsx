@@ -222,7 +222,7 @@ export function AppealSubmissionForm({
             </div>
 
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}`}>
-              <span className={`text-lg font-bold ${STATUS_COLORS.positive.text} tabular-nums`}>
+              <span className={`text-xl font-bold ${STATUS_COLORS.positive.text} tabular-nums`}>
                 {stakeAmount} VETD
               </span>
               <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>staked</span>
@@ -257,7 +257,7 @@ export function AppealSubmissionForm({
             {/* Left column — context + justification */}
             <div className="md:col-span-7 space-y-4">
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                <h4 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                   Appeal Context
                 </h4>
                 <dl className="space-y-1 text-sm">
@@ -273,7 +273,7 @@ export function AppealSubmissionForm({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                   Justification <span className="text-destructive">*</span>
                 </label>
                 <textarea
@@ -291,7 +291,7 @@ export function AppealSubmissionForm({
             {/* Right column — stake + risk + action */}
             <div className="md:col-span-5 space-y-4">
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                <h4 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                   Stake &amp; Risk
                 </h4>
                 <div className="space-y-2">

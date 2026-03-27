@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Browse Jobs — Vetted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text-primary: #f0f0f5;
+    --text-secondary: rgba(255,255,255,0.55);
+    --text-tertiary: rgba(255,255,255,0.35);
+    --orange: #f97316;
+    --orange-glow: rgba(249,115,22,0.25);
+    --orange-glow-subtle: rgba(249,115,22,0.08);
+    --gold: #f59e0b;
+    --gold-border: rgba(245,158,11,0.35);
+    --engineering: #3b82f6;
+    --design: #a855f7;
+    --data: #10b981;
+    --security: #ef4444;
+    --marketing: #ec4899;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 999px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Bricolage Grotesque', serif;
+  }
+
+  /* ─── Background Effects ─── */
+  .bg-effects {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.5;
+  }
+
+  .glow-orb--orange {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: float-slow 20s ease-in-out infinite;
+  }
+
+  .glow-orb--blue {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    top: 400px;
+    right: -200px;
+    animation: float-slow 25s ease-in-out infinite reverse;
+  }
+
+  .glow-orb--purple {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%);
+    bottom: 200px;
+    left: -100px;
+    animation: float-slow 22s ease-in-out infinite;
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(30px, -20px); }
+    66% { transform: translate(-20px, 15px); }
+  }
+
+  .dot-grid {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%);
+  }
+
+  /* ─── Layout ─── */
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ─── Navigation ─── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--orange), #fb923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a.active { color: var(--orange); }
+
+  .nav-wallet {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 8px 16px 8px 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-wallet:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-hover);
+  }
+
+  .wallet-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16,185,129,0.5);
+  }
+
+  /* ─── Hero Section ─── */
+  .hero {
+    text-align: center;
+    padding: 72px 0 48px;
+    position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--orange-glow-subtle);
+    border: 1px solid rgba(249,115,22,0.15);
+    border-radius: var(--radius-pill);
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+
+  .hero-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 .gradient-text {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 30%, #fbbf24 60%, #f97316 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 6s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+  }
+
+  .hero-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* ─── Search Bar ─── */
+  .search-section {
+    margin-top: 36px;
+    margin-bottom: 32px;
+  }
+
+  .search-container {
+    position: relative;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 56px 18px 52px;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.3s;
+    backdrop-filter: blur(20px);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-tertiary);
+  }
+
+  .search-input:focus {
+    border-color: rgba(249,115,22,0.3);
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.08), 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+  }
+
+  .search-shortcut {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .kbd {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  /* ─── Filter Row ─── */
+  .filters-section {
+    margin-bottom: 28px;
+  }
+
+  .filters-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+    backdrop-filter: blur(20px);
+  }
+
+  .filter-pill {
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    background: transparent;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .filter-pill:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .filter-pill.active {
+    color: var(--orange);
+    background: var(--orange-glow-subtle);
+    border-color: rgba(249,115,22,0.2);
+    box-shadow: 0 0 12px rgba(249,115,22,0.1);
+  }
+
+  .filter-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .salary-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 7px 16px;
+    backdrop-filter: blur(20px);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .salary-filter:hover {
+    border-color: var(--border-hover);
+  }
+
+  .salary-filter span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .salary-filter svg {
+    color: var(--text-tertiary);
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ─── Results Bar ─── */
+  .results-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .results-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .results-count strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .sort-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    backdrop-filter: blur(20px);
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .sort-select:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+  }
+
+  /* ─── Job Cards Grid ─── */
+  .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .jobs-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .filters-row { gap: 8px; }
+    .filter-group { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .hero { padding: 48px 0 32px; }
+    .hero-subtitle { font-size: 16px; }
+  }
+
+  /* ─── Job Card ─── */
+  .job-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .job-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    padding: 1px;
+    background: linear-gradient(135deg, transparent, transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .job-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(249,115,22,0.2);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.4),
+      0 0 24px rgba(249,115,22,0.06);
+    background: rgba(255,255,255,0.045);
+  }
+
+  .job-card:hover::before {
+    background: linear-gradient(135deg, rgba(249,115,22,0.2), transparent 60%);
+    opacity: 1;
+  }
+
+  .job-card.featured {
+    border-top: 2px solid var(--gold-border);
+  }
+
+  .job-card.featured .featured-badge {
+    display: inline-flex;
+  }
+
+  .featured-badge {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .featured-badge svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Card Header */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .company-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .company-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .company-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .posted-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  /* Card Body */
+  .job-title {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .guild-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+  }
+
+  .guild-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .guild-badge--engineering {
+    background: rgba(59,130,246,0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,0.15);
+  }
+  .guild-badge--engineering .dot { background: #3b82f6; }
+
+  .guild-badge--design {
+    background: rgba(168,85,247,0.1);
+    color: #c084fc;
+    border: 1px solid rgba(168,85,247,0.15);
+  }
+  .guild-badge--design .dot { background: #a855f7; }
+
+  .guild-badge--data {
+    background: rgba(16,185,129,0.1);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,0.15);
+  }
+  .guild-badge--data .dot { background: #10b981; }
+
+  .guild-badge--security {
+    background: rgba(239,68,68,0.1);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.15);
+  }
+  .guild-badge--security .dot { background: #ef4444; }
+
+  .guild-badge--marketing {
+    background: rgba(236,72,153,0.1);
+    color: #f472b6;
+    border: 1px solid rgba(236,72,153,0.15);
+  }
+  .guild-badge--marketing .dot { background: #ec4899; }
+
+  .meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .meta-tag svg {
+    width: 12px;
+    height: 12px;
+    opacity: 0.6;
+  }
+
+  .salary {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--orange);
+    margin-bottom: 14px;
+    letter-spacing: -0.2px;
+  }
+
+  .salary .salary-period {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    margin-left: 2px;
+  }
+
+  /* Skills */
+  .skills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .skill-tag {
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+
+  .skill-tag:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-primary);
+  }
+
+  /* Card Footer */
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .applicants {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .applicants svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0.5;
+  }
+
+  .apply-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 2px 12px rgba(249,115,22,0.25);
+  }
+
+  .apply-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(249,115,22,0.35);
+    background: linear-gradient(135deg, #fb923c, #f97316);
+  }
+
+  .apply-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ─── Pagination ─── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 40px;
+  }
+
+  .page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(20px);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .page-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    background: var(--surface-hover);
+  }
+
+  .page-btn.active {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 2px 12px rgba(249,115,22,0.25);
+  }
+
+  .page-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .page-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .page-ellipsis {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-effects">
+  <div class="glow-orb glow-orb--orange"></div>
+  <div class="glow-orb glow-orb--blue"></div>
+  <div class="glow-orb glow-orb--purple"></div>
+</div>
+<div class="dot-grid"></div>
+
+<div class="page-wrapper">
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-logo">vetted</div>
+    <ul class="nav-links">
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#" class="active">Browse Jobs</a></li>
+      <li><a href="#">Guilds</a></li>
+      <li><a href="#">Leaderboard</a></li>
+    </ul>
+    <button class="nav-wallet">
+      <span class="wallet-dot"></span>
+      0x7a2B...4f1E
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      142 Open Positions
+    </div>
+    <h1>Find Your Next<br/><span class="gradient-text">Web3 Role</span></h1>
+    <p class="hero-subtitle">Discover vetted opportunities from top crypto companies. Every role reviewed by guild experts, every hire backed by reputation.</p>
+  </section>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-container">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="search-input" type="text" placeholder="Search by title, skill, or company..." />
+      <div class="search-shortcut">
+        <span class="kbd">/</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <!-- Guild Filter -->
+      <div class="filter-group">
+        <button class="filter-pill active">All</button>
+        <button class="filter-pill">Engineering</button>
+        <button class="filter-pill">Design</button>
+        <button class="filter-pill">Data Science</button>
+        <button class="filter-pill">Security</button>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <!-- Job Type -->
+      <div class="filter-group">
+        <button class="filter-pill active">Full-time</button>
+        <button class="filter-pill">Contract</button>
+        <button class="filter-pill">Part-time</button>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <!-- Location -->
+      <div class="filter-group">
+        <button class="filter-pill active">Remote</button>
+        <button class="filter-pill">On-site</button>
+        <button class="filter-pill">Hybrid</button>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <!-- Salary -->
+      <div class="salary-filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Salary Range</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Bar -->
+  <div class="results-bar">
+    <div class="results-count">Showing <strong>24</strong> of <strong>142</strong> jobs</div>
+    <button class="sort-select">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="8" y2="18"/></svg>
+      Most Recent
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+
+  <!-- Jobs Grid -->
+  <div class="jobs-grid">
+
+    <!-- Card 1 — Featured -->
+    <div class="job-card featured">
+      <div class="featured-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Featured
+      </div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">U</div>
+          <span class="company-name">Uniswap Labs</span>
+        </div>
+        <span class="posted-time">2h ago</span>
+      </div>
+      <h3 class="job-title">Senior Solidity Engineer</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--engineering"><span class="dot"></span> Engineering</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Remote
+        </span>
+        <span class="meta-tag">Full-time</span>
+      </div>
+      <div class="salary">$180k - $250k<span class="salary-period">/year</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">Solidity</span>
+        <span class="skill-tag">Foundry</span>
+        <span class="skill-tag">DeFi</span>
+        <span class="skill-tag">EVM</span>
+        <span class="skill-tag">Audit</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          18 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 2 — Featured -->
+    <div class="job-card featured">
+      <div class="featured-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Featured
+      </div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #f97316, #fbbf24);">A</div>
+          <span class="company-name">Aave</span>
+        </div>
+        <span class="posted-time">5h ago</span>
+      </div>
+      <h3 class="job-title">Lead Protocol Designer</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--design"><span class="dot"></span> Design</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Hybrid
+        </span>
+        <span class="meta-tag">Full-time</span>
+      </div>
+      <div class="salary">0.5 - 0.8 ETH<span class="salary-period">/month</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">Figma</span>
+        <span class="skill-tag">Design Systems</span>
+        <span class="skill-tag">DeFi UX</span>
+        <span class="skill-tag">Prototyping</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          12 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="job-card">
+      <div class="featured-badge"></div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #10b981, #34d399);">C</div>
+          <span class="company-name">Chainlink</span>
+        </div>
+        <span class="posted-time">1d ago</span>
+      </div>
+      <h3 class="job-title">Data Engineering Lead</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--data"><span class="dot"></span> Data Science</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Remote
+        </span>
+        <span class="meta-tag">Full-time</span>
+      </div>
+      <div class="salary">$150k - $200k<span class="salary-period">/year</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">Spark</span>
+        <span class="skill-tag">Blockchain Data</span>
+        <span class="skill-tag">SQL</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          8 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="job-card">
+      <div class="featured-badge"></div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #ef4444, #f87171);">O</div>
+          <span class="company-name">OpenZeppelin</span>
+        </div>
+        <span class="posted-time">1d ago</span>
+      </div>
+      <h3 class="job-title">Smart Contract Auditor</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--security"><span class="dot"></span> Security</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Remote
+        </span>
+        <span class="meta-tag">Contract</span>
+      </div>
+      <div class="salary">$160k - $220k<span class="salary-period">/year</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">Solidity</span>
+        <span class="skill-tag">Security</span>
+        <span class="skill-tag">Slither</span>
+        <span class="skill-tag">Formal Verification</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          22 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="job-card">
+      <div class="featured-badge"></div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">A</div>
+          <span class="company-name">Arbitrum Foundation</span>
+        </div>
+        <span class="posted-time">2d ago</span>
+      </div>
+      <h3 class="job-title">Full-Stack dApp Developer</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--engineering"><span class="dot"></span> Engineering</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          On-site
+        </span>
+        <span class="meta-tag">Full-time</span>
+      </div>
+      <div class="salary">$120k - $180k<span class="salary-period">/year</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">React</span>
+        <span class="skill-tag">TypeScript</span>
+        <span class="skill-tag">Wagmi</span>
+        <span class="skill-tag">Viem</span>
+        <span class="skill-tag">GraphQL</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          6 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="job-card">
+      <div class="featured-badge"></div>
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo" style="background: linear-gradient(135deg, #ec4899, #f472b6);">L</div>
+          <span class="company-name">Lens Protocol</span>
+        </div>
+        <span class="posted-time">3d ago</span>
+      </div>
+      <h3 class="job-title">Growth & Community Lead</h3>
+      <div class="card-meta">
+        <span class="guild-badge guild-badge--marketing"><span class="dot"></span> Marketing</span>
+        <span class="meta-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Remote
+        </span>
+        <span class="meta-tag">Part-time</span>
+      </div>
+      <div class="salary">0.3 - 0.5 ETH<span class="salary-period">/month</span></div>
+      <div class="skills-row">
+        <span class="skill-tag">Community</span>
+        <span class="skill-tag">Web3 Marketing</span>
+        <span class="skill-tag">Discord</span>
+        <span class="skill-tag">Analytics</span>
+      </div>
+      <div class="card-footer">
+        <div class="applicants">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          31 applicants
+        </div>
+        <button class="apply-btn">
+          Apply
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <button class="page-btn disabled">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="page-btn active">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <span class="page-ellipsis">...</span>
+    <button class="page-btn">12</button>
+    <button class="page-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // Filter pill toggle
+  document.querySelectorAll('.filter-group').forEach(group => {
+    group.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      });
+    });
+  });
+
+  // Page button toggle
+  document.querySelectorAll('.page-btn:not(.disabled)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Keyboard shortcut for search
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.querySelector('.search-input').focus();
+    }
+  });
+</script>
+
+</body>
+</html>

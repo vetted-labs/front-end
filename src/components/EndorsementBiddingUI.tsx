@@ -91,10 +91,10 @@ export function EndorsementBiddingUI({
             Layer 3: Endorsement Bidding
           </span>
         </div>
-        <h1 className="text-4xl font-bold text-foreground mb-4">
+        <h1 className="text-3xl font-bold text-foreground mb-4">
           Endorse Candidates for Jobs
         </h1>
-        <p className="text-lg text-muted-foreground max-w-3xl">
+        <p className="text-sm text-muted-foreground max-w-3xl">
           Stake tokens to endorse top candidates. Only the top 3 bidders secure endorsement
           slots. Earn rewards when your endorsed candidates get hired.
         </p>
@@ -135,7 +135,7 @@ export function EndorsementBiddingUI({
         <div className="flex items-start gap-3">
           <Info className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
           <div>
-            <h3 className="font-semibold text-foreground mb-2">How Endorsement Bidding Works</h3>
+            <h3 className="font-medium text-foreground mb-2">How Endorsement Bidding Works</h3>
             <ul className="text-sm text-card-foreground space-y-1">
               <li>• <strong>Only top 3 bids</strong> per candidate secure endorsement slots</li>
               <li>• <strong>Non-selected bids are refunded</strong> automatically (no loss)</li>
@@ -165,10 +165,10 @@ export function EndorsementBiddingUI({
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold text-foreground">
+                      <h3 className="text-xl font-medium text-foreground">
                         {app.candidateName}
                       </h3>
-                      <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
+                      <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded-full">
                         {app.matchScore}% Match
                       </span>
                     </div>
@@ -184,7 +184,7 @@ export function EndorsementBiddingUI({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Lock className="w-4 h-4 text-muted-foreground" />
-                      <p className="text-sm font-semibold text-card-foreground">
+                      <p className="text-sm font-medium text-card-foreground">
                         Current Top Endorsements ({app.currentEndorsements.length}/3)
                       </p>
                     </div>
@@ -239,13 +239,13 @@ export function EndorsementBiddingUI({
                   <div className="flex items-center gap-6">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Potential Reward</p>
-                      <p className={`text-lg font-bold ${STATUS_COLORS.positive.text}`}>
+                      <p className={`text-xl font-bold ${STATUS_COLORS.positive.text}`}>
                         {calculatePotentialReward(app)} VETD
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">To Beat</p>
-                      <p className="text-lg font-bold text-foreground">
+                      <p className="text-xl font-bold text-foreground">
                         {getTopBidThreshold(app) + 1} VETD
                       </p>
                     </div>
@@ -278,7 +278,7 @@ export function EndorsementBiddingUI({
         {selectedApplication && (
           <div className="space-y-4">
             <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-              <p className="text-sm font-semibold text-foreground mb-1">
+              <p className="text-sm font-medium text-foreground mb-1">
                 {selectedApplication.candidateName}
               </p>
               <p className="text-xs text-muted-foreground">{selectedApplication.jobTitle}</p>

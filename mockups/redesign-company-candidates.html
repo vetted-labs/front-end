@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted — Company Candidates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --text-dim: #52525b;
+    --orange: #f97316;
+    --orange-glow: rgba(249,115,22,0.15);
+    --green: #22c55e;
+    --green-muted: rgba(34,197,94,0.12);
+    --blue: #3b82f6;
+    --blue-muted: rgba(59,130,246,0.12);
+    --red: #ef4444;
+    --red-muted: rgba(239,68,68,0.10);
+    --amber: #f59e0b;
+    --amber-muted: rgba(245,158,11,0.12);
+    --purple: #a855f7;
+    --purple-muted: rgba(168,85,247,0.12);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Top ambient glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(249,115,22,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  .stat-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--text-muted);
+  }
+
+  .stat-pill .num {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-pill.accent-orange .num { color: var(--orange); }
+  .stat-pill.accent-blue .num   { color: var(--blue); }
+  .stat-pill.accent-green .num  { color: var(--green); }
+
+  /* ─── Search & Filters ─── */
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 380px;
+  }
+
+  .search-box svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-box input::placeholder { color: var(--text-dim); }
+  .search-box input:focus {
+    border-color: rgba(249,115,22,0.4);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.08);
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .filter-pill {
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .filter-pill:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .filter-pill.active {
+    background: var(--orange-glow);
+    border-color: rgba(249,115,22,0.35);
+    color: var(--orange);
+    box-shadow: 0 0 12px rgba(249,115,22,0.12);
+  }
+
+  .filter-pill .count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .filter-pill.active .count {
+    background: rgba(249,115,22,0.2);
+  }
+
+  /* ─── Pipeline Funnel ─── */
+  .funnel-section {
+    margin-bottom: 32px;
+  }
+
+  .funnel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 24px 28px;
+    overflow: hidden;
+  }
+
+  .funnel-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+  }
+
+  .funnel-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+
+  .funnel-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .funnel-stage .stage-bar {
+    border-radius: 8px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    position: relative;
+    transition: transform 0.2s;
+    white-space: nowrap;
+    padding: 0 8px;
+  }
+
+  .funnel-stage .stage-bar:hover {
+    transform: scaleY(1.08);
+  }
+
+  .funnel-stage .stage-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Funnel connector arrows */
+  .funnel-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    flex-shrink: 0;
+    z-index: 1;
+    padding-bottom: 26px;
+  }
+
+  .funnel-connector svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-dim);
+    opacity: 0.4;
+  }
+
+  /* Specific stage widths — funnel narrows */
+  .stage-applied .stage-bar   { width: 240px; background: linear-gradient(135deg, #f97316, #ea580c); }
+  .stage-reviewed .stage-bar  { width: 190px; background: linear-gradient(135deg, #d97706, #b45309); }
+  .stage-shortlisted .stage-bar { width: 120px; background: linear-gradient(135deg, #16a34a, #15803d); }
+  .stage-interviewed .stage-bar { width: 90px; background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .stage-hired .stage-bar     { width: 70px; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 0 20px rgba(34,197,94,0.2); }
+
+  /* ─── Candidate Cards ─── */
+  .candidates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .candidate-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 22px;
+    border-radius: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+    cursor: default;
+    overflow: hidden;
+  }
+
+  .candidate-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .candidate-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+    transform: translateY(-1px);
+  }
+
+  /* Status accent bars */
+  .candidate-card.status-new::before       { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  .candidate-card.status-reviewed::before   { background: var(--purple); }
+  .candidate-card.status-shortlisted::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .candidate-card.status-rejected::before   { background: var(--red); opacity: 0.5; }
+  .candidate-card.status-interviewed::before { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+  /* Avatar */
+  .avatar-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .avatar-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    z-index: 0;
+  }
+
+  .avatar {
+    position: relative;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    background: #1a1a24;
+  }
+
+  .avatar.has-img {
+    overflow: hidden;
+  }
+
+  .avatar.has-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  /* Info column */
+  .candidate-info {
+    min-width: 0;
+  }
+
+  .candidate-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .candidate-title {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .candidate-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .meta-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .meta-location svg { width: 12px; height: 12px; }
+
+  .job-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.15);
+    color: var(--orange);
+  }
+
+  .job-badge svg { width: 11px; height: 11px; opacity: 0.7; }
+
+  /* Skills column */
+  .skills-col {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    max-width: 200px;
+  }
+
+  .skill-tag {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Match score */
+  .match-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .match-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    position: relative;
+  }
+
+  .match-circle svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .match-circle circle {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .match-circle .track { stroke: rgba(255,255,255,0.06); }
+
+  .match-circle.high .progress { stroke: var(--green); }
+  .match-circle.med .progress  { stroke: var(--amber); }
+  .match-circle.low .progress  { stroke: var(--red); }
+
+  .match-circle.high { color: var(--green); }
+  .match-circle.med  { color: var(--amber); }
+  .match-circle.low  { color: var(--red); }
+
+  .match-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Right actions column */
+  .card-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-badge.new {
+    background: var(--blue-muted);
+    color: var(--blue);
+    box-shadow: 0 0 10px rgba(59,130,246,0.12);
+  }
+
+  .status-badge.reviewed {
+    background: var(--purple-muted);
+    color: var(--purple);
+  }
+
+  .status-badge.shortlisted {
+    background: var(--green-muted);
+    color: var(--green);
+    box-shadow: 0 0 10px rgba(34,197,94,0.1);
+  }
+
+  .status-badge.rejected {
+    background: var(--red-muted);
+    color: var(--red);
+    opacity: 0.7;
+  }
+
+  .status-badge.interviewed {
+    background: var(--amber-muted);
+    color: var(--amber);
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .candidate-card:hover .card-actions { opacity: 1; }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .action-btn svg { width: 13px; height: 13px; }
+
+  .action-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .action-btn.primary {
+    background: var(--orange-glow);
+    border-color: rgba(249,115,22,0.3);
+    color: var(--orange);
+  }
+
+  .action-btn.primary:hover {
+    background: rgba(249,115,22,0.2);
+    border-color: rgba(249,115,22,0.5);
+  }
+
+  /* ─── Pagination ─── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .page-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .page-btn.active {
+    background: var(--orange-glow);
+    border-color: rgba(249,115,22,0.35);
+    color: var(--orange);
+    box-shadow: 0 0 12px rgba(249,115,22,0.1);
+  }
+
+  .page-btn.nav {
+    width: auto;
+    padding: 0 14px;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .page-btn.nav svg { width: 14px; height: 14px; }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .page-info {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 0 8px;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .candidate-card {
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+    .skills-col { display: none; }
+    .card-actions { opacity: 1; }
+    .funnel-track { flex-wrap: wrap; gap: 8px; }
+    .funnel-connector { width: 20px; padding-bottom: 0; }
+    .stage-applied .stage-bar   { width: 140px; }
+    .stage-reviewed .stage-bar  { width: 110px; }
+    .stage-shortlisted .stage-bar { width: 80px; }
+    .stage-interviewed .stage-bar { width: 65px; }
+    .stage-hired .stage-bar     { width: 55px; }
+  }
+
+  @media (max-width: 640px) {
+    .candidate-card {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .candidate-card .avatar-wrap { display: none; }
+    .card-right { justify-content: flex-start; }
+    .match-score { flex-direction: row; gap: 6px; }
+    .funnel-track { flex-direction: column; align-items: flex-start; }
+    .funnel-connector { transform: rotate(90deg); width: auto; height: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ─── Page Header ─── -->
+  <div class="page-header">
+    <h1>Candidates</h1>
+    <div class="stat-pills">
+      <span class="stat-pill accent-orange">Total <span class="num">48</span></span>
+      <span class="stat-pill accent-blue">New <span class="num">12</span></span>
+      <span class="stat-pill accent-green">Shortlisted <span class="num">8</span></span>
+    </div>
+  </div>
+
+  <!-- ─── Search & Filters ─── -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search candidates by name, skill, or job..." />
+    </div>
+    <div class="filter-pills">
+      <button class="filter-pill active">All<span class="count">48</span></button>
+      <button class="filter-pill">New<span class="count">12</span></button>
+      <button class="filter-pill">Reviewed<span class="count">16</span></button>
+      <button class="filter-pill">Shortlisted<span class="count">8</span></button>
+      <button class="filter-pill">Interviewed<span class="count">5</span></button>
+      <button class="filter-pill">Rejected<span class="count">7</span></button>
+    </div>
+  </div>
+
+  <!-- ─── Pipeline Funnel ─── -->
+  <div class="funnel-section">
+    <div class="funnel-card">
+      <div class="funnel-label">Hiring Pipeline</div>
+      <div class="funnel-track">
+        <div class="funnel-stage stage-applied">
+          <div class="stage-bar">48</div>
+          <span class="stage-label">Applied</span>
+        </div>
+        <div class="funnel-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="funnel-stage stage-reviewed">
+          <div class="stage-bar">32</div>
+          <span class="stage-label">Reviewed</span>
+        </div>
+        <div class="funnel-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="funnel-stage stage-shortlisted">
+          <div class="stage-bar">8</div>
+          <span class="stage-label">Shortlisted</span>
+        </div>
+        <div class="funnel-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="funnel-stage stage-interviewed">
+          <div class="stage-bar">5</div>
+          <span class="stage-label">Interviewed</span>
+        </div>
+        <div class="funnel-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="funnel-stage stage-hired">
+          <div class="stage-bar">2</div>
+          <span class="stage-label">Hired</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Candidate Cards ─── -->
+  <div class="candidates-list">
+
+    <!-- Card 1: New -->
+    <div class="candidate-card status-new">
+      <div class="avatar-wrap">
+        <div class="avatar">AK</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">Alex Kowalski</div>
+        <div class="candidate-title">Senior Solidity Developer</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Berlin, DE
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Smart Contract Engineer
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">Solidity</span>
+        <span class="skill-tag">Foundry</span>
+        <span class="skill-tag">DeFi</span>
+        <span class="skill-tag">Auditing</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle high">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="16.3"/></svg>
+          <span>87%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge new">New</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Shortlist
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Shortlisted -->
+    <div class="candidate-card status-shortlisted">
+      <div class="avatar-wrap">
+        <div class="avatar">ML</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">Maya Liu</div>
+        <div class="candidate-title">Full-Stack Web3 Engineer</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            San Francisco, US
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Protocol Engineer
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">Rust</span>
+        <span class="skill-tag">TypeScript</span>
+        <span class="skill-tag">Substrate</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle high">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="11.3"/></svg>
+          <span>91%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge shortlisted">Shortlisted</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Interview
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: New -->
+    <div class="candidate-card status-new">
+      <div class="avatar-wrap">
+        <div class="avatar">RS</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">Ravi Sharma</div>
+        <div class="candidate-title">Smart Contract Auditor</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Mumbai, IN
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Smart Contract Engineer
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">Solidity</span>
+        <span class="skill-tag">Vyper</span>
+        <span class="skill-tag">Security</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle med">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="43.9"/></svg>
+          <span>65%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge new">New</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Shortlist
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Reviewed -->
+    <div class="candidate-card status-reviewed">
+      <div class="avatar-wrap">
+        <div class="avatar">EP</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">Elena Petrov</div>
+        <div class="candidate-title">DeFi Protocol Researcher</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Lisbon, PT
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            DeFi Research Lead
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">DeFi</span>
+        <span class="skill-tag">Tokenomics</span>
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">Research</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle med">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="31.4"/></svg>
+          <span>75%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge reviewed">Reviewed</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Shortlist
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5: Interviewed -->
+    <div class="candidate-card status-interviewed">
+      <div class="avatar-wrap">
+        <div class="avatar">JC</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">James Chen</div>
+        <div class="candidate-title">ZK Circuits Engineer</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Taipei, TW
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            ZK Protocol Developer
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">Circom</span>
+        <span class="skill-tag">Halo2</span>
+        <span class="skill-tag">Rust</span>
+        <span class="skill-tag">ZK-SNARKs</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle high">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="7.5"/></svg>
+          <span>94%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge interviewed">Interviewed</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+            Hire
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6: Rejected -->
+    <div class="candidate-card status-rejected">
+      <div class="avatar-wrap">
+        <div class="avatar">TW</div>
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">Taylor Williams</div>
+        <div class="candidate-title">Junior Blockchain Developer</div>
+        <div class="candidate-meta">
+          <span class="meta-location">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Austin, US
+          </span>
+          <span class="job-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            Smart Contract Engineer
+          </span>
+        </div>
+      </div>
+      <div class="skills-col">
+        <span class="skill-tag">JavaScript</span>
+        <span class="skill-tag">Hardhat</span>
+        <span class="skill-tag">ERC-20</span>
+      </div>
+      <div class="match-score">
+        <div class="match-circle low">
+          <svg viewBox="0 0 48 48"><circle class="track" cx="24" cy="24" r="20"/><circle class="progress" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="69.1"/></svg>
+          <span>45%</span>
+        </div>
+        <span class="match-label">Match</span>
+      </div>
+      <div class="card-right">
+        <span class="status-badge rejected">Rejected</span>
+        <div class="card-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            Reconsider
+          </button>
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Pagination ─── -->
+  <div class="pagination">
+    <button class="page-btn nav" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Prev
+    </button>
+    <button class="page-btn active">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <button class="page-btn">4</button>
+    <span class="page-info">of 8</span>
+    <button class="page-btn nav">
+      Next
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // Filter pill toggle
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Pagination toggle
+  document.querySelectorAll('.page-btn:not(.nav)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

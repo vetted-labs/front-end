@@ -82,10 +82,10 @@ function ReputationRing({ score, className = "" }: { score: number; className?: 
       </svg>
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center z-[2]">
-        <span className="text-[42px] font-extrabold font-display tracking-tight text-foreground">
+        <span className="text-5xl font-bold font-display tracking-tight text-foreground">
           {score.toLocaleString()}
         </span>
-        <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-primary">
+        <span className="text-xs font-medium uppercase tracking-[1.5px] text-primary">
           points
         </span>
       </div>
@@ -109,7 +109,7 @@ function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary",
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
       <div className="text-2xl font-bold font-display text-foreground mb-1">{value}</div>
-      <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -248,7 +248,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           )}
           <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm dark:shadow-lg">
             <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold mb-2 text-foreground">Application Under Review</h2>
+            <h2 className="text-2xl font-bold mb-2 text-foreground">Application Under Review</h2>
             <p className="text-muted-foreground mb-4">
               {profile.fullName ? `${profile.fullName}'s expert application` : "This expert application"} is currently being reviewed.
             </p>
@@ -297,7 +297,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                   {mode === "private" ? (
                     <User className="w-12 h-12 text-primary" />
                   ) : (
-                    <span className="text-[40px] font-bold font-display text-primary tracking-wider">
+                    <span className="text-5xl font-bold font-display text-primary tracking-wider">
                       {getInitials(profile.fullName)}
                     </span>
                   )}
@@ -314,7 +314,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             {mode === "private" ? (
               <button
                 onClick={copyAddress}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-[13px] text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
               >
                 <Wallet className="w-3.5 h-3.5 opacity-70" />
                 {truncateAddress(profile.walletAddress)}
@@ -331,7 +331,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                     href={getExplorerAddressUrl(profile.walletAddress)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-[13px] text-primary transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
                   >
                     <Wallet className="w-3.5 h-3.5 opacity-70" />
                     {truncateAddress(profile.walletAddress)}
@@ -359,7 +359,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                 <button
                   onClick={toggleEmailVisibility}
                   disabled={isTogglingEmail}
-                  className={`ml-1 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full border transition-colors ${
+                  className={`ml-1 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide rounded-full border transition-colors ${
                     profile.showEmail
                       ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
                       : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
@@ -385,7 +385,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             {/* Bio */}
             {profile.bio && (
               <div className="w-full mt-6 pt-6 border-t border-border/60 text-left">
-                <div className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
+                <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
                 <p className="text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
               </div>
             )}
@@ -393,7 +393,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
           {/* ── Reputation Ring Card (right, row 1) ── */}
           <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
-            <div className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-5">
+            <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
               Reputation Score
             </div>
             <ReputationRing score={profile.reputation} className="mb-4" />
@@ -405,12 +405,12 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
           {/* ── Earnings Card (right, row 2) ── */}
           <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-3">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <DollarSign className="w-3.5 h-3.5 text-success" />
               Total Earnings
             </div>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-4xl font-bold font-display text-foreground">
+              <span className="text-3xl font-bold font-display text-foreground">
                 {formatVetd(displayEarnings)}
               </span>
               <span className="text-base font-medium text-success/80">VETD</span>
@@ -428,11 +428,11 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
           {/* ── Active Guilds Card (right, row 3) ── */}
           <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-3">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <Shield className="w-3.5 h-3.5 text-primary" />
               Active Guilds
             </div>
-            <div className="text-5xl font-extrabold font-display text-foreground mb-3">
+            <div className="text-5xl font-bold font-display text-foreground mb-3">
               {profile.guilds.length}
             </div>
             <div className="flex gap-1.5 flex-wrap">
@@ -518,7 +518,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           <div className="mt-4 animate-fade-up animate-delay-500">
             <div className="glass-card rounded-2xl border border-border/60 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
                   Recent Activity
                 </h2>
@@ -545,7 +545,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                         </div>
                       </div>
                       {activity.amount && (
-                        <div className="text-sm font-semibold text-primary flex-shrink-0">+{activity.amount}</div>
+                        <div className="text-sm font-medium text-primary flex-shrink-0">+{activity.amount}</div>
                       )}
                     </div>
                   </div>
@@ -569,7 +569,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           {profile.guilds.length === 0 ? (
             <div className="text-center py-12 rounded-2xl border border-border/60 glass-card">
               <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-              <p className="text-lg text-foreground mb-2">
+              <p className="text-sm font-medium text-foreground mb-2">
                 {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
               </p>
               <p className="text-sm text-muted-foreground">

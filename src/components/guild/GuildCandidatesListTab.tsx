@@ -21,7 +21,7 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground text-lg mb-1">{candidate.fullName}</h3>
+                <h3 className="font-bold text-foreground text-xl mb-1">{candidate.fullName}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{candidate.headline}</p>
                 <span className={`inline-block px-3 py-1 ${STATUS_COLORS.info.badge} text-xs font-medium rounded-full capitalize`}>
                   {candidate.experienceLevel}
@@ -38,12 +38,12 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Endorsements</p>
-                  <p className="font-semibold text-foreground">{candidate.endorsements || 0}</p>
+                  <p className="font-medium text-foreground">{candidate.endorsements || 0}</p>
                 </div>
                 {candidate.joinedAt && (
                   <div>
                     <p className="text-muted-foreground">Member Since</p>
-                    <p className="font-semibold text-foreground text-xs">
+                    <p className="font-medium text-foreground text-xs">
                       {new Date(candidate.joinedAt).toLocaleDateString()}
                     </p>
                   </div>

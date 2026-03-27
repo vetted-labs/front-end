@@ -43,7 +43,7 @@ export default function GuildSpecificsStep({
       {/* Experience Level Selection */}
       {template.levels && template.levels.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8">
-          <h2 className="text-xl font-semibold text-foreground mb-1">
+          <h2 className="text-xl font-bold text-foreground mb-1">
             Experience Level <span className="text-destructive">*</span>
           </h2>
           {requiredLevel ? (
@@ -87,7 +87,7 @@ export default function GuildSpecificsStep({
       {currentDomainLevel && currentDomainLevel.topics.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8 space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-1">
+            <h2 className="text-xl font-bold text-foreground mb-1">
               {currentDomainLevel.templateName}
             </h2>
             <p className="text-sm text-muted-foreground">

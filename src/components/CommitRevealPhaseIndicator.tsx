@@ -31,7 +31,7 @@ export function CommitRevealPhaseIndicator({
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Commit-Reveal Voting
         </p>
         <Badge variant="outline">
@@ -76,7 +76,7 @@ export function CommitRevealPhaseIndicator({
                 <span
                   className={`text-xs mt-1 ${
                     isCurrent
-                      ? "font-semibold text-foreground"
+                      ? "font-medium text-foreground"
                       : isPast
                       ? STATUS_COLORS.positive.text
                       : "text-muted-foreground/60"

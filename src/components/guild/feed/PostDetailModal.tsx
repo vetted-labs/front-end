@@ -146,7 +146,7 @@ export function PostDetailModal({
           </div>
 
           {/* Title */}
-          <h2 className="text-lg font-bold text-foreground mb-3">
+          <h2 className="text-xl font-bold text-foreground mb-3">
             {localPost.isPinned && (
               <span className="text-primary mr-1.5">[Pinned]</span>
             )}

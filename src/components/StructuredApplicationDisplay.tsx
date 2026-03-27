@@ -73,7 +73,7 @@ export function StructuredApplicationDisplay({
       {/* Candidate Info Header — only shown when parent doesn't handle identity */}
       {showHeader && (
         <div className="pb-4 border-b border-border">
-          <h3 className="text-lg font-semibold">{application.candidate_name}</h3>
+          <h3 className="text-xl font-bold">{application.candidate_name}</h3>
           <p className="text-sm text-muted-foreground">
             {application.candidate_email}
             {application.years_of_experience !== undefined && application.years_of_experience > 0 && (
@@ -86,7 +86,7 @@ export function StructuredApplicationDisplay({
       {/* Skills Summary */}
       {application.skills_summary && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Skills &amp; Technical Competencies
           </h3>
           <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
@@ -98,7 +98,7 @@ export function StructuredApplicationDisplay({
       {/* Experience Summary */}
       {application.experience_summary && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Professional Experience
           </h3>
           <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
@@ -110,7 +110,7 @@ export function StructuredApplicationDisplay({
       {/* Motivation Statement */}
       {application.motivation_statement && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Motivation &amp; Guild Alignment
           </h3>
           <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
@@ -122,7 +122,7 @@ export function StructuredApplicationDisplay({
       {/* Credibility Evidence */}
       {application.credibility_evidence && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Portfolio &amp; Credibility
           </h3>
           <div className="text-base text-foreground leading-relaxed space-y-1">
@@ -153,7 +153,7 @@ export function StructuredApplicationDisplay({
       {/* Key Achievements */}
       {application.achievements && application.achievements.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Key Achievements
           </h3>
           <ul className="list-disc pl-4 space-y-1.5">

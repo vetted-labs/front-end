@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted - Expert Reputation V2</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #07070b;
+    --surface: rgba(255,255,255,0.025);
+    --surface-bright: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.06);
+    --text: #e8e8ec;
+    --text-dim: rgba(255,255,255,0.5);
+    --text-muted: rgba(255,255,255,0.3);
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.15);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.15);
+    --purple: #a855f7;
+    --purple-dim: rgba(168,85,247,0.15);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.12);
+    --gold: #fbbf24;
+    --silver: #94a3b8;
+    --bronze: #b45309;
+    --diamond: #e0e7ff;
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, .score-number, .tier-label {
+    font-family: 'Bricolage Grotesque', sans-serif;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  /* ═══════════════════════════════════════════════
+     SECTION 1: HERO SCORE
+     ═══════════════════════════════════════════════ */
+  .hero {
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Radial burst background */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle,
+      rgba(249,115,22,0.12) 0%,
+      rgba(249,115,22,0.04) 25%,
+      rgba(168,85,247,0.02) 50%,
+      transparent 70%
+    );
+    pointer-events: none;
+    animation: burstPulse 6s ease-in-out infinite;
+  }
+
+  @keyframes burstPulse {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  }
+
+  /* Concentric rings SVG container */
+  .rings-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    width: 600px;
+    height: 600px;
+    pointer-events: none;
+  }
+
+  .ring {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .ring-1 {
+    stroke: rgba(249,115,22,0.08);
+    stroke-width: 1;
+    animation: ringPulse1 4s ease-in-out infinite;
+  }
+  .ring-2 {
+    stroke: rgba(249,115,22,0.06);
+    stroke-width: 0.8;
+    animation: ringPulse2 5s ease-in-out infinite;
+  }
+  .ring-3 {
+    stroke: rgba(249,115,22,0.04);
+    stroke-width: 0.6;
+    animation: ringPulse3 6s ease-in-out infinite;
+  }
+  .ring-4 {
+    stroke: rgba(168,85,247,0.03);
+    stroke-width: 0.5;
+    animation: ringPulse4 7s ease-in-out infinite;
+  }
+  .ring-5 {
+    stroke: rgba(45,212,191,0.025);
+    stroke-width: 0.4;
+    animation: ringPulse5 8s ease-in-out infinite;
+  }
+
+  @keyframes ringPulse1 { 0%,100% { r: 100; opacity: 0.6; } 50% { r: 108; opacity: 1; } }
+  @keyframes ringPulse2 { 0%,100% { r: 140; opacity: 0.5; } 50% { r: 150; opacity: 0.9; } }
+  @keyframes ringPulse3 { 0%,100% { r: 185; opacity: 0.5; } 50% { r: 198; opacity: 0.8; } }
+  @keyframes ringPulse4 { 0%,100% { r: 230; opacity: 0.4; } 50% { r: 245; opacity: 0.7; } }
+  @keyframes ringPulse5 { 0%,100% { r: 275; opacity: 0.3; } 50% { r: 292; opacity: 0.6; } }
+
+  /* Score display */
+  .score-block {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .score-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .score-number {
+    font-size: clamp(100px, 15vw, 160px);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff 10%, #f97316 60%, #f97316 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 60px rgba(249,115,22,0.3)) drop-shadow(0 0 120px rgba(249,115,22,0.12));
+    animation: scoreGlow 3s ease-in-out infinite;
+    position: relative;
+  }
+
+  @keyframes scoreGlow {
+    0%, 100% { filter: drop-shadow(0 0 60px rgba(249,115,22,0.3)) drop-shadow(0 0 120px rgba(249,115,22,0.12)); }
+    50% { filter: drop-shadow(0 0 80px rgba(249,115,22,0.45)) drop-shadow(0 0 160px rgba(249,115,22,0.2)); }
+  }
+
+  .score-suffix {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 400;
+    background: linear-gradient(90deg, var(--text-muted), var(--text-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    vertical-align: super;
+    margin-left: 4px;
+  }
+
+  /* Tier badge with shimmer */
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    padding: 10px 28px;
+    background: linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(249,115,22,0.08) 100%);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tier-badge::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(251,191,36,0.15), transparent);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  .tier-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--gold);
+  }
+
+  .tier-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  /* Meta stats below badge */
+  .score-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  .meta-trend {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  .meta-trend svg {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    margin-right: 2px;
+  }
+
+  .sparkle {
+    display: inline-block;
+    animation: sparkle 2s ease-in-out infinite;
+    font-size: 12px;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 0.5; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .meta-percentile {
+    color: var(--orange);
+    font-weight: 600;
+  }
+
+  .meta-divider {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+
+  .scroll-hint svg {
+    width: 20px;
+    height: 20px;
+    opacity: 0.4;
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     SECTION 2: BREAKDOWN CARDS
+     ═══════════════════════════════════════════════ */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    padding-left: 4px;
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 100px;
+  }
+
+  .breakdown-card {
+    position: relative;
+    border-radius: 20px;
+    padding: 28px 24px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .breakdown-card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Card 1: Review Accuracy — green, target icon */
+  .card-accuracy {
+    background: linear-gradient(160deg, rgba(34,197,94,0.06) 0%, rgba(7,7,11,0.95) 100%);
+    border: 1px solid rgba(34,197,94,0.12);
+  }
+  .card-accuracy:hover {
+    box-shadow: 0 20px 60px rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.25);
+  }
+  .card-accuracy .card-icon-wrap {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.15);
+    color: var(--green);
+  }
+  .card-accuracy .card-value { color: var(--green); }
+  .card-accuracy .progress-arc-fg { stroke: var(--green); }
+  .card-accuracy .progress-arc-bg { stroke: rgba(34,197,94,0.1); }
+
+  /* Card 2: Consistency — blue, wave icon */
+  .card-consistency {
+    background: linear-gradient(160deg, rgba(59,130,246,0.06) 0%, rgba(7,7,11,0.95) 100%);
+    border: 1px solid rgba(59,130,246,0.12);
+  }
+  .card-consistency:hover {
+    box-shadow: 0 20px 60px rgba(59,130,246,0.08);
+    border-color: rgba(59,130,246,0.25);
+  }
+  .card-consistency .card-icon-wrap {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.15);
+    color: var(--blue);
+  }
+  .card-consistency .card-value { color: var(--blue); }
+
+  /* Card 3: Timeliness — purple, clock icon */
+  .card-timeliness {
+    background: linear-gradient(160deg, rgba(168,85,247,0.06) 0%, rgba(7,7,11,0.95) 100%);
+    border: 1px solid rgba(168,85,247,0.12);
+  }
+  .card-timeliness:hover {
+    box-shadow: 0 20px 60px rgba(168,85,247,0.08);
+    border-color: rgba(168,85,247,0.25);
+  }
+  .card-timeliness .card-icon-wrap {
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.15);
+    color: var(--purple);
+  }
+  .card-timeliness .card-value { color: var(--purple); }
+  .card-timeliness .progress-arc-fg { stroke: var(--purple); }
+  .card-timeliness .progress-arc-bg { stroke: rgba(168,85,247,0.1); }
+
+  /* Card 4: Community Trust — teal, people icon */
+  .card-trust {
+    background: linear-gradient(160deg, rgba(45,212,191,0.06) 0%, rgba(7,7,11,0.95) 100%);
+    border: 1px solid rgba(45,212,191,0.12);
+  }
+  .card-trust:hover {
+    box-shadow: 0 20px 60px rgba(45,212,191,0.08);
+    border-color: rgba(45,212,191,0.25);
+  }
+  .card-trust .card-icon-wrap {
+    background: rgba(45,212,191,0.1);
+    border: 1px solid rgba(45,212,191,0.15);
+    color: var(--teal);
+  }
+  .card-trust .card-value { color: var(--teal); }
+
+  /* Card internals */
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .card-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon-wrap svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .card-viz {
+    width: 56px;
+    height: 56px;
+  }
+
+  .card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .card-value {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .card-bar {
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    overflow: hidden;
+  }
+
+  .card-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-bar-green .card-bar-fill { background: linear-gradient(90deg, var(--green), #4ade80); }
+  .card-bar-blue .card-bar-fill { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+  .card-bar-purple .card-bar-fill { background: linear-gradient(90deg, var(--purple), #c084fc); }
+  .card-bar-teal .card-bar-fill { background: linear-gradient(90deg, var(--teal), #5eead4); }
+
+  /* Mini chart for consistency card */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+  }
+
+  .mini-chart-bar {
+    width: 6px;
+    border-radius: 3px;
+    background: rgba(59,130,246,0.3);
+    transition: height 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Social graph viz for trust card */
+  .social-graph {
+    position: relative;
+    width: 56px;
+    height: 56px;
+  }
+
+  .social-node {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .social-node-center {
+    width: 12px; height: 12px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px rgba(45,212,191,0.4);
+  }
+
+  .social-node-orbit {
+    width: 6px; height: 6px;
+    opacity: 0.5;
+  }
+
+  .social-line {
+    position: absolute;
+    top: 50%; left: 50%;
+    height: 1px;
+    background: rgba(45,212,191,0.15);
+    transform-origin: left center;
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     SECTION 3: TIER PROGRESSION TOWER
+     ═══════════════════════════════════════════════ */
+  .tier-section {
+    margin-bottom: 100px;
+  }
+
+  .tier-tower {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* The connecting rail */
+  .tier-tower::before {
+    content: '';
+    position: absolute;
+    left: 32px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom,
+      rgba(224,231,255,0.1),
+      rgba(251,191,36,0.4) 60%,
+      rgba(148,163,184,0.2) 80%,
+      rgba(180,83,9,0.15)
+    );
+  }
+
+  .tier-item {
+    position: relative;
+    padding: 16px 16px 16px 72px;
+    transition: all 0.3s ease;
+  }
+
+  /* Node on the rail */
+  .tier-node {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .tier-node-inner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Diamond tier (top, locked) */
+  .tier-diamond .tier-node {
+    border-color: rgba(224,231,255,0.2);
+    background: rgba(224,231,255,0.04);
+  }
+  .tier-diamond .tier-node-inner {
+    background: rgba(224,231,255,0.15);
+  }
+  .tier-diamond .tier-card {
+    background: rgba(224,231,255,0.02);
+    border: 1px dashed rgba(224,231,255,0.1);
+    opacity: 0.6;
+  }
+  .tier-diamond .tier-name { color: var(--diamond); }
+
+  /* Gold tier (CURRENT — emphasized) */
+  .tier-gold .tier-node {
+    border-color: var(--gold);
+    background: rgba(251,191,36,0.15);
+    box-shadow: 0 0 20px rgba(251,191,36,0.3);
+    animation: goldNodePulse 2.5s ease-in-out infinite;
+  }
+  .tier-gold .tier-node-inner {
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  @keyframes goldNodePulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(251,191,36,0.3); }
+    50% { box-shadow: 0 0 35px rgba(251,191,36,0.5); }
+  }
+
+  .tier-gold .tier-card {
+    background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.04));
+    border: 1px solid rgba(251,191,36,0.2);
+    box-shadow: 0 0 40px rgba(251,191,36,0.06);
+  }
+  .tier-gold .tier-name { color: var(--gold); }
+
+  /* Silver tier (completed) */
+  .tier-silver .tier-node {
+    border-color: rgba(148,163,184,0.3);
+    background: rgba(148,163,184,0.06);
+  }
+  .tier-silver .tier-node-inner { background: var(--silver); opacity: 0.5; }
+  .tier-silver .tier-card {
+    background: rgba(148,163,184,0.02);
+    border: 1px solid rgba(148,163,184,0.06);
+    opacity: 0.5;
+  }
+  .tier-silver .tier-name { color: var(--silver); }
+
+  /* Bronze tier (completed) */
+  .tier-bronze .tier-node {
+    border-color: rgba(180,83,9,0.3);
+    background: rgba(180,83,9,0.06);
+  }
+  .tier-bronze .tier-node-inner { background: var(--bronze); opacity: 0.4; }
+  .tier-bronze .tier-card {
+    background: rgba(180,83,9,0.02);
+    border: 1px solid rgba(180,83,9,0.06);
+    opacity: 0.4;
+  }
+  .tier-bronze .tier-name { color: var(--bronze); }
+
+  .tier-card {
+    border-radius: 16px;
+    padding: 20px 24px;
+    transition: all 0.3s ease;
+  }
+
+  .tier-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .tier-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .tier-range {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .tier-status {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  .tier-status-current {
+    background: rgba(251,191,36,0.15);
+    color: var(--gold);
+  }
+
+  .tier-status-locked {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+  }
+
+  .tier-status-done {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* Expanded gold benefits */
+  .tier-benefits {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(251,191,36,0.1);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .tier-benefit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .tier-benefit svg {
+    width: 14px;
+    height: 14px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* Points needed indicator */
+  .tier-needed {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tier-needed-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tier-needed-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(224,231,255,0.2);
+    animation: dotFloat 2s ease-in-out infinite;
+  }
+  .tier-needed-dot:nth-child(2) { animation-delay: 0.3s; }
+  .tier-needed-dot:nth-child(3) { animation-delay: 0.6s; }
+
+  @keyframes dotFloat {
+    0%, 100% { transform: translateY(0); opacity: 0.3; }
+    50% { transform: translateY(-4px); opacity: 0.8; }
+  }
+
+  /* Floating particles for the tower */
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+    animation: particleRise 4s ease-in-out infinite;
+  }
+
+  @keyframes particleRise {
+    0% { opacity: 0; transform: translateY(0) translateX(0); }
+    20% { opacity: 0.6; }
+    80% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-80px) translateX(10px); }
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     SECTION 4: SCORE HISTORY CHART
+     ═══════════════════════════════════════════════ */
+  .chart-section {
+    margin-bottom: 100px;
+  }
+
+  .chart-container {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 32px 24px;
+    overflow: hidden;
+  }
+
+  .chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(249,115,22,0.2), transparent);
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .chart-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .chart-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: -1px;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: 240px;
+  }
+
+  .chart-grid-line {
+    stroke: rgba(255,255,255,0.04);
+    stroke-width: 1;
+  }
+
+  .chart-axis-label {
+    font-size: 11px;
+    fill: rgba(255,255,255,0.25);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .chart-area {
+    fill: url(#areaGrad);
+    opacity: 0;
+    animation: areaFadeIn 1.5s ease-out 0.5s forwards;
+  }
+
+  .chart-line {
+    fill: none;
+    stroke: var(--orange);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 2s ease-out 0.3s forwards;
+  }
+
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes areaFadeIn {
+    to { opacity: 1; }
+  }
+
+  .chart-point {
+    fill: var(--bg);
+    stroke: var(--orange);
+    stroke-width: 2.5;
+    r: 0;
+    cursor: pointer;
+    transition: r 0.2s ease;
+  }
+
+  .chart-point:hover {
+    r: 6 !important;
+    fill: var(--orange);
+    filter: drop-shadow(0 0 8px rgba(249,115,22,0.5));
+  }
+
+  .chart-point-anim {
+    animation: pointAppear 0.3s ease-out forwards;
+  }
+
+  @keyframes pointAppear {
+    from { r: 0; }
+    to { r: 4; }
+  }
+
+  .chart-tooltip {
+    position: absolute;
+    background: rgba(20,20,30,0.95);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+
+  .chart-tooltip.visible { opacity: 1; }
+
+  .chart-tooltip-score {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--orange);
+  }
+
+  .chart-tooltip-month {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .chart-month-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0 0;
+  }
+
+  .chart-month {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    flex: 1;
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     SECTION 5: RECENT IMPACT
+     ═══════════════════════════════════════════════ */
+  .impact-section {
+    margin-bottom: 60px;
+  }
+
+  .impact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .impact-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .impact-item:first-child { border-radius: 16px 16px 0 0; }
+  .impact-item:last-child { border-radius: 0 0 16px 16px; }
+
+  .impact-item:hover {
+    background: var(--surface-bright);
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  /* Left color stripe */
+  .impact-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .impact-item.impact-positive::before { background: var(--green); }
+  .impact-item.impact-negative::before { background: var(--red); }
+
+  .impact-delta {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .impact-positive .impact-delta { color: var(--green); }
+  .impact-negative .impact-delta { color: var(--red); }
+
+  .impact-desc {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .impact-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .impact-running {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: right;
+    color: var(--text-dim);
+  }
+
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE
+     ═══════════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    .breakdown-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero { min-height: 70vh; }
+    .breakdown-grid { grid-template-columns: 1fr; }
+    .tier-benefits { grid-template-columns: 1fr; }
+    .rings-container { width: 350px; height: 350px; }
+    .score-meta { gap: 16px; flex-direction: column; }
+    .chart-container { padding: 20px 16px 16px; }
+    .impact-item { padding: 14px 16px; gap: 12px; }
+    .impact-delta { font-size: 16px; min-width: 48px; }
+    .impact-running { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════
+       HERO SCORE SECTION
+       ═══════════════════════════════════════ -->
+  <section class="hero">
+    <!-- Concentric rings -->
+    <svg class="rings-container" viewBox="0 0 600 600">
+      <circle class="ring ring-5" cx="300" cy="300" r="275" />
+      <circle class="ring ring-4" cx="300" cy="300" r="230" />
+      <circle class="ring ring-3" cx="300" cy="300" r="185" />
+      <circle class="ring ring-2" cx="300" cy="300" r="140" />
+      <circle class="ring ring-1" cx="300" cy="300" r="100" />
+      <!-- Tick marks on outer ring -->
+      <g stroke="rgba(249,115,22,0.08)" stroke-width="1">
+        <line x1="300" y1="18" x2="300" y2="28" />
+        <line x1="300" y1="572" x2="300" y2="582" />
+        <line x1="18" y1="300" x2="28" y2="300" />
+        <line x1="572" y1="300" x2="582" y2="300" />
+      </g>
+      <!-- Sweeping arc indicator -->
+      <circle cx="300" cy="300" r="100" fill="none"
+        stroke="url(#sweepGrad)" stroke-width="3" stroke-linecap="round"
+        stroke-dasharray="180 450"
+        style="animation: ringRotate 8s linear infinite;" />
+      <defs>
+        <linearGradient id="sweepGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(249,115,22,0)" />
+          <stop offset="50%" stop-color="rgba(249,115,22,0.4)" />
+          <stop offset="100%" stop-color="rgba(249,115,22,0)" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <style>
+      @keyframes ringRotate { from { transform-origin: 300px 300px; transform: rotate(0deg); } to { transform-origin: 300px 300px; transform: rotate(360deg); } }
+    </style>
+
+    <div class="score-block">
+      <div class="score-label">Reputation Score</div>
+      <div class="score-number" id="scoreNum">0<span class="score-suffix">/1000</span></div>
+
+      <div class="tier-badge">
+        <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+        <span class="tier-label">GOLD TIER</span>
+      </div>
+
+      <div class="score-meta">
+        <div class="meta-item meta-trend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 7 7 17" /><polyline points="17 7 17 17 7 7" style="display:none"/><line x1="7" y1="7" x2="17" y2="7"/><line x1="17" y1="7" x2="17" y2="17"/></svg>
+          +12 pts this month
+          <span class="sparkle">&#10024;</span>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item meta-percentile">Top 8% of all experts</div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">142 reviews completed</div>
+      </div>
+    </div>
+
+    <div class="scroll-hint">
+      <span>Explore</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════
+       BREAKDOWN CARDS
+       ═══════════════════════════════════════ -->
+  <div class="section-title">Score Breakdown</div>
+  <div class="breakdown-grid">
+
+    <!-- 1: Review Accuracy -->
+    <div class="breakdown-card card-accuracy">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <!-- Target/bullseye icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+        </div>
+        <svg class="card-viz" viewBox="0 0 56 56">
+          <circle cx="28" cy="28" r="22" class="progress-arc-bg" fill="none" stroke-width="4"/>
+          <circle cx="28" cy="28" r="22" class="progress-arc-fg" fill="none" stroke-width="4"
+            stroke-linecap="round"
+            stroke-dasharray="138.2"
+            stroke-dashoffset="11.1"
+            transform="rotate(-90 28 28)"
+            style="transition: stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1);" />
+          <text x="28" y="31" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10" font-family="DM Sans">92</text>
+        </svg>
+      </div>
+      <div class="card-name">Review Accuracy</div>
+      <div class="card-value">92%</div>
+      <div class="card-bar card-bar-green">
+        <div class="card-bar-fill" style="width: 92%;"></div>
+      </div>
+    </div>
+
+    <!-- 2: Consistency -->
+    <div class="breakdown-card card-consistency">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <!-- Wave/pulse icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12h2l3-7 4 14 4-10 3 5h4"/>
+          </svg>
+        </div>
+        <div class="mini-chart" id="miniChart">
+          <!-- Bars filled via JS -->
+        </div>
+      </div>
+      <div class="card-name">Consistency</div>
+      <div class="card-value">88%</div>
+      <div class="card-bar card-bar-blue">
+        <div class="card-bar-fill" style="width: 88%;"></div>
+      </div>
+    </div>
+
+    <!-- 3: Timeliness -->
+    <div class="breakdown-card card-timeliness">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <!-- Clock icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <svg class="card-viz" viewBox="0 0 56 56">
+          <circle cx="28" cy="28" r="22" class="progress-arc-bg" fill="none" stroke-width="4"/>
+          <circle cx="28" cy="28" r="22" class="progress-arc-fg" fill="none" stroke-width="4"
+            stroke-linecap="round"
+            stroke-dasharray="138.2"
+            stroke-dashoffset="6.9"
+            transform="rotate(-90 28 28)"
+            style="transition: stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1);" />
+          <text x="28" y="31" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10" font-family="DM Sans">95</text>
+        </svg>
+      </div>
+      <div class="card-name">Timeliness</div>
+      <div class="card-value">95%</div>
+      <div class="card-bar card-bar-purple">
+        <div class="card-bar-fill" style="width: 95%;"></div>
+      </div>
+    </div>
+
+    <!-- 4: Community Trust -->
+    <div class="breakdown-card card-trust">
+      <div class="card-header">
+        <div class="card-icon-wrap">
+          <!-- People icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <!-- Social graph mini viz -->
+        <div class="social-graph">
+          <div class="social-line" style="width:18px; transform: rotate(-30deg) translateY(-50%);"></div>
+          <div class="social-line" style="width:20px; transform: rotate(40deg) translateY(-50%);"></div>
+          <div class="social-line" style="width:15px; transform: rotate(150deg) translateY(-50%);"></div>
+          <div class="social-line" style="width:22px; transform: rotate(200deg) translateY(-50%);"></div>
+          <div class="social-line" style="width:16px; transform: rotate(310deg) translateY(-50%);"></div>
+          <div class="social-node social-node-center"></div>
+          <div class="social-node social-node-orbit" style="top:4px;left:22px;"></div>
+          <div class="social-node social-node-orbit" style="top:14px;right:2px;"></div>
+          <div class="social-node social-node-orbit" style="bottom:8px;left:6px;"></div>
+          <div class="social-node social-node-orbit" style="bottom:2px;right:10px;"></div>
+          <div class="social-node social-node-orbit" style="top:38px;left:0px;"></div>
+        </div>
+      </div>
+      <div class="card-name">Community Trust</div>
+      <div class="card-value">85%</div>
+      <div class="card-bar card-bar-teal">
+        <div class="card-bar-fill" style="width: 85%;"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       TIER PROGRESSION TOWER
+       ═══════════════════════════════════════ -->
+  <div class="section-title">Tier Progression</div>
+  <section class="tier-section">
+    <div class="tier-tower" id="tierTower">
+
+      <!-- Diamond (top, locked) -->
+      <div class="tier-item tier-diamond">
+        <div class="tier-node"><div class="tier-node-inner"></div></div>
+        <div class="tier-card">
+          <div class="tier-card-header">
+            <div>
+              <div class="tier-name">&#9830; Diamond</div>
+              <div class="tier-range">900 &ndash; 1000 pts</div>
+            </div>
+            <span class="tier-status tier-status-locked">LOCKED</span>
+          </div>
+          <div class="tier-needed">
+            <span class="tier-needed-dots">
+              <span class="tier-needed-dot"></span>
+              <span class="tier-needed-dot"></span>
+              <span class="tier-needed-dot"></span>
+            </span>
+            53 more points to unlock
+          </div>
+        </div>
+      </div>
+
+      <!-- Gold (CURRENT) -->
+      <div class="tier-item tier-gold">
+        <div class="tier-node"><div class="tier-node-inner"></div></div>
+        <div class="tier-card">
+          <div class="tier-card-header">
+            <div>
+              <div class="tier-name">&#9733; Gold</div>
+              <div class="tier-range">700 &ndash; 899 pts</div>
+            </div>
+            <span class="tier-status tier-status-current">CURRENT</span>
+          </div>
+          <div class="tier-benefits">
+            <div class="tier-benefit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Priority job queue
+            </div>
+            <div class="tier-benefit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              2x stake multiplier
+            </div>
+            <div class="tier-benefit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Guild leadership eligible
+            </div>
+            <div class="tier-benefit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Governance voting power
+            </div>
+          </div>
+        </div>
+        <!-- Floating particles -->
+        <div class="particle" style="left: 28px; bottom: 20%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 36px; bottom: 30%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 24px; bottom: 50%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 40px; bottom: 40%; animation-delay: 0.5s;"></div>
+        <div class="particle" style="left: 30px; bottom: 60%; animation-delay: 1.5s;"></div>
+      </div>
+
+      <!-- Silver (completed) -->
+      <div class="tier-item tier-silver">
+        <div class="tier-node"><div class="tier-node-inner"></div></div>
+        <div class="tier-card">
+          <div class="tier-card-header">
+            <div>
+              <div class="tier-name">&#9671; Silver</div>
+              <div class="tier-range">400 &ndash; 699 pts</div>
+            </div>
+            <span class="tier-status tier-status-done">&#10003; Completed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bronze (completed) -->
+      <div class="tier-item tier-bronze">
+        <div class="tier-node"><div class="tier-node-inner"></div></div>
+        <div class="tier-card">
+          <div class="tier-card-header">
+            <div>
+              <div class="tier-name">&#9679; Bronze</div>
+              <div class="tier-range">0 &ndash; 399 pts</div>
+            </div>
+            <span class="tier-status tier-status-done">&#10003; Completed</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════
+       SCORE HISTORY CHART
+       ═══════════════════════════════════════ -->
+  <div class="section-title">Score History</div>
+  <section class="chart-section">
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title">6-Month Trend</div>
+        <div class="chart-legend">
+          <span><span class="chart-legend-dot" style="background: var(--orange);"></span>Score</span>
+          <span><span class="chart-legend-dot" style="background: rgba(255,255,255,0.08);"></span>Avg</span>
+        </div>
+      </div>
+
+      <svg class="chart-svg" id="chartSvg" viewBox="0 0 1000 240" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(249,115,22,0.25)" />
+            <stop offset="100%" stop-color="rgba(249,115,22,0)" />
+          </linearGradient>
+        </defs>
+        <!-- Grid lines -->
+        <line class="chart-grid-line" x1="60" y1="20" x2="960" y2="20" />
+        <line class="chart-grid-line" x1="60" y1="75" x2="960" y2="75" />
+        <line class="chart-grid-line" x1="60" y1="130" x2="960" y2="130" />
+        <line class="chart-grid-line" x1="60" y1="185" x2="960" y2="185" />
+
+        <!-- Y-axis labels -->
+        <text class="chart-axis-label" x="48" y="24" text-anchor="end">900</text>
+        <text class="chart-axis-label" x="48" y="79" text-anchor="end">850</text>
+        <text class="chart-axis-label" x="48" y="134" text-anchor="end">800</text>
+        <text class="chart-axis-label" x="48" y="189" text-anchor="end">750</text>
+
+        <!-- Average line -->
+        <line x1="60" y1="105" x2="960" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="6 4" />
+
+        <!-- Area fill -->
+        <path class="chart-area" id="chartArea" />
+        <!-- Line -->
+        <path class="chart-line" id="chartLine" />
+        <!-- Points added by JS -->
+      </svg>
+
+      <div class="chart-month-labels">
+        <span class="chart-month">Oct</span>
+        <span class="chart-month">Nov</span>
+        <span class="chart-month">Dec</span>
+        <span class="chart-month">Jan</span>
+        <span class="chart-month">Feb</span>
+        <span class="chart-month">Mar</span>
+      </div>
+
+      <div class="chart-tooltip" id="chartTooltip">
+        <div class="chart-tooltip-score" id="tooltipScore"></div>
+        <div class="chart-tooltip-month" id="tooltipMonth"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════
+       RECENT IMPACT
+       ═══════════════════════════════════════ -->
+  <div class="section-title">Recent Impact</div>
+  <section class="impact-section">
+    <div class="impact-list">
+      <div class="impact-item impact-positive">
+        <div class="impact-delta">+15</div>
+        <div class="impact-desc">Accurate review — Smart Contract Auditor role</div>
+        <div class="impact-time">2 hours ago</div>
+        <div class="impact-running">847</div>
+      </div>
+      <div class="impact-item impact-positive">
+        <div class="impact-delta">+8</div>
+        <div class="impact-desc">Endorsement validated by guild peers</div>
+        <div class="impact-time">1 day ago</div>
+        <div class="impact-running">832</div>
+      </div>
+      <div class="impact-item impact-negative">
+        <div class="impact-delta">-5</div>
+        <div class="impact-desc">Late submission — Backend Engineer review</div>
+        <div class="impact-time">3 days ago</div>
+        <div class="impact-running">824</div>
+      </div>
+      <div class="impact-item impact-positive">
+        <div class="impact-delta">+12</div>
+        <div class="impact-desc">Consistent weekly activity streak (8 weeks)</div>
+        <div class="impact-time">5 days ago</div>
+        <div class="impact-running">829</div>
+      </div>
+      <div class="impact-item impact-positive">
+        <div class="impact-delta">+5</div>
+        <div class="impact-desc">Community trust milestone reached (50 endorsements)</div>
+        <div class="impact-time">1 week ago</div>
+        <div class="impact-running">817</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page -->
+
+
+<script>
+  // ─── Animated Score Counter ───
+  (function() {
+    const target = 847;
+    const el = document.getElementById('scoreNum');
+    const suffix = '<span class="score-suffix">/1000</span>';
+    let current = 0;
+    const duration = 2200;
+    const start = performance.now();
+
+    function easeOutExpo(t) {
+      return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    }
+
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      current = Math.round(easeOutExpo(progress) * target);
+      el.innerHTML = current + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  })();
+
+
+  // ─── Mini Chart (Consistency Card) ───
+  (function() {
+    const container = document.getElementById('miniChart');
+    const values = [70, 85, 78, 92, 88, 95, 82, 90, 88];
+    values.forEach((v, i) => {
+      const bar = document.createElement('div');
+      bar.className = 'mini-chart-bar';
+      bar.style.height = '0px';
+      bar.style.background = `rgba(59,130,246,${0.2 + (v / 100) * 0.5})`;
+      container.appendChild(bar);
+      setTimeout(() => {
+        bar.style.height = (v / 100) * 40 + 'px';
+      }, 800 + i * 80);
+    });
+  })();
+
+
+  // ─── Score History Chart ───
+  (function() {
+    const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+    const scores = [788, 802, 815, 823, 835, 847];
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.getElementById('chartSvg');
+    const chartLine = document.getElementById('chartLine');
+    const chartArea = document.getElementById('chartArea');
+
+    const minScore = 750;
+    const maxScore = 900;
+    const chartLeft = 110;
+    const chartRight = 920;
+    const chartTop = 20;
+    const chartBottom = 200;
+
+    function scoreToY(score) {
+      return chartBottom - ((score - minScore) / (maxScore - minScore)) * (chartBottom - chartTop);
+    }
+
+    function indexToX(i) {
+      return chartLeft + (i / (scores.length - 1)) * (chartRight - chartLeft);
+    }
+
+    // Build smooth path using cardinal spline approximation
+    const points = scores.map((s, i) => ({ x: indexToX(i), y: scoreToY(s) }));
+
+    function catmullRom(pts, tension) {
+      tension = tension || 0.3;
+      let d = `M ${pts[0].x},${pts[0].y}`;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[Math.max(i - 1, 0)];
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const p3 = pts[Math.min(i + 2, pts.length - 1)];
+
+        const cp1x = p1.x + (p2.x - p0.x) * tension;
+        const cp1y = p1.y + (p2.y - p0.y) * tension;
+        const cp2x = p2.x - (p3.x - p1.x) * tension;
+        const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+        d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+      }
+      return d;
+    }
+
+    const linePath = catmullRom(points, 0.3);
+    chartLine.setAttribute('d', linePath);
+
+    // Area
+    const areaPath = linePath + ` L ${points[points.length - 1].x},${chartBottom} L ${points[0].x},${chartBottom} Z`;
+    chartArea.setAttribute('d', areaPath);
+
+    // Tooltip and interactive points
+    const tooltip = document.getElementById('chartTooltip');
+    const tooltipScore = document.getElementById('tooltipScore');
+    const tooltipMonth = document.getElementById('tooltipMonth');
+
+    points.forEach((p, i) => {
+      const circle = document.createElementNS(svgNS, 'circle');
+      circle.setAttribute('cx', p.x);
+      circle.setAttribute('cy', p.y);
+      circle.classList.add('chart-point', 'chart-point-anim');
+      circle.style.animationDelay = (1.5 + i * 0.15) + 's';
+
+      circle.addEventListener('mouseenter', (e) => {
+        tooltipScore.textContent = scores[i];
+        tooltipMonth.textContent = months[i] + ' 2025';
+        const svgRect = svg.getBoundingClientRect();
+        const px = (p.x / 1000) * svgRect.width;
+        const py = (p.y / 240) * svgRect.height;
+        tooltip.style.left = (px - 30) + 'px';
+        tooltip.style.top = (py - 70) + 'px';
+        tooltip.classList.add('visible');
+      });
+
+      circle.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('visible');
+      });
+
+      svg.appendChild(circle);
+    });
+  })();
+</script>
+
+</body>
+</html>

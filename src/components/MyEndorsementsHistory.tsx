@@ -141,7 +141,7 @@ export function MyEndorsementsHistory() {
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
             Endorsements
           </p>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-2xl font-medium text-foreground">
             My Active Endorsements
           </h2>
         </div>
@@ -195,7 +195,7 @@ export function MyEndorsementsHistory() {
 
                 {/* Job + Candidate */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground leading-tight truncate group-hover:text-primary transition-colors">
+                  <h3 className="font-medium text-foreground leading-tight truncate group-hover:text-primary transition-colors">
                     {endorsement.job?.title}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
@@ -217,10 +217,10 @@ export function MyEndorsementsHistory() {
 
                 {/* Stake */}
                 <div className="hidden md:block text-right min-w-[90px]">
-                  <p className="text-sm font-semibold text-primary tabular-nums">
+                  <p className="text-sm font-medium text-primary tabular-nums">
                     {parseFloat(endorsement.stakeAmount || "0").toFixed(2)} VETD
                   </p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
                     Stake
                   </p>
                 </div>
@@ -231,12 +231,12 @@ export function MyEndorsementsHistory() {
                     (endorsement.blockchainData?.rank ?? 0) <= 3 && (
                       <Badge
                         variant="outline"
-                        className={`${STATUS_COLORS.warning.badge} text-[10px] px-2`}
+                        className={`${STATUS_COLORS.warning.badge} text-xs px-2`}
                       >
                         <Trophy className="w-3 h-3 mr-1" />#{endorsement.blockchainData!.rank}
                       </Badge>
                     )}
-                  <Badge className={`text-[10px] ${statusConfig.className}`}>
+                  <Badge className={`text-xs ${statusConfig.className}`}>
                     {statusConfig.label}
                   </Badge>
                   <div
@@ -256,7 +256,7 @@ export function MyEndorsementsHistory() {
                     {/* Flat metrics row — no boxes, just columns with dividers */}
                     <div className="flex flex-wrap gap-y-4">
                       <div className="flex-1 min-w-[120px] pr-6">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                           Candidate
                         </p>
                         <p className="text-sm font-medium text-foreground">
@@ -269,7 +269,7 @@ export function MyEndorsementsHistory() {
                         )}
                       </div>
                       <div className="flex-1 min-w-[120px] pr-6 border-l border-border/30 pl-6">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                           Guild
                         </p>
                         <p className="text-sm font-medium text-foreground">
@@ -277,7 +277,7 @@ export function MyEndorsementsHistory() {
                         </p>
                       </div>
                       <div className="flex-1 min-w-[100px] pr-6 border-l border-border/30 pl-6">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                           Endorsed
                         </p>
                         <p className="text-sm font-medium text-foreground">
@@ -285,10 +285,10 @@ export function MyEndorsementsHistory() {
                         </p>
                       </div>
                       <div className="flex-1 min-w-[100px] border-l border-border/30 pl-6">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                           {endorsement.blockchainData?.bidAmount ? "On-Chain Bid" : "Stake"}
                         </p>
-                        <p className="text-sm font-semibold text-primary tabular-nums">
+                        <p className="text-sm font-medium text-primary tabular-nums">
                           {parseFloat(
                             endorsement.blockchainData?.bidAmount || endorsement.stakeAmount || "0"
                           ).toFixed(2)}{" "}
@@ -300,7 +300,7 @@ export function MyEndorsementsHistory() {
                     {/* Cover letter */}
                     {endorsement.application?.coverLetter && (
                       <div className="mt-5 pt-5 border-t border-border/30">
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
                           Candidate Summary
                         </p>
                         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -312,7 +312,7 @@ export function MyEndorsementsHistory() {
                     {/* Notes */}
                     {endorsement.notes && (
                       <div className="mt-5 pt-5 border-t border-border/30">
-                        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
                           Your Notes
                         </p>
                         <p className="text-sm text-foreground leading-relaxed">
@@ -332,7 +332,7 @@ export function MyEndorsementsHistory() {
       <div className="rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-md p-5 flex items-start gap-3">
         <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
-          <span className="font-semibold text-primary">Tip:</span> Top 3
+          <span className="font-medium text-primary">Tip:</span> Top 3
           endorsers earn rewards when a candidate is hired. Increase your stake
           to improve your ranking.
         </p>

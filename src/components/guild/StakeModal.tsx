@@ -32,7 +32,7 @@ export function StakeModal({
         <div className="space-y-4">
           <div className="p-4 bg-muted rounded-lg border border-border">
             <p className="text-sm text-muted-foreground mb-1">Candidate</p>
-            <p className="font-semibold text-foreground">{application.candidateName}</p>
+            <p className="font-medium text-foreground">{application.candidateName}</p>
           </div>
 
           <Input

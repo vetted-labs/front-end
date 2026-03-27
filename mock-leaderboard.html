@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leaderboard — Vetted</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0e14; --card: rgba(22,25,35,0.7); --card-solid: #161923;
+    --border: rgba(255,255,255,0.06); --text: #e8eaed; --text-muted: #8b8f9a;
+    --text-muted-60: rgba(139,143,154,0.6); --primary: #ff6a00; --primary-10: rgba(255,106,0,0.1);
+    --emerald: #10b981; --emerald-10: rgba(16,185,129,0.1); --rose: #f43f5e;
+    --gold: #f59e0b; --silver: #94a3b8; --bronze: #d97706;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 16px; }
+
+  /* Card */
+  .card { background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.2); }
+
+  /* Header */
+  .header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px; }
+  .header p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+  .trophy-icon { color: var(--gold); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; overflow-x: auto; margin-top: 24px; padding-bottom: 4px; }
+  .tab { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap; background: transparent; color: var(--text-muted); transition: all 0.15s; font-family: inherit; }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .tab.active { background: var(--primary-10); color: var(--primary); border: 1px solid rgba(255,106,0,0.2); }
+  .tab svg { width: 14px; height: 14px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 8px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .filter-select { appearance: none; padding: 6px 28px 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); cursor: pointer; font-family: inherit; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8f9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+  .filter-select:focus { outline: none; border-color: rgba(255,106,0,0.4); }
+  .expert-count { font-size: 12px; color: var(--text-muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+  /* Podium */
+  .podium-wrap { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(to bottom, var(--card), rgba(22,25,35,0.4)); backdrop-filter: blur(12px); padding: 24px 24px 0; margin-top: 24px; }
+  .podium-glow { position: absolute; top: -64px; left: 50%; transform: translateX(-50%); width: 256px; height: 256px; background: rgba(245,158,11,0.1); border-radius: 50%; filter: blur(48px); pointer-events: none; }
+  .podium-title { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; }
+  .podium-title h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .podium-title svg { width: 18px; height: 18px; color: var(--gold); }
+
+  .podium-cards { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 16px; }
+  .podium-card { display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform 0.2s; }
+  .podium-card:hover { transform: translateY(-4px); }
+  .podium-card-inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border-radius: 16px; border: 1px solid; backdrop-filter: blur(12px); background: var(--card); }
+  .podium-card.gold .podium-card-inner { border-color: rgba(245,158,11,0.4); width: 176px; box-shadow: 0 8px 32px rgba(245,158,11,0.1); }
+  .podium-card.silver .podium-card-inner { border-color: rgba(148,163,184,0.4); width: 144px; }
+  .podium-card.bronze .podium-card-inner { border-color: rgba(217,119,6,0.4); width: 144px; }
+  .rank-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+  .rank-label.gold { color: var(--gold); }
+  .rank-label.silver { color: var(--silver); }
+  .rank-label.bronze { color: var(--bronze); }
+  .avatar { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; }
+  .avatar.gold { width: 80px; height: 80px; font-size: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 0 2px rgba(245,158,11,0.6), 0 4px 16px rgba(245,158,11,0.3); }
+  .avatar.silver { width: 64px; height: 64px; font-size: 16px; background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 0 0 2px rgba(148,163,184,0.6); }
+  .avatar.bronze { width: 64px; height: 64px; font-size: 16px; background: linear-gradient(135deg, #d97706, #92400e); box-shadow: 0 0 0 2px rgba(217,119,6,0.6); }
+  .podium-name { font-size: 13px; font-weight: 600; text-align: center; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .podium-wallet { font-size: 10px; color: var(--text-muted); font-family: monospace; }
+  .podium-role { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 500; text-transform: capitalize; }
+  .role-master { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .role-recruit { background: rgba(148,163,184,0.2); color: #94a3b8; }
+  .podium-metric { text-align: center; margin-top: 4px; }
+  .podium-metric .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .podium-metric .value.big { font-size: 18px; }
+  .podium-metric .value.normal { font-size: 16px; }
+  .podium-metric .label { font-size: 10px; color: var(--text-muted); }
+  .podium-delta { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .podium-delta.positive { color: var(--emerald); }
+  .podium-platform { width: 100%; border-radius: 8px 8px 0 0; border-top: 1px solid; border-left: 1px solid; border-right: 1px solid; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; }
+  .podium-platform span { font-size: 24px; font-weight: 900; opacity: 0.3; user-select: none; }
+  .podium-platform.gold { height: 144px; background: linear-gradient(to bottom, rgba(245,158,11,0.2), rgba(217,119,6,0.1)); border-color: rgba(245,158,11,0.4); }
+  .podium-platform.gold span { color: var(--gold); }
+  .podium-platform.silver { height: 96px; background: linear-gradient(to bottom, rgba(148,163,184,0.2), rgba(100,116,139,0.1)); border-color: rgba(148,163,184,0.4); }
+  .podium-platform.silver span { color: var(--silver); }
+  .podium-platform.bronze { height: 64px; background: linear-gradient(to bottom, rgba(217,119,6,0.2), rgba(146,64,14,0.1)); border-color: rgba(217,119,6,0.4); }
+  .podium-platform.bronze span { color: var(--bronze); }
+
+  /* Crown */
+  .crown { width: 24px; height: 24px; color: var(--gold); filter: drop-shadow(0 0 8px rgba(245,158,11,0.8)); }
+  .crown-placeholder { width: 24px; height: 24px; }
+
+  /* Your Stats Bar */
+  .your-stats { margin-top: 24px; border-color: rgba(255,106,0,0.2); background: rgba(255,106,0,0.02); }
+  .your-stats-header { padding: 8px 20px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,106,0,0.1); }
+  .your-stats-header .icon-wrap { width: 24px; height: 24px; border-radius: 8px; background: var(--primary-10); display: flex; align-items: center; justify-content: center; }
+  .your-stats-header .icon-wrap svg { width: 14px; height: 14px; color: var(--primary); }
+  .your-stats-header .title { font-size: 12px; font-weight: 600; }
+  .you-badge { font-size: 9px; background: rgba(255,106,0,0.2); color: var(--primary); padding: 2px 6px; border-radius: 9999px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .your-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .your-stat-cell { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid rgba(255,255,255,0.04); }
+  .your-stat-cell:last-child { border-right: none; }
+  .your-stat-cell svg { width: 14px; height: 14px; color: var(--primary); flex-shrink: 0; }
+  .your-stat-cell .stat-label { font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .your-stat-cell .stat-value { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* Table */
+  .table-card { margin-top: 24px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  th { padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  th.highlight { color: var(--primary); background: rgba(255,106,0,0.03); }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; cursor: pointer; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr.current-user { background: rgba(255,106,0,0.03); border-left: 2px solid var(--primary); }
+  td { padding: 12px 16px; font-size: 14px; }
+  .rank-num { font-size: 14px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .expert-name { font-size: 14px; font-weight: 700; }
+  .role-pill { font-size: 10px; padding: 2px 6px; border-radius: 9999px; font-weight: 500; text-transform: capitalize; display: inline-flex; }
+  .role-pill.master { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .role-pill.recruit { background: rgba(148,163,184,0.2); color: #94a3b8; }
+  .guild-count { font-size: 10px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 2px; }
+  .guild-count svg { width: 10px; height: 10px; }
+  .rep-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .rep-delta { font-size: 10px; font-weight: 500; font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .rep-delta.up { color: var(--emerald); }
+  .rep-delta.down { color: var(--rose); }
+  .earnings-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .reviews-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .reviews-breakdown { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+  .consensus-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .consensus-bar { width: 56px; height: 4px; border-radius: 9999px; background: rgba(255,255,255,0.04); overflow: hidden; }
+  .consensus-fill { height: 100%; border-radius: 9999px; background: var(--emerald); }
+  .consensus-pct { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .staked-value { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .trend-cell { text-align: center; }
+  .flame { color: #f97316; }
+  .arrow-up { color: var(--emerald); }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .anim { animation: fadeUp 0.4s ease both; }
+  .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.1s; } .d3 { animation-delay: 0.15s; } .d4 { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header anim">
+    <h1>
+      <svg class="trophy-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      Leaderboard
+    </h1>
+    <p>Top performing experts ranked across multiple dimensions.</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs anim d1">
+    <button class="tab active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Overall</button>
+    <button class="tab">Earnings</button>
+    <button class="tab">Reputation</button>
+    <button class="tab">Reviews</button>
+    <button class="tab">Consensus</button>
+    <button class="tab">Endorsements</button>
+    <button class="tab">Trending</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters anim d1">
+    <select class="filter-select"><option>All Guilds</option></select>
+    <select class="filter-select"><option>All Time</option><option>This Month</option><option>This Week</option></select>
+    <select class="filter-select"><option>All Roles</option><option>Recruit</option><option>Master</option></select>
+    <span class="expert-count">5 experts</span>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium-wrap anim d2">
+    <div class="podium-glow"></div>
+    <div class="podium-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+      <h3>Top Performers</h3>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+    </div>
+    <div class="podium-cards">
+      <!-- #2 Silver -->
+      <div class="podium-card silver" style="order:1">
+        <div class="crown-placeholder"></div>
+        <div class="podium-card-inner">
+          <span class="rank-label silver">#2</span>
+          <div class="avatar silver">AB</div>
+          <div class="podium-name">Ameni Bougdima</div>
+          <div class="podium-wallet">0x2d0d...705B</div>
+          <span class="podium-role role-recruit">recruit</span>
+          <div class="podium-metric"><p class="value normal">923</p><p class="label">Reputation</p></div>
+          <div class="podium-delta positive">+80 this period</div>
+        </div>
+        <div class="podium-platform silver"><span>2</span></div>
+      </div>
+      <!-- #1 Gold -->
+      <div class="podium-card gold" style="order:2">
+        <svg class="crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>
+        <div class="podium-card-inner">
+          <span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.08em;">YOU</span>
+          <span class="rank-label gold">#1</span>
+          <div class="avatar gold">SD</div>
+          <div class="podium-name">Sven Daneel</div>
+          <div class="podium-wallet">0x5b31...80c5</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span class="podium-role role-master">master</span>
+            <span style="font-size:10px;color:var(--text-muted)">8 guilds</span>
+          </div>
+          <div class="podium-metric"><p class="value big">1,132</p><p class="label">Reputation</p></div>
+          <div class="podium-delta positive">+95 this period</div>
+        </div>
+        <div class="podium-platform gold"><span>1</span></div>
+      </div>
+      <!-- #3 Bronze -->
+      <div class="podium-card bronze" style="order:3">
+        <div class="crown-placeholder"></div>
+        <div class="podium-card-inner">
+          <span class="rank-label bronze">#3</span>
+          <div class="avatar bronze">TC</div>
+          <div class="podium-name">Taieb Chaouch</div>
+          <div class="podium-wallet">0x459a...fF8A</div>
+          <span class="podium-role role-recruit">recruit</span>
+          <div class="podium-metric"><p class="value normal">921</p><p class="label">Reputation</p></div>
+          <div class="podium-delta positive">+80 this period</div>
+        </div>
+        <div class="podium-platform bronze"><span>3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Your Stats -->
+  <div class="card your-stats anim d3">
+    <div class="your-stats-header">
+      <div class="icon-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+      <span class="title">Your Position</span>
+      <span class="you-badge">YOU</span>
+    </div>
+    <div class="your-stats-grid">
+      <div class="your-stat-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg><div><p class="stat-label">Your Rank</p><p class="stat-value">#1</p></div></div>
+      <div class="your-stat-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><div><p class="stat-label">Reviews</p><p class="stat-value">1</p></div></div>
+      <div class="your-stat-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div><p class="stat-label">Consensus</p><p class="stat-value">N/A</p></div></div>
+      <div class="your-stat-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/></svg><div><p class="stat-label">Earned</p><p class="stat-value">$0</p></div></div>
+      <div class="your-stat-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg><div><p class="stat-label">Endorsements</p><p class="stat-value">8</p></div></div>
+      <div class="your-stat-cell" style="border-right:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="stat-label">Staked</p><p class="stat-value">$740</p></div></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card table-card anim d4">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:48px">#</th>
+          <th>Expert</th>
+          <th class="highlight">Reputation</th>
+          <th>Earnings</th>
+          <th>Reviews</th>
+          <th>Consensus</th>
+          <th>Staked</th>
+          <th style="text-align:center;width:64px">Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="current-user">
+          <td><span class="rank-num">1</span></td>
+          <td>
+            <div class="expert-name">Sven Daneel</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="role-pill master">master</span>
+              <span class="guild-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 8</span>
+            </div>
+          </td>
+          <td class="highlight"><span class="rep-value">1,132</span><span class="rep-delta up">▲ 95</span></td>
+          <td><span class="earnings-value">0 VETD</span></td>
+          <td><span class="reviews-value">1 <span class="reviews-breakdown">(1/0)</span></span></td>
+          <td><div class="consensus-bar-wrap"><div class="consensus-bar"><div class="consensus-fill" style="width:0%"></div></div><span class="consensus-pct">0%</span></div></td>
+          <td><span class="staked-value">740 VETD</span></td>
+          <td class="trend-cell"><svg class="flame" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">2</span></td>
+          <td>
+            <div class="expert-name">Ameni Bougdima</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="role-pill recruit">recruit</span>
+              <span class="guild-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 0</span>
+            </div>
+          </td>
+          <td class="highlight"><span class="rep-value">923</span><span class="rep-delta up">▲ 80</span></td>
+          <td><span class="earnings-value">0 VETD</span></td>
+          <td><span class="reviews-value">0 <span class="reviews-breakdown">(0/0)</span></span></td>
+          <td><div class="consensus-bar-wrap"><div class="consensus-bar"><div class="consensus-fill" style="width:0%"></div></div><span class="consensus-pct">0%</span></div></td>
+          <td><span class="staked-value">—</span></td>
+          <td class="trend-cell"><svg class="flame" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">3</span></td>
+          <td>
+            <div class="expert-name">Taieb Chaouch</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="role-pill recruit">recruit</span>
+              <span class="guild-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 0</span>
+            </div>
+          </td>
+          <td class="highlight"><span class="rep-value">921</span><span class="rep-delta up">▲ 80</span></td>
+          <td><span class="earnings-value">0 VETD</span></td>
+          <td><span class="reviews-value">0 <span class="reviews-breakdown">(0/0)</span></span></td>
+          <td><div class="consensus-bar-wrap"><div class="consensus-bar"><div class="consensus-fill" style="width:0%"></div></div><span class="consensus-pct">0%</span></div></td>
+          <td><span class="staked-value">—</span></td>
+          <td class="trend-cell"><svg class="flame" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">4</span></td>
+          <td>
+            <div class="expert-name">Sven4</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="role-pill master">master</span>
+              <span class="guild-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 8</span>
+            </div>
+          </td>
+          <td class="highlight"><span class="rep-value">500</span></td>
+          <td><span class="earnings-value">0 VETD</span></td>
+          <td><span class="reviews-value">1 <span class="reviews-breakdown">(1/0)</span></span></td>
+          <td><div class="consensus-bar-wrap"><div class="consensus-bar"><div class="consensus-fill" style="width:0%"></div></div><span class="consensus-pct">0%</span></div></td>
+          <td><span class="staked-value">680 VETD</span></td>
+          <td class="trend-cell"><span style="color:rgba(139,143,154,0.4)">—</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">5</span></td>
+          <td>
+            <div class="expert-name">Sven 2</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span class="role-pill recruit">recruit</span>
+              <span class="guild-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 1</span>
+            </div>
+          </td>
+          <td class="highlight"><span class="rep-value">0</span></td>
+          <td><span class="earnings-value">0 VETD</span></td>
+          <td><span class="reviews-value">0 <span class="reviews-breakdown">(0/0)</span></span></td>
+          <td><div class="consensus-bar-wrap"><div class="consensus-bar"><div class="consensus-fill" style="width:0%"></div></div><span class="consensus-pct">0%</span></div></td>
+          <td><span class="staked-value">—</span></td>
+          <td class="trend-cell"><span style="color:rgba(139,143,154,0.4)">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

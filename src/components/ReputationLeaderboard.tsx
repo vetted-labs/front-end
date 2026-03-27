@@ -123,7 +123,7 @@ export function ReputationLeaderboard({
 
       {/* About the Leaderboard */}
       <div className="rounded-lg border bg-muted/30 p-4">
-        <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+        <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
           <Info className="h-4 w-4 text-primary" />
           How Rankings Work
         </h3>
@@ -195,24 +195,24 @@ export function ReputationLeaderboard({
           <table className="w-full">
             <thead className="bg-muted border-b border-border dark:bg-white/[0.03]">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Expert
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Earnings
                 </th>
                 {!guildId && (
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Guilds
                   </th>
                 )}
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Reviews
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Consensus
                 </th>
               </tr>
@@ -245,7 +245,7 @@ export function ReputationLeaderboard({
                       <div className="font-medium text-foreground flex items-center gap-2">
                         {entry.fullName}
                         {entry.expertId === currentExpertId && (
-                          <span className="px-2 py-0.5 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded-full">
+                          <span className="px-2 py-0.5 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded-full">
                             You
                           </span>
                         )}
@@ -265,7 +265,7 @@ export function ReputationLeaderboard({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Coins className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
-                      <span className="text-lg font-bold text-foreground">
+                      <span className="text-xl font-bold text-foreground">
                         {formatVetd(entry.totalEarnings)}
                       </span>
                       {entry.rank <= 10 && (
@@ -287,7 +287,7 @@ export function ReputationLeaderboard({
                   {/* Reviews */}
                   <td className="px-6 py-4">
                     <div className="text-sm">
-                      <div className="font-semibold text-foreground">
+                      <div className="font-medium text-foreground">
                         {entry.totalReviews}
                       </div>
                       <div className="text-xs text-muted-foreground">

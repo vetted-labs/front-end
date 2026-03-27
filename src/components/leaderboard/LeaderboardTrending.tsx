@@ -47,7 +47,7 @@ export function LeaderboardTrending({
           <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", STATUS_COLORS.positive.bgSubtle)}>
             <TrendingUp className={cn("w-3.5 h-3.5", STATUS_COLORS.positive.text)} />
           </div>
-          <h3 className="text-sm font-semibold">Biggest Climbers</h3>
+          <h3 className="text-sm font-medium">Biggest Climbers</h3>
         </div>
 
         {climbers.length === 0 ? (
@@ -74,13 +74,13 @@ export function LeaderboardTrending({
                         <span className="text-xs font-bold text-muted-foreground tabular-nums w-5">
                           {i + 1}
                         </span>
-                        <span className="text-sm font-semibold truncate">{entry.fullName}</span>
+                        <span className="text-sm font-medium truncate">{entry.fullName}</span>
                         {isCurrentUser && (
-                          <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
+                          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
                             You
                           </span>
                         )}
-                        <Badge variant={getRankBadgeVariant(entry.role)} className="text-[9px] px-1.5 py-0 capitalize shrink-0">
+                        <Badge variant={getRankBadgeVariant(entry.role)} className="text-xs px-1.5 py-0 capitalize shrink-0">
                           {entry.role}
                         </Badge>
                       </div>
@@ -108,7 +108,7 @@ export function LeaderboardTrending({
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
             <Flame className="w-3.5 h-3.5 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold">Hot Streaks</h3>
+          <h3 className="text-sm font-medium">Hot Streaks</h3>
         </div>
 
         {streakers.length === 0 ? (
@@ -136,9 +136,9 @@ export function LeaderboardTrending({
                           <Flame key={j} className="w-3.5 h-3.5 text-primary inline-block" />
                         ))}
                       </span>
-                      <span className="text-sm font-semibold truncate">{entry.fullName}</span>
+                      <span className="text-sm font-medium truncate">{entry.fullName}</span>
                       {isCurrentUser && (
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
+                        <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">
                           You
                         </span>
                       )}
@@ -147,7 +147,7 @@ export function LeaderboardTrending({
                       <p className="text-xs font-bold text-primary tabular-nums">
                         {entry.streak}w streak
                       </p>
-                      <p className="text-[10px] text-muted-foreground tabular-nums">
+                      <p className="text-xs text-muted-foreground tabular-nums">
                         {entry.reputation.toLocaleString()} rep
                       </p>
                     </div>

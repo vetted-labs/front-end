@@ -26,7 +26,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Arbitration Vote</CardTitle>
+        <CardTitle className="text-xl">Arbitration Vote</CardTitle>
         <p className="text-sm text-muted-foreground">
           Review the evidence and cast your vote on this dispute.
         </p>

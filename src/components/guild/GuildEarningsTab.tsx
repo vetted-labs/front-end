@@ -50,7 +50,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
 
       {/* Recent Earnings */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">
+        <h3 className="text-xl font-bold text-foreground mb-4">
           Recent Earnings History
         </h3>
         {earnings.recentEarnings.length === 0 ? (
@@ -58,7 +58,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Coins className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <h3 className="text-xl font-bold text-foreground mb-2">
               No Earnings Yet
             </h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -94,7 +94,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-lg font-semibold ${STATUS_COLORS.positive.text}`}>
+                  <p className={`text-xl font-bold ${STATUS_COLORS.positive.text}`}>
                     {earning.type === "proposal"
                       ? `+${earning.amount} pts`
                       : `+$${earning.amount}`}

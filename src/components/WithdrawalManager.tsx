@@ -245,7 +245,7 @@ export function WithdrawalManager({
               <div className="flex items-start gap-2 mb-3">
                 <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} mt-0.5`} />
                 <div className="flex-1">
-                  <h4 className="font-semibold">Unstake Request Pending</h4>
+                  <h4 className="font-bold">Unstake Request Pending</h4>
                   <p className="text-sm text-muted-foreground">
                     Amount: {parseFloat(unstakeRequest.amount ?? "0").toFixed(2)} VETD
                   </p>

@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
   CheckCheck,
   AlertCircle,
   Loader2,
+  Settings,
+  X,
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
+import { getNotificationPriority } from "@/config/colors";
 import type { BaseNotification } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,6 +26,8 @@ export interface NotificationFilterConfig {
   label: string;
   /** Which notification types belong to this filter (empty = special like "all" or "unread"). */
   types?: string[];
+  /** Optional icon for the filter tab */
+  icon?: LucideIcon;
 }
 
 interface NotificationsPageProps<T extends BaseNotification> {
@@ -46,6 +51,66 @@ interface NotificationsPageProps<T extends BaseNotification> {
   buildUrl: (notification: T) => string;
   /** Filter tabs config (first filter should be "all"). */
   filters: NotificationFilterConfig[];
+}
+
+/** Group notifications by relative date */
+function groupByDate<T extends BaseNotification>(notifications: T[]): { label: string; items: T[] }[] {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today.getTime() - 86400000);
+  const weekAgo = new Date(today.getTime() - 7 * 86400000);
+
+  const groups: { label: string; items: T[] }[] = [
+    { label: "Today", items: [] },
+    { label: "Yesterday", items: [] },
+    { label: "This Week", items: [] },
+    { label: "Earlier", items: [] },
+  ];
+
+  for (const n of notifications) {
+    const d = new Date(n.createdAt);
+    if (d >= today) groups[0].items.push(n);
+    else if (d >= yesterday) groups[1].items.push(n);
+    else if (d >= weekAgo) groups[2].items.push(n);
+    else groups[3].items.push(n);
+  }
+
+  return groups.filter((g) => g.items.length > 0);
+}
+
+/** Map notification type to priority-based left stripe and icon styling */
+function getPriorityStyles(type: string): {
+  stripe: string;
+  iconBg: string;
+  isUrgent: boolean;
+} {
+  const priority = getNotificationPriority(type);
+  switch (priority) {
+    case "urgent":
+      return {
+        stripe: "bg-negative",
+        iconBg: "bg-negative/12 text-negative",
+        isUrgent: true,
+      };
+    case "positive":
+      return {
+        stripe: "bg-positive",
+        iconBg: "bg-positive/12 text-positive",
+        isUrgent: false,
+      };
+    case "action":
+      return {
+        stripe: "bg-primary",
+        iconBg: "bg-primary/12 text-primary",
+        isUrgent: false,
+      };
+    default:
+      return {
+        stripe: "bg-info-blue",
+        iconBg: "bg-info-blue/12 text-info-blue",
+        isUrgent: false,
+      };
+  }
 }
 
 export function NotificationsPage<T extends BaseNotification>({
@@ -176,52 +241,66 @@ export function NotificationsPage<T extends BaseNotification>({
       : getFilteredNotifications(f.key).length,
   }));
 
+  // Group filtered notifications by date
+  const dateGroups = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
+
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[860px] mx-auto px-4 sm:px-6 py-12 relative z-[1]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Notifications</h1>
-            <p className="text-muted-foreground">{subtitle}</p>
+        <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+              Notifications
+            </h1>
+            {unreadCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-sm font-medium px-3.5 py-1 rounded-full"
+                style={{ animation: "notif-badge-pulse 2s ease-in-out infinite" }}
+              >
+                <span className="w-[7px] h-[7px] bg-primary rounded-full animate-pulse" />
+                {unreadCount} new
+              </span>
+            )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              disabled={isMarkingAllRead}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isMarkingAllRead ? (
-                <>
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                disabled={isMarkingAllRead}
+                className="inline-flex items-center gap-2 bg-white/[0.025] border border-white/[0.06] text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-[10px] backdrop-blur-xl hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isMarkingAllRead ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Marking...
-                </>
-              ) : (
-                <>
+                ) : (
                   <CheckCheck className="w-4 h-4" />
-                  Mark All as Read
-                </>
-              )}
+                )}
+                Mark all read
+              </button>
+            )}
+            <button className="w-10 h-10 grid place-items-center bg-white/[0.025] border border-white/[0.06] text-muted-foreground rounded-[10px] backdrop-blur-xl hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground transition-all">
+              <Settings className="w-[18px] h-[18px]" />
             </button>
-          )}
+          </div>
         </div>
 
-        {/* Filter Navigation */}
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
-          {filterTabs.map(({ key, label, count }) => (
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
+          {filterTabs.map(({ key, label, count, icon: TabIcon }) => (
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium whitespace-nowrap backdrop-blur-2xl transition-all ${
                 activeFilter === key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-white/[0.025] border-white/[0.06] text-muted-foreground hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground"
               }`}
             >
+              {TabIcon && <TabIcon className="w-4 h-4 shrink-0" />}
               {label}
               {count > 0 && (
-                <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                  key === "unread" && activeFilter !== key ? "bg-negative text-white" : "bg-primary-foreground/20"
+                <span className={`px-2 py-px text-xs font-medium rounded-lg ${
+                  activeFilter === key ? "bg-primary/20" : "bg-white/[0.08]"
                 }`}>
                   {count}
                 </span>
@@ -230,102 +309,115 @@ export function NotificationsPage<T extends BaseNotification>({
           ))}
         </div>
 
-        {/* Notifications List */}
-        <div className="space-y-3">
-          {filteredNotifications.length === 0 ? (
-            <div className="bg-card rounded-2xl p-12 text-center border border-border">
-              <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No notifications</h3>
-              <p className="text-muted-foreground">
-                {activeFilter === "unread"
-                  ? "All caught up! No unread notifications."
-                  : `No ${activeFilter === "all" ? "" : activeFilter.replace("_", " ") + " "}notifications found.`}
-              </p>
-            </div>
-          ) : (
-            filteredNotifications.map((notification) => {
-              const Icon = getIcon(notification.type);
-              const isUnread = !notification.isRead;
-              const isClicked = clickedNotificationId === notification.id;
+        {/* Notifications grouped by date */}
+        {filteredNotifications.length === 0 ? (
+          <div className="bg-white/[0.025] rounded-2xl p-12 text-center border border-white/[0.06]">
+            <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-foreground mb-2">No notifications</h3>
+            <p className="text-muted-foreground">
+              {activeFilter === "unread"
+                ? "All caught up! No unread notifications."
+                : `No ${activeFilter === "all" ? "" : activeFilter.replace("_", " ") + " "}notifications found.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {dateGroups.map((group) => (
+              <div key={group.label}>
+                {/* Date label */}
+                <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
+                  {group.label}
+                </p>
 
-              return (
-                <button
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  disabled={isClicked}
-                  className={`w-full bg-card rounded-2xl p-6 border transition-all text-left hover:shadow-lg hover:border-primary/50 ${
-                    isUnread
-                      ? "border-primary/20 bg-card"
-                      : "border-border opacity-75 hover:opacity-100"
-                  } ${isClicked ? "opacity-60 cursor-wait" : ""}`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${getColor(
-                        notification.type
-                      )}`}
-                    >
-                      {isClicked ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      ) : (
-                        <Icon className="w-6 h-6" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-1">
-                        <h3
-                          className={`text-base font-semibold text-foreground ${
-                            isUnread ? "font-bold" : ""
-                          }`}
-                        >
-                          {notification.title}
-                        </h3>
-                        {isUnread && (
-                          <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-2 mt-1.5" />
-                        )}
-                      </div>
-                      <p
-                        className={`text-sm text-muted-foreground mb-2 ${
-                          isUnread ? "font-medium" : ""
+                <div className="space-y-2.5">
+                  {group.items.map((notification) => {
+                    const Icon = getIcon(notification.type);
+                    const isUnread = !notification.isRead;
+                    const isClicked = clickedNotificationId === notification.id;
+                    const { stripe, iconBg, isUrgent } = getPriorityStyles(notification.type);
+
+                    return (
+                      <button
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        disabled={isClicked}
+                        className={`w-full flex items-start gap-4 px-6 py-5 bg-white/[0.025] border border-white/[0.06] rounded-2xl relative overflow-hidden cursor-pointer backdrop-blur-3xl text-left transition-all duration-200 hover:bg-white/[0.045] hover:border-white/[0.12] hover:translate-y-[-1px] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] ${
+                          isClicked ? "opacity-60 cursor-wait" : ""
+                        } ${
+                          isUnread ? "" : "opacity-60"
+                        } ${
+                          isUrgent ? "border-negative/12" : ""
                         }`}
+                        style={isUrgent ? { animation: "notif-urgent-glow 3s ease-in-out infinite" } : undefined}
                       >
-                        {notification.message}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{formatTimeAgo(notification.createdAt)}</span>
-                        {notification.isRead && notification.readAt && (
-                          <>
-                            <span>&bull;</span>
-                            <Check className="w-3 h-3" />
-                            <span>Read</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })
-          )}
+                        {/* Priority stripe */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-r ${stripe}`} />
 
-          {/* Load More Button */}
-          {hasMore && filteredNotifications.length > 0 && (
-            <button
-              onClick={loadMore}
-              disabled={isLoadingMore}
-              className="w-full py-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Load more notifications"
-              )}
-            </button>
-          )}
-        </div>
+                        {/* Icon */}
+                        <div className={`relative w-12 h-12 rounded-[14px] grid place-items-center shrink-0 ${iconBg}`}>
+                          {isClicked ? (
+                            <Loader2 className="w-[22px] h-[22px] animate-spin" />
+                          ) : (
+                            <Icon className="w-[22px] h-[22px]" />
+                          )}
+                          {/* Unread dot */}
+                          {isUnread && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background animate-pulse" />
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`text-sm leading-snug mb-1 ${
+                            isUnread ? "font-semibold text-white" : "font-medium text-foreground"
+                          }`}>
+                            {notification.title}
+                          </h3>
+                          <p className="text-[13.5px] text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground/50 font-medium">
+                            <span>{formatTimeAgo(notification.createdAt)}</span>
+                            {notification.isRead && notification.readAt && (
+                              <>
+                                <span>&bull;</span>
+                                <Check className="w-3 h-3" />
+                                <span>Read</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Dismiss button (shows on hover) */}
+                        <div className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-white/[0.06] hover:text-muted-foreground transition-all mt-1">
+                          <X className="w-4 h-4" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {hasMore && filteredNotifications.length > 0 && (
+          <button
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="w-full py-4 mt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Load more notifications"
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

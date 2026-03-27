@@ -109,7 +109,7 @@ export function ProposalTypeSection({
           <Settings2 className="w-5 h-5 text-info-blue" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-bold text-foreground">
             Proposal Type
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -166,7 +166,7 @@ export function ProposalTypeSection({
         <Scale className="w-4 h-4 text-primary shrink-0" />
         <span className="text-muted-foreground">
           This proposal type requires{" "}
-          <span className="font-semibold text-foreground">
+          <span className="font-medium text-foreground">
             {threshold.threshold}% approval
           </span>{" "}
           to pass

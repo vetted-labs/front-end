@@ -55,7 +55,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           <div className="flex items-start gap-4">
             {/* Avatar */}
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0">
-              <span className="text-lg font-extrabold text-white tracking-tight">
+              <span className="text-lg font-bold text-white tracking-tight">
                 {initials}
               </span>
             </div>
@@ -63,11 +63,11 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
             {/* Name + badge + email */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-xl font-extrabold text-foreground tracking-tight">
+                <h3 className="text-xl font-bold text-foreground tracking-tight">
                   {displayName}
                 </h3>
                 {level && (
-                  <span className="px-2.5 py-0.5 bg-primary/15 text-primary border border-primary/30 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 bg-primary/15 text-primary border border-primary/30 text-xs font-bold rounded-full uppercase tracking-wider">
                     {level}
                   </span>
                 )}
@@ -81,20 +81,20 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
             <div className="grid grid-cols-2 gap-3">
               {(displayTitle || displayCompany) && (
                 <div className="border border-border/40 rounded-lg bg-muted/20 p-3.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Position
                   </p>
-                  <p className="text-sm font-semibold text-foreground truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {`${application.currentTitle ?? ""}${application.currentCompany ? ` at ${application.currentCompany}` : ""}`}
                   </p>
                 </div>
               )}
               {application.yearsOfExperience != null && application.yearsOfExperience > 0 && (
                 <div className="border border-border/40 rounded-lg bg-muted/20 p-3.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Experience
                   </p>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-medium text-foreground">
                     {application.yearsOfExperience} years
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
       <div className="grid gap-4">
         {application.bio && (
           <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-2">Bio</p>
+            <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-2">Bio</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.bio}
             </p>
@@ -182,7 +182,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
         )}
         {application.motivation && (
           <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
+            <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.motivation}
             </p>
@@ -193,7 +193,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
       {/* Expertise Areas — preserved (skills-based evaluation) */}
       {application.expertiseAreas && application.expertiseAreas.length > 0 && (
         <div>
-          <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-3">
+          <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3">
             Expertise Areas
           </p>
           <div className="flex flex-wrap gap-2">

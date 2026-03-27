@@ -78,7 +78,7 @@ export function GuildMembersTab({
                   {/* Header: Name and Role */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground text-lg mb-2 group-hover:text-primary transition-colors">
+                      <h3 className="font-bold text-foreground text-xl mb-2 group-hover:text-primary transition-colors">
                         {expert.fullName}
                       </h3>
                       <Badge variant={getRankBadgeVariant(expert.role)} className="uppercase text-xs font-bold">
@@ -88,7 +88,7 @@ export function GuildMembersTab({
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-primary mb-1">
                         <Star className="w-5 h-5 fill-current" />
-                        <span className="font-bold text-lg">{expert.reputation}</span>
+                        <span className="font-bold text-xl">{expert.reputation}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">reputation</p>
                     </div>
@@ -124,14 +124,14 @@ export function GuildMembersTab({
                         <TrendingUp className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-muted-foreground text-xs">Reviews</p>
-                          <p className="font-semibold text-foreground">{expert.totalReviews}</p>
+                          <p className="font-medium text-foreground">{expert.totalReviews}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-muted-foreground text-xs">Success</p>
-                          <p className="font-semibold text-foreground">{expert.successRate}%</p>
+                          <p className="font-medium text-foreground">{expert.successRate}%</p>
                         </div>
                       </div>
                     </div>
@@ -179,7 +179,7 @@ export function GuildMembersTab({
                   {/* Header: Name and Experience Level */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground text-lg mb-2">
+                      <h3 className="font-bold text-foreground text-xl mb-2">
                         {candidate.fullName}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
@@ -192,7 +192,7 @@ export function GuildMembersTab({
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-primary mb-1">
                         <Star className="w-5 h-5 fill-current" />
-                        <span className="font-bold text-lg">{candidate.reputation}</span>
+                        <span className="font-bold text-xl">{candidate.reputation}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">reputation</p>
                     </div>
@@ -205,12 +205,12 @@ export function GuildMembersTab({
                         <Award className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-muted-foreground text-xs">Endorsements</p>
-                          <p className="font-semibold text-foreground">{candidate.endorsements}</p>
+                          <p className="font-medium text-foreground">{candidate.endorsements}</p>
                         </div>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Member Since</p>
-                        <p className="font-semibold text-foreground text-xs">
+                        <p className="font-medium text-foreground text-xs">
                           {candidate.joinedAt ? new Date(candidate.joinedAt).toLocaleDateString() : "N/A"}
                         </p>
                       </div>

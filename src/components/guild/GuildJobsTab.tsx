@@ -113,7 +113,7 @@ export function GuildJobsTab({
           <Users className="w-5 h-5" />
           Job Applications ({applications.length})
           {applications.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-primary/10 text-primary border border-primary/40 text-xs font-semibold rounded-full">
+            <span className="ml-1 px-2 py-0.5 bg-primary/10 text-primary border border-primary/40 text-xs font-medium rounded-full">
               {applications.length}
             </span>
           )}
@@ -128,7 +128,7 @@ export function GuildJobsTab({
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 border border-border flex items-center justify-center">
                 <Briefcase className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground">
                 {displayJobsCount > 0
                   ? `${displayJobsCount} open positions are syncing.`
                   : `No open positions in ${guildName}`}
@@ -142,14 +142,14 @@ export function GuildJobsTab({
                   className="rounded-2xl p-5 border border-border bg-card shadow-sm dark:shadow-lg transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
                 >
                   {/* Job Title */}
-                  <h3 className="text-lg font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                     {job.title}
                   </h3>
 
                   {/* Job Type Badge */}
                   <div className="flex items-center gap-2 mb-3">
                     <span
-                      className={`px-3 py-1 text-xs font-semibold rounded-full ${getJobTypeBadge(
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${getJobTypeBadge(
                         job.type
                       )}`}
                     >
@@ -210,7 +210,7 @@ export function GuildJobsTab({
                 <div className="w-16 h-16 bg-muted/50 rounded-full border border-border flex items-center justify-center mx-auto mb-4">
                   <Briefcase className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 className="text-xl font-bold text-foreground mb-2">
                   No Applications Yet
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -235,7 +235,7 @@ export function GuildJobsTab({
                     {/* Header: Job title + Match score */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0 pr-4">
-                        <h4 className="text-lg font-semibold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                        <h4 className="text-xl font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
                           {application.jobTitle}
                         </h4>
                         <div className="flex items-center gap-2 mb-2">
@@ -258,7 +258,7 @@ export function GuildJobsTab({
                             {new Date(application.appliedAt).toLocaleDateString()}
                           </span>
                           {!application.reviewedByRecruiter && (
-                            <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full border border-primary/25 text-[11px] font-medium">
+                            <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-full border border-primary/25 text-xs font-medium">
                               Awaiting Recruiter Review
                             </span>
                           )}
@@ -272,7 +272,7 @@ export function GuildJobsTab({
                             <span className="text-2xl font-bold text-white leading-none">
                               {application.matchScore}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                            <span className="text-xs text-muted-foreground font-medium mt-0.5">
                               MATCH
                             </span>
                           </div>

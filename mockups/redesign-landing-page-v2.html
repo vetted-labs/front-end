@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — The Credibility Layer for Hiring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ========== RESET & TOKENS ========== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #07070b;
+  --bg-card: rgba(255,255,255,0.035);
+  --bg-card-hover: rgba(255,255,255,0.055);
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: #f0f0f5;
+  --text-secondary: rgba(255,255,255,0.50);
+  --text-tertiary: rgba(255,255,255,0.30);
+  --orange: #f97316;
+  --orange-soft: #fb923c;
+  --orange-glow: rgba(249,115,22,0.15);
+  --orange-glow-subtle: rgba(249,115,22,0.06);
+  --glass: rgba(255,255,255,0.035);
+  --glass-border: rgba(255,255,255,0.07);
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ========== AMBIENT BACKGROUND ========== */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.5;
+}
+
+.ambient-orb-1 {
+  width: 600px; height: 600px;
+  top: -10%; left: 15%;
+  background: radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%);
+  animation: orbFloat 18s ease-in-out infinite;
+}
+
+.ambient-orb-2 {
+  width: 500px; height: 500px;
+  top: 5%; right: 10%;
+  background: radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 70%);
+  animation: orbFloat 22s ease-in-out infinite reverse;
+}
+
+.ambient-orb-3 {
+  width: 400px; height: 400px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(249,115,22,0.04) 0%, transparent 70%);
+  animation: orbFloat 15s ease-in-out infinite 3s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(30px, -20px); }
+  50% { transform: translate(-20px, 30px); }
+  75% { transform: translate(15px, 10px); }
+}
+
+/* ========== LAYOUT ========== */
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ========== NAVIGATION ========== */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7,7,11,0.75);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--orange), var(--orange-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.04);
+}
+
+.nav-links a svg {
+  width: 16px; height: 16px;
+  opacity: 0.6;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.04);
+}
+
+.nav-sign-in {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.nav-sign-in:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.18);
+}
+
+/* ========== HERO ========== */
+.hero {
+  padding: 64px 0 24px;
+  text-align: center;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s var(--ease) both;
+}
+
+.hero-badge-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 8px rgba(249,115,22,0.6);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(249,115,22,0.6); }
+  50% { opacity: 0.6; box-shadow: 0 0 16px rgba(249,115,22,0.4); }
+}
+
+.hero-badge-icon {
+  width: 14px; height: 14px;
+  color: var(--orange);
+}
+
+.hero-badge-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orange);
+  letter-spacing: 0.02em;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  animation: fadeUp 0.6s var(--ease) 0.1s both;
+}
+
+.hero-subtitle {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto 44px;
+  line-height: 1.6;
+  animation: fadeUp 0.6s var(--ease) 0.2s both;
+}
+
+/* ========== VALUE CARDS ========== */
+.value-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  max-width: 960px;
+  margin: 0 auto 36px;
+  animation: fadeUp 0.6s var(--ease) 0.3s both;
+}
+
+.value-card {
+  position: relative;
+  text-align: left;
+  padding: 28px 24px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.35s var(--ease);
+  overflow: hidden;
+}
+
+.value-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.value-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.value-card:hover::before {
+  opacity: 1;
+}
+
+/* Featured card (Become an Expert) */
+.value-card.featured {
+  border-color: rgba(249,115,22,0.15);
+  background: rgba(249,115,22,0.03);
+}
+
+.value-card.featured::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(249,115,22,0.12), transparent 60%);
+  z-index: -1;
+  opacity: 0.5;
+  transition: opacity 0.35s;
+}
+
+.value-card.featured:hover {
+  border-color: rgba(249,115,22,0.30);
+  box-shadow: 0 20px 60px rgba(249,115,22,0.08), 0 0 40px rgba(249,115,22,0.04);
+}
+
+.value-card.featured:hover::after {
+  opacity: 1;
+}
+
+.value-card-star {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--orange);
+}
+
+.value-card-star svg {
+  width: 16px; height: 16px;
+  fill: var(--orange);
+}
+
+.value-card-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  background: rgba(249,115,22,0.08);
+  transition: background 0.3s;
+}
+
+.value-card:hover .value-card-icon {
+  background: rgba(249,115,22,0.12);
+}
+
+.value-card-icon svg {
+  width: 24px; height: 24px;
+  color: var(--orange);
+}
+
+.value-card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.value-card:hover .value-card-title {
+  color: var(--orange);
+}
+
+.value-card-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.value-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--orange);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.25s var(--ease);
+}
+
+.value-card-cta svg {
+  width: 14px; height: 14px;
+  transition: transform 0.2s;
+}
+
+.value-card:hover .value-card-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.value-card:hover .value-card-cta svg {
+  transform: translateX(2px);
+}
+
+/* ========== GUILD PILLS ========== */
+.guild-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  max-width: 700px;
+  margin: 0 auto;
+  animation: fadeUp 0.6s var(--ease) 0.4s both;
+}
+
+.guild-pills-label {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-right: 4px;
+}
+
+.guild-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  background: rgba(249,115,22,0.06);
+  border: 1px solid rgba(249,115,22,0.12);
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+
+.guild-pill:hover {
+  background: rgba(249,115,22,0.10);
+  border-color: rgba(249,115,22,0.20);
+}
+
+/* ========== STATS BAR ========== */
+.stats-section {
+  padding: 40px 0;
+}
+
+.stats-bar {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px 16px;
+  position: relative;
+}
+
+.stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: var(--border);
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-tertiary);
+}
+
+/* ========== JOB BROWSER ========== */
+.jobs-section {
+  padding: 56px 0 72px;
+}
+
+.jobs-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+.jobs-header-left {}
+
+.jobs-overline {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.jobs-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.jobs-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--orange);
+  transition: all 0.2s;
+}
+
+.jobs-view-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.jobs-view-all svg {
+  width: 14px; height: 14px;
+}
+
+/* Filter pills */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.filter-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.filter-pill {
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+
+.filter-pill:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.filter-pill.active {
+  color: var(--bg);
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.filter-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ef4444;
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+
+.filter-clear:hover {
+  background: rgba(239,68,68,0.08);
+}
+
+.filter-clear svg {
+  width: 12px; height: 12px;
+}
+
+/* Job cards grid */
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.job-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: all 0.35s var(--ease);
+  cursor: pointer;
+}
+
+.job-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+}
+
+.job-card-body {
+  padding: 24px 22px 18px;
+}
+
+.job-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.job-card-logo {
+  width: 44px; height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--orange);
+}
+
+.job-card-logo.gradient {
+  background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(249,115,22,0.04));
+  border: 1px solid rgba(249,115,22,0.10);
+}
+
+.job-card-logo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 11px;
+}
+
+.job-card-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.job-card-time svg {
+  width: 12px; height: 12px;
+}
+
+.job-card-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+  line-height: 1.3;
+  transition: color 0.2s;
+}
+
+.job-card:hover .job-card-title {
+  color: var(--orange);
+}
+
+.job-card-company {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.job-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+
+.job-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.job-card-meta svg {
+  width: 12px; height: 12px;
+}
+
+.job-card-salary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.job-card-salary span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-left: 2px;
+}
+
+.job-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.job-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.job-card-tag {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.job-card-tag.guild {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+.job-card-tag.location-type {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.03);
+  border-color: transparent;
+}
+
+.job-card-arrow {
+  width: 16px; height: 16px;
+  color: var(--text-tertiary);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.25s var(--ease);
+}
+
+.job-card:hover .job-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--orange);
+}
+
+/* CTA button */
+.jobs-cta {
+  text-align: center;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange), var(--orange-soft));
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(249,115,22,0.25);
+  transition: all 0.3s var(--ease);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(249,115,22,0.35);
+}
+
+.btn-primary svg {
+  width: 16px; height: 16px;
+}
+
+/* ========== FOOTER ========== */
+.footer {
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.015);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.footer-inner {
+  padding: 56px 0 24px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+
+.footer-brand-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--orange), var(--orange-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.footer-brand-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 260px;
+  line-height: 1.6;
+}
+
+.footer-col-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-links a,
+.footer-links button {
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  text-align: left;
+  padding: 0;
+}
+
+.footer-links a:hover,
+.footer-links button:hover {
+  color: var(--orange);
+}
+
+.footer-bottom {
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.footer-copyright {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s var(--ease) both;
+}
+
+/* Scroll-triggered fade in */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.7s var(--ease);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+
+  .hero { padding: 48px 0 20px; }
+
+  .hero-title { font-size: 34px; }
+
+  .hero-subtitle { font-size: 15px; margin-bottom: 36px; }
+
+  .value-cards {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    gap: 14px;
+  }
+
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-item:nth-child(2)::after { display: none; }
+
+  .stat-item {
+    padding: 20px 12px;
+  }
+
+  .stat-value { font-size: 26px; }
+
+  .jobs-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .jobs-title { font-size: 26px; }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .filter-divider { display: none; }
+
+  .filter-row { gap: 6px; }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .jobs-view-all-desktop { display: none; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .value-cards {
+    max-width: 100%;
+  }
+
+  .jobs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 769px) {
+  .jobs-view-all-desktop { display: inline-flex; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="ambient-orb ambient-orb-1"></div>
+  <div class="ambient-orb ambient-orb-2"></div>
+  <div class="ambient-orb ambient-orb-3"></div>
+</div>
+
+<div class="content">
+
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <a href="/" class="nav-logo">vetted</a>
+          <ul class="nav-links">
+            <li><a href="/browse/jobs">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              Find Jobs
+            </a></li>
+            <li><a href="/auth/login?type=expert">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+              Start Vetting
+            </a></li>
+            <li><a href="/auth/login?type=company">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              Start Hiring
+            </a></li>
+            <li><a href="/guilds">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="m16 16 3.5 3.5"/><path d="M19 21 21 19"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="M5 14l6-6"/><path d="m8 11-3.5 3.5"/><path d="M6 19 3 22"/></svg>
+              Guilds
+            </a></li>
+          </ul>
+        </div>
+        <div class="nav-right">
+          <button class="theme-toggle" title="Toggle theme">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </button>
+          <button class="nav-sign-in">Sign In</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero">
+    <div class="container">
+
+      <!-- Badge -->
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <svg class="hero-badge-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+        <span class="hero-badge-text">Private Beta Live</span>
+      </div>
+
+      <!-- Tagline -->
+      <h1 class="hero-title">The Credibility Layer for Hiring</h1>
+      <p class="hero-subtitle">Guild-verified experts vet candidates on-chain. Companies hire with confidence, experts earn reputation, talent gets recognized.</p>
+
+      <!-- Value cards -->
+      <div class="value-cards">
+        <!-- Find Work -->
+        <a href="/auth/login?type=candidate" class="value-card">
+          <div class="value-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <div class="value-card-title">Find Work</div>
+          <div class="value-card-desc">Get vetted by guild experts and matched with quality positions that value proven skills.</div>
+          <div class="value-card-cta">
+            Get started
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </a>
+
+        <!-- Become an Expert (FEATURED) -->
+        <a href="/auth/login?type=expert" class="value-card featured">
+          <div class="value-card-star">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="value-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="value-card-title">Become an Expert</div>
+          <div class="value-card-desc">Join a guild, review candidates, stake your reputation, and earn for quality assessments.</div>
+          <div class="value-card-cta">
+            Get started
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </a>
+
+        <!-- Post a Job -->
+        <a href="/auth/login?type=company" class="value-card">
+          <div class="value-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+          </div>
+          <div class="value-card-title">Post a Job</div>
+          <div class="value-card-desc">Access guild-vetted talent with verified skills. No more resume roulette.</div>
+          <div class="value-card-cta">
+            Get started
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </a>
+      </div>
+
+      <!-- Guild pills -->
+      <div class="guild-pills">
+        <span class="guild-pills-label">Active Guilds:</span>
+        <span class="guild-pill">Solidity</span>
+        <span class="guild-pill">React</span>
+        <span class="guild-pill">Smart Contracts</span>
+        <span class="guild-pill">UX Design</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== STATS BAR ==================== -->
+  <section class="stats-section reveal">
+    <div class="container">
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" data-target="15">0</span>
+          <span class="stat-label">Active Guilds</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-target="142">0</span>
+          <span class="stat-label">Open Positions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-target="2400" data-suffix="+">0</span>
+          <span class="stat-label">Expert Reviewers</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" data-target="8500" data-suffix="+">0</span>
+          <span class="stat-label">Candidates Vetted</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== JOB BROWSER ==================== -->
+  <section class="jobs-section reveal">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="jobs-header">
+        <div class="jobs-header-left">
+          <div class="jobs-overline">Opportunities</div>
+          <h2 class="jobs-title">Latest Positions</h2>
+        </div>
+        <a href="/browse/jobs" class="jobs-view-all jobs-view-all-desktop">
+          View all positions
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row">
+        <button class="filter-pill" data-filter="guild" data-value="Solidity">Solidity</button>
+        <button class="filter-pill" data-filter="guild" data-value="React">React</button>
+        <button class="filter-pill" data-filter="guild" data-value="Smart Contracts">Smart Contracts</button>
+        <button class="filter-pill" data-filter="guild" data-value="UX Design">UX Design</button>
+        <span class="filter-divider"></span>
+        <button class="filter-pill" data-filter="type" data-value="Full-time">Full-time</button>
+        <button class="filter-pill" data-filter="type" data-value="Contract">Contract</button>
+        <button class="filter-pill" data-filter="type" data-value="Freelance">Freelance</button>
+        <span class="filter-divider"></span>
+        <button class="filter-pill" data-filter="location" data-value="Remote">Remote</button>
+        <button class="filter-pill" data-filter="location" data-value="Onsite">Onsite</button>
+        <button class="filter-pill" data-filter="location" data-value="Hybrid">Hybrid</button>
+      </div>
+
+      <!-- Job cards -->
+      <div class="jobs-grid" id="jobsGrid">
+
+        <!-- Job 1 -->
+        <div class="job-card" data-guild="Solidity" data-type="Full-time" data-location="Remote">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                2h ago
+              </span>
+            </div>
+            <div class="job-card-title">Senior Solidity Engineer</div>
+            <div class="job-card-company">Chainlink Labs</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                San Francisco, CA
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Full-time
+              </span>
+            </div>
+            <div class="job-card-salary">$180k &ndash; $240k <span>/ year</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">Solidity</span>
+              <span class="job-card-tag location-type">Remote</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Job 2 -->
+        <div class="job-card" data-guild="React" data-type="Full-time" data-location="Remote">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                5h ago
+              </span>
+            </div>
+            <div class="job-card-title">Lead Frontend Engineer</div>
+            <div class="job-card-company">Uniswap Labs</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                New York, NY
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Full-time
+              </span>
+            </div>
+            <div class="job-card-salary">$160k &ndash; $210k <span>/ year</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">React</span>
+              <span class="job-card-tag location-type">Remote</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Job 3 -->
+        <div class="job-card" data-guild="Smart Contracts" data-type="Contract" data-location="Remote">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                1d ago
+              </span>
+            </div>
+            <div class="job-card-title">Smart Contract Auditor</div>
+            <div class="job-card-company">OpenZeppelin</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Remote
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Contract
+              </span>
+            </div>
+            <div class="job-card-salary">$150k &ndash; $200k <span>/ year</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">Smart Contracts</span>
+              <span class="job-card-tag location-type">Remote</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Job 4 -->
+        <div class="job-card" data-guild="UX Design" data-type="Full-time" data-location="Hybrid">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                1d ago
+              </span>
+            </div>
+            <div class="job-card-title">Senior Product Designer</div>
+            <div class="job-card-company">Aave Labs</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                London, UK
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Full-time
+              </span>
+            </div>
+            <div class="job-card-salary">$120k &ndash; $160k <span>/ year</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">UX Design</span>
+              <span class="job-card-tag location-type">Hybrid</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Job 5 -->
+        <div class="job-card" data-guild="Solidity" data-type="Full-time" data-location="Onsite">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                2d ago
+              </span>
+            </div>
+            <div class="job-card-title">Protocol Engineer</div>
+            <div class="job-card-company">Compound Finance</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                San Francisco, CA
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Full-time
+              </span>
+            </div>
+            <div class="job-card-salary">$170k &ndash; $220k <span>/ year</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">Solidity</span>
+              <span class="job-card-tag location-type">Onsite</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Job 6 -->
+        <div class="job-card" data-guild="React" data-type="Freelance" data-location="Remote">
+          <div class="job-card-body">
+            <div class="job-card-top">
+              <div class="job-card-logo gradient">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+              </div>
+              <span class="job-card-time">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                3d ago
+              </span>
+            </div>
+            <div class="job-card-title">DApp Frontend Developer</div>
+            <div class="job-card-company">MakerDAO</div>
+            <div class="job-card-meta">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Remote
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Freelance
+              </span>
+            </div>
+            <div class="job-card-salary">$90 &ndash; $140 <span>/ hour</span></div>
+          </div>
+          <div class="job-card-footer">
+            <div class="job-card-tags">
+              <span class="job-card-tag guild">React</span>
+              <span class="job-card-tag location-type">Remote</span>
+            </div>
+            <svg class="job-card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="jobs-cta">
+        <button class="btn-primary" onclick="window.location.href='/browse/jobs'">
+          View All Positions
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-grid">
+          <!-- Brand -->
+          <div>
+            <div class="footer-brand-name">vetted</div>
+            <p class="footer-brand-desc">The Credibility Layer for Hiring</p>
+          </div>
+
+          <!-- Platform -->
+          <div>
+            <div class="footer-col-title">Platform</div>
+            <ul class="footer-links">
+              <li><a href="/browse/jobs">Browse Jobs</a></li>
+              <li><a href="/guilds">Explore Guilds</a></li>
+            </ul>
+          </div>
+
+          <!-- Get Started -->
+          <div>
+            <div class="footer-col-title">Get Started</div>
+            <ul class="footer-links">
+              <li><button>Find Work</button></li>
+              <li><button>Become an Expert</button></li>
+              <li><button>Post a Job</button></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p class="footer-copyright">&copy; 2026 Vetted. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ========== COUNT-UP ANIMATION ON SCROLL ==========
+function animateCountUp(el, target, suffix, duration) {
+  const start = performance.now();
+  const step = (now) => {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(eased * target);
+    el.textContent = current.toLocaleString() + (suffix || '');
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ========== SCROLL REVEAL (stats + jobs) ==========
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+
+      // If this is the stats section, trigger count-ups
+      const statValues = entry.target.querySelectorAll('.stat-value[data-target]');
+      statValues.forEach(el => {
+        if (el.dataset.animated) return;
+        el.dataset.animated = 'true';
+        const target = parseInt(el.dataset.target, 10);
+        const suffix = el.dataset.suffix || '';
+        animateCountUp(el, target, suffix, 1800);
+      });
+
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ========== FILTER PILLS ==========
+const activeFilters = { guild: [], type: [], location: [] };
+
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const filterType = pill.dataset.filter;
+    const value = pill.dataset.value;
+    const idx = activeFilters[filterType].indexOf(value);
+
+    if (idx > -1) {
+      activeFilters[filterType].splice(idx, 1);
+      pill.classList.remove('active');
+    } else {
+      activeFilters[filterType].push(value);
+      pill.classList.add('active');
+    }
+
+    applyFilters();
+  });
+});
+
+function applyFilters() {
+  const cards = document.querySelectorAll('.job-card');
+  const hasAny = activeFilters.guild.length || activeFilters.type.length || activeFilters.location.length;
+
+  cards.forEach(card => {
+    if (!hasAny) {
+      card.style.display = '';
+      return;
+    }
+
+    const matchGuild = !activeFilters.guild.length || activeFilters.guild.includes(card.dataset.guild);
+    const matchType = !activeFilters.type.length || activeFilters.type.includes(card.dataset.type);
+    const matchLocation = !activeFilters.location.length || activeFilters.location.includes(card.dataset.location);
+
+    card.style.display = (matchGuild && matchType && matchLocation) ? '' : 'none';
+  });
+
+  // Show/hide clear button
+  let clearBtn = document.querySelector('.filter-clear');
+  if (hasAny && !clearBtn) {
+    clearBtn = document.createElement('button');
+    clearBtn.className = 'filter-clear';
+    clearBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Clear';
+    clearBtn.addEventListener('click', clearAllFilters);
+    document.querySelector('.filter-row').appendChild(clearBtn);
+  } else if (!hasAny && clearBtn) {
+    clearBtn.remove();
+  }
+}
+
+function clearAllFilters() {
+  activeFilters.guild = [];
+  activeFilters.type = [];
+  activeFilters.location = [];
+  document.querySelectorAll('.filter-pill.active').forEach(p => p.classList.remove('active'));
+  applyFilters();
+}
+</script>
+</body>
+</html>

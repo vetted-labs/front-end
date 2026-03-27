@@ -144,13 +144,13 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
       >
         {/* YOU badge */}
         {isCurrentUser && (
-          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
             YOU
           </span>
         )}
 
         {/* Rank label */}
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${styles.rankLabel}`}>
+        <span className={`text-xs font-bold uppercase tracking-widest ${styles.rankLabel}`}>
           #{rank}
         </span>
 
@@ -172,23 +172,23 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
         {/* Name */}
         <div className="text-center">
           <p
-            className={`font-semibold text-foreground leading-tight ${
-              rank === 1 ? "text-xs" : "text-[11px]"
+            className={`font-medium text-foreground leading-tight ${
+              rank === 1 ? "text-xs" : "text-xs"
             } max-w-[110px] truncate`}
           >
             {entry.fullName}
           </p>
-          <p className="text-[9px] text-muted-foreground font-mono mt-0.5">
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">
             {truncateAddress(entry.walletAddress)}
           </p>
         </div>
 
         {/* Role & guilds */}
         <div className="flex items-center gap-1 flex-wrap justify-center">
-          <span className="text-[9px] bg-muted text-muted-foreground px-1 py-px rounded font-medium capitalize">
+          <span className="text-xs bg-muted text-muted-foreground px-1 py-px rounded font-medium capitalize">
             {entry.role}
           </span>
-          <span className="text-[9px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {entry.guildCount} guild{entry.guildCount !== 1 ? "s" : ""}
           </span>
         </div>
@@ -202,12 +202,12 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
           >
             {formattedValue}
           </p>
-          <p className="text-[9px] text-muted-foreground">{metric.label}</p>
+          <p className="text-xs text-muted-foreground">{metric.label}</p>
         </div>
 
         {/* Delta */}
         <div
-          className={`text-[10px] font-semibold tabular-nums ${
+          className={`text-xs font-medium tabular-nums ${
             deltaPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
           }`}
         >
@@ -225,7 +225,7 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
           flex items-start justify-center pt-1
         `}
       >
-        <span className={`text-lg font-black ${styles.rankLabel} opacity-20 select-none`}>
+        <span className={`text-lg font-bold ${styles.rankLabel} opacity-20 select-none`}>
           {rank}
         </span>
       </div>

@@ -49,7 +49,7 @@ export default function ResumeAndGeneralStep({
       {/* Guidance */}
       {template.guidance && template.guidance.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-6">
-          <h3 className="font-semibold text-foreground mb-3">
+          <h3 className="font-bold text-foreground mb-3">
             Before You Start
           </h3>
           <ul className="space-y-2">
@@ -69,7 +69,7 @@ export default function ResumeAndGeneralStep({
       {/* Required Social Links */}
       {requiredSocialLinks.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-6">
-          <h3 className="font-semibold text-foreground mb-3">
+          <h3 className="font-bold text-foreground mb-3">
             Required Social Links
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
@@ -122,7 +122,7 @@ export default function ResumeAndGeneralStep({
 
       {/* Resume Upload */}
       <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8">
-        <h2 className="text-xl font-semibold text-foreground mb-1">
+        <h2 className="text-xl font-bold text-foreground mb-1">
           Resume / CV{" "}
           <span className="text-destructive">*</span>
         </h2>
@@ -244,7 +244,7 @@ export default function ResumeAndGeneralStep({
       {template.generalQuestions && template.generalQuestions.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8 space-y-8">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-1">
+            <h2 className="text-xl font-bold text-foreground mb-1">
               General Questions
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -258,7 +258,7 @@ export default function ResumeAndGeneralStep({
               className="space-y-4 pt-6 first:pt-0 border-t first:border-t-0 border-border"
             >
               <div>
-                <h3 className="text-base font-medium text-foreground">
+                <h3 className="text-sm font-medium text-foreground">
                   {qIndex + 1}. {q.prompt}
                   {q.required && (
                     <span className="text-destructive ml-1">*</span>

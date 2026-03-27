@@ -175,7 +175,7 @@ function StatsGrid({ stats }: { stats: ExpertStats }) {
                 <item.icon className={cn("w-4 h-4", item.color)} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {item.label}
                 </p>
                 <p className="text-xl font-bold tabular-nums">{item.value}</p>
@@ -228,7 +228,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
         {/* Term Rules for Guild Master */}
         {rank.role === "master" && (
           <div className="mt-5 pt-5 border-t border-border/40">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2.5">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2.5">
               Term Rules
             </p>
             <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
@@ -256,10 +256,10 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Reward Tier
                   </span>
-                  <span className={cn("text-sm font-semibold", colors.text)}>{tier.name}</span>
+                  <span className={cn("text-sm font-medium", colors.text)}>{tier.name}</span>
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {tier.rewardWeight}x rewards
@@ -267,7 +267,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
               </div>
               {nextTier ? (
                 <div className="mt-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span>Progress to {nextTier.name}</span>
                     <span className="tabular-nums">
                       {stats.reputation} / {nextTier.minReputation}
@@ -326,22 +326,22 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
               <Icon className={cn("w-4 h-4", colors.text)} />
             </div>
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Next Rank
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold">{nextRank.name}</span>
-                <Badge variant={getRankBadgeVariant(nextRank.role)} className="text-[10px]">
+                <span className="text-sm font-medium">{nextRank.name}</span>
+                <Badge variant={getRankBadgeVariant(nextRank.role)} className="text-xs">
                   Level {nextRank.level}
                 </Badge>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <p className={cn("text-lg font-bold tabular-nums", metCount === requirements.length ? STATUS_COLORS.positive.text : "")}>
+            <p className={cn("text-xl font-bold tabular-nums", metCount === requirements.length ? STATUS_COLORS.positive.text : "")}>
               {metCount}/{requirements.length}
             </p>
-            <p className="text-[10px] text-muted-foreground">requirements met</p>
+            <p className="text-xs text-muted-foreground">requirements met</p>
           </div>
         </div>
       </div>
@@ -411,7 +411,7 @@ function RankLadder({
 
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+      <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
         All Ranks
       </h3>
 
@@ -457,7 +457,7 @@ function RankLadder({
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">{rank.name}</span>
+                        <span className="text-sm font-medium">{rank.name}</span>
                         {isLocked && <Lock className="w-3 h-3 text-muted-foreground/40" />}
                       </div>
                       <p className="text-xs text-muted-foreground/60 mt-0.5 hidden sm:block">
@@ -466,14 +466,14 @@ function RankLadder({
                     </div>
                     {isCurrent && (
                       <div className={cn(
-                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold border",
+                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border",
                         colors.badge,
                       )}>
                         Current
                       </div>
                     )}
                     {isAchieved && (
-                      <div className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold border", STATUS_COLORS.positive.badge)}>
+                      <div className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", STATUS_COLORS.positive.badge)}>
                         Achieved
                       </div>
                     )}
@@ -491,7 +491,7 @@ function RankLadder({
                       <div className="grid sm:grid-cols-2 gap-6 pt-4">
                         {/* Requirements */}
                         <div>
-                          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
                             Requirements
                           </p>
                           <ul className="space-y-2">
@@ -527,7 +527,7 @@ function RankLadder({
 
                         {/* Unlocks */}
                         <div>
-                          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
                             Unlocks
                           </p>
                           <ul className="space-y-2">
@@ -625,7 +625,7 @@ export function GuildRanksProgression() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Advance Your Guild Rank</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Advance Your Guild Rank</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Build reputation, complete reviews, and climb from Recruit to Guild Master.
         </p>

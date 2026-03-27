@@ -78,7 +78,7 @@ export function VotingScoreSlider({
       {/* Score Selection */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Your Score (0-100)</h4>
+          <h4 className="text-sm font-medium">Your Score (0-100)</h4>
           <Badge
             variant={getScoreBadgeVariant(score)}
             className={`text-base px-4 py-1.5 ${getScoreColor(score)}`}
@@ -120,7 +120,7 @@ export function VotingScoreSlider({
 
         {/* Score Label */}
         <div className="text-center">
-          <p className={`text-lg font-semibold ${getScoreColor(score)}`}>
+          <p className={`text-xl font-bold ${getScoreColor(score)}`}>
             {getScoreLabel(score)}
           </p>
         </div>

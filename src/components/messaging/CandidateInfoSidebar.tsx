@@ -18,7 +18,7 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
         {/* Candidate identity */}
         <div className="text-center border-b border-border/20 dark:border-white/[0.04] pb-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 ring-2 ring-primary/20 shadow-sm flex items-center justify-center mx-auto mb-2">
-            <span className="text-primary font-bold text-lg">
+            <span className="text-primary font-bold text-xl">
               {conversation.candidateName.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -30,7 +30,7 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
 
         {/* Contact */}
         <div className="space-y-2 border-b border-border/20 dark:border-white/[0.04] pb-4">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Contact</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">Contact</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Mail className="w-3.5 h-3.5" />
             <span className="truncate">{conversation.candidateEmail}</span>
@@ -40,19 +40,19 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
         {/* Experience */}
         {conversation.candidateExperienceLevel && (
           <div className="space-y-2 border-b border-border/20 dark:border-white/[0.04] pb-4">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Experience</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">Experience</p>
             <p className="text-xs text-foreground capitalize">{conversation.candidateExperienceLevel}</p>
           </div>
         )}
 
         {/* Application */}
         <div className="space-y-2 border-b border-border/20 dark:border-white/[0.04] pb-4">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Application</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">Application</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Briefcase className="w-3.5 h-3.5" />
             <span className="truncate">{conversation.jobTitle}</span>
           </div>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${status.className}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${status.className}`}>
             {status.label}
           </span>
         </div>
@@ -60,7 +60,7 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
         {/* Socials */}
         {(conversation.candidateLinkedIn || conversation.candidateGithub) && (
           <div className="space-y-2 border-b border-border/20 dark:border-white/[0.04] pb-4">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Socials</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground/60 font-medium">Socials</p>
             <div className="flex items-center gap-2">
               {conversation.candidateLinkedIn && (
                 <a

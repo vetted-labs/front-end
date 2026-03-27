@@ -50,11 +50,11 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
 
             {/* Guild Name & Rank */}
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-foreground text-base mb-1 truncate">
+              <h4 className="font-medium text-foreground text-base mb-1 truncate">
                 {guild.name}
               </h4>
               <div className="inline-flex items-center gap-2">
-                <Badge variant={getRankBadgeVariant(guild.expertRole)} className="text-[10px] uppercase tracking-wide">
+                <Badge variant={getRankBadgeVariant(guild.expertRole)} className="text-xs uppercase tracking-wide">
                   {guild.expertRole}
                 </Badge>
                 <InfoTooltip content={getRankExplanation(guild.expertRole)} side="right" />
@@ -70,7 +70,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
             <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Reputation</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reputation</p>
               </div>
               <p className="text-xl font-bold text-foreground">{guild.reputation}</p>
             </div>
@@ -79,7 +79,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
             <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Earned</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Earned</p>
               </div>
               <p className="text-xl font-bold text-foreground">${guild.totalEarnings}</p>
             </div>
@@ -89,7 +89,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
         {/* Simplified Footer - Compact */}
         {guild.joinedAt && (
           <div className="px-4 pb-3 pt-2 border-t border-border/50">
-            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               Member since {formatDate(guild.joinedAt)}
             </p>
@@ -115,7 +115,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
 
           {/* Guild Name & Rank */}
           <div className="flex-1">
-            <h3 className="font-bold text-foreground text-lg mb-0.5">
+            <h3 className="font-bold text-foreground text-xl mb-0.5">
               {guild.name}
             </h3>
             <div className="inline-flex items-center gap-2">

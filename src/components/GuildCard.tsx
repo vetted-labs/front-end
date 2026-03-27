@@ -56,12 +56,12 @@ export function GuildCard({
               <GuildIcon className="w-[22px] h-[22px] text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-[17px] font-bold font-display text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
+              <h3 className="text-xl font-bold font-display text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
                 {guild.name}
               </h3>
               {guild.expertRole && (
                 <div className="mt-1.5">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-[10px] font-bold uppercase tracking-[1.1px] text-primary">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-xs font-bold uppercase tracking-[1.1px] text-primary">
                     <span className="w-[5px] h-[5px] rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
                     {guild.expertRole}
                   </span>
@@ -73,21 +73,21 @@ export function GuildCard({
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-2 mb-3.5">
             <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
-              <div className="font-mono text-base font-semibold text-primary mb-0.5">{guild.reputation || 0}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rep</div>
+              <div className="font-mono text-base font-medium text-primary mb-0.5">{guild.reputation || 0}</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Rep</div>
             </div>
             <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
-              <div className="font-mono text-base font-semibold text-positive mb-0.5">{formatVetd(guild.totalEarnings)}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Earned</div>
+              <div className="font-mono text-sm font-medium text-positive mb-0.5">{formatVetd(guild.totalEarnings)}</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Earned</div>
             </div>
             <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
-              <div className="font-mono text-base font-semibold text-foreground mb-0.5">{totalProposals}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Proposals</div>
+              <div className="font-mono text-base font-medium text-foreground mb-0.5">{totalProposals}</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Proposals</div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-3 border-t border-border/60 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Users className="w-[11px] h-[11px] opacity-50" />
               {guild.memberCount || 0} members
@@ -140,10 +140,10 @@ export function GuildCard({
                 <GuildIcon className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-[15px] font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">
+                <h3 className="text-sm font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">
                   {guild.name}
                 </h3>
-                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
                   {guild.expertRole && <span className="capitalize">{guild.expertRole}</span>}
                   {guild.expertRole && <span className="opacity-30">·</span>}
                   <span>{guild.memberCount} members</span>
@@ -160,7 +160,7 @@ export function GuildCard({
 
             {/* Description (public only) */}
             {showDescription && !isExpertView && (
-              <p className="text-[13px] text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
                 {getGuildPreviewDescription(guild.name)}
               </p>
             )}
@@ -174,37 +174,37 @@ export function GuildCard({
                       <Coins className="w-[11px] h-[11px] text-primary" />
                     </div>
                     <div className="font-mono text-base font-bold text-primary">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Staked</div>
-                    <div className="font-mono text-[8px] text-muted-foreground tracking-wider mt-0.5">VETD</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Staked</div>
+                    <div className="font-mono text-xs text-muted-foreground tracking-wider mt-0.5">VETD</div>
                   </div>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
                     <div className="w-[22px] h-[22px] rounded-[6px] bg-positive/10 flex items-center justify-center mx-auto mb-1.5">
                       <DollarSign className="w-[11px] h-[11px] text-positive" />
                     </div>
                     <div className="font-mono text-base font-bold text-positive">{formatVetd(guild.totalEarnings)}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Earned</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Earned</div>
                   </div>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
                     <div className="w-[22px] h-[22px] rounded-[6px] bg-muted/20 flex items-center justify-center mx-auto mb-1.5">
                       <Star className="w-[11px] h-[11px] text-muted-foreground" />
                     </div>
                     <div className="font-mono text-base font-bold text-foreground">{guild.reputation || 0}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Rep</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Rep</div>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
                     <div className="font-mono text-base font-bold text-foreground">{guild.expertCount || 0}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Experts</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Experts</div>
                   </div>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
                     <div className="font-mono text-base font-bold text-foreground">{guild.totalProposalsReviewed || 0}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Reviewed</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Reviewed</div>
                   </div>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
                     <div className="font-mono text-base font-bold text-primary">{guild.jobCount || 0}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Open Jobs</div>
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground">Open Jobs</div>
                   </div>
                 </>
               )}

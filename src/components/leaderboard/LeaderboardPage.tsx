@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
     <div className="space-y-6 animate-page-enter">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2.5">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
           <Trophy className="w-6 h-6 text-[#f59e0b]" />
           Leaderboard
         </h1>
@@ -331,7 +331,7 @@ export default function LeaderboardPage() {
             onChange={setRole}
           />
           <div className="flex-1" />
-          <span className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-xs text-muted-foreground tabular-nums">
             {sortedEntries.length} expert{sortedEntries.length !== 1 ? "s" : ""}
           </span>
         </div>

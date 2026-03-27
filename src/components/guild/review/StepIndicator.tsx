@@ -63,7 +63,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
                 )}
               </div>
               <span
-                className={`text-xs font-semibold hidden sm:inline tracking-wide ${
+                className={`text-xs font-medium hidden sm:inline tracking-wide ${
                   isActive
                     ? "text-primary"
                     : isCompleted

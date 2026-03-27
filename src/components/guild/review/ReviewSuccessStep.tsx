@@ -58,26 +58,26 @@ export function ReviewSuccessStep({
 
       {/* Score Summary */}
       <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
-        <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+        <h4 className="text-sm font-bold text-foreground tracking-wide uppercase">
           Your Review Summary
         </h4>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-3 rounded-lg bg-card border border-border">
             <p className="text-xs text-muted-foreground mb-1">General</p>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-xl font-bold text-foreground">
               {generalTotal}<span className="text-sm text-muted-foreground font-normal">/{generalMax || "?"}</span>
             </p>
           </div>
           <div className="text-center p-3 rounded-lg bg-card border border-border">
             <p className="text-xs text-muted-foreground mb-1">Domain</p>
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-xl font-bold text-foreground">
               {topicTotal}<span className="text-sm text-muted-foreground font-normal">/{topicMax || "?"}</span>
             </p>
           </div>
           <div className="text-center p-3 rounded-lg bg-card border border-border">
             <p className="text-xs text-muted-foreground mb-1">Deductions</p>
-            <p className={`text-lg font-bold ${redFlagDeductions > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
+            <p className={`text-xl font-bold ${redFlagDeductions > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
               {redFlagDeductions > 0 ? `-${redFlagDeductions}` : "0"}
             </p>
           </div>
@@ -128,7 +128,7 @@ export function ReviewSuccessStep({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
-              <p className="text-[10px] text-muted-foreground font-mono mt-1.5 truncate">
+              <p className="text-xs text-muted-foreground font-mono mt-1.5 truncate">
                 {commitTxHash}
               </p>
             </div>

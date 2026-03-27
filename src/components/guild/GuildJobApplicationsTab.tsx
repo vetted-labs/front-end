@@ -17,7 +17,7 @@ export function GuildJobApplicationsTab({
   return (
     <div className="space-y-4">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-foreground mb-2">
+        <h3 className="text-xl font-bold text-foreground mb-2">
           Active Job Applications
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export function GuildJobApplicationsTab({
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-xl font-bold text-foreground mb-2">
             No Applications Yet
           </h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -46,7 +46,7 @@ export function GuildJobApplicationsTab({
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-foreground mb-1">
+                <h4 className="text-xl font-bold text-foreground mb-1">
                   {application.jobTitle}
                 </h4>
                 <p className="text-sm text-muted-foreground mb-2">

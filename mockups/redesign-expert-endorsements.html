@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Endorsement Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#0a0a0f;
+    --card:rgba(255,255,255,0.03);
+    --card-hover:rgba(255,255,255,0.05);
+    --border:rgba(255,255,255,0.06);
+    --border-hover:rgba(255,255,255,0.12);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --orange:#f97316;
+    --orange-soft:rgba(249,115,22,0.08);
+    --orange-border:rgba(249,115,22,0.2);
+    --orange-glow:rgba(249,115,22,0.12);
+    --green:#34d399;
+    --green-soft:rgba(52,211,153,0.08);
+    --green-border:rgba(52,211,153,0.2);
+    --amber:#fbbf24;
+    --amber-soft:rgba(251,191,36,0.08);
+    --amber-border:rgba(251,191,36,0.2);
+    --red:#f87171;
+    --red-soft:rgba(248,113,113,0.08);
+    --red-border:rgba(248,113,113,0.2);
+    --blue:#60a5fa;
+    --blue-soft:rgba(96,165,250,0.08);
+    --blue-border:rgba(96,165,250,0.2);
+    --purple:#a78bfa;
+    --purple-soft:rgba(167,139,250,0.08);
+    --purple-border:rgba(167,139,250,0.2);
+    --cyan:#22d3ee;
+    --cyan-soft:rgba(34,211,238,0.08);
+    --cyan-border:rgba(34,211,238,0.2);
+    --r:16px;
+    --font:'Inter',system-ui,-apple-system,sans-serif;
+    --heading:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font-family:var(--font);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+  }
+
+  /* ── Background effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{
+    content:'';position:absolute;
+    width:900px;height:900px;
+    top:-15%;left:5%;
+    background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 60%);
+    animation:drift 22s ease-in-out infinite alternate;
+  }
+  .bg-fx::after{
+    content:'';position:absolute;
+    width:700px;height:700px;
+    bottom:-10%;right:-5%;
+    background:radial-gradient(circle,rgba(52,211,153,0.04) 0%,transparent 55%);
+    animation:drift 28s ease-in-out infinite alternate-reverse;
+  }
+
+  .bg-orb-3{
+    position:fixed;
+    width:500px;height:500px;
+    top:40%;left:50%;
+    background:radial-gradient(circle,rgba(167,139,250,0.03) 0%,transparent 55%);
+    animation:drift 25s ease-in-out infinite alternate;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  @keyframes drift{
+    0%{transform:translate(0,0) scale(1)}
+    100%{transform:translate(30px,15px) scale(1.04)}
+  }
+
+  .dots{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,0.018) 1px,transparent 1px);
+    background-size:32px 32px;
+  }
+
+  /* ── Layout ── */
+  .page{position:relative;z-index:2;padding:32px 0 80px}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  /* ── Header ── */
+  .header{margin-bottom:40px}
+  .header-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .header h1{
+    font-family:var(--heading);
+    font-size:clamp(28px,4vw,38px);
+    font-weight:700;
+    letter-spacing:-0.02em;
+    background:linear-gradient(135deg,var(--t1) 0%,var(--t2) 100%);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .live-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 14px;
+    background:var(--green-soft);
+    border:1px solid var(--green-border);
+    border-radius:100px;
+    font-size:12px;font-weight:600;
+    color:var(--green);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .live-dot{
+    width:8px;height:8px;
+    background:var(--green);
+    border-radius:50%;
+    animation:pulse-dot 2s ease-in-out infinite;
+    box-shadow:0 0 8px var(--green);
+  }
+  @keyframes pulse-dot{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.5;transform:scale(0.8)}
+  }
+  .accent-bar{
+    width:80px;height:3px;
+    background:linear-gradient(90deg,var(--orange),var(--orange-glow));
+    border-radius:2px;
+    margin-top:12px;
+  }
+  .header-sub{
+    color:var(--t2);font-size:15px;margin-top:8px;line-height:1.5;
+  }
+
+  /* ── Stats Cards ── */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin-bottom:40px;
+  }
+  @media(max-width:768px){
+    .stats-grid{grid-template-columns:1fr}
+  }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:24px;
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    transition:all 0.3s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-card:hover{
+    background:var(--card-hover);
+    border-color:var(--border-hover);
+    transform:translateY(-2px);
+  }
+  .stat-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+  }
+  .stat-label{
+    font-size:13px;color:var(--t3);font-weight:500;
+    text-transform:uppercase;letter-spacing:0.06em;
+    margin-bottom:12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .stat-icon{
+    width:32px;height:32px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .stat-icon.orange{background:var(--orange-soft);color:var(--orange)}
+  .stat-icon.green{background:var(--green-soft);color:var(--green)}
+  .stat-icon.blue{background:var(--blue-soft);color:var(--blue)}
+  .stat-value{
+    font-family:var(--heading);
+    font-size:36px;font-weight:700;
+    color:var(--t1);
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .stat-sub{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:6px}
+  .stat-sub .eth{color:var(--orange);font-weight:600}
+  .stat-sub .up{color:var(--green);font-weight:600}
+
+  /* Success ring */
+  .stat-card-ring{display:flex;align-items:center;gap:24px}
+  .ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0}
+  .ring-wrap svg{transform:rotate(-90deg)}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:6}
+  .ring-fill{
+    fill:none;stroke:var(--green);stroke-width:6;
+    stroke-linecap:round;
+    stroke-dasharray:201;
+    stroke-dashoffset:12;
+    transition:stroke-dashoffset 1s ease;
+    filter:drop-shadow(0 0 6px rgba(52,211,153,0.3));
+  }
+  .ring-label{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--heading);font-size:20px;font-weight:700;color:var(--green);
+  }
+
+  /* ── Market Section ── */
+  .section-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .section-title{
+    font-family:var(--heading);
+    font-size:22px;font-weight:700;
+    color:var(--t1);
+    display:flex;align-items:center;gap:10px;
+  }
+  .section-count{
+    font-size:13px;font-weight:600;
+    background:var(--orange-soft);
+    color:var(--orange);
+    padding:4px 10px;
+    border-radius:100px;
+    border:1px solid var(--orange-border);
+  }
+
+  .market-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    margin-bottom:0;
+  }
+  @media(max-width:900px){
+    .market-grid{grid-template-columns:1fr}
+  }
+
+  .market-col-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--border);
+  }
+  .market-col-title{
+    font-family:var(--heading);
+    font-size:17px;font-weight:600;color:var(--t1);
+    display:flex;align-items:center;gap:8px;
+  }
+  .market-col-title .dot{
+    width:6px;height:6px;border-radius:50%;
+  }
+  .market-col-title .dot.orange{background:var(--orange)}
+  .market-col-title .dot.green{background:var(--green)}
+
+  .filter-row{
+    display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;
+  }
+  .filter-chip{
+    padding:6px 14px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:100px;
+    color:var(--t2);
+    font-size:12px;font-weight:500;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .filter-chip:hover,.filter-chip.active{
+    background:var(--orange-soft);
+    border-color:var(--orange-border);
+    color:var(--orange);
+  }
+
+  /* ── Candidate Cards (Available) ── */
+  .candidate-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:20px;
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    transition:all 0.3s ease;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:12px;
+  }
+  .candidate-card:hover{
+    background:var(--card-hover);
+    border-color:var(--border-hover);
+    transform:translateY(-1px);
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+  }
+  .candidate-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+  }
+
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+  .card-identity{display:flex;align-items:center;gap:12px}
+  .avatar{
+    width:42px;height:42px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:700;
+    color:var(--t1);
+    position:relative;
+    flex-shrink:0;
+  }
+  .avatar.a1{background:linear-gradient(135deg,#7c3aed,#a78bfa)}
+  .avatar.a2{background:linear-gradient(135deg,#0891b2,#22d3ee)}
+  .avatar.a3{background:linear-gradient(135deg,#059669,#34d399)}
+  .avatar.a4{background:linear-gradient(135deg,#dc2626,#f87171)}
+  .avatar.a5{background:linear-gradient(135deg,#d97706,#fbbf24)}
+  .avatar.a6{background:linear-gradient(135deg,#2563eb,#60a5fa)}
+  .avatar.a7{background:linear-gradient(135deg,#9333ea,#c084fc)}
+  .avatar.a8{background:linear-gradient(135deg,#0d9488,#2dd4bf)}
+
+  .candidate-name{font-size:15px;font-weight:600;color:var(--t1);line-height:1.3}
+  .candidate-role{font-size:12px;color:var(--t3);margin-top:2px}
+
+  .guild-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;
+    border-radius:100px;
+    font-size:11px;font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .guild-badge.solidity{background:var(--purple-soft);color:var(--purple);border:1px solid var(--purple-border)}
+  .guild-badge.react{background:var(--cyan-soft);color:var(--cyan);border:1px solid var(--cyan-border)}
+  .guild-badge.design{background:var(--orange-soft);color:var(--orange);border:1px solid var(--orange-border)}
+  .guild-badge.security{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
+  .guild-badge.data{background:var(--blue-soft);color:var(--blue);border:1px solid var(--blue-border)}
+
+  .card-metrics{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+    padding:12px;
+    background:rgba(0,0,0,0.2);
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .metric{text-align:center}
+  .metric-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+  .metric-value{font-family:var(--heading);font-size:16px;font-weight:700}
+  .metric-value.eth{color:var(--orange)}
+  .metric-value.reward{color:var(--green)}
+
+  .risk-low{color:var(--green)}
+  .risk-med{color:var(--amber)}
+  .risk-high{color:var(--red)}
+  .risk-indicator{
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  .risk-bar{display:flex;gap:2px}
+  .risk-bar span{width:12px;height:4px;border-radius:2px;background:rgba(255,255,255,0.08)}
+  .risk-bar.low span:nth-child(1){background:var(--green)}
+  .risk-bar.med span:nth-child(1),.risk-bar.med span:nth-child(2){background:var(--amber)}
+  .risk-bar.high span:nth-child(1),.risk-bar.high span:nth-child(2),.risk-bar.high span:nth-child(3){background:var(--red)}
+
+  .skills-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .skill-tag{
+    padding:3px 10px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:6px;
+    font-size:11px;color:var(--t2);
+    font-weight:500;
+  }
+
+  .card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .expiry{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:var(--t3);
+  }
+  .expiry svg{width:14px;height:14px;color:var(--amber)}
+  .expiry .time{color:var(--amber);font-weight:600}
+
+  .btn-endorse{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 20px;
+    background:linear-gradient(135deg,var(--orange),#ea580c);
+    border:none;border-radius:10px;
+    color:#fff;
+    font-family:var(--font);
+    font-size:13px;font-weight:600;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    box-shadow:0 0 20px rgba(249,115,22,0.15);
+    letter-spacing:0.02em;
+  }
+  .btn-endorse:hover{
+    transform:translateY(-1px);
+    box-shadow:0 0 30px rgba(249,115,22,0.3);
+  }
+  .btn-endorse svg{width:14px;height:14px}
+
+  /* ── Active Stakes (Position Cards) ── */
+  .stake-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:20px;
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    transition:all 0.3s ease;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:12px;
+  }
+  .stake-card:hover{
+    background:var(--card-hover);
+    border-color:var(--border-hover);
+  }
+  .stake-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+  }
+
+  .stake-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .stake-identity{display:flex;align-items:center;gap:12px}
+  .stake-info-right{text-align:right}
+  .stake-amount{
+    font-family:var(--heading);font-size:18px;font-weight:700;color:var(--orange);
+  }
+  .stake-payout{font-size:12px;color:var(--green);font-weight:500;margin-top:2px}
+
+  .status-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 12px;
+    border-radius:100px;
+    font-size:11px;font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:12px;
+  }
+  .status-badge.active{
+    background:var(--green-soft);color:var(--green);border:1px solid var(--green-border);
+  }
+  .status-badge.active::before{
+    content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
+    animation:pulse-dot 2s ease-in-out infinite;
+    box-shadow:0 0 6px var(--green);
+  }
+  .status-badge.resolving{
+    background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-border);
+  }
+  .status-badge.resolving::before{
+    content:'';width:6px;height:6px;border-radius:50%;background:var(--amber);
+    animation:pulse-dot 1.5s ease-in-out infinite;
+  }
+  .status-badge.completed{
+    background:var(--blue-soft);color:var(--blue);border:1px solid var(--blue-border);
+  }
+  .status-badge.completed::before{
+    content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);
+  }
+
+  /* Progress bar */
+  .progress-section{margin-bottom:12px}
+  .progress-header{display:flex;justify-content:space-between;margin-bottom:6px}
+  .progress-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em}
+  .progress-pct{font-size:12px;font-weight:600;color:var(--t2)}
+  .progress-track{
+    width:100%;height:6px;
+    background:rgba(255,255,255,0.06);
+    border-radius:3px;
+    overflow:hidden;
+    position:relative;
+  }
+  .progress-fill{
+    height:100%;border-radius:3px;
+    transition:width 1s ease;
+    position:relative;
+  }
+  .progress-fill.green{
+    background:linear-gradient(90deg,var(--green),#10b981);
+    box-shadow:0 0 8px rgba(52,211,153,0.3);
+  }
+  .progress-fill.amber{
+    background:linear-gradient(90deg,var(--amber),#f59e0b);
+    box-shadow:0 0 8px rgba(251,191,36,0.3);
+  }
+  .progress-fill.blue{
+    background:linear-gradient(90deg,var(--blue),#3b82f6);
+    box-shadow:0 0 8px rgba(96,165,250,0.3);
+  }
+  .progress-fill::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+    animation:shimmer 2s ease-in-out infinite;
+  }
+  @keyframes shimmer{
+    0%{transform:translateX(-100%)}
+    100%{transform:translateX(100%)}
+  }
+
+  .stake-footer{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+  }
+  .stake-timeline{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:6px}
+  .stake-timeline svg{width:14px;height:14px}
+  .payout-estimate{text-align:right}
+  .payout-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.05em}
+  .payout-value{font-family:var(--heading);font-size:16px;font-weight:700;color:var(--green)}
+
+  /* ── Scrollable list container ── */
+  .card-list{
+    max-height:620px;
+    overflow-y:auto;
+    padding-right:4px;
+  }
+  .card-list::-webkit-scrollbar{width:4px}
+  .card-list::-webkit-scrollbar-track{background:transparent}
+  .card-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+  .card-list::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.15)}
+
+  /* ── Divider ── */
+  .section-divider{
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--border),transparent);
+    margin:32px 0;
+  }
+
+  /* ── Empty / Summary row ── */
+  .summary-row{
+    display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;
+  }
+  .summary-chip{
+    display:flex;align-items:center;gap:6px;
+    padding:6px 14px;
+    background:rgba(0,0,0,0.2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:12px;color:var(--t2);
+  }
+  .summary-chip strong{color:var(--t1);font-weight:600}
+
+  /* ── Responsive ── */
+  @media(max-width:640px){
+    .card-metrics{grid-template-columns:1fr}
+    .card-bottom{flex-direction:column;align-items:stretch;gap:8px}
+    .btn-endorse{justify-content:center}
+    .stat-card-ring{flex-direction:column;align-items:flex-start;gap:16px}
+    .header-row{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="bg-orb-3"></div>
+<div class="dots"></div>
+
+<div class="page">
+<div class="container">
+
+  <!-- ══ Header ══ -->
+  <div class="header">
+    <div class="header-row">
+      <h1>Endorsement Marketplace</h1>
+      <span class="live-badge">
+        <span class="live-dot"></span>
+        Live Market
+      </span>
+    </div>
+    <div class="accent-bar"></div>
+    <p class="header-sub">Stake your reputation on candidates you believe in. Earn rewards when they succeed.</p>
+  </div>
+
+  <!-- ══ Stats ══ -->
+  <div class="stats-grid">
+
+    <!-- Active Endorsements -->
+    <div class="stat-card">
+      <div class="stat-label">
+        <span class="stat-icon orange">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        Active Endorsements
+      </div>
+      <div class="stat-value">7</div>
+      <div class="stat-sub">
+        Total staked: <span class="eth">3.2 ETH</span>
+        <span style="margin-left:8px;color:var(--green)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </span>
+        <span class="up">+2 this week</span>
+      </div>
+    </div>
+
+    <!-- Success Rate -->
+    <div class="stat-card">
+      <div class="stat-label">
+        <span class="stat-icon green">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </span>
+        Success Rate
+      </div>
+      <div class="stat-card-ring">
+        <div class="ring-wrap">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle class="ring-bg" cx="36" cy="36" r="32"/>
+            <circle class="ring-fill" cx="36" cy="36" r="32"/>
+          </svg>
+          <div class="ring-label">94%</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:4px">16 of 17 endorsements successful</div>
+          <div style="font-size:12px;color:var(--green);font-weight:500">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            +3% vs. last month
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Earned -->
+    <div class="stat-card">
+      <div class="stat-label">
+        <span class="stat-icon blue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </span>
+        Total Earned
+      </div>
+      <div class="stat-value" style="color:var(--green)">1.8 ETH</div>
+      <div class="stat-sub">
+        From 17 endorsements
+        <span style="margin-left:8px;color:var(--t3)">~$4,320 USD</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ Market Overview ══ -->
+  <div class="section-header">
+    <div class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Market Overview
+    </div>
+    <div class="summary-row">
+      <span class="summary-chip"><strong>12</strong> open positions</span>
+      <span class="summary-chip"><strong>8.4 ETH</strong> total pool</span>
+      <span class="summary-chip"><strong>87%</strong> avg. success</span>
+    </div>
+  </div>
+
+  <div class="market-grid">
+
+    <!-- ── Left: Available to Endorse ── -->
+    <div>
+      <div class="market-col-header">
+        <span class="market-col-title">
+          <span class="dot orange"></span>
+          Available to Endorse
+        </span>
+        <span style="font-size:12px;color:var(--t3)">5 candidates</span>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-chip active">All Guilds</span>
+        <span class="filter-chip">Solidity</span>
+        <span class="filter-chip">React</span>
+        <span class="filter-chip">Design</span>
+        <span class="filter-chip">Security</span>
+      </div>
+
+      <div class="card-list">
+
+        <!-- Candidate 1 -->
+        <div class="candidate-card">
+          <div class="card-top">
+            <div class="card-identity">
+              <div class="avatar a1">MK</div>
+              <div>
+                <div class="candidate-name">Marcus Kim</div>
+                <div class="candidate-role">Smart Contract Engineer</div>
+              </div>
+            </div>
+            <span class="guild-badge solidity">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Solidity
+            </span>
+          </div>
+          <div class="card-metrics">
+            <div class="metric">
+              <div class="metric-label">Stake</div>
+              <div class="metric-value eth">0.5 ETH</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Risk</div>
+              <div class="metric-value risk-low">
+                <div class="risk-indicator">
+                  Low
+                  <div class="risk-bar low"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reward</div>
+              <div class="metric-value reward">+0.08 ETH</div>
+            </div>
+          </div>
+          <div class="skills-row">
+            <span class="skill-tag">Solidity</span>
+            <span class="skill-tag">EVM</span>
+            <span class="skill-tag">Foundry</span>
+            <span class="skill-tag">DeFi</span>
+          </div>
+          <div class="card-bottom">
+            <div class="expiry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="time">2d 14h</span> remaining
+            </div>
+            <button class="btn-endorse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Endorse
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate 2 -->
+        <div class="candidate-card">
+          <div class="card-top">
+            <div class="card-identity">
+              <div class="avatar a2">SL</div>
+              <div>
+                <div class="candidate-name">Sarah Lin</div>
+                <div class="candidate-role">Frontend Developer</div>
+              </div>
+            </div>
+            <span class="guild-badge react">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              React
+            </span>
+          </div>
+          <div class="card-metrics">
+            <div class="metric">
+              <div class="metric-label">Stake</div>
+              <div class="metric-value eth">0.3 ETH</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Risk</div>
+              <div class="metric-value risk-low">
+                <div class="risk-indicator">
+                  Low
+                  <div class="risk-bar low"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reward</div>
+              <div class="metric-value reward">+0.05 ETH</div>
+            </div>
+          </div>
+          <div class="skills-row">
+            <span class="skill-tag">React</span>
+            <span class="skill-tag">TypeScript</span>
+            <span class="skill-tag">Next.js</span>
+            <span class="skill-tag">Wagmi</span>
+          </div>
+          <div class="card-bottom">
+            <div class="expiry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="time">4d 6h</span> remaining
+            </div>
+            <button class="btn-endorse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Endorse
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate 3 -->
+        <div class="candidate-card">
+          <div class="card-top">
+            <div class="card-identity">
+              <div class="avatar a4">JR</div>
+              <div>
+                <div class="candidate-name">Jake Rivera</div>
+                <div class="candidate-role">Security Auditor</div>
+              </div>
+            </div>
+            <span class="guild-badge security">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Security
+            </span>
+          </div>
+          <div class="card-metrics">
+            <div class="metric">
+              <div class="metric-label">Stake</div>
+              <div class="metric-value eth">0.8 ETH</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Risk</div>
+              <div class="metric-value risk-high">
+                <div class="risk-indicator">
+                  High
+                  <div class="risk-bar high"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reward</div>
+              <div class="metric-value reward">+0.18 ETH</div>
+            </div>
+          </div>
+          <div class="skills-row">
+            <span class="skill-tag">Audit</span>
+            <span class="skill-tag">Formal Verification</span>
+            <span class="skill-tag">Slither</span>
+          </div>
+          <div class="card-bottom">
+            <div class="expiry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="time">1d 2h</span> remaining
+            </div>
+            <button class="btn-endorse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Endorse
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate 4 -->
+        <div class="candidate-card">
+          <div class="card-top">
+            <div class="card-identity">
+              <div class="avatar a3">AP</div>
+              <div>
+                <div class="candidate-name">Anika Patel</div>
+                <div class="candidate-role">UX/UI Designer</div>
+              </div>
+            </div>
+            <span class="guild-badge design">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Design
+            </span>
+          </div>
+          <div class="card-metrics">
+            <div class="metric">
+              <div class="metric-label">Stake</div>
+              <div class="metric-value eth">0.25 ETH</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Risk</div>
+              <div class="metric-value risk-low">
+                <div class="risk-indicator">
+                  Low
+                  <div class="risk-bar low"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reward</div>
+              <div class="metric-value reward">+0.04 ETH</div>
+            </div>
+          </div>
+          <div class="skills-row">
+            <span class="skill-tag">Figma</span>
+            <span class="skill-tag">Web3 UX</span>
+            <span class="skill-tag">Design Systems</span>
+          </div>
+          <div class="card-bottom">
+            <div class="expiry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="time">5d 19h</span> remaining
+            </div>
+            <button class="btn-endorse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Endorse
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate 5 -->
+        <div class="candidate-card">
+          <div class="card-top">
+            <div class="card-identity">
+              <div class="avatar a6">DW</div>
+              <div>
+                <div class="candidate-name">Daniel Wu</div>
+                <div class="candidate-role">Data Engineer</div>
+              </div>
+            </div>
+            <span class="guild-badge data">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Data
+            </span>
+          </div>
+          <div class="card-metrics">
+            <div class="metric">
+              <div class="metric-label">Stake</div>
+              <div class="metric-value eth">0.4 ETH</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Risk</div>
+              <div class="metric-value risk-med">
+                <div class="risk-indicator">
+                  Med
+                  <div class="risk-bar med"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reward</div>
+              <div class="metric-value reward">+0.07 ETH</div>
+            </div>
+          </div>
+          <div class="skills-row">
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">dbt</span>
+            <span class="skill-tag">Dune Analytics</span>
+            <span class="skill-tag">SQL</span>
+          </div>
+          <div class="card-bottom">
+            <div class="expiry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="time">3d 8h</span> remaining
+            </div>
+            <button class="btn-endorse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Endorse
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /card-list -->
+    </div>
+
+    <!-- ── Right: Active Stakes ── -->
+    <div>
+      <div class="market-col-header">
+        <span class="market-col-title">
+          <span class="dot green"></span>
+          Your Active Stakes
+        </span>
+        <span style="font-size:12px;color:var(--t3)">3 positions</span>
+      </div>
+
+      <div class="summary-row" style="margin-bottom:16px;margin-top:0">
+        <span class="summary-chip"><strong>1.45 ETH</strong> at stake</span>
+        <span class="summary-chip" style="color:var(--green)"><strong>+0.22 ETH</strong> est. return</span>
+      </div>
+
+      <div class="card-list">
+
+        <!-- Stake 1 — Active -->
+        <div class="stake-card">
+          <div class="stake-top">
+            <div class="stake-identity">
+              <div class="avatar a5">EO</div>
+              <div>
+                <div class="candidate-name">Elena Ortiz</div>
+                <div class="candidate-role">Protocol Engineer</div>
+              </div>
+            </div>
+            <div class="stake-info-right">
+              <div class="stake-amount">0.6 ETH</div>
+              <div class="stake-payout">+0.10 ETH potential</div>
+            </div>
+          </div>
+          <span class="status-badge active">Active</span>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Vetting Progress</span>
+              <span class="progress-pct">65%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill green" style="width:65%"></div>
+            </div>
+          </div>
+          <div class="stake-footer">
+            <div class="stake-timeline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Staked 5 days ago
+            </div>
+            <div class="payout-estimate">
+              <div class="payout-label">Est. Payout</div>
+              <div class="payout-value">0.70 ETH</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stake 2 — Resolving -->
+        <div class="stake-card">
+          <div class="stake-top">
+            <div class="stake-identity">
+              <div class="avatar a7">TN</div>
+              <div>
+                <div class="candidate-name">Tomasz Nowak</div>
+                <div class="candidate-role">Solidity Developer</div>
+              </div>
+            </div>
+            <div class="stake-info-right">
+              <div class="stake-amount">0.5 ETH</div>
+              <div class="stake-payout">+0.08 ETH potential</div>
+            </div>
+          </div>
+          <span class="status-badge resolving">Resolving</span>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Review Phase</span>
+              <span class="progress-pct">90%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill amber" style="width:90%"></div>
+            </div>
+          </div>
+          <div class="stake-footer">
+            <div class="stake-timeline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Staked 12 days ago
+            </div>
+            <div class="payout-estimate">
+              <div class="payout-label">Est. Payout</div>
+              <div class="payout-value">0.58 ETH</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stake 3 — Completed -->
+        <div class="stake-card">
+          <div class="stake-top">
+            <div class="stake-identity">
+              <div class="avatar a8">RJ</div>
+              <div>
+                <div class="candidate-name">Rina Johal</div>
+                <div class="candidate-role">Frontend Architect</div>
+              </div>
+            </div>
+            <div class="stake-info-right">
+              <div class="stake-amount">0.35 ETH</div>
+              <div class="stake-payout" style="color:var(--blue)">+0.04 ETH earned</div>
+            </div>
+          </div>
+          <span class="status-badge completed">Completed</span>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Finalized</span>
+              <span class="progress-pct">100%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill blue" style="width:100%"></div>
+            </div>
+          </div>
+          <div class="stake-footer">
+            <div class="stake-timeline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Candidate hired successfully
+            </div>
+            <div class="payout-estimate">
+              <div class="payout-label">Final Payout</div>
+              <div class="payout-value">0.39 ETH</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /card-list -->
+    </div>
+
+  </div><!-- /market-grid -->
+
+</div>
+</div>
+
+</body>
+</html>

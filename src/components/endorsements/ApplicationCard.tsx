@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { Clock, Eye } from 'lucide-react';
 import { useMemo } from 'react';
 import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
@@ -15,36 +14,78 @@ interface ApplicationCardProps {
   onQuickEndorse?: (application: EndorsementApplication) => void;
 }
 
-const RING_CIRCUMFERENCE = 2 * Math.PI * 19;
+const MATCH_RING_CIRCUMFERENCE = 2 * Math.PI * 27;
 
-function ScoreRing({ score }: { score: number }) {
-  const offset = RING_CIRCUMFERENCE - (score / 100) * RING_CIRCUMFERENCE;
-  const matchColors = getMatchScoreColors(score);
+function MatchScoreAvatar({
+  score,
+  initials,
+  profilePicture,
+  candidateName,
+}: {
+  score: number | null;
+  initials: string;
+  profilePicture?: string | null;
+  candidateName: string;
+}) {
+  const matchColors = getMatchScoreColors(score ?? 50);
+  const offset = score !== null ? MATCH_RING_CIRCUMFERENCE - (score / 100) * MATCH_RING_CIRCUMFERENCE : MATCH_RING_CIRCUMFERENCE;
+
+  // Map match score to stroke color class
+  const strokeColorClass = score !== null && score >= 70
+    ? "stroke-positive"
+    : score !== null && score >= 40
+    ? "stroke-warning"
+    : "stroke-negative";
+
+  // Badge color
+  const badgeClass = score !== null && score >= 70
+    ? "text-positive bg-positive/15 border-positive/30"
+    : score !== null && score >= 40
+    ? "text-warning bg-warning/15 border-warning/30"
+    : "text-negative bg-negative/15 border-negative/30";
 
   return (
-    <div className="relative flex shrink-0 items-center justify-center w-[50px] h-[50px]">
-      <div className={`absolute inset-[-4px] rounded-full opacity-0 blur-lg transition-opacity group-hover:opacity-100 ${matchColors.bgSubtle}`} />
-      <svg className="w-[50px] h-[50px] -rotate-90" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r="19" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.06]" />
-        <circle
-          cx="22" cy="22" r="19"
-          fill="none"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray={RING_CIRCUMFERENCE}
-          strokeDashoffset={offset}
-          className={matchColors.text.replace('text-', 'stroke-')}
-        />
-      </svg>
-      <span className={`absolute font-semibold text-sm ${matchColors.text}`}>
-        {score}
-      </span>
+    <div className="relative shrink-0">
+      {/* Inner avatar */}
+      <Avatar className="w-[52px] h-[52px] rounded-full z-[2] relative">
+        {profilePicture && (
+          <AvatarImage src={profilePicture} alt={candidateName} className="rounded-full" />
+        )}
+        <AvatarFallback className={`rounded-full text-base font-bold ${matchColors.bgSubtle} text-foreground`}>
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+
+      {/* Match ring */}
+      {score !== null && (
+        <div className="absolute inset-[-4px] rounded-full z-[1]">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="27" fill="none" strokeWidth="3" className="stroke-white/[0.06]" />
+            <circle
+              cx="30" cy="30" r="27"
+              fill="none"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray={MATCH_RING_CIRCUMFERENCE}
+              strokeDashoffset={offset}
+              className={`${strokeColorClass} transition-[stroke-dashoffset] duration-600 ease-out`}
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Score badge */}
+      {score !== null && (
+        <span className={`absolute bottom-[-4px] right-[-4px] z-[3] font-mono text-xs font-bold px-1.5 py-px rounded border leading-tight ${badgeClass}`}>
+          {score}%
+        </span>
+      )}
     </div>
   );
 }
 
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
-  const { label: countdownLabel, isExpired, isUrgent, remaining } = useCountdown(
+  const { label: countdownLabel, isExpired, remaining } = useCountdown(
     application.bidding_deadline,
     { fallbackStart: application.applied_at, expiredLabel: "Bidding closed" },
   );
@@ -68,10 +109,10 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
 
   const rawGuildScore = application.guild_score ? parseFloat(application.guild_score.toString()) : null;
   const guildScore = rawGuildScore && rawGuildScore > 0 ? Math.round(rawGuildScore) : null;
-  const matchColors = getMatchScoreColors(guildScore ?? 50);
 
-  // Countdown urgency in hours
+  // Countdown urgency
   const hoursLeft = isExpired ? 0 : Math.floor(remaining / (1000 * 60 * 60));
+  const isBlindBidding = !isExpired && hoursLeft > 24;
   const countdownStyles = isExpired
     ? 'bg-muted/50 text-muted-foreground border-border/60'
     : getUrgencyColors(hoursLeft);
@@ -80,118 +121,107 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     ? formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })
     : null;
 
-  const jobMetaParts = [
-    application.company_name,
-    application.location,
-    salaryDisplay,
-  ].filter(Boolean);
-
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.12] hover:bg-card/60 hover:shadow-lg hover:shadow-black/20 h-full">
-      {/* Accent Bar */}
-      <div className={`h-[3px] w-full ${matchColors.bg}`} />
-
-      <div className="flex flex-1 flex-col p-5">
-        {/* Header: Avatar + Info + Score Ring */}
-        <div className="mb-4 flex items-start gap-3.5">
-          <Avatar className={`w-[46px] h-[46px] rounded-xl border ${matchColors.bgSubtle} ${matchColors.border}`}>
-            {application.candidate_profile_picture_url && (
-              <AvatarImage
-                src={application.candidate_profile_picture_url}
-                alt={application.candidate_name}
-                className="rounded-xl"
-              />
-            )}
-            <AvatarFallback className={`rounded-xl text-[15px] font-semibold ${matchColors.bgSubtle}`}>
-              {candidateInitials}
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-[15px] leading-tight text-foreground">
-              {application.candidate_name}
-            </h3>
-            <p className="text-[12.5px] text-muted-foreground truncate mb-2">
-              {application.candidate_headline}
-            </p>
-            {application.experience_level && (
-              <Badge variant="outline" className="text-[10.5px] font-medium px-2.5 py-0 h-5 bg-white/[0.04] border-white/[0.08] text-muted-foreground capitalize">
-                {application.experience_level}
-              </Badge>
-            )}
-          </div>
-
-          {guildScore !== null && (
-            <ScoreRing score={guildScore} />
+    <div className="group flex flex-col overflow-hidden rounded-[20px] border border-white/[0.06] bg-white/[0.03] transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
+      {/* Top section: Avatar with match ring + candidate info */}
+      <div className="flex items-start gap-3.5 px-5 pt-5">
+        <MatchScoreAvatar
+          score={guildScore}
+          initials={candidateInitials}
+          profilePicture={application.candidate_profile_picture_url}
+          candidateName={application.candidate_name}
+        />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-sm leading-snug text-foreground">
+            {application.candidate_name}
+          </h3>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {application.candidate_headline}
+          </p>
+          {/* Skills */}
+          {skillsArray.length > 0 && (
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {skillsArray.slice(0, 3).map((skill: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.04] px-2 py-px text-xs font-medium text-muted-foreground"
+                >
+                  {skill}
+                </span>
+              ))}
+              {skillsArray.length > 3 && (
+                <span className="px-1.5 py-px text-xs text-muted-foreground/50">
+                  +{skillsArray.length - 3}
+                </span>
+              )}
+            </div>
           )}
         </div>
+      </div>
 
-        {/* Skills */}
-        {skillsArray.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {skillsArray.slice(0, 3).map((skill: string, idx: number) => (
-              <span
-                key={idx}
-                className="inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors group-hover:bg-white/[0.05] group-hover:border-white/[0.10]"
-              >
-                {skill}
-              </span>
-            ))}
-            {skillsArray.length > 3 && (
-              <span className="px-2 py-0.5 text-[11px] font-medium text-muted-foreground/60">
-                +{skillsArray.length - 3}
-              </span>
-            )}
-          </div>
+      {/* Job section */}
+      <div className="px-5 py-3.5 border-t border-white/[0.06] mt-3.5">
+        <p className="font-medium text-sm text-foreground truncate">
+          {application.job_title}
+        </p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">
+          {application.company_name}
+          {application.location ? ` · ${application.location}` : ''}
+        </p>
+        {salaryDisplay && (
+          <p className="font-mono text-xs text-muted-foreground/50 mt-1">
+            {salaryDisplay}
+          </p>
         )}
+      </div>
 
-        {/* Divider */}
-        <div className="mb-3.5 h-px bg-border/60" />
+      {/* Deadline bar */}
+      <div className="px-5 py-2.5 bg-white/[0.025] flex items-center justify-between gap-2.5">
+        <span className={`inline-flex items-center gap-1.5 font-mono text-xs font-medium ${
+          isBlindBidding ? 'text-warning' : isExpired ? 'text-muted-foreground' : hoursLeft < 6 ? 'text-primary' : 'text-muted-foreground'
+        }`}>
+          {isBlindBidding ? (
+            <>
+              <Eye className="w-3.5 h-3.5" />
+              <span className="font-mono text-xs font-bold uppercase tracking-[0.08em] bg-warning/10 border border-warning/20 px-1.5 py-px rounded text-warning">
+                BLIND BIDDING
+              </span>
+              {countdownLabel}
+            </>
+          ) : (
+            <>
+              <Clock className="w-3 h-3" />
+              {countdownLabel}
+            </>
+          )}
+        </span>
+        <span className="text-xs text-muted-foreground/40">
+          Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
+        </span>
+      </div>
 
-        {/* Job Section */}
-        <div className="mb-3.5">
-          <p className="font-medium text-[13px] text-foreground truncate">
-            {application.job_title}
-          </p>
-          <p className="text-[11.5px] text-muted-foreground/60 truncate">
-            {jobMetaParts.join(' · ')}
-          </p>
-        </div>
-
-        {/* Footer: Applied time + Countdown */}
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground/50">
-            Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
-          </span>
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${countdownStyles}`}>
-            <Clock className="w-3 h-3" />
-            {countdownLabel}
-          </span>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="mt-auto grid grid-cols-2 gap-2">
-          <Button
-            variant="ghost"
-            className="h-9 rounded-[10px] border border-white/[0.10] text-muted-foreground text-[13px] font-medium hover:bg-white/[0.04] hover:border-white/[0.18] hover:text-foreground"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewDetails(application);
-            }}
-          >
-            Details
-          </Button>
-          <Button
-            className="h-9 rounded-[10px] bg-gradient-to-br from-primary via-primary to-amber-700 text-[13px] font-semibold text-[hsl(var(--gradient-button-text))] hover:from-amber-400 hover:via-primary hover:to-primary"
-            disabled={isExpired || !onQuickEndorse}
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickEndorse?.(application);
-            }}
-          >
-            Endorse
-          </Button>
-        </div>
+      {/* Action buttons */}
+      <div className="px-5 py-3.5 flex gap-2.5 mt-auto">
+        <Button
+          variant="ghost"
+          className="flex-1 h-10 rounded-[10px] border border-white/[0.06] text-muted-foreground text-sm font-medium hover:bg-white/[0.04] hover:border-white/[0.12] hover:text-foreground"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(application);
+          }}
+        >
+          View Details
+        </Button>
+        <Button
+          className="flex-1 h-10 rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-sm font-medium text-[hsl(var(--gradient-button-text))] shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
+          disabled={isExpired || !onQuickEndorse}
+          onClick={(e) => {
+            e.stopPropagation();
+            onQuickEndorse?.(application);
+          }}
+        >
+          Endorse
+        </Button>
       </div>
     </div>
   );

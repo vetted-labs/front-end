@@ -35,7 +35,7 @@ export function VotingParametersSection({
           <Coins className="w-5 h-5 text-positive" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-bold text-foreground">
             Voting Parameters
           </h3>
           <p className="text-sm text-muted-foreground">

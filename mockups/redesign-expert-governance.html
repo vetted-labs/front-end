@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vetted — Governance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: rgba(255,255,255,0.03);
+      --surface-hover: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.10);
+      --text: #f0f0f5;
+      --text-muted: rgba(255,255,255,0.50);
+      --text-dim: rgba(255,255,255,0.35);
+      --primary: #f97316;
+      --primary-glow: rgba(249,115,22,0.25);
+      --green: #22c55e;
+      --green-glow: rgba(34,197,94,0.20);
+      --green-muted: rgba(34,197,94,0.12);
+      --red: #ef4444;
+      --red-glow: rgba(239,68,68,0.20);
+      --red-muted: rgba(239,68,68,0.12);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245,158,11,0.20);
+      --amber-muted: rgba(245,158,11,0.12);
+      --blue: #3b82f6;
+      --blue-glow: rgba(59,130,246,0.20);
+      --blue-muted: rgba(59,130,246,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      line-height: 1.2;
+    }
+
+    /* --- Background Effects --- */
+    .bg-effects {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+    }
+    .glow-orb.orange {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(249,115,22,0.18) 0%, transparent 70%);
+      top: -120px; right: -80px;
+    }
+    .glow-orb.blue {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%);
+      bottom: 100px; left: -100px;
+    }
+    .glow-orb.purple {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .dot-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* --- Layout --- */
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* --- Glass Card --- */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .glass:hover {
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+    }
+
+    /* --- Page Header --- */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .page-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .accent-bar {
+      width: 4px;
+      height: 40px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--primary), #fb923c);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .page-header h1 span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 1rem;
+      margin-left: 12px;
+    }
+    .btn-create {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      cursor: pointer;
+      box-shadow: 0 0 24px var(--primary-glow), 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-create:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 36px var(--primary-glow), 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .btn-create svg {
+      width: 16px; height: 16px;
+    }
+
+    /* --- Voting Power Hero --- */
+    .voting-power {
+      padding: 32px;
+      margin-bottom: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 200px;
+      gap: 32px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .voting-power::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+    .vp-section { position: relative; }
+    .vp-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .vp-big {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .vp-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .vp-sub .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: fit-content;
+    }
+    .vp-sub .tag.gold {
+      background: rgba(245,158,11,0.12);
+      color: #fbbf24;
+    }
+    .vp-sub .tag.rep {
+      background: rgba(139,92,246,0.12);
+      color: #a78bfa;
+    }
+    .vp-votes-cast {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .vp-votes-value {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .vp-votes-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .vp-votes-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--primary), #fb923c);
+      width: 80%;
+    }
+    .vp-votes-detail {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Participation Ring */
+    .participation-ring-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+    .participation-ring {
+      position: relative;
+      width: 120px; height: 120px;
+    }
+    .participation-ring svg {
+      transform: rotate(-90deg);
+      width: 120px; height: 120px;
+    }
+    .participation-ring .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.06);
+      stroke-width: 8;
+    }
+    .participation-ring .ring-fill {
+      fill: none;
+      stroke: url(#ringGrad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 326;
+      stroke-dashoffset: 65.2; /* 326 * (1 - 0.8) */
+      transition: stroke-dashoffset 1s ease;
+    }
+    .participation-ring .ring-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-pct {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .ring-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+
+    /* --- Filter Tabs --- */
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-tab:hover {
+      border-color: var(--border-light);
+      color: var(--text);
+    }
+    .filter-tab.active {
+      background: rgba(249,115,22,0.12);
+      border-color: rgba(249,115,22,0.3);
+      color: var(--primary);
+    }
+    .filter-tab .count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      font-size: 0.7rem;
+      margin-left: 6px;
+    }
+    .filter-tab.active .count {
+      background: rgba(249,115,22,0.20);
+    }
+
+    /* --- Section Header --- */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .section-header .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .section-header .badge.green {
+      background: var(--green-muted);
+      color: var(--green);
+    }
+
+    /* --- Proposal Cards --- */
+    .proposals-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .proposal-card {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+    }
+    .proposal-card.past {
+      opacity: 0.6;
+    }
+    .proposal-card.past:hover {
+      opacity: 0.85;
+    }
+    .proposal-left {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+    .proposal-top-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .proposal-id {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.04);
+      padding: 2px 10px;
+      border-radius: var(--radius-xs);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .status-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .status-badge.active {
+      background: var(--green-muted);
+      color: var(--green);
+    }
+    .status-badge.active .dot {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green-glow);
+      animation: pulse-dot 2s infinite;
+    }
+    .status-badge.pending {
+      background: var(--amber-muted);
+      color: var(--amber);
+    }
+    .status-badge.pending .dot {
+      background: var(--amber);
+      box-shadow: 0 0 6px var(--amber-glow);
+    }
+    .status-badge.executed {
+      background: var(--blue-muted);
+      color: var(--blue);
+    }
+    .status-badge.executed .dot {
+      background: var(--blue);
+    }
+    .status-badge.defeated {
+      background: var(--red-muted);
+      color: var(--red);
+    }
+    .status-badge.defeated .dot {
+      background: var(--red);
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .proposal-title {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .proposal-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .proposer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .proposer-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .proposer-avatar.orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .proposer-avatar.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .proposer-avatar.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .proposer-avatar.pink { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .proposer-rank {
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+    .proposer-rank.gold { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .proposer-rank.silver { background: rgba(156,163,175,0.12); color: #9ca3af; }
+    .proposer-rank.diamond { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .time-left {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .time-left svg {
+      width: 14px; height: 14px;
+      opacity: 0.5;
+    }
+
+    /* Vote Bar */
+    .vote-section {
+      margin-top: 2px;
+    }
+    .vote-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .vote-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .vote-for-label { color: var(--green); }
+    .vote-against-label { color: var(--red); }
+    .vote-bar {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.04);
+      overflow: hidden;
+      display: flex;
+      position: relative;
+    }
+    .vote-bar-for {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+      border-radius: 5px 0 0 5px;
+      transition: width 0.6s ease;
+      position: relative;
+    }
+    .vote-bar-for::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15));
+    }
+    .vote-bar-against {
+      height: 100%;
+      background: linear-gradient(90deg, #f87171, #ef4444);
+      border-radius: 0 5px 5px 0;
+      transition: width 0.6s ease;
+    }
+    .vote-counts {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Right side of proposal card */
+    .proposal-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 140px;
+    }
+    .your-vote {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: var(--radius-xs);
+    }
+    .your-vote.voted-for {
+      background: var(--green-muted);
+      color: var(--green);
+    }
+    .your-vote.voted-against {
+      background: var(--red-muted);
+      color: var(--red);
+    }
+    .your-vote svg {
+      width: 14px; height: 14px;
+    }
+    .btn-vote {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border: 1px solid rgba(249,115,22,0.3);
+      border-radius: var(--radius-sm);
+      background: rgba(249,115,22,0.08);
+      color: var(--primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-vote:hover {
+      background: rgba(249,115,22,0.15);
+      border-color: rgba(249,115,22,0.5);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+    .btn-vote svg {
+      width: 14px; height: 14px;
+    }
+    .result-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: var(--radius-xs);
+    }
+    .result-badge.passed {
+      background: var(--green-muted);
+      color: var(--green);
+    }
+    .result-badge.failed {
+      background: var(--red-muted);
+      color: var(--red);
+    }
+
+    /* --- Governance Stats --- */
+    .gov-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .stat-card {
+      padding: 24px;
+      text-align: center;
+    }
+    .stat-card .stat-value {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .stat-card .stat-value.orange {
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-card .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stat-card .stat-detail {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+      opacity: 0.7;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 900px) {
+      .voting-power {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .participation-ring-wrapper {
+        grid-column: span 2;
+        justify-self: center;
+      }
+    }
+    @media (max-width: 640px) {
+      .page-wrapper { padding: 24px 16px 60px; }
+      .page-header h1 { font-size: 1.5rem; }
+      .voting-power {
+        grid-template-columns: 1fr;
+        padding: 24px;
+      }
+      .participation-ring-wrapper {
+        grid-column: span 1;
+      }
+      .proposal-card {
+        grid-template-columns: 1fr;
+      }
+      .proposal-right {
+        flex-direction: row;
+        align-items: center;
+        min-width: 0;
+      }
+      .gov-stats {
+        grid-template-columns: 1fr;
+      }
+      .vp-big { font-size: 2.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-effects">
+  <div class="dot-grid"></div>
+  <div class="glow-orb orange"></div>
+  <div class="glow-orb blue"></div>
+  <div class="glow-orb purple"></div>
+</div>
+
+<!-- SVG Defs for ring gradient -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#fb923c" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="page-wrapper">
+
+  <!-- ===== Page Header ===== -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="accent-bar"></div>
+      <h1>Governance <span>Shape the future of Vetted</span></h1>
+    </div>
+    <button class="btn-create">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Proposal
+    </button>
+  </div>
+
+  <!-- ===== Your Voting Power ===== -->
+  <div class="glass voting-power">
+    <!-- Weight -->
+    <div class="vp-section">
+      <div class="vp-label">Your Voting Weight</div>
+      <div class="vp-big">3.2x</div>
+      <div class="vp-sub" style="margin-top:10px;">
+        <span class="tag gold">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01z"/></svg>
+          Gold Tier
+        </span>
+        <span class="tag rep">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          847 Reputation
+        </span>
+      </div>
+    </div>
+
+    <!-- Votes Cast -->
+    <div class="vp-section">
+      <div class="vp-label">Votes Cast This Quarter</div>
+      <div class="vp-votes-cast">
+        <div class="vp-votes-value">12 <span style="font-size:1rem;color:var(--text-dim);font-weight:400">/ 15</span></div>
+        <div class="vp-votes-bar">
+          <div class="vp-votes-bar-fill"></div>
+        </div>
+        <div class="vp-votes-detail">3 proposals remaining</div>
+      </div>
+    </div>
+
+    <!-- Delegation -->
+    <div class="vp-section">
+      <div class="vp-label">Delegated Power</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.5rem;font-weight:700;color:var(--text);">+0.4x</div>
+      <div class="vp-sub" style="margin-top:6px;">
+        <span style="color:var(--text-dim);font-size:0.75rem;">From 2 delegators</span>
+        <span style="color:var(--text-dim);font-size:0.7rem;opacity:0.6;">Total effective: 3.6x</span>
+      </div>
+    </div>
+
+    <!-- Participation Ring -->
+    <div class="participation-ring-wrapper">
+      <div class="participation-ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52" />
+          <circle class="ring-fill" cx="60" cy="60" r="52" />
+        </svg>
+        <div class="ring-value">
+          <div class="ring-pct">80%</div>
+          <div class="ring-label">Participation</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Filter Tabs ===== -->
+  <div class="filter-tabs">
+    <button class="filter-tab active">All <span class="count">9</span></button>
+    <button class="filter-tab">Active <span class="count">3</span></button>
+    <button class="filter-tab">Pending <span class="count">1</span></button>
+    <button class="filter-tab">Executed <span class="count">3</span></button>
+    <button class="filter-tab">Defeated <span class="count">2</span></button>
+  </div>
+
+  <!-- ===== Active Proposals ===== -->
+  <div class="section-header">
+    <h2>Active Proposals</h2>
+    <span class="badge green">3</span>
+  </div>
+
+  <div class="proposals-grid">
+
+    <!-- Proposal 1 - Active, Voted For -->
+    <div class="glass proposal-card">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-42</span>
+          <span class="status-badge active"><span class="dot"></span>Active</span>
+          <span class="time-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            2d 6h left
+          </span>
+        </div>
+        <div class="proposal-title">Increase minimum stake for endorsements from 50 to 100 VET</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar">AK</div>
+            <span>Alex Kim</span>
+            <span class="proposer-rank gold">Gold</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">67% For</span>
+            <span class="vote-against-label">33% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:67%"></div>
+            <div class="vote-bar-against" style="width:33%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>1,247 votes (842.3x weight)</span>
+            <span>614 votes (415.1x weight)</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <div class="your-vote voted-for">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Voted For
+        </div>
+      </div>
+    </div>
+
+    <!-- Proposal 2 - Active, Not Voted -->
+    <div class="glass proposal-card">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-41</span>
+          <span class="status-badge active"><span class="dot"></span>Active</span>
+          <span class="time-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            4d 12h left
+          </span>
+        </div>
+        <div class="proposal-title">Add "AI/ML Engineering" as a new guild specialization</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar orange">SR</div>
+            <span>Sarah Reeves</span>
+            <span class="proposer-rank diamond">Diamond</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">81% For</span>
+            <span class="vote-against-label">19% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:81%"></div>
+            <div class="vote-bar-against" style="width:19%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>2,103 votes (1,580.2x weight)</span>
+            <span>492 votes (310.5x weight)</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <button class="btn-vote">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Cast Vote
+        </button>
+      </div>
+    </div>
+
+    <!-- Proposal 3 - Active, Voted Against -->
+    <div class="glass proposal-card">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-40</span>
+          <span class="status-badge active"><span class="dot"></span>Active</span>
+          <span class="time-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            18h left
+          </span>
+        </div>
+        <div class="proposal-title">Reduce proposal quorum threshold from 30% to 20%</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar green">MT</div>
+            <span>Marcus Torres</span>
+            <span class="proposer-rank silver">Silver</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">43% For</span>
+            <span class="vote-against-label">57% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:43%"></div>
+            <div class="vote-bar-against" style="width:57%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>687 votes (412.8x weight)</span>
+            <span>910 votes (548.3x weight)</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <div class="your-vote voted-against">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Voted Against
+        </div>
+      </div>
+    </div>
+
+    <!-- Proposal 4 - Pending -->
+    <div class="glass proposal-card">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-43</span>
+          <span class="status-badge pending"><span class="dot"></span>Pending</span>
+          <span class="time-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Voting starts in 1d 3h
+          </span>
+        </div>
+        <div class="proposal-title">Implement quadratic voting for high-impact protocol changes</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar blue">JL</div>
+            <span>Jenny Liu</span>
+            <span class="proposer-rank gold">Gold</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span style="color:var(--text-dim)">Voting not yet started</span>
+            <span></span>
+          </div>
+          <div class="vote-bar" style="opacity:0.3">
+            <div class="vote-bar-for" style="width:0%"></div>
+            <div class="vote-bar-against" style="width:0%"></div>
+          </div>
+          <div class="vote-counts">
+            <span style="color:var(--text-dim)">Quorum required: 30% of total voting power</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <span style="font-size:0.75rem;color:var(--text-dim);text-align:right;">Awaiting<br/>voting period</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Past Proposals ===== -->
+  <div class="section-header">
+    <h2>Past Proposals</h2>
+  </div>
+
+  <div class="proposals-grid">
+
+    <!-- Past 1 - Executed -->
+    <div class="glass proposal-card past">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-39</span>
+          <span class="status-badge executed"><span class="dot"></span>Executed</span>
+          <span class="time-left" style="color:var(--text-dim);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Ended Mar 18
+          </span>
+        </div>
+        <div class="proposal-title">Establish review quality bounty pool of 10,000 VET per quarter</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar pink">NP</div>
+            <span>Nina Patel</span>
+            <span class="proposer-rank diamond">Diamond</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">89% For</span>
+            <span class="vote-against-label">11% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:89%"></div>
+            <div class="vote-bar-against" style="width:11%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>3,412 votes</span>
+            <span>421 votes</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <div class="result-badge passed">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Passed
+        </div>
+        <div class="your-vote voted-for" style="font-size:0.7rem;padding:4px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+          You voted For
+        </div>
+      </div>
+    </div>
+
+    <!-- Past 2 - Defeated -->
+    <div class="glass proposal-card past">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-38</span>
+          <span class="status-badge defeated"><span class="dot"></span>Defeated</span>
+          <span class="time-left" style="color:var(--text-dim);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Ended Mar 12
+          </span>
+        </div>
+        <div class="proposal-title">Allow anonymous proposals with reputation threshold of 500+</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar">DW</div>
+            <span>David Wright</span>
+            <span class="proposer-rank silver">Silver</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">28% For</span>
+            <span class="vote-against-label">72% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:28%"></div>
+            <div class="vote-bar-against" style="width:72%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>534 votes</span>
+            <span>1,372 votes</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <div class="result-badge failed">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Failed
+        </div>
+        <div class="your-vote voted-against" style="font-size:0.7rem;padding:4px 10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          You voted Against
+        </div>
+      </div>
+    </div>
+
+    <!-- Past 3 - Executed -->
+    <div class="glass proposal-card past">
+      <div class="proposal-left">
+        <div class="proposal-top-row">
+          <span class="proposal-id">#VIP-37</span>
+          <span class="status-badge executed"><span class="dot"></span>Executed</span>
+          <span class="time-left" style="color:var(--text-dim);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Ended Mar 5
+          </span>
+        </div>
+        <div class="proposal-title">Extend expert cool-down period from 7 to 14 days after dispute</div>
+        <div class="proposal-meta">
+          <div class="proposer">
+            <div class="proposer-avatar orange">CR</div>
+            <span>Carlos Ruiz</span>
+            <span class="proposer-rank gold">Gold</span>
+          </div>
+        </div>
+        <div class="vote-section">
+          <div class="vote-bar-labels">
+            <span class="vote-for-label">74% For</span>
+            <span class="vote-against-label">26% Against</span>
+          </div>
+          <div class="vote-bar">
+            <div class="vote-bar-for" style="width:74%"></div>
+            <div class="vote-bar-against" style="width:26%"></div>
+          </div>
+          <div class="vote-counts">
+            <span>2,180 votes</span>
+            <span>766 votes</span>
+          </div>
+        </div>
+      </div>
+      <div class="proposal-right">
+        <div class="result-badge passed">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Passed
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== Governance Stats ===== -->
+  <div class="section-header" style="margin-top:16px;">
+    <h2>Governance Overview</h2>
+  </div>
+  <div class="gov-stats">
+    <div class="glass stat-card">
+      <div class="stat-value orange">42</div>
+      <div class="stat-label">Total Proposals</div>
+      <div class="stat-detail">+6 this quarter</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="stat-value" style="color:var(--green);">76%</div>
+      <div class="stat-label">Pass Rate</div>
+      <div class="stat-detail">32 of 42 proposals passed</div>
+    </div>
+    <div class="glass stat-card">
+      <div class="stat-value">62%</div>
+      <div class="stat-label">Avg Participation</div>
+      <div class="stat-detail">Up 8% from last quarter</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

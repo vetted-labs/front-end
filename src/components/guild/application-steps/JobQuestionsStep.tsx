@@ -32,14 +32,14 @@ export default function JobQuestionsStep({
             <p className="text-sm text-muted-foreground">
               Applying for
             </p>
-            <p className="font-semibold text-foreground">{jobTitle}</p>
+            <p className="font-medium text-foreground">{jobTitle}</p>
           </div>
         </div>
       </div>
 
       {/* Cover Letter */}
       <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8">
-        <h2 className="text-xl font-semibold text-foreground mb-1">
+        <h2 className="text-xl font-bold text-foreground mb-1">
           Cover Letter <span className="text-destructive">*</span>
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
@@ -61,7 +61,7 @@ export default function JobQuestionsStep({
       {screeningQuestions.length > 0 && (
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8 space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
               <HelpCircle className="w-5 h-5" />
               Screening Questions
             </h2>

@@ -73,7 +73,7 @@ export function GuildApplicationsTab({
 
       {/* Pending Proposals */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">
+        <h3 className="text-xl font-bold text-foreground mb-4">
           Pending Reviews
         </h3>
         {applications.pending.length === 0 ? (
@@ -81,7 +81,7 @@ export function GuildApplicationsTab({
             <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <h3 className="text-xl font-bold text-foreground mb-2">
               No Pending Reviews
             </h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -104,11 +104,11 @@ export function GuildApplicationsTab({
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-foreground text-base truncate">
+                        <h4 className="font-bold text-foreground text-sm truncate">
                           {application.candidateName}
                         </h4>
                         {application.expertiseLevel && (
-                          <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                          <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
                             {application.expertiseLevel}
                           </span>
                         )}
@@ -186,7 +186,7 @@ export function GuildApplicationsTab({
 
       {/* Ongoing Reviews */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Ongoing Reviews</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4">Ongoing Reviews</h3>
         {applications.ongoing.length === 0 ? (
           <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
             <p className="text-sm text-muted-foreground">
@@ -209,10 +209,10 @@ export function GuildApplicationsTab({
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-foreground text-base truncate">
+                        <h4 className="font-bold text-foreground text-sm truncate">
                           {application.candidateName}
                         </h4>
-                        <span className={`shrink-0 px-2.5 py-0.5 text-xs font-semibold rounded-full ${STATUS_COLORS.warning.badge}`}>
+                        <span className={`shrink-0 px-2.5 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS.warning.badge}`}>
                           Under Review
                         </span>
                       </div>

@@ -142,10 +142,10 @@ export default function GuildMyStatsPage() {
                 <User className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-foreground mb-2">
+                <h1 className="text-3xl font-bold text-foreground mb-2">
                   My Guild Statistics
                 </h1>
-                <p className="text-lg text-muted-foreground mb-4">
+                <p className="text-sm font-medium text-muted-foreground mb-4">
                   {stats.fullName}
                 </p>
                 <div className="flex items-center gap-4">
@@ -430,7 +430,7 @@ export default function GuildMyStatsPage() {
             {/* Role Progress */}
             {stats.nextRole && (
               <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-6 border-2 border-primary/20">
-                <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Role Progression
                 </h3>
@@ -456,7 +456,7 @@ export default function GuildMyStatsPage() {
                   {stats.requirementsForNextRole &&
                     stats.requirementsForNextRole.length > 0 && (
                       <div className="mt-4">
-                        <p className="text-sm font-semibold text-foreground mb-2">
+                        <p className="text-sm font-medium text-foreground mb-2">
                           Requirements:
                         </p>
                         <ul className="space-y-2">
@@ -478,7 +478,7 @@ export default function GuildMyStatsPage() {
 
             {/* Contribution Score */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Trophy className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
                 Contribution Score
               </h3>
@@ -496,7 +496,7 @@ export default function GuildMyStatsPage() {
 
             {/* Activity Score */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-              <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary" />
                 Activity Level
               </h3>
@@ -505,7 +505,7 @@ export default function GuildMyStatsPage() {
                   <span className="text-sm text-muted-foreground">
                     Current Activity
                   </span>
-                  <span className="text-lg font-bold text-foreground">
+                  <span className="text-xl font-bold text-foreground">
                     {stats.activityScore || 0}/100
                   </span>
                 </div>
@@ -533,7 +533,7 @@ export default function GuildMyStatsPage() {
 
             {/* Quick Actions */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-              <h3 className="text-lg font-bold text-foreground mb-4">
+              <h3 className="text-xl font-bold text-foreground mb-4">
                 Quick Actions
               </h3>
               <div className="space-y-2">

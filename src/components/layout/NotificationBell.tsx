@@ -86,7 +86,7 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -96,9 +96,9 @@ export function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border bg-card shadow-xl overflow-hidden dark:bg-card/80 dark:backdrop-blur-2xl dark:border-white/[0.08] z-50">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+            <h3 className="text-sm font-medium text-foreground">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                 {unreadCount} new
               </span>
             )}
@@ -154,7 +154,7 @@ export function NotificationBell() {
                             {notification.title}
                           </p>
                           {applicantTag && (
-                            <span className={`px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded-full flex-shrink-0 ${applicantTag.className}`}>
+                            <span className={`px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider rounded-full flex-shrink-0 ${applicantTag.className}`}>
                               {applicantTag.label}
                             </span>
                           )}
@@ -169,7 +169,7 @@ export function NotificationBell() {
                       <p className="truncate text-xs text-muted-foreground">
                         {notification.message}
                       </p>
-                      <p className="mt-1 text-[11px] text-muted-foreground/70">
+                      <p className="mt-1 text-xs text-muted-foreground/70">
                         {formatTimeAgo(notification.createdAt)}
                       </p>
                     </div>

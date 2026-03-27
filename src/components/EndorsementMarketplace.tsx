@@ -18,13 +18,9 @@ import type { EndorsementApplication, GuildRecord } from "@/types";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Coins,
-  Users,
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -194,7 +190,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
         <CardContent className="p-12 text-center">
           <Coins className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+          <h3 className="text-xl font-bold mb-2">Connect Your Wallet</h3>
           <p className="text-muted-foreground">
             Please connect your wallet to view and endorse applications
           </p>
@@ -263,32 +259,31 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         }}
       />
 
-      {/* Applications List */}
-      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Applications in {guildName}
-          </CardTitle>
-          <CardDescription>
-            Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when candidate is hired.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ApplicationsGrid
-            applications={applications ?? []}
-            loading={loading}
-            onSelectApplication={handleViewDetails}
-            onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
-          />
-          <PaginationNav
-            page={applicationsPage}
-            totalPages={applicationsTotalPages}
-            onPageChange={setApplicationsPage}
-            className="mt-6"
-          />
-        </CardContent>
-      </Card>
+      {/* Available Applications */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+          <h2 className="font-display font-bold text-xl tracking-tight">
+            Available Applications
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-xs text-muted-foreground">
+              <span className="text-muted-foreground font-medium">{applicationsTotalItems}</span> applications
+            </span>
+          </div>
+        </div>
+        <ApplicationsGrid
+          applications={applications ?? []}
+          loading={loading}
+          onSelectApplication={handleViewDetails}
+          onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
+        />
+        <PaginationNav
+          page={applicationsPage}
+          totalPages={applicationsTotalPages}
+          onPageChange={setApplicationsPage}
+          className="mt-6"
+        />
+      </div>
 
       {/* Candidate Details Modal */}
       <CandidateDetailsModal

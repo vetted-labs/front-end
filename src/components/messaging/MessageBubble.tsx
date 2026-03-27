@@ -62,7 +62,7 @@ export function MessageBubble({
         )}
       >
         {!isOwn && (
-          <p className="text-[11px] font-medium text-muted-foreground mb-0.5">
+          <p className="text-xs font-medium text-muted-foreground mb-0.5">
             {message.senderName}
           </p>
         )}
@@ -71,7 +71,7 @@ export function MessageBubble({
         </p>
         <p
           className={cn(
-            "text-[11px] mt-1",
+            "text-xs mt-1",
             isOwn ? "text-white/60 text-right" : "text-muted-foreground/60"
           )}
         >

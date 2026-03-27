@@ -28,7 +28,7 @@ export function ReviewNavigation({
       <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
         <button
           onClick={onClose}
-          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
         >
           Cancel
         </button>
@@ -48,7 +48,7 @@ export function ReviewNavigation({
       <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
         <button
           onClick={onBack}
-          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2"
+          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
@@ -69,7 +69,7 @@ export function ReviewNavigation({
       <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
         <button
           onClick={onBack}
-          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2"
+          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2"
         >
           <ChevronLeft className="w-4 h-4" />
           Back

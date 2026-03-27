@@ -100,7 +100,7 @@ export function GuildActivityFeed({
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
           <Activity className="w-8 h-8 text-muted-foreground/50" />
         </div>
-        <p className="text-lg text-muted-foreground">No recent activity</p>
+        <p className="text-sm font-medium text-muted-foreground">No recent activity</p>
       </div>
     );
   }
@@ -124,10 +124,10 @@ export function GuildActivityFeed({
                 <div className="rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2 mb-0.5">
                     <Icon className={`w-3.5 h-3.5 ${meta.colorClass}`} />
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${meta.colorClass}`}>
+                    <span className={`text-xs font-medium uppercase tracking-wider ${meta.colorClass}`}>
                       {meta.label}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/50 ml-auto">
+                    <span className="text-xs text-muted-foreground/50 ml-auto">
                       {formatTimeAgo(activity.timestamp)}
                     </span>
                   </div>
@@ -197,7 +197,7 @@ export function GuildActivityFeed({
             {Object.entries(grouped).map(([dateLabel, items]) => (
               <div key={dateLabel}>
                 <div className="sticky top-0 z-10 bg-gradient-to-r from-background via-background to-transparent pb-2 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
                     {dateLabel}
                   </span>
                 </div>
@@ -222,10 +222,10 @@ export function GuildActivityFeed({
                               <div className="flex items-start justify-between gap-3">
                                 <div>
                                   <p className="text-sm text-foreground leading-snug">
-                                    <span className="font-semibold">{activity.actor}</span>{" "}
+                                    <span className="font-medium">{activity.actor}</span>{" "}
                                     <span className="text-muted-foreground">{activity.details}</span>
                                     {activity.target && (
-                                      <span className="font-semibold"> {activity.target}</span>
+                                      <span className="font-medium"> {activity.target}</span>
                                     )}
                                   </p>
                                   <span

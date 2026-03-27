@@ -25,6 +25,7 @@ import type { GovernanceProposalDetail } from "@/types";
 import { PROPOSAL_TYPE_LABELS } from "@/types";
 import { formatDate as formatDateShared, truncateAddress, formatDeadline } from "@/lib/utils";
 import { PROPOSAL_STATUS_CONFIG, GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD, computeVoteWeight } from "@/config/constants";
+import { STATUS_COLORS, VOTE_COLORS, getProposalTypeColors } from "@/config/colors";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 
@@ -124,7 +125,7 @@ export function GovernanceProposalDetailPage() {
   /* ─── Not found ─── */
   if (!proposal) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.back()}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -133,7 +134,7 @@ export function GovernanceProposalDetailPage() {
           Back to Governance
         </button>
         <div className="text-center py-16">
-          <p className="text-lg font-semibold mb-1">Proposal not found</p>
+          <p className="text-xl font-bold mb-1">Proposal not found</p>
           <p className="text-sm text-muted-foreground">
             This proposal may have been removed or the ID is invalid.
           </p>
@@ -155,13 +156,15 @@ export function GovernanceProposalDetailPage() {
   const deadlineStr = getTimeRemaining(proposal.voting_deadline);
   const createdDate = formatDate(proposal.created_at);
   const deadlineDate = formatDate(proposal.voting_deadline);
+  const typeColors = getProposalTypeColors(proposal.proposal_type);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb items={[
         { label: "Governance", href: "/expert/governance" },
         { label: proposal?.title ?? "Proposal" },
       ]} />
+
       {/* ─── Back link ─── */}
       <button
         onClick={() => router.back()}
@@ -172,70 +175,82 @@ export function GovernanceProposalDetailPage() {
       </button>
 
       {/* ─── Hero header card ─── */}
-      <div className="rounded-xl border border-border bg-card p-6 sm:p-8 mb-6">
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
-            {proposal.title}
-          </h1>
-          <Badge
-            variant={statusVariant(proposal.status)}
-            className="shrink-0 text-sm px-3 py-1"
-          >
-            {statusLabel(proposal.status, isFinalized)}
-          </Badge>
-        </div>
+      <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-6 sm:p-8 mb-6 relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
 
-        {/* Description directly in header — it&apos;s the proposal identity */}
-        <p className="text-base text-muted-foreground leading-relaxed mb-5 whitespace-pre-wrap">
-          {proposal.description}
-        </p>
-
-        {/* Metadata chips row */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          <Badge variant="outline" className="font-normal">
-            {PROPOSAL_TYPE_LABELS[proposal.proposal_type] || proposal.proposal_type}
-          </Badge>
-          {proposal.guild_name && (
-            <Badge variant="secondary" className="font-normal">
-              {proposal.guild_name}
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="font-mono text-sm font-medium text-primary mb-2">
+                #{proposal.id.slice(0, 8)}
+              </p>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+                {proposal.title}
+              </h1>
+            </div>
+            <Badge
+              variant={statusVariant(proposal.status)}
+              className="shrink-0 text-sm px-3 py-1"
+            >
+              {statusLabel(proposal.status, isFinalized)}
             </Badge>
-          )}
-          <span>
-            by {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
-          </span>
-          <span className="tabular-nums">{formatVETD(proposal.stake_amount)} VETD staked</span>
-          <span className="inline-flex items-center gap-1">
-            <Scale className="w-3.5 h-3.5" />
-            Approval: {thresholdConfig.label}
-          </span>
-          {createdDate && <span>{createdDate}</span>}
-        </div>
-
-        {/* Active: countdown + quick stats row */}
-        {!isFinalized && (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 pt-4 border-t border-border text-sm">
-            {deadlineStr && (
-              <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                <Clock className="w-4 h-4 text-primary" />
-                {deadlineStr}
-              </span>
-            )}
-            {!deadlineStr && deadlineDate && (
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                Ends {deadlineDate}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <Users className="w-4 h-4" />
-              {proposal.voter_count} voter{proposal.voter_count !== 1 ? "s" : ""}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <Zap className="w-4 h-4" />
-              {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} vote weight quorum
-            </span>
           </div>
-        )}
+
+          <p className="text-base text-muted-foreground leading-relaxed mb-5 whitespace-pre-wrap">
+            {proposal.description}
+          </p>
+
+          {/* Metadata chips row */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+            <Badge variant="outline" className={`font-normal ${typeColors.badge}`}>
+              {PROPOSAL_TYPE_LABELS[proposal.proposal_type] || proposal.proposal_type}
+            </Badge>
+            {proposal.guild_name && (
+              <Badge variant="secondary" className="font-normal">
+                {proposal.guild_name}
+              </Badge>
+            )}
+            <span className="flex items-center gap-1.5">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-muted-foreground to-muted-foreground/60 flex items-center justify-center text-xs font-bold text-white">
+                {(proposal.proposer_name || "??").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+              </span>
+              {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
+            </span>
+            <span className="tabular-nums">{formatVETD(proposal.stake_amount)} VETD staked</span>
+            <span className="inline-flex items-center gap-1">
+              <Scale className="w-3.5 h-3.5" />
+              {thresholdConfig.label}
+            </span>
+            {createdDate && <span>{createdDate}</span>}
+          </div>
+
+          {/* Active: countdown + quick stats row */}
+          {!isFinalized && (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 pt-4 border-t border-border text-sm">
+              {deadlineStr && (
+                <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                  <Clock className="w-4 h-4 text-primary" />
+                  {deadlineStr}
+                </span>
+              )}
+              {!deadlineStr && deadlineDate && (
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  Ends {deadlineDate}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Users className="w-4 h-4" />
+                {proposal.voter_count} voter{proposal.voter_count !== 1 ? "s" : ""}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Zap className="w-4 h-4" />
+                {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} vote weight quorum
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ─── Finalized: Results Banner ─── */}
@@ -255,24 +270,40 @@ export function GovernanceProposalDetailPage() {
         /* ══════ FINALIZED: full-width sections ══════ */
         <div className="space-y-6">
           {/* Stats row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard label="For" value={`${forPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_for)} weight`} color="text-positive" />
-            <StatCard label="Against" value={`${againstPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_against)} weight`} color="text-negative" />
-            <StatCard label="Abstain" value={`${abstainPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_abstain)} weight`} color="text-muted-foreground" />
-            <StatCard
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <DetailStatCard
+              label="For"
+              value={`${forPercent.toFixed(0)}%`}
+              sub={`${formatVETD(proposal.votes_for)} weight`}
+              colorClass={VOTE_COLORS.for.text}
+            />
+            <DetailStatCard
+              label="Against"
+              value={`${againstPercent.toFixed(0)}%`}
+              sub={`${formatVETD(proposal.votes_against)} weight`}
+              colorClass={VOTE_COLORS.against.text}
+            />
+            <DetailStatCard
+              label="Abstain"
+              value={`${abstainPercent.toFixed(0)}%`}
+              sub={`${formatVETD(proposal.votes_abstain)} weight`}
+              colorClass={VOTE_COLORS.abstain.text}
+            />
+            <DetailStatCard
               label="Quorum"
               value={quorumPercent >= 100 ? "Reached" : `${Math.min(quorumPercent, 100).toFixed(0)}%`}
               sub={`${formatVETD(proposal.total_voting_power)} / ${formatVETD(proposal.quorum_required)} weight`}
-              color={quorumPercent >= 100 ? "text-positive" : "text-warning"}
+              colorClass={quorumPercent >= 100 ? STATUS_COLORS.positive.text : STATUS_COLORS.warning.text}
             />
           </div>
 
           {/* Vote bar */}
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
             <VotingPowerBar
               forPercent={forPercent}
               againstPercent={againstPercent}
               abstainPercent={abstainPercent}
+              large
             />
           </div>
 
@@ -280,26 +311,26 @@ export function GovernanceProposalDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Your Vote */}
             {proposal.has_voted && (
-              <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+                <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
                   Your Vote
                 </h3>
                 <div className="flex items-center gap-3">
                   {proposal.my_vote === "for" ? (
-                    <CheckCircle2 className="w-5 h-5 text-positive" />
+                    <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.text}`} />
                   ) : proposal.my_vote === "against" ? (
-                    <XCircle className="w-5 h-5 text-negative" />
+                    <XCircle className={`w-5 h-5 ${STATUS_COLORS.negative.text}`} />
                   ) : (
                     <span className="w-5 h-5 rounded-full bg-muted-foreground/20 inline-block" />
                   )}
-                  <span className="text-lg font-semibold capitalize">{proposal.my_vote}</span>
+                  <span className="text-xl font-bold capitalize">{proposal.my_vote}</span>
                 </div>
               </div>
             )}
 
             {/* Type-specific */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -308,7 +339,7 @@ export function GovernanceProposalDetailPage() {
               </div>
             )}
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -319,7 +350,7 @@ export function GovernanceProposalDetailPage() {
 
           {/* Vote History */}
           {proposal.votes && proposal.votes.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
               <VoteHistorySection votes={proposal.votes} />
             </div>
           )}
@@ -331,7 +362,7 @@ export function GovernanceProposalDetailPage() {
           <div className="lg:col-span-7 space-y-6">
             {/* Type-specific details */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -341,7 +372,7 @@ export function GovernanceProposalDetailPage() {
             )}
 
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -351,7 +382,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Vote History */}
             {proposal.votes && proposal.votes.length > 0 && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <VoteHistorySection votes={proposal.votes} />
               </div>
             )}
@@ -360,7 +391,7 @@ export function GovernanceProposalDetailPage() {
             {(!proposal.votes || proposal.votes.length === 0) &&
               proposal.proposal_type !== "parameter_change" &&
               proposal.proposal_type !== "guild_master_election" && (
-              <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
+              <div className="rounded-2xl border border-dashed border-border bg-card/30 p-8 text-center">
                 <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">
                   No votes yet. Be the first to vote on this proposal.
@@ -372,15 +403,18 @@ export function GovernanceProposalDetailPage() {
           {/* Sidebar */}
           <div className="order-first lg:order-none lg:col-span-5 lg:sticky lg:top-24 lg:self-start space-y-4">
             {/* Voting Status */}
-            <div className="rounded-xl border border-border border-t-2 border-t-primary bg-card p-5 space-y-4">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5 space-y-4 relative overflow-hidden">
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+
+              <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Voting Status
               </h3>
 
               {/* Deadline */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Deadline</span>
-                <span className="text-sm font-semibold">
+                <span className="text-sm font-medium">
                   {deadlineStr || deadlineDate || "Open"}
                 </span>
               </div>
@@ -388,7 +422,7 @@ export function GovernanceProposalDetailPage() {
               {/* Threshold */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Threshold</span>
-                <span className="text-sm font-semibold">{thresholdConfig.label}</span>
+                <span className="text-sm font-medium">{thresholdConfig.label}</span>
               </div>
 
               {/* Quorum */}
@@ -399,9 +433,9 @@ export function GovernanceProposalDetailPage() {
                     {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} weight
                   </span>
                 </div>
-                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted/30">
                   <div
-                    className={`h-full rounded-full transition-all ${quorumPercent >= 100 ? "bg-positive" : "bg-primary"}`}
+                    className={`h-full rounded-full transition-all duration-700 ${quorumPercent >= 100 ? "bg-positive" : "bg-gradient-to-r from-primary to-primary/70"}`}
                     style={{ width: `${Math.min(quorumPercent, 100)}%` }}
                   />
                 </div>
@@ -420,13 +454,13 @@ export function GovernanceProposalDetailPage() {
               {/* Voter count */}
               <div className="flex justify-between text-sm pt-3 border-t border-border">
                 <span className="text-muted-foreground">Voters</span>
-                <span className="font-semibold tabular-nums">{proposal.voter_count}</span>
+                <span className="font-medium tabular-nums">{proposal.voter_count}</span>
               </div>
             </div>
 
             {/* Vote Form */}
             {canVote && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
                 <GovernanceVoteForm
                   voteWeight={voteWeight}
                   reputation={reputation}
@@ -438,11 +472,11 @@ export function GovernanceProposalDetailPage() {
 
             {/* Already Voted */}
             {proposal.has_voted && (
-              <div className="rounded-xl border border-positive/30 bg-positive/5 p-5">
+              <div className={`rounded-2xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-5`}>
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-positive shrink-0" />
+                  <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.text} shrink-0`} />
                   <div>
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-medium">
                       You voted: <span className="capitalize">{proposal.my_vote}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">Your vote has been recorded.</p>
@@ -457,14 +491,15 @@ export function GovernanceProposalDetailPage() {
   );
 }
 
-/* ─── Stat Card ────────────────────────────────────────────────── */
+/* ─── Detail Stat Card ─── */
 
-function StatCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+function DetailStatCard({ label, value, sub, colorClass }: { label: string; value: string; sub: string; colorClass: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums ${color}`}>{value}</p>
-      <p className="text-xs text-muted-foreground tabular-nums mt-0.5">{sub}</p>
+    <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+      <p className="text-xs text-muted-foreground mb-1 relative">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums font-mono ${colorClass} relative`}>{value}</p>
+      <p className="text-xs text-muted-foreground tabular-nums mt-0.5 relative">{sub}</p>
     </div>
   );
 }
@@ -482,18 +517,18 @@ function ParameterChangeSection({
 }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+      <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
         Parameter Change
       </h3>
       <div className="flex items-center gap-3">
-        <div className="flex-1 rounded-lg bg-negative/5 border border-negative/20 p-3">
+        <div className={`flex-1 rounded-xl ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} p-3`}>
           <p className="text-xs text-muted-foreground mb-0.5">Current</p>
-          <p className="text-sm font-bold text-negative">{currentValue ?? "\u2014"}</p>
+          <p className={`text-sm font-bold ${STATUS_COLORS.negative.text}`}>{currentValue ?? "\u2014"}</p>
         </div>
         <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-        <div className="flex-1 rounded-lg bg-positive/5 border border-positive/20 p-3">
+        <div className={`flex-1 rounded-xl ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} p-3`}>
           <p className="text-xs text-muted-foreground mb-0.5">Proposed</p>
-          <p className="text-sm font-bold text-positive">{proposedValue ?? "\u2014"}</p>
+          <p className={`text-sm font-bold ${STATUS_COLORS.positive.text}`}>{proposedValue ?? "\u2014"}</p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground mt-2">Parameter: <span className="font-medium text-foreground">{parameterName}</span></p>
@@ -510,10 +545,10 @@ function NomineeSection({
 }) {
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+      <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
         Nominee
       </h3>
-      <p className="text-base font-semibold">
+      <p className="text-sm font-medium">
         {nomineeName || "Nominee"}
       </p>
       <p className="text-sm text-muted-foreground font-mono mt-0.5">
@@ -529,7 +564,7 @@ function VoteHistorySection({ votes }: { votes: GovernanceProposalDetail["votes"
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Vote History
         </h3>
         <span className="text-xs text-muted-foreground tabular-nums">
@@ -550,18 +585,19 @@ function VoteHistorySection({ votes }: { votes: GovernanceProposalDetail["votes"
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Badge
-                variant={
-                  v.vote === "for" ? "default"
-                    : v.vote === "against" ? "destructive"
-                    : "secondary"
-                }
-                className="capitalize"
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                  v.vote === "for"
+                    ? STATUS_COLORS.positive.badge
+                    : v.vote === "against"
+                      ? STATUS_COLORS.negative.badge
+                      : STATUS_COLORS.neutral.badge
+                }`}
               >
                 {v.vote}
-              </Badge>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {(v.vote_weight ?? v.voting_power).toFixed(2)}x weight
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums font-mono">
+                {(v.vote_weight ?? v.voting_power).toFixed(2)}x
               </span>
             </div>
           </div>

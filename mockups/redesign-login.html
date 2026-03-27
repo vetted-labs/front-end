@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --bg: #0a0a0f;
+    --primary: #f97316;
+    --accent: #fb923c;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #f5f5f5;
+    --text-muted: rgba(255,255,255,0.5);
+    --text-dim: rgba(255,255,255,0.3);
+    --linkedin: #0a66c2;
+    --coinbase: #0052ff;
+    --metamask: #e2761b;
+    --focus-ring: rgba(249,115,22,0.4);
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Layout ───────────────────────────────────── */
+
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .brand-side {
+    flex: 0 0 60%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem;
+    overflow: hidden;
+  }
+
+  .auth-side {
+    flex: 0 0 40%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Background Effects ───────────────────────── */
+
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridDrift 20s linear infinite;
+  }
+
+  @keyframes gridDrift {
+    0%   { background-position: 0 0; }
+    100% { background-position: 60px 60px; }
+  }
+
+  .dot-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    animation: dotPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes dotPulse {
+    0%   { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+
+  .glow-orb--orange {
+    width: 500px;
+    height: 500px;
+    background: rgba(249,115,22,0.12);
+    top: 15%;
+    left: 10%;
+    animation: orbDrift1 16s ease-in-out infinite alternate;
+  }
+
+  .glow-orb--blue {
+    width: 400px;
+    height: 400px;
+    background: rgba(59,130,246,0.08);
+    bottom: 10%;
+    right: 5%;
+    animation: orbDrift2 20s ease-in-out infinite alternate;
+  }
+
+  .glow-orb--purple {
+    width: 300px;
+    height: 300px;
+    background: rgba(139,92,246,0.06);
+    top: 60%;
+    left: 50%;
+    animation: orbDrift3 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes orbDrift1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(40px, -30px) scale(1.1); }
+    100% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  @keyframes orbDrift2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-30px, 20px) scale(1.05); }
+    100% { transform: translate(20px, -40px) scale(0.9); }
+  }
+
+  @keyframes orbDrift3 {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(30px, -30px); }
+  }
+
+  /* ── Brand Content ────────────────────────────── */
+
+  .brand-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 560px;
+  }
+
+  .wordmark {
+    font-size: 5rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 40%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+  }
+
+  .tagline {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ── Stat Pills ───────────────────────────────── */
+
+  .stat-pills {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    animation: pillFloat 6s ease-in-out infinite;
+  }
+
+  .stat-pill:nth-child(1) { animation-delay: 0s; }
+  .stat-pill:nth-child(2) { animation-delay: 2s; }
+  .stat-pill:nth-child(3) { animation-delay: 4s; }
+
+  @keyframes pillFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  .stat-pill__number {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .stat-pill__icon {
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+  }
+
+  /* ── Floating Shapes (very subtle) ────────────── */
+
+  .shape {
+    position: absolute;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
+  .shape--1 {
+    width: 120px;
+    height: 120px;
+    top: 12%;
+    right: 15%;
+    transform: rotate(15deg);
+    animation: shapeSpin 30s linear infinite;
+  }
+
+  .shape--2 {
+    width: 80px;
+    height: 80px;
+    bottom: 18%;
+    left: 12%;
+    border-radius: 50%;
+    animation: shapeSpin 24s linear infinite reverse;
+  }
+
+  .shape--3 {
+    width: 60px;
+    height: 60px;
+    top: 55%;
+    right: 8%;
+    transform: rotate(45deg);
+    animation: shapeSpin 36s linear infinite;
+  }
+
+  @keyframes shapeSpin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* ── Auth Card ────────────────────────────────── */
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .auth-card__accent {
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+    background-size: 200% 100%;
+    animation: accentShimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes accentShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  .auth-card__body {
+    padding: 2rem;
+  }
+
+  .auth-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .auth-card__subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.75rem;
+  }
+
+  /* ── Tab Selector ─────────────────────────────── */
+
+  .tabs {
+    display: flex;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 1.75rem;
+    position: relative;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    z-index: 1;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    color: rgba(255,255,255,0.7);
+  }
+
+  .tab--active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow: 0 2px 12px rgba(249,115,22,0.3);
+  }
+
+  /* ── Form Panels ──────────────────────────────── */
+
+  .panel {
+    display: none;
+    animation: panelFadeIn 0.3s ease;
+  }
+
+  .panel--active {
+    display: block;
+  }
+
+  @keyframes panelFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Inputs ───────────────────────────────────── */
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .field__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 0.375rem;
+  }
+
+  .field__wrapper {
+    position: relative;
+  }
+
+  .field__input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .field__input::placeholder {
+    color: var(--text-dim);
+  }
+
+  .field__input:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .field__input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .field__toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .field__toggle:hover {
+    color: var(--text-muted);
+  }
+
+  /* ── Checkbox ─────────────────────────────────── */
+
+  .remember-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .checkbox-label input[type="checkbox"]:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .checkbox-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4.5px;
+    top: 1.5px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .forgot-link {
+    font-size: 0.8125rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .forgot-link:hover {
+    color: var(--accent);
+  }
+
+  /* ── Buttons ──────────────────────────────────── */
+
+  .btn-primary {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+    opacity: 0;
+    transition: opacity 0.25s;
+    border-radius: inherit;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 4px 24px rgba(249,115,22,0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
+
+  .btn-primary span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* ── Divider ──────────────────────────────────── */
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .divider__line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .divider__text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  /* ── Social Buttons ───────────────────────────── */
+
+  .btn-social {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+
+  .btn-social:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+
+  .btn-social--linkedin {
+    border-color: rgba(10,102,194,0.3);
+  }
+
+  .btn-social--linkedin:hover {
+    border-color: rgba(10,102,194,0.5);
+    background: rgba(10,102,194,0.08);
+    box-shadow: 0 2px 16px rgba(10,102,194,0.15);
+  }
+
+  .btn-social__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ── Wallet Buttons ───────────────────────────── */
+
+  .wallet-section {
+    text-align: center;
+  }
+
+  .wallet-section__heading {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.375rem;
+  }
+
+  .wallet-section__desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  .wallet-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn-wallet {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .btn-wallet--metamask:hover {
+    border-color: rgba(226,118,27,0.5);
+    background: rgba(226,118,27,0.06);
+    box-shadow: 0 2px 20px rgba(226,118,27,0.15);
+    transform: translateY(-1px);
+  }
+
+  .btn-wallet--coinbase:hover {
+    border-color: rgba(0,82,255,0.5);
+    background: rgba(0,82,255,0.06);
+    box-shadow: 0 2px 20px rgba(0,82,255,0.15);
+    transform: translateY(-1px);
+  }
+
+  .btn-wallet__icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .wallet-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: rgba(249,115,22,0.04);
+    border: 1px solid rgba(249,115,22,0.1);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  .wallet-note__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--primary);
+    opacity: 0.7;
+  }
+
+  /* ── Footer Link ──────────────────────────────── */
+
+  .auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .auth-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .auth-footer a:hover {
+    color: var(--accent);
+  }
+
+  /* ── Separator between auth side and brand side ─ */
+
+  .auth-side::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    bottom: 10%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent);
+  }
+
+  /* ── Responsive ───────────────────────────────── */
+
+  @media (max-width: 1024px) {
+    .brand-side {
+      display: none;
+    }
+
+    .auth-side {
+      flex: 1;
+      background: var(--bg);
+    }
+
+    .auth-side::before {
+      display: none;
+    }
+
+    .auth-card {
+      max-width: 440px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .auth-side {
+      padding: 1rem;
+      align-items: flex-start;
+      padding-top: 3rem;
+    }
+
+    .auth-card__body {
+      padding: 1.5rem;
+    }
+
+    .tabs {
+      gap: 2px;
+    }
+
+    .tab {
+      font-size: 0.75rem;
+      padding: 0.5rem 0.25rem;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══ LEFT: Brand Showcase ═══ -->
+  <div class="brand-side">
+    <div class="grid-pattern"></div>
+    <div class="dot-overlay"></div>
+
+    <div class="glow-orb glow-orb--orange"></div>
+    <div class="glow-orb glow-orb--blue"></div>
+    <div class="glow-orb glow-orb--purple"></div>
+
+    <div class="shape shape--1"></div>
+    <div class="shape shape--2"></div>
+    <div class="shape shape--3"></div>
+
+    <div class="brand-content">
+      <h1 class="wordmark">VETTED</h1>
+      <p class="tagline">Decentralized Hiring, Verified Talent</p>
+
+      <div class="stat-pills">
+        <div class="stat-pill">
+          <svg class="stat-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span><span class="stat-pill__number">2,400+</span> Experts</span>
+        </div>
+        <div class="stat-pill">
+          <svg class="stat-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span><span class="stat-pill__number">180+</span> Companies</span>
+        </div>
+        <div class="stat-pill">
+          <svg class="stat-pill__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span><span class="stat-pill__number">15</span> Guilds</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: Auth Card ═══ -->
+  <div class="auth-side">
+    <div class="auth-card">
+      <div class="auth-card__accent"></div>
+      <div class="auth-card__body">
+
+        <h2 class="auth-card__title">Welcome back</h2>
+        <p class="auth-card__subtitle">Sign in to your account to continue</p>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab tab--active" data-tab="seeker" onclick="switchTab('seeker')">Job Seeker</button>
+          <button class="tab" data-tab="company" onclick="switchTab('company')">Company</button>
+          <button class="tab" data-tab="expert" onclick="switchTab('expert')">Expert</button>
+        </div>
+
+        <!-- ── Job Seeker Panel ── -->
+        <div class="panel panel--active" id="panel-seeker">
+          <div class="field">
+            <label class="field__label" for="seeker-email">Email</label>
+            <div class="field__wrapper">
+              <input class="field__input" id="seeker-email" type="email" placeholder="you@example.com" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="seeker-password">Password</label>
+            <div class="field__wrapper">
+              <input class="field__input" id="seeker-password" type="password" placeholder="Enter your password" autocomplete="current-password">
+              <button class="field__toggle" type="button" onclick="togglePassword('seeker-password', this)" aria-label="Toggle password visibility">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="remember-row">
+            <label class="checkbox-label">
+              <input type="checkbox"> Remember me
+            </label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+
+          <button class="btn-primary"><span>Sign In</span></button>
+
+          <div class="divider">
+            <div class="divider__line"></div>
+            <span class="divider__text">or continue with</span>
+            <div class="divider__line"></div>
+          </div>
+
+          <button class="btn-social btn-social--linkedin">
+            <svg class="btn-social__icon" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            Continue with LinkedIn
+          </button>
+
+          <div class="auth-footer">
+            Don't have an account? <a href="#">Sign up</a>
+          </div>
+        </div>
+
+        <!-- ── Company Panel ── -->
+        <div class="panel" id="panel-company">
+          <div class="field">
+            <label class="field__label" for="company-email">Company Email</label>
+            <div class="field__wrapper">
+              <input class="field__input" id="company-email" type="email" placeholder="hiring@company.com" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="company-password">Password</label>
+            <div class="field__wrapper">
+              <input class="field__input" id="company-password" type="password" placeholder="Enter your password" autocomplete="current-password">
+              <button class="field__toggle" type="button" onclick="togglePassword('company-password', this)" aria-label="Toggle password visibility">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="remember-row">
+            <label class="checkbox-label">
+              <input type="checkbox"> Remember me
+            </label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+
+          <button class="btn-primary"><span>Sign In</span></button>
+
+          <div class="divider">
+            <div class="divider__line"></div>
+            <span class="divider__text">or continue with</span>
+            <div class="divider__line"></div>
+          </div>
+
+          <button class="btn-social btn-social--linkedin">
+            <svg class="btn-social__icon" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            Continue with LinkedIn
+          </button>
+
+          <div class="auth-footer">
+            Don't have an account? <a href="#">Register your company</a>
+          </div>
+        </div>
+
+        <!-- ── Expert Panel ── -->
+        <div class="panel" id="panel-expert">
+          <div class="wallet-section">
+            <h3 class="wallet-section__heading">Connect Your Wallet</h3>
+            <p class="wallet-section__desc">Experts authenticate with their Web3 wallet. No email or password required.</p>
+
+            <div class="wallet-buttons">
+              <button class="btn-wallet btn-wallet--metamask">
+                <!-- MetaMask Fox SVG -->
+                <svg class="btn-wallet__icon" viewBox="0 0 40 40" fill="none">
+                  <path d="M35.95 4.08L22.07 14.47l2.56-6.07L35.95 4.08z" fill="#E2761B" stroke="#E2761B" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.02 4.08l13.74 10.49-2.43-6.17L4.02 4.08zM30.8 27.53l-3.69 5.65 7.89 2.17 2.27-7.7-6.47-.12zM2.76 27.65l2.25 7.7 7.89-2.17-3.69-5.65-6.45.12z" fill="#E4761B" stroke="#E4761B" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12.57 17.73l-2.2 3.32 7.83.35-.28-8.42-5.35 4.75zM27.4 17.73l-5.42-4.85-.19 8.52 7.82-.35-2.21-3.32zM12.9 33.18l4.7-2.3-4.06-3.17-.64 5.47zM22.37 30.88l4.73 2.3-.67-5.47-4.06 3.17z" fill="#E4761B" stroke="#E4761B" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M27.1 33.18l-4.73-2.3.38 3.1-.04 1.3 4.39-2.1zM12.9 33.18l4.39 2.1-.03-1.3.37-3.1-4.73 2.3z" fill="#D7C1B3" stroke="#D7C1B3" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M17.37 26.25l-3.92-1.15 2.77-1.27 1.15 2.42zM22.6 26.25l1.15-2.42 2.78 1.27-3.93 1.15z" fill="#233447" stroke="#233447" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12.9 33.18l.67-5.65-4.36.12 3.69 5.53zM26.43 27.53l.67 5.65 3.7-5.53-4.37-.12zM29.61 21.05l-7.82.35.73 4.85 1.15-2.42 2.78 1.27 3.16-4.05zM13.45 25.1l2.77-1.27 1.15 2.42.73-4.85-7.83-.35 3.18 4.05z" fill="#CD6116" stroke="#CD6116" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10.37 21.05l3.27 6.38-.1-3.17-3.17-3.21zM26.45 24.26l-.1 3.17 3.26-6.38-3.16 3.21zM18.2 21.4l-.73 4.85.91 4.7.2-6.2-.38-3.35zM21.79 21.4l-.37 3.34.19 6.21.92-4.7-.74-4.85z" fill="#E4751F" stroke="#E4751F" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M22.52 26.25l-.92 4.7.66.46 4.06-3.17.1-3.17-3.9 1.18zM13.45 25.07l.1 3.17 4.06 3.17.65-.46-.91-4.7-3.9-1.18z" fill="#F6851B" stroke="#F6851B" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M22.56 35.28l.04-1.3-.35-.31H17.72l-.34.3.03 1.31-4.39-2.1 1.53 1.26 3.11 2.15h4.57l3.12-2.15 1.53-1.26-4.37 2.1z" fill="#C0AD9E" stroke="#C0AD9E" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M22.37 30.88l-.66-.46h-3.45l-.65.46-.37 3.1.34-.3h4.53l.35.3-.09-3.1z" fill="#161616" stroke="#161616" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M36.56 15.12l1.18-5.67L35.95 4.08l-13.58 10.07 5.23 4.42 7.38 2.16 1.63-1.9-.71-.51 1.13-1.03-.86-.67 1.12-.86-.74-.56zM2.26 9.45l1.18 5.67-.75.56 1.13.86-.86.67 1.13 1.03-.71.51 1.62 1.9 7.39-2.16 5.22-4.42L4.02 4.08 2.26 9.45z" fill="#763D16" stroke="#763D16" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M34.98 20.73l-7.38-2.16 2.22 3.32-3.27 6.38 4.32-.06h6.47l-2.36-7.48zM12.37 18.57L5 20.73l-2.34 7.48h6.45l4.32.06-3.27-6.38 2.21-3.32zM21.79 21.4l.47-8.12 2.13-5.77H15.58l2.13 5.77.47 8.12.18 3.36.01 6.19h3.45l.02-6.19.17-3.36z" fill="#F6851B" stroke="#F6851B" stroke-width=".25" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                MetaMask
+              </button>
+
+              <button class="btn-wallet btn-wallet--coinbase">
+                <!-- Coinbase SVG -->
+                <svg class="btn-wallet__icon" viewBox="0 0 40 40" fill="none">
+                  <rect width="40" height="40" rx="8" fill="#0052FF"/>
+                  <path d="M20 6C12.268 6 6 12.268 6 20s6.268 14 14 14 14-6.268 14-14S27.732 6 20 6zm-3.5 11.5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5z" fill="white"/>
+                </svg>
+                Coinbase Wallet
+              </button>
+            </div>
+
+            <div class="wallet-note">
+              <svg class="wallet-note__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span>Expert accounts are wallet-based only. Your on-chain reputation and guild membership are tied directly to your wallet address. Make sure you connect the correct wallet.</span>
+            </div>
+          </div>
+
+          <div class="auth-footer">
+            Want to hire talent instead? <a href="#">Sign up as a Company</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.classList.toggle('tab--active', btn.dataset.tab === tab);
+    });
+
+    // Update panels
+    document.querySelectorAll('.panel').forEach(panel => {
+      panel.classList.remove('panel--active');
+    });
+
+    const target = document.getElementById('panel-' + tab);
+    if (target) {
+      // Force re-trigger animation
+      void target.offsetWidth;
+      target.classList.add('panel--active');
+    }
+
+    // Update subtitle
+    const subtitle = document.querySelector('.auth-card__subtitle');
+    if (tab === 'expert') {
+      subtitle.textContent = 'Connect your wallet to access your guild';
+    } else if (tab === 'company') {
+      subtitle.textContent = 'Sign in to manage your job listings';
+    } else {
+      subtitle.textContent = 'Sign in to your account to continue';
+    }
+  }
+
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+
+    // Swap icon
+    if (isPassword) {
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    } else {
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+  }
+</script>
+</body>
+</html>

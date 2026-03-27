@@ -13,6 +13,8 @@ type LifecycleInfo = {
   message: string;
   className: string;
   dotColor: string;
+  /** Color key for the spinning ring: positive, warning, neutral */
+  ringColor: "positive" | "warning" | "neutral" | "info" | "negative";
 };
 
 function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleInfo | null {
@@ -26,6 +28,7 @@ function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleI
         message: "Reward pending",
         className: STATUS_COLORS.positive.text,
         dotColor: STATUS_COLORS.positive.dot,
+        ringColor: "positive",
       };
     case "offered":
       return {
@@ -33,6 +36,7 @@ function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleI
         message: `${candidateName} received an offer`,
         className: STATUS_COLORS.info.text,
         dotColor: STATUS_COLORS.info.dot,
+        ringColor: "info",
       };
     case "rejected":
     case "withdrawn":
@@ -41,6 +45,7 @@ function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleI
         message: status === "rejected" ? "Not selected" : "Withdrawn",
         className: STATUS_COLORS.negative.text,
         dotColor: STATUS_COLORS.negative.dot,
+        ringColor: "negative",
       };
     case "interviewing":
       return {
@@ -48,6 +53,7 @@ function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleI
         message: "Interviewing",
         className: STATUS_COLORS.info.text,
         dotColor: STATUS_COLORS.info.dot,
+        ringColor: "positive",
       };
     case "accepted":
       return {
@@ -55,6 +61,7 @@ function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleI
         message: "Accepted — awaiting confirmation",
         className: STATUS_COLORS.positive.text,
         dotColor: STATUS_COLORS.positive.dot,
+        ringColor: "positive",
       };
     default:
       return null;
@@ -68,6 +75,134 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .substring(0, 2);
+}
+
+const RING_COLOR_MAP: Record<string, string> = {
+  positive: "hsl(var(--positive))",
+  warning: "hsl(var(--warning))",
+  info: "hsl(var(--info-blue))",
+  negative: "hsl(var(--negative))",
+  neutral: "hsl(var(--primary))",
+};
+
+const STATUS_LABEL_MAP: Record<string, { label: string; statusClass: string }> = {
+  interviewing: { label: "Interviewing", statusClass: `${STATUS_COLORS.positive.badge}` },
+  hired: { label: "Reward Pending", statusClass: `${STATUS_COLORS.positive.badge}` },
+  offered: { label: "Offered", statusClass: `${STATUS_COLORS.info.badge}` },
+  accepted: { label: "Accepted", statusClass: `${STATUS_COLORS.positive.badge}` },
+  rejected: { label: "Not Selected", statusClass: `${STATUS_COLORS.negative.badge}` },
+  withdrawn: { label: "Withdrawn", statusClass: `${STATUS_COLORS.neutral.badge}` },
+  under_review: { label: "Under Review", statusClass: `${STATUS_COLORS.warning.badge}` },
+  pending: { label: "Pending", statusClass: `${STATUS_COLORS.neutral.badge}` },
+};
+
+function EndorsementSpinCard({
+  endorsement,
+  lifecycle,
+  initials,
+  bidAmount,
+  rank,
+  animationDelay,
+  onClick,
+}: {
+  endorsement: ActiveEndorsement;
+  lifecycle: LifecycleInfo | null;
+  initials: string;
+  bidAmount: number;
+  rank: number | undefined;
+  animationDelay: string;
+  onClick: () => void;
+}) {
+  const ringColor = lifecycle ? RING_COLOR_MAP[lifecycle.ringColor] : "hsl(var(--primary))";
+  const status = endorsement.application?.status ?? "pending";
+  const statusInfo = STATUS_LABEL_MAP[status] ?? STATUS_LABEL_MAP.pending;
+
+  return (
+    <div
+      className="flex-none w-[340px] scroll-snap-start cursor-pointer"
+      onClick={onClick}
+    >
+      {/* Outer spinning gradient border */}
+      <div
+        className="rounded-[22px] p-[2px] endo-spinning-border"
+        style={{
+          background: `conic-gradient(from var(--endo-spin-angle, 0deg), ${ringColor}, transparent 40%, transparent 60%, ${ringColor})`,
+          animationDelay,
+        }}
+      >
+        <div className="bg-background rounded-[20px] p-5 flex flex-col gap-3.5 h-full relative z-[1]">
+          {/* Top: Avatar with spinning ring + info */}
+          <div className="flex items-center gap-3.5">
+            {/* Avatar with ring */}
+            <div className="relative w-14 h-14 shrink-0">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `conic-gradient(from var(--endo-spin-angle, 0deg), ${ringColor}, transparent 50%, ${ringColor})`,
+                  animation: "endo-card-spin 3s linear infinite",
+                  animationDelay,
+                }}
+              />
+              <Avatar className="absolute inset-[3px] rounded-full border-0">
+                {endorsement.candidate?.profilePicture && (
+                  <AvatarImage
+                    src={endorsement.candidate.profilePicture}
+                    alt={endorsement.candidate?.name ?? ''}
+                    className="rounded-full"
+                  />
+                )}
+                <AvatarFallback className="rounded-full bg-white/[0.06] text-foreground text-sm font-bold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground truncate">
+                {endorsement.candidate?.name}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {endorsement.job?.title}
+              </p>
+              <p className="text-xs text-muted-foreground/50">
+                applying at {endorsement.job?.companyName}
+              </p>
+            </div>
+          </div>
+
+          {/* Status badge */}
+          <div className="flex items-center justify-between">
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.06em] px-2.5 py-1 rounded-full ${statusInfo.statusClass}`}>
+              <span className="w-[5px] h-[5px] rounded-full bg-current" />
+              {statusInfo.label}
+            </span>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-white/[0.06]" />
+
+          {/* Bid + Rank */}
+          <div className="flex items-center justify-between">
+            <span className="font-mono font-bold text-base text-primary">
+              {bidAmount.toFixed(0)} VETD
+            </span>
+            <span className="font-mono text-xs text-muted-foreground flex items-center gap-1.5">
+              {rank !== undefined && rank > 0 ? (
+                <>
+                  Rank
+                  <span className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-[7px] bg-primary/10 text-primary text-xs font-bold">
+                    #{rank}
+                  </span>
+                </>
+              ) : (
+                <span className="italic text-muted-foreground/50">Blind period</span>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 interface MyActiveEndorsementsProps {
@@ -121,145 +256,90 @@ export function MyActiveEndorsements({
     onSelectEndorsement(applicationForModal);
   };
 
+  // Compute total staked across guild endorsements
+  const totalStaked = userEndorsements.reduce((sum, e) => sum + parseFloat(e.stakeAmount || '0'), 0);
+
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md overflow-hidden">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Award className="w-4 h-4" />
-            My Active Endorsements
-          </h3>
-          <p className="text-xs text-muted-foreground/60 mt-1">
-            {userEndorsements.length > 0
-              ? `${userEndorsements.length} active endorsement${userEndorsements.length !== 1 ? 's' : ''} in ${guildName}`
-              : allUserEndorsements.length > 0
-              ? `${allUserEndorsements.length} endorsement${allUserEndorsements.length !== 1 ? 's' : ''} in other guilds`
-              : `No active endorsements yet. Endorse candidates below to get started.`
-            }
-          </p>
+    <div>
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-2.5">
+          Your Active Endorsements
+          {userEndorsements.length > 0 && (
+            <span className="font-mono text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              {userEndorsements.length}
+            </span>
+          )}
+        </h2>
+        <div className="flex items-center gap-4">
+          {totalStaked > 0 && (
+            <span className="font-mono text-xs text-muted-foreground">
+              Total: <span className="text-foreground font-medium">{totalStaked.toFixed(0)} VETD</span> staked
+            </span>
+          )}
+          {allUserEndorsements.length > 0 && (
+            <Link href="/expert/endorsements/history">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-white/[0.10] text-muted-foreground hover:bg-white/[0.04] hover:border-white/[0.18]"
+              >
+                View All ({allUserEndorsements.length})
+              </Button>
+            </Link>
+          )}
         </div>
-        {allUserEndorsements.length > 0 && (
-          <Link href="/expert/endorsements/history">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 border-white/[0.10] text-muted-foreground hover:bg-white/[0.04] hover:border-white/[0.18]"
-            >
-              View All ({allUserEndorsements.length})
-            </Button>
-          </Link>
-        )}
       </div>
 
-      {/* Content */}
-      <div className="p-5">
-        {userEndorsements.length === 0 ? (
-          <div className="text-center py-8">
-            <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground mb-2">
-              You haven&apos;t endorsed any candidates in {guildName} yet
-            </p>
-            {allUserEndorsements.length > 0 ? (
-              <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                <p className="text-xs text-muted-foreground mb-2">
-                  You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {Array.from(new Set(allUserEndorsements.map((e) => e.guild?.name).filter(Boolean))).map((name) => (
-                    <span key={name} className="text-xs px-2.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary/80">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground/60">
-                Browse applications below and endorse candidates you believe will succeed
+      {/* Horizontally scrollable cards */}
+      {userEndorsements.length === 0 ? (
+        <div className="rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md p-8 text-center">
+          <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground mb-2">
+            You haven&apos;t endorsed any candidates in {guildName} yet
+          </p>
+          {allUserEndorsements.length > 0 ? (
+            <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-2">
+                You have {allUserEndorsements.length} endorsement{allUserEndorsements.length !== 1 ? 's' : ''} in other guilds:
               </p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {userEndorsements.map((endorsement) => {
-              const lifecycle = getEndorsementLifecycleInfo(endorsement);
-              const initials = endorsement.candidate?.name ? getInitials(endorsement.candidate.name) : '??';
-              const bidAmount = parseFloat(endorsement.stakeAmount || '0');
-              const rank = endorsement.blockchainData?.rank;
+              <div className="flex flex-wrap gap-2 justify-center">
+                {Array.from(new Set(allUserEndorsements.map((e) => e.guild?.name).filter(Boolean))).map((name) => (
+                  <span key={name} className="text-xs px-2.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary/80">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/60">
+              Browse applications below and endorse candidates you believe will succeed
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/[0.06]">
+          {userEndorsements.map((endorsement, idx) => {
+            const lifecycle = getEndorsementLifecycleInfo(endorsement);
+            const initials = endorsement.candidate?.name ? getInitials(endorsement.candidate.name) : '??';
+            const bidAmount = parseFloat(endorsement.stakeAmount || '0');
+            const rank = endorsement.blockchainData?.rank;
 
-              return (
-                <div
-                  key={endorsement.application?.id || endorsement.endorsementId}
-                  onClick={() => handleEndorsementClick(endorsement)}
-                  className="group relative flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 cursor-pointer transition-all duration-200 hover:bg-white/[0.04] hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/10"
-                >
-                  {/* Avatar */}
-                  <Avatar className="w-10 h-10 rounded-lg border border-white/[0.08] shrink-0">
-                    {endorsement.candidate?.profilePicture && (
-                      <AvatarImage
-                        src={endorsement.candidate.profilePicture}
-                        alt={endorsement.candidate?.name ?? ''}
-                        className="rounded-lg"
-                      />
-                    )}
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-sm font-semibold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                        {endorsement.candidate?.name}
-                      </h4>
-                      {lifecycle && (
-                        <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-medium ${lifecycle.className}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${lifecycle.dotColor}`} />
-                          {lifecycle.message}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground/60 truncate">
-                      {endorsement.job?.title} at {endorsement.job?.companyName}
-                    </p>
-                  </div>
-
-                  {/* Bid + Date */}
-                  <div className="flex items-center gap-4 shrink-0">
-                    {/* Bid Amount */}
-                    <div className="text-right">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        <Coins className="w-3.5 h-3.5 text-primary/70" />
-                        <span className="text-sm font-semibold text-primary">
-                          {bidAmount.toFixed(2)}
-                        </span>
-                        <span className="text-[10px] font-medium text-primary/50 uppercase">VETD</span>
-                      </div>
-                      <div className="flex items-center gap-2 justify-end mt-0.5">
-                        {rank !== undefined && rank > 0 && (
-                          <span className="text-[10px] text-muted-foreground/40">
-                            Rank #{rank}
-                          </span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground/40">
-                          {endorsement.createdAt
-                            ? new Date(endorsement.createdAt).toLocaleDateString()
-                            : 'N/A'
-                          }
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Arrow */}
-                    <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+            return (
+              <EndorsementSpinCard
+                key={endorsement.application?.id || endorsement.endorsementId}
+                endorsement={endorsement}
+                lifecycle={lifecycle}
+                initials={initials}
+                bidAmount={bidAmount}
+                rank={rank}
+                animationDelay={`${-idx}s`}
+                onClick={() => handleEndorsementClick(endorsement)}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

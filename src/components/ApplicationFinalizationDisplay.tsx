@@ -160,7 +160,7 @@ export function ApplicationFinalizationDisplay({
             )}
           </div>
           <div className="text-right shrink-0">
-            <p className="text-4xl font-bold tabular-nums">{consensusScore.toFixed(1)}</p>
+            <p className="text-3xl font-bold tabular-nums">{consensusScore.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">/ 100</p>
           </div>
         </div>
@@ -190,18 +190,18 @@ export function ApplicationFinalizationDisplay({
       {/* My Performance */}
       {myVote && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+          <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
             Your Performance
           </h3>
           <dl className="space-y-3">
             <div className="flex justify-between items-baseline">
               <dt className="text-sm text-muted-foreground">Score</dt>
-              <dd className="text-base font-semibold tabular-nums">{myVote.score}/100</dd>
+              <dd className="text-base font-medium tabular-nums">{myVote.score}/100</dd>
             </div>
             {myVote.alignment_distance !== undefined && (
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Alignment</dt>
-                <dd className="text-base font-semibold tabular-nums">
+                <dd className="text-base font-medium tabular-nums">
                   {myVote.alignment_distance.toFixed(1)}
                   {myVote.alignment_distance < 10 ? " \u2713" : myVote.alignment_distance > 20 ? " \u2717" : ""}
                 </dd>
@@ -210,7 +210,7 @@ export function ApplicationFinalizationDisplay({
             {myVote.reputation_change !== undefined && (
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Rep Change</dt>
-                <dd className={`text-base font-semibold tabular-nums ${
+                <dd className={`text-base font-medium tabular-nums ${
                   myVote.reputation_change > 0 ? STATUS_COLORS.positive.text : myVote.reputation_change < 0 ? STATUS_COLORS.negative.text : ""
                 }`}>
                   {myVote.reputation_change > 0 ? "+" : ""}{myVote.reputation_change}
@@ -220,13 +220,13 @@ export function ApplicationFinalizationDisplay({
             {myVote.reward_amount !== undefined && myVote.reward_amount > 0 && (
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Reward</dt>
-                <dd className="text-base font-semibold tabular-nums">{myVote.reward_amount.toFixed(2)} VETD</dd>
+                <dd className="text-base font-medium tabular-nums">{myVote.reward_amount.toFixed(2)} VETD</dd>
               </div>
             )}
             {myVote.slashing_tier && (
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Tier</dt>
-                <dd className={`text-base font-semibold ${
+                <dd className={`text-sm font-medium ${
                   myVote.slashing_tier === "aligned" ? STATUS_COLORS.positive.text
                     : myVote.slashing_tier === "neutral" ? "text-muted-foreground"
                     : myVote.slashing_tier === "mild" ? STATUS_COLORS.warning.text

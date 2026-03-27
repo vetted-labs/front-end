@@ -133,7 +133,7 @@ export function EndorsementModal({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold">{application.candidate_name}</h3>
+                      <h3 className="text-xl font-bold">{application.candidate_name}</h3>
                       <p className="text-muted-foreground">{application.candidate_headline}</p>
                       <Badge variant="secondary" className="mt-2">{application.experience_level}</Badge>
                     </div>
@@ -277,7 +277,7 @@ export function EndorsementModal({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold">{application.job_title}</h3>
+                    <h3 className="text-xl font-bold">{application.job_title}</h3>
                     <p className="text-sm text-muted-foreground">{application.company_name}</p>
                   </div>
 
@@ -321,11 +321,11 @@ export function EndorsementModal({
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <Label className="text-xs text-muted-foreground">Your Balance</Label>
-              <p className="font-semibold">{parseFloat(userBalance).toFixed(2)} VETD</p>
+              <p className="font-medium">{parseFloat(userBalance).toFixed(2)} VETD</p>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Your Stake</Label>
-              <p className="font-semibold">{parseFloat(userStake).toFixed(2)} VETD</p>
+              <p className="font-medium">{parseFloat(userStake).toFixed(2)} VETD</p>
             </div>
           </div>
 

@@ -49,7 +49,7 @@ export function GeneralReviewStep({
         <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
           <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
         </div>
-        <h3 className="text-base font-bold text-foreground">General Review</h3>
+        <h3 className="text-sm font-bold text-foreground">General Review</h3>
       </div>
 
       {loadingTemplates && !generalTemplate ? (
@@ -113,7 +113,7 @@ export function GeneralReviewStep({
                           <div className="space-y-3">
                             {question.parts.map((part: QuestionPart) => (
                               <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-3.5">
-                                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
                                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                                   {getGeneralResponseValue(question.id, part.id) || <span className="text-muted-foreground italic">No response</span>}
                                 </p>
@@ -134,7 +134,7 @@ export function GeneralReviewStep({
 
                   {/* Scoring area */}
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className={`text-[11px] ${STATUS_COLORS.warning.text} opacity-70 uppercase tracking-wider font-bold`}>Scoring</p>
+                    <p className={`text-xs ${STATUS_COLORS.warning.text} opacity-70 uppercase tracking-wider font-bold`}>Scoring</p>
                     {criteria.map((criterion) => (
                       <div key={criterion.id} className="space-y-2">
                         <p className="text-xs text-muted-foreground">

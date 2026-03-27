@@ -45,19 +45,19 @@ export function ConversationListItem({
             isSelected && "ring-2 ring-primary/30"
           )}
         >
-          <span className="text-primary font-semibold text-sm">{initial}</span>
+          <span className="text-primary font-medium text-sm">{initial}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <span
               className={cn(
                 "text-sm truncate",
-                hasUnread ? "font-semibold text-foreground" : "font-medium text-foreground"
+                hasUnread ? "font-medium text-foreground" : "font-medium text-foreground"
               )}
             >
               {displayName}
             </span>
-            <span className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums">
+            <span className="text-xs text-muted-foreground flex-shrink-0 tabular-nums">
               {conversation.lastMessage && formatTimeAgo(conversation.lastMessage.createdAt)}
             </span>
           </div>
@@ -77,7 +77,7 @@ export function ConversationListItem({
             )}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${status.className}`}
+                className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${status.className}`}
               >
                 {status.label}
               </span>

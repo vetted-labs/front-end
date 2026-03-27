@@ -395,7 +395,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
                     <>
                       Pending Reviews
                       {pendingCount > 0 && (
-                        <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 font-mono text-[10px] font-semibold rounded-full">
+                        <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 font-mono text-xs font-medium rounded-full">
                           {pendingCount}
                         </span>
                       )}

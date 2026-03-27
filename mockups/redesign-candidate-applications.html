@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Applications - Vetted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --text-dim: #52525b;
+    --primary: #f97316;
+    --primary-glow: rgba(249,115,22,0.15);
+    --primary-glow-strong: rgba(249,115,22,0.3);
+    --blue: #3b82f6;
+    --blue-glow: rgba(59,130,246,0.15);
+    --green: #22c55e;
+    --green-glow: rgba(34,197,94,0.15);
+    --gold: #eab308;
+    --gold-glow: rgba(234,179,8,0.2);
+    --red: #ef4444;
+    --red-glow: rgba(239,68,68,0.15);
+    --purple: #a855f7;
+    --purple-glow: rgba(168,85,247,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+  }
+
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---- Ambient background ---- */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; top: -180px; left: -100px; background: rgba(249,115,22,0.06); }
+  .orb-2 { width: 500px; height: 500px; bottom: -120px; right: -80px; background: rgba(59,130,246,0.05); }
+  .orb-3 { width: 350px; height: 350px; top: 40%; left: 55%; background: rgba(168,85,247,0.04); }
+
+  /* ---- Layout ---- */
+  .page { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  /* ---- Glass card mixin ---- */
+  .glass {
+    background: var(--surface);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .glass-sm { border-radius: var(--radius-sm); }
+
+  /* ---- Header ---- */
+  .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; flex-wrap: wrap; }
+  .page-header h1 {
+    font-family: 'Bricolage Grotesque', serif;
+    font-weight: 700; font-size: 2rem; letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .count-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    background: var(--primary-glow); color: var(--primary); border: 1px solid rgba(249,115,22,0.2);
+  }
+  .count-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+  /* ---- Stats row ---- */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    padding: 20px 22px; display: flex; flex-direction: column; gap: 6px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+  .stat-label { font-size: 0.78rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-value { font-family: 'Bricolage Grotesque', serif; font-size: 1.75rem; font-weight: 700; color: #fff; }
+  .stat-card.blue .stat-value { color: var(--blue); }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.gold { position: relative; overflow: hidden; }
+  .stat-card.gold .stat-value { color: var(--gold); }
+  .stat-card.gold::after {
+    content: ''; position: absolute; inset: -2px; border-radius: var(--radius); pointer-events: none;
+    background: radial-gradient(ellipse at 60% 0%, rgba(234,179,8,0.12) 0%, transparent 65%);
+  }
+
+  /* ---- Filters ---- */
+  .filters { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+  .filter-pill {
+    padding: 7px 18px; border-radius: 999px; font-size: 0.82rem; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    cursor: pointer; transition: all 0.2s; user-select: none;
+  }
+  .filter-pill:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-hover); }
+  .filter-pill.active {
+    background: var(--primary-glow); color: var(--primary); border-color: rgba(249,115,22,0.25);
+  }
+
+  /* ---- Application cards ---- */
+  .app-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+
+  .app-card {
+    position: relative; display: grid;
+    grid-template-columns: 6px 1fr;
+    overflow: hidden; transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .app-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  /* accent bar */
+  .accent-bar { border-radius: var(--radius) 0 0 var(--radius); }
+  .accent-bar.applied     { background: var(--blue); }
+  .accent-bar.review      { background: var(--purple); }
+  .accent-bar.interview   { background: var(--green); }
+  .accent-bar.offered     { background: var(--gold); }
+  .accent-bar.rejected    { background: var(--red); }
+
+  .card-body { padding: 24px 28px; }
+
+  /* top row */
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .card-company { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+  .company-logo {
+    width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.1rem; color: #fff;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card-company-info { min-width: 0; }
+  .card-company-name { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+  .card-job-title {
+    font-family: 'Bricolage Grotesque', serif; font-size: 1.2rem; font-weight: 700;
+    color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 520px;
+  }
+
+  /* status badge */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .status-badge .glow-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .badge-applied     { background: var(--blue-glow); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+  .badge-applied .glow-dot { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+  .badge-review      { background: var(--purple-glow); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+  .badge-review .glow-dot { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+  .badge-interview   { background: var(--green-glow); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .badge-interview .glow-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .badge-offered     { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(234,179,8,0.25); box-shadow: 0 0 20px rgba(234,179,8,0.1); }
+  .badge-offered .glow-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  .badge-rejected    { background: var(--red-glow); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+  .badge-rejected .glow-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* meta tags row */
+  .card-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .meta-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; color: var(--text-muted);
+  }
+  .meta-tag svg { width: 14px; height: 14px; opacity: 0.5; }
+  .meta-chip {
+    padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 500;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: var(--text-muted);
+  }
+
+  /* ---- Vetting Pipeline ---- */
+  .pipeline-section { margin-bottom: 18px; }
+  .pipeline-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 10px; }
+
+  .pipeline {
+    display: flex; align-items: center; gap: 0; position: relative;
+    padding: 12px 0;
+  }
+  .pipeline-step {
+    display: flex; align-items: center; gap: 0; flex: 1; position: relative;
+  }
+  .pipeline-step:last-child { flex: 0; }
+
+  .step-node {
+    position: relative; z-index: 2;
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+    transition: all 0.2s;
+  }
+  .step-node.completed {
+    background: var(--green); color: #fff;
+    box-shadow: 0 0 10px var(--green-glow);
+  }
+  .step-node.active {
+    background: var(--primary); color: #fff;
+    box-shadow: 0 0 14px var(--primary-glow-strong);
+    animation: pulse-active 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-active {
+    0%,100% { box-shadow: 0 0 10px var(--primary-glow); }
+    50% { box-shadow: 0 0 22px var(--primary-glow-strong); }
+  }
+  .step-node.pending {
+    background: rgba(255,255,255,0.06); color: var(--text-dim);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .step-node.rejected-step {
+    background: var(--red); color: #fff;
+    box-shadow: 0 0 10px var(--red-glow);
+  }
+
+  .step-connector {
+    flex: 1; height: 2px; min-width: 20px;
+  }
+  .step-connector.completed { background: var(--green); opacity: 0.5; }
+  .step-connector.active { background: linear-gradient(90deg, var(--green) 0%, var(--primary) 100%); opacity: 0.5; }
+  .step-connector.pending { background: rgba(255,255,255,0.06); }
+
+  .step-label {
+    position: absolute; top: 34px; left: 50%; transform: translateX(-50%);
+    font-size: 0.65rem; color: var(--text-dim); white-space: nowrap; font-weight: 500;
+  }
+  .step-label.active-label { color: var(--primary); font-weight: 600; }
+  .step-label.completed-label { color: var(--text-muted); }
+
+  /* ---- Skills match ---- */
+  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  .skills-match { display: flex; align-items: center; gap: 8px; }
+  .skills-dots { display: flex; gap: 4px; }
+  .skill-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .skill-dot.matched { background: var(--green); }
+  .skill-dot.unmatched { background: rgba(255,255,255,0.08); }
+  .skills-text { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+  .card-actions { display: flex; gap: 8px; }
+  .btn {
+    padding: 8px 18px; border-radius: var(--radius-xs); font-size: 0.78rem; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+  }
+  .btn-primary {
+    background: var(--primary); color: #fff;
+    box-shadow: 0 2px 10px rgba(249,115,22,0.25);
+  }
+  .btn-primary:hover { background: #ea6a10; box-shadow: 0 4px 16px rgba(249,115,22,0.35); transform: translateY(-1px); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--border-hover); }
+  .btn-danger-ghost {
+    background: transparent; color: var(--red); border: 1px solid rgba(239,68,68,0.15);
+  }
+  .btn-danger-ghost:hover { background: var(--red-glow); border-color: rgba(239,68,68,0.3); }
+
+  /* ---- Pagination ---- */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .page-btn {
+    width: 38px; height: 38px; border-radius: var(--radius-xs); font-size: 0.82rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+  }
+  .page-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-hover); }
+  .page-btn.active-page { background: var(--primary-glow); color: var(--primary); border-color: rgba(249,115,22,0.25); }
+  .page-btn.disabled { opacity: 0.3; pointer-events: none; }
+  .page-btn svg { width: 16px; height: 16px; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .page-header h1 { font-size: 1.5rem; }
+    .card-top { flex-direction: column; gap: 12px; }
+    .card-job-title { max-width: 100%; }
+    .pipeline { flex-wrap: wrap; gap: 4px; }
+    .step-label { display: none; }
+    .card-bottom { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 14px 16px; }
+    .stat-value { font-size: 1.4rem; }
+    .card-body { padding: 16px 18px; }
+    .filters { gap: 6px; }
+    .filter-pill { padding: 6px 12px; font-size: 0.76rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>My Applications</h1>
+    <span class="count-badge"><span class="dot"></span>8 active</span>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="glass stat-card">
+      <span class="stat-label">Total Applied</span>
+      <span class="stat-value">12</span>
+    </div>
+    <div class="glass stat-card blue">
+      <span class="stat-label">Under Review</span>
+      <span class="stat-value">5</span>
+    </div>
+    <div class="glass stat-card green">
+      <span class="stat-label">Interviews</span>
+      <span class="stat-value">2</span>
+    </div>
+    <div class="glass stat-card gold">
+      <span class="stat-label">Offers</span>
+      <span class="stat-value">1</span>
+    </div>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filters">
+    <span class="filter-pill active" onclick="setFilter(this)">All</span>
+    <span class="filter-pill" onclick="setFilter(this)">Applied</span>
+    <span class="filter-pill" onclick="setFilter(this)">Under Review</span>
+    <span class="filter-pill" onclick="setFilter(this)">Interview</span>
+    <span class="filter-pill" onclick="setFilter(this)">Offered</span>
+    <span class="filter-pill" onclick="setFilter(this)">Rejected</span>
+  </div>
+
+  <!-- Application Cards -->
+  <div class="app-list">
+
+    <!-- Card 1: Offered -->
+    <div class="glass app-card">
+      <div class="accent-bar offered"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #eab308 20%, #a17806);">A</div>
+            <div class="card-company-info">
+              <div class="card-company-name">Aave Labs</div>
+              <div class="card-job-title">Senior Solidity Engineer</div>
+            </div>
+          </div>
+          <div class="status-badge badge-offered"><span class="glow-dot"></span>Offer Received</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Mar 10
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Remote
+          </span>
+          <span class="meta-chip">Full-time</span>
+          <span class="meta-chip">DeFi</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Applied</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Expert Review</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Company Review</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Interview</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node active">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label active-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+            </div>
+            <span class="skills-text">5/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Offer</button>
+            <button class="btn btn-ghost">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Interview -->
+    <div class="glass app-card">
+      <div class="accent-bar interview"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #22c55e 20%, #15803d);">U</div>
+            <div class="card-company-info">
+              <div class="card-company-name">Uniswap Labs</div>
+              <div class="card-job-title">Smart Contract Auditor</div>
+            </div>
+          </div>
+          <div class="status-badge badge-interview"><span class="glow-dot"></span>Interview</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Mar 14
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            New York, NY
+          </span>
+          <span class="meta-chip">Full-time</span>
+          <span class="meta-chip">Security</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Applied</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Expert Review</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Company Review</span>
+              <div class="step-connector active"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node active">!</div>
+              <span class="step-label active-label">Interview</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot unmatched"></div>
+            </div>
+            <span class="skills-text">4/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Details</button>
+            <button class="btn btn-danger-ghost">Withdraw</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Interview -->
+    <div class="glass app-card">
+      <div class="accent-bar interview"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #3b82f6 20%, #1d4ed8);">C</div>
+            <div class="card-company-info">
+              <div class="card-company-name">Chainlink Labs</div>
+              <div class="card-job-title">Protocol Engineer</div>
+            </div>
+          </div>
+          <div class="status-badge badge-interview"><span class="glow-dot"></span>Interview</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Mar 8
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Remote
+          </span>
+          <span class="meta-chip">Full-time</span>
+          <span class="meta-chip">Oracle</span>
+          <span class="meta-chip">Rust</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Applied</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Expert Review</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Company Review</span>
+              <div class="step-connector active"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node active">!</div>
+              <span class="step-label active-label">Interview</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot unmatched"></div>
+              <div class="skill-dot unmatched"></div>
+            </div>
+            <span class="skills-text">3/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Details</button>
+            <button class="btn btn-danger-ghost">Withdraw</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Under Review (Expert) -->
+    <div class="glass app-card">
+      <div class="accent-bar review"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #a855f7 20%, #7c3aed);">L</div>
+            <div class="card-company-info">
+              <div class="card-company-name">Lido Finance</div>
+              <div class="card-job-title">DeFi Protocol Developer</div>
+            </div>
+          </div>
+          <div class="status-badge badge-review"><span class="glow-dot"></span>Expert Review</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Mar 20
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Lisbon, PT
+          </span>
+          <span class="meta-chip">Full-time</span>
+          <span class="meta-chip">Staking</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Applied</span>
+              <div class="step-connector active"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node active">!</div>
+              <span class="step-label active-label">Expert Review</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Company Review</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Interview</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot unmatched"></div>
+            </div>
+            <span class="skills-text">4/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Details</button>
+            <button class="btn btn-danger-ghost">Withdraw</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 5: Applied -->
+    <div class="glass app-card">
+      <div class="accent-bar applied"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #06b6d4 20%, #0891b2);">O</div>
+            <div class="card-company-info">
+              <div class="card-company-name">OpenSea</div>
+              <div class="card-job-title">Full Stack Engineer - NFT Marketplace</div>
+            </div>
+          </div>
+          <div class="status-badge badge-applied"><span class="glow-dot"></span>Applied</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Mar 25
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            San Francisco, CA
+          </span>
+          <span class="meta-chip">Full-time</span>
+          <span class="meta-chip">NFT</span>
+          <span class="meta-chip">React</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node active">!</div>
+              <span class="step-label active-label">Applied</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Expert Review</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Company Review</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Interview</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+            </div>
+            <span class="skills-text">5/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Details</button>
+            <button class="btn btn-danger-ghost">Withdraw</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6: Rejected -->
+    <div class="glass app-card">
+      <div class="accent-bar rejected"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-company">
+            <div class="company-logo" style="background: linear-gradient(135deg, #6b7280 20%, #4b5563);">M</div>
+            <div class="card-company-info">
+              <div class="card-company-name">MakerDAO</div>
+              <div class="card-job-title">Governance Engineer</div>
+            </div>
+          </div>
+          <div class="status-badge badge-rejected"><span class="glow-dot"></span>Rejected</div>
+        </div>
+        <div class="card-meta">
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Applied Feb 28
+          </span>
+          <span class="meta-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Remote
+          </span>
+          <span class="meta-chip">Contract</span>
+          <span class="meta-chip">DAO</span>
+        </div>
+
+        <div class="pipeline-section">
+          <div class="pipeline-label">Vetting Progress</div>
+          <div class="pipeline">
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Applied</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node completed">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="step-label completed-label">Expert Review</span>
+              <div class="step-connector completed"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node rejected-step">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <span class="step-label" style="color: var(--red);">Company Review</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Interview</span>
+              <div class="step-connector pending"></div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-node pending"></div>
+              <span class="step-label">Offer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="skills-match">
+            <div class="skills-dots">
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot matched"></div>
+              <div class="skill-dot unmatched"></div>
+              <div class="skill-dot unmatched"></div>
+              <div class="skill-dot unmatched"></div>
+            </div>
+            <span class="skills-text">2/5 skills matched</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-primary">View Feedback</button>
+            <button class="btn btn-ghost">View Details</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-list -->
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <button class="page-btn disabled">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="page-btn active-page">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <button class="page-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+function setFilter(el) {
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+
+</body>
+</html>

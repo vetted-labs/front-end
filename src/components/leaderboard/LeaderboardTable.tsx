@@ -41,15 +41,15 @@ export function LeaderboardTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-border/40">
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-12">
+            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-12">
               #
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Expert
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider",
+                "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider",
                 highlightCol === "reputation"
                   ? "text-primary bg-primary/5"
                   : "text-muted-foreground"
@@ -59,7 +59,7 @@ export function LeaderboardTable({
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider",
+                "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider",
                 highlightCol === "earnings"
                   ? "text-primary bg-primary/5"
                   : "text-muted-foreground"
@@ -69,7 +69,7 @@ export function LeaderboardTable({
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider",
+                "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider",
                 highlightCol === "reviews"
                   ? "text-primary bg-primary/5"
                   : "text-muted-foreground"
@@ -79,7 +79,7 @@ export function LeaderboardTable({
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider",
+                "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider",
                 highlightCol === "consensus"
                   ? "text-primary bg-primary/5"
                   : "text-muted-foreground"
@@ -87,10 +87,10 @@ export function LeaderboardTable({
             >
               Consensus
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
               Staked
             </th>
-            <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell w-16">
+            <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell w-16">
               Trend
             </th>
           </tr>
@@ -114,7 +114,7 @@ export function LeaderboardTable({
               >
                 {/* Rank */}
                 <td className="px-4 py-3">
-                  <span className="text-sm font-semibold text-muted-foreground tabular-nums">
+                  <span className="text-sm font-medium text-muted-foreground tabular-nums">
                     {rank}
                   </span>
                 </td>
@@ -128,13 +128,13 @@ export function LeaderboardTable({
                     <div className="flex items-center gap-1.5">
                       <span
                         className={cn(
-                          "text-[10px] px-1.5 py-0.5 rounded-full font-medium capitalize",
+                          "text-xs px-1.5 py-0.5 rounded-full font-medium capitalize",
                           getRolePillClass(entry.role)
                         )}
                       >
                         {entry.role}
                       </span>
-                      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
                         <Users className="w-2.5 h-2.5" />
                         {entry.guildCount}
                       </span>
@@ -150,13 +150,13 @@ export function LeaderboardTable({
                   )}
                 >
                   <div className="flex items-baseline gap-1">
-                    <span className="text-sm font-semibold tabular-nums">
+                    <span className="text-sm font-medium tabular-nums">
                       {entry.reputation.toLocaleString()}
                     </span>
                     {delta !== 0 && (
                       <span
                         className={cn(
-                          "text-[10px] font-medium tabular-nums",
+                          "text-xs font-medium tabular-nums",
                           delta > 0 ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                         )}
                       >
@@ -173,7 +173,7 @@ export function LeaderboardTable({
                     highlightCol === "earnings" && "bg-primary/5"
                   )}
                 >
-                  <span className="text-sm font-semibold tabular-nums">
+                  <span className="text-sm font-medium tabular-nums">
                     {entry.totalEarnings.toLocaleString()} VETD
                   </span>
                 </td>
@@ -185,7 +185,7 @@ export function LeaderboardTable({
                     highlightCol === "reviews" && "bg-primary/5"
                   )}
                 >
-                  <span className="text-sm font-semibold tabular-nums">
+                  <span className="text-sm font-medium tabular-nums">
                     {entry.totalReviews}{" "}
                     <span className="text-xs text-muted-foreground font-normal">
                       ({entry.approvals}/{entry.rejections})

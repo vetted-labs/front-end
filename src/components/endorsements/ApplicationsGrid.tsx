@@ -1,5 +1,5 @@
 import { ApplicationCard } from './ApplicationCard';
-import { Loader2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationsGridProps {
@@ -12,9 +12,9 @@ interface ApplicationsGridProps {
 export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse }: ApplicationsGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="h-72 bg-muted/50 animate-pulse rounded-2xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-80 bg-white/[0.025] animate-pulse rounded-[20px]" />
         ))}
       </div>
     );
@@ -24,9 +24,9 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
     return (
       <div className="text-center py-12">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-          <Loader2 className="w-8 h-8 text-muted-foreground" />
+          <Users className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">No Applications Available</h3>
+        <h3 className="text-xl font-bold mb-2">No Applications Available</h3>
         <p className="text-muted-foreground">
           There are currently no applications in this guild that need endorsements.
         </p>
@@ -35,7 +35,7 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {applications.map(app => (
         <ApplicationCard
           key={app.application_id}

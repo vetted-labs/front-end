@@ -40,7 +40,7 @@ export function WalletStatusBanner({
           <CardContent className="p-4 flex items-start gap-4">
             <AlertCircle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-1`}>
+              <h3 className={`text-xl font-bold ${STATUS_COLORS.warning.text} mb-1`}>
                 Test Mode
               </h3>
               <p className={`text-sm ${STATUS_COLORS.warning.text}`}>
@@ -57,7 +57,7 @@ export function WalletStatusBanner({
           <CardContent className="p-4 flex items-start gap-4">
             <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-2`}>
+              <h3 className={`text-xl font-bold ${STATUS_COLORS.warning.text} mb-2`}>
                 Wrong Network Detected
               </h3>
               <p className={`text-sm ${STATUS_COLORS.warning.text} mb-3`}>
@@ -85,9 +85,9 @@ export function WalletStatusBanner({
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connected Wallet</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Connected Wallet</p>
                   <div className="flex items-center gap-2">
-                    <code className="text-lg font-semibold text-foreground">{shortAddress}</code>
+                    <code className="text-xl font-bold text-foreground">{shortAddress}</code>
                     <Badge className="border-primary/30 bg-primary/10 text-primary">
                       Vault
                     </Badge>
@@ -98,8 +98,8 @@ export function WalletStatusBanner({
                 </div>
               </div>
               <div className="rounded-xl border border-border/60 bg-muted/50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Network</p>
-                <div className="mt-1 flex items-center gap-2 text-sm font-semibold">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Network</p>
+                <div className="mt-1 flex items-center gap-2 text-sm font-medium">
                   <Network className="h-4 w-4 text-muted-foreground" />
                   <span>{chainName || 'Unknown Network'}</span>
                 </div>

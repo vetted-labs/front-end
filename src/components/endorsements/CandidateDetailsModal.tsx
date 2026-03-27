@@ -110,8 +110,8 @@ export function CandidateDetailsModal({
             {/* Name + headline */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-[17px] font-bold text-foreground leading-tight truncate">{application.candidate_name}</h2>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS.positive.badge}`}>
+                <h2 className="text-xl font-bold text-foreground leading-tight truncate">{application.candidate_name}</h2>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${STATUS_COLORS.positive.badge}`}>
                   Verified
                 </span>
               </div>
@@ -162,7 +162,7 @@ export function CandidateDetailsModal({
                   <CheckCircle className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider leading-none">Skill Match</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider leading-none">Skill Match</p>
                   <p className="text-base font-bold text-primary tabular-nums leading-tight mt-0.5">{skillMatchData.percentage}%</p>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export function CandidateDetailsModal({
                   <Star className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider leading-none">Guild Score</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider leading-none">Guild Score</p>
                   <p className="text-base font-bold text-primary tabular-nums leading-tight mt-0.5">{guildScore}<span className="text-xs text-muted-foreground font-normal">/100</span></p>
                 </div>
               </div>
@@ -183,8 +183,8 @@ export function CandidateDetailsModal({
                 <Clock className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider leading-none">Applied</p>
-                <p className="text-sm font-semibold text-foreground leading-tight mt-0.5">{formatTimeAgo(application.applied_at)}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider leading-none">Applied</p>
+                <p className="text-sm font-medium text-foreground leading-tight mt-0.5">{formatTimeAgo(application.applied_at)}</p>
               </div>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function CandidateDetailsModal({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all border ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-primary/15 to-accent/10 text-primary border-primary/30'
                     : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04] border-transparent'
@@ -225,12 +225,12 @@ export function CandidateDetailsModal({
                   <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                     <User className="w-3 h-3 text-primary" />
                   </div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Bio</h3>
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bio</h3>
                 </div>
                 {application.candidate_bio ? (
-                  <p className="text-[13px] leading-relaxed text-foreground whitespace-pre-wrap">{application.candidate_bio}</p>
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{application.candidate_bio}</p>
                 ) : (
-                  <p className="text-[13px] text-muted-foreground italic">No bio provided</p>
+                  <p className="text-sm text-muted-foreground italic">No bio provided</p>
                 )}
               </div>
 
@@ -240,27 +240,27 @@ export function CandidateDetailsModal({
                   <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                     <Briefcase className="w-3 h-3 text-primary" />
                   </div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Application Summary</h3>
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Application Summary</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   <div className="flex items-center justify-between border-b border-white/[0.04] pb-2.5">
                     <span className="text-xs text-muted-foreground">Position</span>
-                    <span className="text-[13px] font-semibold text-foreground">{application.job_title}</span>
+                    <span className="text-sm font-medium text-foreground">{application.job_title}</span>
                   </div>
                   <div className="flex items-center justify-between border-b border-white/[0.04] pb-2.5">
                     <span className="text-xs text-muted-foreground">Company</span>
-                    <span className="text-[13px] font-semibold text-foreground">{application.company_name}</span>
+                    <span className="text-sm font-medium text-foreground">{application.company_name}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Status</span>
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md border ${STATUS_COLORS.warning.badge}`}>
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border ${STATUS_COLORS.warning.badge}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.warning.dot}`} />
                       {application.status || 'Pending'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Applied</span>
-                    <span className="text-[13px] text-foreground">{new Date(application.applied_at).toLocaleDateString()}</span>
+                    <span className="text-sm text-foreground">{new Date(application.applied_at).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -272,21 +272,21 @@ export function CandidateDetailsModal({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <Zap className="w-3 h-3 text-primary" />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Highlights</h3>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Highlights</h3>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {application.experience_level && (
-                      <span className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
                         {application.experience_level}
                       </span>
                     )}
                     {skillMatchData.percentage > 0 && (
-                      <span className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary">
                         {skillMatchData.percentage}% Match
                       </span>
                     )}
                     {skillMatchData.matched.length > 0 && skillMatchData.matched.slice(0, 4).map((skill: string, i: number) => (
-                      <span key={i} className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground capitalize">
+                      <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground capitalize">
                         {skill}
                       </span>
                     ))}
@@ -305,10 +305,10 @@ export function CandidateDetailsModal({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <Mail className="w-3 h-3 text-primary" />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cover Letter</h3>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Cover Letter</h3>
                   </div>
                   <div className="pl-3 border-l-2 border-primary/20">
-                    <p className="text-[13px] whitespace-pre-wrap leading-relaxed text-foreground">{application.cover_letter}</p>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">{application.cover_letter}</p>
                   </div>
                 </div>
               )}
@@ -319,13 +319,13 @@ export function CandidateDetailsModal({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <HelpCircle className="w-3 h-3 text-primary" />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Screening Questions</h3>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Screening Questions</h3>
                   </div>
                   <div className="space-y-2.5">
                     {Object.entries(application.screening_answers).map(([question, answer], idx) => (
                       <div key={idx} className="rounded-lg bg-white/[0.02] border border-white/[0.04] p-3">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{question}</p>
-                        <p className="text-[13px] text-foreground">{answer}</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{question}</p>
+                        <p className="text-sm text-foreground">{answer}</p>
                       </div>
                     ))}
                   </div>
@@ -376,8 +376,8 @@ export function CandidateDetailsModal({
                 <>
                   <div className="h-px bg-white/[0.06]" />
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Description</h4>
-                    <p className="text-[13px] leading-relaxed text-muted-foreground whitespace-pre-wrap">{application.job_description}</p>
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Description</h4>
+                    <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{application.job_description}</p>
                   </div>
                 </>
               )}
@@ -386,14 +386,14 @@ export function CandidateDetailsModal({
                 <>
                   <div className="h-px bg-white/[0.06]" />
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Requirements</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Requirements</h4>
                     <div className="space-y-2">
                       {application.requirements.map((req: string, i: number) => (
                         <div key={i} className="flex items-start gap-2.5">
                           <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <CheckCircle className="w-2.5 h-2.5 text-primary" />
                           </div>
-                          <span className="text-[13px] text-foreground">{req}</span>
+                          <span className="text-sm text-foreground">{req}</span>
                         </div>
                       ))}
                     </div>
@@ -405,13 +405,13 @@ export function CandidateDetailsModal({
                 <>
                   <div className="h-px bg-white/[0.06]" />
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Required Skills</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Required Skills</h4>
                     <div className="flex flex-wrap gap-1.5">
                       {(Array.isArray(application.job_skills)
                         ? application.job_skills
                         : application.job_skills.split(',')
                       ).map((skill: string, i: number) => (
-                        <span key={i} className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
+                        <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
                           {skill.trim()}
                         </span>
                       ))}
@@ -432,7 +432,7 @@ export function CandidateDetailsModal({
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <CheckCircle className="w-3 h-3 text-primary" />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Overall Match</h3>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Overall Match</h3>
                   </div>
                   <span className="text-2xl font-bold tabular-nums text-primary">{skillMatchData.percentage}%</span>
                 </div>
@@ -446,7 +446,7 @@ export function CandidateDetailsModal({
                       : '[&>div]:bg-negative'
                   }`}
                 />
-                <p className="text-[11px] text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Based on matching job requirements with candidate bio and experience
                 </p>
               </div>
@@ -458,13 +458,13 @@ export function CandidateDetailsModal({
                     <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
                       <CheckCircle className={`w-3 h-3 ${STATUS_COLORS.positive.text}`} />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Matched <span className={STATUS_COLORS.positive.text}>({skillMatchData.matched.length})</span>
                     </h3>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {skillMatchData.matched.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
+                      <span key={i} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
                         <CheckCircle className="w-3 h-3" /> {skill}
                       </span>
                     ))}
@@ -479,13 +479,13 @@ export function CandidateDetailsModal({
                     <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center`}>
                       <XCircle className={`w-3 h-3 ${STATUS_COLORS.negative.text}`} />
                     </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Missing <span className={STATUS_COLORS.negative.text}>({skillMatchData.missing.length})</span>
                     </h3>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {skillMatchData.missing.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
+                      <span key={i} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
                         <XCircle className="w-3 h-3" /> {skill}
                       </span>
                     ))}
@@ -502,8 +502,8 @@ export function CandidateDetailsModal({
                         <Award className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Guild Review Score</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Community consensus evaluation</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Guild Review Score</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Community consensus evaluation</p>
                       </div>
                     </div>
                     <div className="flex items-baseline gap-1">
@@ -523,7 +523,7 @@ export function CandidateDetailsModal({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 h-11 text-sm font-semibold rounded-xl border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+              className="flex-1 h-11 text-sm font-medium rounded-xl border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] transition-all"
             >
               Close
             </Button>

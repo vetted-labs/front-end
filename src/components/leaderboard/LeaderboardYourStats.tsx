@@ -29,8 +29,8 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
           <Trophy className="w-3.5 h-3.5 text-primary" />
         </div>
-        <span className="text-xs font-semibold text-foreground">Your Position</span>
-        <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ml-1">
+        <span className="text-xs font-medium text-foreground">Your Position</span>
+        <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ml-1">
           You
         </span>
       </div>
@@ -45,7 +45,7 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
           >
             <stat.icon className={cn("w-3.5 h-3.5 shrink-0", stat.color)} />
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
                 {stat.label}
               </p>
               <p className="text-sm font-bold tabular-nums">{stat.value}</p>

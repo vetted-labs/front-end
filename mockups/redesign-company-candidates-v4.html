@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Candidates — V4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #07070b;
+    --surface: rgba(255,255,255,0.025);
+    --surface-hover: rgba(255,255,255,0.04);
+    --surface-active: rgba(255,255,255,0.055);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.1);
+    --text: #e2e2ea;
+    --text-muted: #7c7c8e;
+    --text-dim: #4e4e5e;
+    --orange: #f97316;
+    --orange-muted: rgba(249,115,22,0.12);
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --red: #ef4444;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+  }
+
+  /* ─── Page Shell ─── */
+  .shell {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ─── Top Bar ─── */
+  .top-bar {
+    flex-shrink: 0;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .top-bar h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .top-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+  }
+  .top-count span { color: var(--text-muted); }
+
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover { color: var(--orange); }
+
+  /* ─── Two-Panel ─── */
+  .panels {
+    flex: 1;
+    display: flex;
+    gap: 1px;
+    min-height: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--border);
+  }
+
+  /* ─── LEFT PANEL ─── */
+  .left {
+    width: 35%;
+    min-width: 300px;
+    max-width: 420px;
+    background: rgba(255,255,255,0.015);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .left-head {
+    padding: 16px 16px 0;
+    flex-shrink: 0;
+  }
+
+  /* Search */
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .search:focus-within {
+    border-color: rgba(249,115,22,0.35);
+  }
+  .search svg {
+    width: 14px; height: 14px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .search input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 9px 0;
+  }
+  .search input::placeholder { color: var(--text-dim); }
+
+  /* Filter row */
+  .filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .flt {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 24px 6px 9px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%234e4e5e' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    transition: border-color 0.15s;
+  }
+  .flt:hover { border-color: var(--border-hover); }
+
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sort-row .label {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .sort-row select {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    padding: 2px 16px 2px 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='7' height='4' viewBox='0 0 7 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l2.5 2.5L6 1' stroke='%234e4e5e' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+  }
+
+  /* Candidate list */
+  .list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.06) transparent;
+  }
+  .list::-webkit-scrollbar { width: 3px; }
+  .list::-webkit-scrollbar-track { background: transparent; }
+  .list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+
+  /* Job group */
+  .job-grp { }
+  .job-grp + .job-grp { border-top: 1px solid var(--border); }
+
+  .job-hdr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.12s;
+    user-select: none;
+  }
+  .job-hdr:hover { background: var(--surface-hover); }
+  .job-hdr svg {
+    width: 14px; height: 14px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .job-title {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .job-cnt {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: var(--surface);
+    padding: 1px 7px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .job-chev {
+    width: 12px; height: 12px;
+    color: var(--text-dim);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .job-grp.collapsed .job-chev { transform: rotate(-90deg); }
+  .job-grp.collapsed .job-items { display: none; }
+
+  /* Candidate row */
+  .cand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px 8px 24px;
+    cursor: pointer;
+    transition: background 0.12s;
+    border-left: 2px solid transparent;
+    height: 52px;
+  }
+  .cand:hover { background: var(--surface); }
+  .cand.sel {
+    background: rgba(249,115,22,0.04);
+    border-left-color: var(--orange);
+  }
+  .cand.sel .c-name { color: #fff; }
+
+  .c-av {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .c-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .c-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .c-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  /* Status dot — the only status indicator */
+  .c-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .c-dot.pending   { background: var(--orange); }
+  .c-dot.reviewing  { background: var(--blue); }
+  .c-dot.interviewed { background: var(--purple); }
+  .c-dot.accepted   { background: var(--green); }
+  .c-dot.rejected   { background: var(--red); }
+
+  /* ─── RIGHT PANEL ─── */
+  .right {
+    flex: 1;
+    background: rgba(255,255,255,0.01);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Detail header */
+  .d-head {
+    padding: 20px 24px 0;
+    flex-shrink: 0;
+  }
+  .d-row1 {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .d-av {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .d-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .d-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1px;
+  }
+  .d-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .d-email-icon {
+    width: 16px; height: 16px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .d-email-icon:hover { color: var(--orange); }
+  .d-role {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .d-date {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .d-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: flex-start;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: var(--radius-xs);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn svg { width: 13px; height: 13px; }
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #ea580c;
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--border);
+  }
+  .btn-outline:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+    background: var(--surface);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 7px 10px;
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    margin: 16px 0 16px;
+    padding: 0 4px;
+  }
+  .pip-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .pip-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--surface-active);
+    border: 2px solid var(--border);
+    position: relative;
+    z-index: 2;
+  }
+  .pip-dot.done {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .pip-dot.current {
+    background: var(--orange);
+    border-color: var(--orange);
+    box-shadow: 0 0 8px rgba(249,115,22,0.3);
+  }
+  .pip-lbl {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .pip-dot.done ~ .pip-lbl,
+  .pip-step.done .pip-lbl { color: var(--text-muted); }
+  .pip-step.current .pip-lbl { color: var(--orange); }
+  .pip-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 8px;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+  .pip-line.done {
+    background: var(--green);
+  }
+  .pip-line.active {
+    background: linear-gradient(90deg, var(--green), var(--orange));
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--text-muted); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--orange);
+    font-weight: 600;
+  }
+
+  /* Detail content */
+  .d-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.06) transparent;
+  }
+  .d-content::-webkit-scrollbar { width: 3px; }
+  .d-content::-webkit-scrollbar-track { background: transparent; }
+  .d-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+
+  /* Section */
+  .section {
+    margin-bottom: 20px;
+  }
+  .section:last-child { margin-bottom: 0; }
+  .s-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  /* Applied-for card */
+  .applied-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .applied-card .ac-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface-active);
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* Resume card */
+  .resume-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .resume-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: var(--orange-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .resume-icon svg { width: 14px; height: 14px; color: var(--orange); }
+  .resume-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .resume-link {
+    font-size: 11px;
+    color: var(--orange);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .resume-link:hover { text-decoration: underline; }
+
+  /* Two-col info grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .info-item {}
+  .info-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .info-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .info-value a {
+    color: var(--orange);
+    text-decoration: none;
+  }
+  .info-value a:hover { text-decoration: underline; }
+
+  /* Message bar */
+  .msg-bar {
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .msg-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    transition: border-color 0.15s;
+  }
+  .msg-input:focus-within {
+    border-color: rgba(249,115,22,0.35);
+  }
+  .msg-input input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 10px 0;
+  }
+  .msg-input input::placeholder { color: var(--text-dim); }
+  .msg-input button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    transition: color 0.15s;
+  }
+  .msg-input button:hover { color: var(--orange); }
+
+  /* Skills list */
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .skill-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 900px) {
+    .panels { flex-direction: column; }
+    .left { width: 100%; max-width: none; min-width: 0; max-height: 45vh; }
+    .right { min-height: 55vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-left">
+      <h1>Candidates</h1>
+      <span class="top-count"><span>23</span> total</span>
+    </div>
+    <div class="breadcrumb">
+      <a href="#">Dashboard</a> / Candidates
+    </div>
+  </div>
+
+  <!-- Two-Panel -->
+  <div class="panels">
+
+    <!-- LEFT PANEL -->
+    <div class="left">
+      <div class="left-head">
+        <!-- Search -->
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search candidates...">
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <select class="flt">
+            <option>All Guilds</option>
+            <option>Engineering</option>
+            <option>Design</option>
+            <option>Marketing</option>
+          </select>
+          <select class="flt">
+            <option>All Status</option>
+            <option>Pending</option>
+            <option>Reviewing</option>
+            <option>Interviewed</option>
+            <option>Accepted</option>
+          </select>
+        </div>
+
+        <!-- Sort -->
+        <div class="sort-row">
+          <span class="label">Sort:</span>
+          <select>
+            <option>Endorsements</option>
+            <option>Date Applied</option>
+            <option>Name</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Candidate List -->
+      <div class="list">
+
+        <!-- Job Group 1 -->
+        <div class="job-grp" data-group>
+          <div class="job-hdr" onclick="toggleGroup(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span class="job-title">Lead Web Agent</span>
+            <span class="job-cnt">5</span>
+            <svg class="job-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-items">
+            <div class="cand sel" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #8b5cf6;">S</div>
+              <div class="c-info">
+                <div class="c-name">sven daneel</div>
+                <div class="c-sub">Senior Full-Stack Developer</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #3b82f6;">M</div>
+              <div class="c-info">
+                <div class="c-name">Maria Chen</div>
+                <div class="c-sub">Frontend Engineer</div>
+              </div>
+              <div class="c-dot reviewing"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #22c55e;">J</div>
+              <div class="c-info">
+                <div class="c-name">James Wilson</div>
+                <div class="c-sub">UI/UX Developer</div>
+              </div>
+              <div class="c-dot interviewed"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #f59e0b;">A</div>
+              <div class="c-info">
+                <div class="c-name">Aisha Patel</div>
+                <div class="c-sub">React Developer</div>
+              </div>
+              <div class="c-dot accepted"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #ec4899;">L</div>
+              <div class="c-info">
+                <div class="c-name">Liam O'Brien</div>
+                <div class="c-sub">Web3 Frontend Dev</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 2 -->
+        <div class="job-grp" data-group>
+          <div class="job-hdr" onclick="toggleGroup(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span class="job-title">Smart Contract Auditor</span>
+            <span class="job-cnt">4</span>
+            <svg class="job-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-items">
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #06b6d4;">R</div>
+              <div class="c-info">
+                <div class="c-name">Raj Sharma</div>
+                <div class="c-sub">Solidity Expert</div>
+              </div>
+              <div class="c-dot reviewing"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #f43f5e;">E</div>
+              <div class="c-info">
+                <div class="c-name">Elena Kowalski</div>
+                <div class="c-sub">Security Researcher</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #10b981;">T</div>
+              <div class="c-info">
+                <div class="c-name">Tomás Garcia</div>
+                <div class="c-sub">Blockchain Developer</div>
+              </div>
+              <div class="c-dot accepted"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #6366f1;">N</div>
+              <div class="c-info">
+                <div class="c-name">Nora Fischer</div>
+                <div class="c-sub">Smart Contract Dev</div>
+              </div>
+              <div class="c-dot interviewed"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 3 -->
+        <div class="job-grp" data-group>
+          <div class="job-hdr" onclick="toggleGroup(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span class="job-title">Product Designer</span>
+            <span class="job-cnt">3</span>
+            <svg class="job-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-items">
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #a855f7;">K</div>
+              <div class="c-info">
+                <div class="c-name">Kim Tanaka</div>
+                <div class="c-sub">Senior Product Designer</div>
+              </div>
+              <div class="c-dot reviewing"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #14b8a6;">D</div>
+              <div class="c-info">
+                <div class="c-name">David Okonkwo</div>
+                <div class="c-sub">UX/UI Designer</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #f97316;">S</div>
+              <div class="c-info">
+                <div class="c-name">Sophie Laurent</div>
+                <div class="c-sub">Design Systems Lead</div>
+              </div>
+              <div class="c-dot accepted"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 4 -->
+        <div class="job-grp collapsed" data-group>
+          <div class="job-hdr" onclick="toggleGroup(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span class="job-title">DevOps Engineer</span>
+            <span class="job-cnt">3</span>
+            <svg class="job-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-items">
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #ef4444;">B</div>
+              <div class="c-info">
+                <div class="c-name">Ben Crawford</div>
+                <div class="c-sub">Cloud Infrastructure</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #8b5cf6;">Y</div>
+              <div class="c-info">
+                <div class="c-name">Yuki Sato</div>
+                <div class="c-sub">SRE Engineer</div>
+              </div>
+              <div class="c-dot reviewing"></div>
+            </div>
+            <div class="cand" onclick="selectCandidate(this)">
+              <div class="c-av" style="background: #3b82f6;">C</div>
+              <div class="c-info">
+                <div class="c-name">Clara Nguyen</div>
+                <div class="c-sub">Platform Engineer</div>
+              </div>
+              <div class="c-dot pending"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right">
+
+      <!-- Header -->
+      <div class="d-head">
+        <div class="d-row1">
+          <div class="d-av" style="background: #8b5cf6;">S</div>
+          <div class="d-meta">
+            <div class="d-name-row">
+              <span class="d-name">sven daneel</span>
+              <svg class="d-email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <div class="d-role">Senior Full-Stack Developer</div>
+            <div class="d-date">Applied Mar 27</div>
+          </div>
+          <div class="d-actions">
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Start Review
+            </button>
+            <button class="btn btn-outline">Reject</button>
+          </div>
+        </div>
+
+        <!-- Pipeline -->
+        <div class="pipeline">
+          <div class="pip-step current">
+            <div class="pip-dot current"></div>
+            <span class="pip-lbl">Pending</span>
+          </div>
+          <div class="pip-line active"></div>
+          <div class="pip-step">
+            <div class="pip-dot"></div>
+            <span class="pip-lbl">Reviewing</span>
+          </div>
+          <div class="pip-line"></div>
+          <div class="pip-step">
+            <div class="pip-dot"></div>
+            <span class="pip-lbl">Interviewed</span>
+          </div>
+          <div class="pip-line"></div>
+          <div class="pip-step">
+            <div class="pip-dot"></div>
+            <span class="pip-lbl">Accepted</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this)">Profile</div>
+        <div class="tab" onclick="switchTab(this)">Application</div>
+        <div class="tab" onclick="switchTab(this)">Guild Report</div>
+        <div class="tab" onclick="switchTab(this)">History</div>
+        <div class="tab" onclick="switchTab(this)">Notes</div>
+      </div>
+
+      <!-- Content -->
+      <div class="d-content">
+
+        <!-- Applied For -->
+        <div class="section">
+          <div class="s-title">Applied For</div>
+          <div class="applied-card">
+            <span class="ac-title">Lead Web Agent</span>
+            <span class="tag">Hybrid</span>
+            <span class="tag">Full-time</span>
+            <span class="tag">Engineering</span>
+          </div>
+        </div>
+
+        <!-- Resume -->
+        <div class="section">
+          <div class="s-title">Resume</div>
+          <div class="resume-card">
+            <div class="resume-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+            </div>
+            <span class="resume-name">sven-daneel-resume.pdf</span>
+            <a href="#" class="resume-link">View</a>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="section">
+          <div class="s-title">Skills</div>
+          <div class="skills">
+            <span class="skill-tag">React</span>
+            <span class="skill-tag">TypeScript</span>
+            <span class="skill-tag">Next.js</span>
+            <span class="skill-tag">Node.js</span>
+            <span class="skill-tag">Solidity</span>
+            <span class="skill-tag">GraphQL</span>
+            <span class="skill-tag">AWS</span>
+            <span class="skill-tag">Docker</span>
+          </div>
+        </div>
+
+        <!-- Two-col details -->
+        <div class="section">
+          <div class="s-title">Details</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Experience</div>
+              <div class="info-value">7 years</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Location</div>
+              <div class="info-value">Berlin, Germany</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Email</div>
+              <div class="info-value"><a href="#">sven@example.com</a></div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Portfolio</div>
+              <div class="info-value"><a href="#">svendaneel.dev</a></div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Endorsements</div>
+              <div class="info-value">12</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Guild Rank</div>
+              <div class="info-value">Journeyman</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Message bar -->
+      <div class="msg-bar">
+        <div class="msg-input">
+          <input type="text" placeholder="Message sven...">
+          <button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function toggleGroup(header) {
+    header.closest('.job-grp').classList.toggle('collapsed');
+  }
+
+  function selectCandidate(row) {
+    document.querySelectorAll('.cand').forEach(c => c.classList.remove('sel'));
+    row.classList.add('sel');
+  }
+
+  function switchTab(tab) {
+    tab.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Candidates — Master-Detail V3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #07070b;
+    --surface: rgba(255,255,255,0.025);
+    --surface-hover: rgba(255,255,255,0.045);
+    --surface-active: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e8e8ed;
+    --text-muted: #8a8a9a;
+    --text-dim: #5a5a6a;
+    --orange: #f97316;
+    --orange-soft: rgba(249,115,22,0.1);
+    --orange-border: rgba(249,115,22,0.25);
+    --green: #22c55e;
+    --green-soft: rgba(34,197,94,0.1);
+    --green-border: rgba(34,197,94,0.2);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59,130,246,0.1);
+    --blue-border: rgba(59,130,246,0.2);
+    --purple: #a855f7;
+    --purple-soft: rgba(168,85,247,0.1);
+    --purple-border: rgba(168,85,247,0.2);
+    --red: #ef4444;
+    --red-soft: rgba(239,68,68,0.1);
+    --red-border: rgba(239,68,68,0.2);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245,158,11,0.1);
+    --amber-border: rgba(245,158,11,0.2);
+    --radius: 16px;
+    --radius-lg: 20px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+  }
+
+  /* Ambient glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(249,115,22,0.035) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -250px; left: -150px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.025) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── Layout Shell ─── */
+  .page-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 24px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ─── Top Bar ─── */
+  .top-bar {
+    flex-shrink: 0;
+    margin-bottom: 20px;
+  }
+  .breadcrumb {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover { color: var(--orange); }
+  .breadcrumb span { color: var(--text-dim); margin: 0 6px; }
+
+  .top-bar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .top-bar h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .stat-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .stat-badge .badge-count { font-weight: 700; color: #fff; }
+  .stat-badge .badge-label { color: var(--text-muted); }
+  .stat-badge.total .badge-count { color: var(--text-muted); }
+  .stat-badge.pending { border-color: var(--orange-border); background: var(--orange-soft); }
+  .stat-badge.pending .badge-count { color: var(--orange); }
+  .stat-badge.reviewing { border-color: var(--blue-border); background: var(--blue-soft); }
+  .stat-badge.reviewing .badge-count { color: var(--blue); }
+  .stat-badge.interviewed { border-color: var(--purple-border); background: var(--purple-soft); }
+  .stat-badge.interviewed .badge-count { color: var(--purple); }
+  .stat-badge.accepted { border-color: var(--green-border); background: var(--green-soft); }
+  .stat-badge.accepted .badge-count { color: var(--green); }
+
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    backdrop-filter: blur(12px);
+  }
+  .btn-export:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  /* ─── Two-Panel Layout ─── */
+  .two-panel {
+    flex: 1;
+    display: flex;
+    gap: 1px;
+    min-height: 0;
+    background: var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  /* ─── LEFT PANEL ─── */
+  .panel-left {
+    width: 38%;
+    min-width: 320px;
+    background: rgba(255,255,255,0.015);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(24px);
+  }
+
+  .list-header {
+    padding: 20px 20px 0;
+    flex-shrink: 0;
+  }
+
+  /* Search */
+  .search-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 6px 4px 14px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus-within {
+    border-color: rgba(249,115,22,0.4);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.06);
+  }
+  .search-input svg {
+    width: 16px; height: 16px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .search-input input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 8px 0;
+  }
+  .search-input input::placeholder { color: var(--text-dim); }
+
+  /* Filters row */
+  .filters-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .filter-select {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 28px 7px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a5a6a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: border-color 0.15s;
+  }
+  .filter-select:hover { border-color: var(--border-hover); }
+  .filter-select:focus { outline: none; border-color: rgba(249,115,22,0.3); }
+
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .sort-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .sort-select {
+    padding: 4px 24px 4px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%235a5a6a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    transition: border-color 0.15s;
+  }
+  .sort-select:hover { border-color: var(--border); }
+
+  /* Candidate list */
+  .candidate-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .candidate-list::-webkit-scrollbar { width: 4px; }
+  .candidate-list::-webkit-scrollbar-track { background: transparent; }
+  .candidate-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+  }
+  .candidate-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* Job group */
+  .job-group { border-bottom: 1px solid var(--border); }
+  .job-group:last-child { border-bottom: none; }
+
+  .job-group-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .job-group-header:hover { background: var(--surface-hover); }
+
+  .job-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--surface-active);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .job-icon svg { width: 14px; height: 14px; color: var(--text-muted); }
+
+  .job-group-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .job-group-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .job-group-chevron {
+    width: 16px; height: 16px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .job-group.collapsed .job-group-chevron { transform: rotate(-90deg); }
+  .job-group.collapsed .job-group-items { display: none; }
+
+  /* Candidate row */
+  .candidate-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px 10px 28px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    border-left: 3px solid transparent;
+  }
+  .candidate-row:hover { background: var(--surface); }
+  .candidate-row.selected {
+    background: rgba(249,115,22,0.05);
+    border-left-color: var(--orange);
+  }
+  .candidate-row.selected .cand-name { color: #fff; }
+
+  .cand-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .cand-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .cand-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .cand-subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+  .cand-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .cand-status.pending {
+    color: var(--orange);
+    background: var(--orange-soft);
+    border: 1px solid var(--orange-border);
+  }
+  .cand-status.reviewing {
+    color: var(--blue);
+    background: var(--blue-soft);
+    border: 1px solid var(--blue-border);
+  }
+  .cand-status.interviewed {
+    color: var(--purple);
+    background: var(--purple-soft);
+    border: 1px solid var(--purple-border);
+  }
+  .cand-status.accepted {
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid var(--green-border);
+  }
+  .cand-status.rejected {
+    color: var(--red);
+    background: var(--red-soft);
+    border: 1px solid var(--red-border);
+  }
+
+  .cand-time {
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* ─── RIGHT PANEL ─── */
+  .panel-right {
+    flex: 1;
+    background: rgba(255,255,255,0.01);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(24px);
+    min-width: 0;
+  }
+
+  /* Detail header */
+  .detail-header {
+    padding: 24px 28px 0;
+    flex-shrink: 0;
+  }
+  .detail-top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .detail-avatar {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .detail-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    border: 2px solid rgba(249,115,22,0.3);
+    pointer-events: none;
+  }
+  .detail-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .detail-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .detail-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .detail-email-icon {
+    width: 20px; height: 20px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .detail-email-icon:hover { color: var(--orange); }
+  .detail-role {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .detail-applied-date {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Pipeline steps */
+  .pipeline-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0 20px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    position: relative;
+  }
+  .pipeline-step:last-child { flex: 0; }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface-active);
+    color: var(--text-dim);
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s;
+  }
+  .step-dot.completed {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .step-dot.current {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(249,115,22,0.3);
+  }
+  .step-label {
+    position: absolute;
+    top: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .step-dot.completed + .step-label,
+  .pipeline-step.completed .step-label { color: var(--green); }
+  .step-dot.current + .step-label,
+  .pipeline-step.current .step-label { color: var(--orange); }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .step-line.completed {
+    background: var(--green);
+  }
+  .step-line.active {
+    background: linear-gradient(90deg, var(--green), var(--orange));
+  }
+
+  /* Action buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-xs);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn svg { width: 14px; height: 14px; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--orange), #ea580c);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 12px rgba(249,115,22,0.25);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 20px rgba(249,115,22,0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--border);
+  }
+  .btn-outline:hover {
+    background: var(--surface);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: var(--red-border);
+  }
+  .btn-danger:hover {
+    background: var(--red-soft);
+  }
+
+  .btn-status {
+    background: var(--orange-soft);
+    color: var(--orange);
+    border-color: var(--orange-border);
+    cursor: default;
+    font-size: 12px;
+  }
+
+  /* ─── Tab Bar ─── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    position: relative;
+    user-select: none;
+  }
+  .tab-item:hover { color: var(--text); }
+  .tab-item.active {
+    color: var(--orange);
+    border-bottom-color: var(--orange);
+    font-weight: 600;
+  }
+  .tab-badge {
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--orange-soft);
+    color: var(--orange);
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+  }
+
+  /* ─── Detail Content ─── */
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.08) transparent;
+  }
+  .detail-content::-webkit-scrollbar { width: 4px; }
+  .detail-content::-webkit-scrollbar-track { background: transparent; }
+  .detail-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+  .detail-section {
+    margin-bottom: 24px;
+  }
+  .detail-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .applied-for-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+  }
+  .applied-job-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .applied-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .applied-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--surface-active);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .applied-tag.type { color: var(--blue); background: var(--blue-soft); border-color: var(--blue-border); }
+  .applied-tag.schedule { color: var(--purple); background: var(--purple-soft); border-color: var(--purple-border); }
+  .applied-tag.dept { color: var(--amber); background: var(--amber-soft); border-color: var(--amber-border); }
+
+  .resume-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .resume-card:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-hover);
+  }
+  .resume-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--red-soft);
+    border: 1px solid var(--red-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .resume-icon svg { width: 18px; height: 18px; color: var(--red); }
+  .resume-info { flex: 1; }
+  .resume-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1px;
+  }
+  .resume-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .resume-link {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .resume-link:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+  .resume-link svg { width: 14px; height: 14px; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .info-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .info-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .skills-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .skill-chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .skill-chip:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  /* Endorsements mini */
+  .endorsements-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .endorsement-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+  .endorsement-row:hover { border-color: var(--border-hover); }
+  .endorsement-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .endorsement-info { flex: 1; min-width: 0; }
+  .endorsement-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .endorsement-guild {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .endorsement-score {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* ─── Message Bar ─── */
+  .message-bar {
+    flex-shrink: 0;
+    padding: 16px 28px;
+    border-top: 1px solid var(--border);
+  }
+  .message-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 6px 4px 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .message-input-wrap:focus-within {
+    border-color: rgba(249,115,22,0.35);
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.06);
+  }
+  .message-input-wrap input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 8px 0;
+  }
+  .message-input-wrap input::placeholder { color: var(--text-dim); }
+  .send-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--orange), #ea580c);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover {
+    box-shadow: 0 2px 12px rgba(249,115,22,0.3);
+    transform: translateY(-1px);
+  }
+  .send-btn svg { width: 14px; height: 14px; color: #fff; }
+
+  /* ─── Empty / No Selection State ─── */
+  .no-selection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 40px;
+  }
+  .no-selection svg {
+    width: 48px; height: 48px;
+    color: var(--text-dim);
+    opacity: 0.4;
+    margin-bottom: 16px;
+  }
+  .no-selection p {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 768px) {
+    .page-shell {
+      padding: 16px 12px 12px;
+    }
+    .top-bar h1 { font-size: 22px; }
+    .stat-badges { display: none; }
+
+    .two-panel {
+      border-radius: var(--radius);
+    }
+    .panel-left {
+      width: 100%;
+      min-width: 0;
+    }
+    .panel-right {
+      display: none;
+    }
+    .panel-left.has-selection .candidate-list,
+    .panel-left.has-selection .list-header {
+      display: none;
+    }
+
+    /* Mobile: show detail inline */
+    .two-panel.show-detail .panel-left { display: none; }
+    .two-panel.show-detail .panel-right { display: flex; }
+
+    .detail-header { padding: 20px 16px 0; }
+    .tab-bar { padding: 0 16px; }
+    .detail-content { padding: 20px 16px; }
+    .message-bar { padding: 12px 16px; }
+
+    .mobile-back {
+      display: flex !important;
+    }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (min-width: 769px) {
+    .mobile-back { display: none !important; }
+  }
+
+  /* Cover letter section */
+  .cover-letter-preview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .cover-letter-preview p { margin-bottom: 10px; }
+  .cover-letter-preview p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div class="page-shell">
+  <!-- ─── Top Bar ─── -->
+  <div class="top-bar">
+    <div class="breadcrumb">
+      <a href="#">Dashboard</a>
+      <span>&rsaquo;</span>
+      Candidates
+    </div>
+    <div class="top-bar-row">
+      <div class="top-bar-left">
+        <h1>Candidates</h1>
+        <div class="stat-badges">
+          <div class="stat-badge total">
+            <span class="badge-count">60</span>
+            <span class="badge-label">total</span>
+          </div>
+          <div class="stat-badge pending">
+            <span class="badge-count">28</span>
+            <span class="badge-label">pending</span>
+          </div>
+          <div class="stat-badge reviewing">
+            <span class="badge-count">13</span>
+            <span class="badge-label">reviewing</span>
+          </div>
+          <div class="stat-badge interviewed">
+            <span class="badge-count">5</span>
+            <span class="badge-label">interviewed</span>
+          </div>
+          <div class="stat-badge accepted">
+            <span class="badge-count">10</span>
+            <span class="badge-label">accepted</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-export">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Two-Panel Layout ─── -->
+  <div class="two-panel" id="twoPanel">
+
+    <!-- LEFT PANEL -->
+    <div class="panel-left" id="panelLeft">
+      <div class="list-header">
+        <div class="search-input">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search candidates..." id="searchInput">
+        </div>
+        <div class="filters-row">
+          <select class="filter-select">
+            <option>All Guilds</option>
+            <option>Engineering</option>
+            <option>Design</option>
+            <option>Marketing</option>
+            <option>Data Science</option>
+          </select>
+          <select class="filter-select">
+            <option>All Status</option>
+            <option>Pending</option>
+            <option>Reviewing</option>
+            <option>Interviewed</option>
+            <option>Accepted</option>
+            <option>Rejected</option>
+          </select>
+        </div>
+        <div class="sort-row">
+          <span class="sort-label">Sort:</span>
+          <select class="sort-select">
+            <option>Endorsements</option>
+            <option>Newest First</option>
+            <option>Name A-Z</option>
+            <option>Status</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="candidate-list" id="candidateList">
+
+        <!-- Job Group 1 -->
+        <div class="job-group" data-group="1">
+          <div class="job-group-header" onclick="toggleGroup(this)">
+            <div class="job-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <span class="job-group-title">Lead Web Agent</span>
+            <span class="job-group-count">3</span>
+            <svg class="job-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-group-items">
+            <div class="candidate-row selected" onclick="selectCandidate(this, 'sven')" data-id="sven">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #f97316, #ea580c);">S</div>
+              <div class="cand-info">
+                <div class="cand-name">Sven Daneel</div>
+                <div class="cand-subtitle">Full-Stack Developer</div>
+              </div>
+              <span class="cand-status pending">Pending</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'marco')" data-id="marco">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">M</div>
+              <div class="cand-info">
+                <div class="cand-name">Marco Rivera</div>
+                <div class="cand-subtitle">Frontend Engineer</div>
+              </div>
+              <span class="cand-status reviewing">Reviewing</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'lena')" data-id="lena">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #a855f7, #9333ea);">L</div>
+              <div class="cand-info">
+                <div class="cand-name">Lena Johansson</div>
+                <div class="cand-subtitle">Web3 Developer</div>
+              </div>
+              <span class="cand-status accepted">Accepted</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 2 -->
+        <div class="job-group" data-group="2">
+          <div class="job-group-header" onclick="toggleGroup(this)">
+            <div class="job-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="job-group-title">Regional Accountability Producer</span>
+            <span class="job-group-count">2</span>
+            <svg class="job-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-group-items">
+            <div class="candidate-row" onclick="selectCandidate(this, 'aisha')" data-id="aisha">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">A</div>
+              <div class="cand-info">
+                <div class="cand-name">Aisha Okonkwo</div>
+                <div class="cand-subtitle">Project Manager</div>
+              </div>
+              <span class="cand-status interviewed">Interviewed</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'raj')" data-id="raj">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">R</div>
+              <div class="cand-info">
+                <div class="cand-name">Raj Patel</div>
+                <div class="cand-subtitle">Operations Lead</div>
+              </div>
+              <span class="cand-status pending">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 3 -->
+        <div class="job-group" data-group="3">
+          <div class="job-group-header" onclick="toggleGroup(this)">
+            <div class="job-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+            </div>
+            <span class="job-group-title">Dynamic Data Officer</span>
+            <span class="job-group-count">2</span>
+            <svg class="job-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-group-items">
+            <div class="candidate-row" onclick="selectCandidate(this, 'chen')" data-id="chen">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">C</div>
+              <div class="cand-info">
+                <div class="cand-name">Chen Wei</div>
+                <div class="cand-subtitle">Data Engineer</div>
+              </div>
+              <span class="cand-status reviewing">Reviewing</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'sofia')" data-id="sofia">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #ec4899, #db2777);">S</div>
+              <div class="cand-info">
+                <div class="cand-name">Sofia Andersson</div>
+                <div class="cand-subtitle">Analytics Lead</div>
+              </div>
+              <span class="cand-status pending">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job Group 4 -->
+        <div class="job-group" data-group="4">
+          <div class="job-group-header" onclick="toggleGroup(this)">
+            <div class="job-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <span class="job-group-title">Senior Brand Agent</span>
+            <span class="job-group-count">4</span>
+            <svg class="job-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="job-group-items">
+            <div class="candidate-row" onclick="selectCandidate(this, 'emma')" data-id="emma">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">E</div>
+              <div class="cand-info">
+                <div class="cand-name">Emma Thompson</div>
+                <div class="cand-subtitle">Brand Strategist</div>
+              </div>
+              <span class="cand-status accepted">Accepted</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'omar')" data-id="omar">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">O</div>
+              <div class="cand-info">
+                <div class="cand-name">Omar Hassan</div>
+                <div class="cand-subtitle">Creative Director</div>
+              </div>
+              <span class="cand-status reviewing">Reviewing</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'maria')" data-id="maria">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #f43f5e, #e11d48);">M</div>
+              <div class="cand-info">
+                <div class="cand-name">Maria Santos</div>
+                <div class="cand-subtitle">Marketing Manager</div>
+              </div>
+              <span class="cand-status interviewed">Interviewed</span>
+            </div>
+            <div class="candidate-row" onclick="selectCandidate(this, 'kai')" data-id="kai">
+              <div class="cand-avatar" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">K</div>
+              <div class="cand-info">
+                <div class="cand-name">Kai Nakamura</div>
+                <div class="cand-subtitle">UX Designer</div>
+              </div>
+              <span class="cand-status pending">Pending</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel-right" id="panelRight">
+
+      <!-- Mobile back button -->
+      <button class="mobile-back btn btn-outline" onclick="goBack()" style="display: none; margin: 16px 16px 0; align-self: flex-start;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+
+      <!-- Candidate Detail Header -->
+      <div class="detail-header" id="detailHeader">
+        <div class="detail-top-row">
+          <div class="detail-avatar" style="background: linear-gradient(135deg, #f97316, #ea580c);" id="detailAvatar">S</div>
+          <div class="detail-meta">
+            <div class="detail-name-row">
+              <h2 class="detail-name" id="detailName">Sven Daneel</h2>
+              <svg class="detail-email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="Send email"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div class="detail-role" id="detailRole">Full-Stack Developer</div>
+            <div class="detail-applied-date" id="detailDate">Applied Mar 22, 2026</div>
+          </div>
+          <div class="detail-actions">
+            <span class="btn btn-status" id="detailStatusBtn">Pending</span>
+            <button class="btn btn-primary" id="detailActionBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Start Review
+            </button>
+            <button class="btn btn-danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reject
+            </button>
+          </div>
+        </div>
+
+        <!-- Pipeline Steps -->
+        <div class="pipeline-steps">
+          <div class="pipeline-step current" id="step1">
+            <div class="step-dot current" id="dot1">1</div>
+            <span class="step-label">Pending</span>
+            <div class="step-line active" id="line1"></div>
+          </div>
+          <div class="pipeline-step" id="step2">
+            <div class="step-dot" id="dot2">2</div>
+            <span class="step-label">Reviewing</span>
+            <div class="step-line" id="line2"></div>
+          </div>
+          <div class="pipeline-step" id="step3">
+            <div class="step-dot" id="dot3">3</div>
+            <span class="step-label">Interviewed</span>
+            <div class="step-line" id="line3"></div>
+          </div>
+          <div class="pipeline-step" id="step4" style="flex: 0;">
+            <div class="step-dot" id="dot4">4</div>
+            <span class="step-label">Accepted</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="switchTab(this, 'profile')">Profile</div>
+        <div class="tab-item" onclick="switchTab(this, 'application')">Application</div>
+        <div class="tab-item" onclick="switchTab(this, 'guild')">Guild Report <span class="tab-badge">2</span></div>
+        <div class="tab-item" onclick="switchTab(this, 'history')">History</div>
+        <div class="tab-item" onclick="switchTab(this, 'notes')">Notes</div>
+      </div>
+
+      <!-- Detail Content -->
+      <div class="detail-content" id="detailContent">
+
+        <!-- Profile Tab (default) -->
+        <div class="tab-panel" id="tab-profile">
+
+          <div class="detail-section">
+            <div class="detail-section-title">Applied For</div>
+            <div class="applied-for-card">
+              <div class="applied-job-title" id="appliedJobTitle">Lead Web Agent</div>
+              <div class="applied-tags">
+                <span class="applied-tag type">Hybrid</span>
+                <span class="applied-tag schedule">Part-time</span>
+                <span class="applied-tag dept">Engineering</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Resume</div>
+            <div class="resume-card">
+              <div class="resume-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div class="resume-info">
+                <div class="resume-name">sven_daneel_resume.pdf</div>
+                <div class="resume-meta">PDF document &middot; 245 KB</div>
+              </div>
+              <div class="resume-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Details</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Experience Level</div>
+                <div class="info-value">Senior (5+ years)</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Contact Email</div>
+                <div class="info-value" style="font-size: 13px;">sven@example.com</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Location</div>
+                <div class="info-value">Berlin, Germany</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Salary Expectation</div>
+                <div class="info-value">$120k - $150k</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Skills</div>
+            <div class="skills-list">
+              <span class="skill-chip">React</span>
+              <span class="skill-chip">TypeScript</span>
+              <span class="skill-chip">Node.js</span>
+              <span class="skill-chip">Solidity</span>
+              <span class="skill-chip">GraphQL</span>
+              <span class="skill-chip">AWS</span>
+              <span class="skill-chip">Next.js</span>
+              <span class="skill-chip">PostgreSQL</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Guild Endorsements</div>
+            <div class="endorsements-mini">
+              <div class="endorsement-row">
+                <div class="endorsement-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">JK</div>
+                <div class="endorsement-info">
+                  <div class="endorsement-name">James Kim</div>
+                  <div class="endorsement-guild">Engineering Guild &middot; Senior Expert</div>
+                </div>
+                <div class="endorsement-score">9.2</div>
+              </div>
+              <div class="endorsement-row">
+                <div class="endorsement-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a);">PB</div>
+                <div class="endorsement-info">
+                  <div class="endorsement-name">Priya Bhatt</div>
+                  <div class="endorsement-guild">Engineering Guild &middot; Expert</div>
+                </div>
+                <div class="endorsement-score">8.7</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Application Tab -->
+        <div class="tab-panel" id="tab-application" style="display:none;">
+          <div class="detail-section">
+            <div class="detail-section-title">Cover Letter</div>
+            <div class="cover-letter-preview">
+              <p>Dear Hiring Team,</p>
+              <p>I'm writing to express my strong interest in the Lead Web Agent position. With over 5 years of experience building scalable web applications using React, TypeScript, and Node.js, I believe I can make a significant contribution to your team.</p>
+              <p>In my current role, I've led the development of a decentralized application serving 50k+ users, implementing smart contract integrations and real-time data pipelines. I'm particularly drawn to Vetted's mission of bringing transparency and accountability to the hiring process through blockchain technology.</p>
+              <p>I look forward to discussing how my experience aligns with your needs.</p>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Application Answers</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="info-item">
+                <div class="info-label">Why are you interested in this role?</div>
+                <div class="info-value" style="font-size: 13px; font-weight: 400; color: var(--text-muted); line-height: 1.6;">I'm passionate about decentralized systems and believe in the power of transparent, blockchain-based hiring. This role combines my technical skills with my interest in Web3.</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Availability</div>
+                <div class="info-value" style="font-size: 13px;">Available to start within 2 weeks</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guild Report Tab -->
+        <div class="tab-panel" id="tab-guild" style="display:none;">
+          <div class="detail-section">
+            <div class="detail-section-title">Expert Reviews</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="applied-for-card">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <div class="endorsement-avatar" style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 36px; height: 36px; font-size: 13px;">JK</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text);">James Kim</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">Engineering Guild &middot; Reviewed Mar 24</div>
+                  </div>
+                  <div style="margin-left: auto; font-size: 18px; font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; color: var(--green);">9.2</div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">Strong technical background with excellent problem-solving skills. Deep understanding of React ecosystem and blockchain fundamentals. Highly recommended for senior-level web development roles.</p>
+              </div>
+              <div class="applied-for-card">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <div class="endorsement-avatar" style="background: linear-gradient(135deg, #22c55e, #16a34a); width: 36px; height: 36px; font-size: 13px;">PB</div>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text);">Priya Bhatt</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">Engineering Guild &middot; Reviewed Mar 25</div>
+                  </div>
+                  <div style="margin-left: auto; font-size: 18px; font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; color: var(--green);">8.7</div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">Solid candidate with good communication skills. Technical assessment showed strong proficiency in TypeScript and system design. Would benefit from more blockchain-specific experience but shows strong learning aptitude.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-panel" id="tab-history" style="display:none;">
+          <div class="detail-section">
+            <div class="detail-section-title">Activity Timeline</div>
+            <div style="display: flex; flex-direction: column; gap: 0; padding-left: 16px; border-left: 2px solid var(--border);">
+              <div style="position: relative; padding: 0 0 24px 20px;">
+                <div style="position: absolute; left: -23px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--orange); border: 2px solid var(--bg);"></div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">Application received</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Mar 22, 2026 at 2:34 PM</div>
+              </div>
+              <div style="position: relative; padding: 0 0 24px 20px;">
+                <div style="position: absolute; left: -23px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); border: 2px solid var(--bg);"></div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">Resume viewed by hiring manager</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Mar 23, 2026 at 10:15 AM</div>
+              </div>
+              <div style="position: relative; padding: 0 0 24px 20px;">
+                <div style="position: absolute; left: -23px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--green); border: 2px solid var(--bg);"></div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">Guild review requested</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Mar 23, 2026 at 11:00 AM</div>
+              </div>
+              <div style="position: relative; padding: 0 0 0 20px;">
+                <div style="position: absolute; left: -23px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--purple); border: 2px solid var(--bg);"></div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text);">2 guild endorsements received</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">Mar 25, 2026 at 4:12 PM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes Tab -->
+        <div class="tab-panel" id="tab-notes" style="display:none;">
+          <div class="detail-section">
+            <div class="detail-section-title">Internal Notes</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="applied-for-card">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #4f46e5); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff;">YZ</div>
+                  <span style="font-size: 12px; font-weight: 600; color: var(--text);">You</span>
+                  <span style="font-size: 11px; color: var(--text-dim); margin-left: auto;">Mar 24, 2026</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">Strong profile. Technical skills match our requirements well. Schedule a technical screening call this week.</p>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" placeholder="Add a note..." style="flex: 1; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-size: 13px; font-family: inherit; outline: none;">
+                <button class="btn btn-primary" style="padding: 8px 14px;">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Message Bar -->
+      <div class="message-bar">
+        <div class="message-input-wrap">
+          <input type="text" placeholder="Message Sven Daneel..." id="messageInput">
+          <button class="send-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Candidate data store
+  const candidates = {
+    sven: {
+      name: 'Sven Daneel',
+      initial: 'S',
+      role: 'Full-Stack Developer',
+      gradient: 'linear-gradient(135deg, #f97316, #ea580c)',
+      status: 'pending',
+      step: 1,
+      job: 'Lead Web Agent',
+      date: 'Applied Mar 22, 2026',
+      email: 'sven@example.com',
+      experience: 'Senior (5+ years)',
+      location: 'Berlin, Germany',
+      salary: '$120k - $150k',
+      skills: ['React', 'TypeScript', 'Node.js', 'Solidity', 'GraphQL', 'AWS', 'Next.js', 'PostgreSQL'],
+      tags: [{text: 'Hybrid', cls: 'type'}, {text: 'Part-time', cls: 'schedule'}, {text: 'Engineering', cls: 'dept'}],
+      resume: 'sven_daneel_resume.pdf'
+    },
+    marco: {
+      name: 'Marco Rivera',
+      initial: 'M',
+      role: 'Frontend Engineer',
+      gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+      status: 'reviewing',
+      step: 2,
+      job: 'Lead Web Agent',
+      date: 'Applied Mar 19, 2026',
+      email: 'marco@example.com',
+      experience: 'Mid-level (3-5 years)',
+      location: 'Madrid, Spain',
+      salary: '$90k - $110k',
+      skills: ['React', 'Vue.js', 'CSS', 'JavaScript', 'Figma'],
+      tags: [{text: 'Hybrid', cls: 'type'}, {text: 'Part-time', cls: 'schedule'}, {text: 'Engineering', cls: 'dept'}],
+      resume: 'marco_rivera_cv.pdf'
+    },
+    lena: {
+      name: 'Lena Johansson',
+      initial: 'L',
+      role: 'Web3 Developer',
+      gradient: 'linear-gradient(135deg, #a855f7, #9333ea)',
+      status: 'accepted',
+      step: 4,
+      job: 'Lead Web Agent',
+      date: 'Applied Mar 10, 2026',
+      email: 'lena@example.com',
+      experience: 'Senior (5+ years)',
+      location: 'Stockholm, Sweden',
+      salary: '$130k - $160k',
+      skills: ['Solidity', 'Rust', 'React', 'Web3.js', 'Hardhat', 'Ethers.js'],
+      tags: [{text: 'Remote', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Engineering', cls: 'dept'}],
+      resume: 'lena_johansson_resume.pdf'
+    },
+    aisha: {
+      name: 'Aisha Okonkwo',
+      initial: 'A',
+      role: 'Project Manager',
+      gradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
+      status: 'interviewed',
+      step: 3,
+      job: 'Regional Accountability Producer',
+      date: 'Applied Mar 15, 2026',
+      email: 'aisha@example.com',
+      experience: 'Senior (7+ years)',
+      location: 'Lagos, Nigeria',
+      salary: '$100k - $130k',
+      skills: ['Agile', 'Scrum', 'JIRA', 'Stakeholder Management', 'Risk Assessment'],
+      tags: [{text: 'Remote', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Operations', cls: 'dept'}],
+      resume: 'aisha_okonkwo_cv.pdf'
+    },
+    raj: {
+      name: 'Raj Patel',
+      initial: 'R',
+      role: 'Operations Lead',
+      gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+      status: 'pending',
+      step: 1,
+      job: 'Regional Accountability Producer',
+      date: 'Applied Mar 25, 2026',
+      email: 'raj@example.com',
+      experience: 'Mid-level (4 years)',
+      location: 'Mumbai, India',
+      salary: '$80k - $100k',
+      skills: ['Operations', 'Supply Chain', 'Data Analysis', 'Leadership'],
+      tags: [{text: 'Hybrid', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Operations', cls: 'dept'}],
+      resume: 'raj_patel_resume.pdf'
+    },
+    chen: {
+      name: 'Chen Wei',
+      initial: 'C',
+      role: 'Data Engineer',
+      gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+      status: 'reviewing',
+      step: 2,
+      job: 'Dynamic Data Officer',
+      date: 'Applied Mar 18, 2026',
+      email: 'chen@example.com',
+      experience: 'Senior (6 years)',
+      location: 'Shanghai, China',
+      salary: '$110k - $140k',
+      skills: ['Python', 'SQL', 'Spark', 'Kafka', 'dbt', 'Airflow'],
+      tags: [{text: 'Remote', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Data', cls: 'dept'}],
+      resume: 'chen_wei_cv.pdf'
+    },
+    sofia: {
+      name: 'Sofia Andersson',
+      initial: 'S',
+      role: 'Analytics Lead',
+      gradient: 'linear-gradient(135deg, #ec4899, #db2777)',
+      status: 'pending',
+      step: 1,
+      job: 'Dynamic Data Officer',
+      date: 'Applied Mar 26, 2026',
+      email: 'sofia@example.com',
+      experience: 'Mid-level (4 years)',
+      location: 'Copenhagen, Denmark',
+      salary: '$95k - $120k',
+      skills: ['Python', 'R', 'Tableau', 'SQL', 'Machine Learning'],
+      tags: [{text: 'Hybrid', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Data', cls: 'dept'}],
+      resume: 'sofia_andersson_resume.pdf'
+    },
+    emma: {
+      name: 'Emma Thompson',
+      initial: 'E',
+      role: 'Brand Strategist',
+      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      status: 'accepted',
+      step: 4,
+      job: 'Senior Brand Agent',
+      date: 'Applied Mar 8, 2026',
+      email: 'emma@example.com',
+      experience: 'Senior (8 years)',
+      location: 'London, UK',
+      salary: '$115k - $145k',
+      skills: ['Brand Strategy', 'Content Marketing', 'SEO', 'Analytics', 'Copywriting'],
+      tags: [{text: 'Remote', cls: 'type'}, {text: 'Part-time', cls: 'schedule'}, {text: 'Marketing', cls: 'dept'}],
+      resume: 'emma_thompson_cv.pdf'
+    },
+    omar: {
+      name: 'Omar Hassan',
+      initial: 'O',
+      role: 'Creative Director',
+      gradient: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+      status: 'reviewing',
+      step: 2,
+      job: 'Senior Brand Agent',
+      date: 'Applied Mar 20, 2026',
+      email: 'omar@example.com',
+      experience: 'Senior (6 years)',
+      location: 'Dubai, UAE',
+      salary: '$105k - $135k',
+      skills: ['Creative Direction', 'Adobe Suite', 'Branding', 'Motion Design', 'UI Design'],
+      tags: [{text: 'On-site', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Marketing', cls: 'dept'}],
+      resume: 'omar_hassan_resume.pdf'
+    },
+    maria: {
+      name: 'Maria Santos',
+      initial: 'M',
+      role: 'Marketing Manager',
+      gradient: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+      status: 'interviewed',
+      step: 3,
+      job: 'Senior Brand Agent',
+      date: 'Applied Mar 14, 2026',
+      email: 'maria@example.com',
+      experience: 'Mid-level (5 years)',
+      location: 'Lisbon, Portugal',
+      salary: '$90k - $115k',
+      skills: ['Marketing Strategy', 'Social Media', 'PPC', 'Email Marketing', 'Analytics'],
+      tags: [{text: 'Hybrid', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Marketing', cls: 'dept'}],
+      resume: 'maria_santos_cv.pdf'
+    },
+    kai: {
+      name: 'Kai Nakamura',
+      initial: 'K',
+      role: 'UX Designer',
+      gradient: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+      status: 'pending',
+      step: 1,
+      job: 'Senior Brand Agent',
+      date: 'Applied Mar 27, 2026',
+      email: 'kai@example.com',
+      experience: 'Mid-level (3 years)',
+      location: 'Tokyo, Japan',
+      salary: '$85k - $105k',
+      skills: ['UX Research', 'Figma', 'Prototyping', 'User Testing', 'Design Systems'],
+      tags: [{text: 'Remote', cls: 'type'}, {text: 'Full-time', cls: 'schedule'}, {text: 'Design', cls: 'dept'}],
+      resume: 'kai_nakamura_portfolio.pdf'
+    }
+  };
+
+  const statusLabels = {
+    pending: 'Pending',
+    reviewing: 'Reviewing',
+    interviewed: 'Interviewed',
+    accepted: 'Accepted',
+    rejected: 'Rejected'
+  };
+
+  const actionLabels = {
+    pending: 'Start Review',
+    reviewing: 'Schedule Interview',
+    interviewed: 'Make Decision',
+    accepted: 'Onboard',
+    rejected: 'Reconsider'
+  };
+
+  function toggleGroup(header) {
+    const group = header.closest('.job-group');
+    group.classList.toggle('collapsed');
+  }
+
+  function selectCandidate(row, id) {
+    // Deselect all
+    document.querySelectorAll('.candidate-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+
+    const c = candidates[id];
+    if (!c) return;
+
+    // Update detail panel
+    document.getElementById('detailAvatar').style.background = c.gradient;
+    document.getElementById('detailAvatar').textContent = c.initial;
+    document.getElementById('detailName').textContent = c.name;
+    document.getElementById('detailRole').textContent = c.role;
+    document.getElementById('detailDate').textContent = c.date;
+    document.getElementById('appliedJobTitle').textContent = c.job;
+    document.getElementById('messageInput').placeholder = `Message ${c.name}...`;
+
+    // Status button
+    const statusBtn = document.getElementById('detailStatusBtn');
+    statusBtn.textContent = statusLabels[c.status];
+    statusBtn.className = 'btn btn-status';
+    if (c.status === 'reviewing') {
+      statusBtn.style.background = 'var(--blue-soft)';
+      statusBtn.style.color = 'var(--blue)';
+      statusBtn.style.borderColor = 'var(--blue-border)';
+    } else if (c.status === 'interviewed') {
+      statusBtn.style.background = 'var(--purple-soft)';
+      statusBtn.style.color = 'var(--purple)';
+      statusBtn.style.borderColor = 'var(--purple-border)';
+    } else if (c.status === 'accepted') {
+      statusBtn.style.background = 'var(--green-soft)';
+      statusBtn.style.color = 'var(--green)';
+      statusBtn.style.borderColor = 'var(--green-border)';
+    } else {
+      statusBtn.style.background = 'var(--orange-soft)';
+      statusBtn.style.color = 'var(--orange)';
+      statusBtn.style.borderColor = 'var(--orange-border)';
+    }
+
+    // Action button
+    document.getElementById('detailActionBtn').lastChild.textContent = ' ' + actionLabels[c.status];
+
+    // Pipeline steps
+    updatePipeline(c.step);
+
+    // Tags
+    const tagsContainer = document.querySelector('.applied-tags');
+    tagsContainer.innerHTML = c.tags.map(t => `<span class="applied-tag ${t.cls}">${t.text}</span>`).join('');
+
+    // Resume
+    document.querySelector('.resume-name').textContent = c.resume;
+
+    // Info grid
+    const infoItems = document.querySelectorAll('.info-item');
+    if (infoItems.length >= 4) {
+      infoItems[0].querySelector('.info-value').textContent = c.experience;
+      infoItems[1].querySelector('.info-value').textContent = c.email;
+      infoItems[2].querySelector('.info-value').textContent = c.location;
+      infoItems[3].querySelector('.info-value').textContent = c.salary;
+    }
+
+    // Skills
+    const skillsList = document.querySelector('.skills-list');
+    skillsList.innerHTML = c.skills.map(s => `<span class="skill-chip">${s}</span>`).join('');
+
+    // Reset to profile tab
+    switchTab(document.querySelector('.tab-item.active') || document.querySelector('.tab-item'), 'profile');
+
+    // Mobile: show detail
+    if (window.innerWidth <= 768) {
+      document.getElementById('twoPanel').classList.add('show-detail');
+    }
+  }
+
+  function updatePipeline(step) {
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.getElementById('dot' + i);
+      const line = document.getElementById('line' + i);
+      const pipeStep = document.getElementById('step' + i);
+
+      dot.className = 'step-dot';
+      if (pipeStep) pipeStep.className = 'pipeline-step';
+      if (line) line.className = 'step-line';
+
+      if (i < step) {
+        dot.classList.add('completed');
+        if (pipeStep) pipeStep.classList.add('completed');
+        if (line) line.classList.add('completed');
+      } else if (i === step) {
+        dot.classList.add('current');
+        if (pipeStep) pipeStep.classList.add('current');
+        if (line) line.classList.add('active');
+      }
+      // Keep last step without flex:0 removal
+      if (i === 4) pipeStep.style.flex = '0';
+    }
+  }
+
+  function switchTab(el, tabId) {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('tab-' + tabId);
+    if (panel) panel.style.display = 'block';
+  }
+
+  function goBack() {
+    document.getElementById('twoPanel').classList.remove('show-detail');
+  }
+
+  // Search filtering
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.candidate-row').forEach(row => {
+      const name = row.querySelector('.cand-name').textContent.toLowerCase();
+      const subtitle = row.querySelector('.cand-subtitle').textContent.toLowerCase();
+      row.style.display = (name.includes(q) || subtitle.includes(q)) ? '' : 'none';
+    });
+    // Update group counts
+    document.querySelectorAll('.job-group').forEach(group => {
+      const visible = group.querySelectorAll('.candidate-row:not([style*="display: none"])').length;
+      group.querySelector('.job-group-count').textContent = visible;
+      group.style.display = visible > 0 ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

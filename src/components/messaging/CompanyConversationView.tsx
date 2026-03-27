@@ -125,7 +125,7 @@ export default function CompanyConversationView() {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-semibold text-xs">
+            <span className="text-primary font-medium text-xs">
               {conversation.candidateName.charAt(0).toUpperCase()}
             </span>
           </div>

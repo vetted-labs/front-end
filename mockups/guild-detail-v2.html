@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Design Guild v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#060a14;--card:rgba(12,18,33,0.6);--stat:rgba(255,255,255,0.025);
+    --border:rgba(255,255,255,0.06);--t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;
+    --gc:#f97316;--gc-soft:rgba(249,115,22,0.08);--gc-border:rgba(249,115,22,0.2);--gc-glow:rgba(249,115,22,0.12);
+    --emerald:#34d399;--emerald-s:rgba(52,211,153,0.08);
+    --amber:#fbbf24;--amber-s:rgba(251,191,36,0.08);
+    --cyan:#22d3ee;--cyan-s:rgba(34,211,238,0.08);
+    --orange:#f97316;--orange-s:rgba(249,115,22,0.08);
+    --r:20px;--fd:'Outfit',sans-serif;--fb:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;
+  }
+  body{background:var(--bg);color:var(--t1);font-family:var(--fb);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{content:'';position:absolute;width:800px;height:800px;top:-12%;left:10%;background:radial-gradient(circle,rgba(249,115,22,0.07) 0%,transparent 65%);animation:drift 20s ease-in-out infinite alternate}
+  .bg-fx::after{content:'';position:absolute;width:500px;height:500px;bottom:-8%;right:5%;background:radial-gradient(circle,rgba(234,88,12,0.04) 0%,transparent 60%);animation:drift 25s ease-in-out infinite alternate-reverse}
+  @keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,20px) scale(1.05)}}
+  .dots{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,0.022) 1px,transparent 1px);background-size:28px 28px}
+
+  .page{position:relative;z-index:2}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+  .glass{background:var(--card);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:relative;overflow:hidden}
+  .glass-shim::after{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--gc-border),transparent 40%,transparent 60%,rgba(251,191,36,0.12));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .4s;pointer-events:none}
+  .glass-shim:hover::after{opacity:1}
+
+  /* Breadcrumb */
+  .bc{padding:20px 0;font-size:13px;color:var(--t3);display:flex;align-items:center;gap:8px}
+  .bc a{color:var(--t3);text-decoration:none;transition:color .2s}.bc a:hover{color:var(--t2)}
+  .bc .cur{color:var(--gc);font-weight:600}
+  .bc .sep{opacity:.3}
+
+  /* ═══ BENTO GRID ═══ */
+  .bento{display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto auto;gap:12px;margin-bottom:12px}
+  @media(max-width:860px){.bento{grid-template-columns:1fr;}.bento-identity{grid-row:auto}.bento-pos{grid-row:auto}.bento-health{grid-row:auto}.bento-stake{grid-row:auto}}
+  .bento-identity{grid-row:1;grid-column:1}
+  .bento-pos{grid-row:1;grid-column:2}
+  .bento-health{grid-row:2;grid-column:1}
+  .bento-stake{grid-row:2;grid-column:2}
+
+  /* Guild identity */
+  .identity{padding:32px}
+  .guild-icon{width:56px;height:56px;border-radius:16px;background:var(--gc-soft);border:1px solid var(--gc-border);display:flex;align-items:center;justify-content:center;color:var(--gc);margin-bottom:16px;box-shadow:0 0 20px var(--gc-glow)}
+  .guild-icon svg{width:28px;height:28px}
+  .guild-title{font-family:var(--fd);font-size:42px;font-weight:800;letter-spacing:-1px;margin-bottom:8px;background:linear-gradient(135deg,#f8fafc,#cbd5e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .guild-desc{font-size:15px;color:var(--t2);line-height:1.6;margin-bottom:16px;max-width:520px}
+  .meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--t2)}
+  .chip svg{width:13px;height:13px;color:var(--t3)}
+  .chip-dot{width:3px;height:3px;border-radius:50%;background:var(--t3)}
+  .mbr-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:100px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);font-size:11px;font-weight:600;color:var(--emerald)}
+  .mbr-badge svg{width:13px;height:13px}
+  .mbr-badge .master{color:var(--gc)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .btn-stake{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:12px;background:var(--gc-soft);border:1px solid var(--gc-border);color:var(--gc);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;transition:all .3s;box-shadow:0 0 14px var(--gc-glow)}
+  .btn-stake:hover{background:rgba(249,115,22,0.15);border-color:rgba(249,115,22,0.35);box-shadow:0 0 22px rgba(249,115,22,0.18)}
+  .btn-stake svg{width:15px;height:15px}
+  .btn-sec{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;transition:all .3s}
+  .btn-sec:hover{border-color:var(--gc-border);color:var(--t1);background:rgba(255,255,255,0.05)}
+  .btn-sec svg{width:13px;height:13px}
+
+  /* Your position */
+  .pos-card{padding:28px 24px;display:flex;flex-direction:column}
+  .pos-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:18px;display:flex;align-items:center;gap:6px}
+  .pos-label svg{width:12px;height:12px;color:var(--gc)}
+  .pos-rep{font-family:var(--fm);font-size:38px;font-weight:800;color:var(--t1);margin-bottom:2px;letter-spacing:-1px}
+  .pos-rep-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+  .pos-rank{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .rank-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;background:var(--gc-soft);border:1px solid var(--gc-border);font-family:var(--fd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gc)}
+  .rank-badge .dot{width:4px;height:4px;border-radius:50%;background:var(--gc);box-shadow:0 0 6px var(--gc)}
+  .rank-bar-wrap{margin-bottom:18px}
+  .rank-bar{width:100%;height:3px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden}
+  .rank-fill{height:100%;border-radius:3px;background:var(--gc);box-shadow:0 0 8px var(--gc-glow)}
+  .rank-label{font-size:10px;color:var(--t3);font-family:var(--fm);margin-top:4px}
+  .pos-divider{width:100%;height:1px;background:var(--border);margin:0 0 14px}
+  .pos-earn{display:flex;align-items:center;justify-content:space-between}
+  .pos-earn-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px}
+  .pos-earn-val{font-family:var(--fm);font-size:20px;font-weight:700;color:var(--emerald)}
+  .pos-earn-unit{font-size:11px;color:var(--t3);font-family:var(--fm);margin-left:4px}
+
+  /* Health stats */
+  .health{padding:20px 28px;display:flex;align-items:center;gap:0}
+  .health-stat{flex:1;text-align:center;padding:8px 0;position:relative}
+  .health-stat+.health-stat::before{content:'';position:absolute;left:0;top:20%;height:60%;width:1px;background:var(--border)}
+  .health-stat .hs-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+  .health-stat .hs-icon svg{width:13px;height:13px}
+  .health-stat .hs-val{font-family:var(--fm);font-size:20px;font-weight:700;color:var(--t1);margin-bottom:2px}
+  .health-stat .hs-label{font-size:10px;color:var(--t3);letter-spacing:.3px}
+
+  /* Stake card */
+  .stake-card{padding:22px 24px;display:flex;flex-direction:column;justify-content:center}
+  .stake-card .s-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .stake-card .s-label svg{width:12px;height:12px;color:var(--gc)}
+  .stake-row{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .stake-val{font-family:var(--fm);font-size:28px;font-weight:700;color:var(--t1)}
+  .stake-unit{font-size:12px;color:var(--gc);font-family:var(--fm);font-weight:600}
+  .stake-sub{font-size:11px;color:var(--t3);margin-bottom:14px}
+  .stake-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:10px;background:var(--gc-soft);border:1px solid var(--gc-border);color:var(--gc);font-family:var(--fd);font-size:12px;font-weight:700;cursor:pointer;transition:all .3s;width:fit-content}
+  .stake-btn:hover{background:rgba(249,115,22,0.15);box-shadow:0 0 14px var(--gc-glow)}
+  .stake-btn svg{width:13px;height:13px}
+
+  /* ═══ TAB BAR ═══ */
+  .tab-bar{position:sticky;top:0;z-index:20;background:rgba(6,10,20,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);margin:0 -24px;padding:0 24px}
+  .tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:color .25s;white-space:nowrap;position:relative;border-bottom:2px solid transparent}
+  .tab:hover{color:var(--t2)}
+  .tab.active{color:var(--gc);font-weight:700;border-bottom-color:var(--gc)}
+  .tab .badge{font-family:var(--fm);font-size:10px;padding:1px 7px;border-radius:100px;background:var(--gc-soft);color:var(--gc);margin-left:6px;font-weight:600}
+
+  /* ═══ FEED ═══ */
+  .feed-area{padding-top:28px;padding-bottom:60px}
+  .feed-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+  .btn-post{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;border-radius:10px;background:linear-gradient(135deg,var(--gc),#ea580c);color:#0a0a0a;font-family:var(--fd);font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .25s;box-shadow:0 4px 14px rgba(167,139,250,0.25)}
+  .btn-post:hover{box-shadow:0 6px 22px rgba(249,115,22,0.35);transform:translateY(-1px)}
+  .btn-post svg{width:13px;height:13px}
+  .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .filter-group{display:flex;gap:3px;padding:3px;background:rgba(255,255,255,0.02);border-radius:9px;border:1px solid var(--border)}
+  .fp{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:500;color:var(--t3);cursor:pointer;transition:all .2s;border:none;background:transparent;display:flex;align-items:center;gap:4px}
+  .fp:hover{color:var(--t2);background:rgba(255,255,255,0.03)}
+  .fp.active{color:var(--gc);background:var(--gc-soft)}
+  .fp svg{width:11px;height:11px}
+  .divider-v{width:1px;height:20px;background:var(--border)}
+  .cats{display:flex;gap:5px;flex-wrap:wrap}
+  .cat{padding:4px 13px;border-radius:100px;font-size:11px;font-weight:500;color:var(--t3);border:1px solid var(--border);background:transparent;cursor:pointer;transition:all .2s}
+  .cat:hover{color:var(--t2);border-color:rgba(255,255,255,0.1)}
+  .cat.active{color:var(--gc);border-color:var(--gc-border);background:var(--gc-soft)}
+
+  /* Posts */
+  .posts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .post{border-radius:16px;padding:0;display:flex;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+  .post:hover{border-color:var(--gc-border);box-shadow:0 0 24px rgba(167,139,250,0.04)}
+  .post-accent{width:3px;flex-shrink:0;border-radius:3px 0 0 3px}
+  .post-accent.violet{background:#a78bfa}
+  .post-accent.cyan{background:var(--cyan)}
+  .post-accent.orange{background:var(--orange)}
+  .post-inner{flex:1;padding:20px 24px}
+  .post-pin{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gc);margin-bottom:6px}
+  .post-pin svg{width:11px;height:11px}
+  .post-author{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .post-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:9px;font-weight:700;flex-shrink:0;color:var(--t1)}
+  .post-avatar.v{background:linear-gradient(135deg,rgba(249,115,22,0.25),rgba(234,88,12,0.15))}
+  .post-avatar.c{background:linear-gradient(135deg,rgba(34,211,238,0.25),rgba(6,182,212,0.15))}
+  .post-name{font-size:13px;font-weight:600;color:var(--t1)}
+  .post-rank{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:4px}
+  .post-rank.master{background:rgba(251,191,36,0.08);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+  .post-rank.expert{background:var(--emerald-s);color:var(--emerald);border:1px solid rgba(52,211,153,0.2)}
+  .post-rep{font-family:var(--fm);font-size:11px;color:var(--amber);display:flex;align-items:center;gap:2px}
+  .post-rep svg{width:10px;height:10px;fill:var(--amber)}
+  .post-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 9px;border-radius:100px}
+  .post-tag.insight{background:rgba(167,139,250,0.08);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)}
+  .post-tag.question{background:var(--cyan-s);color:var(--cyan);border:1px solid rgba(34,211,238,0.2)}
+  .post-time{font-size:11px;color:var(--t3)}
+  .post-title{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--t1);margin-bottom:5px;line-height:1.4;cursor:pointer;transition:color .2s}
+  .post-title:hover{color:var(--gc)}
+  .post-excerpt{font-size:13px;color:var(--t2);line-height:1.55;margin-bottom:12px}
+  .post-footer{display:flex;align-items:center;gap:16px}
+  .pf-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t3);cursor:pointer;transition:color .2s;border:none;background:none;padding:4px 8px;border-radius:6px}
+  .pf-item:hover{color:var(--t2);background:rgba(255,255,255,0.03)}
+  .pf-item svg{width:14px;height:14px}
+  .pf-item.voted{color:var(--gc)}
+  .pf-item .count{font-family:var(--fm);font-weight:600}
+
+  @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .a{animation:fade-up .5s ease forwards;opacity:0}
+  .a1{animation-delay:.05s}.a2{animation-delay:.1s}.a3{animation-delay:.15s}
+  .a4{animation-delay:.2s}.a5{animation-delay:.25s}.a6{animation-delay:.3s}
+  .a7{animation-delay:.35s}.a8{animation-delay:.4s}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+<div class="dots"></div>
+
+<div class="page">
+<div class="container">
+
+  <nav class="bc a a1">
+    <a href="#">Dashboard</a><span class="sep">›</span>
+    <a href="#">Guilds</a><span class="sep">›</span>
+    <span class="cur">Design</span>
+  </nav>
+
+  <!-- ═══ BENTO GRID ═══ -->
+  <div class="bento">
+
+    <!-- Identity -->
+    <div class="glass glass-shim bento-identity identity a a2">
+      <div class="guild-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      </div>
+      <h1 class="guild-title">Design</h1>
+      <p class="guild-desc">Designers and user experience professionals who evaluate candidates for product design, visual systems, and user research roles.</p>
+      <div class="meta-row">
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>2 members</span>
+        <span class="chip-dot"></span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>0 candidates</span>
+        <span class="chip-dot"></span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>Est. 2026</span>
+      </div>
+      <span class="mbr-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+        Member <span style="opacity:.4;margin:0 2px">·</span> <span class="master">Master</span>
+      </span>
+      <div class="actions">
+        <button class="btn-sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Expert Dashboard</button>
+        <button class="btn-sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>Public Page</button>
+      </div>
+    </div>
+
+    <!-- Your Position -->
+    <div class="glass glass-shim bento-pos pos-card a a3">
+      <div class="pos-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Your Position
+      </div>
+      <div class="pos-rep">500</div>
+      <div class="pos-rep-label">Reputation</div>
+      <div class="pos-rank">
+        <span class="rank-badge"><span class="dot"></span> Master</span>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar"><div class="rank-fill" style="width:100%"></div></div>
+        <div class="rank-label">Max rank achieved</div>
+      </div>
+      <div class="pos-divider"></div>
+      <div class="pos-earn">
+        <span class="pos-earn-label">Earnings</span>
+        <span><span class="pos-earn-val">$0</span><span class="pos-earn-unit">VETD</span></span>
+      </div>
+    </div>
+
+    <!-- Health Stats -->
+    <div class="glass bento-health health a a4">
+      <div class="health-stat">
+        <div class="hs-icon" style="background:var(--gc-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gc)" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <div class="hs-val">0</div>
+        <div class="hs-label">Reviewed</div>
+      </div>
+      <div class="health-stat">
+        <div class="hs-icon" style="background:var(--amber-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="hs-val">&mdash;</div>
+        <div class="hs-label">Avg Time</div>
+      </div>
+      <div class="health-stat">
+        <div class="hs-icon" style="background:var(--emerald-s)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="hs-val">0</div>
+        <div class="hs-label">Candidates</div>
+      </div>
+      <div class="health-stat">
+        <div class="hs-icon" style="background:rgba(255,255,255,0.03)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div class="hs-val">2</div>
+        <div class="hs-label">Members</div>
+      </div>
+    </div>
+
+    <!-- Staking -->
+    <div class="glass glass-shim bento-stake stake-card a a5">
+      <div class="s-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+        Guild Staking
+      </div>
+      <div class="stake-row">
+        <span class="stake-val">190</span>
+        <span class="stake-unit">VETD</span>
+      </div>
+      <div class="stake-sub">Total staked by all members</div>
+      <button class="stake-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+        Stake VETD
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ TAB BAR ═══ -->
+  <div class="tab-bar a a6">
+    <div class="tabs">
+      <div class="tab active">Feed</div>
+      <div class="tab">Reviews<span class="badge">0</span></div>
+      <div class="tab">Jobs<span class="badge">0</span></div>
+      <div class="tab">Activity</div>
+      <div class="tab">Earnings</div>
+      <div class="tab">Members<span class="badge">2</span></div>
+      <div class="tab">Leaderboard</div>
+    </div>
+  </div>
+
+  <!-- ═══ FEED ═══ -->
+  <div class="feed-area">
+    <div class="feed-toolbar a a7">
+      <div class="filter-row">
+        <div class="filter-group">
+          <button class="fp active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Hot</button>
+          <button class="fp">New</button>
+          <button class="fp">Top</button>
+          <button class="fp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>Saved</button>
+        </div>
+        <div class="divider-v"></div>
+        <div class="cats">
+          <button class="cat active">All</button>
+          <button class="cat">Discussion</button>
+          <button class="cat">Question</button>
+          <button class="cat">Insight</button>
+          <button class="cat">Job-Related</button>
+        </div>
+      </div>
+      <button class="btn-post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>New Post</button>
+    </div>
+
+    <div class="posts">
+      <!-- Post 1: Pinned, Insight -->
+      <div class="glass post a a7">
+        <div class="post-accent violet"></div>
+        <div class="post-inner">
+          <div class="post-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>Pinned</div>
+          <div class="post-author">
+            <div class="post-avatar v">SD</div>
+            <span class="post-name">Sven Daneel</span>
+            <span class="post-rank master">Master</span>
+            <span class="post-rep"><svg viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>1132</span>
+            <span class="post-tag insight">Insight</span>
+            <span class="post-time">4w ago</span>
+          </div>
+          <div class="post-title">Design system knowledge is the #1 predictor of senior-level success</div>
+          <p class="post-excerpt">After reviewing 30+ design proposals, candidates with demonstrated design system experience had significantly higher pass rates during the endorsement phase. Worth weighting this higher.</p>
+          <div class="post-footer">
+            <button class="pf-item voted">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+              <span class="count">3</span>
+            </button>
+            <button class="pf-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              <span>10 replies</span>
+            </button>
+            <button class="pf-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post 2: Question -->
+      <div class="glass post a a8">
+        <div class="post-accent cyan"></div>
+        <div class="post-inner">
+          <div class="post-author">
+            <div class="post-avatar c">TC</div>
+            <span class="post-name">Taieb Chaouch</span>
+            <span class="post-rank expert">Expert</span>
+            <span class="post-rep"><svg viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>921</span>
+            <span class="post-tag question">Question</span>
+            <span class="post-time">3w ago</span>
+          </div>
+          <div class="post-title">How do you handle design tool preferences in evaluations?</div>
+          <p class="post-excerpt">Some candidates are Figma-native while others come from Sketch or Adobe backgrounds. Should tool proficiency factor into scoring, or is that just a ramp-up issue?</p>
+          <div class="post-footer">
+            <button class="pf-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+              <span class="count">3</span>
+            </button>
+            <button class="pf-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              <span>5 replies</span>
+            </button>
+            <button class="pf-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</body>
+</html>

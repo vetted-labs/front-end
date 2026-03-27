@@ -66,7 +66,7 @@ export function GuildMembershipApplicationsTab({
               <Shield className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-semibold text-foreground mb-1">
+              <h3 className="text-sm font-bold text-foreground mb-1">
                 Stake VETD to Start Reviewing
               </h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -93,7 +93,7 @@ export function GuildMembershipApplicationsTab({
         >
           Expert Reviews
           {expertCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {expertCount}
             </span>
           )}
@@ -108,7 +108,7 @@ export function GuildMembershipApplicationsTab({
         >
           Candidate Reviews
           {candidateCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {candidateCount}
             </span>
           )}
@@ -130,7 +130,7 @@ export function GuildMembershipApplicationsTab({
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">
+              <h3 className="text-xl font-bold text-foreground mb-1">
                 Expert Proposals to Join Guild
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -139,7 +139,7 @@ export function GuildMembershipApplicationsTab({
               </p>
             </div>
             {expertCount > 0 && (
-              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
                 {expertCount} pending
               </span>
             )}
@@ -150,7 +150,7 @@ export function GuildMembershipApplicationsTab({
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 No Pending Expert Applications
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -167,10 +167,10 @@ export function GuildMembershipApplicationsTab({
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1.5">
-                        <h4 className="font-semibold text-foreground text-base truncate">
+                        <h4 className="font-bold text-foreground text-sm truncate">
                           {application.fullName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
                           {application.expertiseLevel}
                         </span>
                         {application.finalized && application.outcome && (
@@ -249,13 +249,13 @@ export function GuildMembershipApplicationsTab({
                           {application.expertiseAreas.slice(0, 4).map((area, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 bg-muted/50 text-foreground text-[11px] rounded-md border border-border"
+                              className="px-2 py-0.5 bg-muted/50 text-foreground text-xs rounded-md border border-border"
                             >
                               {area}
                             </span>
                           ))}
                           {application.expertiseAreas.length > 4 && (
-                            <span className="px-2 py-0.5 bg-muted/50 text-muted-foreground text-[11px] rounded-md border border-border">
+                            <span className="px-2 py-0.5 bg-muted/50 text-muted-foreground text-xs rounded-md border border-border">
                               +{application.expertiseAreas.length - 4} more
                             </span>
                           )}
@@ -320,7 +320,7 @@ export function GuildMembershipApplicationsTab({
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-1">
+              <h3 className="text-xl font-bold text-foreground mb-1">
                 Candidate Applications to Join Guild
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ export function GuildMembershipApplicationsTab({
               </p>
             </div>
             {candidateCount > 0 && (
-              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+              <span className="shrink-0 px-3 py-1 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
                 {candidateCount} pending
               </span>
             )}
@@ -339,7 +339,7 @@ export function GuildMembershipApplicationsTab({
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 No Pending Candidate Applications
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -356,10 +356,10 @@ export function GuildMembershipApplicationsTab({
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1.5">
-                        <h4 className="font-semibold text-foreground text-base truncate">
+                        <h4 className="font-bold text-foreground text-sm truncate">
                           {application.candidateName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+                        <span className="shrink-0 px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
                           {application.expertiseLevel}
                         </span>
                       </div>
@@ -438,7 +438,7 @@ export function GuildMembershipApplicationsTab({
       {activeSubTab === "proposals" && (
         <div className="space-y-4">
           <div className="mb-2">
-            <h3 className="text-lg font-semibold text-foreground mb-1">
+            <h3 className="text-xl font-bold text-foreground mb-1">
               Candidate Proposals
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -455,7 +455,7 @@ export function GuildMembershipApplicationsTab({
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Vote className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 No Candidate Proposals
               </h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -473,7 +473,7 @@ export function GuildMembershipApplicationsTab({
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1.5">
-                        <h4 className="font-semibold text-foreground text-base truncate">
+                        <h4 className="font-bold text-foreground text-sm truncate">
                           {proposal.candidate_name}
                         </h4>
                         <Badge

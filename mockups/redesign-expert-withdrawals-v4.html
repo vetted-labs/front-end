@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staking Portfolio — V4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #07070b;
+    --surface: rgba(255,255,255,0.025);
+    --surface-hover: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.1);
+    --text: #e8e8ed;
+    --text-muted: #8a8a9a;
+    --text-dim: #555566;
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.1);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.1);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.1);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.1);
+    --purple: #a855f7;
+    --purple-dim: rgba(168,85,247,0.1);
+    --teal: #14b8a6;
+    --teal-dim: rgba(20,184,166,0.1);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.1);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle top glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(249,115,22,0.035) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ─────────────── HEADER ─────────────── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .page-header h1 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 30px;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .wallet-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .wallet-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(34,197,94,0.45);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(34,197,94,0.45); }
+    50% { box-shadow: 0 0 14px rgba(34,197,94,0.65); }
+  }
+  .wallet-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ─────────────── OVERVIEW STRIP ─────────────── */
+  .overview-strip {
+    display: flex;
+    align-items: baseline;
+    gap: 40px;
+    margin-bottom: 44px;
+    padding: 24px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+  }
+  .overview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .overview-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+  }
+  .overview-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .overview-value .unit {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+  .overview-value.primary { color: var(--orange); }
+  .overview-value.muted { color: var(--text-muted); font-size: 22px; }
+  .overview-value.warn { color: var(--amber); font-size: 22px; }
+
+  /* Separator between overview items */
+  .overview-sep {
+    width: 1px;
+    height: 36px;
+    background: var(--border);
+    align-self: center;
+  }
+
+  /* ─────────────── SECTION HEADINGS ─────────────── */
+  .section-head {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #fff;
+    margin-bottom: 16px;
+    letter-spacing: -0.2px;
+  }
+
+  /* ─────────────── GUILD STAKES LIST ─────────────── */
+  .guild-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 44px;
+  }
+
+  .guild-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .guild-row:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  /* Guild identity */
+  .guild-id {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .guild-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .guild-dot.blue { background: var(--blue); }
+  .guild-dot.purple { background: var(--purple); }
+  .guild-dot.teal { background: var(--teal); }
+  .guild-dot.red { background: var(--red); }
+
+  .guild-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .guild-icon svg { width: 20px; height: 20px; }
+  .guild-icon.engineering { background: var(--blue-dim); color: var(--blue); }
+  .guild-icon.design { background: var(--purple-dim); color: var(--purple); }
+  .guild-icon.data { background: var(--teal-dim); color: var(--teal); }
+  .guild-icon.security { background: var(--red-dim); color: var(--red); }
+
+  .guild-text {
+    min-width: 0;
+  }
+  .guild-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .guild-stake-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* Status */
+  .guild-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .guild-status.active { color: var(--green); }
+  .guild-status.active .status-dot {
+    background: var(--green);
+    box-shadow: 0 0 6px rgba(34,197,94,0.5);
+  }
+  .guild-status.cooldown { color: var(--amber); }
+  .guild-status.cooldown .status-dot {
+    background: var(--amber);
+    box-shadow: 0 0 6px rgba(245,158,11,0.5);
+    animation: blink 1.8s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .guild-status.ready { color: var(--green); }
+  .guild-status.ready .status-dot {
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(34,197,94,0.6);
+  }
+
+  /* Actions */
+  .guild-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-ghost:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+  .btn-orange {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border: 1px solid rgba(249,115,22,0.2);
+  }
+  .btn-orange:hover {
+    background: rgba(249,115,22,0.18);
+    border-color: rgba(249,115,22,0.35);
+  }
+  .btn-green {
+    background: var(--green);
+    color: #fff;
+    border: 1px solid var(--green);
+  }
+  .btn-green:hover {
+    background: #1eb854;
+    box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+  }
+  .btn-amber {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .btn-amber:hover {
+    background: rgba(245,158,11,0.18);
+    border-color: rgba(245,158,11,0.35);
+  }
+
+  /* ─────────────── DISTRIBUTION BAR ─────────────── */
+  .distribution {
+    margin-bottom: 44px;
+  }
+  .dist-bar-wrap {
+    border-radius: 6px;
+    overflow: hidden;
+    height: 10px;
+    display: flex;
+    gap: 2px;
+    margin-bottom: 14px;
+  }
+  .dist-segment {
+    height: 100%;
+    border-radius: 4px;
+    transition: flex 0.4s ease;
+  }
+  .dist-segment.engineering { background: var(--blue); }
+  .dist-segment.design { background: var(--purple); }
+  .dist-segment.data { background: var(--teal); }
+  .dist-segment.security { background: var(--red); }
+
+  .dist-legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .dist-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .dist-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .dist-legend-dot.engineering { background: var(--blue); }
+  .dist-legend-dot.design { background: var(--purple); }
+  .dist-legend-dot.data { background: var(--teal); }
+  .dist-legend-dot.security { background: var(--red); }
+  .dist-legend-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ─────────────── RECENT ACTIVITY ─────────────── */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .activity-icon svg { width: 14px; height: 14px; }
+  .activity-icon.stake { background: var(--orange-dim); color: var(--orange); }
+  .activity-icon.unstake { background: var(--amber-dim); color: var(--amber); }
+  .activity-icon.withdraw { background: var(--green-dim); color: var(--green); }
+
+  .activity-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .activity-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .activity-time {
+    font-size: 12px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* ─────────────── RESPONSIVE ─────────────── */
+  @media (max-width: 700px) {
+    .container { padding: 32px 16px 80px; }
+    .page-header h1 { font-size: 24px; }
+
+    .overview-strip {
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+    }
+    .overview-sep { display: none; }
+
+    .guild-row {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      padding: 16px 18px;
+    }
+    .guild-actions {
+      justify-content: flex-start;
+    }
+    .guild-status {
+      order: -1;
+    }
+
+    .dist-legend { gap: 14px; }
+  }
+
+  @media (max-width: 480px) {
+    .overview-value { font-size: 20px; }
+    .overview-value.muted,
+    .overview-value.warn { font-size: 18px; }
+    .guild-actions { flex-wrap: wrap; }
+    .btn { font-size: 12px; padding: 6px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <div class="page-header">
+    <h1>Staking Portfolio</h1>
+    <div class="wallet-badge">
+      <span class="wallet-dot"></span>
+      <span class="wallet-addr">0x7a3B...f29E</span>
+    </div>
+  </div>
+
+  <!-- ── OVERVIEW STRIP ── -->
+  <div class="overview-strip">
+    <div class="overview-item">
+      <span class="overview-label">Total Staked</span>
+      <span class="overview-value primary">1,450<span class="unit">VETD</span></span>
+    </div>
+    <div class="overview-sep"></div>
+    <div class="overview-item">
+      <span class="overview-label">Wallet Balance</span>
+      <span class="overview-value muted">2,800<span class="unit">VETD</span></span>
+    </div>
+    <div class="overview-sep"></div>
+    <div class="overview-item">
+      <span class="overview-label">Pending Unstake</span>
+      <span class="overview-value warn">200<span class="unit">VETD</span></span>
+    </div>
+  </div>
+
+  <!-- ── GUILD STAKES ── -->
+  <h2 class="section-head">Guild Stakes</h2>
+  <div class="guild-list">
+
+    <!-- Engineering Guild — Active -->
+    <div class="guild-row">
+      <div class="guild-id">
+        <div class="guild-icon engineering">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <div class="guild-text">
+          <div class="guild-name">Engineering Guild</div>
+          <div class="guild-stake-amount">500 VETD staked</div>
+        </div>
+      </div>
+      <div class="guild-status active">
+        <span class="status-dot"></span>
+        Active
+      </div>
+      <div class="guild-actions">
+        <button class="btn btn-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Stake More
+        </button>
+        <button class="btn btn-ghost">Unstake</button>
+      </div>
+    </div>
+
+    <!-- Design Guild — Active -->
+    <div class="guild-row">
+      <div class="guild-id">
+        <div class="guild-icon design">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.8 15.8a8 8 0 1 0-11.6 0"/><path d="M12 12v10"/></svg>
+        </div>
+        <div class="guild-text">
+          <div class="guild-name">Design Guild</div>
+          <div class="guild-stake-amount">350 VETD staked</div>
+        </div>
+      </div>
+      <div class="guild-status active">
+        <span class="status-dot"></span>
+        Active
+      </div>
+      <div class="guild-actions">
+        <button class="btn btn-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Stake More
+        </button>
+        <button class="btn btn-ghost">Unstake</button>
+      </div>
+    </div>
+
+    <!-- Data Science Guild — Cooldown -->
+    <div class="guild-row">
+      <div class="guild-id">
+        <div class="guild-icon data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><ellipse cx="12" cy="6" rx="9" ry="3"/><path d="M3 6v12c0 1.66 4 3 9 3s9-1.34 9-3V6"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+        </div>
+        <div class="guild-text">
+          <div class="guild-name">Data Science Guild</div>
+          <div class="guild-stake-amount">400 VETD staked</div>
+        </div>
+      </div>
+      <div class="guild-status cooldown">
+        <span class="status-dot"></span>
+        3d 12h remaining
+      </div>
+      <div class="guild-actions">
+        <button class="btn btn-amber">Cancel Unstake</button>
+      </div>
+    </div>
+
+    <!-- Security Guild — Ready to Withdraw -->
+    <div class="guild-row">
+      <div class="guild-id">
+        <div class="guild-icon security">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="guild-text">
+          <div class="guild-name">Security Guild</div>
+          <div class="guild-stake-amount">200 VETD staked</div>
+        </div>
+      </div>
+      <div class="guild-status ready">
+        <span class="status-dot"></span>
+        Ready to withdraw
+      </div>
+      <div class="guild-actions">
+        <button class="btn btn-green">Complete Unstake</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── STAKING DISTRIBUTION ── -->
+  <div class="distribution">
+    <h2 class="section-head">Staking Distribution</h2>
+    <div class="dist-bar-wrap">
+      <div class="dist-segment engineering" style="flex: 500"></div>
+      <div class="dist-segment design" style="flex: 350"></div>
+      <div class="dist-segment data" style="flex: 400"></div>
+      <div class="dist-segment security" style="flex: 200"></div>
+    </div>
+    <div class="dist-legend">
+      <div class="dist-legend-item">
+        <span class="dist-legend-dot engineering"></span>
+        Engineering
+        <span class="dist-legend-pct">34%</span>
+      </div>
+      <div class="dist-legend-item">
+        <span class="dist-legend-dot design"></span>
+        Design
+        <span class="dist-legend-pct">24%</span>
+      </div>
+      <div class="dist-legend-item">
+        <span class="dist-legend-dot data"></span>
+        Data Science
+        <span class="dist-legend-pct">28%</span>
+      </div>
+      <div class="dist-legend-item">
+        <span class="dist-legend-dot security"></span>
+        Security
+        <span class="dist-legend-pct">14%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RECENT ACTIVITY ── -->
+  <h2 class="section-head">Recent Activity</h2>
+  <div class="activity-list">
+    <div class="activity-item">
+      <div class="activity-icon withdraw">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="19"/></svg>
+      </div>
+      <div class="activity-text">Unstake cooldown completed for <strong>Security Guild</strong></div>
+      <div class="activity-time">2 hours ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-icon unstake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="activity-text">Initiated unstake of <strong>400 VETD</strong> from Data Science Guild</div>
+      <div class="activity-time">3 days ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-icon stake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="activity-text">Staked <strong>150 VETD</strong> in Security Guild</div>
+      <div class="activity-time">1 week ago</div>
+    </div>
+    <div class="activity-item">
+      <div class="activity-icon stake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="activity-text">Staked <strong>350 VETD</strong> in Design Guild</div>
+      <div class="activity-time">2 weeks ago</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

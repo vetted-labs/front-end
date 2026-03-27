@@ -81,12 +81,12 @@ export function MeetingMessage({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Video className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <span className="text-xs font-medium uppercase tracking-wider text-primary">
                 Meeting Scheduled
               </span>
             </div>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusStyle.bg} ${statusStyle.color}`}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium border ${statusStyle.bg} ${statusStyle.color}`}
             >
               {statusStyle.label}
             </span>

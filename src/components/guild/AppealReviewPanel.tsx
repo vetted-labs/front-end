@@ -86,7 +86,7 @@ export function AppealReviewPanel({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Gavel className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
-            <h4 className="text-sm font-semibold">Appeal Review</h4>
+            <h4 className="text-sm font-bold">Appeal Review</h4>
           </div>
           <div className="flex items-center gap-1.5">
             <StatusIcon className={`w-4 h-4 ${status.color}`} />
@@ -172,7 +172,7 @@ export function AppealReviewPanel({
                       <span className="text-xs font-medium">{vote.expertName ?? "Panel Member"}</span>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] ${
+                        className={`text-xs ${
                           vote.decision === "overturn"
                             ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
                             : `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.text}`
@@ -181,7 +181,7 @@ export function AppealReviewPanel({
                         {vote.decision}
                       </Badge>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{vote.reasoning}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{vote.reasoning}</p>
                   </div>
                 </div>
               ))}
@@ -204,7 +204,7 @@ export function AppealReviewPanel({
               ) : (
                 <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
               )}
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-medium">
                 {appeal.outcome.decision === "overturned"
                   ? "Appeal Successful — Candidate Admitted"
                   : "Appeal Rejected — Rejection Upheld"}
@@ -237,8 +237,8 @@ export function AppealReviewPanel({
                 }`}
               >
                 <XCircle className={`w-4 h-4 mb-1 ${decision === "uphold" ? STATUS_COLORS.negative.icon : "text-muted-foreground"}`} />
-                <p className="text-xs font-semibold">Uphold Rejection</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-xs font-medium">Uphold Rejection</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Original decision was correct
                 </p>
               </button>
@@ -252,8 +252,8 @@ export function AppealReviewPanel({
                 }`}
               >
                 <CheckCircle2 className={`w-4 h-4 mb-1 ${decision === "overturn" ? STATUS_COLORS.positive.icon : "text-muted-foreground"}`} />
-                <p className="text-xs font-semibold">Overturn — Admit Candidate</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-xs font-medium">Overturn — Admit Candidate</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Candidate was incorrectly rejected
                 </p>
               </button>
@@ -269,7 +269,7 @@ export function AppealReviewPanel({
                 placeholder="Explain your decision. This will be recorded and visible to the appealing expert..."
                 className="w-full h-20 px-3 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 resize-none"
               />
-              <p className="text-[10px] text-muted-foreground/60 mt-1">
+              <p className="text-xs text-muted-foreground/60 mt-1">
                 {reasoning.length}/50 minimum characters
               </p>
             </div>

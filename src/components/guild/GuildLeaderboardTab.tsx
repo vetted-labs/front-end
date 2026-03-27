@@ -54,7 +54,7 @@ export function GuildLeaderboardTab({
       {/* Time Period Selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-foreground">Top Experts</h3>
+          <h3 className="text-xl font-bold text-foreground">Top Experts</h3>
           <p className="text-sm text-muted-foreground mt-1">
             Showing {leaderboardData.topExperts.length} top performing experts
           </p>
@@ -78,7 +78,7 @@ export function GuildLeaderboardTab({
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Trophy className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-xl font-bold text-foreground mb-2">
             No Leaderboard Data
           </h3>
           <p className="text-sm text-muted-foreground">
@@ -159,7 +159,7 @@ export function GuildLeaderboardTab({
                       {/* Stats - Condensed */}
                       <td className="px-3 py-3 text-center">
                         <div className="flex items-center justify-center">
-                          <span className="font-semibold text-foreground text-sm">
+                          <span className="font-medium text-foreground text-sm">
                             {expert.reputation}
                           </span>
                           {renderReputationChange(expert.reputationChange)}
@@ -174,7 +174,7 @@ export function GuildLeaderboardTab({
                         <span className="text-foreground text-sm">{expert.accuracy}%</span>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <span className="font-semibold text-foreground text-sm">
+                        <span className="font-medium text-foreground text-sm">
                           {formatVetd(expert.totalEarnings)}
                         </span>
                       </td>
@@ -195,7 +195,7 @@ export function GuildLeaderboardTab({
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
-                      <span className="text-lg font-bold text-foreground">
+                      <span className="text-xl font-bold text-foreground">
                         #{leaderboardData.currentUser.rank}
                       </span>
                       {renderRankChange(leaderboardData.currentUser.rankChange)}

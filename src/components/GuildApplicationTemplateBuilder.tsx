@@ -200,7 +200,7 @@ export function GuildApplicationTemplateBuilder({
               Back
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">
+              <h1 className="text-xl font-bold text-foreground">
                 Application Template Builder
               </h1>
               <p className="text-xs text-muted-foreground">{guildName}</p>
@@ -290,7 +290,7 @@ export function GuildApplicationTemplateBuilder({
                     <GripVertical className="w-5 h-5 text-muted-foreground mt-2 cursor-move" />
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-semibold rounded">
+                        <span className="px-2 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 text-xs font-medium rounded">
                           {question.type.replace("_", " ").toUpperCase()}
                         </span>
                         <span className="text-sm text-muted-foreground">Question {index + 1}</span>

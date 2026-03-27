@@ -22,7 +22,7 @@ export function CommitRevealStatusCard({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Voting Status
         </h3>
         <Badge variant="outline">{phase === "commit" ? "In Progress" : "Finalized"}</Badge>

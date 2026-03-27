@@ -69,7 +69,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                 {/* Member Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-lg text-foreground">{entry.fullName}</h3>
+                    <h3 className="font-bold text-xl text-foreground">{entry.fullName}</h3>
                     <span
                       className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${getRoleBadgeColor(
                         entry.role
@@ -137,7 +137,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                   {entry.reputationChange && (
                     <div className="mt-2">
                       <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
+                        className={`inline-block px-2 py-1 text-xs font-medium rounded ${
                           entry.reputationChange.startsWith("+")
                             ? STATUS_COLORS.positive.badge
                             : entry.reputationChange.startsWith("-")
@@ -157,7 +157,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
       ) : (
         <div className="text-center py-16">
           <Trophy className="w-20 h-20 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-lg text-muted-foreground mb-2">No leaderboard data available</p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">No leaderboard data available</p>
           <p className="text-sm text-muted-foreground">
             Rankings will appear as members earn reputation
           </p>

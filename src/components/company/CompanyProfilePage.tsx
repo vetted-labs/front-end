@@ -191,7 +191,7 @@ export default function CompanyProfilePage() {
 
         {/* Logo Section */}
         <div className="bg-card rounded-xl shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Company Logo</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">Company Logo</h2>
           <div className="flex items-center gap-6">
             <div className="relative">
               {profile.logoUrl ? (
@@ -237,7 +237,7 @@ export default function CompanyProfilePage() {
         {/* Company Information */}
         <div className="bg-card rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Company Information</h2>
+            <h2 className="text-xl font-bold text-foreground">Company Information</h2>
             {!isEditing && (
               <Button
                 variant="outline"
@@ -421,7 +421,7 @@ export default function CompanyProfilePage() {
 
         {/* Account Info */}
         <div className="bg-card rounded-xl shadow-sm p-6 mt-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Account Information</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">Account Information</h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <label className="text-muted-foreground">Member Since</label>

@@ -73,7 +73,7 @@ export function ScheduleMeetingModal({
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 dark:border-white/[0.04]">
             <div className="flex items-center gap-2">
               <Video className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Schedule Meeting</h3>
+              <h3 className="text-sm font-medium text-foreground">Schedule Meeting</h3>
             </div>
             <button
               onClick={onClose}

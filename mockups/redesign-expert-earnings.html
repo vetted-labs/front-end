@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Expert Earnings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#0a0a0f;
+    --card:rgba(255,255,255,0.03);
+    --border:rgba(255,255,255,0.06);
+    --border-hover:rgba(255,255,255,0.12);
+    --t1:#f1f5f9;
+    --t2:#94a3b8;
+    --t3:#64748b;
+    --orange:#f97316;
+    --orange-soft:rgba(249,115,22,0.08);
+    --orange-border:rgba(249,115,22,0.2);
+    --orange-glow:rgba(249,115,22,0.12);
+    --green:#34d399;
+    --green-soft:rgba(52,211,153,0.08);
+    --green-border:rgba(52,211,153,0.2);
+    --amber:#fbbf24;
+    --amber-soft:rgba(251,191,36,0.08);
+    --amber-border:rgba(251,191,36,0.2);
+    --blue:#60a5fa;
+    --blue-soft:rgba(96,165,250,0.08);
+    --blue-border:rgba(96,165,250,0.2);
+    --purple:#a78bfa;
+    --purple-soft:rgba(167,139,250,0.08);
+    --purple-border:rgba(167,139,250,0.2);
+    --r:16px;
+    --font:'Inter',system-ui,-apple-system,sans-serif;
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--t1);
+    font-family:var(--font);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+  }
+
+  /* ── Background effects ── */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-fx::before{
+    content:'';position:absolute;
+    width:900px;height:900px;
+    top:-15%;left:5%;
+    background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 60%);
+    animation:drift 22s ease-in-out infinite alternate;
+  }
+  .bg-fx::after{
+    content:'';position:absolute;
+    width:600px;height:600px;
+    bottom:-10%;right:0;
+    background:radial-gradient(circle,rgba(52,211,153,0.035) 0%,transparent 55%);
+    animation:drift 28s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift{
+    0%{transform:translate(0,0) scale(1)}
+    100%{transform:translate(30px,15px) scale(1.04)}
+  }
+
+  .dots{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,0.018) 1px,transparent 1px);
+    background-size:32px 32px;
+  }
+
+  /* ── Layout ── */
+  .page{position:relative;z-index:2;padding:32px 0 80px}
+  .container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* ── Glass card ── */
+  .glass{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .glass:hover{
+    border-color:var(--border-hover);
+  }
+
+  /* ── Page header ── */
+  .page-header{margin-bottom:32px}
+  .accent-bar{
+    width:48px;height:3px;border-radius:3px;
+    background:linear-gradient(90deg,var(--orange),#ea580c);
+    margin-bottom:16px;
+  }
+  .page-title{
+    font-size:32px;font-weight:800;letter-spacing:-0.5px;
+    background:linear-gradient(135deg,#f8fafc 40%,#94a3b8);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:4px;
+  }
+  .page-subtitle{font-size:14px;color:var(--t3);font-weight:400}
+
+  /* ── Summary stats grid ── */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:28px;
+  }
+  @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.stats-grid{grid-template-columns:1fr}}
+
+  .stat-card{
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    opacity:0;transition:opacity 0.3s;
+  }
+  .stat-card:hover::before{opacity:1}
+
+  .stat-card--green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+  .stat-card--amber::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+  .stat-card--blue::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+  .stat-card--purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+
+  .stat-icon{
+    width:40px;height:40px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:16px;
+  }
+  .stat-icon svg{width:20px;height:20px}
+
+  .stat-icon--green{background:var(--green-soft);border:1px solid var(--green-border);color:var(--green)}
+  .stat-icon--amber{background:var(--amber-soft);border:1px solid var(--amber-border);color:var(--amber)}
+  .stat-icon--blue{background:var(--blue-soft);border:1px solid var(--blue-border);color:var(--blue)}
+  .stat-icon--purple{background:var(--purple-soft);border:1px solid var(--purple-border);color:var(--purple)}
+
+  .stat-label{
+    font-size:12px;font-weight:500;color:var(--t3);
+    text-transform:uppercase;letter-spacing:0.8px;
+    margin-bottom:8px;
+  }
+  .stat-value{
+    font-size:28px;font-weight:800;letter-spacing:-0.5px;
+    color:var(--t1);line-height:1;margin-bottom:4px;
+  }
+  .stat-sub{font-size:12px;color:var(--t3);font-weight:400}
+
+  .stat-change{
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:11px;font-weight:600;margin-top:8px;
+    padding:2px 8px;border-radius:100px;
+  }
+  .stat-change--up{color:var(--green);background:var(--green-soft)}
+  .stat-change--down{color:#f87171;background:rgba(248,113,113,0.08)}
+
+  /* ── Time filter row ── */
+  .filter-row{
+    display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:12px;
+    margin-bottom:20px;
+  }
+  .filter-pills{
+    display:flex;gap:4px;
+    padding:4px;border-radius:12px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--border);
+  }
+  .pill{
+    padding:7px 18px;border-radius:8px;
+    font-size:13px;font-weight:600;
+    color:var(--t3);cursor:pointer;
+    transition:all 0.2s;border:1px solid transparent;
+    background:transparent;
+    font-family:var(--font);
+  }
+  .pill:hover{color:var(--t2);background:rgba(255,255,255,0.03)}
+  .pill--active{
+    color:var(--orange);
+    background:var(--orange-soft);
+    border-color:var(--orange-border);
+    box-shadow:0 0 16px var(--orange-glow);
+  }
+  .pill--active:hover{
+    color:var(--orange);
+    background:rgba(249,115,22,0.12);
+  }
+
+  .filter-right{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--t3);
+  }
+  .filter-right svg{width:16px;height:16px;color:var(--t3)}
+
+  /* ── Chart area ── */
+  .chart-card{
+    padding:28px;
+    margin-bottom:28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .chart-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:24px;flex-wrap:wrap;gap:12px;
+  }
+  .chart-title{font-size:16px;font-weight:700;color:var(--t1)}
+  .chart-legend{display:flex;gap:16px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+  .legend-dot{width:8px;height:8px;border-radius:50%}
+  .legend-dot--earn{background:var(--orange);box-shadow:0 0 6px var(--orange-glow)}
+  .legend-dot--pend{background:var(--amber);box-shadow:0 0 6px rgba(251,191,36,0.2)}
+
+  .chart-wrap{position:relative;width:100%;height:280px}
+  .chart-wrap svg{width:100%;height:100%;display:block}
+
+  /* Y-axis labels */
+  .y-labels{
+    position:absolute;left:0;top:0;bottom:40px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:4px 0;
+  }
+  .y-label{font-size:10px;color:var(--t3);font-weight:500;text-align:right;width:36px}
+
+  /* X-axis labels */
+  .x-labels{
+    display:flex;justify-content:space-between;
+    padding:8px 44px 0 44px;
+  }
+  .x-label{font-size:10px;color:var(--t3);font-weight:500}
+
+  /* ── Transactions ── */
+  .tx-section{margin-bottom:28px}
+  .tx-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;flex-wrap:wrap;gap:8px;
+  }
+  .tx-title{font-size:16px;font-weight:700;color:var(--t1)}
+  .tx-viewall{
+    font-size:12px;font-weight:600;color:var(--orange);
+    cursor:pointer;transition:color 0.2s;
+    text-decoration:none;
+    display:flex;align-items:center;gap:4px;
+  }
+  .tx-viewall:hover{color:#fb923c}
+  .tx-viewall svg{width:14px;height:14px}
+
+  .tx-list{display:flex;flex-direction:column;gap:6px}
+
+  .tx-row{
+    display:grid;
+    grid-template-columns:4px 1fr auto auto;
+    align-items:center;
+    gap:0;
+    padding:0;
+    border-radius:14px;
+    overflow:hidden;
+    transition:border-color 0.2s,box-shadow 0.2s;
+    cursor:default;
+  }
+  .tx-row:hover{
+    border-color:var(--border-hover);
+    box-shadow:0 0 20px rgba(255,255,255,0.02);
+  }
+
+  .tx-stripe{
+    width:4px;height:100%;min-height:64px;
+    align-self:stretch;
+  }
+  .tx-stripe--review{background:var(--orange)}
+  .tx-stripe--endorsement{background:var(--blue)}
+  .tx-stripe--bonus{background:var(--green)}
+  .tx-stripe--governance{background:var(--purple)}
+
+  .tx-info{
+    padding:16px 20px;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .tx-desc{font-size:14px;font-weight:600;color:var(--t1)}
+  .tx-meta{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;color:var(--t3);
+  }
+  .tx-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--t3)}
+  .tx-guild{
+    display:inline-flex;align-items:center;gap:4px;
+    color:var(--t3);
+  }
+  .tx-guild svg{width:12px;height:12px}
+
+  .tx-amount{
+    padding:16px 20px;
+    text-align:right;
+    font-size:16px;font-weight:700;
+    color:var(--t1);
+    white-space:nowrap;
+  }
+  .tx-amount-usd{
+    display:block;font-size:11px;font-weight:400;color:var(--t3);margin-top:2px;
+  }
+
+  .tx-status{
+    padding:16px 20px;
+    display:flex;align-items:center;justify-content:flex-end;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:4px 12px;border-radius:100px;
+    font-size:11px;font-weight:600;
+    white-space:nowrap;
+  }
+  .badge--completed{
+    color:var(--green);background:var(--green-soft);
+    border:1px solid var(--green-border);
+  }
+  .badge--pending{
+    color:var(--amber);background:var(--amber-soft);
+    border:1px solid var(--amber-border);
+  }
+  .badge--processing{
+    color:var(--blue);background:var(--blue-soft);
+    border:1px solid var(--blue-border);
+  }
+  .badge-dot{
+    width:5px;height:5px;border-radius:50%;
+  }
+  .badge--completed .badge-dot{background:var(--green);box-shadow:0 0 4px var(--green)}
+  .badge--pending .badge-dot{background:var(--amber);box-shadow:0 0 4px var(--amber)}
+  .badge--processing .badge-dot{background:var(--blue);box-shadow:0 0 4px var(--blue)}
+
+  /* ── Payout card ── */
+  .payout-card{
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .payout-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--orange),transparent);
+    opacity:0.5;
+  }
+  .payout-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;flex-wrap:wrap;gap:12px;
+  }
+  .payout-title{font-size:16px;font-weight:700;color:var(--t1)}
+  .payout-total{
+    display:flex;align-items:center;gap:8px;
+  }
+  .payout-total-val{font-size:20px;font-weight:800;color:var(--orange)}
+  .payout-total-sub{font-size:12px;color:var(--t3)}
+
+  .payout-items{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+  .payout-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    transition:border-color 0.2s;
+  }
+  .payout-item:hover{border-color:var(--border-hover)}
+  .payout-item-left{display:flex;flex-direction:column;gap:2px}
+  .payout-item-desc{font-size:13px;font-weight:600;color:var(--t1)}
+  .payout-item-meta{font-size:11px;color:var(--t3)}
+  .payout-item-right{text-align:right}
+  .payout-item-amount{font-size:15px;font-weight:700;color:var(--t1)}
+  .payout-item-eta{font-size:11px;color:var(--t3)}
+
+  .btn-claim{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:12px 28px;border-radius:12px;
+    background:linear-gradient(135deg,var(--orange),#ea580c);
+    border:none;
+    color:#fff;font-family:var(--font);font-size:14px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;
+    box-shadow:0 0 24px var(--orange-glow),0 4px 12px rgba(0,0,0,0.3);
+  }
+  .btn-claim:hover{
+    transform:translateY(-1px);
+    box-shadow:0 0 32px rgba(249,115,22,0.2),0 6px 16px rgba(0,0,0,0.4);
+  }
+  .btn-claim svg{width:16px;height:16px}
+
+  /* ── Responsive ── */
+  @media(max-width:768px){
+    .page{padding:20px 0 60px}
+    .page-title{font-size:26px}
+    .stat-value{font-size:22px}
+    .stats-grid{gap:8px}
+    .stat-card{padding:18px}
+    .stat-icon{width:34px;height:34px;margin-bottom:12px}
+    .stat-icon svg{width:16px;height:16px}
+    .chart-wrap{height:200px}
+    .tx-row{grid-template-columns:4px 1fr auto}
+    .tx-status{display:none}
+    .tx-amount{padding:12px 16px}
+    .tx-info{padding:12px 14px}
+    .x-labels{padding:8px 44px 0 44px}
+  }
+  @media(max-width:480px){
+    .filter-row{flex-direction:column;align-items:flex-start}
+    .chart-card{padding:18px}
+    .payout-card{padding:18px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Background effects -->
+<div class="bg-fx"></div>
+<div class="dots"></div>
+
+<div class="page">
+  <div class="container">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="accent-bar"></div>
+      <h1 class="page-title">Earnings</h1>
+      <p class="page-subtitle">Track your review income, pending payouts, and on-chain transactions</p>
+    </div>
+
+    <!-- Summary stat cards -->
+    <div class="stats-grid">
+      <!-- Total Earned -->
+      <div class="glass stat-card stat-card--green">
+        <div class="stat-icon stat-icon--green">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="stat-label">Total Earned</div>
+        <div class="stat-value">12.45 ETH</div>
+        <div class="stat-sub">$29,880.00</div>
+        <div class="stat-change stat-change--up">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2L8 6H2L5 2Z" fill="currentColor"/></svg>
+          +18.2% from last month
+        </div>
+      </div>
+
+      <!-- Pending Payouts -->
+      <div class="glass stat-card stat-card--amber">
+        <div class="stat-icon stat-icon--amber">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-label">Pending Payouts</div>
+        <div class="stat-value">2.30 ETH</div>
+        <div class="stat-sub">$5,520.00</div>
+        <div class="stat-change stat-change--up">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2L8 6H2L5 2Z" fill="currentColor"/></svg>
+          3 pending reviews
+        </div>
+      </div>
+
+      <!-- This Month -->
+      <div class="glass stat-card stat-card--blue">
+        <div class="stat-icon stat-icon--blue">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="stat-label">This Month</div>
+        <div class="stat-value">1.80 ETH</div>
+        <div class="stat-sub">$4,320.00</div>
+        <div class="stat-change stat-change--up">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2L8 6H2L5 2Z" fill="currentColor"/></svg>
+          +24.1% vs last month
+        </div>
+      </div>
+
+      <!-- Avg per Review -->
+      <div class="glass stat-card stat-card--purple">
+        <div class="stat-icon stat-icon--purple">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="stat-label">Avg per Review</div>
+        <div class="stat-value">0.15 ETH</div>
+        <div class="stat-sub">$360.00</div>
+        <div class="stat-change stat-change--down">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8L8 4H2L5 8Z" fill="currentColor"/></svg>
+          -2.4% vs last month
+        </div>
+      </div>
+    </div>
+
+    <!-- Time range filter + chart -->
+    <div class="filter-row">
+      <div class="filter-pills">
+        <button class="pill">7D</button>
+        <button class="pill pill--active">30D</button>
+        <button class="pill">90D</button>
+        <button class="pill">All</button>
+      </div>
+      <div class="filter-right">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </div>
+    </div>
+
+    <!-- Chart card -->
+    <div class="glass chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Earnings Over Time</div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-dot legend-dot--earn"></div>
+            Earned
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot legend-dot--pend"></div>
+            Pending
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <!-- Y-axis labels -->
+        <div class="y-labels">
+          <span class="y-label">2.0</span>
+          <span class="y-label">1.5</span>
+          <span class="y-label">1.0</span>
+          <span class="y-label">0.5</span>
+          <span class="y-label">0.0</span>
+        </div>
+        <svg viewBox="0 0 1000 260" preserveAspectRatio="none">
+          <defs>
+            <!-- Earned fill gradient -->
+            <linearGradient id="earnFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f97316" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+            </linearGradient>
+            <!-- Earned line gradient -->
+            <linearGradient id="earnLine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#ea580c"/>
+              <stop offset="50%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#fb923c"/>
+            </linearGradient>
+            <!-- Pending fill gradient -->
+            <linearGradient id="pendFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Grid lines -->
+          <line x1="40" y1="10" x2="980" y2="10" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="40" y1="72" x2="980" y2="72" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="40" y1="135" x2="980" y2="135" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="40" y1="197" x2="980" y2="197" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="40" y1="250" x2="980" y2="250" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+          <!-- Earned area fill -->
+          <path d="M40,250 L40,180 L110,155 L190,170 L270,120 L350,100 L430,130 L510,80 L590,60 L670,90 L750,45 L830,55 L910,30 L980,40 L980,250 Z" fill="url(#earnFill)"/>
+          <!-- Earned line -->
+          <path d="M40,180 L110,155 L190,170 L270,120 L350,100 L430,130 L510,80 L590,60 L670,90 L750,45 L830,55 L910,30 L980,40" fill="none" stroke="url(#earnLine)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Earned line glow -->
+          <path d="M40,180 L110,155 L190,170 L270,120 L350,100 L430,130 L510,80 L590,60 L670,90 L750,45 L830,55 L910,30 L980,40" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>
+
+          <!-- Pending area fill -->
+          <path d="M40,250 L40,220 L110,210 L190,225 L270,200 L350,190 L430,205 L510,180 L590,170 L670,185 L750,160 L830,165 L910,150 L980,155 L980,250 Z" fill="url(#pendFill)"/>
+          <!-- Pending line -->
+          <path d="M40,220 L110,210 L190,225 L270,200 L350,190 L430,205 L510,180 L590,170 L670,185 L750,160 L830,165 L910,150 L980,155" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+          <!-- Data points on earned line -->
+          <circle cx="40" cy="180" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="110" cy="155" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="190" cy="170" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="270" cy="120" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="350" cy="100" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="430" cy="130" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="510" cy="80" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="590" cy="60" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="670" cy="90" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="750" cy="45" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="830" cy="55" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="910" cy="30" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+          <circle cx="980" cy="40" r="3.5" fill="#0a0a0f" stroke="#f97316" stroke-width="2"/>
+
+          <!-- Highlighted latest point with glow -->
+          <circle cx="980" cy="40" r="8" fill="#f97316" opacity="0.15"/>
+          <circle cx="980" cy="40" r="5" fill="#0a0a0f" stroke="#f97316" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="x-labels">
+        <span class="x-label">Mar 1</span>
+        <span class="x-label">Mar 4</span>
+        <span class="x-label">Mar 7</span>
+        <span class="x-label">Mar 10</span>
+        <span class="x-label">Mar 13</span>
+        <span class="x-label">Mar 16</span>
+        <span class="x-label">Mar 19</span>
+        <span class="x-label">Mar 22</span>
+        <span class="x-label">Mar 25</span>
+        <span class="x-label">Mar 27</span>
+      </div>
+    </div>
+
+    <!-- Recent transactions -->
+    <div class="tx-section">
+      <div class="tx-header">
+        <div class="tx-title">Recent Transactions</div>
+        <a class="tx-viewall" href="#">
+          View All
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <div class="tx-list">
+
+        <!-- Row: Review -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--review"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Candidate Review: Sarah Chen</div>
+            <div class="tx-meta">
+              <span>Mar 27, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Engineering Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Review</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.18 ETH
+            <span class="tx-amount-usd">$432.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--completed"><span class="badge-dot"></span>Completed</div>
+          </div>
+        </div>
+
+        <!-- Row: Review -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--review"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Candidate Review: Marcus Johnson</div>
+            <div class="tx-meta">
+              <span>Mar 26, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Engineering Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Review</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.15 ETH
+            <span class="tx-amount-usd">$360.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--completed"><span class="badge-dot"></span>Completed</div>
+          </div>
+        </div>
+
+        <!-- Row: Endorsement -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--endorsement"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Endorsement Reward: Alex Rivera</div>
+            <div class="tx-meta">
+              <span>Mar 25, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Design Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Endorsement</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.08 ETH
+            <span class="tx-amount-usd">$192.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--completed"><span class="badge-dot"></span>Completed</div>
+          </div>
+        </div>
+
+        <!-- Row: Review (pending) -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--review"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Candidate Review: Priya Patel</div>
+            <div class="tx-meta">
+              <span>Mar 24, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Data Science Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Review</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.20 ETH
+            <span class="tx-amount-usd">$480.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--pending"><span class="badge-dot"></span>Pending</div>
+          </div>
+        </div>
+
+        <!-- Row: Bonus -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--bonus"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Monthly Consistency Bonus</div>
+            <div class="tx-meta">
+              <span>Mar 22, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span>Bonus</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.25 ETH
+            <span class="tx-amount-usd">$600.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--completed"><span class="badge-dot"></span>Completed</div>
+          </div>
+        </div>
+
+        <!-- Row: Governance -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--governance"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Governance Participation Reward</div>
+            <div class="tx-meta">
+              <span>Mar 20, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Engineering Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Governance</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.05 ETH
+            <span class="tx-amount-usd">$120.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--completed"><span class="badge-dot"></span>Completed</div>
+          </div>
+        </div>
+
+        <!-- Row: Review (processing) -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--review"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Candidate Review: Jordan Lee</div>
+            <div class="tx-meta">
+              <span>Mar 19, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Engineering Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Review</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.15 ETH
+            <span class="tx-amount-usd">$360.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--processing"><span class="badge-dot"></span>Processing</div>
+          </div>
+        </div>
+
+        <!-- Row: Endorsement -->
+        <div class="glass tx-row">
+          <div class="tx-stripe tx-stripe--endorsement"></div>
+          <div class="tx-info">
+            <div class="tx-desc">Endorsement Reward: Taylor Kim</div>
+            <div class="tx-meta">
+              <span>Mar 17, 2026</span>
+              <span class="tx-meta-dot"></span>
+              <span class="tx-guild">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Design Guild
+              </span>
+              <span class="tx-meta-dot"></span>
+              <span>Endorsement</span>
+            </div>
+          </div>
+          <div class="tx-amount">
+            +0.10 ETH
+            <span class="tx-amount-usd">$240.00</span>
+          </div>
+          <div class="tx-status">
+            <div class="badge badge--pending"><span class="badge-dot"></span>Pending</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pending payouts claim card -->
+    <div class="glass payout-card">
+      <div class="payout-header">
+        <div class="payout-title">Claimable Payouts</div>
+        <div class="payout-total">
+          <span class="payout-total-val">2.30 ETH</span>
+          <span class="payout-total-sub">ready to claim</span>
+        </div>
+      </div>
+      <div class="payout-items">
+        <div class="payout-item">
+          <div class="payout-item-left">
+            <div class="payout-item-desc">Review: Priya Patel (Data Science Guild)</div>
+            <div class="payout-item-meta">Finalized Mar 24 -- awaiting claim</div>
+          </div>
+          <div class="payout-item-right">
+            <div class="payout-item-amount">0.20 ETH</div>
+            <div class="payout-item-eta">~$480</div>
+          </div>
+        </div>
+        <div class="payout-item">
+          <div class="payout-item-left">
+            <div class="payout-item-desc">Review: Jordan Lee (Engineering Guild)</div>
+            <div class="payout-item-meta">Finalized Mar 19 -- awaiting claim</div>
+          </div>
+          <div class="payout-item-right">
+            <div class="payout-item-amount">0.15 ETH</div>
+            <div class="payout-item-eta">~$360</div>
+          </div>
+        </div>
+        <div class="payout-item">
+          <div class="payout-item-left">
+            <div class="payout-item-desc">Endorsement: Taylor Kim (Design Guild)</div>
+            <div class="payout-item-meta">Finalized Mar 17 -- awaiting claim</div>
+          </div>
+          <div class="payout-item-right">
+            <div class="payout-item-amount">0.10 ETH</div>
+            <div class="payout-item-eta">~$240</div>
+          </div>
+        </div>
+        <div class="payout-item">
+          <div class="payout-item-left">
+            <div class="payout-item-desc">Batch: 12 completed reviews (Mar 1-15)</div>
+            <div class="payout-item-meta">Finalized Mar 16 -- awaiting claim</div>
+          </div>
+          <div class="payout-item-right">
+            <div class="payout-item-amount">1.85 ETH</div>
+            <div class="payout-item-eta">~$4,440</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-claim">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        Claim All (2.30 ETH)
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Interactive filter pills
+  document.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('pill--active'));
+      pill.classList.add('pill--active');
+    });
+  });
+</script>
+
+</body>
+</html>

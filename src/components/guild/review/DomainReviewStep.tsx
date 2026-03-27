@@ -56,7 +56,7 @@ export function DomainReviewStep({
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning/20 to-primary/20 flex items-center justify-center">
             <Award className="w-4 h-4 text-warning" />
           </div>
-          <h3 className="text-base font-bold text-foreground">Domain Review</h3>
+          <h3 className="text-sm font-bold text-foreground">Domain Review</h3>
         </div>
 
         {loadingTemplates && !levelTemplate ? (
@@ -104,10 +104,10 @@ export function DomainReviewStep({
                   </div>
 
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className="text-[11px] text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
+                    <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
                     {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
                       <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-foreground">What to look for</p>
+                        <p className="text-xs font-medium text-foreground">What to look for</p>
                         <ul className="space-y-1">
                           {topic.whatToLookFor.map((item: string, idx: number) => (
                             <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
@@ -216,7 +216,7 @@ export function DomainReviewStep({
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold text-foreground">Overall Score</p>
-            <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-warning to-primary tabular-nums">
+            <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-warning to-primary tabular-nums">
               {overallScore}
             </p>
           </div>
@@ -243,7 +243,7 @@ export function DomainReviewStep({
 
       {/* Feedback */}
       <div>
-        <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-3">
+        <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3">
           Feedback (Optional)
         </p>
         <textarea

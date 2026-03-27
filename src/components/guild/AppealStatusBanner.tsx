@@ -45,10 +45,10 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold">Appeal</span>
+              <span className="text-sm font-medium">Appeal</span>
               <Badge
                 variant="outline"
-                className={`text-[10px] ${
+                className={`text-xs ${
                   isOverturned
                     ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
                     : isUpheld
@@ -61,7 +61,7 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
                 {appeal.status === "upheld" && "Rejection Upheld"}
                 {appeal.status === "overturned" && "Overturned — Admitted"}
               </Badge>
-              <span className="text-[10px] text-muted-foreground/60">
+              <span className="text-xs text-muted-foreground/60">
                 Filed {formatTimeAgo(appeal.createdAt)}
                 {appeal.appealerName && ` by ${appeal.appealerName}`}
               </span>
