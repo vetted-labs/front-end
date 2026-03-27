@@ -32,7 +32,7 @@ export function ActionButtonPanel({
       <div className="flex items-center gap-2.5">
         <button
           onClick={() => setShowStakingModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-white/[0.05] border border-white/[0.08] text-zinc-400 text-xs font-medium hover:bg-white/[0.08] hover:text-zinc-300 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-muted/30 border border-border/60 text-muted-foreground text-xs font-medium hover:bg-muted/50 hover:text-foreground transition-colors"
         >
           <Coins className="w-3.5 h-3.5" />
           {meetsMinimum ? "Manage Stake" : "Stake to Start Vetting"}
@@ -47,7 +47,7 @@ export function ActionButtonPanel({
           <Sparkles className="w-3.5 h-3.5" />
           Start Endorsing
           {!meetsMinimum && (
-            <span className={`text-[10px] ${STATUS_COLORS.warning.text} ml-1`}>
+            <span className={`text-xs ${STATUS_COLORS.warning.text} ml-1`}>
               Stake Required
             </span>
           )}

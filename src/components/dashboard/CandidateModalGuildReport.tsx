@@ -31,10 +31,10 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
       {/* Score Card */}
       <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Guild Review Summary
           </p>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
             guildApplication.guildApproved
               ? STATUS_COLORS.positive.badge
               : guildApplication.status === "rejected"
@@ -46,16 +46,16 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center p-3 rounded-lg bg-muted/30 dark:bg-white/[0.02]">
-            <p className="text-lg font-semibold text-foreground">{guildApplication.reviewCount}</p>
-            <p className="text-[11px] text-muted-foreground">Reviews</p>
+            <p className="text-sm font-medium text-foreground">{guildApplication.reviewCount}</p>
+            <p className="text-xs text-muted-foreground">Reviews</p>
           </div>
           <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.positive.bgSubtle}`}>
-            <p className={`text-lg font-semibold ${STATUS_COLORS.positive.text}`}>{guildApplication.approvalCount}</p>
-            <p className="text-[11px] text-muted-foreground">Approvals</p>
+            <p className={`text-sm font-medium ${STATUS_COLORS.positive.text}`}>{guildApplication.approvalCount}</p>
+            <p className="text-xs text-muted-foreground">Approvals</p>
           </div>
           <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.negative.bgSubtle}`}>
-            <p className={`text-lg font-semibold ${STATUS_COLORS.negative.text}`}>{guildApplication.rejectionCount}</p>
-            <p className="text-[11px] text-muted-foreground">Rejections</p>
+            <p className={`text-sm font-medium ${STATUS_COLORS.negative.text}`}>{guildApplication.rejectionCount}</p>
+            <p className="text-xs text-muted-foreground">Rejections</p>
           </div>
         </div>
         <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
@@ -68,7 +68,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
       {/* Expert Reviews */}
       {reviews.length > 0 && (
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
             Expert Reviews
           </p>
           <div className="space-y-3">
@@ -77,7 +77,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
-                    <span className={`inline-flex items-center gap-0.5 text-[11px] font-medium ${
+                    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${
                       review.vote === "approve" ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                     }`}>
                       {review.vote === "approve" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}

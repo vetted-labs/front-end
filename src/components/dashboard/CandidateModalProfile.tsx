@@ -24,7 +24,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
     <div className="space-y-5">
       {/* Resume card */}
       <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
-        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
           Resume
         </p>
         {resumeUrl ? (
@@ -47,7 +47,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
 
       {/* Contact info */}
       <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
-        <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
           Contact Info
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -73,7 +73,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
       {/* Social links */}
       {(hasSocialLinks || hasLegacy) && (
         <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
             Social Profiles
           </p>
           <div className="space-y-2">

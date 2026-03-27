@@ -18,7 +18,7 @@ export default function AnalyticsPage() {
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-foreground mb-1">Analytics</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-1">Analytics</h1>
           <p className="text-muted-foreground">Track your hiring performance and metrics</p>
         </div>
 
@@ -28,7 +28,7 @@ export default function AnalyticsPage() {
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-8 py-6 text-center shadow-lg dark:bg-card/60">
               <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">Coming Soon</h2>
+              <h2 className="text-xl font-bold text-foreground mb-2">Coming Soon</h2>
               <p className="text-muted-foreground text-sm max-w-sm">
                 Advanced analytics and hiring insights are being built. Stay tuned!
               </p>
@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
                 >
                   <stat.icon className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">{stat.label}</span>
-                  <span className="text-sm font-semibold text-foreground">{stat.value}</span>
+                  <span className="text-sm font-medium text-foreground">{stat.value}</span>
                 </div>
               ))}
             </div>
@@ -60,7 +60,7 @@ export default function AnalyticsPage() {
               {/* Placeholder chart */}
               <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Applications Over Time</h3>
+                  <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Applications Over Time</h3>
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="p-5 space-y-4">
@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
               {/* Placeholder status breakdown */}
               <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
                 <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Applications by Status</h3>
+                  <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Applications by Status</h3>
                   <CheckCircle className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="p-5 space-y-4">
@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
             {/* Placeholder jobs list */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
               <div className="px-5 py-4 border-b border-border/40">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">My Posted Jobs</h3>
+                <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">My Posted Jobs</h3>
               </div>
               <div className="divide-y divide-border/30">
                 {["Senior Engineer", "Product Manager", "Designer"].map((title) => (
@@ -116,7 +116,7 @@ export default function AnalyticsPage() {
                         <BarChart3 className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">{title}</p>
+                        <p className="font-medium text-foreground">{title}</p>
                         <p className="text-sm text-muted-foreground">24 applicants · 156 views</p>
                       </div>
                     </div>

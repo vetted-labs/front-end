@@ -28,8 +28,8 @@ export function GuildsSection({
 
   if (guilds.length === 0) {
     return (
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-8 text-center">
-        <p className="text-[13px] text-zinc-500">No guild memberships yet</p>
+      <div className="bg-card border border-border/60 rounded-[14px] p-8 text-center">
+        <p className="text-sm text-muted-foreground">No guild memberships yet</p>
       </div>
     );
   }
@@ -38,13 +38,13 @@ export function GuildsSection({
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-3.5">
-        <span className="text-[13px] font-semibold text-zinc-200">
+        <span className="text-sm font-bold text-foreground">
           Your Guilds
         </span>
         {rest.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="px-3 py-1.5 rounded-[7px] bg-white/[0.04] border border-white/[0.06] text-zinc-500 text-[11px] font-medium hover:text-zinc-300 hover:bg-white/[0.06] transition-colors"
+            className="px-3 py-1.5 rounded-[7px] bg-muted/30 border border-border/40 text-muted-foreground text-xs font-medium hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             {expanded ? "Show less" : `Show all ${guilds.length} →`}
           </button>

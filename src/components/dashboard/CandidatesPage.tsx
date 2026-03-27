@@ -40,6 +40,7 @@ export default function CandidatesPage() {
 
   // Fetch endorsement stats in background after candidates load
   const endorsementsFetched = useRef(false);
+  // eslint-disable-next-line no-restricted-syntax -- background fetch after initial data load
   useEffect(() => {
     if (allApplications.length === 0 || endorsementsFetched.current) return;
     endorsementsFetched.current = true;
@@ -146,11 +147,13 @@ export default function CandidatesPage() {
   }, [groupedJobs, debouncedSearch, filterStatus, filterGuild]);
 
   // Auto-expand all groups whenever the filtered list changes
+  // eslint-disable-next-line no-restricted-syntax -- sync expanded state with filter changes
   useEffect(() => {
     setExpandedJobIds(new Set(filteredJobs.map((g) => g.job.id)));
   }, [filteredJobs]);
 
   // Auto-expand when selecting a candidate in a collapsed group
+  // eslint-disable-next-line no-restricted-syntax -- sync expanded state with selection
   useEffect(() => {
     if (selectedApplication) {
       setExpandedJobIds((prev) => {
@@ -228,41 +231,41 @@ export default function CandidatesPage() {
 
   return (
     <div className="h-full flex flex-col animate-page-enter">
-      {/* Mobile header — visible only on small screens */}
-      <div className="flex-shrink-0 px-6 py-3 border-b border-border/40 dark:border-white/[0.04] lg:hidden">
+      {/* Mobile header */}
+      <div className="flex-shrink-0 px-4 py-2.5 border-b border-border/30 dark:border-white/[0.04] lg:hidden">
         {selectedApplication ? (
           <button
             onClick={() => setSelectedApplication(null)}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             Back to list
           </button>
         ) : (
           <div>
             <button
               onClick={() => router.push("/dashboard")}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors mb-2 flex items-center gap-1"
+              className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors mb-1.5 flex items-center gap-1"
             >
               <ArrowLeft className="w-3 h-3" />
               Dashboard
             </button>
-            <h1 className="text-lg font-semibold text-foreground">Candidates</h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">Candidates</h1>
           </div>
         )}
       </div>
 
-      {/* Desktop header — hidden on mobile */}
-      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-6 py-2.5 border-b border-border/40 dark:border-white/[0.04]">
+      {/* Desktop header */}
+      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-5 py-2 border-b border-border/30 dark:border-white/[0.04]">
         <button
           onClick={() => router.push("/dashboard")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors flex items-center gap-1"
         >
           <ArrowLeft className="w-3 h-3" />
           Dashboard
         </button>
-        <h1 className="text-lg font-semibold text-foreground">Candidates</h1>
-        <div className="ml-auto pr-12">
+        <h1 className="text-xl font-bold text-foreground tracking-tight">Candidates</h1>
+        <div className="ml-auto pr-8">
           <CandidateStatsBar
             total={stats.total}
             pending={stats.pending}
@@ -275,11 +278,11 @@ export default function CandidatesPage() {
         </div>
       </div>
 
-      {/* Two-panel layout — fills remaining height, no gaps */}
+      {/* Two-panel layout */}
       <div className="flex flex-1 min-h-0">
-        {/* Left panel — candidate list */}
+        {/* Left panel */}
         <div
-          className={`w-full lg:w-[38%] xl:w-[33%] flex flex-col border-r border-border/40 dark:border-white/[0.04] ${
+          className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-white/[0.04] ${
             selectedApplication ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -305,7 +308,7 @@ export default function CandidatesPage() {
           />
         </div>
 
-        {/* Right panel — candidate detail */}
+        {/* Right panel */}
         <div
           className={`w-full flex-1 min-w-0 min-h-0 ${
             selectedApplication ? "flex" : "hidden lg:flex"

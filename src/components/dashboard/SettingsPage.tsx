@@ -78,7 +78,7 @@ export default function SettingsPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
           </div>
           <p className="text-muted-foreground">Manage your company profile and preferences</p>
         </div>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
               {activeTab === "notifications" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">Notification Preferences</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-4">Notification Preferences</h2>
                     <p className="text-sm text-muted-foreground mb-6">
                       Choose how you want to receive updates about your job postings
                     </p>
@@ -180,7 +180,7 @@ export default function SettingsPage() {
               {activeTab === "security" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">Security Settings</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-4">Security Settings</h2>
                     <p className="text-sm text-muted-foreground mb-6">
                       Manage your account security and authentication
                     </p>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
               {activeTab === "billing" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">Billing & Subscription</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-4">Billing & Subscription</h2>
                     <p className="text-sm text-muted-foreground mb-6">
                       Manage your subscription and payment methods
                     </p>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                   <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-lg p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-1">Pro Plan</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-1">Pro Plan</h3>
                         <p className="text-sm text-muted-foreground">Unlimited job postings and candidates</p>
                       </div>
                       <span className="px-3 py-1 bg-primary text-white rounded-full text-sm font-medium">
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <p className="text-3xl font-bold text-foreground mb-4">
-                      $99<span className="text-lg font-normal text-muted-foreground">/month</span>
+                      $99<span className="text-sm font-medium text-muted-foreground">/month</span>
                     </p>
                     <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
                       Manage Subscription

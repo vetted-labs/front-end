@@ -68,7 +68,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
           Upcoming Meetings
         </h2>
         {meetings.length > 0 && (
@@ -112,12 +112,12 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
                   <p className="text-xs text-muted-foreground truncate">
                     {meeting.counterpartyName} &middot; {meeting.jobTitle}
                   </p>
-                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">
                     {formatMeetingTime(meeting.scheduledAt)}
                   </p>
                 </div>
                 <span
-                  className={`flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold border capitalize ${style.color}`}
+                  className={`flex-shrink-0 px-2 py-0.5 rounded-md text-xs font-medium border capitalize ${style.color}`}
                 >
                   {meeting.status === "new_time_proposed" ? "New Time" : meeting.status}
                 </span>

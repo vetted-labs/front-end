@@ -303,21 +303,21 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
             {/* Content */}
             <div className="relative px-6 pt-8 pb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-foreground leading-tight">Manage Staking</h2>
+                <h2 className="text-xl font-bold text-foreground leading-tight">Manage Staking</h2>
                 <p className="text-xs text-muted-foreground mt-1">Stake VETD per guild to unlock reviewing</p>
               </div>
               <button
                 onClick={handleClose}
                 disabled={step === "transaction"}
                 aria-label="Close staking modal"
-                className="group w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                className="group w-8 h-8 flex items-center justify-center rounded-full bg-muted/30 hover:bg-muted/50 border border-border/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
                 <X className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
             </div>
 
             {/* Gradient divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+            <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
           </div>
 
           {/* ── Content ── */}
@@ -329,7 +329,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                   <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.warning.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${STATUS_COLORS.warning.text}`}>Wrong Network</p>
+                  <p className={`text-sm font-medium ${STATUS_COLORS.warning.text}`}>Wrong Network</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Switch to Sepolia Testnet to continue.</p>
                 </div>
                 <Button
@@ -349,7 +349,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                   <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.negative.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${STATUS_COLORS.negative.text}`}>Staking Paused</p>
+                  <p className={`text-sm font-medium ${STATUS_COLORS.negative.text}`}>Staking Paused</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Contract is paused. Try again later.</p>
                 </div>
               </div>
@@ -358,10 +358,10 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
             {(
               <>
                 {/* ── Action Mode Toggle ── */}
-                <div className="flex p-1 bg-white/[0.04] rounded-2xl border border-white/[0.06]">
+                <div className="flex p-1 bg-muted/30 rounded-2xl border border-border/60">
                   <button
                     onClick={() => setActionMode("stake")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
                       actionMode === "stake"
                         ? "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/25"
                         : "text-muted-foreground hover:text-foreground"
@@ -373,7 +373,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                   <button
                     onClick={() => setActionMode("withdraw")}
                     disabled={!currentStake || currentStake === 0}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
                       actionMode === "withdraw"
                         ? "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/25"
                         : "text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
@@ -385,7 +385,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                 </div>
 
                 {/* ── Guild Card (with left accent bar like endorsement candidate card) ── */}
-                <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 flex overflow-hidden">
+                <div className="relative rounded-2xl bg-muted/20 border border-border/60 p-4 flex overflow-hidden">
                   {/* Left accent bar */}
                   <div className="w-0.5 bg-gradient-to-b from-primary to-accent rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
                   {isGuildLocked ? (
@@ -422,7 +422,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
 
                 {/* Guild dropdown */}
                 {!isGuildLocked && showGuildDropdown && guilds && guilds.length > 0 && (
-                  <div className="rounded-2xl shadow-2xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto -mt-2">
+                  <div className="rounded-2xl shadow-2xl border border-border/60 bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto -mt-2">
                     {guilds.map((guild) => (
                       <button
                         key={guild.id}
@@ -433,7 +433,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                         className={`w-full text-left px-4 py-3 transition-all text-sm first:rounded-t-2xl last:rounded-b-2xl ${
                           selectedGuild?.id === guild.id
                             ? "bg-primary/15 text-primary font-medium"
-                            : "text-foreground hover:bg-white/[0.06]"
+                            : "text-foreground hover:bg-muted/50"
                         }`}
                       >
                         {guild.name}
@@ -452,28 +452,28 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                   <div className="flex items-center gap-1.5">
                     <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Balance:</span>
-                    <span className="font-semibold tabular-nums">
+                    <span className="font-medium tabular-nums">
                       {formatTokenAmount(currentBalance)} {balanceLabel}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5 text-primary" />
                     <span className="text-primary/70">Staked:</span>
-                    <span className="font-semibold text-primary tabular-nums">
+                    <span className="font-medium text-primary tabular-nums">
                       {selectedGuild ? `${formatTokenAmount(currentStake)} ${stakeLabel}` : "—"}
                     </span>
                   </div>
                 </div>
 
                 {/* ── Amount Input Card ── */}
-                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                <div className="rounded-2xl bg-muted/20 border border-border/60 p-4 space-y-2 transition-colors focus-within:border-primary/20">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
                       {actionMode === "stake" ? "Your stake" : "You withdraw"}
                     </span>
                     <button
                       onClick={handleMaxClick}
-                      className="text-[10px] font-bold text-primary/70 hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded transition-all tracking-wider uppercase"
+                      className="text-xs font-bold text-primary/70 hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded transition-all tracking-wider uppercase"
                     >
                       MAX
                     </button>
@@ -487,11 +487,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                       disabled={step === "transaction"}
                       className="flex-1 bg-transparent text-3xl font-bold text-foreground placeholder:text-muted-foreground/30 outline-none tabular-nums min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] flex-shrink-0">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border/60 flex-shrink-0">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                        <span className="text-[11px] font-bold text-[hsl(var(--gradient-button-text))]">V</span>
+                        <span className="text-xs font-bold text-[hsl(var(--gradient-button-text))]">V</span>
                       </div>
-                      <span className="text-sm font-semibold">VETD</span>
+                      <span className="text-sm font-medium">VETD</span>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground/60">
@@ -514,7 +514,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                         key={btn.label}
                         onClick={() => setStakeAmount(btn.getValue())}
                         disabled={step === "transaction"}
-                        className="h-10 text-xs font-semibold rounded-lg border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-10 text-xs font-medium rounded-lg border border-border/40 bg-muted/20 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {btn.label}
                       </button>
@@ -532,7 +532,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                         key={btn.label}
                         onClick={() => setStakeAmount(currentStake ? (currentStake * btn.factor).toFixed(2) : "0")}
                         disabled={step === "transaction"}
-                        className="h-10 text-xs font-semibold rounded-lg border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-10 text-xs font-medium rounded-lg border border-border/40 bg-muted/20 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {btn.label}
                       </button>
@@ -546,7 +546,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                     variant="outline"
                     onClick={handleClose}
                     disabled={step === "transaction"}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] font-semibold"
+                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border/60 bg-muted/30 hover:bg-muted/50 font-medium"
                   >
                     Cancel
                   </Button>
@@ -560,7 +560,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                       parseFloat(stakeAmount) <= 0 ||
                       !selectedGuild
                     }
-                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-[15px] bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 hover:shadow-primary/35 hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 hover:shadow-primary/35 hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     {actionMode === "stake" ? (
                       <>

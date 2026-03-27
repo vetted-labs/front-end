@@ -121,12 +121,12 @@ export function CandidateDetailModal({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary font-semibold text-sm">
+                <span className="text-primary font-medium text-sm">
                   {candidate.fullName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="min-w-0">
-                <h3 className="text-[15px] font-medium text-foreground truncate">
+                <h3 className="text-sm font-medium text-foreground truncate">
                   {candidate.fullName}
                 </h3>
                 <p className="text-xs text-muted-foreground truncate">
@@ -249,7 +249,7 @@ export function CandidateDetailModal({
             <div className="space-y-5">
               {/* Position summary */}
               <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4 bg-muted/20 dark:bg-white/[0.02]">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
                   Applied For
                 </p>
                 <p className="text-sm font-medium text-foreground">
@@ -270,7 +270,7 @@ export function CandidateDetailModal({
 
               {/* Cover letter */}
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
                   Cover Letter
                 </p>
                 {application.coverLetter ? (
@@ -290,7 +290,7 @@ export function CandidateDetailModal({
               {application.screeningAnswers &&
                 application.screeningAnswers.length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
                       Screening Answers
                     </p>
                     <div className="space-y-3">
@@ -300,7 +300,7 @@ export function CandidateDetailModal({
                             key={idx}
                             className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4"
                           >
-                            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">
+                            <p className="text-xs font-medium text-muted-foreground mb-1.5">
                               Question {idx + 1}
                             </p>
                             <p className="text-sm text-foreground/90 leading-relaxed">
@@ -326,7 +326,7 @@ export function CandidateDetailModal({
           {activeTab === "notes" && (
             <div className="space-y-4">
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
                   Internal Notes
                 </p>
                 <textarea

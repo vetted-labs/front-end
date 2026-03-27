@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { STATUS_COLORS } from "@/config/colors";
+import { getCandidateStatusDot } from "@/config/colors";
 
 interface CandidateStatsBarProps {
   total: number;
@@ -13,12 +13,12 @@ interface CandidateStatsBarProps {
   onFilterClick?: (status: string) => void;
 }
 
-const stats = [
-  { key: "all", label: "total", color: "text-foreground" },
-  { key: "pending", label: "pending", color: STATUS_COLORS.warning.text },
-  { key: "reviewing", label: "reviewing", color: STATUS_COLORS.info.text },
-  { key: "interviewed", label: "interviewed", color: STATUS_COLORS.neutral.text },
-  { key: "accepted", label: "accepted", color: STATUS_COLORS.positive.text },
+const statDefs = [
+  { key: "all", label: "total", dot: null },
+  { key: "pending", label: "pending", dot: "pending" },
+  { key: "reviewing", label: "reviewing", dot: "reviewing" },
+  { key: "interviewed", label: "interviewed", dot: "interviewed" },
+  { key: "accepted", label: "accepted", dot: "accepted" },
 ] as const;
 
 export function CandidateStatsBar({
@@ -33,22 +33,25 @@ export function CandidateStatsBar({
   const counts: Record<string, number> = { all: total, pending, reviewing, interviewed, accepted };
 
   return (
-    <div className="flex items-center gap-4">
-      {stats.map((stat, i) => (
+    <div className="flex items-center gap-3">
+      {statDefs.map((stat, i) => (
         <span key={stat.key} className="contents">
-          {i > 0 && <span className="text-border dark:text-white/10">&middot;</span>}
+          {i > 0 && <span className="text-border/40 dark:text-white/[0.06]">&middot;</span>}
           <button
             type="button"
             onClick={() => onFilterClick?.(stat.key === activeFilter ? "all" : stat.key)}
             className={cn(
-              "text-sm text-muted-foreground rounded-md px-1.5 py-0.5 transition-all",
-              onFilterClick && "hover:bg-muted/50 cursor-pointer",
+              "flex items-center gap-1.5 text-xs text-muted-foreground rounded-md px-1.5 py-0.5 transition-all",
+              onFilterClick && "hover:bg-muted/30 cursor-pointer",
               !onFilterClick && "cursor-default",
-              activeFilter === stat.key && stat.key !== "all" && "ring-1 ring-primary/40 bg-primary/5"
+              activeFilter === stat.key && stat.key !== "all" && "ring-1 ring-primary/30 bg-primary/[0.04]"
             )}
           >
-            <span className={cn("font-semibold tabular-nums", stat.color)}>{counts[stat.key]}</span>{" "}
-            {stat.label}
+            {stat.dot && (
+              <span className={cn("w-1.5 h-1.5 rounded-full", getCandidateStatusDot(stat.dot))} />
+            )}
+            <span className="font-medium tabular-nums text-foreground">{counts[stat.key]}</span>
+            <span className="text-muted-foreground/60">{stat.label}</span>
           </button>
         </span>
       ))}

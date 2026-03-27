@@ -60,14 +60,14 @@ function TimelineEntry({ entry }: { entry: StatusTransition }) {
 
               {terminal && (
                 <span
-                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${toConfig?.className ?? ""}`}
+                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${toConfig?.className ?? ""}`}
                 >
                   Final
                 </span>
               )}
             </div>
 
-            <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap tabular-nums flex-shrink-0">
+            <span className="text-xs text-muted-foreground/70 whitespace-nowrap tabular-nums flex-shrink-0">
               {formatTimeAgo(entry.changedAt)}
             </span>
           </div>
@@ -75,11 +75,11 @@ function TimelineEntry({ entry }: { entry: StatusTransition }) {
           {/* From → To badges */}
           {!isInitial && fromConfig && (
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-              <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium ${fromConfig.className}`}>
+              <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${fromConfig.className}`}>
                 {fromConfig.label}
               </span>
               <span className="text-muted-foreground/40">&rarr;</span>
-              <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium ${toConfig?.className ?? ""}`}>
+              <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${toConfig?.className ?? ""}`}>
                 {toConfig?.label ?? entry.toStatus}
               </span>
             </div>
@@ -93,7 +93,7 @@ function TimelineEntry({ entry }: { entry: StatusTransition }) {
           )}
 
           {/* Full date */}
-          <p className="text-[10px] text-muted-foreground/40 mt-2 tabular-nums">
+          <p className="text-xs text-muted-foreground/40 mt-2 tabular-nums">
             {formatDate(entry.changedAt)} at {formatTime(entry.changedAt)}
           </p>
         </div>

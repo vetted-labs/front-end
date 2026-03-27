@@ -186,7 +186,7 @@ export function CandidateDetailPanel({
         {/* Row 2 — Avatar + name + contacts + pipeline stepper */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
-            <span className="text-primary font-display font-bold text-lg">
+            <span className="text-primary font-display font-bold text-xl">
               {candidate.fullName.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -234,8 +234,8 @@ export function CandidateDetailPanel({
           <div className="space-y-5">
             {/* Applied For — hero card */}
             <div className="rounded-xl border border-border/40 dark:border-white/[0.06] bg-gradient-to-br from-muted/40 via-transparent to-primary/[0.03] p-5">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
-              <p className="text-base font-semibold text-foreground">{job.title}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
+              <p className="text-sm font-medium text-foreground">{job.title}</p>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
                 <span>{job.location}</span>
                 {job.type && (
@@ -268,7 +268,7 @@ export function CandidateDetailPanel({
                       <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">View Resume</p>
+                      <p className="text-sm font-medium text-foreground">View Resume</p>
                       <p className="text-xs text-muted-foreground mt-0.5">PDF document</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
@@ -286,14 +286,14 @@ export function CandidateDetailPanel({
               {/* Experience */}
               {candidate.experienceLevel && (
                 <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Experience</p>
-                  <p className="text-sm font-semibold text-foreground capitalize">{candidate.experienceLevel} Level</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Experience</p>
+                  <p className="text-sm font-medium text-foreground capitalize">{candidate.experienceLevel} Level</p>
                 </div>
               )}
 
               {/* Contact card */}
               <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2.5">Contact</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2.5">Contact</p>
                 <div className="space-y-2">
                   <a href={`mailto:${candidate.email}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
                     <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -310,7 +310,7 @@ export function CandidateDetailPanel({
               {/* Links card */}
               {(candidate.socialLinks?.filter((l) => l.url?.trim()).length || candidate.linkedIn || candidate.github) && (
                 <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2.5">Links</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2.5">Links</p>
                   <div className="space-y-2">
                     {candidate.socialLinks?.filter((l) => l.url?.trim()).map((link, idx) => {
                       const Icon = getPlatformIcon(link.platform);
@@ -340,7 +340,7 @@ export function CandidateDetailPanel({
         {activeTab === "application" && (
           <div className="space-y-5">
             <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4 bg-muted/20 dark:bg-white/[0.02]">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
               <p className="text-sm font-medium text-foreground">{job.title}</p>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                 <span>{job.location}</span>
@@ -356,7 +356,7 @@ export function CandidateDetailPanel({
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Cover Letter</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Cover Letter</p>
               {application.coverLetter ? (
                 <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
                   <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{application.coverLetter}</p>
@@ -368,11 +368,11 @@ export function CandidateDetailPanel({
 
             {application.screeningAnswers && application.screeningAnswers.length > 0 && (
               <div>
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Screening Answers</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Screening Answers</p>
                 <div className="space-y-3">
                   {application.screeningAnswers.map((answer: string, idx: number) => (
                     <div key={idx} className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
-                      <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Question {idx + 1}</p>
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5">Question {idx + 1}</p>
                       <p className="text-sm text-foreground/90 leading-relaxed">{answer}</p>
                     </div>
                   ))}
@@ -404,8 +404,8 @@ export function CandidateDetailPanel({
               <>
                 <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Guild Review Summary</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Guild Review Summary</p>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
                       guildReport.guildApplication.guildApproved
                         ? STATUS_COLORS.positive.badge
                         : guildReport.guildApplication.status === "rejected"
@@ -417,16 +417,16 @@ export function CandidateDetailPanel({
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="text-center p-3 rounded-lg bg-muted/30 dark:bg-white/[0.02]">
-                      <p className="text-lg font-semibold text-foreground">{guildReport.guildApplication.reviewCount}</p>
-                      <p className="text-[11px] text-muted-foreground">Reviews</p>
+                      <p className="text-sm font-medium text-foreground">{guildReport.guildApplication.reviewCount}</p>
+                      <p className="text-xs text-muted-foreground">Reviews</p>
                     </div>
                     <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.positive.bgSubtle}`}>
-                      <p className={`text-lg font-semibold ${STATUS_COLORS.positive.text}`}>{guildReport.guildApplication.approvalCount}</p>
-                      <p className="text-[11px] text-muted-foreground">Approvals</p>
+                      <p className={`text-sm font-medium ${STATUS_COLORS.positive.text}`}>{guildReport.guildApplication.approvalCount}</p>
+                      <p className="text-xs text-muted-foreground">Approvals</p>
                     </div>
                     <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.negative.bgSubtle}`}>
-                      <p className={`text-lg font-semibold ${STATUS_COLORS.negative.text}`}>{guildReport.guildApplication.rejectionCount}</p>
-                      <p className="text-[11px] text-muted-foreground">Rejections</p>
+                      <p className={`text-sm font-medium ${STATUS_COLORS.negative.text}`}>{guildReport.guildApplication.rejectionCount}</p>
+                      <p className="text-xs text-muted-foreground">Rejections</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
@@ -438,14 +438,14 @@ export function CandidateDetailPanel({
 
                 {guildReport.reviews.length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Expert Reviews</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Expert Reviews</p>
                     <div className="space-y-3">
                       {guildReport.reviews.map((review) => (
                         <div key={review.id} className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
-                              <span className={`inline-flex items-center gap-0.5 text-[11px] font-medium ${
+                              <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${
                                 review.vote === "approve" ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                               }`}>
                                 {review.vote === "approve" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -485,7 +485,7 @@ export function CandidateDetailPanel({
         {activeTab === "notes" && (
           <div className="space-y-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Internal Notes</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Internal Notes</p>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}

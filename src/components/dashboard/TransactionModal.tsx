@@ -35,7 +35,7 @@ export function TransactionModal({
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-2xl border border-border/60 max-w-md w-full mx-4 animate-in zoom-in-95 duration-200 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
         {/* Header */}
         <div className="relative flex items-center justify-between p-6 border-b border-border/50">
-          <h3 className="text-lg font-semibold text-foreground">Transaction Status</h3>
+          <h3 className="text-xl font-bold text-foreground">Transaction Status</h3>
           {canClose && (
             <button
               onClick={onClose}
@@ -109,7 +109,7 @@ export function TransactionModal({
                   {actionType === "stake" ? "Stake Confirmed!" : "Withdrawal Confirmed!"}
                 </h4>
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border}`}>
-                  <span className={`text-lg font-bold ${STATUS_COLORS.positive.text}`}>
+                  <span className={`text-sm font-bold ${STATUS_COLORS.positive.text}`}>
                     {amount} VETD
                   </span>
                   <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>
@@ -119,7 +119,7 @@ export function TransactionModal({
                 {guildName && (
                   <p className="text-sm text-muted-foreground">
                     {actionType === "stake" ? "Staked in" : "Withdrawn from"}{" "}
-                    <span className="font-semibold text-foreground">{guildName}</span>
+                    <span className="font-medium text-foreground">{guildName}</span>
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
@@ -143,7 +143,7 @@ export function TransactionModal({
 
               <Button
                 onClick={onClose}
-                className={`w-full h-12 ${STATUS_COLORS.positive.bg} hover:opacity-90 shadow-lg shadow-positive/20 transition-all rounded-xl font-semibold text-base text-white`}
+                className={`w-full h-12 ${STATUS_COLORS.positive.bg} hover:opacity-90 shadow-lg shadow-positive/20 transition-all rounded-xl font-medium text-base text-white`}
               >
                 Done
               </Button>
@@ -198,7 +198,7 @@ export function TransactionModal({
               <Button
                 onClick={onClose}
                 variant="outline"
-                className="w-full h-11 rounded-xl font-semibold"
+                className="w-full h-11 rounded-xl font-medium"
               >
                 Close
               </Button>

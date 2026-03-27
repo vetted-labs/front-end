@@ -35,14 +35,14 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
   const hasMore = applications.length > 5;
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border/60 rounded-[14px] p-5 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[13px] font-semibold text-zinc-200">
+        <span className="text-sm font-bold text-foreground">
           Review Queue
         </span>
         {applications.length > 0 && (
-          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS.warning.badge}`}>
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS.warning.badge}`}>
             {applications.length} pending
           </span>
         )}
@@ -50,7 +50,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
 
       {/* Candidate rows */}
       {displayed.length === 0 ? (
-        <p className="text-center text-[12px] text-zinc-600 py-4">
+        <p className="text-center text-xs text-muted-foreground py-4">
           No pending reviews
         </p>
       ) : (
@@ -65,12 +65,12 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 className={`flex items-center gap-3 p-3 rounded-[10px] text-left transition-colors ${
                   isFirst
                     ? `${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} hover:bg-warning/[0.08]`
-                    : "bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04]"
+                    : "bg-muted/30 border border-border/40 hover:bg-muted/50"
                 }`}
               >
                 {/* Avatar */}
                 <div
-                  className={`w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[12px] font-bold shrink-0 ${
+                  className={`w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-xs font-bold shrink-0 ${
                     isFirst
                       ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
                       : `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.text}`
@@ -81,17 +81,17 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-zinc-200 truncate">
+                  <div className="text-sm font-medium text-foreground truncate">
                     {name}
                   </div>
-                  <div className="text-[11px] text-zinc-600 truncate">
+                  <div className="text-xs text-muted-foreground truncate">
                     {app.guild_name || "Guild"}
                     {app.created_at && ` · ${formatTimeAgo(app.created_at)}`}
                   </div>
                 </div>
 
                 {/* Action */}
-                <span className="shrink-0 px-3 py-1.5 bg-white/[0.06] border border-white/[0.08] text-zinc-400 rounded-[7px] text-[11px] font-medium">
+                <span className="shrink-0 px-3 py-1.5 bg-muted/30 border border-border/40 text-muted-foreground rounded-[7px] text-xs font-medium">
                   Review →
                 </span>
               </button>
@@ -101,7 +101,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
           {hasMore && (
             <button
               onClick={() => router.push("/expert/applications")}
-              className="text-center text-[12px] text-zinc-500 hover:text-zinc-300 transition-colors py-2"
+              className="text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               View all assigned →
             </button>

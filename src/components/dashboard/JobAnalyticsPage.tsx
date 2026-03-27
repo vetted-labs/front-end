@@ -37,7 +37,7 @@ export default function JobAnalyticsPage() {
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
             <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-8 py-6 text-center shadow-lg dark:bg-card/60">
               <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">Coming Soon</h2>
+              <h2 className="text-xl font-bold text-foreground mb-2">Coming Soon</h2>
               <p className="text-muted-foreground text-sm max-w-sm">
                 Per-job analytics with detailed conversion metrics are on the way.
               </p>
@@ -69,7 +69,7 @@ export default function JobAnalyticsPage() {
             {/* Status Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-card p-6 rounded-xl border border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-6">Application Status</h3>
+                <h3 className="text-xl font-bold text-foreground mb-6">Application Status</h3>
                 <div className="space-y-4">
                   {[
                     { label: "Pending Review", value: 12, bg: STATUS_COLORS.warning.bgSubtle, icon: Clock },
@@ -89,7 +89,7 @@ export default function JobAnalyticsPage() {
               </div>
 
               <div className="bg-card p-6 rounded-xl border border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-6">Job Information</h3>
+                <h3 className="text-xl font-bold text-foreground mb-6">Job Information</h3>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Description</p>

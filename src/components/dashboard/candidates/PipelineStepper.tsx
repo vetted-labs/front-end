@@ -68,7 +68,7 @@ export function PipelineStepper({ currentStatus, history }: PipelineStepperProps
 
               {/* Label */}
               <span
-                className={`text-[10px] font-medium mt-1 text-center leading-tight ${
+                className={`text-xs font-medium mt-1 text-center leading-tight ${
                   isCompleted || isCurrent
                     ? "text-foreground"
                     : "text-muted-foreground/40"
@@ -100,7 +100,7 @@ export function PipelineStepper({ currentStatus, history }: PipelineStepperProps
           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${STATUS_COLORS.negative.bg} text-white shadow-sm`}>
             <X className="w-3 h-3" />
           </div>
-          <span className={`text-[10px] font-medium mt-1 ${STATUS_COLORS.negative.text}`}>
+          <span className={`text-xs font-medium mt-1 ${STATUS_COLORS.negative.text}`}>
             Rejected
           </span>
         </div>

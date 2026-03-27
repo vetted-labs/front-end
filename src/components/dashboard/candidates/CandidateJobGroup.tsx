@@ -1,9 +1,8 @@
 "use client";
 
-import { Briefcase, Award, ChevronDown } from "lucide-react";
+import { Briefcase, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
-import { STATUS_COLORS } from "@/config/colors";
+import { getCandidateStatusDot } from "@/config/colors";
 import type { CompanyApplication } from "@/types";
 
 interface CandidateJobGroupProps {
@@ -18,6 +17,23 @@ interface CandidateJobGroupProps {
   onShowMore: () => void;
 }
 
+/** Deterministic muted avatar background based on name */
+function getAvatarColor(name: string): string {
+  const colors = [
+    "bg-primary/15 text-primary",
+    "bg-info-blue/15 text-info-blue",
+    "bg-positive/15 text-positive",
+    "bg-rank-officer/15 text-rank-officer",
+    "bg-rank-craftsman/15 text-rank-craftsman",
+    "bg-warning/15 text-warning",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
 export function CandidateJobGroup({
   job,
   applications,
@@ -29,104 +45,91 @@ export function CandidateJobGroup({
   visibleCount,
   onShowMore,
 }: CandidateJobGroupProps) {
-  // Mini status breakdown for collapsed header
-  const statusCounts = applications.reduce<Record<string, number>>((acc, app) => {
-    acc[app.status] = (acc[app.status] || 0) + 1;
-    return acc;
-  }, {});
-
   const remaining = applications.length - visibleCount;
 
   return (
     <div>
-      {/* Clickable Job Header */}
+      {/* Job Group Header */}
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-4 py-2 bg-muted/30 dark:bg-white/[0.02] border-b border-border/30 dark:border-white/[0.04] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors"
+        className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/30 dark:hover:bg-white/[0.03] transition-colors border-b border-border/20 dark:border-white/[0.04]"
       >
+        <Briefcase className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
+          {job.title}
+        </span>
+        <span className="text-xs font-medium text-muted-foreground/40 bg-muted/40 dark:bg-white/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
+          {applications.length}
+        </span>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+            "w-3 h-3 text-muted-foreground/40 ml-auto transition-transform duration-150 flex-shrink-0",
             !isExpanded && "-rotate-90"
           )}
         />
-        <Briefcase className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-        <span className="text-xs font-medium text-muted-foreground truncate">{job.title}</span>
-        <span className="text-[10px] text-muted-foreground/60 flex-shrink-0">{applications.length}</span>
-
-        {/* Mini status breakdown — shown when collapsed */}
-        {!isExpanded && Object.keys(statusCounts).length > 0 && (
-          <span className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-            {Object.entries(statusCounts).map(([status, count]) => (
-              <span
-                key={status}
-                className="text-[10px] font-medium text-muted-foreground"
-              >
-                {count} {status}
-              </span>
-            ))}
-          </span>
-        )}
       </button>
 
-      {/* Candidate Rows — only when expanded */}
+      {/* Candidate Rows */}
       {isExpanded && (
         <>
           {applications.slice(0, visibleCount).map((app) => {
-            const config = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG.pending;
             const isSelected = selectedApplicationId === app.id;
-            const endorsementCount = getEndorsementCount(app);
+            const avatarColor = getAvatarColor(app.candidate.fullName);
+            const endorsements = getEndorsementCount(app);
 
             return (
               <button
                 key={app.id}
                 onClick={() => onSelectApplication(app)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-border/20 dark:border-white/[0.03]",
+                  "w-full flex items-center gap-2.5 px-4 h-[52px] text-left transition-colors border-l-2",
                   isSelected
-                    ? "bg-primary/5 border-l-2 border-l-primary"
-                    : "hover:bg-muted/30 dark:hover:bg-white/[0.02] border-l-2 border-l-transparent"
+                    ? "bg-primary/[0.04] border-l-primary"
+                    : "hover:bg-muted/20 dark:hover:bg-white/[0.02] border-l-transparent"
                 )}
               >
-                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary font-medium text-xs">
+                {/* Avatar */}
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", avatarColor)}>
+                  <span className="text-xs font-medium">
                     {app.candidate.fullName.charAt(0).toUpperCase()}
                   </span>
                 </div>
+
+                {/* Name + subtitle */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-foreground truncate">{app.candidate.fullName}</p>
-                    {endorsementCount > 0 && (
-                      <span className="flex items-center gap-0.5 flex-shrink-0">
-                        <Award className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`} />
-                        <span className={`text-[10px] font-medium ${STATUS_COLORS.positive.text}`}>{endorsementCount}</span>
+                    <p className={cn(
+                      "text-sm font-medium truncate",
+                      isSelected ? "text-foreground" : "text-foreground/90"
+                    )}>
+                      {app.candidate.fullName}
+                    </p>
+                    {endorsements > 0 && (
+                      <span className="text-xs font-medium text-muted-foreground/60 flex-shrink-0">
+                        {endorsements}
                       </span>
                     )}
                   </div>
-                  {app.candidate.headline ? (
-                    <p className="text-xs text-muted-foreground/70 truncate">{app.candidate.headline}</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {new Date(app.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground/50 truncate leading-tight">
+                    {app.candidate.headline || new Date(app.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
                 </div>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${config.className} flex-shrink-0`}>
-                  {config.label}
-                </span>
+
+                {/* Status dot (8px) */}
+                <div className={cn("w-2 h-2 rounded-full flex-shrink-0", getCandidateStatusDot(app.status))} />
               </button>
             );
           })}
 
-          {/* Show more button */}
+          {/* Show more */}
           {remaining > 0 && (
             <button
               type="button"
               onClick={onShowMore}
-              className="w-full py-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors border-b border-border/20 dark:border-white/[0.03]"
+              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors border-b border-border/20 dark:border-white/[0.03]"
             >
-              Show {remaining <= 10 ? `all ${remaining}` : `${10} more`} candidates
+              Show {remaining <= 10 ? `all ${remaining}` : "10 more"} candidates
             </button>
           )}
         </>

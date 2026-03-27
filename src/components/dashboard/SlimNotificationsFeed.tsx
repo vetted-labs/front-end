@@ -41,14 +41,14 @@ export function SlimNotificationsFeed({
   };
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border/60 rounded-[14px] p-5 h-full">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-zinc-200">
+        <span className="text-sm font-bold text-foreground">
           Notifications
         </span>
         <button
           onClick={() => router.push("/expert/notifications")}
-          className="text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           View all →
         </button>
@@ -56,12 +56,12 @@ export function SlimNotificationsFeed({
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-4 h-4 border-2 border-zinc-600 border-t-zinc-400 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2">
-          <Bell className="w-5 h-5 text-zinc-600" />
-          <p className="text-[12px] text-zinc-600">All caught up</p>
+          <Bell className="w-5 h-5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">All caught up</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2 mt-4">
@@ -73,7 +73,7 @@ export function SlimNotificationsFeed({
               <button
                 key={notification.id}
                 onClick={() => handleClick(notification)}
-                className="flex items-start gap-3 p-2.5 rounded-[10px] bg-white/[0.02] border border-white/[0.04] text-left hover:bg-white/[0.04] transition-colors"
+                className="flex items-start gap-3 p-2.5 rounded-[10px] bg-muted/30 border border-border/40 text-left hover:bg-muted/50 transition-colors"
               >
                 <div
                   className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
@@ -85,13 +85,13 @@ export function SlimNotificationsFeed({
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-medium text-zinc-300 truncate">
+                  <div className="text-xs font-medium text-foreground truncate">
                     {notification.title}
                   </div>
-                  <div className="text-[11px] text-zinc-600 truncate">
+                  <div className="text-xs text-muted-foreground truncate">
                     {notification.message}
                   </div>
-                  <div className="text-[10px] text-zinc-600 mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     {formatTimeAgo(notification.createdAt)}
                   </div>
                 </div>

@@ -65,11 +65,11 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Recent Notifications
           </h2>
           {unreadCount > 0 && (
-            <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+            <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
               {unreadCount}
             </span>
           )}
@@ -178,7 +178,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
                             {notification.title}
                           </p>
                           {applicantTag && (
-                            <span className={`px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded-full flex-shrink-0 ${applicantTag.className}`}>
+                            <span className={`px-1.5 py-0.5 text-xs font-medium uppercase tracking-wider rounded-full flex-shrink-0 ${applicantTag.className}`}>
                               {applicantTag.label}
                             </span>
                           )}
@@ -186,7 +186,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                           {notification.message}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground/70">
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground/70">
                           {notification.guildName && (
                             <>
                               <span className="font-medium">{notification.guildName}</span>

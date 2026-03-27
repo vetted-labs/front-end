@@ -83,8 +83,8 @@ export function RankProgress({ guilds }: RankProgressProps) {
   const topGuilds = selectTopGuilds(guilds);
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-5 h-full">
-      <span className="text-[13px] font-semibold text-zinc-200">
+    <div className="bg-card border border-border/60 rounded-[14px] p-5 h-full">
+      <span className="text-sm font-bold text-foreground">
         Rank Progress
       </span>
 
@@ -102,26 +102,26 @@ export function RankProgress({ guilds }: RankProgressProps) {
               className={`p-3 rounded-[10px] ${
                 isHighlighted
                   ? "bg-primary/[0.06] border border-primary/[0.12]"
-                  : "bg-white/[0.02] border border-white/[0.05]"
+                  : "bg-muted/30 border border-border/40"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span
-                  className={`text-[12px] font-semibold ${
-                    isHighlighted ? "text-primary" : "text-zinc-300"
+                  className={`text-xs font-medium ${
+                    isHighlighted ? "text-primary" : "text-foreground"
                   }`}
                 >
                   {guild.name}
                 </span>
                 <span
-                  className={`text-[10px] uppercase tracking-wider font-semibold ${
-                    isHighlighted ? "text-primary" : "text-zinc-500"
+                  className={`text-xs uppercase tracking-wider font-medium ${
+                    isHighlighted ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {RANK_LABELS[guild.expertRole] ?? guild.expertRole}
                 </span>
               </div>
-              <div className="w-full h-[3px] bg-white/[0.06] rounded-full">
+              <div className="w-full h-[3px] bg-muted/50 rounded-full">
                 <div
                   className="h-[3px] rounded-full bg-primary transition-all duration-500"
                   style={{
