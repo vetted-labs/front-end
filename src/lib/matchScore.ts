@@ -5,6 +5,8 @@
  * No AI/LLM needed — pure skill overlap computation.
  */
 
+import { STATUS_COLORS } from "@/config/colors";
+
 /**
  * Compute a match score (0-100) between candidate skills and job required skills.
  * Uses weighted Jaccard similarity: exact matches score higher, partial matches score lower.
@@ -41,8 +43,8 @@ export function computeMatchScore(
  * Get a label and color for a match score.
  */
 export function getMatchScoreConfig(score: number): { label: string; colorClass: string; bgClass: string } {
-  if (score >= 80) return { label: "Strong Match", colorClass: "text-green-600 dark:text-green-400", bgClass: "bg-green-500/10 border-green-500/20" };
-  if (score >= 60) return { label: "Good Match", colorClass: "text-blue-600 dark:text-blue-400", bgClass: "bg-blue-500/10 border-blue-500/20" };
-  if (score >= 40) return { label: "Partial Match", colorClass: "text-amber-600 dark:text-amber-400", bgClass: "bg-amber-500/10 border-amber-500/20" };
+  if (score >= 80) return { label: "Strong Match", colorClass: STATUS_COLORS.positive.text, bgClass: `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}` };
+  if (score >= 60) return { label: "Good Match", colorClass: STATUS_COLORS.info.text, bgClass: `${STATUS_COLORS.info.bgSubtle} ${STATUS_COLORS.info.border}` };
+  if (score >= 40) return { label: "Partial Match", colorClass: STATUS_COLORS.warning.text, bgClass: `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}` };
   return { label: "Low Match", colorClass: "text-muted-foreground", bgClass: "bg-muted/50 border-border" };
 }

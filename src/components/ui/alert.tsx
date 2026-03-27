@@ -15,11 +15,11 @@ export function Alert({ variant = "info", children, onClose, className = "" }: A
       icon: <XCircle className="w-5 h-5 text-destructive" />
     },
     success: {
-      container: "bg-success/10 border-success/20 text-green-800 dark:text-green-300",
-      icon: <CheckCircle2 className="w-5 h-5 text-success" />
+      container: "bg-positive/10 border-positive/20 text-positive",
+      icon: <CheckCircle2 className="w-5 h-5 text-positive" />
     },
     warning: {
-      container: "bg-warning/10 border-warning/20 text-amber-800 dark:text-amber-300",
+      container: "bg-warning/10 border-warning/20 text-warning",
       icon: <AlertCircle className="w-5 h-5 text-warning" />
     },
     info: {

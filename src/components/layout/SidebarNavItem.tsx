@@ -58,7 +58,7 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
         <>
           <span className="truncate">{label}</span>
           {badge !== undefined && badge > 0 && (
-            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-bold text-white">
               {badge > 99 ? "99+" : badge}
             </span>
           )}
@@ -70,14 +70,14 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
         <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md border border-border group-hover:block">
           {label}
           {badge !== undefined && badge > 0 && (
-            <span className="ml-1 text-red-400">({badge})</span>
+            <span className="ml-1 text-destructive">({badge})</span>
           )}
         </span>
       )}
 
       {/* Badge dot when collapsed */}
       {isCollapsed && badge !== undefined && badge > 0 && (
-        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
       )}
     </Link>
   );

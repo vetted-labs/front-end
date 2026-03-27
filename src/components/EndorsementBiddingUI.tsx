@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Modal } from "./ui/modal";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface JobApplication {
   id: string;
@@ -84,9 +85,9 @@ export function EndorsementBiddingUI({
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-full mb-4">
-          <Zap className="w-4 h-4 text-emerald-600 mr-2" />
-          <span className="text-sm font-medium text-emerald-700">
+        <div className={`inline-flex items-center px-4 py-2 ${STATUS_COLORS.positive.bgSubtle} rounded-full mb-4`}>
+          <Zap className={`w-4 h-4 ${STATUS_COLORS.positive.icon} mr-2`} />
+          <span className={`text-sm font-medium ${STATUS_COLORS.positive.text}`}>
             Layer 3: Endorsement Bidding
           </span>
         </div>
@@ -110,19 +111,19 @@ export function EndorsementBiddingUI({
           <p className="text-xs text-muted-foreground mt-1">Available for bidding</p>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+        <div className={`${STATUS_COLORS.warning.bgSubtle} rounded-xl p-6 border ${STATUS_COLORS.warning.border}`}>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-amber-700">Your Reputation</p>
-            <Award className="w-5 h-5 text-amber-600" />
+            <p className={`text-sm font-medium ${STATUS_COLORS.warning.text}`}>Your Reputation</p>
+            <Award className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
           </div>
           <p className="text-3xl font-bold text-foreground">{expertReputation}</p>
           <p className="text-xs text-muted-foreground mt-1">Affects reward multiplier</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+        <div className={`${STATUS_COLORS.positive.bgSubtle} rounded-xl p-6 border ${STATUS_COLORS.positive.border}`}>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-emerald-700">Active Endorsements</p>
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
+            <p className={`text-sm font-medium ${STATUS_COLORS.positive.text}`}>Active Endorsements</p>
+            <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <p className="text-3xl font-bold text-foreground">3</p>
           <p className="text-xs text-muted-foreground mt-1">Currently staked</p>
@@ -130,9 +131,9 @@ export function EndorsementBiddingUI({
       </div>
 
       {/* How It Works */}
-      <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-8">
+      <div className={`${STATUS_COLORS.info.bgSubtle} rounded-xl p-6 border ${STATUS_COLORS.info.border} mb-8`}>
         <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <Info className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
           <div>
             <h3 className="font-semibold text-foreground mb-2">How Endorsement Bidding Works</h3>
             <ul className="text-sm text-card-foreground space-y-1">
@@ -207,10 +208,10 @@ export function EndorsementBiddingUI({
                             <div
                               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                                 endorsement.rank === 1
-                                  ? "bg-amber-100 text-amber-700"
+                                  ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
                                   : endorsement.rank === 2
                                   ? "bg-muted text-card-foreground"
-                                  : "bg-orange-100 text-orange-700"
+                                  : `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
                               }`}
                             >
                               #{endorsement.rank}
@@ -238,7 +239,7 @@ export function EndorsementBiddingUI({
                   <div className="flex items-center gap-6">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Potential Reward</p>
-                      <p className="text-lg font-bold text-emerald-600">
+                      <p className={`text-lg font-bold ${STATUS_COLORS.positive.text}`}>
                         {calculatePotentialReward(app)} VETD
                       </p>
                     </div>
@@ -304,7 +305,7 @@ export function EndorsementBiddingUI({
             <div className="bg-muted rounded-lg p-4 space-y-2">
               <div className="flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">If hired (reward):</p>
-                <p className="text-sm font-bold text-emerald-600">
+                <p className={`text-sm font-bold ${STATUS_COLORS.positive.text}`}>
                   +{calculatePotentialReward(selectedApplication)} VETD
                 </p>
               </div>

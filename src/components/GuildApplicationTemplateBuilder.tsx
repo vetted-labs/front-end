@@ -17,6 +17,7 @@ import { Input } from "./ui/input";
 import { Alert } from "./ui/alert";
 import { expertApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface Question {
   id: string;
@@ -177,7 +178,7 @@ export function GuildApplicationTemplateBuilder({
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className={`w-16 h-16 ${STATUS_COLORS.positive.icon} mx-auto mb-4`} />
           <h2 className="text-2xl font-bold text-foreground mb-2">Template Created!</h2>
           <p className="text-muted-foreground">Your application template has been saved successfully.</p>
         </div>

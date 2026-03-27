@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { GuildRecord } from "@/types";
+import { STATUS_COLORS } from "@/config/colors";
 
 /**
  * Resolve a guild name (e.g. "Engineering Guild" or "Engineering") to its
@@ -206,11 +207,11 @@ export const getGuildBgColor = (guildName: string): string => {
 export const getRoleBadgeColor = (role: string): string => {
   switch (role) {
     case "master":
-      return "bg-gradient-to-r from-amber-400 to-orange-500 text-white";
+      return "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]";
     case "craftsman":
       return "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]";
     case "recruit":
-      return "bg-gradient-to-r from-blue-400 to-cyan-500 text-white";
+      return `${STATUS_COLORS.info.bgSubtle} ${STATUS_COLORS.info.text}`;
     default:
       return "bg-muted text-foreground";
   }
@@ -234,13 +235,13 @@ export const getActivityIcon = (type: string): LucideIcon => {
 export const getActivityColor = (type: string): string => {
   switch (type) {
     case "proposal_submitted":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
+      return STATUS_COLORS.info.badge;
     case "candidate_approved":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+      return STATUS_COLORS.positive.badge;
     case "job_posted":
       return "bg-primary/20 text-primary border border-primary/40";
     case "endorsement_given":
-      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+      return STATUS_COLORS.warning.badge;
     default:
       return "bg-muted text-muted-foreground border border-border";
   }

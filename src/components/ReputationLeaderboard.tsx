@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { EmptyState } from "./ui/empty-state";
+import { STATUS_COLORS, PODIUM_COLORS } from "@/config/colors";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { formatVetd, truncateAddress } from "@/lib/utils";
@@ -53,16 +54,16 @@ export function ReputationLeaderboard({
   const entries = leaderboard ?? [];
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-500" />;
-    if (rank === 2) return <Medal className="w-6 h-6 text-muted-foreground" />;
-    if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />;
+    if (rank === 1) return <Trophy className={`w-6 h-6 ${PODIUM_COLORS[1].label}`} />;
+    if (rank === 2) return <Medal className={`w-6 h-6 ${PODIUM_COLORS[2].label}`} />;
+    if (rank === 3) return <Medal className={`w-6 h-6 ${PODIUM_COLORS[3].label}`} />;
     return null;
   };
 
   const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white";
-    if (rank === 2) return "bg-gradient-to-br from-slate-300 to-slate-500 text-white";
-    if (rank === 3) return "bg-gradient-to-br from-amber-500 to-amber-700 text-white";
+    if (rank === 1) return `bg-gradient-to-br ${PODIUM_COLORS[1].gradient} text-white`;
+    if (rank === 2) return `bg-gradient-to-br ${PODIUM_COLORS[2].gradient} text-white`;
+    if (rank === 3) return `bg-gradient-to-br ${PODIUM_COLORS[3].gradient} text-white`;
     return "bg-muted text-card-foreground";
   };
 
@@ -94,7 +95,7 @@ export function ReputationLeaderboard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-yellow-500" />
+            <Trophy className={`w-7 h-7 ${PODIUM_COLORS[1].label}`} />
             Earnings Leaderboard
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -149,8 +150,8 @@ export function ReputationLeaderboard({
 
         <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-              <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
+              <Activity className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-1">Avg Reviews</p>
@@ -165,8 +166,8 @@ export function ReputationLeaderboard({
 
         <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-              <Coins className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
+              <Coins className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-1">Top Earnings</p>
@@ -177,8 +178,8 @@ export function ReputationLeaderboard({
 
         <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
+              <DollarSign className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
@@ -263,12 +264,12 @@ export function ReputationLeaderboard({
                   {/* Earnings */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Coins className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      <Coins className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                       <span className="text-lg font-bold text-foreground">
                         {formatVetd(entry.totalEarnings)}
                       </span>
                       {entry.rank <= 10 && (
-                        <ChevronUp className="w-4 h-4 text-green-500" />
+                        <ChevronUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
                       )}
                     </div>
                   </td>
@@ -300,7 +301,7 @@ export function ReputationLeaderboard({
                     <div className="flex items-center gap-2">
                       <div className="w-full bg-muted rounded-full h-2 max-w-[100px]">
                         <div
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
+                          className={`${STATUS_COLORS.positive.bg} h-2 rounded-full`}
                           style={{
                             width: `${calculateConsensusRate(entry.approvals, entry.rejections)}%`,
                           }}

@@ -31,6 +31,7 @@ import { formatSalaryRange } from "@/lib/utils";
 import { JOB_STATUSES, JOB_STATUS_CONFIG } from "@/config/constants";
 
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { STATUS_COLORS } from "@/config/colors";
 
 import type { Job, DashboardStats } from "@/types";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
@@ -136,17 +137,17 @@ export function HiringDashboard() {
             <span className="text-sm font-semibold text-foreground">{stats?.totalJobs || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
-            <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
             <span className="text-xs text-muted-foreground">Active</span>
             <span className="text-sm font-semibold text-foreground">{stats?.activeJobs || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
-            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Users className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
             <span className="text-xs text-muted-foreground">Applicants</span>
             <span className="text-sm font-semibold text-foreground">{stats?.totalApplicants || 0}</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
-            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <Clock className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
             <span className="text-xs text-muted-foreground">Avg. Days</span>
             <span className="text-sm font-semibold text-foreground">{stats?.averageTimeToHire || 0}</span>
           </div>

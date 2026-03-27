@@ -17,6 +17,7 @@ import {
   getTransactionErrorMessage,
 } from "@/lib/blockchain";
 import { useVettingManager } from "@/lib/hooks/useVettedContracts";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface CommitmentFormProps {
   applicationId: string;
@@ -132,8 +133,8 @@ export function CommitmentForm({
     <div className="space-y-5">
       {/* Session pending notice */}
       {sessionPending && (
-        <div className="flex items-start gap-3 rounded-xl border border-blue-500/30 bg-blue-500/5 p-3">
-          <Clock className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+        <div className={`flex items-start gap-3 rounded-xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle} p-3`}>
+          <Clock className={`w-5 h-5 ${STATUS_COLORS.info.icon} mt-0.5 flex-shrink-0`} />
           <div className="text-sm">
             <p className="font-medium text-foreground mb-1">Session being created...</p>
             <p className="text-muted-foreground">

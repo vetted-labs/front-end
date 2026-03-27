@@ -2,6 +2,7 @@
 
 import { Loader2, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import React from "react";
+import { STATUS_COLORS } from "@/config/colors";
 
 export type TransactionPhase =
   | "idle"
@@ -35,15 +36,15 @@ function getPhaseConfig(phase: TransactionPhase) {
       };
     case "confirming":
       return {
-        icon: <Loader2 className="h-5 w-5 animate-spin text-amber-500" />,
+        icon: <Loader2 className={`h-5 w-5 animate-spin ${STATUS_COLORS.warning.icon}`} />,
         label: "Confirming on chain...",
-        color: "text-amber-500",
+        color: STATUS_COLORS.warning.text,
       };
     case "confirmed":
       return {
-        icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+        icon: <CheckCircle2 className={`h-5 w-5 ${STATUS_COLORS.positive.icon}`} />,
         label: "Transaction confirmed!",
-        color: "text-green-500",
+        color: STATUS_COLORS.positive.text,
       };
     case "failed":
       return {

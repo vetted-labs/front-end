@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { computeMatchScore, getMatchScoreConfig } from "@/lib/matchScore";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface MatchScoreBadgeProps {
   candidateSkills: string[];
@@ -60,7 +61,7 @@ export function MatchScoreBadge({ candidateSkills, jobSkills, compact = false }:
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Matching Skills</p>
               <div className="flex flex-wrap gap-1">
                 {matchedSkills.map((skill) => (
-                  <span key={skill} className="px-1.5 py-0.5 bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] rounded-md border border-green-500/20">
+                  <span key={skill} className={`px-1.5 py-0.5 ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text} text-[10px] rounded-md ${STATUS_COLORS.positive.border}`}>
                     {skill}
                   </span>
                 ))}

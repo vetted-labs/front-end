@@ -19,6 +19,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { GuildRecord } from "@/types";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface EndorsementHeaderProps {
   // Wallet
@@ -83,14 +84,14 @@ export function EndorsementHeader({
     <>
       {/* Wrong Network Warning */}
       {!isOnSepolia && (
-        <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/5">
+        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
+            <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-300 mb-2">
+              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-2`}>
                 Wrong Network Detected
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+              <p className={`text-sm ${STATUS_COLORS.warning.text} mb-3`}>
                 Your wallet is connected to <strong>{chainName || "Unknown Network"}</strong>.
                 Please switch to <strong>Sepolia Testnet</strong> to endorse applications.
               </p>
@@ -123,7 +124,7 @@ export function EndorsementHeader({
                   title="Copy address"
                 >
                   {copied ? (
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className={`h-3 w-3 ${STATUS_COLORS.positive.icon}`} />
                   ) : (
                     <Copy className="h-3 w-3" />
                   )}
@@ -153,8 +154,8 @@ export function EndorsementHeader({
                 <span
                   className={`h-[7px] w-[7px] rounded-full ${
                     isOnSepolia
-                      ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]"
-                      : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]"
+                      ? `${STATUS_COLORS.positive.dot} shadow-[0_0_6px_hsl(var(--positive)/0.4)]`
+                      : `${STATUS_COLORS.warning.dot} shadow-[0_0_6px_hsl(var(--warning)/0.4)]`
                   }`}
                 />
                 <span className="text-xs font-semibold text-muted-foreground">

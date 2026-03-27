@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { logger } from "@/lib/logger";
 import { getExplorerTxUrl } from "@/lib/blockchain";
+import { STATUS_COLORS } from "@/config/colors";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import { truncateAddress } from "@/lib/utils";
 import type { EndorsementApplication } from "@/types";
@@ -217,22 +218,22 @@ export function EndorsementTransactionModal({
             {/* Bidding Period Countdown */}
             <div className={`rounded-2xl border p-3 flex items-center gap-2.5 ${
               biddingExpired
-                ? "border-red-500/20 bg-red-500/[0.08]"
+                ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`
                 : biddingUrgent
-                ? "border-amber-500/20 bg-amber-500/[0.08]"
+                ? `${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`
                 : "border-white/[0.08] bg-white/[0.03]"
             }`}>
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                biddingExpired ? "bg-red-500/10" : biddingUrgent ? "bg-amber-500/10" : "bg-white/[0.06]"
+                biddingExpired ? STATUS_COLORS.negative.bgSubtle : biddingUrgent ? STATUS_COLORS.warning.bgSubtle : "bg-white/[0.06]"
               }`}>
                 <Clock className={`w-4 h-4 ${
-                  biddingExpired ? "text-red-400" : biddingUrgent ? "text-amber-400" : "text-primary"
+                  biddingExpired ? STATUS_COLORS.negative.icon : biddingUrgent ? STATUS_COLORS.warning.icon : "text-primary"
                 }`} />
               </div>
               <div className="flex-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Bidding period</p>
                 <p className={`text-sm font-semibold tabular-nums ${
-                  biddingExpired ? "text-red-400" : biddingUrgent ? "text-amber-400" : "text-foreground"
+                  biddingExpired ? STATUS_COLORS.negative.text : biddingUrgent ? STATUS_COLORS.warning.text : "text-foreground"
                 }`}>
                   {countdownLabel}
                 </p>
@@ -241,8 +242,8 @@ export function EndorsementTransactionModal({
 
             {/* Existing Bid Warning */}
             {application?.current_bid && (
-              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.08] p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+              <div className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-4 flex items-start gap-3`}>
+                <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} mt-0.5 flex-shrink-0`} />
                 <div>
                   <p className="text-sm font-semibold text-foreground">Already endorsed</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -337,11 +338,11 @@ export function EndorsementTransactionModal({
 
                 {/* Error */}
                 {errorMessage && (
-                  <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.08] p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className={`rounded-2xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4 flex items-start gap-3`}>
+                    <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
                     <div>
-                      <p className="text-sm font-semibold text-red-400">Error</p>
-                      <p className="text-xs text-red-300/80 mt-0.5">{errorMessage}</p>
+                      <p className={`text-sm font-semibold ${STATUS_COLORS.negative.text}`}>Error</p>
+                      <p className={`text-xs ${STATUS_COLORS.negative.text} opacity-80 mt-0.5`}>{errorMessage}</p>
                     </div>
                   </div>
                 )}
@@ -507,22 +508,22 @@ export function EndorsementTransactionModal({
             {txStep === 'error' && (
               <div className="text-center py-8">
                 <div className="relative w-24 h-24 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-red-500/20 animate-pulse" />
-                  <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-xl">
+                  <div className={`absolute inset-0 rounded-full ${STATUS_COLORS.negative.bgSubtle} animate-pulse`} />
+                  <div className={`relative w-24 h-24 rounded-full ${STATUS_COLORS.negative.bg} flex items-center justify-center shadow-xl`}>
                     <AlertCircle className="w-10 h-10 text-white" />
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-red-400 mb-4">Transaction Failed</h3>
+                <h3 className={`text-xl font-bold ${STATUS_COLORS.negative.text} mb-4`}>Transaction Failed</h3>
 
-                <div className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-4 mb-6 text-left">
+                <div className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4 mb-6 text-left`}>
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-300">{txError || errorMessage || "An error occurred."}</p>
+                    <AlertCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
+                    <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{txError || errorMessage || "An error occurred."}</p>
                   </div>
 
                   {(approvalTxHash || bidTxHash) && (
-                    <div className="mt-3 pt-3 border-t border-red-500/20 space-y-2">
+                    <div className={`mt-3 pt-3 border-t ${STATUS_COLORS.negative.border} space-y-2`}>
                       {approvalTxHash && (
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Approval</span>

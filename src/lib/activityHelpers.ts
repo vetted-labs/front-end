@@ -1,4 +1,5 @@
 import { LucideIcon, FileText, Award, DollarSign, TrendingUp } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 type ActivityType = "proposal_vote" | "endorsement" | "earning" | "reputation_gain";
 
@@ -17,28 +18,14 @@ export const getActivityIconComponent = (type: ActivityType): LucideIcon => {
   }
 };
 
-export const getActivityColorClasses = (type: ActivityType): string => {
-  // Simplified slate color scheme for all activities
-  return "bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700";
+export const getActivityColorClasses = (_type: ActivityType): string => {
+  return `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.border}`;
 };
 
-export const getActivityIconBgColor = (type: ActivityType): string => {
-  // Consistent icon background
-  return "bg-slate-200 dark:bg-slate-700";
+export const getActivityIconBgColor = (_type: ActivityType): string => {
+  return STATUS_COLORS.neutral.bgSubtle;
 };
 
-export const getActivityIconColor = (type: ActivityType): string => {
-  // Icon color (subtle variation for distinction)
-  switch (type) {
-    case "proposal_vote":
-      return "text-slate-600 dark:text-slate-400";
-    case "endorsement":
-      return "text-slate-700 dark:text-slate-300";
-    case "earning":
-      return "text-slate-700 dark:text-slate-300";
-    case "reputation_gain":
-      return "text-slate-600 dark:text-slate-400";
-    default:
-      return "text-slate-600 dark:text-slate-400";
-  }
+export const getActivityIconColor = (_type: ActivityType): string => {
+  return STATUS_COLORS.neutral.text;
 };

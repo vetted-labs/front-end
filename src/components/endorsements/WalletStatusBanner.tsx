@@ -9,6 +9,7 @@ import {
   Wallet,
   Network,
 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface WalletStatusBannerProps {
   isBackendWallet: boolean;
@@ -35,14 +36,14 @@ export function WalletStatusBanner({
     <>
       {/* Backend Wallet Test Mode Indicator */}
       {isBackendWallet && (
-        <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/5">
+        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
+            <AlertCircle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-300 mb-1">
+              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-1`}>
                 Test Mode
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
+              <p className={`text-sm ${STATUS_COLORS.warning.text}`}>
                 You&apos;re connected with the backend test wallet ({backendWalletAddress.substring(0, 6)}...{backendWalletAddress.substring(38)}). Use this for development testing only.
               </p>
             </div>
@@ -52,14 +53,14 @@ export function WalletStatusBanner({
 
       {/* Wrong Network Warning */}
       {!isOnSepolia && (
-        <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/5">
+        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-1" />
+            <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-300 mb-2">
+              <h3 className={`text-lg font-semibold ${STATUS_COLORS.warning.text} mb-2`}>
                 Wrong Network Detected
               </h3>
-              <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+              <p className={`text-sm ${STATUS_COLORS.warning.text} mb-3`}>
                 Your wallet is connected to <strong>{chainName || "Unknown Network"}</strong>.
                 Please switch to <strong>Sepolia Testnet</strong> to endorse applications.
               </p>
@@ -102,7 +103,7 @@ export function WalletStatusBanner({
                   <Network className="h-4 w-4 text-muted-foreground" />
                   <span>{chainName || 'Unknown Network'}</span>
                 </div>
-                <p className={`mt-1 text-xs ${isOnSepolia ? 'text-primary' : 'text-amber-700 dark:text-amber-300'}`}>
+                <p className={`mt-1 text-xs ${isOnSepolia ? 'text-primary' : STATUS_COLORS.warning.text}`}>
                   {isOnSepolia ? 'Sepolia ready' : 'Switch required'}
                 </p>
               </div>

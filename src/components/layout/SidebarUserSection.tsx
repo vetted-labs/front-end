@@ -114,7 +114,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
                     {address}
                   </p>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-positive" />
                     <span className="text-[11px] text-muted-foreground">
                       {getNetworkName(chainId)}
                     </span>

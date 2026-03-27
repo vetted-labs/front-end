@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useApi } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface DisputeVoteFormProps {
   onSubmit: (decision: "uphold" | "dismiss", reasoning: string) => Promise<void>;
@@ -34,7 +35,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant={decision === "uphold" ? "default" : "outline"}
-            className={decision === "uphold" ? "bg-red-600 hover:bg-red-700" : "hover:border-red-500 hover:text-red-500"}
+            className={decision === "uphold" ? `${STATUS_COLORS.negative.bg} hover:opacity-90` : `hover:${STATUS_COLORS.negative.border} hover:${STATUS_COLORS.negative.text}`}
             onClick={() => setDecision("uphold")}
             disabled={disabled || isSubmitting}
             size="lg"
@@ -43,7 +44,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
           </Button>
           <Button
             variant={decision === "dismiss" ? "default" : "outline"}
-            className={decision === "dismiss" ? "bg-green-600 hover:bg-green-700" : "hover:border-green-500 hover:text-green-500"}
+            className={decision === "dismiss" ? `${STATUS_COLORS.positive.bg} hover:opacity-90` : `hover:${STATUS_COLORS.positive.border} hover:${STATUS_COLORS.positive.text}`}
             onClick={() => setDecision("dismiss")}
             disabled={disabled || isSubmitting}
             size="lg"

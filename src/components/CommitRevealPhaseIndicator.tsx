@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle } from "lucide-react";
 import { formatDeadline } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface CommitRevealPhaseIndicatorProps {
   currentPhase: "direct" | "commit" | "finalized";
@@ -57,7 +58,7 @@ export function CommitRevealPhaseIndicator({
                   )}
                   <div className="flex-shrink-0">
                     {isPast ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                     ) : isCurrent ? (
                       <div className="w-5 h-5 rounded-full bg-primary" />
                     ) : (
@@ -77,7 +78,7 @@ export function CommitRevealPhaseIndicator({
                     isCurrent
                       ? "font-semibold text-foreground"
                       : isPast
-                      ? "text-green-500"
+                      ? STATUS_COLORS.positive.text
                       : "text-muted-foreground/60"
                   }`}
                 >

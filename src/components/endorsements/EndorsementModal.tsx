@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { STATUS_COLORS } from "@/config/colors";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn, formatSalaryRange } from '@/lib/utils';
@@ -233,7 +234,7 @@ export function EndorsementModal({
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${
-                          skillMatch >= 70 ? 'bg-green-500' : skillMatch >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                          skillMatch >= 70 ? STATUS_COLORS.positive.bg : skillMatch >= 40 ? STATUS_COLORS.warning.bg : STATUS_COLORS.negative.bg
                         }`}
                         style={{ width: `${skillMatch}%` }}
                       />

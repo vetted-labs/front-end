@@ -2,6 +2,7 @@
 
 import { guildAppealApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 import { AppealSubmissionForm } from "@/components/guild/AppealSubmissionForm";
 import { AppealStatusBanner } from "@/components/guild/AppealStatusBanner";
 import type { GuildApplicationAppeal } from "@/types";
@@ -66,8 +67,8 @@ export function ApplicationFinalizationDisplay({
     const isTiebreaker = application.tiebreaker_required;
     if (compact) {
       return (
-        <div className="border-l-4 border-l-orange-500 bg-card border border-border rounded-xl p-4">
-          <p className="font-bold text-orange-500">Consensus Failed</p>
+        <div className="border-l-4 border-l-warning bg-card border border-border rounded-xl p-4">
+          <p className={`font-bold ${STATUS_COLORS.warning.text}`}>Consensus Failed</p>
           <p className="text-sm text-muted-foreground">
             {isTiebreaker ? "Tiebreaker expert assigned" : "Assigning tiebreaker..."}
           </p>
@@ -75,7 +76,7 @@ export function ApplicationFinalizationDisplay({
       );
     }
     return (
-      <div className="border-l-4 border-l-orange-500 bg-card border border-border rounded-xl p-6">
+      <div className="border-l-4 border-l-warning bg-card border border-border rounded-xl p-6">
         <h2 className="text-xl font-bold mb-1">Consensus Could Not Be Reached</h2>
         <p className="text-sm text-muted-foreground">
           Reviewer scores were split into two distinct clusters.
@@ -97,10 +98,10 @@ export function ApplicationFinalizationDisplay({
 
   if (compact) {
     return (
-      <div className={`border-l-4 ${isApproved ? "border-l-green-500" : "border-l-red-500"} bg-card border border-border rounded-xl p-4`}>
+      <div className={`border-l-4 ${isApproved ? "border-l-positive" : "border-l-negative"} bg-card border border-border rounded-xl p-4`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className={`font-bold ${isApproved ? "text-green-500" : "text-red-500"}`}>
+            <p className={`font-bold ${isApproved ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text}`}>
               {isApproved ? "Approved" : "Rejected"}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -109,7 +110,7 @@ export function ApplicationFinalizationDisplay({
           </div>
           {myVote && myVote.alignment_distance !== undefined && (
             <div className="text-right">
-              <p className={`text-sm font-medium ${myVote.alignment_distance < 10 ? "text-green-500" : "text-red-500"}`}>
+              <p className={`text-sm font-medium ${myVote.alignment_distance < 10 ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text}`}>
                 {myVote.alignment_distance < 10 ? "High" : "Low"} Alignment
               </p>
               {myVote.reputation_change !== undefined && (
@@ -126,10 +127,10 @@ export function ApplicationFinalizationDisplay({
 
   const alignmentColor = myVote?.alignment_distance !== undefined
     ? myVote.alignment_distance < 10
-      ? "text-green-500"
+      ? STATUS_COLORS.positive.text
       : myVote.alignment_distance > 20
-      ? "text-red-500"
-      : "text-amber-500"
+      ? STATUS_COLORS.negative.text
+      : STATUS_COLORS.warning.text
     : "";
 
   const alignmentText = myVote?.alignment_distance !== undefined
@@ -143,7 +144,7 @@ export function ApplicationFinalizationDisplay({
   return (
     <div className="space-y-6">
       {/* Outcome Banner */}
-      <div className={`border-l-4 ${isApproved ? "border-l-green-500" : "border-l-red-500"} bg-card border border-border rounded-xl p-6`}>
+      <div className={`border-l-4 ${isApproved ? "border-l-positive" : "border-l-negative"} bg-card border border-border rounded-xl p-6`}>
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold mb-1">
@@ -210,7 +211,7 @@ export function ApplicationFinalizationDisplay({
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Rep Change</dt>
                 <dd className={`text-base font-semibold tabular-nums ${
-                  myVote.reputation_change > 0 ? "text-green-500" : myVote.reputation_change < 0 ? "text-red-500" : ""
+                  myVote.reputation_change > 0 ? STATUS_COLORS.positive.text : myVote.reputation_change < 0 ? STATUS_COLORS.negative.text : ""
                 }`}>
                   {myVote.reputation_change > 0 ? "+" : ""}{myVote.reputation_change}
                 </dd>
@@ -226,15 +227,15 @@ export function ApplicationFinalizationDisplay({
               <div className="flex justify-between items-baseline">
                 <dt className="text-sm text-muted-foreground">Tier</dt>
                 <dd className={`text-base font-semibold ${
-                  myVote.slashing_tier === "aligned" ? "text-green-500"
+                  myVote.slashing_tier === "aligned" ? STATUS_COLORS.positive.text
                     : myVote.slashing_tier === "neutral" ? "text-muted-foreground"
-                    : myVote.slashing_tier === "mild" ? "text-amber-500"
-                    : myVote.slashing_tier === "moderate" ? "text-orange-500"
-                    : "text-red-500"
+                    : myVote.slashing_tier === "mild" ? STATUS_COLORS.warning.text
+                    : myVote.slashing_tier === "moderate" ? "text-primary"
+                    : STATUS_COLORS.negative.text
                 }`}>
                   {myVote.slashing_tier}
                   {myVote.slash_percent !== undefined && myVote.slash_percent > 0 && (
-                    <span className="text-sm text-red-500 ml-2">-{myVote.slash_percent}%</span>
+                    <span className={`text-sm ${STATUS_COLORS.negative.text} ml-2`}>-{myVote.slash_percent}%</span>
                   )}
                 </dd>
               </div>

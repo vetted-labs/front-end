@@ -1,5 +1,7 @@
 "use client";
 
+import { STATUS_COLORS } from "@/config/colors";
+
 interface RetentionCountdownProps {
   startDate: string;
   totalDays?: number;
@@ -19,10 +21,10 @@ export function RetentionCountdown({
 
   const barColor =
     percent < 50
-      ? "bg-green-500"
+      ? STATUS_COLORS.positive.bg
       : percent < 80
-      ? "bg-amber-500"
-      : "bg-red-500";
+      ? STATUS_COLORS.warning.bg
+      : STATUS_COLORS.negative.bg;
 
   return (
     <div className="space-y-1">

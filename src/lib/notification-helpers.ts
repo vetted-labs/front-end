@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import type { Notification } from "@/types";
 import { logger } from "@/lib/logger";
-import { getNotificationPriority, NOTIFICATION_COLORS } from "@/config/colors";
+import { getNotificationPriority, NOTIFICATION_COLORS, STATUS_COLORS } from "@/config/colors";
 
 export type { Notification };
 
@@ -43,9 +43,9 @@ export function getNotificationColor(type: string): string {
 export function getApplicantTypeTag(applicantType?: "expert" | "candidate"): { label: string; className: string } | null {
   if (!applicantType) return null;
   if (applicantType === "expert") {
-    return { label: "Expert", className: "bg-purple-500/15 text-purple-400" };
+    return { label: "Expert", className: STATUS_COLORS.info.badge };
   }
-  return { label: "Candidate", className: "bg-blue-500/15 text-blue-400" };
+  return { label: "Candidate", className: STATUS_COLORS.info.badge };
 }
 
 export { formatTimeAgo } from "@/lib/utils";
