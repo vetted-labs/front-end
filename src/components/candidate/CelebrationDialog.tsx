@@ -110,7 +110,7 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
 
           {/* Job details card */}
           <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 mb-6 animate-fade-up animate-delay-400`}>
-            <p className="font-semibold text-foreground text-lg mb-1">
+            <p className="font-bold text-foreground text-xl mb-1">
               {application.job.title}
             </p>
             <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">

@@ -344,7 +344,7 @@ export default function JobApplicationModal({
           {/* Screening Questions */}
           {job.screeningQuestions && job.screeningQuestions.length > 0 && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
                 <HelpCircle className="w-5 h-5" />
                 Screening Questions
               </h3>

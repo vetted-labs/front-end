@@ -59,7 +59,7 @@ export function UserMenu({
             <span className="text-xs font-mono text-foreground font-medium">
               {truncateAddress(address)}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {getNetworkName(chainId)}
             </span>
           </div>

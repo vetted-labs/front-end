@@ -21,7 +21,7 @@ export function JobBasicInfo({
           <Briefcase className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-bold text-foreground">
             Basic Information
           </h3>
           <p className="text-sm text-muted-foreground">

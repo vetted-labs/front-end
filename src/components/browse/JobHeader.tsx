@@ -2,12 +2,15 @@ import {
   Building2,
   MapPin,
   Briefcase,
-  Calendar,
-  Star,
+  Clock,
   Users,
-  Eye,
+  DollarSign,
+  Code2,
+  Globe,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
+import { getGuildBadgeColors } from "@/config/colors";
+import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
 
 interface JobHeaderProps {
@@ -15,59 +18,93 @@ interface JobHeaderProps {
 }
 
 export default function JobHeader({ job }: JobHeaderProps) {
+  const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
+
   return (
-    <div className="border-b border-border pb-6 mb-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {job.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              <span className="font-medium">{job.companyName || "Company"}</span>
+    <div className="pb-0">
+      {/* Company Row */}
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3.5">
+          {job.companyLogo ? (
+            <img
+              src={getAssetUrl(job.companyLogo)}
+              alt={job.companyName || "Company"}
+              className="w-12 h-12 rounded-[14px] object-cover border border-border/60 flex-shrink-0 shadow-sm"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-[14px] bg-muted/50 border border-border/60 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-6 h-6 text-muted-foreground" />
+            </div>
+          )}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              {job.companyName || "Company"}
             </span>
-            <span className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              {job.location}
-            </span>
-            <span className="flex items-center gap-1">
-              <Briefcase className="w-4 h-4" />
-              {job.type}
-            </span>
+            <span className="text-xs text-muted-foreground">{job.department || job.type}</span>
           </div>
         </div>
-        {job.companyLogo && (
-          <img
-            src={getAssetUrl(job.companyLogo)}
-            alt={job.companyName || "Company"}
-            className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border-2 border-border shadow-md sm:ml-6 flex-shrink-0"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+      </div>
+
+      {/* Job Title */}
+      <h1 className="font-display text-3xl sm:text-3xl font-bold tracking-tight leading-[1.15] mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+        {job.title}
+      </h1>
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-primary/[0.08] border border-primary/20 text-primary">
+          <Briefcase className="w-3 h-3" />
+          {job.type}
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-positive/[0.08] border border-positive/20 text-positive">
+          <Globe className="w-3 h-3" />
+          {job.locationType ? job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1) : "Remote"}
+        </span>
+        {guildColors && (
+          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium ${guildColors.bg} border ${guildColors.border} ${guildColors.text}`}>
+            <Code2 className="w-3 h-3" />
+            {job.guild}
+          </span>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Calendar className="w-4 h-4" />
-          Posted {new Date(job.createdAt).toLocaleDateString()}
-        </span>
-        {job.featured && (
-          <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full text-xs font-bold">
-            <Star className="w-3 h-3 fill-white" />
-            FEATURED
-          </span>
+      {/* Meta Row */}
+      <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-border/40">
+        {job.salary?.min && job.salary?.max && (
+          <>
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-positive">
+              <DollarSign className="w-3.5 h-3.5" />
+              {formatSalaryRange(job.salary)}
+              {job.equityOffered && (
+                <span className="text-primary font-medium ml-1">
+                  + Equity
+                </span>
+              )}
+            </div>
+            <div className="w-px h-3.5 bg-border/60" />
+          </>
         )}
-        <span className="flex items-center gap-1">
-          <Users className="w-4 h-4" />
-          {job.applicants} applicants
-        </span>
-        <span className="flex items-center gap-1">
-          <Eye className="w-4 h-4" />
-          {job.views} views
-        </span>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
+          Posted {getTimeAgo(job.createdAt)}
+        </div>
+        <div className="w-px h-3.5 bg-border/60" />
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Users className="w-3.5 h-3.5 text-muted-foreground/60" />
+          {job.applicants || 0} applicants
+        </div>
+        {job.location && (
+          <>
+            <div className="w-px h-3.5 bg-border/60" />
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground/60" />
+              {job.location}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

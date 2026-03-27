@@ -41,7 +41,7 @@ export default function ResumeSection({
   return (
     <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
       <div className="px-6 py-4 border-b border-border/40">
-        <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           <FileText className="w-4 h-4 text-muted-foreground" />
           Resume / CV
         </h2>

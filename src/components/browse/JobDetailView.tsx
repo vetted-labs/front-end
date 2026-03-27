@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { candidateApi, jobsApi, applicationsApi, guildsApi } from "@/lib/api";
 import {
-  ArrowLeft,
-  DollarSign,
   MapPin,
   Send,
   Shield,
@@ -16,10 +15,15 @@ import {
   AlertCircle,
   Trophy,
   Loader2,
+  Briefcase,
+  Code2,
+  Globe,
+  ArrowRight,
+  Layers,
 } from "lucide-react";
 import { Button, Alert } from "@/components/ui";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
-import { STATUS_COLORS } from "@/config/colors";
+import { STATUS_COLORS, getGuildBadgeColors } from "@/config/colors";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -211,7 +215,7 @@ export default function JobDetailView() {
 
   if (error && !job) {
     return (
-      <div className="min-h-screen min-h-full flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Alert variant="error">Failed to load job details. {error}</Alert>
       </div>
     );
@@ -219,7 +223,7 @@ export default function JobDetailView() {
 
   if (!job) {
     return (
-      <div className="min-h-screen min-h-full flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-foreground mb-4">Job not found</p>
           <Button onClick={() => router.push("/browse")}>Browse All Jobs</Button>
@@ -229,157 +233,188 @@ export default function JobDetailView() {
   }
 
   const hasAlreadyApplied = !!existingApplication;
+  const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <button
-          onClick={() => router.push("/browse/jobs")}
-          className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Jobs
-        </button>
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
+          <Link href="/browse/jobs" className="hover:text-foreground transition-colors">
+            Jobs
+          </Link>
+          <span className="opacity-30">/</span>
+          {job.guild && (
+            <>
+              <span className="hover:text-foreground transition-colors cursor-default">
+                {job.guild}
+              </span>
+              <span className="opacity-30">/</span>
+            </>
+          )}
+          <span className="text-foreground/80 font-medium">{job.title}</span>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-5 sm:p-8 border border-border/60">
+        {/* Two-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+
+          {/* ---- LEFT COLUMN ---- */}
+          <div className="flex flex-col gap-6">
+            {/* Job Header Card */}
+            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-7 sm:p-9 transition-colors hover:border-border/80">
               <JobHeader job={job} />
+            </div>
+
+            {/* Job Description / Requirements / Skills / Screening */}
+            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-7 sm:p-9 transition-colors hover:border-border/80">
               <JobRequirements job={job} />
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24 border border-border/60">
-              {/* Already Applied / Accepted */}
-              {hasAlreadyApplied && existingApplication.status === "accepted" && (
-                <div className={`relative overflow-hidden p-4 rounded-lg border-2 ${STATUS_COLORS.positive.border} animate-celebrate-glow ${STATUS_COLORS.positive.bgSubtle} animate-shimmer-border`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center flex-shrink-0`}>
-                      <Trophy className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <span className={`font-bold ${STATUS_COLORS.positive.text} text-lg`}>
-                        Accepted!
-                      </span>
-                      <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-80`}>
-                        Congratulations on your offer
-                      </p>
-                    </div>
-                  </div>
-                  <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
-                    You applied on{" "}
-                    {new Date(existingApplication.appliedAt).toLocaleDateString()}
-                  </p>
-                  <button
-                    onClick={() => router.push("/candidate/applications")}
-                    className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                    View My Applications &rarr;
-                  </button>
-                </div>
-              )}
-              {hasAlreadyApplied && existingApplication.status !== "accepted" && (
-                <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border} rounded-lg`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
-                    <span className={`font-semibold ${STATUS_COLORS.positive.text}`}>
-                      Already Applied
-                    </span>
-                  </div>
-                  <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
-                    You applied on{" "}
-                    {new Date(existingApplication.appliedAt).toLocaleDateString()}
-                  </p>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>
-                      Status:
-                    </span>
-                    <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { className: "bg-muted text-muted-foreground" }).className}`}>
-                      {(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { label: existingApplication.status }).label}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => router.push("/candidate/applications")}
-                    className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                    View My Applications &rarr;
-                  </button>
-                </div>
-              )}
+          {/* ---- RIGHT COLUMN (sticky sidebar) ---- */}
+          <div className="lg:sticky lg:top-6 flex flex-col gap-5">
 
-              {/* Invalid Guild Warning */}
-              {job.guild &&
-                (job.guild.match(/^[0-9]+Guild$/) || job.guild.length < 2) && (
-                  <div className={`p-4 ${STATUS_COLORS.negative.bgSubtle} border-2 ${STATUS_COLORS.negative.border} rounded-lg`}>
-                    <div className="flex items-start gap-2 mb-2">
-                      <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
+            {/* Already Applied / Accepted */}
+            {hasAlreadyApplied && existingApplication.status === "accepted" && (
+              <div className={`relative overflow-hidden p-4 rounded-[20px] border-2 ${STATUS_COLORS.positive.border} animate-celebrate-glow ${STATUS_COLORS.positive.bgSubtle} animate-shimmer-border`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center flex-shrink-0`}>
+                    <Trophy className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <span className={`font-bold ${STATUS_COLORS.positive.text} text-xl`}>
+                      Accepted!
+                    </span>
+                    <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-80`}>
+                      Congratulations on your offer
+                    </p>
+                  </div>
+                </div>
+                <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
+                  You applied on{" "}
+                  {new Date(existingApplication.appliedAt).toLocaleDateString()}
+                </p>
+                <button
+                  onClick={() => router.push("/candidate/applications")}
+                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  View My Applications &rarr;
+                </button>
+              </div>
+            )}
+            {hasAlreadyApplied && existingApplication.status !== "accepted" && (
+              <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border} rounded-[20px]`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
+                  <span className={`font-semibold ${STATUS_COLORS.positive.text}`}>
+                    Already Applied
+                  </span>
+                </div>
+                <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
+                  You applied on{" "}
+                  {new Date(existingApplication.appliedAt).toLocaleDateString()}
+                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>
+                    Status:
+                  </span>
+                  <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { className: "bg-muted text-muted-foreground" }).className}`}>
+                    {(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { label: existingApplication.status }).label}
+                  </span>
+                </div>
+                <button
+                  onClick={() => router.push("/candidate/applications")}
+                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  View My Applications &rarr;
+                </button>
+              </div>
+            )}
+
+            {/* Apply Card */}
+            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 overflow-hidden transition-colors hover:border-border/80">
+              {/* Gradient top bar */}
+              <div className="h-[3px] bg-gradient-to-r from-primary via-primary/80 to-warning bg-[length:200%_100%] animate-shimmer-bar" />
+
+              <div className="p-6">
+                {/* Salary display */}
+                {job.salary?.min && job.salary?.max && (
+                  <>
+                    <div className="font-display text-3xl font-bold tracking-tight text-foreground mb-0.5">
+                      {formatSalaryRange(job.salary)}
+                    </div>
+                    {job.equityOffered && (
+                      <div className="flex items-center gap-1.5 text-sm text-primary font-medium mb-5">
+                        <Layers className="w-3.5 h-3.5" />
+                        + Equity {job.equityRange && `(${job.equityRange})`}
+                      </div>
+                    )}
+                    {!job.equityOffered && <div className="mb-5" />}
+                  </>
+                )}
+
+                {/* Invalid Guild Warning */}
+                {job.guild &&
+                  (job.guild.match(/^[0-9]+Guild$/) || job.guild.length < 2) && (
+                    <div className={`p-3 mb-4 ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} rounded-xl`}>
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
+                        <div>
+                          <p className={`text-sm font-semibold ${STATUS_COLORS.negative.text}`}>
+                            Invalid Guild Data
+                          </p>
+                          <p className={`text-xs ${STATUS_COLORS.negative.text} opacity-70 mt-0.5`}>
+                            This job has invalid guild information. Please contact the employer.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Guild Membership Warnings */}
+                {isAuthenticated &&
+                  !checkingGuildMembership &&
+                  guildMembershipStatus === "not_member" &&
+                  job.guild &&
+                  !job.guild.match(/^[0-9]+Guild$/) &&
+                  job.guild.length >= 2 && (
+                    <div className={`p-3 mb-4 ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} rounded-xl`}>
+                      <div className="flex items-start gap-2">
+                        <Shield className={`w-4 h-4 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-0.5`} />
+                        <div>
+                          <p className={`text-sm font-semibold ${STATUS_COLORS.warning.text}`}>
+                            Guild Membership Required
+                          </p>
+                          <p className={`text-xs ${STATUS_COLORS.warning.text} opacity-70 mt-0.5`}>
+                            You must join the <strong>{job.guild}</strong> guild to apply
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {isAuthenticated && guildMembershipStatus === "pending" && (
+                  <div className={`p-3 mb-4 ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-xl`}>
+                    <div className="flex items-start gap-2">
+                      <Clock className={`w-4 h-4 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className={`font-semibold ${STATUS_COLORS.negative.text}`}>
-                          Invalid Guild Data
+                        <p className={`text-sm font-semibold ${STATUS_COLORS.info.text}`}>
+                          Guild Application Pending
                         </p>
-                        <p className={`text-sm ${STATUS_COLORS.negative.text} opacity-70 mt-1`}>
-                          This job has invalid guild information:{" "}
-                          <code className={`px-1 py-0.5 ${STATUS_COLORS.negative.bgSubtle} rounded text-xs`}>
-                            {job.guild}
-                          </code>
-                          <br />
-                          Please contact the employer to fix this issue.
+                        <p className={`text-xs ${STATUS_COLORS.info.text} opacity-70 mt-0.5`}>
+                          Your application to join <strong>{job.guild}</strong> is under review
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-              {/* Guild Membership Status */}
-              {isAuthenticated &&
-                !checkingGuildMembership &&
-                guildMembershipStatus === "not_member" &&
-                job.guild &&
-                !job.guild.match(/^[0-9]+Guild$/) &&
-                job.guild.length >= 2 && (
-                  <div className={`p-4 ${STATUS_COLORS.warning.bgSubtle} border-2 ${STATUS_COLORS.warning.border} rounded-lg`}>
-                    <div className="flex items-start gap-2 mb-2">
-                      <Shield className={`w-5 h-5 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className={`font-semibold ${STATUS_COLORS.warning.text}`}>
-                          Guild Membership Required
-                        </p>
-                        <p className={`text-sm ${STATUS_COLORS.warning.text} opacity-70 mt-1`}>
-                          You must join the <strong>{job.guild}</strong> guild to apply
-                          for this position
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              {isAuthenticated && guildMembershipStatus === "pending" && (
-                <div className={`p-4 ${STATUS_COLORS.info.bgSubtle} border-2 ${STATUS_COLORS.info.border} rounded-lg`}>
-                  <div className="flex items-start gap-2 mb-2">
-                    <Clock className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
-                    <div>
-                      <p className={`font-semibold ${STATUS_COLORS.info.text}`}>
-                        Guild Application Pending
-                      </p>
-                      <p className={`text-sm ${STATUS_COLORS.info.text} opacity-70 mt-1`}>
-                        Your application to join <strong>{job.guild}</strong> is under
-                        review by expert members
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Apply Button */}
-              <div className="space-y-2">
+                {/* Apply Button */}
                 <Button
                   onClick={handleApply}
-                  className="w-full"
+                  className="w-full !rounded-[14px] !text-base !font-bold !tracking-tight shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-px transition-all"
                   size="lg"
                   disabled={
                     hasAlreadyApplied ||
@@ -403,71 +438,95 @@ export default function JobDetailView() {
                           ? `Apply & Join ${job.guild}`
                           : guildMembershipStatus === "pending"
                             ? "Guild Application Pending"
-                            : "Apply for this Role"}
+                            : "Apply Now"}
                 </Button>
                 {hasAlreadyApplied && (
-                  <p className="text-xs text-muted-foreground text-center">
+                  <p className="text-xs text-muted-foreground text-center mt-2.5">
                     You cannot apply to this position again
                   </p>
                 )}
                 {!isGuildMember &&
                   isAuthenticated &&
                   guildMembershipStatus === "not_member" && (
-                    <p className="text-xs text-muted-foreground text-center">
+                    <p className="text-xs text-muted-foreground text-center mt-2.5">
                       Fill out a short application to join this guild
                     </p>
                   )}
               </div>
+            </div>
 
-              {/* Job Details */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="font-semibold text-foreground mb-3">Job Details</h3>
-
-                {job.salary?.min && job.salary?.max && (
-                  <div className="flex items-start gap-3">
-                    <DollarSign className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Salary Range</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatSalaryRange(job.salary)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Location Type</p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {job.locationType}
-                    </p>
-                  </div>
+            {/* Company Info Mini Card */}
+            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-6 transition-colors hover:border-border/80">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border/40">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-5 h-5 text-muted-foreground" />
                 </div>
-
-                {job.experienceLevel && (
-                  <div className="flex items-start gap-3">
-                    <TrendingUp className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        Experience Level
-                      </p>
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {job.experienceLevel}
-                      </p>
-                    </div>
+                <div>
+                  <div className="text-sm font-medium text-foreground">
+                    {job.companyName || "Company"}
                   </div>
-                )}
-
-                <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Guild</p>
-                    <p className="text-sm text-muted-foreground">{job.guild}</p>
-                  </div>
+                  <div className="text-xs text-muted-foreground">About the Company</div>
                 </div>
               </div>
+              <div className="flex flex-col gap-3">
+                {job.department && (
+                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                    <Layers className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                    {job.department}
+                  </div>
+                )}
+                <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                  {job.location}
+                </div>
+                <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <Globe className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                  {job.locationType ? job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1) : "Remote"}
+                </div>
+                {job.experienceLevel && (
+                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                    {job.experienceLevel.charAt(0).toUpperCase() + job.experienceLevel.slice(1)}
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Guild Info Mini Card */}
+            {guildColors && job.guild && (
+              <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-6 transition-colors hover:border-border/80">
+                <div className="flex items-center gap-3 mb-3.5">
+                  <div className={`w-10 h-10 rounded-xl ${guildColors.bg} border ${guildColors.border} flex items-center justify-center flex-shrink-0`}>
+                    <Code2 className={`w-[18px] h-[18px] ${guildColors.text}`} />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">
+                      {job.guild}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Guild-verified position
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3.5">
+                  Expert reviews for this position are conducted by verified members
+                  of the {job.guild}, ensuring deep technical evaluation.
+                </p>
+                {(() => {
+                  const guildUuid = resolveGuildId(job.guild!);
+                  if (!guildUuid) return null;
+                  return (
+                    <Link
+                      href={`/guilds/${guildUuid}`}
+                      className="flex items-center gap-1.5 text-sm text-primary font-medium hover:gap-2.5 transition-all pt-3.5 border-t border-border/40"
+                    >
+                      View Guild Profile
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
       </div>

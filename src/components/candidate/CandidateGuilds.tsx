@@ -80,7 +80,7 @@ export default function CandidateGuilds() {
         {/* Header */}
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">My Guilds</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">My Guilds</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {guildApplications.length} application{guildApplications.length !== 1 ? "s" : ""}
             </p>
@@ -122,7 +122,7 @@ export default function CandidateGuilds() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
               <Users className="w-8 h-8 text-muted-foreground/40" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No guild applications yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">No guild applications yet</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
               Join a guild to get vetted by expert reviewers and access exclusive job opportunities
             </p>
@@ -169,11 +169,11 @@ export default function CandidateGuilds() {
                         <GuildIcon className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-base font-semibold text-white leading-tight">{guildName}</h3>
+                        <h3 className="text-sm font-bold text-white leading-tight">{guildName}</h3>
                       </div>
                     </div>
                     {/* Status badge top-right */}
-                    <div className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border backdrop-blur-sm ${statusStyle.className}`}>
+                    <div className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${statusStyle.className}`}>
                       <StatusIcon className="w-3 h-3" />
                       {statusStyle.label}
                     </div>

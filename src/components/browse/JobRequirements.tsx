@@ -1,3 +1,8 @@
+import {
+  Info,
+  CheckCircle2,
+  BookOpen,
+} from "lucide-react";
 import type { Job } from "@/types";
 
 interface JobRequirementsProps {
@@ -6,45 +11,85 @@ interface JobRequirementsProps {
 
 export default function JobRequirements({ job }: JobRequirementsProps) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-3">
-          About the Role
-        </h2>
-        <p className="text-card-foreground whitespace-pre-wrap">
-          {job.description}
-        </p>
-      </div>
-
-      {job.requirements && job.requirements.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-foreground mb-3">
-            Requirements
+    <div className="space-y-0">
+      {/* Job Description */}
+      {job.description && (
+        <div className="pt-8">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground mb-5">
+            Job Description
           </h2>
-          <ul className="space-y-2">
+
+          <div className="mb-7">
+            <div className="flex items-center gap-2 font-display text-sm font-bold text-foreground mb-3">
+              <Info className="w-4 h-4 text-primary" />
+              About the Role
+            </div>
+            <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+              {job.description}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Requirements */}
+      {job.requirements && job.requirements.length > 0 && (
+        <div className="mb-7">
+          <div className="flex items-center gap-2 font-display text-sm font-bold text-foreground mb-3">
+            <CheckCircle2 className="w-4 h-4 text-primary" />
+            Requirements
+          </div>
+          <ul className="flex flex-col gap-2.5">
             {job.requirements.map((req, index) => (
-              <li key={index} className="flex items-start gap-2 text-card-foreground">
-                <span className="text-primary mt-1">&bull;</span>
-                <span>{req}</span>
+              <li
+                key={index}
+                className="text-sm text-muted-foreground leading-relaxed pl-5 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1.5 before:h-1.5 before:rounded-full before:bg-primary/60"
+              >
+                {req}
               </li>
             ))}
           </ul>
         </div>
       )}
 
+      {/* Skills */}
       {job.skills && job.skills.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-foreground mb-3">
-            Skills
+        <div className="pt-8 border-t border-border/40">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground mb-5">
+            Required Skills
           </h2>
           <div className="flex flex-wrap gap-2">
             {job.skills.map((skill, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-muted/50 text-foreground border border-border/60 rounded-full text-sm font-medium"
+                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground bg-muted/20 border border-border/40 transition-all hover:border-primary/20 hover:text-primary hover:bg-primary/[0.08] cursor-default"
               >
                 {skill}
               </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Screening Questions */}
+      {job.screeningQuestions && job.screeningQuestions.length > 0 && (
+        <div className="pt-8 border-t border-border/40">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground mb-5 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-primary" />
+            Screening Questions
+          </h2>
+          <div className="flex flex-col gap-3">
+            {job.screeningQuestions.map((question, index) => (
+              <div
+                key={index}
+                className="p-5 rounded-[14px] bg-muted/10 border border-border/40"
+              >
+                <div className="text-xs font-bold uppercase tracking-[1.2px] text-primary mb-2">
+                  Question {index + 1}
+                </div>
+                <div className="text-sm font-medium text-foreground leading-relaxed">
+                  {question}
+                </div>
+              </div>
             ))}
           </div>
         </div>

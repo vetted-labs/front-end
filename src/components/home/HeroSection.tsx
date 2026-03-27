@@ -77,10 +77,10 @@ export function HeroSection({
         </div>
 
         {/* Headline */}
-        <h1 className="font-display font-extrabold text-4xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-4">
+        <h1 className="font-display font-bold text-3xl sm:text-5xl leading-[1.1] tracking-tight text-foreground mb-4">
           The Credibility Layer<br />for Hiring
         </h1>
-        <p className="text-base sm:text-lg text-muted-foreground font-normal mb-12">
+        <p className="text-sm sm:text-sm text-muted-foreground font-normal mb-12">
           Expert signals that separate real talent from noise.
         </p>
 
@@ -115,7 +115,7 @@ export function HeroSection({
                       style={card.iconStroke ? { color: card.iconStroke } : undefined}
                     />
                   </div>
-                  <h3 className="font-display font-bold text-lg tracking-tight text-foreground mb-1.5">
+                  <h3 className="font-display font-bold text-xl tracking-tight text-foreground mb-1.5">
                     {card.title}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">

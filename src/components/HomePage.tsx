@@ -8,7 +8,6 @@ import { useAccount, useDisconnect } from "wagmi";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { Logo } from "@/components/Logo";
 import { HeroSection } from "./home/HeroSection";
 import { StatsBar } from "./home/StatsBar";
 import { JobBrowser } from "./home/JobBrowser";
@@ -73,7 +72,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background animate-page-enter">
+    <div className="min-h-screen bg-background animate-page-enter">
       {/* Hero Section with Action Cards */}
       <HeroSection
         guilds={guilds ?? []}
@@ -90,81 +89,81 @@ export function HomePage() {
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
 
       {/* Footer */}
-      <footer className="bg-card/30 backdrop-blur-sm border-t border-border/40 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid md:grid-cols-3 gap-10">
+      <footer className="border-t border-border/40">
+        <div className="max-w-[1120px] mx-auto px-6 py-12">
+          <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-12">
             {/* Brand */}
             <div>
-              <Logo size="md" />
-              <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-                The Credibility Layer for Hiring
+              <div className="font-display font-bold text-xl mb-2.5">
+                vetted<span className="text-primary">.</span>
+              </div>
+              <p className="text-sm text-muted-foreground/50 leading-relaxed max-w-[260px]">
+                The credibility layer for hiring. Expert signals you can trust.
               </p>
             </div>
 
             {/* Platform */}
             <div>
-              <h4 className="text-xs uppercase tracking-[0.15em] font-semibold text-foreground mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/50 mb-3.5">
                 Platform
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2">
                 <li>
-                  <Link
-                    href="/browse/jobs"
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
+                  <Link href="/browse/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Browse Jobs
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/guilds"
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Explore Guilds
+                  <Link href="/guilds" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Guilds
                   </Link>
+                </li>
+                <li>
+                  <button onClick={handleExpertJoin} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Expert Portal
+                  </button>
+                </li>
+                <li>
+                  <button onClick={handlePostJob} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Post a Job
+                  </button>
                 </li>
               </ul>
             </div>
 
-            {/* Get Started */}
+            {/* Company */}
             <div>
-              <h4 className="text-xs uppercase tracking-[0.15em] font-semibold text-foreground mb-4">
-                Get Started
+              <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/50 mb-3.5">
+                Company
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2">
                 <li>
-                  <button
-                    onClick={handleJoinAsCandidate}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Find Work
-                  </button>
+                  <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    About
+                  </Link>
                 </li>
                 <li>
-                  <button
-                    onClick={handleExpertJoin}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Become an Expert
-                  </button>
+                  <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Documentation
+                  </Link>
                 </li>
                 <li>
-                  <button
-                    onClick={handlePostJob}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    Post a Job
-                  </button>
+                  <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Terms
+                  </Link>
                 </li>
               </ul>
             </div>
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-10 pt-6 border-t border-border/30 text-center">
-            <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} Vetted. All rights reserved.
-            </p>
+          <div className="mt-9 pt-5 border-t border-border/20 text-xs text-muted-foreground/50">
+            &copy; {new Date().getFullYear()} Vetted. All rights reserved.
           </div>
         </div>
       </footer>

@@ -141,7 +141,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
                 <RefreshCw className="w-3.5 h-3.5" />
                 Resubmit Application
               </Button>
-              <p className="text-[11px] text-muted-foreground mt-1.5">
+              <p className="text-xs text-muted-foreground mt-1.5">
                 You have {1 - feedback.resubmissionCount} resubmission{1 - feedback.resubmissionCount !== 1 ? "s" : ""} remaining.
               </p>
             </div>

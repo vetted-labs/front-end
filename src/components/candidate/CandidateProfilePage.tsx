@@ -201,7 +201,7 @@ export default function CandidateProfilePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-1">
+            <h1 className="text-3xl font-bold text-foreground mb-1 font-display">
               {isEditing ? "Edit Profile" : "My Profile"}
             </h1>
             <p className="text-muted-foreground">
@@ -245,7 +245,7 @@ export default function CandidateProfilePage() {
           {/* Social Links */}
           <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
             <div className="px-6 py-4 border-b border-border/40">
-              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-muted-foreground" />
                 Social Links
                 {isEditing && <span className="text-destructive text-sm">*</span>}

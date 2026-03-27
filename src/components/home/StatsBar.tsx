@@ -31,6 +31,7 @@ function useCountUp(target: number, duration = 1800) {
     requestAnimationFrame(step);
   }, [target, duration]);
 
+  // eslint-disable-next-line no-restricted-syntax -- IntersectionObserver subscription with changing animate callback
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -55,11 +56,11 @@ function StatItem({ label, target, suffix = "" }: { label: string; target: numbe
   const { value, ref } = useCountUp(target);
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-1 py-4 px-2">
-      <span className="text-3xl sm:text-4xl font-display font-bold text-foreground">
+    <div ref={ref} className="flex items-center gap-2 px-6 sm:px-9 py-2 sm:py-0 border-r border-border/30 last:border-r-0">
+      <span className="font-display font-bold text-xl sm:text-xl tracking-tight text-foreground whitespace-nowrap">
         {value.toLocaleString()}{suffix}
       </span>
-      <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
+      <span className="text-xs text-muted-foreground/60 font-medium whitespace-nowrap">
         {label}
       </span>
     </div>
@@ -73,12 +74,14 @@ export function StatsBar({ guilds, jobs }: StatsBarProps) {
   const candidatesVetted = guilds.reduce((sum, g) => sum + (g.candidateCount ?? 0), 0);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-up animate-delay-500">
-      <div className="glass-card rounded-2xl border border-border/60 grid grid-cols-2 md:grid-cols-4 divide-x divide-border/40">
-        <StatItem label="Active Guilds" target={activeGuilds || 8} />
-        <StatItem label="Open Positions" target={openPositions || 24} />
-        <StatItem label="Expert Reviewers" target={expertReviewers || 120} />
-        <StatItem label="Candidates Vetted" target={candidatesVetted || 350} suffix="+" />
+    <div className="max-w-[1120px] mx-auto px-6 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
+      <div className="bg-card/20 border border-border/30 rounded-2xl backdrop-blur-sm py-5 flex items-center justify-center">
+        <div className="flex items-center flex-wrap justify-center gap-y-2">
+          <StatItem label="Expert Reviewers" target={expertReviewers || 120} />
+          <StatItem label="Candidates Vetted" target={candidatesVetted || 350} suffix="+" />
+          <StatItem label="Open Positions" target={openPositions || 24} />
+          <StatItem label="Active Guilds" target={activeGuilds || 8} />
+        </div>
       </div>
     </div>
   );

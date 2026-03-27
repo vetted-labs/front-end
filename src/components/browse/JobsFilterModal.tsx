@@ -36,7 +36,7 @@ export function JobsFilterModal({
       <div className="space-y-6 max-h-[70vh] overflow-y-auto">
         {/* Guilds Section */}
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">Guilds</h3>
+          <h3 className="text-sm font-bold text-foreground mb-3">Guilds</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {allGuilds.map((guild) => (
               <button
@@ -56,7 +56,7 @@ export function JobsFilterModal({
 
         {/* Job Types Section */}
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">
+          <h3 className="text-sm font-bold text-foreground mb-3">
             Job Type
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -78,7 +78,7 @@ export function JobsFilterModal({
 
         {/* Location Types Section */}
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">
+          <h3 className="text-sm font-bold text-foreground mb-3">
             Work Location
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

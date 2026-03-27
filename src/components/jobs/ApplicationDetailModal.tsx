@@ -54,13 +54,13 @@ export function ApplicationDetailModal({
           {/* Candidate Info + Status */}
           <div className="flex items-start gap-4 px-6 py-5 border-b border-border/40">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-lg font-semibold text-primary">
+              <span className="text-xl font-bold text-primary">
                 {application.candidate.fullName.charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-bold text-xl">
                   {application.candidate.fullName}
                 </h3>
                 <Badge variant={getStatusBadgeVariant(application.status)}>
@@ -112,7 +112,7 @@ export function ApplicationDetailModal({
           {/* Cover Letter */}
           <div className="border-b border-border/40">
             <div className="px-5 py-4 border-b border-border/40">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Cover Letter
               </h4>
             </div>
@@ -125,7 +125,7 @@ export function ApplicationDetailModal({
           {application.screeningAnswers && application.screeningAnswers.length > 0 && (
             <div className="border-b border-border/40">
               <div className="px-5 py-4 border-b border-border/40">
-                <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Screening Answers
                 </h4>
               </div>

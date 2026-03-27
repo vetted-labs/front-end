@@ -52,7 +52,7 @@ export function AuthPageLayout({
         <div className={`w-full ${maxWidth} relative`}>
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+            <h1 className="text-3xl sm:text-3xl font-bold text-foreground tracking-tight">
               {title}
             </h1>
             <p className="mt-2 text-muted-foreground">{subtitle}</p>

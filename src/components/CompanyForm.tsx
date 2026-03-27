@@ -126,7 +126,7 @@ export function CompanyForm() {
             <div className="w-10 h-10 bg-primary/10 rounded-xl"></div>
             <span className="text-2xl font-bold text-foreground">Vetted</span>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2 font-display">
             Create Company Account
           </h1>
           <p className="text-muted-foreground">Start hiring vetted Web3 talent</p>
@@ -141,7 +141,7 @@ export function CompanyForm() {
                   <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-bold text-foreground">
                     Wallet Connection
                   </h3>
                   {isConnected && address ? (
@@ -170,7 +170,7 @@ export function CompanyForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
                 Company Information
               </h3>
@@ -196,7 +196,7 @@ export function CompanyForm() {
 
             {/* Details Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Details</h3>
+              <h3 className="text-xl font-bold text-foreground">Details</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
@@ -240,7 +240,7 @@ export function CompanyForm() {
 
             {/* Account Credentials */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Account Credentials</h3>
+              <h3 className="text-xl font-bold text-foreground">Account Credentials</h3>
 
               <Input
                 label="Email *"

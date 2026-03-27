@@ -53,7 +53,7 @@ export function WalletConnectModal({
               <span className="text-2xl">{connector.icon || '💼'}</span>
             </div>
             <div className="flex-1 text-left">
-              <p className="font-semibold text-card-foreground">
+              <p className="font-medium text-card-foreground">
                 {connector.name}
               </p>
               <p className="text-xs text-muted-foreground">

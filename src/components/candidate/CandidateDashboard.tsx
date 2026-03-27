@@ -3,23 +3,25 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Clock,
   Eye,
-  TrendingUp,
-  CheckCircle,
   XCircle,
   Briefcase,
   Users,
   Building2,
   MapPin,
-  ArrowRight,
   Search,
   UserPen,
   ChevronRight,
   MessageSquare,
+  Star,
+  FileText,
+  Calendar,
+  Check,
+  Circle,
+  ArrowRight,
 } from "lucide-react";
 import { candidateApi, applicationsApi, messagingApi, extractApiError } from "@/lib/api";
-import { STATUS_COLORS } from "@/config/colors";
+import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -31,14 +33,6 @@ import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
 import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
 
-
-const STATUS_ICONS: Record<string, typeof Clock> = {
-  pending:     Clock,
-  reviewing:   Eye,
-  interviewed: TrendingUp,
-  accepted:    CheckCircle,
-  rejected:    XCircle,
-};
 
 const CELEBRATED_KEY = "vetted:celebrated-acceptances";
 
@@ -125,6 +119,128 @@ async function fetchDashboardData(): Promise<DashboardData> {
   };
 }
 
+/* ── Pipeline helpers for dashboard mini-pipeline ── */
+
+const PIPELINE_STEPS = ["Applied", "Review", "Interview", "Offer"] as const;
+
+function getStepIndex(status: string): number {
+  switch (status) {
+    case "pending": return 0;
+    case "reviewing": return 1;
+    case "interviewed": return 2;
+    case "accepted": return 3;
+    default: return -1; // rejected
+  }
+}
+
+function MiniPipeline({ status }: { status: string }) {
+  const isRejected = status === "rejected";
+  const currentStep = getStepIndex(status);
+
+  return (
+    <div className="flex items-center gap-0 mt-2">
+      {PIPELINE_STEPS.map((label, i) => {
+        const isCompleted = !isRejected && currentStep > i;
+        const isCurrent = !isRejected && currentStep === i;
+        const isOffer = i === PIPELINE_STEPS.length - 1;
+
+        return (
+          <div key={label} className="flex items-center">
+            {/* Node */}
+            <div
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                isCompleted
+                  ? isOffer
+                    ? "bg-warning text-warning-foreground shadow-[0_0_8px_hsl(var(--warning)/0.3)]"
+                    : "bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.2)]"
+                  : isCurrent
+                    ? "border-2 border-primary text-primary shadow-[0_0_10px_hsl(var(--primary)/0.2)]"
+                    : isRejected && i === currentStep + 1
+                      ? "bg-negative text-white shadow-[0_0_8px_hsl(var(--negative)/0.2)]"
+                      : "border border-border/60 text-muted-foreground/40 bg-muted/30"
+              }`}
+              title={label}
+            >
+              {isCompleted ? (
+                <Check className="w-2.5 h-2.5" />
+              ) : isCurrent ? (
+                <Circle className="w-2 h-2 fill-current" />
+              ) : isRejected && i === currentStep + 1 ? (
+                <XCircle className="w-2.5 h-2.5" />
+              ) : null}
+            </div>
+            {/* Connector line */}
+            {i < PIPELINE_STEPS.length - 1 && (
+              <div
+                className={`w-5 h-0.5 ${
+                  isCompleted
+                    ? "bg-primary/50"
+                    : "bg-border/40"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Profile completeness calculator ── */
+
+function getProfileCompletion(profile: CandidateProfile): { percentage: number; items: { label: string; done: boolean }[] } {
+  const items = [
+    { label: "Full name added", done: !!profile.fullName },
+    { label: "Headline set", done: !!profile.headline },
+    { label: "Bio written", done: !!profile.bio },
+    { label: "Resume uploaded", done: !!profile.resumeUrl },
+    { label: "LinkedIn connected", done: !!profile.linkedIn },
+    { label: "GitHub linked", done: !!profile.github },
+  ];
+  const done = items.filter((i) => i.done).length;
+  const percentage = Math.round((done / items.length) * 100);
+  return { percentage, items };
+}
+
+/* ── Profile Ring SVG ── */
+
+function ProfileRing({ percentage, size = 110 }: { percentage: number; size?: number }) {
+  const radius = (size - 12) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className="stroke-border/20"
+          strokeWidth={5}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className="stroke-primary"
+          strokeWidth={5}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-bold font-display text-primary tabular-nums">{percentage}%</span>
+        <span className="text-xs text-muted-foreground">Complete</span>
+      </div>
+    </div>
+  );
+}
+
 export default function CandidateDashboard() {
   const { ready } = useRequireAuth("candidate");
 
@@ -134,7 +250,7 @@ export default function CandidateDashboard() {
   );
 
   const profile = data?.profile ?? null;
-  const applications = data?.applications ?? [];
+  const applications = useMemo(() => data?.applications ?? [], [data?.applications]);
   const stats = data?.stats ?? { total: 0, pending: 0, reviewing: 0, interviewed: 0, accepted: 0, rejected: 0 };
   const guildApplications = data?.guildApplications ?? [];
   const conversations = data?.conversations ?? [];
@@ -176,22 +292,17 @@ export default function CandidateDashboard() {
     );
   }
 
+  const profileCompletion = getProfileCompletion(profile);
   const recentApplications = applications.slice(0, 5);
   const recentGuildApps = guildApplications.slice(0, 3);
-  // Show unread first, then most recent
   const recentConversations = [...conversations]
     .sort((a, b) => (b.unreadCount > 0 ? 1 : 0) - (a.unreadCount > 0 ? 1 : 0) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 4);
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
-
-  // Active stats to show (non-zero, or always show total + pending)
-  const statEntries: { key: string; label: string; value: number; color: string }[] = [
-    { key: "total",    label: "Applied",     value: stats.total,       color: "text-primary" },
-    { key: "pending",  label: "Pending",     value: stats.pending,     color: STATUS_COLORS.warning.text },
-    { key: "reviewing",label: "In Review",   value: stats.reviewing,   color: STATUS_COLORS.info.text },
-    { key: "accepted", label: "Accepted",    value: stats.accepted,    color: STATUS_COLORS.positive.text },
-    { key: "rejected", label: "Rejected",    value: stats.rejected,    color: STATUS_COLORS.negative.text },
-  ];
+  const firstName = profile.fullName?.split(" ")[0] || "there";
+  const initials = profile.fullName
+    ? profile.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : "?";
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -200,118 +311,253 @@ export default function CandidateDashboard() {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              Welcome back, {profile.fullName?.split(" ")[0]}
-            </h1>
-            {profile.headline && (
-              <p className="text-sm text-muted-foreground mt-1">{profile.headline}</p>
-            )}
-          </div>
-          <Link
-            href="/candidate/profile"
-            className="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg border border-border bg-card/60 backdrop-blur text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
-          >
-            <UserPen className="w-3.5 h-3.5" />
-            Edit Profile
-          </Link>
-        </div>
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
 
-        {/* Stats row — compact, glassy */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
-          {statEntries.map(({ key, label, value, color }) => (
-            <div
-              key={key}
-              className="flex-shrink-0 flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3 min-w-[120px]"
-            >
-              <span className={`text-2xl font-bold tabular-nums ${color}`}>{value}</span>
-              <span className="text-xs text-muted-foreground leading-tight">{label}</span>
+        {/* ── Welcome Header ── */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-display font-bold text-xl shadow-[0_0_20px_hsl(var(--primary)/0.15)] flex-shrink-0">
+              {initials}
             </div>
-          ))}
-        </div>
-
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Applications — takes 3 cols */}
-          <div className="lg:col-span-3 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                Recent Applications
-              </h2>
-              {applications.length > 5 && (
-                <Link
-                  href="/candidate/applications"
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  View all <ArrowRight className="w-3 h-3" />
-                </Link>
+            <div>
+              <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
+                Welcome back, {firstName}
+              </h1>
+              {profile.headline && (
+                <p className="text-sm text-muted-foreground mt-0.5">{profile.headline}</p>
               )}
             </div>
-            {recentApplications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-14 px-6">
-                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                  <Search className="w-7 h-7 text-muted-foreground/40" />
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">No applications yet — start exploring</p>
-                <Link
-                  href="/browse/jobs"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
-                >
-                  <Briefcase className="w-4 h-4" />
-                  Browse Jobs
-                </Link>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/30">
-                {recentApplications.map((app) => {
-                  const statusStyle = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG.pending;
-                  const Icon = STATUS_ICONS[app.status] || Clock;
-                  return (
-                    <Link
-                      key={app.id}
-                      href={`/browse/jobs/${app.job.id}`}
-                      className="flex items-center gap-4 w-full px-5 py-3.5 text-left hover:bg-muted/30 transition-colors group"
-                    >
-                      <div className={`flex-shrink-0 w-9 h-9 rounded-lg ${statusStyle.className} border flex items-center justify-center`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                          {app.job.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          {app.job.companyName && (
-                            <span className="flex items-center gap-1">
-                              <Building2 className="w-3 h-3" />
-                              {app.job.companyName}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {app.job.location}
-                          </span>
-                        </div>
-                      </div>
-                      <span className={`flex-shrink-0 px-2.5 py-1 rounded-md text-[11px] font-semibold border ${statusStyle.className}`}>
-                        {statusStyle.label}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/candidate/profile"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg border border-border bg-card/60 backdrop-blur text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+            >
+              <UserPen className="w-3.5 h-3.5" />
+              Edit Profile
+            </Link>
+            <Link
+              href="/browse/jobs"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+            >
+              <Search className="w-3.5 h-3.5" />
+              Browse Jobs
+            </Link>
+          </div>
+        </div>
+
+        {/* ── Quick Stats Strip ── */}
+        <div className="flex items-stretch gap-3 overflow-x-auto pb-1 scrollbar-hide">
+          {/* Applications */}
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+              <FileText className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.total}</span>
+              <span className="text-xs text-muted-foreground font-medium">Applications</span>
+            </div>
           </div>
 
-          {/* Right column — 2 cols */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Interviews */}
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+              <Calendar className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.interviewed}</span>
+              <span className="text-xs text-muted-foreground font-medium">Interviews</span>
+            </div>
+          </div>
+
+          {/* Offers -- golden glow */}
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-warning/20 bg-card/40 backdrop-blur-md px-4 py-3.5 relative overflow-hidden shadow-[0_0_20px_hsl(var(--warning)/0.12)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-warning/[0.06] to-transparent pointer-events-none rounded-xl" />
+            <div className="relative w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 bg-warning/15">
+              <Star className="w-[18px] h-[18px] text-warning" />
+            </div>
+            <div className="relative flex flex-col gap-0.5">
+              <span className="text-xl font-display font-bold tabular-nums text-warning">{stats.accepted}</span>
+              <span className="text-xs text-muted-foreground font-medium">{stats.accepted === 1 ? "Offer" : "Offers"}</span>
+            </div>
+          </div>
+
+          {/* In Review */}
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+              <Eye className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.reviewing}</span>
+              <span className="text-xs text-muted-foreground font-medium">In Review</span>
+            </div>
+          </div>
+
+          {/* Profile Strength Mini Ring */}
+          <div className="flex-1 min-w-[160px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+            <div className="relative flex-shrink-0" style={{ width: 40, height: 40 }}>
+              <svg width={40} height={40} className="-rotate-90">
+                <circle cx={20} cy={20} r={16} fill="none" className="stroke-border/20" strokeWidth={3} />
+                <circle
+                  cx={20} cy={20} r={16}
+                  fill="none"
+                  className="stroke-primary"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 16}
+                  strokeDashoffset={2 * Math.PI * 16 - (profileCompletion.percentage / 100) * 2 * Math.PI * 16}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary font-display">
+                {profileCompletion.percentage}%
+              </div>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xl font-display font-bold tabular-nums text-foreground">{profileCompletion.percentage}%</span>
+              <span className="text-xs text-muted-foreground font-medium">Profile Strength</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Two-Column Main Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+          {/* ── Left Column (3 cols) ── */}
+          <div className="lg:col-span-3 space-y-5">
+
+            {/* Active Applications */}
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-muted-foreground/50" />
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
+                    Active Applications
+                  </h2>
+                </div>
+                {applications.length > 5 && (
+                  <Link
+                    href="/candidate/applications"
+                    className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    View All ({applications.length}) <ChevronRight className="w-3 h-3" />
+                  </Link>
+                )}
+              </div>
+              {recentApplications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-14 px-6">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <Search className="w-7 h-7 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">No applications yet -- start exploring</p>
+                  <Link
+                    href="/browse/jobs"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    Browse Jobs
+                  </Link>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/30">
+                  {recentApplications.map((app) => {
+                    const statusStyle = APPLICATION_STATUS_CONFIG[app.status] || APPLICATION_STATUS_CONFIG.pending;
+                    const companyInitial = app.job.companyName ? app.job.companyName[0].toUpperCase() : "?";
+                    return (
+                      <Link
+                        key={app.id}
+                        href={`/browse/jobs/${app.job.id}`}
+                        className="flex items-start gap-4 w-full px-5 py-4 text-left hover:bg-muted/30 transition-colors group"
+                      >
+                        {/* Company avatar */}
+                        <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border/40 flex items-center justify-center text-sm font-bold text-muted-foreground">
+                          {companyInitial}
+                        </div>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                                {app.job.title}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                {app.job.companyName && (
+                                  <span className="flex items-center gap-1">
+                                    <Building2 className="w-3 h-3" />
+                                    {app.job.companyName}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {app.job.location}
+                                </span>
+                              </div>
+                            </div>
+                            <span className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold border whitespace-nowrap ${statusStyle.className}`}>
+                              {statusStyle.label}
+                            </span>
+                          </div>
+                          {/* Mini pipeline */}
+                          <MiniPipeline status={app.status} />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Upcoming Meetings */}
+            <UpcomingMeetings userType="candidate" />
+          </div>
+
+          {/* ── Right Column (2 cols) ── */}
+          <div className="lg:col-span-2 space-y-5">
+
+            {/* Profile Completion Ring */}
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
+                  Profile Completion
+                </h2>
+              </div>
+              <div className="px-5 py-5">
+                <div className="flex flex-col items-center mb-4">
+                  <ProfileRing percentage={profileCompletion.percentage} />
+                </div>
+                <div className="space-y-2">
+                  {profileCompletion.items.map((item) => (
+                    <div
+                      key={item.label}
+                      className={`flex items-center gap-2.5 py-1.5 text-sm ${item.done ? "text-muted-foreground" : "text-foreground"}`}
+                    >
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                        item.done ? STATUS_COLORS.positive.bgSubtle : "bg-muted/40"
+                      }`}>
+                        {item.done ? (
+                          <Check className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`} />
+                        ) : (
+                          <Circle className="w-3 h-3 text-muted-foreground/40" />
+                        )}
+                      </div>
+                      <span className="text-sm">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {profileCompletion.percentage < 100 && (
+                  <Link
+                    href="/candidate/profile"
+                    className="block w-full mt-4 px-4 py-2.5 text-center text-sm font-semibold rounded-lg bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+                  >
+                    Complete Your Profile
+                  </Link>
+                )}
+              </div>
+            </div>
+
             {/* Guild Applications */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Guild Applications
                 </h2>
                 {guildApplications.length > 3 && (
@@ -348,7 +594,7 @@ export default function CandidateDashboard() {
                             <p className="text-sm font-medium text-foreground truncate">
                               {app.guildName || app.guild?.name || "Guild"}
                             </p>
-                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${guildStatusConfig.className}`}>
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${guildStatusConfig.className}`}>
                               {guildStatusConfig.label}
                             </span>
                           </div>
@@ -371,18 +617,15 @@ export default function CandidateDashboard() {
               )}
             </div>
 
-            {/* Upcoming Meetings */}
-            <UpcomingMeetings userType="candidate" />
-
-            {/* Recent Messages */}
+            {/* Messages */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                     Messages
                   </h2>
                   {totalUnread > 0 && (
-                    <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
+                    <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-bold rounded-full">
                       {totalUnread}
                     </span>
                   )}
@@ -392,7 +635,7 @@ export default function CandidateDashboard() {
                     href="/candidate/messages"
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
-                    View all <ArrowRight className="w-3 h-3" />
+                    View Inbox <ChevronRight className="w-3 h-3" />
                   </Link>
                 )}
               </div>
@@ -411,12 +654,15 @@ export default function CandidateDashboard() {
                       href={`/candidate/messages?conversation=${convo.id}`}
                       className="flex items-start gap-3 w-full px-5 py-3.5 text-left hover:bg-muted/30 transition-colors group"
                     >
-                      <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+                      <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center relative ${
                         convo.unreadCount > 0
                           ? "bg-primary/10 border border-primary/20"
                           : "bg-muted/50 border border-border/40"
                       }`}>
                         <Building2 className={`w-4 h-4 ${convo.unreadCount > 0 ? "text-primary" : "text-muted-foreground"}`} />
+                        {convo.unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-0.5">
@@ -425,9 +671,9 @@ export default function CandidateDashboard() {
                           }`}>
                             {convo.companyName}
                           </p>
-                          {convo.unreadCount > 0 && (
-                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-primary" />
-                          )}
+                          <span className="text-xs text-muted-foreground/60 flex-shrink-0">
+                            {formatTimeAgo(convo.lastMessage?.createdAt || convo.updatedAt)}
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{convo.jobTitle}</p>
                         {convo.lastMessage && (
@@ -437,9 +683,6 @@ export default function CandidateDashboard() {
                             {convo.lastMessage.senderType === "candidate" ? "You: " : ""}{convo.lastMessage.content}
                           </p>
                         )}
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          {formatTimeAgo(convo.lastMessage?.createdAt || convo.updatedAt)}
-                        </p>
                       </div>
                     </Link>
                   ))}
@@ -450,14 +693,14 @@ export default function CandidateDashboard() {
             {/* Quick Actions */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
               <div className="px-5 py-4 border-b border-border/40">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Quick Actions
                 </h2>
               </div>
               <div className="p-2">
                 {[
-                  { label: "Browse Jobs",   icon: Briefcase,      href: "/browse/jobs" },
-                  { label: "Messages",      icon: MessageSquare,  href: "/candidate/messages" },
+                  { label: "Browse Jobs",    icon: Briefcase,      href: "/browse/jobs" },
+                  { label: "Messages",       icon: MessageSquare,  href: "/candidate/messages" },
                   { label: "Explore Guilds", icon: Users,          href: "/guilds" },
                   { label: "Edit Profile",   icon: UserPen,        href: "/candidate/profile" },
                 ].map(({ label, icon: QIcon, href }) => (

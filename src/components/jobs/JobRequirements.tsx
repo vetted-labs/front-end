@@ -28,7 +28,7 @@ export function JobRequirements({
             <Shield className="w-5 h-5 text-info-blue" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-xl font-bold text-foreground">
               Guild & Publishing
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ export function JobRequirements({
             <FileText className="w-5 h-5 text-info-blue" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">
+            <h3 className="text-xl font-bold text-foreground">
               Requirements & Qualifications
             </h3>
             <p className="text-sm text-muted-foreground">

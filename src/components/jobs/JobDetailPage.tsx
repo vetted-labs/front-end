@@ -164,11 +164,11 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold text-foreground">
+                  <h1 className="text-2xl font-bold text-foreground font-display">
                     {job.title}
                   </h1>
                   <span
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium ${
                       (JOB_STATUS_CONFIG[job.status ?? "draft"] || JOB_STATUS_CONFIG.draft).className
                     }`}
                   >
@@ -207,7 +207,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
           {!dashboardContext && <div className="lg:col-span-1">
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] sticky top-6">
               <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Applicants
                 </h2>
                 <span className="text-xs text-muted-foreground">
@@ -254,7 +254,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-semibold text-primary">
+                          <span className="text-sm font-medium text-primary">
                             {application.candidate.fullName
                               .charAt(0)
                               .toUpperCase()}
@@ -262,7 +262,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">
+                          <h3 className="font-bold text-sm truncate">
                             {application.candidate.fullName}
                           </h3>
                           <p className="text-xs text-muted-foreground truncate">
@@ -308,7 +308,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {/* Basic Information */}
               <div className="border-b border-border/40">
                 <div className="px-5 py-4 border-b border-border/40">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
                     Basic Information
                   </h2>
@@ -339,7 +339,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {/* Location & Type */}
               <div className="border-b border-border/40">
                 <div className="px-5 py-4 border-b border-border/40">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     Location & Type
                   </h2>
@@ -375,7 +375,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {/* Compensation & Experience */}
               <div className="border-b border-border/40">
                 <div className="px-5 py-4 border-b border-border/40">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
                     Compensation & Experience
                   </h2>
@@ -419,7 +419,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {/* Guild Assignment */}
               <div className="border-b border-border/40">
                 <div className="px-5 py-4 border-b border-border/40">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     Guild Assignment
                   </h2>
@@ -439,7 +439,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {job.requirements && job.requirements.length > 0 && (
                 <div className="border-b border-border/40">
                   <div className="px-5 py-4 border-b border-border/40">
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Requirements
                     </h2>
@@ -461,7 +461,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {job.skills && job.skills.length > 0 && (
                 <div className="border-b border-border/40">
                   <div className="px-5 py-4 border-b border-border/40">
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Skills
                     </h2>
                   </div>
@@ -484,7 +484,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {job.screeningQuestions && job.screeningQuestions.length > 0 && (
                 <div>
                   <div className="px-5 py-4 border-b border-border/40">
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <HelpCircle className="w-4 h-4" />
                       Screening Questions
                     </h2>
