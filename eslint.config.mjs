@@ -23,6 +23,36 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      "react/no-danger": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["pg", "postgres", "postgresql"],
+              message:
+                "❌ SECURITY: Frontend must NEVER access database directly. Use backend API.",
+            },
+            {
+              group: ["**/db.ts", "**/db.js", "*/db"],
+              message:
+                "❌ SECURITY: Frontend must NEVER import database utilities. Use backend API.",
+            },
+            {
+              group: [
+                "**/backend/**",
+                "../backend/**",
+                "../../backend/**",
+              ],
+              message:
+                "❌ ARCHITECTURE: Frontend must NEVER import backend code. Use API calls.",
+            },
+          ],
+        },
+      ],
       "no-restricted-syntax": [
         "warn",
         {
