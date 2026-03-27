@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, MessageSquare, Link2, ShieldCheck, Eye, Lock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, MessageSquare, Link2, ShieldCheck, Eye, Lock, TrendingUp, TrendingDown, Minus, X } from "lucide-react";
 import { expertApi, guildsApi, commitRevealApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
@@ -102,11 +102,51 @@ export function ViewReviewModal({
   const generalJustifications = justifications?.general as Record<string, string> | undefined;
   const domainJustifications = justifications?.domain as Record<string, string> | undefined;
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Your Review">
-      <p className="text-sm text-muted-foreground -mt-2 mb-4">{applicantName}</p>
+  // Status badge config
+  const statusBadge = isCommitPhase
+    ? { label: "Vote Submitted (Pending Reveal)", className: "bg-amber-500/10 text-amber-500 border border-amber-500/20", icon: <Lock className="w-3.5 h-3.5" /> }
+    : review?.vote === "approve"
+    ? { label: "Approved", className: "bg-green-500/10 text-green-500 border border-green-500/20", icon: <CheckCircle className="w-3.5 h-3.5" /> }
+    : review?.vote === "reject"
+    ? { label: "Rejected", className: "bg-red-500/10 text-red-500 border border-red-500/20", icon: <XCircle className="w-3.5 h-3.5" /> }
+    : { label: "Pending", className: "bg-orange-500/10 text-orange-500 border border-orange-500/20", icon: null };
 
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="">
       <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-xl font-extrabold text-foreground">{applicantName}</h2>
+              {review && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusBadge.className}`}>
+                  {statusBadge.icon}
+                  {statusBadge.label}
+                </span>
+              )}
+            </div>
+            {review && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {new Date(review.committedAt || review.createdAt).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+                at{" "}
+                {new Date(review.committedAt || review.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="w-8 h-8 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         {loading && (
           <div className="flex items-center justify-center py-12" role="status" aria-label="Loading review">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
@@ -122,33 +162,6 @@ export function ViewReviewModal({
 
         {review && (
           <>
-            {/* Vote Badge */}
-            <div className="flex items-center gap-3">
-              {isCommitPhase ? (
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  <Lock className="w-4 h-4" />
-                  Vote Submitted (Pending Reveal)
-                </div>
-              ) : (
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
-                  review.vote === "approve"
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
-                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
-                }`}>
-                  {review.vote === "approve" ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <XCircle className="w-4 h-4" />
-                  )}
-                  {review.vote === "approve" ? "Approved" : "Rejected"}
-                </div>
-              )}
-              <span className="text-xs text-muted-foreground">
-                {new Date(review.committedAt || review.createdAt).toLocaleDateString()} at{" "}
-                {new Date(review.committedAt || review.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-
             {/* Missed Reveal Warning */}
             {missedReveal && (
               <Alert variant="error">
@@ -178,136 +191,108 @@ export function ViewReviewModal({
             )}
 
             {/* Score Summary */}
-            {(
-              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
-                    Score Summary
-                  </h4>
-                  {isCommitPhase && (
-                    <span className="text-[10px] text-amber-400 font-medium uppercase tracking-wider">
-                      Hidden until all votes are in
-                    </span>
-                  )}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  Score Summary
+                </p>
+                {isCommitPhase && (
+                  <span className="text-[10px] text-amber-400 font-medium uppercase tracking-wider">
+                    Hidden until all votes are in
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                {/* General */}
+                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">General</p>
+                  <p className="text-2xl font-extrabold text-foreground">{generalTotal}</p>
+                  <p className="text-sm text-muted-foreground">/{generalMax || "?"}</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 rounded-lg bg-card border border-border">
-                    <p className="text-xs text-muted-foreground mb-1">General</p>
-                    <p className="text-lg font-bold text-foreground">
-                      {generalTotal}
-                      <span className="text-sm text-muted-foreground font-normal">
-                        /{generalMax || "?"}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-card border border-border">
-                    <p className="text-xs text-muted-foreground mb-1">Domain</p>
-                    <p className="text-lg font-bold text-foreground">
-                      {domainTotal}
-                      <span className="text-sm text-muted-foreground font-normal">
-                        /{domainMax || "?"}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-card border border-border">
-                    <p className="text-xs text-muted-foreground mb-1">Deductions</p>
-                    <p className={`text-lg font-bold ${(review.redFlagDeductions ?? 0) > 0 ? "text-red-400" : "text-foreground"}`}>
-                      {(review.redFlagDeductions ?? 0) > 0 ? `-${review.redFlagDeductions}` : "0"}
-                    </p>
-                  </div>
+                {/* Domain */}
+                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Domain</p>
+                  <p className="text-2xl font-extrabold text-foreground">{domainTotal}</p>
+                  <p className="text-sm text-muted-foreground">/{domainMax || "?"}</p>
                 </div>
 
-                {/* Overall Score */}
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
-                    <span className="text-2xl font-bold text-foreground">
-                      {overallScore}
-                      <span className="text-sm text-muted-foreground font-normal">/{overallMax}</span>
-                    </span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        scorePercent >= 70
-                          ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                          : scorePercent >= 40
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500"
-                          : "bg-gradient-to-r from-red-500 to-rose-500"
-                      }`}
-                      style={{ width: `${Math.min(scorePercent, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 text-right">{scorePercent}%</p>
+                {/* Deductions */}
+                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Deductions</p>
+                  <p className={`text-2xl font-extrabold ${(review.redFlagDeductions ?? 0) > 0 ? "text-red-400" : "text-foreground"}`}>
+                    {(review.redFlagDeductions ?? 0) > 0 ? `-${review.redFlagDeductions}` : "0"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">pts</p>
+                </div>
+
+                {/* Overall */}
+                <div className="border border-green-500/15 rounded-xl bg-green-500/[0.04] p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Overall</p>
+                  <p className="text-2xl font-extrabold text-green-500">{scorePercent}%</p>
+                  <p className="text-sm text-muted-foreground">{overallScore}/{overallMax}</p>
                 </div>
               </div>
-            )}
+
+              {/* Progress bar */}
+              <div className="h-1.5 rounded-full bg-muted/20 overflow-hidden mt-4 mb-6">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-500/60 transition-all duration-500"
+                  style={{ width: `${Math.min(scorePercent, 100)}%` }}
+                />
+              </div>
+            </div>
 
             {/* Consensus Result (shown when finalized) */}
             {isFinalized && finalization && (
-              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
-                <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
-                  Consensus Result
-                </h4>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 rounded-lg bg-card border border-border">
-                    <p className="text-xs text-muted-foreground mb-1">Your Score</p>
-                    <p className="text-lg font-bold text-foreground">{scorePercent}%</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-card border border-border">
-                    <p className="text-xs text-muted-foreground mb-1">Consensus Score</p>
+              <div className="border border-border/40 rounded-xl bg-muted/20 p-4">
+                <div className="flex items-stretch gap-0">
+                  {/* Consensus score */}
+                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
+                    <p className="text-[11px] text-muted-foreground mb-1">Consensus score</p>
                     <p className="text-lg font-bold text-foreground">{finalization.consensusScore}%</p>
                   </div>
-                </div>
 
-                {expertVote && (
-                  <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                    expertVote.cluster === "majority"
-                      ? "bg-green-500/[0.06] border-green-500/20"
-                      : expertVote.cluster === "minority"
-                      ? "bg-red-500/[0.06] border-red-500/20"
-                      : "bg-muted/30 border-border"
-                  }`}>
-                    {expertVote.cluster === "majority" ? (
-                      <TrendingUp className="w-5 h-5 text-green-500 shrink-0" />
-                    ) : expertVote.cluster === "minority" ? (
-                      <TrendingDown className="w-5 h-5 text-red-500 shrink-0" />
-                    ) : (
-                      <Minus className="w-5 h-5 text-muted-foreground shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {expertVote.cluster === "majority" ? "Aligned with consensus" : expertVote.cluster === "minority" ? "Deviated from consensus" : "Neutral"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Distance from consensus: {expertVote.alignmentDistance.toFixed(1)} points
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={`text-sm font-bold ${
-                        expertVote.reputationChange > 0
-                          ? "text-green-500"
-                          : expertVote.reputationChange < 0
-                          ? "text-red-500"
-                          : "text-muted-foreground"
-                      }`}>
-                        {expertVote.reputationChange > 0 ? "+" : ""}{expertVote.reputationChange}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">reputation</p>
-                    </div>
+                  <div className="w-px h-8 bg-border/40 self-center" />
+
+                  {/* Your score */}
+                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
+                    <p className="text-[11px] text-muted-foreground mb-1">Your score</p>
+                    <p className="text-lg font-bold text-foreground">{scorePercent}%</p>
                   </div>
-                )}
 
-                {/* Outcome */}
-                <div className="pt-3 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Application Outcome</span>
-                  <span className={`text-sm font-semibold ${
-                    finalization.outcome === "approved" ? "text-green-500" : "text-red-500"
-                  }`}>
-                    {finalization.outcome === "approved" ? "Approved" : "Rejected"}
-                  </span>
+                  {expertVote && (
+                    <>
+                      <div className="w-px h-8 bg-border/40 self-center" />
+
+                      {/* Reputation change */}
+                      <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
+                        <p className="text-[11px] text-muted-foreground mb-1">Reputation change</p>
+                        <p className={`text-lg font-bold ${
+                          expertVote.reputationChange > 0
+                            ? "text-green-500"
+                            : expertVote.reputationChange < 0
+                            ? "text-red-500"
+                            : "text-muted-foreground"
+                        }`}>
+                          {expertVote.reputationChange > 0 ? "+" : ""}{expertVote.reputationChange}
+                        </p>
+                      </div>
+
+                      <div className="w-px h-8 bg-border/40 self-center" />
+
+                      {/* VETD reward */}
+                      <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
+                        <p className="text-[11px] text-muted-foreground mb-1">VETD reward</p>
+                        <p className="text-lg font-bold text-primary">
+                          {(expertVote as typeof expertVote & { vetdReward?: number }).vetdReward != null
+                            ? `+${(expertVote as typeof expertVote & { vetdReward?: number }).vetdReward}`
+                            : "—"}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -315,20 +300,24 @@ export function ViewReviewModal({
             {/* Justifications */}
             {((generalJustifications && Object.keys(generalJustifications).length > 0) ||
               (domainJustifications && Object.keys(domainJustifications).length > 0)) && (
-              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-4">
-                <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+              <div className="space-y-4">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                   Your Justifications
-                </h4>
+                </p>
 
                 {generalJustifications && Object.entries(generalJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">General</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                      General
+                    </p>
                     {Object.entries(generalJustifications).map(([key, value]) => (
-                      <div key={key} className="p-3 rounded-lg bg-card border border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
+                      <div key={key}>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
-                        <p className="text-sm text-foreground">{value}</p>
+                        <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
+                          <p className="text-sm text-muted-foreground leading-relaxed">{value}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -336,13 +325,17 @@ export function ViewReviewModal({
 
                 {domainJustifications && Object.entries(domainJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Domain</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                      Domain
+                    </p>
                     {Object.entries(domainJustifications).map(([key, value]) => (
-                      <div key={key} className="p-3 rounded-lg bg-card border border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
+                      <div key={key}>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
-                        <p className="text-sm text-foreground">{value}</p>
+                        <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
+                          <p className="text-sm text-muted-foreground leading-relaxed">{value}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
