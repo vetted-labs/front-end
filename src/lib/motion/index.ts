@@ -36,3 +36,5 @@ export type { RevealProps } from "./primitives/Reveal";
 
 export { Counter } from "./primitives/Counter";
 export type { CounterProps } from "./primitives/Counter";
+
+export { PageTransition } from "./PageTransition";

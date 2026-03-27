@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
+import { motion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
+import { DURATIONS } from "@/lib/motion"
 
 const Tabs = TabsPrimitive.Root
 
@@ -40,7 +42,7 @@ TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
@@ -48,7 +50,16 @@ const TabsContent = React.forwardRef<
       className
     )}
     {...props}
-  />
+  >
+    <motion.div
+      key={props.value}
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DURATIONS.normal, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  </TabsPrimitive.Content>
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 

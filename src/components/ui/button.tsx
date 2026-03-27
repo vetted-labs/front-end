@@ -1,10 +1,14 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Loader2 } from "lucide-react"
+import { motion, AnimatePresence, type HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { SPRINGS } from "@/lib/motion"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -30,27 +34,54 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<HTMLMotionProps<"button">, "children">,
     VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, isLoading, icon, disabled, children, ...props }, ref) => {
+    const isLink = variant === "link";
+
     return (
-      <button
+      <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || isLoading}
+        whileTap={isLink ? undefined : { scale: 0.97 }}
+        whileHover={isLink ? undefined : { scale: 1.02 }}
+        transition={SPRINGS.snappy}
         {...props}
       >
-        {isLoading
-          ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          : icon && <span className="mr-2">{icon}</span>
-        }
+        <AnimatePresence mode="wait" initial={false}>
+          {isLoading ? (
+            <motion.span
+              key="loader"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+              className="mr-2"
+            >
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </motion.span>
+          ) : icon ? (
+            <motion.span
+              key="icon"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+              className="mr-2"
+            >
+              {icon}
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
         {children}
-      </button>
+      </motion.button>
     )
   }
 )

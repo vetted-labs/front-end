@@ -1,5 +1,9 @@
+"use client";
+
 import { AlertCircle, CheckCircle2, Info, XCircle } from "lucide-react";
 import { ReactNode } from "react";
+import { motion } from "framer-motion";
+import { DURATIONS } from "@/lib/motion";
 
 interface AlertProps {
   variant?: "error" | "success" | "warning" | "info";
@@ -31,7 +35,12 @@ export function Alert({ variant = "info", children, onClose, className = "" }: A
   const { container, icon } = styles[variant];
 
   return (
-    <div className={`p-4 border rounded-lg flex items-start gap-3 ${container} ${className}`}>
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DURATIONS.normal, ease: "easeOut" }}
+      className={`p-4 border rounded-lg flex items-start gap-3 ${container} ${className}`}
+    >
       <div className="flex-shrink-0">{icon}</div>
       <div className="flex-1 text-sm">{children}</div>
       {onClose && (
@@ -42,6 +51,6 @@ export function Alert({ variant = "info", children, onClose, className = "" }: A
           <XCircle className="w-4 h-4" />
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }
