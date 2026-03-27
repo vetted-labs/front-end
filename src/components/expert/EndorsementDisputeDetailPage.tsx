@@ -285,7 +285,7 @@ export function EndorsementDisputeDetailPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     Deadline
                   </span>
@@ -294,7 +294,7 @@ export function EndorsementDisputeDetailPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     Votes
                   </span>

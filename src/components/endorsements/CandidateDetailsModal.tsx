@@ -119,7 +119,7 @@ export function CandidateDetailsModal({
             </div>
 
             {/* Quick links + close */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {application.linkedin && (
                 <a href={ensureHttps(application.linkedin)} target="_blank" rel="noopener noreferrer"
                   aria-label="LinkedIn profile"
@@ -155,9 +155,9 @@ export function CandidateDetailsModal({
           </div>
 
           {/* Stats row */}
-          <div className="relative flex items-center gap-2.5 mt-4 pb-5">
+          <div className="relative flex items-center gap-3 mt-4 pb-5">
             {skillMatchData.percentage > 0 && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
+              <div className="flex items-center gap-3 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <CheckCircle className="w-4 h-4 text-primary" />
                 </div>
@@ -168,7 +168,7 @@ export function CandidateDetailsModal({
               </div>
             )}
             {guildScore && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
+              <div className="flex items-center gap-3 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Star className="w-4 h-4 text-primary" />
                 </div>
@@ -178,7 +178,7 @@ export function CandidateDetailsModal({
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
+            <div className="flex items-center gap-3 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
               <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
                 <Clock className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
               </div>
@@ -195,12 +195,12 @@ export function CandidateDetailsModal({
 
         {/* ── Tab Bar ── */}
         <div className="px-6 pt-3 flex-shrink-0">
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all border ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all border ${
                   activeTab === tab.id
                     ? 'bg-primary/10 text-primary border-primary/30'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 border-transparent'
@@ -253,7 +253,7 @@ export function CandidateDetailsModal({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Status</span>
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border ${STATUS_COLORS.warning.badge}`}>
+                    <span className={`inline-flex items-center gap-2 text-xs font-medium px-2 py-0.5 rounded-md border ${STATUS_COLORS.warning.badge}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.warning.dot}`} />
                       {application.status || 'Pending'}
                     </span>
@@ -274,7 +274,7 @@ export function CandidateDetailsModal({
                     </div>
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Highlights</h3>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {application.experience_level && (
                       <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-muted/30 border border-border text-foreground">
                         {application.experience_level}
@@ -321,7 +321,7 @@ export function CandidateDetailsModal({
                     </div>
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Screening Questions</h3>
                   </div>
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {Object.entries(application.screening_answers).map(([question, answer], idx) => (
                       <div key={idx} className="rounded-lg bg-muted/20 border border-border p-3">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{question}</p>
@@ -355,17 +355,17 @@ export function CandidateDetailsModal({
               {/* Meta chips */}
               <div className="flex flex-wrap gap-2">
                 {application.location && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <MapPin className="w-3 h-3" /> {application.location}
                   </span>
                 )}
                 {application.job_type && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <Briefcase className="w-3 h-3" /> {application.job_type}
                   </span>
                 )}
                 {(application.salary_min || application.salary_max) && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <DollarSign className="w-3 h-3" />
                     {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
                   </span>
@@ -389,7 +389,7 @@ export function CandidateDetailsModal({
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Requirements</h4>
                     <div className="space-y-2">
                       {application.requirements.map((req: string, i: number) => (
-                        <div key={i} className="flex items-start gap-2.5">
+                        <div key={i} className="flex items-start gap-3">
                           <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <CheckCircle className="w-2.5 h-2.5 text-primary" />
                           </div>
@@ -406,7 +406,7 @@ export function CandidateDetailsModal({
                   <div className="h-px bg-muted/30" />
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Required Skills</h4>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {(Array.isArray(application.job_skills)
                         ? application.job_skills
                         : application.job_skills.split(',')
@@ -462,9 +462,9 @@ export function CandidateDetailsModal({
                       Matched <span className={STATUS_COLORS.positive.text}>({skillMatchData.matched.length})</span>
                     </h3>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {skillMatchData.matched.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
+                      <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
                         <CheckCircle className="w-3 h-3" /> {skill}
                       </span>
                     ))}
@@ -483,9 +483,9 @@ export function CandidateDetailsModal({
                       Missing <span className={STATUS_COLORS.negative.text}>({skillMatchData.missing.length})</span>
                     </h3>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {skillMatchData.missing.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
+                      <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
                         <XCircle className="w-3 h-3" /> {skill}
                       </span>
                     ))}
@@ -506,7 +506,7 @@ export function CandidateDetailsModal({
                         <p className="text-xs text-muted-foreground mt-0.5">Community consensus evaluation</p>
                       </div>
                     </div>
-                    <div className="flex items-baseline gap-1">
+                    <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold text-primary tabular-nums">{guildScore}</span>
                       <span className="text-sm text-muted-foreground">/100</span>
                     </div>

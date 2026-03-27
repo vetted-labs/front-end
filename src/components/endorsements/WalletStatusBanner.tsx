@@ -84,7 +84,7 @@ export function WalletStatusBanner({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                   <Wallet className="h-5 w-5 text-primary" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Connected Wallet</p>
                   <div className="flex items-center gap-2">
                     <code className="text-xl font-bold text-foreground">{shortAddress}</code>

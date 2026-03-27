@@ -204,7 +204,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
       )} />
 
       <div className="relative p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           {/* Rank Icon */}
           <div className={cn(
             "flex h-16 w-16 items-center justify-center rounded-xl shrink-0",
@@ -217,7 +217,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
 
           {/* Rank Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-2xl font-bold tracking-tight">{rank.name}</h2>
               <Badge variant={getRankBadgeVariant(rank.role)}>{rank.role}</Badge>
             </div>
@@ -231,7 +231,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2.5">
               Term Rules
             </p>
-            <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+            <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
               {[
                 "3-month term (1 quarter)",
                 "Can be re-elected for a second consecutive term",
@@ -346,7 +346,7 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
         </div>
       </div>
 
-      <div className="px-5 pb-5 space-y-3.5">
+      <div className="px-5 pb-5 space-y-4">
         {requirements.map((req) => (
           <div key={req.label}>
             <div className="flex items-center justify-between text-sm mb-1.5">

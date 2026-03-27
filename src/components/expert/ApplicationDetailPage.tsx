@@ -93,28 +93,28 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     switch (status) {
       case "ongoing":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.info.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.info.badge}`}>
             <Clock className="w-4 h-4" />
             Ongoing
           </span>
         );
       case "approved":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
             <CheckCircle className="w-4 h-4" />
             Approved
           </span>
         );
       case "rejected":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.negative.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.negative.badge}`}>
             <XCircle className="w-4 h-4" />
             Rejected
           </span>
         );
       default:
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.neutral.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.neutral.badge}`}>
             <Clock className="w-4 h-4" />
             Pending
           </span>

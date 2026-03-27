@@ -96,10 +96,10 @@ export default function ExpertApplicationFlow() {
         {flow.error && (
           <div className="mb-6" ref={flow.errorRef}>
             <Alert variant="error">
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <span>{flow.error}</span>
                 {flow.errorDetails.length > 0 && (
-                  <ul className="list-disc list-inside text-sm mt-2 space-y-0.5">
+                  <ul className="list-disc list-inside text-sm mt-2 space-y-2">
                     {flow.errorDetails.map((detail, i) => (
                       <li key={i}>{detail}</li>
                     ))}

@@ -176,15 +176,15 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                   </span>
                 </div>
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-2">
                     <Eye className="w-4 h-4" />
                     {job.views ?? 0} views
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     {job.applicants ?? 0} applicants
                   </span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     Posted {new Date(job.createdAt).toLocaleDateString()}
                   </span>

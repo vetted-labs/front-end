@@ -82,7 +82,7 @@ export function TransactionStatus({
             href={`${chainExplorerUrl}/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
+            className="text-xs text-primary hover:underline inline-flex items-center gap-2 mt-1"
           >
             View transaction <ExternalLink className="h-3 w-3" />
           </a>

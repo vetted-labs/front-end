@@ -44,7 +44,7 @@ export function GeneralReviewStep({
   onGeneralJustificationsChange,
 }: GeneralReviewStepProps) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center gap-3 mb-1">
         <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
           <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
@@ -79,7 +79,7 @@ export function GeneralReviewStep({
                 {/* Question header with score */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                   <p className="text-sm font-semibold text-foreground">{question.prompt}</p>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-full rounded-full bg-primary transition-all duration-500"
@@ -101,7 +101,7 @@ export function GeneralReviewStep({
                       const combinedAnswer = getGeneralResponseValue(question.id);
                       if (combinedAnswer) {
                         return (
-                          <div className="rounded-lg bg-muted/30 border border-border p-3.5">
+                          <div className="rounded-lg bg-muted/30 border border-border p-4">
                             <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                               {combinedAnswer}
                             </p>
@@ -112,7 +112,7 @@ export function GeneralReviewStep({
                         return (
                           <div className="space-y-3">
                             {question.parts.map((part: QuestionPart) => (
-                              <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-3.5">
+                              <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-4">
                                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
                                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                                   {getGeneralResponseValue(question.id, part.id) || <span className="text-muted-foreground italic">No response</span>}
@@ -123,7 +123,7 @@ export function GeneralReviewStep({
                         );
                       }
                       return (
-                        <div className="rounded-lg bg-muted/30 border border-border p-3.5">
+                        <div className="rounded-lg bg-muted/30 border border-border p-4">
                           <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                             <span className="text-muted-foreground italic">No response</span>
                           </p>
@@ -188,12 +188,12 @@ export function GeneralReviewStep({
               {interpretationGuide.map((item) => (
                 <div
                   key={item.range}
-                  className="rounded-xl bg-muted/50 border border-border p-3.5 space-y-2"
+                  className="rounded-xl bg-muted/50 border border-border p-4 space-y-2"
                 >
                   <p className="text-xs font-bold text-primary">
                     {item.range} — {item.label}
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-2">
                     {(item.notes || []).map((note: string, idx: number) => (
                       <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
                         {note}

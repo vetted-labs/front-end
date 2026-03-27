@@ -34,7 +34,7 @@ export function MatchScoreBadge({ candidateSkills, jobSkills, compact = false }:
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${config.bgClass} ${config.colorClass}`}>
+      <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-md text-xs font-medium border ${config.bgClass} ${config.colorClass}`}>
         <Sparkles className="w-3 h-3" />
         {score}%
       </span>
@@ -47,19 +47,19 @@ export function MatchScoreBadge({ candidateSkills, jobSkills, compact = false }:
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${config.bgClass} ${config.colorClass} cursor-help`}>
+      <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-medium border ${config.bgClass} ${config.colorClass} cursor-help`}>
         <Sparkles className="w-3.5 h-3.5" />
         {score}% {config.label}
       </span>
 
       {/* Tooltip */}
       {showTooltip && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-xl border border-border bg-popover p-3 shadow-lg">
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-xl border border-border bg-popover p-4 shadow-lg">
           <p className="text-xs font-medium text-foreground mb-1.5">Skill Match Details</p>
           {matchedSkills.length > 0 && (
             <div className="mb-2">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Matching Skills</p>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-2">
                 {matchedSkills.map((skill) => (
                   <span key={skill} className={`px-1.5 py-0.5 ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text} text-xs rounded-md ${STATUS_COLORS.positive.border}`}>
                     {skill}

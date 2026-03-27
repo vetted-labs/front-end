@@ -8,7 +8,7 @@ export function renderPromptLines(prompt?: string) {
     .filter(Boolean);
   if (lines.length === 0) return null;
   return (
-    <div className="space-y-1 text-xs text-muted-foreground">
+    <div className="space-y-2 text-xs text-muted-foreground">
       {lines.map((line, idx) => (
         <p key={idx} className={idx === 0 ? "" : "pl-4"}>
           {idx === 0 ? line : `• ${line}`}

@@ -64,7 +64,7 @@ export function AuthorBadge({
 
       {/* Reputation */}
       {showReputation && author.reputation > 0 && (
-        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
           <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon} fill-warning`} />
           {author.reputation}
         </span>

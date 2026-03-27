@@ -348,7 +348,7 @@ export default function CompanyProfilePage() {
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:text-primary flex items-center gap-1"
+                    className="text-primary hover:text-primary flex items-center gap-2"
                   >
                     <Globe className="w-4 h-4" />
                     {profile.website}
@@ -361,7 +361,7 @@ export default function CompanyProfilePage() {
                   <label className="text-sm font-medium text-card-foreground block mb-1">
                     Location
                   </label>
-                  <p className="text-foreground flex items-center gap-1">
+                  <p className="text-foreground flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     {profile.location}
                   </p>
@@ -373,7 +373,7 @@ export default function CompanyProfilePage() {
                   <label className="text-sm font-medium text-card-foreground block mb-1">
                     Company Size
                   </label>
-                  <p className="text-foreground flex items-center gap-1">
+                  <p className="text-foreground flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </p>
@@ -385,7 +385,7 @@ export default function CompanyProfilePage() {
                   <label className="text-sm font-medium text-card-foreground block mb-1">
                     Industry
                   </label>
-                  <p className="text-foreground flex items-center gap-1">
+                  <p className="text-foreground flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-muted-foreground" />
                     {INDUSTRIES.find((i) => i.value === profile.industry)?.label ||
                       profile.industry}

@@ -15,7 +15,7 @@ function StepIndicator({
   status: "pending" | "active" | "done";
 }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-3">
       {status === "done" ? (
         <CheckCircle2 className="w-4 h-4 text-positive shrink-0" />
       ) : status === "active" ? (
@@ -77,7 +77,7 @@ export function ProposalSubmitSection({
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
             Transaction Progress
           </p>
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {hasGuild && (
               <>
                 <StepIndicator

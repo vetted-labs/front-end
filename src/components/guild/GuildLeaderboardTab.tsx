@@ -121,7 +121,7 @@ export function GuildLeaderboardTab({
                     >
                       {/* Rank with medal icons for top 3 and rank change indicators */}
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           {index === 0 && <span className="text-xl">🥇</span>}
                           {index === 1 && <span className="text-xl">🥈</span>}
                           {index === 2 && <span className="text-xl">🥉</span>}
@@ -194,7 +194,7 @@ export function GuildLeaderboardTab({
                 </p>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <span className="text-xl font-bold text-foreground">
                         #{leaderboardData.currentUser.rank}
                       </span>

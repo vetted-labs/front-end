@@ -118,7 +118,7 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
       </p>
 
       {/* Role & guilds */}
-      <div className="flex items-center gap-1.5 justify-center mt-2">
+      <div className="flex items-center gap-2 justify-center mt-2">
         <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-medium capitalize">
           {entry.role}
         </span>

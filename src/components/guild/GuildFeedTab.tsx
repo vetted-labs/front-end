@@ -120,7 +120,7 @@ export function GuildFeedTab({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         {/* Sort Controls — grouped pill bar */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex gap-[3px] p-[3px] bg-muted/20 rounded-lg border border-border">
+          <div className="flex gap-2 p-[3px] bg-muted/20 rounded-lg border border-border">
             {(["hot", "new", "top"] as const).map((mode) => {
               const icons = { hot: Flame, new: Clock, top: TrendingUp };
               const Icon = icons[mode];
@@ -128,7 +128,7 @@ export function GuildFeedTab({
                 <button
                   key={mode}
                   onClick={() => setSortMode(mode)}
-                  className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                     sortMode === mode
                       ? "bg-primary/[0.08] text-primary border border-primary/15"
                       : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-muted/20"
@@ -157,7 +157,7 @@ export function GuildFeedTab({
             {bookmarkCount > 0 && (
               <button
                 onClick={() => setShowBookmarked((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                   showBookmarked
                     ? "bg-primary/[0.08] text-primary border border-primary/15"
                     : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-muted/20"
@@ -173,7 +173,7 @@ export function GuildFeedTab({
           <div className="hidden sm:block w-px h-5 bg-border/60" />
 
           {/* Tag Filters */}
-          <div className="flex flex-wrap gap-[5px]">
+          <div className="flex flex-wrap gap-2">
             {TAG_OPTIONS.map((tag) => (
               <button
                 key={tag.value}
@@ -194,7 +194,7 @@ export function GuildFeedTab({
         {showNewPostButton && (
           <button
             onClick={() => setShowNewPost(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             New Post
@@ -211,7 +211,7 @@ export function GuildFeedTab({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="rounded-xl border border-border bg-card p-5 animate-pulse"
+              className="rounded-xl border border-border bg-card p-6 animate-pulse"
             >
               <div className="h-4 bg-muted rounded w-3/4 mb-3" />
               <div className="h-3 bg-muted rounded w-1/2 mb-2" />

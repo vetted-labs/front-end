@@ -47,7 +47,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
         </h2>
         <button
           onClick={() => router.push("/browse/jobs")}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:gap-2.5 transition-all"
+          className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:gap-3 transition-all"
         >
           Browse All Jobs
           <ArrowRight className="w-3.5 h-3.5" />
@@ -60,7 +60,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : displayedJobs.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5 animate-fade-up" style={{ animationDelay: "400ms" }}>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: "400ms" }}>
           {displayedJobs.map((job) => {
             const salary = (job.salary.min || job.salary.max) ? formatSalaryRange(job.salary) : null;
             const guildName = job.guild?.replace(/ Guild$/i, "") ?? "";
@@ -76,7 +76,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
               <div
                 key={job.id}
                 onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                className="bg-card border border-border rounded-lg p-5 cursor-pointer group hover:border-border hover:bg-card hover:-translate-y-px transition-all duration-250"
+                className="bg-card border border-border rounded-lg p-6 cursor-pointer group hover:border-border hover:bg-card hover:-translate-y-px transition-all duration-250"
               >
                 {/* Top meta */}
                 <div className="flex items-center justify-between mb-2.5">
@@ -95,7 +95,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
 
                 {/* Tags */}
                 {tags.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap mb-3.5">
+                  <div className="flex gap-2 flex-wrap mb-3.5">
                     {tags.map((tag) => (
                       <span key={tag} className="text-xs font-medium px-2 py-0.5 rounded bg-muted/30 text-muted-foreground/60">
                         {tag}
@@ -111,7 +111,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
                   ) : (
                     <span className="text-sm text-muted-foreground">Competitive</span>
                   )}
-                  <span className="text-xs text-muted-foreground/50 flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground/50 flex items-center gap-2">
                     <Clock className="w-3 h-3" />
                     {getTimeAgo(job.createdAt)}
                   </span>

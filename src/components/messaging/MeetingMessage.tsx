@@ -97,11 +97,11 @@ export function MeetingMessage({
         <div className="px-4 py-3 space-y-2">
           <p className="text-sm font-medium text-foreground">{meeting.title}</p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5" />
               {formattedDate} at {formattedTime}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
               {meeting.duration} min
             </span>
@@ -113,7 +113,7 @@ export function MeetingMessage({
           {/* Proposed new time info */}
           {meeting.response?.proposedTime && (
             <div className="mt-2 p-2 rounded-lg bg-info-blue/5 border border-info-blue/20">
-              <p className="text-xs font-medium text-info-blue flex items-center gap-1 mb-1">
+              <p className="text-xs font-medium text-info-blue flex items-center gap-2 mb-1">
                 <CalendarClock className="w-3 h-3" />
                 Proposed New Time
               </p>
@@ -145,7 +145,7 @@ export function MeetingMessage({
               <button
                 onClick={() => handleRespond("accepted")}
                 disabled={isResponding}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-positive/10 text-positive border border-positive/30 hover:bg-positive/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-positive/10 text-positive border border-positive/30 hover:bg-positive/20 transition-colors disabled:opacity-50"
               >
                 <Check className="w-3 h-3" />
                 Accept
@@ -153,7 +153,7 @@ export function MeetingMessage({
               <button
                 onClick={() => handleRespond("declined")}
                 disabled={isResponding}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-negative/40 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-negative/40 transition-colors disabled:opacity-50"
               >
                 <X className="w-3 h-3" />
                 Decline
@@ -162,7 +162,7 @@ export function MeetingMessage({
                 <button
                   onClick={() => onProposeNewTime(meetingId)}
                   disabled={isResponding}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-info-blue/40 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-info-blue/40 transition-colors disabled:opacity-50"
                 >
                   <CalendarClock className="w-3 h-3" />
                   New Time
@@ -174,7 +174,7 @@ export function MeetingMessage({
               href={meeting.meetingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
             >
               Join Meeting
               <ExternalLink className="w-3 h-3" />

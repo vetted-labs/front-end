@@ -155,9 +155,9 @@ export function ApplicationQuestionsSection({
                     </div>
                   )}
                   {question.parts && question.parts.length > 0 && (
-                    <div className="mt-3 text-sm text-muted-foreground space-y-1">
+                    <div className="mt-3 text-sm text-muted-foreground space-y-2">
                       <p className="font-medium">Address the following in your answer:</p>
-                      <ul className="list-disc pl-5 space-y-0.5">
+                      <ul className="list-disc pl-5 space-y-2">
                         {question.parts.map((part: QuestionPart) => (
                           <li key={part.id}>{part.label}</li>
                         ))}

@@ -186,7 +186,7 @@ export default function CompanyMessagesInbox() {
           {selectedConversation ? (
             <button
               onClick={() => setSelectedConversation(null)}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -255,7 +255,7 @@ export default function CompanyMessagesInbox() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-foreground truncate">
                           {selectedConversation.candidateName}
                         </p>
@@ -268,7 +268,7 @@ export default function CompanyMessagesInbox() {
                   </div>
                   <button
                     onClick={() => setShowScheduleModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     Schedule Meeting

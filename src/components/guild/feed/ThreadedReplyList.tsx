@@ -161,7 +161,7 @@ function ReplyNode({
 
   return (
     <div className={depth > 0 ? "ml-6 border-l-2 border-border pl-3" : ""}>
-      <div className="flex gap-2.5 rounded-lg border border-border bg-card p-3">
+      <div className="flex gap-3 rounded-lg border border-border bg-card p-4">
         <div className="flex-shrink-0">
           <VoteButton
             targetId={reply.id}
@@ -178,7 +178,7 @@ function ReplyNode({
               {formatTimeAgo(reply.createdAt)}
             </span>
             {reply.isAccepted && (
-              <span className={`flex items-center gap-1 text-xs font-medium ${STATUS_COLORS.positive.text}`}>
+              <span className={`flex items-center gap-2 text-xs font-medium ${STATUS_COLORS.positive.text}`}>
                 <CheckCircle2 className="w-3 h-3" />
                 Accepted
               </span>
@@ -191,7 +191,7 @@ function ReplyNode({
             {canReplyInline && (
               <button
                 onClick={() => setShowInlineReply((prev) => !prev)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <MessageSquare className="w-3 h-3" />
                 Reply
@@ -201,7 +201,7 @@ function ReplyNode({
             {canAccept && (
               <button
                 onClick={() => onAcceptAnswer(reply.id)}
-                className={`flex items-center gap-1 text-xs ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
+                className={`flex items-center gap-2 text-xs ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
               >
                 <CheckCircle2 className="w-3 h-3" />
                 Accept
@@ -223,7 +223,7 @@ function ReplyNode({
               <button
                 type="submit"
                 disabled={isSubmitting || !inlineReplyText.trim()}
-                className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-3 h-3" />
                 {isSubmitting ? "..." : "Reply"}
@@ -238,7 +238,7 @@ function ReplyNode({
         <button
           onClick={handleLoadChildren}
           disabled={loadingChildren}
-          className="mt-2 ml-6 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+          className="mt-2 ml-6 flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
         >
           <ChevronDown className="w-3 h-3" />
           {loadingChildren ? "Loading..." : `Show ${childCount} ${childCount === 1 ? "reply" : "replies"}`}
@@ -251,7 +251,7 @@ function ReplyNode({
           {!showChildren && (
             <button
               onClick={() => setShowChildren(true)}
-              className="mt-2 ml-6 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+              className="mt-2 ml-6 flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
             >
               <ChevronDown className="w-3 h-3" />
               Show {loadedChildren.length} {loadedChildren.length === 1 ? "reply" : "replies"}

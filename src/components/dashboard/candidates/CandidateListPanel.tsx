@@ -123,7 +123,7 @@ export function CandidateListPanel({
         </div>
 
         {/* Filters */}
-        <div className="flex gap-1.5 mb-2">
+        <div className="flex gap-2 mb-2">
           <select
             value={filterGuild}
             onChange={(e) => onGuildFilterChange(e.target.value)}
@@ -152,7 +152,7 @@ export function CandidateListPanel({
         </div>
 
         {/* Sort + expand/collapse */}
-        <div className="flex items-center gap-1.5 pb-2.5 border-b border-border/20 dark:border-border">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-border/20 dark:border-border">
           <span className="text-xs font-medium text-muted-foreground/40">Sort:</span>
           <select
             value={sortBy}
@@ -170,7 +170,7 @@ export function CandidateListPanel({
             <option value="name">Name A-Z</option>
           </select>
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
             <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications}</span>
             <button
               type="button"

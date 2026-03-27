@@ -38,7 +38,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
             <CheckCircle2 className="w-4 h-4 text-primary" />
             Requirements
           </div>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col gap-3">
             {job.requirements.map((req, index) => (
               <li
                 key={index}
@@ -81,7 +81,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
             {job.screeningQuestions.map((question, index) => (
               <div
                 key={index}
-                className="p-5 rounded-xl bg-muted/10 border border-border"
+                className="p-6 rounded-xl bg-muted/10 border border-border"
               >
                 <div className="text-xs font-bold uppercase tracking-[1.2px] text-primary mb-2">
                   Question {index + 1}

@@ -118,7 +118,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
                   Areas for Improvement
                 </p>
               </div>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {feedback.improvementAreas.map((area, i) => (
                   <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />

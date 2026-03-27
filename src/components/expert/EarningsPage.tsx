@@ -171,7 +171,7 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         {/* ── Page header ── */}
         <div>
@@ -202,7 +202,7 @@ export default function EarningsPage() {
 
         {/* ── Time range filter pills ── */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1 p-1 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border">
+          <div className="flex gap-2 p-1 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border">
             {(["day", "week", "month", "all"] as TimeRange[]).map((range) => (
               <button
                 key={range}

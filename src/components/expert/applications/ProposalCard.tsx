@@ -34,11 +34,11 @@ export function ProposalCard({
           : null;
 
   return (
-    <div className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 dark:hover:border-border">
+    <div className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/30 dark:hover:border-border">
       {/* Top row: name + badges + actions */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <h3
               className="text-sm font-bold text-foreground hover:text-primary cursor-pointer transition-colors truncate"
               onClick={() => router.push(`/expert/voting/applications/${proposal.id}`)}
@@ -70,7 +70,7 @@ export function ProposalCard({
               <Badge className={`text-xs shrink-0 ${STATUS_COLORS.info.bg}`}>Tiebreaker</Badge>
             )}
             {hasVoted && (
-              <span className={`inline-flex items-center gap-1 text-xs ${STATUS_COLORS.positive.text}`}>
+              <span className={`inline-flex items-center gap-2 text-xs ${STATUS_COLORS.positive.text}`}>
                 <CheckCircle className="w-3 h-3" />
                 Voted
               </span>
@@ -115,12 +115,12 @@ export function ProposalCard({
           <CountdownBadge deadline={proposal.voting_deadline} label="Vote" />
         )}
         {isFinalized && proposal.finalized_at && (
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-2">
             <CheckCircle className="w-3.5 h-3.5" />
             Finalized {new Date(proposal.finalized_at).toLocaleDateString()}
           </span>
         )}
-        <span className="inline-flex items-center gap-1">
+        <span className="inline-flex items-center gap-2">
           <Users className="w-3.5 h-3.5" />
           {proposal.vote_count}{proposal.assigned_reviewer_count != null ? `/${proposal.assigned_reviewer_count}` : ""} votes
         </span>

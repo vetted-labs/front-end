@@ -118,16 +118,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
 
           {/* Row 3: Date + review count + job title + links */}
           <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
               {new Date(application.appliedAt).toLocaleDateString()}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-2">
               <Users className="w-3.5 h-3.5" />
               {application.reviewCount} reviewed
             </span>
             {(application.currentTitle || application.currentCompany) && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-2">
                 <Briefcase className="w-3.5 h-3.5" />
                 {application.currentTitle}
                 {application.currentTitle && application.currentCompany && " at "}
@@ -140,7 +140,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 href={application.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-primary/70 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 LinkedIn <ExternalLink className="w-3 h-3" />
@@ -151,7 +151,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 href={getAssetUrl(application.resumeUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-primary/70 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-2 text-primary/70 hover:text-primary transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 <FileText className="w-3 h-3" />
@@ -167,14 +167,14 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
+                className={`inline-flex items-center gap-2 ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <ShieldCheck className="w-3 h-3" />
                 On-chain <ExternalLink className="w-3 h-3" />
               </a>
             )}
-            <span className={`inline-flex items-center gap-1.5 font-medium ${
+            <span className={`inline-flex items-center gap-2 font-medium ${
               vettingState === "finalized" || vettingState === "revealed"
                 ? STATUS_COLORS.positive.text
                 : vettingState === "committed"
@@ -195,7 +195,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
           {/* Commit-reveal phase + timer */}
           {isCommitReveal && (
             <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
-              <span className={`inline-flex items-center gap-1 font-medium ${phaseColor[phase!] ?? "text-muted-foreground"}`}>
+              <span className={`inline-flex items-center gap-2 font-medium ${phaseColor[phase!] ?? "text-muted-foreground"}`}>
                 <ShieldCheck className="w-3 h-3" />
                 {phaseLabel[phase!] ?? phase}
               </span>
@@ -212,7 +212,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
             onViewReview ? (
               <button
                 onClick={() => onViewReview(application)}
-                className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 View
                 <ChevronRight className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
           ) : (
             <button
               onClick={() => onReview(application)}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Review
               <ChevronRight className="w-4 h-4" />

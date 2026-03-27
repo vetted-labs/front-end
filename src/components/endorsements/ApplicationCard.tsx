@@ -124,7 +124,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
       {/* Top section: Avatar with match ring + candidate info */}
-      <div className="flex items-start gap-3.5 px-5 pt-5">
+      <div className="flex items-start gap-4 px-5 pt-5">
         <MatchScoreAvatar
           score={guildScore}
           initials={candidateInitials}
@@ -140,7 +140,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </p>
           {/* Skills */}
           {skillsArray.length > 0 && (
-            <div className="flex gap-1.5 mt-2 flex-wrap">
+            <div className="flex gap-2 mt-2 flex-wrap">
               {skillsArray.slice(0, 3).map((skill: string, idx: number) => (
                 <span
                   key={idx}
@@ -176,8 +176,8 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       </div>
 
       {/* Deadline bar */}
-      <div className="px-5 py-2.5 bg-card flex items-center justify-between gap-2.5">
-        <span className={`inline-flex items-center gap-1.5 font-mono text-xs font-medium ${
+      <div className="px-5 py-2.5 bg-card flex items-center justify-between gap-3">
+        <span className={`inline-flex items-center gap-2 font-mono text-xs font-medium ${
           isBlindBidding ? 'text-warning' : isExpired ? 'text-muted-foreground' : hoursLeft < 6 ? 'text-primary' : 'text-muted-foreground'
         }`}>
           {isBlindBidding ? (
@@ -201,7 +201,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       </div>
 
       {/* Action buttons */}
-      <div className="px-5 py-3.5 flex gap-2.5 mt-auto">
+      <div className="px-5 py-3.5 flex gap-3 mt-auto">
         <Button
           variant="ghost"
           className="flex-1 h-10 rounded-lg border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"

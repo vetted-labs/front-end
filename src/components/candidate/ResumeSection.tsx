@@ -60,7 +60,7 @@ export default function ResumeSection({
                 <p className="text-xs text-muted-foreground">Uploaded</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <a
                 href={getAssetUrl(resumeUrl)}
                 target="_blank"

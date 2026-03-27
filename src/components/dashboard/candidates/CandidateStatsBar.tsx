@@ -41,7 +41,7 @@ export function CandidateStatsBar({
             type="button"
             onClick={() => onFilterClick?.(stat.key === activeFilter ? "all" : stat.key)}
             className={cn(
-              "flex items-center gap-1.5 text-xs text-muted-foreground rounded-md px-1.5 py-0.5 transition-all",
+              "flex items-center gap-2 text-xs text-muted-foreground rounded-md px-1.5 py-0.5 transition-all",
               onFilterClick && "hover:bg-muted/30 cursor-pointer",
               !onFilterClick && "cursor-default",
               activeFilter === stat.key && stat.key !== "all" && "ring-1 ring-primary/30 bg-primary/[0.04]"

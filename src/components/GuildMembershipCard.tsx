@@ -42,7 +42,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
       >
         {/* Branded Guild Header - Compact */}
         <div className="bg-secondary/50 dark:bg-muted/50 px-4 py-3 rounded-t-xl border-b border-border">
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-3">
             {/* Guild Icon Badge with Nested Gradients */}
             <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
               <GuildIcon className="w-5 h-5 text-muted-foreground" />
@@ -65,10 +65,10 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
 
         {/* Hero Stats Section - Compact */}
         <div className="p-4">
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {/* Reputation - Primary Metric */}
             <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-2 mb-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reputation</p>
               </div>
@@ -77,7 +77,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
 
             {/* Earnings - Primary Metric */}
             <div className="bg-secondary dark:bg-muted rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-2 mb-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Earned</p>
               </div>
@@ -89,7 +89,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
         {/* Simplified Footer - Compact */}
         {guild.joinedAt && (
           <div className="px-4 pb-3 pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
               <Calendar className="w-3 h-3" />
               Member since {formatDate(guild.joinedAt)}
             </p>
@@ -172,12 +172,12 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
       {/* Minimal Footer */}
       <div className="px-5 pb-4 pt-3 border-t border-border">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Users className="w-3.5 h-3.5" />
             <span>{guild.memberCount} members</span>
           </div>
           {guild.joinedAt && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5" />
               <span>Since {formatDate(guild.joinedAt)}</span>
             </div>

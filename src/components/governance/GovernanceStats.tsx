@@ -35,13 +35,13 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
     <div className="space-y-10 mb-16">
       {/* ─── Stats Grid ─── */}
       <div>
-        <div className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight mb-5">
+        <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight mb-5">
           Governance Overview
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Participation Ring */}
-          <div className="relative rounded-xl border border-border bg-card p-7 text-center overflow-hidden">
+          <div className="relative rounded-xl border border-border bg-card p-6 text-center overflow-hidden">
             <div className="absolute inset-0 bg-transparent pointer-events-none" />
             <div className="relative w-16 h-16 mx-auto mb-2.5">
               <svg width="64" height="64" viewBox="0 0 64 64">
@@ -111,7 +111,7 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
       {stats.votedProposals.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+            <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
               Your Recent Votes
             </div>
             <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium font-mono ${STATUS_COLORS.positive.badge}`}>
@@ -119,7 +119,7 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             {stats.votedProposals.map((p) => {
               const voteType = p.my_vote as "for" | "against" | "abstain" | undefined;
               const isPassed = p.outcome === "passed" || p.status === "passed";
@@ -139,7 +139,7 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
                     #{p.id.slice(0, 6)} {p.title}
                   </p>
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${
+                    className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${
                       voteType === "for"
                         ? STATUS_COLORS.positive.badge
                         : voteType === "against"
@@ -189,7 +189,7 @@ function StatCard({
   sub: string;
 }) {
   return (
-    <div className="relative rounded-xl border border-border bg-card p-7 text-center overflow-hidden">
+    <div className="relative rounded-xl border border-border bg-card p-6 text-center overflow-hidden">
       <div className="absolute inset-0 bg-transparent pointer-events-none" />
       <div className={`w-11 h-11 rounded-xl ${STAT_ICON.bg} border border-primary/25 flex items-center justify-center mx-auto mb-3.5 ${STAT_ICON.text}`}>
         {icon}

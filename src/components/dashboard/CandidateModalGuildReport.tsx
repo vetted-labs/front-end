@@ -34,7 +34,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Guild Review Summary
           </p>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+          <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded text-xs font-medium border ${
             guildApplication.guildApproved
               ? STATUS_COLORS.positive.badge
               : guildApplication.status === "rejected"
@@ -77,14 +77,14 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
-                    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+                    <span className={`inline-flex items-center gap-2 text-xs font-medium ${
                       review.vote === "approve" ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                     }`}>
                       {review.vote === "approve" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                       {review.vote === "approve" ? "Approved" : "Rejected"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
                     <span className="text-xs font-medium text-foreground">{review.overallScore}</span>
                   </div>

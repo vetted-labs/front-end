@@ -64,7 +64,7 @@ export function TeamMemberList({ members, isLoading, onUpdateRole, onRemove, isU
             </div>
 
             <span className={cn(
-              "inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border flex-shrink-0",
+              "inline-flex items-center gap-2 px-2 py-0.5 rounded text-xs font-medium border flex-shrink-0",
               roleConfig.className
             )}>
               <RoleIcon className="w-3 h-3" />

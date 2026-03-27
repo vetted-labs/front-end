@@ -36,7 +36,7 @@ export function PromotionProgressCard({
   // Already at max rank
   if (currentIndex >= GUILD_RANK_ORDER.length - 1) {
     return (
-      <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-5`}>
+      <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-6`}>
         <div className="flex items-center gap-2 mb-1">
           <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -94,7 +94,7 @@ export function PromotionProgressCard({
   const allMet = metCount === checks.length;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
@@ -118,7 +118,7 @@ export function PromotionProgressCard({
       {/* Criteria checklist */}
       <div className="space-y-2">
         {checks.map((check) => (
-          <div key={check.label} className="flex items-center gap-2.5">
+          <div key={check.label} className="flex items-center gap-3">
             {check.met ? (
               <CheckCircle2 className={`w-4 h-4 ${STATUS_COLORS.positive.icon} shrink-0`} />
             ) : (

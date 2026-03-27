@@ -63,7 +63,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Link
           href="/browse/jobs"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 flex items-center gap-1.5"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 flex items-center gap-2"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Browse Jobs
@@ -71,7 +71,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
 
         {/* Company Header */}
         <div className="rounded-xl border border-border bg-card p-6 mb-6">
-          <div className="flex items-start gap-5">
+          <div className="flex items-start gap-6">
             {profile.logoUrl ? (
               <img
                 src={getAssetUrl(profile.logoUrl)}
@@ -93,19 +93,19 @@ export default function CompanyPublicProfilePage({ params }: Props) {
 
               <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground mt-2">
                 {profile.location && (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-2">
                     <MapPin className="w-3.5 h-3.5" />
                     {profile.location}
                   </span>
                 )}
                 {profile.industry && (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-2">
                     <Briefcase className="w-3.5 h-3.5" />
                     {INDUSTRIES.find((i) => i.value === profile.industry)?.label || profile.industry}
                   </span>
                 )}
                 {profile.size && (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-2">
                     <Users className="w-3.5 h-3.5" />
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </span>
@@ -115,7 +115,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                    className="inline-flex items-center gap-2 text-primary hover:underline"
                   >
                     <Globe className="w-3.5 h-3.5" />
                     Website
@@ -125,7 +125,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
               </div>
 
               {profile.createdAt && (
-                <p className="text-xs text-muted-foreground/60 mt-2 flex items-center gap-1">
+                <p className="text-xs text-muted-foreground/60 mt-2 flex items-center gap-2">
                   <Calendar className="w-3 h-3" />
                   Member since {new Date(profile.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 </p>

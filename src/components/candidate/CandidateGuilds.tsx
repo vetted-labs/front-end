@@ -173,7 +173,7 @@ export default function CandidateGuilds() {
                       </div>
                     </div>
                     {/* Status badge top-right */}
-                    <div className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.className}`}>
+                    <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.className}`}>
                       <StatusIcon className="w-3 h-3" />
                       {statusStyle.label}
                     </div>
@@ -192,12 +192,12 @@ export default function CandidateGuilds() {
                     {/* Review progress (if available) */}
                     {((app.reviewCount ?? 0) > 0 || (app.approvalCount ?? 0) > 0) && (
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-2">
                           <Eye className="w-3 h-3" />
                           {app.reviewCount || 0} review{(app.reviewCount || 0) !== 1 ? "s" : ""}
                         </span>
                         {(app.approvalCount ?? 0) > 0 && (
-                          <span className={`flex items-center gap-1 ${STATUS_COLORS.positive.text}`}>
+                          <span className={`flex items-center gap-2 ${STATUS_COLORS.positive.text}`}>
                             <Star className="w-3 h-3" />
                             {app.approvalCount} approval{app.approvalCount !== 1 ? "s" : ""}
                           </span>
@@ -210,7 +210,7 @@ export default function CandidateGuilds() {
                       <span className="text-xs text-muted-foreground/60">
                         Applied {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
                       </span>
-                      <span className="text-xs text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs text-primary flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         View Guild <ChevronRight className="w-3 h-3" />
                       </span>
                     </div>

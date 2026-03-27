@@ -78,7 +78,7 @@ function CandidateProfileSection({
               href={ensureHttps(profile.linkedIn)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
             >
               <Linkedin className="w-4 h-4" />
               LinkedIn
@@ -89,7 +89,7 @@ function CandidateProfileSection({
               href={ensureHttps(profile.github)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
             >
               <Github className="w-4 h-4" />
               GitHub
@@ -100,7 +100,7 @@ function CandidateProfileSection({
               href={`${API_URL}/api/candidates/${candidateId}/resume`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
             >
               <FileText className="w-4 h-4" />
               Resume / CV
@@ -112,7 +112,7 @@ function CandidateProfileSection({
               href={ensureHttps(link.url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-border bg-card hover:border-primary/30 hover:text-primary transition-colors"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               {link.label || link.platform}
@@ -138,7 +138,7 @@ function CandidateQuickLinks({
   if (!hasAnyLink) return null;
 
   return (
-    <div className="flex items-center gap-1.5 mt-2">
+    <div className="flex items-center gap-2 mt-2">
       {profile.linkedIn && (
         <a
           href={ensureHttps(profile.linkedIn)}
@@ -286,7 +286,7 @@ export default function VotingApplicationPage({
         {/* -- Back link -- */}
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Applications

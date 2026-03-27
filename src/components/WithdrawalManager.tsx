@@ -255,7 +255,7 @@ export function WithdrawalManager({
               {!canCompleteUnstake ? (
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       Cooldown Period
                     </span>

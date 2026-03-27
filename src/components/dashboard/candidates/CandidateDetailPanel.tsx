@@ -171,7 +171,7 @@ export function CandidateDetailPanel({
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <span className="text-xs text-muted-foreground flex items-center gap-2">
               <Calendar className="w-3 h-3" />
               Applied {appliedDate}
             </span>
@@ -231,9 +231,9 @@ export function CandidateDetailPanel({
       {/* Tab Content (scrollable) */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {activeTab === "profile" && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Applied For — hero card */}
-            <div className="rounded-xl border border-border bg-muted/30 p-5">
+            <div className="rounded-xl border border-border bg-muted/30 p-6">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
               <p className="text-sm font-medium text-foreground">{job.title}</p>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
@@ -295,12 +295,12 @@ export function CandidateDetailPanel({
               <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2.5">Contact</p>
                 <div className="space-y-2">
-                  <a href={`mailto:${candidate.email}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                  <a href={`mailto:${candidate.email}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
                     <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="truncate">{candidate.email}</span>
                   </a>
                   {candidate.phone && (
-                    <a href={`tel:${candidate.phone}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                    <a href={`tel:${candidate.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
                       <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />{candidate.phone}
                     </a>
                   )}
@@ -315,18 +315,18 @@ export function CandidateDetailPanel({
                     {candidate.socialLinks?.filter((l) => l.url?.trim()).map((link, idx) => {
                       const Icon = getPlatformIcon(link.platform);
                       return (
-                        <a key={idx} href={ensureHttps(link.url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                        <a key={idx} href={ensureHttps(link.url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
                           <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />{link.label || link.platform}
                         </a>
                       );
                     })}
                     {!candidate.socialLinks?.length && candidate.linkedIn && (
-                      <a href={ensureHttps(candidate.linkedIn)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                      <a href={ensureHttps(candidate.linkedIn)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
                         <Linkedin className="w-4 h-4 text-muted-foreground flex-shrink-0" />LinkedIn
                       </a>
                     )}
                     {!candidate.socialLinks?.length && candidate.github && (
-                      <a href={ensureHttps(candidate.github)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
+                      <a href={ensureHttps(candidate.github)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors">
                         <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />GitHub
                       </a>
                     )}
@@ -338,7 +338,7 @@ export function CandidateDetailPanel({
         )}
 
         {activeTab === "application" && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="rounded-lg border border-border p-4 bg-muted/20">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
               <p className="text-sm font-medium text-foreground">{job.title}</p>
@@ -383,7 +383,7 @@ export function CandidateDetailPanel({
         )}
 
         {activeTab === "guild-report" && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {guildReportLoading ? (
               <div className="flex items-center justify-center py-10">
                 <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -405,7 +405,7 @@ export function CandidateDetailPanel({
                 <div className="rounded-lg border border-border p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Guild Review Summary</p>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                    <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded text-xs font-medium border ${
                       guildReport.guildApplication.guildApproved
                         ? STATUS_COLORS.positive.badge
                         : guildReport.guildApplication.status === "rejected"
@@ -445,14 +445,14 @@ export function CandidateDetailPanel({
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
-                              <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+                              <span className={`inline-flex items-center gap-2 text-xs font-medium ${
                                 review.vote === "approve" ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                               }`}>
                                 {review.vote === "approve" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                 {review.vote === "approve" ? "Approved" : "Rejected"}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
                               <span className="text-xs font-medium text-foreground">{review.overallScore}</span>
                             </div>

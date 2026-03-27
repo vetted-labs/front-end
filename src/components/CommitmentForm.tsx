@@ -130,7 +130,7 @@ export function CommitmentForm({
   const sessionPending = !!blockchainSessionId && !blockchainSessionCreated;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Session pending notice */}
       {sessionPending && (
         <div className={`flex items-start gap-3 rounded-xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle} p-3`}>

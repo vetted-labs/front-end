@@ -116,7 +116,7 @@ export function StatusTimeline({ history }: StatusTimelineProps) {
       {/* Timeline line */}
       <div className="absolute left-[23px] top-0 bottom-0 w-px bg-border/60 dark:bg-muted/40" />
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {history.map((entry) => (
           <TimelineEntry key={entry.id} entry={entry} />
         ))}

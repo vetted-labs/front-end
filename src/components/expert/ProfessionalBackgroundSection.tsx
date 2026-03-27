@@ -187,7 +187,7 @@ export function ProfessionalBackgroundSection({
             {expertiseAreas.map((area, index) => (
               <div
                 key={index}
-                className="inline-flex items-center gap-1 px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-full text-sm"
+                className="inline-flex items-center gap-2 px-3 py-1 bg-primary/30 text-primary border border-primary/50 dark:bg-primary/40 dark:border-primary/70 rounded-full text-sm"
               >
                 <span>{area}</span>
                 <button

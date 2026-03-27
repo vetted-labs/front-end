@@ -126,7 +126,7 @@ function ImpactRow({
 
         {/* Vote details grid */}
         {isProposalVote && (
-          <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/50 dark:bg-muted/20 px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Your Vote</p>
               <p className="text-sm font-medium tabular-nums mt-0.5">{entry.vote_score}</p>

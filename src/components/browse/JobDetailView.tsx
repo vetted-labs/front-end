@@ -261,18 +261,18 @@ export default function JobDetailView() {
           {/* ---- LEFT COLUMN ---- */}
           <div className="flex flex-col gap-6">
             {/* Job Header Card */}
-            <div className="bg-card rounded-xl border border-border p-7 sm:p-9 transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border p-6 sm:p-8 transition-colors hover:border-border">
               <JobHeader job={job} />
             </div>
 
             {/* Job Description / Requirements / Skills / Screening */}
-            <div className="bg-card rounded-xl border border-border p-7 sm:p-9 transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border p-6 sm:p-8 transition-colors hover:border-border">
               <JobRequirements job={job} />
             </div>
           </div>
 
           {/* ---- RIGHT COLUMN (sticky sidebar) ---- */}
-          <div className="lg:sticky lg:top-6 flex flex-col gap-5">
+          <div className="lg:sticky lg:top-6 flex flex-col gap-6">
 
             {/* Already Applied / Accepted */}
             {hasAlreadyApplied && existingApplication.status === "accepted" && (
@@ -296,7 +296,7 @@ export default function JobDetailView() {
                 </p>
                 <button
                   onClick={() => router.push("/candidate/applications")}
-                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
+                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-2"
                 >
                   <ClipboardList className="w-4 h-4" />
                   View My Applications &rarr;
@@ -325,7 +325,7 @@ export default function JobDetailView() {
                 </div>
                 <button
                   onClick={() => router.push("/candidate/applications")}
-                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-1"
+                  className="text-sm text-primary hover:text-primary font-medium flex items-center gap-2"
                 >
                   <ClipboardList className="w-4 h-4" />
                   View My Applications &rarr;
@@ -346,7 +346,7 @@ export default function JobDetailView() {
                       {formatSalaryRange(job.salary)}
                     </div>
                     {job.equityOffered && (
-                      <div className="flex items-center gap-1.5 text-sm text-primary font-medium mb-5">
+                      <div className="flex items-center gap-2 text-sm text-primary font-medium mb-5">
                         <Layers className="w-3.5 h-3.5" />
                         + Equity {job.equityRange && `(${job.equityRange})`}
                       </div>
@@ -470,21 +470,21 @@ export default function JobDetailView() {
               </div>
               <div className="flex flex-col gap-3">
                 {job.department && (
-                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Layers className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
                     {job.department}
                   </div>
                 )}
-                <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <MapPin className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
                   {job.location}
                 </div>
-                <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <Globe className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
                   {job.locationType ? job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1) : "Remote"}
                 </div>
                 {job.experienceLevel && (
-                  <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <TrendingUp className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
                     {job.experienceLevel.charAt(0).toUpperCase() + job.experienceLevel.slice(1)}
                   </div>
@@ -518,7 +518,7 @@ export default function JobDetailView() {
                   return (
                     <Link
                       href={`/guilds/${guildUuid}`}
-                      className="flex items-center gap-1.5 text-sm text-primary font-medium hover:gap-2.5 transition-all pt-3.5 border-t border-border"
+                      className="flex items-center gap-2 text-sm text-primary font-medium hover:gap-3 transition-all pt-3.5 border-t border-border"
                     >
                       View Guild Profile
                       <ArrowRight className="w-3.5 h-3.5" />

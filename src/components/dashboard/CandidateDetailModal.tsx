@@ -170,7 +170,7 @@ export function CandidateDetailModal({
           <div className="flex items-center gap-3 mt-3 flex-wrap">
             <a
               href={`mailto:${candidate.email}`}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <Mail className="w-3 h-3" />
               {candidate.email}
@@ -178,7 +178,7 @@ export function CandidateDetailModal({
             {candidate.phone && (
               <a
                 href={`tel:${candidate.phone}`}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="w-3 h-3" />
                 {candidate.phone}
@@ -196,7 +196,7 @@ export function CandidateDetailModal({
                         href={ensureHttps(link.url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <Icon className="w-3 h-3" />
                         {link.label}
@@ -210,7 +210,7 @@ export function CandidateDetailModal({
                       href={ensureHttps(candidate.linkedIn)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Linkedin className="w-3 h-3" />
                       LinkedIn
@@ -221,7 +221,7 @@ export function CandidateDetailModal({
                       href={ensureHttps(candidate.github)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Github className="w-3 h-3" />
                       GitHub
@@ -246,7 +246,7 @@ export function CandidateDetailModal({
 
           {/* Application Tab */}
           {activeTab === "application" && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               {/* Position summary */}
               <div className="rounded-lg border border-border p-4 bg-muted/20">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
@@ -317,7 +317,7 @@ export function CandidateDetailModal({
 
           {/* Guild Report Tab */}
           {activeTab === "guild-report" && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <CandidateModalGuildReport guildReport={guildReport} />
             </div>
           )}
@@ -381,7 +381,7 @@ export function CandidateDetailModal({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground flex items-center gap-2">
               <Calendar className="w-3 h-3" />
               Applied{" "}
               {new Date(application.appliedAt).toLocaleDateString("en-US", {

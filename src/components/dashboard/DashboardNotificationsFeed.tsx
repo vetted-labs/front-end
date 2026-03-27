@@ -76,7 +76,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
         </div>
         <div className="flex items-center gap-2">
           {/* Filter pills */}
-          <div className="flex items-center gap-1 mr-2">
+          <div className="flex items-center gap-2 mr-2">
             <button
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${
@@ -135,7 +135,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
           </div>
         ) : (
           <div
-            className="relative pl-5 border-l-2 border-border space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+            className="relative pl-5 border-l-2 border-border space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
             style={{ maxHeight: "360px" }}
           >
             {displayed.map((notification) => {
@@ -173,7 +173,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <p className={`text-sm leading-snug ${isUnread ? "font-medium text-foreground" : "text-foreground"}`}>
                             {notification.title}
                           </p>
@@ -186,7 +186,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                           {notification.message}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground/70">
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground/70">
                           {notification.guildName && (
                             <>
                               <span className="font-medium">{notification.guildName}</span>

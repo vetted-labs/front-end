@@ -188,7 +188,7 @@ interface DialogHeaderProps {
 
 export function DialogHeader({ children, className }: DialogHeaderProps) {
   return (
-    <div className={cn("flex flex-col space-y-1.5 p-6 border-b border-border", className)}>
+    <div className={cn("flex flex-col space-y-2 p-6 border-b border-border", className)}>
       {children}
     </div>
   );

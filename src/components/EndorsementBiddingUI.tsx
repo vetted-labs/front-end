@@ -136,7 +136,7 @@ export function EndorsementBiddingUI({
           <Info className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
           <div>
             <h3 className="font-medium text-foreground mb-2">How Endorsement Bidding Works</h3>
-            <ul className="text-sm text-card-foreground space-y-1">
+            <ul className="text-sm text-card-foreground space-y-2">
               <li>• <strong>Only top 3 bids</strong> per candidate secure endorsement slots</li>
               <li>• <strong>Non-selected bids are refunded</strong> automatically (no loss)</li>
               <li>• <strong>If hired:</strong> Share reward pool proportional to your bid</li>
@@ -202,7 +202,7 @@ export function EndorsementBiddingUI({
                       {app.currentEndorsements.map((endorsement, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between bg-card rounded-lg p-3 border border-border"
+                          className="flex items-center justify-between bg-card rounded-lg p-4 border border-border"
                         >
                           <div className="flex items-center gap-3">
                             <div

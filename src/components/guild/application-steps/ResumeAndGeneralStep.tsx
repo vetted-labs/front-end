@@ -267,11 +267,11 @@ export default function ResumeAndGeneralStep({
               </div>
 
               {q.hints && q.hints.length > 0 && (
-                <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 space-y-1">
+                <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 space-y-2">
                   <p className="font-medium">
                     Address the following in your answer:
                   </p>
-                  <ul className="list-disc pl-5 space-y-0.5">
+                  <ul className="list-disc pl-5 space-y-2">
                     {q.hints.map((hint, i) => (
                       <li key={i}>{hint}</li>
                     ))}

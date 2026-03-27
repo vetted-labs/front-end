@@ -222,7 +222,7 @@ export default function JobsListing() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <section className="text-center py-16 sm:py-20 relative">
-          <div className="inline-flex items-center gap-1.5 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">
+          <div className="inline-flex items-center gap-2 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">
             <Search className="w-3.5 h-3.5" />
             {totalJobCount} Open Positions
           </div>
@@ -262,7 +262,7 @@ export default function JobsListing() {
         <div className="mb-7">
           <div className="flex items-center gap-3 flex-wrap">
             {/* Guild Filter Group */}
-            <div className="inline-flex items-center gap-0.5 bg-card border border-border rounded-full p-1">
+            <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
               <button
                 onClick={() => {
                   if (selectedGuilds.length > 0) setSelectedGuilds([]);
@@ -294,7 +294,7 @@ export default function JobsListing() {
             <div className="w-px h-6 bg-border/60 flex-shrink-0" />
 
             {/* Job Type Group */}
-            <div className="inline-flex items-center gap-0.5 bg-card border border-border rounded-full p-1">
+            <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
               {JOB_TYPES.slice(0, 3).map((type) => (
                 <button
                   key={type}
@@ -314,7 +314,7 @@ export default function JobsListing() {
             <div className="w-px h-6 bg-border/60 flex-shrink-0" />
 
             {/* Location Group */}
-            <div className="inline-flex items-center gap-0.5 bg-card border border-border rounded-full p-1">
+            <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
               {LOCATION_TYPES.map((type) => (
                 <button
                   key={type}
@@ -333,7 +333,7 @@ export default function JobsListing() {
             {/* More Filters Button */}
             <button
               onClick={() => setShowAllGuildsModal(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground bg-card border border-border hover:border-border transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground bg-card border border-border hover:border-border transition-all"
             >
               <Filter className="w-3.5 h-3.5" />
               More
@@ -343,7 +343,7 @@ export default function JobsListing() {
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilterSelections}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-destructive transition-all"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-destructive transition-all"
               >
                 <X className="w-3.5 h-3.5" />
                 Clear filters

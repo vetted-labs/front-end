@@ -28,7 +28,7 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
                 </span>
               </div>
               <div className="text-right">
-                <div className="flex items-center gap-1 text-primary mb-1">
+                <div className="flex items-center gap-2 text-primary mb-1">
                   <Star className="w-4 h-4 fill-current" />
                   <span className="font-bold">{candidate.reputation || 0}</span>
                 </div>

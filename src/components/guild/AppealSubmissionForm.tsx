@@ -228,7 +228,7 @@ export function AppealSubmissionForm({
               <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>staked</span>
             </div>
 
-            <div className="space-y-1 text-sm text-muted-foreground">
+            <div className="space-y-2 text-sm text-muted-foreground">
               <p>A panel of senior guild members will review your justification.</p>
               <p>You&apos;ll be notified when a decision is reached.</p>
             </div>
@@ -260,7 +260,7 @@ export function AppealSubmissionForm({
                 <h4 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                   Appeal Context
                 </h4>
-                <dl className="space-y-1 text-sm">
+                <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Guild</dt>
                     <dd className="font-medium">{guildName}</dd>
@@ -310,7 +310,7 @@ export function AppealSubmissionForm({
               <div className="space-y-3 text-xs text-muted-foreground">
                 <div>
                   <p className={`font-medium ${STATUS_COLORS.positive.text} mb-0.5`}>If appeal succeeds</p>
-                  <ul className="space-y-0.5 pl-3">
+                  <ul className="space-y-2 pl-3">
                     <li>&bull; Stake returned</li>
                     <li>&bull; Application re-reviewed</li>
                     <li>&bull; Reputation earned</li>
@@ -318,7 +318,7 @@ export function AppealSubmissionForm({
                 </div>
                 <div>
                   <p className={`font-medium ${STATUS_COLORS.negative.text} mb-0.5`}>If appeal fails</p>
-                  <ul className="space-y-0.5 pl-3">
+                  <ul className="space-y-2 pl-3">
                     <li>&bull; Stake forfeited</li>
                     <li>&bull; Reputation penalty</li>
                     <li>&bull; No further appeals</li>

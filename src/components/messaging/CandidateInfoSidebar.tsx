@@ -92,7 +92,7 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
             href={getAssetUrl(conversation.candidateResumeUrl)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-medium w-full text-center hover:bg-primary/15 transition-colors"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-medium w-full text-center hover:bg-primary/15 transition-colors"
           >
             <FileText className="w-3.5 h-3.5" />
             View Resume

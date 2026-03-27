@@ -39,7 +39,7 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
           <div
             key={stat.label}
             className={cn(
-              "px-4 py-3 flex items-center gap-2.5",
+              "px-4 py-3 flex items-center gap-3",
               i < stats.length - 1 && "border-r border-border"
             )}
           >

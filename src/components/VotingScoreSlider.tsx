@@ -146,7 +146,7 @@ export function VotingScoreSlider({
           <summary className="cursor-pointer font-medium text-foreground mb-1">
             Scoring Guidelines
           </summary>
-          <div className="space-y-1 mt-2 pl-1">
+          <div className="space-y-2 mt-2 pl-1">
             <p><strong>0-30:</strong> Strong rejection - candidate lacks qualifications</p>
             <p><strong>30-50:</strong> Weak rejection - some concerns about fit</p>
             <p><strong>50-60:</strong> Neutral - uncertain, needs more info</p>

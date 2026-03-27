@@ -52,7 +52,7 @@ function ProgressArc({
 /** Mini bar chart for consistency card */
 function MiniBarChart({ values }: { values: number[] }) {
   return (
-    <div className="flex items-end gap-[3px] h-10">
+    <div className="flex items-end gap-2 h-10">
       {values.map((v, i) => (
         <div
           key={i}
@@ -206,7 +206,7 @@ export function ReputationBreakdownCards({
             <div
               key={card.name}
               className={`
-                relative rounded-xl p-7 overflow-hidden border
+                relative rounded-xl p-6 overflow-hidden border
                 ${card.cardBg}
                 ${card.borderColor}
                 transition-all duration-300

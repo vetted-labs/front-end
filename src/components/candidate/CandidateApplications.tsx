@@ -217,7 +217,7 @@ export default function CandidateApplications() {
             My Applications
           </h1>
           {activeCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               {activeCount} active
             </span>
@@ -304,7 +304,7 @@ export default function CandidateApplications() {
                     <div className="px-6 py-5">
                       {/* Top row: company + status badge */}
                       <div className="flex items-start justify-between gap-4 mb-3">
-                        <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
                           <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-sm font-bold text-muted-foreground">
                             {companyInitial}
                           </div>
@@ -317,7 +317,7 @@ export default function CandidateApplications() {
                             </h3>
                           </div>
                         </div>
-                        <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${statusStyle.className}`}>
+                        <span className={`flex-shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${statusStyle.className}`}>
                           <span className={`w-[7px] h-[7px] rounded-full ${
                             application.status === "accepted" ? "bg-warning"
                               : application.status === "rejected" ? STATUS_COLORS.negative.dot
@@ -330,12 +330,12 @@ export default function CandidateApplications() {
                       </div>
 
                       {/* Meta tags */}
-                      <div className="flex items-center gap-3.5 flex-wrap mb-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                      <div className="flex items-center gap-4 flex-wrap mb-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-2">
                           <Calendar className="w-3.5 h-3.5 opacity-50" />
                           Applied {new Date(application.appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-2">
                           <MapPin className="w-3.5 h-3.5 opacity-50" />
                           {application.job.location}
                         </span>
@@ -343,7 +343,7 @@ export default function CandidateApplications() {
                           {application.job.type}
                         </span>
                         {application.job.salary && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-2">
                             <DollarSign className="w-3.5 h-3.5 opacity-50" />
                             {formatSalaryRange(application.job.salary)}
                           </span>
@@ -358,7 +358,7 @@ export default function CandidateApplications() {
                         {/* Skills match dots */}
                         {application.job.skills && application.job.skills.length > 0 && (
                           <div className="flex items-center gap-2">
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                               {application.job.skills.slice(0, 5).map((_, idx) => (
                                 <div
                                   key={idx}

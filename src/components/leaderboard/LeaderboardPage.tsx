@@ -187,7 +187,7 @@ function TableSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="px-4 py-4 flex items-center gap-4">
             <div className="w-8 h-8 rounded-lg bg-muted/50 animate-pulse shrink-0" />
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <div className="w-32 h-3 rounded bg-muted/50 animate-pulse" />
               <div className="w-20 h-2 rounded bg-muted/30 animate-pulse" />
             </div>
@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
           <Trophy className="w-6 h-6 text-[#f59e0b]" />
           Leaderboard
         </h1>
@@ -289,13 +289,13 @@ export default function LeaderboardPage() {
       {/* Tabs + Filters */}
       <Card padding="none" className="overflow-visible">
         {/* Tabs row */}
-        <div className="flex items-center gap-0.5 px-2 pt-2 pb-0 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-2 px-2 pt-2 pb-0 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all",
                 activeTab === tab.id
                   ? "bg-primary/10 text-primary shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -311,7 +311,7 @@ export default function LeaderboardPage() {
         <div className="border-t border-border mx-3 mt-1.5" />
 
         {/* Filters row */}
-        <div className="flex items-center gap-2.5 px-3 py-2.5 flex-wrap">
+        <div className="flex items-center gap-3 px-3 py-2.5 flex-wrap">
           <FilterDropdown
             icon={Building2}
             value={guildId}

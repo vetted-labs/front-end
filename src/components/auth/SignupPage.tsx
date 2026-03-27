@@ -197,7 +197,7 @@ function SignupForm() {
         </p>
 
         {errors.submit && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+          <div className="mb-5 flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
             <div className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-destructive" />
             <div>
               <span>{errors.submit}</span>
@@ -355,7 +355,7 @@ function SignupForm() {
             <button
               type="button"
               onClick={handleLinkedInSignup}
-              className="w-full py-2.5 px-4 bg-[#0A66C2] hover:bg-[#004182] text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2.5 shadow-sm transition-all active:scale-[0.98]"
+              className="w-full py-2.5 px-4 bg-[#0A66C2] hover:bg-[#004182] text-white rounded-xl font-medium text-sm flex items-center justify-center gap-3 shadow-sm transition-all active:scale-[0.98]"
             >
               <Linkedin className="w-4 h-4" />
               Continue with LinkedIn

@@ -34,7 +34,7 @@ export default function BrowsePage() {
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">
+          <div className="inline-flex items-center gap-2 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">
             <Search className="w-3.5 h-3.5" />
             Decentralized Talent Marketplace
           </div>
@@ -125,9 +125,9 @@ export default function BrowsePage() {
                         {job.title}
                       </h3>
 
-                      <div className="flex flex-wrap gap-1.5 mb-3">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {guildColors && (
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${guildColors.bg} ${guildColors.text} border ${guildColors.border}`}>
+                          <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium ${guildColors.bg} ${guildColors.text} border ${guildColors.border}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${guildColors.dot}`} />
                             {job.guild?.replace(/ Guild$/i, "")}
                           </span>
@@ -142,12 +142,12 @@ export default function BrowsePage() {
                       </p>
 
                       <div className="flex items-center justify-between pt-4 border-t border-border">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5 opacity-60" />
                           {job.location}
                         </div>
                         {job.salary.min && job.salary.max && (
-                          <div className="flex items-center gap-1 text-sm font-medium text-primary">
+                          <div className="flex items-center gap-2 text-sm font-medium text-primary">
                             <DollarSign className="w-3.5 h-3.5" />
                             {job.salary.min / 1000}k - {job.salary.max / 1000}k
                           </div>

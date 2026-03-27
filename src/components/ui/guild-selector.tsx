@@ -80,7 +80,7 @@ export function GuildSelector({
       {/* Dropdown */}
       {open && (
         <div className="absolute right-0 top-full mt-2 z-50 w-72 rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-xl dark:bg-card/80 dark:border-white/[0.08] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
-          <div className="p-1.5 max-h-64 overflow-y-auto space-y-0.5">
+          <div className="p-1.5 max-h-64 overflow-y-auto space-y-2">
             {/* All guilds option */}
             <button
               type="button"

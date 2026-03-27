@@ -83,12 +83,12 @@ export function RankProgress({ guilds }: RankProgressProps) {
   const topGuilds = selectTopGuilds(guilds);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-6 h-full">
       <span className="text-sm font-bold text-foreground">
         Rank Progress
       </span>
 
-      <div className="flex flex-col gap-3.5 mt-4">
+      <div className="flex flex-col gap-4 mt-4">
         {topGuilds.map((guild, index) => {
           const progress = computeProgress(guild);
           const isHighlighted = index === 0;

@@ -130,7 +130,7 @@ export function LeaderboardTrending({
                   className={cn(isCurrentUser && "border-primary/20 bg-primary/[0.03]")}
                 >
                   <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <span className="text-sm">
                         {Array.from({ length: fires }).map((_, j) => (
                           <Flame key={j} className="w-3.5 h-3.5 text-primary inline-block" />

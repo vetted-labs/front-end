@@ -106,7 +106,7 @@ export function StartConversationButton({
             <button
               onClick={handleSend}
               disabled={!message.trim() || isSending}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-white hover:opacity-90 transition-opacity disabled:opacity-30"
+              className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-white hover:opacity-90 transition-opacity disabled:opacity-30"
             >
               {isSending ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -125,7 +125,7 @@ export function StartConversationButton({
     <button
       onClick={handleClick}
       disabled={isChecking}
-      className={`inline-flex items-center gap-1.5 font-medium text-primary hover:underline disabled:opacity-50 ${
+      className={`inline-flex items-center gap-2 font-medium text-primary hover:underline disabled:opacity-50 ${
         size === "sm" ? "text-xs" : "text-sm"
       }`}
     >

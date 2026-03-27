@@ -27,7 +27,7 @@ export function ConversationFilters({
   jobs,
 }: ConversationFiltersProps) {
   return (
-    <div className="px-4 py-3.5 border-b border-border dark:border-border space-y-2.5">
+    <div className="px-4 py-3.5 border-b border-border dark:border-border space-y-3">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
         <input

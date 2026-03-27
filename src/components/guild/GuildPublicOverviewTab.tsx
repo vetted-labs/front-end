@@ -70,7 +70,7 @@ export function GuildPublicOverviewTab({
                     </span>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center gap-1 text-primary">
+                    <div className="flex items-center gap-2 text-primary">
                       <Star className="w-4 h-4 fill-current" />
                       <span className="font-bold">{expert.reputation}</span>
                     </div>
@@ -122,7 +122,7 @@ export function GuildPublicOverviewTab({
                     <div className="flex-1">
                       <h3 className="font-medium text-foreground mb-2">{job.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-2">
                           <MapPin className="w-4 h-4" />
                           {job.location}
                         </span>
@@ -130,13 +130,13 @@ export function GuildPublicOverviewTab({
                           {job.type}
                         </span>
                         {(job.salary.min || job.salary.max) && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
                             {formatSalaryRange(job.salary)}
                           </span>
                         )}
                         {(job.applicants ?? 0) > 0 && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             {job.applicants} applicants
                           </span>

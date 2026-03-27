@@ -63,21 +63,21 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
 
           {/* Row 3: Date + review count + job title */}
           <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
               {new Date(application.submittedAt).toLocaleDateString()}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-2">
               <Users className="w-3.5 h-3.5" />
               {application.reviewCount} reviewed
             </span>
             {application.jobTitle && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-2">
                 <Briefcase className="w-3.5 h-3.5" />
                 {application.jobTitle}
               </span>
             )}
-            <span className={`inline-flex items-center gap-1.5 font-medium ${
+            <span className={`inline-flex items-center gap-2 font-medium ${
               isReviewed ? STATUS_COLORS.positive.text : "text-primary"
             }`}>
               <span className={`w-[5px] h-[5px] rounded-full ${
@@ -94,7 +94,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
             onViewReview && (
               <button
                 onClick={() => onViewReview(application)}
-                className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 View
                 <ChevronRight className="w-4 h-4" />
@@ -103,7 +103,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
           ) : (
             <button
               onClick={() => onReview(application)}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Review
               <ChevronRight className="w-4 h-4" />

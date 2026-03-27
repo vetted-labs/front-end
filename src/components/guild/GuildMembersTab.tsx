@@ -86,7 +86,7 @@ export function GuildMembersTab({
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 text-primary mb-1">
+                      <div className="flex items-center gap-2 text-primary mb-1">
                         <Star className="w-5 h-5 fill-current" />
                         <span className="font-bold text-xl">{expert.reputation}</span>
                       </div>
@@ -190,7 +190,7 @@ export function GuildMembersTab({
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 text-primary mb-1">
+                      <div className="flex items-center gap-2 text-primary mb-1">
                         <Star className="w-5 h-5 fill-current" />
                         <span className="font-bold text-xl">{candidate.reputation}</span>
                       </div>

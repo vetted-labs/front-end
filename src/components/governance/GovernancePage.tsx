@@ -116,7 +116,7 @@ export default function GovernancePage() {
 
               {/* Voting Power + Tier badges */}
               <div className="flex items-center gap-8 flex-wrap">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     Your Voting Power
                   </span>
@@ -129,11 +129,11 @@ export default function GovernancePage() {
                 <div className="w-px h-10 bg-border flex-shrink-0" />
 
                 <div className="flex flex-col gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning/8 border border-warning/20 text-xs font-medium text-warning">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning/8 border border-warning/20 text-xs font-medium text-warning">
                     <Star className="w-3.5 h-3.5" />
                     Expert
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-xs font-medium text-primary">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-xs font-medium text-primary">
                     <BarChart3 className="w-3.5 h-3.5" />
                     {reputation.toLocaleString()} Reputation
                   </span>
@@ -145,7 +145,7 @@ export default function GovernancePage() {
             <div className="flex flex-col items-end gap-4 pt-3 lg:pt-8">
               <button
                 onClick={() => router.push("/expert/governance/create")}
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold text-white bg-primary hover:translate-y-[-2px] transition-all"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-sm font-bold text-white bg-primary hover:translate-y-[-2px] transition-all"
               >
                 <Plus className="w-[18px] h-[18px]" />
                 Create Proposal
@@ -205,7 +205,7 @@ export default function GovernancePage() {
             {activeProposals.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-5 pt-2">
-                  <div className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+                  <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
                     Active & Pending
                     <span className="font-mono text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
                       {activeProposals.length}
@@ -229,7 +229,7 @@ export default function GovernancePage() {
             {pastProposals.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-5 pt-2">
-                  <div className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+                  <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
                     Past Proposals
                     <span className="font-mono text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
                       {pastProposals.length}
@@ -237,7 +237,7 @@ export default function GovernancePage() {
                   </div>
                   <button
                     onClick={() => setShowPast(!showPast)}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-all"
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-all"
                   >
                     {showPast ? "Hide" : "Show all"}
                     <ChevronDown
@@ -289,7 +289,7 @@ function PastProposalRow({
   return (
     <div
       onClick={onClick}
-      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-5 p-5 sm:px-7 rounded-xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
+      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-4 p-6 sm:px-7 rounded-xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
     >
       {/* Meta */}
       <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
@@ -297,7 +297,7 @@ function PastProposalRow({
           #{proposal.id.slice(0, 6)}
         </span>
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold w-fit ${
+          className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold w-fit ${
             isPassed
               ? STATUS_COLORS.positive.badge
               : STATUS_COLORS.negative.badge

@@ -39,7 +39,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
   const displayed = activities.slice(0, 6);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-6 h-full">
       <span className="text-sm font-bold text-foreground">
         Recent Activity
       </span>
@@ -68,7 +68,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                   <div className="text-xs text-foreground truncate">
                     {activity.description}
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
                     <span>{activity.guildName}</span>
                     <span className="text-muted-foreground/50">·</span>
                     <span>{formatTimeAgo(activity.timestamp)}</span>

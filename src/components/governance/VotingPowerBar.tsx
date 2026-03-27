@@ -19,7 +19,7 @@ export function VotingPowerBar({
   const barHeight = large ? "h-8" : "h-2.5";
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       <div className={`flex ${barHeight} w-full overflow-hidden rounded-full bg-muted/30`}>
         {forPercent > 0 && (
           <div
@@ -45,15 +45,15 @@ export function VotingPowerBar({
         )}
       </div>
       <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
           <span className={`inline-block h-2 w-2 rounded-full ${VOTE_COLORS.for.bar}`} />
           <span className={VOTE_COLORS.for.text}>For {forPercent.toFixed(0)}%</span>
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
           <span className={`inline-block h-2 w-2 rounded-full ${VOTE_COLORS.against.bar}`} />
           <span className={VOTE_COLORS.against.text}>Against {againstPercent.toFixed(0)}%</span>
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-2">
           <span className={`inline-block h-2 w-2 rounded-full ${VOTE_COLORS.abstain.bar}`} />
           <span className={VOTE_COLORS.abstain.text}>Abstain {abstainPercent.toFixed(0)}%</span>
         </span>

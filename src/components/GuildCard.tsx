@@ -51,7 +51,7 @@ export function GuildCard({
 
         <div className="relative p-6">
           {/* Header: Icon + Name + Rank */}
-          <div className="flex items-start gap-3.5 mb-4">
+          <div className="flex items-start gap-4 mb-4">
             <div className="w-11 h-11 rounded-[13px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
               <GuildIcon className="w-[22px] h-[22px] text-primary" />
             </div>
@@ -61,7 +61,7 @@ export function GuildCard({
               </h3>
               {guild.expertRole && (
                 <div className="mt-1.5">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-xs font-bold uppercase tracking-[1.1px] text-primary">
+                  <span className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-xs font-bold uppercase tracking-[1.1px] text-primary">
                     <span className="w-[5px] h-[5px] rounded-full bg-primary" />
                     {guild.expertRole}
                   </span>
@@ -88,12 +88,12 @@ export function GuildCard({
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-border text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-2">
               <Users className="w-[11px] h-[11px] opacity-50" />
               {guild.memberCount || 0} members
             </span>
             {guild.joinedAt && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-2">
                 <Calendar className="w-[11px] h-[11px] opacity-50" />
                 Since {formatDate(guild.joinedAt)}
               </span>
@@ -143,7 +143,7 @@ export function GuildCard({
                 <h3 className="text-sm font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">
                   {guild.name}
                 </h3>
-                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
                   {guild.expertRole && <span className="capitalize">{guild.expertRole}</span>}
                   {guild.expertRole && <span className="opacity-30">·</span>}
                   <span>{guild.memberCount} members</span>
@@ -166,7 +166,7 @@ export function GuildCard({
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-[7px]">
+            <div className="grid grid-cols-3 gap-2">
               {isExpertView ? (
                 <>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border">

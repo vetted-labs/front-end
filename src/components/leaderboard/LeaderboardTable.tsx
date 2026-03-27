@@ -121,11 +121,11 @@ export function LeaderboardTable({
 
                 {/* Expert */}
                 <td className="px-4 py-3">
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-2">
                     <span className="text-sm font-bold leading-tight">
                       {entry.fullName || truncateAddress(entry.walletAddress)}
                     </span>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <span
                         className={cn(
                           "text-xs px-1.5 py-0.5 rounded-full font-medium capitalize",
@@ -134,7 +134,7 @@ export function LeaderboardTable({
                       >
                         {entry.role}
                       </span>
-                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Users className="w-2.5 h-2.5" />
                         {entry.guildCount}
                       </span>
@@ -149,7 +149,7 @@ export function LeaderboardTable({
                     highlightCol === "reputation" && "bg-primary/5"
                   )}
                 >
-                  <div className="flex items-baseline gap-1">
+                  <div className="flex items-baseline gap-2">
                     <span className="text-sm font-medium tabular-nums">
                       {entry.reputation.toLocaleString()}
                     </span>

@@ -52,19 +52,19 @@ export function GovernanceProposalCard({
       className="group grid grid-cols-1 md:grid-cols-[140px_1fr_220px] items-center gap-4 md:gap-6 p-6 md:px-8 rounded-xl border border-border bg-card cursor-pointer hover:translate-y-[-1px] hover:border-border hover:bg-muted/30 transition-all"
     >
       {/* ─── Left: Meta ─── */}
-      <div className="flex md:flex-col items-center md:items-start gap-2.5 md:gap-2">
+      <div className="flex md:flex-col items-center md:items-start gap-3 md:gap-2">
         <span className="font-mono text-sm font-medium text-primary">
           #{proposal.id.slice(0, 6)}
         </span>
 
         {isActive && (
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.positive.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.positive.badge}`}>
             <span className="w-[5px] h-[5px] rounded-full bg-positive animate-pulse" />
             Active
           </span>
         )}
         {isPending && (
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.warning.badge}`}>
+          <span className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.warning.badge}`}>
             <Clock className="w-2.5 h-2.5" />
             Pending
           </span>
@@ -91,7 +91,7 @@ export function GovernanceProposalCard({
         </div>
 
         {/* Read more on hover */}
-        <span className="hidden group-hover:inline-flex items-center gap-1.5 text-xs font-medium text-primary mt-2">
+        <span className="hidden group-hover:inline-flex items-center gap-2 text-xs font-medium text-primary mt-2">
           Read full proposal
           <ChevronRight className="w-3.5 h-3.5" />
         </span>
@@ -132,7 +132,7 @@ export function GovernanceProposalCard({
             {/* Your vote status */}
             {proposal.has_voted ? (
               <div
-                className={`flex items-center gap-1.5 text-xs font-medium mt-0.5 ${
+                className={`flex items-center gap-2 text-xs font-medium mt-0.5 ${
                   proposal.my_vote === "for"
                     ? VOTE_COLORS.for.text
                     : proposal.my_vote === "against"

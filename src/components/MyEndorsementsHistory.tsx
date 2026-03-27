@@ -95,7 +95,7 @@ export function MyEndorsementsHistory() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-border bg-card p-5"
+            className="rounded-xl border border-border bg-card p-6"
           >
             <div className="flex items-center gap-4">
               <div
@@ -198,7 +198,7 @@ export function MyEndorsementsHistory() {
                   <h3 className="font-medium text-foreground leading-tight truncate group-hover:text-primary transition-colors">
                     {endorsement.job?.title}
                   </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                     <span className="truncate">{endorsement.job?.companyName}</span>
                     <span className="text-border">·</span>
                     <span className="truncate">{endorsement.job?.location || "Remote"}</span>
@@ -329,7 +329,7 @@ export function MyEndorsementsHistory() {
       </div>
 
       {/* ── Info Banner ── */}
-      <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 flex items-start gap-3">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 flex items-start gap-3">
         <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
           <span className="font-medium text-primary">Tip:</span> Top 3

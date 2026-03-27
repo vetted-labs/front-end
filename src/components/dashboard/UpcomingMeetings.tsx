@@ -74,7 +74,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
         {meetings.length > 0 && (
           <button
             onClick={() => router.push(messagesPath)}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-primary hover:underline flex items-center gap-2"
           >
             View all <ArrowRight className="w-3 h-3" />
           </button>

@@ -24,7 +24,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
     <div className="pb-0">
       {/* Company Row */}
       <div className="flex items-start justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-4">
           {job.companyLogo ? (
             <img
               src={getAssetUrl(job.companyLogo)}
@@ -39,7 +39,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
               <Building2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-foreground flex items-center gap-2">
               {job.companyName || "Company"}
             </span>
@@ -55,16 +55,16 @@ export default function JobHeader({ job }: JobHeaderProps) {
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-5">
-        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-primary/[0.08] border border-primary/20 text-primary">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-primary/[0.08] border border-primary/20 text-primary">
           <Briefcase className="w-3 h-3" />
           {job.type}
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-positive/[0.08] border border-positive/20 text-positive">
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-positive/[0.08] border border-positive/20 text-positive">
           <Globe className="w-3 h-3" />
           {job.locationType ? job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1) : "Remote"}
         </span>
         {guildColors && (
-          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium ${guildColors.bg} border ${guildColors.border} ${guildColors.text}`}>
+          <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium ${guildColors.bg} border ${guildColors.border} ${guildColors.text}`}>
             <Code2 className="w-3 h-3" />
             {job.guild}
           </span>
@@ -75,7 +75,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
       <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-border">
         {job.salary?.min && job.salary?.max && (
           <>
-            <div className="flex items-center gap-1.5 text-sm font-semibold text-positive">
+            <div className="flex items-center gap-2 text-sm font-semibold text-positive">
               <DollarSign className="w-3.5 h-3.5" />
               {formatSalaryRange(job.salary)}
               {job.equityOffered && (
@@ -87,19 +87,19 @@ export default function JobHeader({ job }: JobHeaderProps) {
             <div className="w-px h-3.5 bg-border/60" />
           </>
         )}
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
           Posted {getTimeAgo(job.createdAt)}
         </div>
         <div className="w-px h-3.5 bg-border/60" />
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-3.5 h-3.5 text-muted-foreground/60" />
           {job.applicants || 0} applicants
         </div>
         {job.location && (
           <>
             <div className="w-px h-3.5 bg-border/60" />
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground/60" />
               {job.location}
             </div>

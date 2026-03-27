@@ -40,7 +40,7 @@ export function CommitRevealPhaseIndicator({
       </div>
 
       {/* Phase Timeline */}
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-2 mb-3">
         {PHASES.map((phase, index) => {
           const isPast = index < currentIndex;
           const isCurrent = index === currentIndex;

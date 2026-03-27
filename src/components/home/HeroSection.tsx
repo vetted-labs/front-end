@@ -73,7 +73,7 @@ export function HeroSection({
             <button
               key={card.key}
               onClick={handlers[card.key]}
-              className={`relative text-left rounded-xl p-7 pb-6 border transition-colors cursor-pointer group ${
+              className={`relative text-left rounded-xl p-6 border transition-colors cursor-pointer group ${
                 featured
                   ? "border-primary/15 bg-primary/[0.04] hover:border-primary/25"
                   : "bg-card border-border hover:border-border"
@@ -100,13 +100,13 @@ export function HeroSection({
 
       {/* Guild Pills */}
       {!isLoadingGuilds && guilds.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-3">
           {guilds.slice(0, 6).map((g) => {
             const name = g.name.replace(/ Guild$/i, "");
             return (
               <div
                 key={g.id}
-                className="inline-flex items-center gap-[7px] px-3.5 py-1.5 bg-card border border-border/30 rounded-full text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-colors cursor-default"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-card border border-border/30 rounded-full text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-colors cursor-default"
               >
                 <span className="w-[7px] h-[7px] rounded-full flex-shrink-0 bg-primary" />
                 {name}

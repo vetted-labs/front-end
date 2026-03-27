@@ -133,42 +133,42 @@ export default function PersonalInfoSection({
       ) : (
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Full Name</p>
               <p className="text-sm text-foreground">{profile.fullName || "\u2014"}</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">{profile.email || "\u2014"}</p>
               </div>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">{profile.phone || "\u2014"}</p>
               </div>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Experience</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Award className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">
                   {(profile.experienceLevel && EXPERIENCE_LABELS[profile.experienceLevel]) || profile.experienceLevel || "\u2014"}
                 </p>
               </div>
             </div>
-            <div className="space-y-1 md:col-span-2">
+            <div className="space-y-2 md:col-span-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Headline</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">{profile.headline || "\u2014"}</p>
               </div>
             </div>
             {profile.bio && (
-              <div className="space-y-1 md:col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bio</p>
                 <p className="text-sm text-foreground whitespace-pre-line">{profile.bio}</p>
               </div>

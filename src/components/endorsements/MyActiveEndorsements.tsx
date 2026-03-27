@@ -130,9 +130,9 @@ function EndorsementSpinCard({
           animationDelay,
         }}
       >
-        <div className="bg-background rounded-xl p-5 flex flex-col gap-3.5 h-full relative z-[1]">
+        <div className="bg-background rounded-xl p-6 flex flex-col gap-4 h-full relative z-[1]">
           {/* Top: Avatar with spinning ring + info */}
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-4">
             {/* Avatar with ring */}
             <div className="relative w-14 h-14 shrink-0">
               <div
@@ -172,7 +172,7 @@ function EndorsementSpinCard({
 
           {/* Status badge */}
           <div className="flex items-center justify-between">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.06em] px-2.5 py-1 rounded-full ${statusInfo.statusClass}`}>
+            <span className={`inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.06em] px-2.5 py-1 rounded-full ${statusInfo.statusClass}`}>
               <span className="w-[5px] h-[5px] rounded-full bg-current" />
               {statusInfo.label}
             </span>
@@ -186,7 +186,7 @@ function EndorsementSpinCard({
             <span className="font-mono font-bold text-base text-primary">
               {bidAmount.toFixed(0)} VETD
             </span>
-            <span className="font-mono text-xs text-muted-foreground flex items-center gap-1.5">
+            <span className="font-mono text-xs text-muted-foreground flex items-center gap-2">
               {rank !== undefined && rank > 0 ? (
                 <>
                   Rank
@@ -263,7 +263,7 @@ export function MyActiveEndorsements({
     <div>
       {/* Section header */}
       <div className="flex items-center justify-between mb-5">
-        <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-2.5">
+        <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3">
           Your Active Endorsements
           {userEndorsements.length > 0 && (
             <span className="font-mono text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">

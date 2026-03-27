@@ -125,7 +125,7 @@ export default function GlobalGuildsPage() {
 
           {allGuilds.length > 0 ? (
             <>
-              <div className="grid gap-4 md:gap-5">
+              <div className="grid gap-4">
                 {currentGuilds.map((guild) => {
                   const GuildIcon = getGuildIcon(guild.name);
                   const description =
@@ -177,20 +177,20 @@ export default function GlobalGuildsPage() {
                         </p>
 
                         {/* Metrics — compact, icon-led */}
-                        <div className="flex items-center gap-5 text-xs text-muted-foreground/80">
-                          <span className="inline-flex items-center gap-1.5">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground/80">
+                          <span className="inline-flex items-center gap-2">
                             <Users className="w-3 h-3" />
                             <span className="font-medium tabular-nums text-foreground/70">
                               {members}
                             </span>
                           </span>
-                          <span className="inline-flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-2">
                             <FileCheck className="w-3 h-3" />
                             <span className="font-medium tabular-nums text-foreground/70">
                               {reviews}
                             </span>
                           </span>
-                          <span className="inline-flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-2">
                             <Briefcase className="w-3 h-3" />
                             <span className="font-medium tabular-nums text-foreground/70">
                               {jobs}

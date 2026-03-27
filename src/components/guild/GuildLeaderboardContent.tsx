@@ -38,7 +38,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                   onNavigate(`/experts/${entry.walletAddress}`);
                 }
               }}
-              className={`w-full bg-card border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all text-left ${
+              className={`w-full bg-card border rounded-xl p-6 hover:border-primary/50 hover:shadow-md transition-all text-left ${
                 entry.role !== 'candidate' && entry.walletAddress ? 'cursor-pointer' : 'cursor-default'
               } ${
                 index < 3 ? `border-2 ${STATUS_COLORS.warning.border} bg-warning/5` : "border-border"
@@ -78,7 +78,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                       {entry.role.toUpperCase()}
                     </span>
                     {entry.trend && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         {entry.trend === "up" ? (
                           <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
                         ) : entry.trend === "down" ? (

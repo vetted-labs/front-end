@@ -47,12 +47,12 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
             </p>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               {application.job.companyName && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-2">
                   <Building2 className="w-3.5 h-3.5" />
                   {application.job.companyName}
                 </span>
               )}
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-2">
                 <Briefcase className="w-3.5 h-3.5" />
                 {application.job.type}
               </span>

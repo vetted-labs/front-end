@@ -88,7 +88,7 @@ export function AppealReviewPanel({
             <Gavel className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
             <h4 className="text-sm font-bold">Appeal Review</h4>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <StatusIcon className={`w-4 h-4 ${status.color}`} />
             <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
           </div>
@@ -120,7 +120,7 @@ export function AppealReviewPanel({
 
         {/* Justification */}
         <div className="mb-4">
-          <div className="flex items-center gap-1.5 mb-1.5">
+          <div className="flex items-center gap-2 mb-1.5">
             <FileText className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Appeal Justification
@@ -135,7 +135,7 @@ export function AppealReviewPanel({
 
         {/* Vote Progress */}
         <div className="flex items-center justify-between mb-4 rounded-lg bg-muted/30 px-3 py-2">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Panel Progress</span>
           </div>
@@ -164,7 +164,7 @@ export function AppealReviewPanel({
               {appeal.votes.map((vote) => (
                 <div
                   key={vote.id}
-                  className="flex items-start gap-2.5 rounded-lg bg-muted/20 border border-border/30 px-3 py-2"
+                  className="flex items-start gap-3 rounded-lg bg-muted/20 border border-border/30 px-3 py-2"
                 >
                   <Shield className="w-3.5 h-3.5 mt-0.5 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -210,7 +210,7 @@ export function AppealReviewPanel({
                   : "Appeal Rejected — Rejection Upheld"}
               </span>
             </div>
-            <div className="text-xs text-muted-foreground space-y-0.5 ml-6">
+            <div className="text-xs text-muted-foreground space-y-2 ml-6">
               <p>
                 Appealer reputation: {appeal.outcome.appealerReputationChange > 0 ? "+" : ""}
                 {appeal.outcome.appealerReputationChange}

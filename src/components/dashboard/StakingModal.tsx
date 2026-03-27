@@ -321,7 +321,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
           </div>
 
           {/* ── Content ── */}
-          <div className="px-6 pt-5 pb-6 space-y-3.5 flex-1 overflow-y-auto min-h-0">
+          <div className="px-6 pt-5 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
             {/* Wrong Network Warning */}
             {!isOnSepolia && (
               <div className={`p-3.5 ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} rounded-xl flex items-center gap-3`}>
@@ -449,14 +449,14 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
 
                 {/* ── Balance & Staked (inline like endorsement modal) ── */}
                 <div className="flex items-center justify-between text-xs px-1">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Balance:</span>
                     <span className="font-medium tabular-nums">
                       {formatTokenAmount(currentBalance)} {balanceLabel}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5 text-primary" />
                     <span className="text-primary/70">Staked:</span>
                     <span className="font-medium text-primary tabular-nums">
@@ -503,7 +503,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
 
                 {/* ── Quick Amount Buttons ── */}
                 {actionMode === "stake" ? (
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-4 gap-2">
                     {[
                       { label: "Min +10%", getValue: () => (minStake * 1.1).toFixed(2) },
                       { label: "Min +50%", getValue: () => (minStake * 1.5).toFixed(2) },
@@ -521,7 +521,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-4 gap-2">
                     {[
                       { label: "25%", factor: 0.25 },
                       { label: "50%", factor: 0.5 },

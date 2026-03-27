@@ -23,7 +23,7 @@ export function BookmarkButton({
         onBookmarkToggle(targetId);
       }}
       title="Bookmark"
-      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+      className={`flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
         isBookmarked
           ? `${STATUS_COLORS.info.text} ${STATUS_COLORS.info.bgSubtle}`
           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

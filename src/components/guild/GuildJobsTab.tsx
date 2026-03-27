@@ -133,7 +133,7 @@ export function GuildJobsTab({
               {sortedJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="rounded-xl p-5 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
+                  className="rounded-xl p-6 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
                 >
                   {/* Job Title */}
                   <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
@@ -247,7 +247,7 @@ export function GuildJobsTab({
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
-                          <span className="text-muted-foreground flex items-center gap-1.5">
+                          <span className="text-muted-foreground flex items-center gap-2">
                             <Clock className="w-3.5 h-3.5" />
                             {new Date(application.appliedAt).toLocaleDateString()}
                           </span>
@@ -282,7 +282,7 @@ export function GuildJobsTab({
                     {/* Footer: endorsements + actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                       <div className="flex items-center gap-2 text-sm">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
                           <Award className="w-3.5 h-3.5 text-warning" />
                           <span className="text-foreground font-medium">
                             {application.endorsementCount}

@@ -16,7 +16,7 @@ import {
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-4">
-      <div className="flex items-center gap-2.5 mb-3">
+      <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -60,7 +60,7 @@ export function HowEarningsWork() {
         <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
             <Section icon={Vote} title="Vetting Rewards">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Review candidates and submit your score</Bullet>
                 <Bullet>Earn VETD when your score <strong className="text-foreground/80">aligns with consensus</strong></Bullet>
                 <Bullet>Closer alignment = bigger reward</Bullet>
@@ -68,7 +68,7 @@ export function HowEarningsWork() {
             </Section>
 
             <Section icon={TrendingUp} title="Tier Multipliers">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation</span>
                   <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
@@ -86,7 +86,7 @@ export function HowEarningsWork() {
             </Section>
 
             <Section icon={Award} title="Endorsement Rewards">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Endorse a candidate you believe in</Bullet>
                 <Bullet>If they get hired, you <strong className="text-foreground/80">share the reward pool</strong></Bullet>
                 <Bullet>Paid in $VETD per guild config</Bullet>
@@ -94,7 +94,7 @@ export function HowEarningsWork() {
             </Section>
 
             <Section icon={ArrowDownToLine} title="Claiming Rewards">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>VETD accumulates in the smart contract</Bullet>
                 <Bullet>Click <strong className="text-foreground/80">&quot;Claim Rewards&quot;</strong> to withdraw to your wallet</Bullet>
                 <Bullet>Requires one blockchain transaction to confirm</Bullet>
@@ -102,7 +102,7 @@ export function HowEarningsWork() {
             </Section>
 
             <Section icon={ShieldAlert} title="Slashing Risk">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Scores far from consensus can trigger slashing</Bullet>
                 <Bullet>Up to <strong className="text-foreground/80">25% of staked VETD</strong> may be slashed</Bullet>
                 <Bullet>Stay aligned with consensus to protect your stake</Bullet>

@@ -92,13 +92,13 @@ export function LeaderboardEndorsements({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="text-sm font-bold tabular-nums">{entry.endorsementCount}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <Coins className="w-3.5 h-3.5 text-positive shrink-0" />
                       <span className="text-sm font-medium tabular-nums">
                         {formatVetd(bidVetd)}

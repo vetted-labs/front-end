@@ -67,7 +67,7 @@ export function VoteButton({
     <button
       onClick={handleVote}
       disabled={isVoting}
-      className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+      className={`flex flex-col items-center gap-2 px-1.5 py-1 rounded-lg transition-colors ${
         voted
           ? "text-primary bg-primary/10"
           : "text-muted-foreground hover:text-primary hover:bg-primary/5"

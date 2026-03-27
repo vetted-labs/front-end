@@ -40,7 +40,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
 
       {/* Featured Badge */}
       {job.featured && (
-        <div className="flex items-center gap-1 text-warning text-xs font-medium uppercase tracking-wider mb-3">
+        <div className="flex items-center gap-2 text-warning text-xs font-medium uppercase tracking-wider mb-3">
           <Star className="w-3 h-3 fill-current" />
           Featured
         </div>
@@ -84,7 +84,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
 
       {/* Applied Badge (if applicable) */}
       {showAppliedBadge && hasApplied && (
-        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium mb-3 ${STATUS_COLORS.positive.badge}`}>
+        <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded text-xs font-medium mb-3 ${STATUS_COLORS.positive.badge}`}>
           <CheckCircle2 className="w-3 h-3" />
           Applied
         </span>
@@ -100,17 +100,17 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
               const guildUuid = resolveGuildId(job.guild!);
               if (guildUuid) router.push(`/guilds/${guildUuid}`);
             }}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium tracking-wide border ${guildColors.bg} ${guildColors.text} ${guildColors.border}`}
+            className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium tracking-wide border ${guildColors.bg} ${guildColors.text} ${guildColors.border}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${guildColors.dot}`} />
             {job.guild?.replace(/ Guild$/i, "")}
           </button>
         )}
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
+        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <MapPin className="w-3 h-3 opacity-60" />
           {job.locationType || job.location}
         </span>
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
+        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <Briefcase className="w-3 h-3 opacity-60" />
           {job.type}
         </span>
@@ -128,7 +128,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
 
       {/* Skills Row */}
       {job.skills && job.skills.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {job.skills.slice(0, 5).map((skill, index) => (
             <span
               key={index}
@@ -147,11 +147,11 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
 
       {/* Card Footer: Applicants + Apply Button */}
       <div className="flex items-center justify-between pt-4 border-t border-border">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
           <Users className="w-3.5 h-3.5 opacity-50" />
           {job.applicants || 0} applicants
         </div>
-        <span className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm group-hover:shadow-md group-hover:-translate-y-px transition-all">
+        <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm group-hover:shadow-md group-hover:-translate-y-px transition-all">
           Apply
           <ArrowRight className="w-3.5 h-3.5" />
         </span>

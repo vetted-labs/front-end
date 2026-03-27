@@ -27,7 +27,7 @@ export function RetentionCountdown({
       : STATUS_COLORS.negative.bg;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{elapsed} days elapsed</span>
         <span>{daysRemaining} days remaining</span>

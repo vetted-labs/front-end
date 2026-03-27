@@ -110,7 +110,7 @@ export function GuildActivityFeed({
     return (
       <div>
         <div
-          className="relative pl-5 border-l-2 border-border space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+          className="relative pl-5 border-l-2 border-border space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
           style={{ maxHeight: maxHeight || "320px" }}
         >
           {sliced.map((activity) => {
@@ -175,7 +175,7 @@ export function GuildActivityFeed({
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all ${
+              className={`flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all ${
                 filter === type
                   ? `${meta.badgeClass} border-current`
                   : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
@@ -201,7 +201,7 @@ export function GuildActivityFeed({
                     {dateLabel}
                   </span>
                 </div>
-                <div className="relative pl-6 border-l-2 border-border space-y-1">
+                <div className="relative pl-6 border-l-2 border-border space-y-2">
                   {items.map((activity) => {
                     const meta = ACTIVITY_META[activity.type] || FALLBACK_META;
                     const Icon = meta.icon;

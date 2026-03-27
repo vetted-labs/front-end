@@ -44,13 +44,13 @@ export function GovernanceVoteForm({
             Vote weight: <span className="font-medium text-foreground tabular-nums">{voteWeight.toFixed(2)}x</span>
           </p>
           {isGuildMaster && (
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-2 text-xs font-bold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
               <Crown className="w-3 h-3" />
               1.5x Master
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+        <p className="text-xs text-muted-foreground mt-1 flex items-start gap-2">
           <Info className="w-3 h-3 mt-0.5 shrink-0" />
           <span>Based on your reputation ({reputation.toLocaleString()} pts). Formula: 1 + min(rep/1000, 2.0){isGuildMaster ? " × 1.5" : ""}.</span>
         </p>

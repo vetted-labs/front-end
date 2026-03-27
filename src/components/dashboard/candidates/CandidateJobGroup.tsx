@@ -83,7 +83,7 @@ export function CandidateJobGroup({
                 key={app.id}
                 onClick={() => onSelectApplication(app)}
                 className={cn(
-                  "w-full flex items-center gap-2.5 px-4 h-[52px] text-left transition-colors border-l-2",
+                  "w-full flex items-center gap-3 px-4 h-[52px] text-left transition-colors border-l-2",
                   isSelected
                     ? "bg-primary/[0.04] border-l-primary"
                     : "hover:bg-muted/20 dark:hover:bg-muted/20 border-l-transparent"
@@ -98,7 +98,7 @@ export function CandidateJobGroup({
 
                 {/* Name + subtitle */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <p className={cn(
                       "text-sm font-medium truncate",
                       isSelected ? "text-foreground" : "text-foreground/90"

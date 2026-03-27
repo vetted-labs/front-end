@@ -58,7 +58,7 @@ export function ReputationScoreHero({
       {/* Stats row */}
       <div className="flex items-center gap-6 mt-5 flex-wrap">
         {totalGains > 0 && (
-          <div className={`flex items-center gap-1.5 text-sm font-medium ${STATUS_COLORS.positive.text}`}>
+          <div className={`flex items-center gap-2 text-sm font-medium ${STATUS_COLORS.positive.text}`}>
             <TrendingUp className="w-3.5 h-3.5" />
             +{totalGains} pts earned
           </div>

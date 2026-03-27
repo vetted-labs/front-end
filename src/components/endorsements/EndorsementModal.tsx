@@ -244,7 +244,7 @@ export function EndorsementModal({
                   {application.requirements && application.requirements.length > 0 && (
                     <div>
                       <h4 className="font-medium mb-2">Job Requirements</h4>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-2">
                         {application.requirements.map((req: string, i: number) => (
                           <li key={i}>{req}</li>
                         ))}
@@ -283,19 +283,19 @@ export function EndorsementModal({
 
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     {application.location && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         {application.location}
                       </span>
                     )}
                     {application.job_type && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-2">
                         <Briefcase className="w-4 h-4" />
                         {application.job_type}
                       </span>
                     )}
                     {(application.salary_min || application.salary_max) && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
                         {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
                       </span>

@@ -104,7 +104,7 @@ interface ProfileStatCellProps {
 
 function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary", iconBg = "bg-primary/10" }: ProfileStatCellProps) {
   return (
-    <div className=" rounded-xl border border-border p-5 text-center transition-all hover:border-primary/30">
+    <div className=" rounded-xl border border-border p-6 text-center transition-all hover:border-primary/30">
       <div className={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center mx-auto mb-3`}>
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
@@ -339,7 +339,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                   </a>
                   <button
                     onClick={copyAddress}
-                    className="inline-flex items-center gap-1 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
+                    className="inline-flex items-center gap-2 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
                   >
                     {copiedAddress ? (
                       <Check className="w-3 h-3 text-success" />
@@ -370,14 +370,14 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               </div>
             )}
             {mode === "public" && profile.showEmail && profile.email && (
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <Mail className="w-3.5 h-3.5 text-muted-foreground" />
                 {profile.email}
               </div>
             )}
 
             {/* Member since */}
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-3.5 h-3.5" />
               Member since {memberSince}
             </div>
@@ -397,14 +397,14 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               Reputation Score
             </div>
             <ReputationRing score={profile.reputation} className="mb-4" />
-            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
               <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               Master
             </div>
           </div>
 
           {/* ── Earnings Card (right, row 2) ── */}
-          <div className=" rounded-xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
+          <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <DollarSign className="w-3.5 h-3.5 text-success" />
               Total Earnings
@@ -427,7 +427,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Active Guilds Card (right, row 3) ── */}
-          <div className=" rounded-xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
+          <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-300">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <Shield className="w-3.5 h-3.5 text-primary" />
               Active Guilds
@@ -435,7 +435,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             <div className="text-5xl font-bold font-display text-foreground mb-3">
               {profile.guilds.length}
             </div>
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {profile.guilds.map((guild) => (
                 <div
                   key={guild.id}

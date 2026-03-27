@@ -86,7 +86,7 @@ export function NewPostModal({ guildId, onClose, onCreated }: NewPostModalProps)
 
   return (
     <Modal isOpen onClose={onClose} title="New Post" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {error && <Alert variant="error">{error}</Alert>}
 
         {/* Tag Selector */}

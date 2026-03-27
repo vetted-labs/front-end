@@ -29,7 +29,7 @@ export function ActionButtonPanel({
 
   return (
     <>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setShowStakingModal(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-muted/30 border border-border text-muted-foreground text-xs font-medium hover:bg-muted/50 hover:text-foreground transition-colors"

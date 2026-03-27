@@ -196,7 +196,7 @@ export default function GuildDetailPage() {
             <span className="text-[hsl(var(--gd))] font-medium">{guild.name.replace(/ Guild$/i, "")}</span>
           </div>
 
-          <div className="flex items-start gap-5 mb-6">
+          <div className="flex items-start gap-6 mb-6">
             {/* Guild icon */}
             <div className="w-16 h-16 rounded-xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center flex-shrink-0">
               <GuildIcon className="w-8 h-8 text-[hsl(var(--gd))]" />
@@ -235,7 +235,7 @@ export default function GuildDetailPage() {
           {/* Member badge / Apply / Pending */}
           <div className="flex items-center gap-3">
             {showMemberBadge && (
-              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-positive/10 border border-positive/20 text-sm font-medium text-positive">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-positive/10 border border-positive/20 text-sm font-medium text-positive">
                 <CheckCircle2 className="w-4 h-4" />
                 Member
                 {membership.role && (
@@ -249,7 +249,7 @@ export default function GuildDetailPage() {
               </div>
             )}
             {showPendingStatus && (
-              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm font-medium text-warning">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm font-medium text-warning">
                 <Clock className="w-4 h-4" />
                 Pending Review
               </div>
@@ -257,7 +257,7 @@ export default function GuildDetailPage() {
             {showApplyButton && (
               <button
                 onClick={handleApplyToGuild}
-                className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-colors bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
+                className="inline-flex items-center gap-3 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-colors bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
               >
                 Join Guild
               </button>
@@ -276,7 +276,7 @@ export default function GuildDetailPage() {
 
         {/* ═══ TAB BAR — Glassmorphic ═══ */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 p-1.5 bg-card border border-border rounded-xl mb-10 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-2 p-1.5 bg-card border border-border rounded-xl mb-10 overflow-x-auto scrollbar-none">
             {(
               [
                 { value: "feed" as const, label: "Overview" },
@@ -348,7 +348,7 @@ export default function GuildDetailPage() {
 
             {activeTab === "jobs" && (
               <div>
-                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground mb-5 flex items-center gap-2.5">
+                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground mb-5 flex items-center gap-3">
                   <Briefcase className="w-5 h-5 text-[hsl(var(--gd))]" />
                   Open Positions
                 </h2>
@@ -368,7 +368,7 @@ export default function GuildDetailPage() {
                             {formatSalaryRange(job.salary)}
                           </p>
                         )}
-                        <div className="flex flex-wrap gap-1.5 mb-4">
+                        <div className="flex flex-wrap gap-2 mb-4">
                           {job.location && (
                             <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
                               {job.location}
@@ -382,12 +382,12 @@ export default function GuildDetailPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           {(job.applicants ?? 0) > 0 && (
-                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+                            <span className="flex items-center gap-2 text-xs text-muted-foreground/50">
                               <Users className="w-3.5 h-3.5" />
                               {job.applicants} applicants
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-[hsl(var(--gd))] text-xs font-medium">
+                          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-[hsl(var(--gd))] text-xs font-medium">
                             View
                           </span>
                         </div>

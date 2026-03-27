@@ -139,7 +139,7 @@ export function PollCreator({ poll, onChange }: PollCreatorProps) {
               <button
                 type="button"
                 onClick={handleAddOption}
-                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add option

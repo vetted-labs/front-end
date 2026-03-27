@@ -239,14 +239,14 @@ export function CompanyDashboardOverview() {
           <div className="flex items-center gap-2">
             <Link
               href="/dashboard/settings"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
             >
               <Settings className="w-4 h-4 opacity-60" />
               Settings
             </Link>
             <Link
               href="/jobs/new"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Post New Job
@@ -292,7 +292,7 @@ export function CompanyDashboardOverview() {
                 <Activity className="w-4 h-4 text-primary" />
                 Hiring Pipeline
               </h2>
-              <Link href="/dashboard/candidates" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1">
+              <Link href="/dashboard/candidates" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-2">
                 View Full Pipeline
                 <ChevronRight className="w-3 h-3" />
               </Link>
@@ -315,12 +315,12 @@ export function CompanyDashboardOverview() {
                       </div>
 
                       {/* Candidate cards */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {apps.slice(0, 3).map((app) => (
                           <Link
                             key={app.id}
                             href="/dashboard/candidates"
-                            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/10 border border-border/15 dark:border-border hover:bg-muted/20 dark:hover:bg-muted/20 hover:border-border/30 transition-all group"
+                            className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/10 border border-border/15 dark:border-border hover:bg-muted/20 dark:hover:bg-muted/20 hover:border-border/30 transition-all group"
                           >
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${getAvatarBg(app.candidate.fullName)}`}>
                               <span className="text-xs font-medium">
@@ -456,7 +456,7 @@ export function CompanyDashboardOverview() {
                   <Briefcase className="w-4 h-4 text-primary" />
                   Your Jobs
                 </h2>
-                <Link href="/dashboard/jobs" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1">
+                <Link href="/dashboard/jobs" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-2">
                   Manage
                   <ChevronRight className="w-3 h-3" />
                 </Link>
@@ -470,7 +470,7 @@ export function CompanyDashboardOverview() {
                   </p>
                   <Link
                     href="/jobs/new"
-                    className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium"
+                    className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium"
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
                     Post a Job
@@ -552,7 +552,7 @@ export function CompanyDashboardOverview() {
                               href={meeting.details.meetingUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1"
+                              className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-2"
                             >
                               Join
                               <ExternalLink className="w-3 h-3" />
@@ -574,11 +574,11 @@ export function CompanyDashboardOverview() {
                   Pending Actions
                 </h2>
               </div>
-              <div className="p-4 space-y-1.5">
+              <div className="p-4 space-y-2">
                 {unreadCount > 0 && (
                   <Link
                     href="/dashboard/messages"
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
+                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-positive/10 flex items-center justify-center flex-shrink-0">
                       <MessageSquare className="w-3.5 h-3.5 text-positive" />
@@ -596,7 +596,7 @@ export function CompanyDashboardOverview() {
                 {recentApplications.some((a) => a.status === "pending") && (
                   <Link
                     href="/dashboard/candidates"
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
+                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Users className="w-3.5 h-3.5 text-primary" />

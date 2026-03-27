@@ -162,7 +162,7 @@ export function GuildMembershipApplicationsTab({
               {(guildApplications || []).slice(0, expertVisible).map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -186,7 +186,7 @@ export function GuildMembershipApplicationsTab({
                         {application.currentTitle} at {application.currentCompany}
                       </p>
 
-                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs">
                         <span className="text-muted-foreground">
                           {application.yearsOfExperience}y experience
                         </span>
@@ -245,7 +245,7 @@ export function GuildMembershipApplicationsTab({
                       </div>
 
                       {application.expertiseAreas && application.expertiseAreas.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        <div className="flex flex-wrap gap-2 mt-2.5">
                           {application.expertiseAreas.slice(0, 4).map((area, idx) => (
                             <span
                               key={idx}
@@ -264,7 +264,7 @@ export function GuildMembershipApplicationsTab({
                     </div>
 
                     <div className="shrink-0 flex flex-col items-end gap-3">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Users className="w-3.5 h-3.5" />
                         <span className="font-semibold">{application.reviewCount}</span>
                         <span>reviewed</span>
@@ -351,7 +351,7 @@ export function GuildMembershipApplicationsTab({
               {candidateApplications.slice(0, candidateVisible).map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -368,7 +368,7 @@ export function GuildMembershipApplicationsTab({
                         {application.candidateEmail}
                       </p>
 
-                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs">
                         <span className="flex items-center text-muted-foreground">
                           <Clock className="w-3.5 h-3.5 mr-1" />
                           {new Date(application.submittedAt).toLocaleDateString()}
@@ -383,7 +383,7 @@ export function GuildMembershipApplicationsTab({
                     </div>
 
                     <div className="shrink-0 flex flex-col items-end gap-3">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Users className="w-3.5 h-3.5" />
                         <span className="font-semibold">{application.reviewCount}</span>
                         <span>reviewed</span>
@@ -467,7 +467,7 @@ export function GuildMembershipApplicationsTab({
               {(proposals ?? []).map((proposal) => (
                 <div
                   key={proposal.id}
-                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer"
+                  className="rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer"
                   onClick={() => router.push(`/expert/voting/applications/${proposal.id}`)}
                 >
                   <div className="flex items-start gap-4">
@@ -500,7 +500,7 @@ export function GuildMembershipApplicationsTab({
                         {proposal.candidate_email}
                       </p>
 
-                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-xs">
                         <span className="flex items-center text-muted-foreground">
                           <Clock className="w-3.5 h-3.5 mr-1" />
                           {proposal.created_at ? new Date(proposal.created_at).toLocaleDateString() : "—"}

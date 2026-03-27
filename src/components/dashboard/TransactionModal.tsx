@@ -90,7 +90,7 @@ export function TransactionModal({
 
           {/* Success State */}
           {status === "success" && (
-            <div className="text-center space-y-5">
+            <div className="text-center space-y-6">
               <div className="relative w-28 h-28 mx-auto">
                 {/* Outer success glow */}
                 <div className={`absolute inset-0 rounded-full ${STATUS_COLORS.positive.bg} opacity-15 animate-pulse`} />

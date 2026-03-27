@@ -42,19 +42,19 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
 
       <div
         onClick={onClick}
-        className="relative rounded-xl bg-card p-7 sm:p-9 overflow-hidden cursor-pointer"
+        className="relative rounded-xl bg-card p-6 sm:p-8 overflow-hidden cursor-pointer"
       >
         {/* Top glow line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-border" />
 
         {/* Live tag */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-negative/10 border border-negative/20 text-xs font-bold text-negative uppercase tracking-wider mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-negative/10 border border-negative/20 text-xs font-bold text-negative uppercase tracking-wider mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-negative animate-pulse" />
           Live Vote
         </div>
 
         {/* Header: Title + Countdown */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
           <div className="flex-1 min-w-0">
             <p className="font-mono text-sm font-medium text-primary mb-1">
               #{proposal.id.slice(0, 8)}
@@ -79,7 +79,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5">
                 Time Remaining
               </p>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 {[
                   { val: countdown.days, label: "Days" },
                   { val: String(countdown.hours).padStart(2, "0"), label: "Hrs" },
@@ -135,7 +135,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
 
         {/* Quorum bar */}
         <div className="flex items-center gap-4 mb-6">
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+          <span className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
             <Users className="w-3.5 h-3.5" />
             Quorum
           </span>
@@ -157,7 +157,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
             You voted {proposal.my_vote ? proposal.my_vote.charAt(0).toUpperCase() + proposal.my_vote.slice(1) : ""}
           </div>
         ) : (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
               <ChevronRight className="w-3.5 h-3.5 text-primary" />
               Click to cast your vote ({voteWeight.toFixed(1)}x power)

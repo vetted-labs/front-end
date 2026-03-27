@@ -44,7 +44,7 @@ export function GuildStatsPanel({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
       {/* Health stats bar */}
-      <div className=" rounded-xl border border-border p-5 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
+      <div className=" rounded-xl border border-border p-6 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
         <div className="flex-1 text-center px-2">
           <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
             <Target className="w-3.5 h-3.5 text-primary" />
@@ -82,9 +82,9 @@ export function GuildStatsPanel({
 
         <div className="rounded-xl border border-primary/15 bg-primary/[0.04] px-5 py-4">
           <p className="text-sm font-bold text-foreground mb-3">Why join this guild?</p>
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {whyJoinPoints.map((point, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+              <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
                 <span className="text-primary mt-0.5 shrink-0">{point.icon}</span>
                 {point.text}
               </li>

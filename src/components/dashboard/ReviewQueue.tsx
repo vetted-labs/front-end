@@ -35,7 +35,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
   const hasMore = applications.length > 5;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-6 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-bold text-foreground">
@@ -54,7 +54,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
           No pending reviews
         </p>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {displayed.map((app, index) => {
             const isFirst = index === 0;
             const name = app.candidate_name || "Application";

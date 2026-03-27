@@ -96,7 +96,7 @@ export function ApplicationsFilters({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <Select value={selectedGuildId} onValueChange={onGuildChange}>
             <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg border-border bg-background/70">
               <SelectValue placeholder="All Guilds" />

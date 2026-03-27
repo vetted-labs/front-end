@@ -75,7 +75,7 @@ export function ConversationListItem({
             ) : (
               <span className="text-xs text-muted-foreground italic">No messages</span>
             )}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span
                 className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium border ${status.className}`}
               >

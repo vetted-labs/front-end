@@ -99,7 +99,7 @@ export function GuildApplicationsTab({
               return (
                 <div
                   key={application.id}
-                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted"
+                  className="rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -204,7 +204,7 @@ export function GuildApplicationsTab({
               return (
                 <div
                   key={application.id}
-                  className="rounded-xl border border-primary/20 bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-primary/20 bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">

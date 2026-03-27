@@ -287,7 +287,7 @@ function LoginForm() {
 
               {/* Error */}
               {error && (
-                <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                <div className="mb-5 flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                   <div className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-destructive" />
                   <span>{error}</span>
                 </div>
@@ -352,7 +352,7 @@ function LoginForm() {
                   </div>
 
                   {/* Wallet note */}
-                  <div className="flex items-start gap-2 p-3.5 bg-primary/[0.04] border border-primary/10 rounded-lg text-left">
+                  <div className="flex items-start gap-2 p-4 bg-primary/[0.04] border border-primary/10 rounded-lg text-left">
                     <Info className="w-4 h-4 text-primary/70 flex-shrink-0 mt-0.5" />
                     <span className="text-xs text-muted-foreground leading-relaxed">
                       Expert accounts are wallet-based only. Your on-chain reputation and guild membership are tied directly to your wallet address.
@@ -418,7 +418,7 @@ function LoginForm() {
                       <button
                         type="button"
                         onClick={handleLinkedInLogin}
-                        className="w-full py-3 px-4 bg-card border rounded-lg font-medium text-sm text-foreground flex items-center justify-center gap-2.5 transition-all hover:-translate-y-px hover:bg-[rgba(10,102,194,0.08)] hover:shadow-[0_2px_16px_rgba(10,102,194,0.15)]"
+                        className="w-full py-3 px-4 bg-card border rounded-lg font-medium text-sm text-foreground flex items-center justify-center gap-3 transition-all hover:-translate-y-px hover:bg-[rgba(10,102,194,0.08)] hover:shadow-[0_2px_16px_rgba(10,102,194,0.15)]"
                         style={{ borderColor: "rgba(10,102,194,0.3)" }}
                       >
                         <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="#0a66c2">

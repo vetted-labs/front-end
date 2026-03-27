@@ -63,7 +63,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
   const grouped = groupByDate(items);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Section heading */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold tracking-tight">Recent Transactions</h2>
@@ -85,7 +85,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
             </div>
 
             {/* Transaction rows */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               {entries.map((entry, i) => {
                 const TypeIcon = typeIcons[entry.type] || Coins;
                 const subLabel = typeSubLabels[entry.type];
@@ -102,7 +102,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                       <div className="w-1 self-stretch bg-primary/60 group-hover:bg-primary transition-colors" />
 
                       {/* Info section */}
-                      <div className="flex items-center gap-3.5 px-4 py-3.5 min-w-0">
+                      <div className="flex items-center gap-4 px-4 py-3.5 min-w-0">
                         <div className={`w-8 h-8 rounded-lg ${STAT_ICON.bg} flex items-center justify-center flex-shrink-0`}>
                           <TypeIcon className={`w-4 h-4 ${STAT_ICON.text}`} />
                         </div>
@@ -118,7 +118,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                               )}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground/50">
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground/50">
                             <span>
                               {new Date(entry.created_at).toLocaleTimeString("en-US", {
                                 hour: "2-digit",
@@ -128,7 +128,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                             {entry.guild_name && (
                               <>
                                 <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/30" />
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-2">
                                   <Layers className="w-3 h-3" />
                                   {entry.guild_name}
                                 </span>

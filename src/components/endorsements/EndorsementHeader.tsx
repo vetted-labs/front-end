@@ -87,10 +87,10 @@ export function EndorsementHeader({
         <div className="sticky top-0 z-30 bg-background/88 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
           <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
             {/* Left: Title + LIVE badge + Guild selector */}
-            <div className="flex items-center gap-3.5 flex-wrap">
-              <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-2.5 whitespace-nowrap">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3 whitespace-nowrap">
                 Endorsement Marketplace
-                <span className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-positive uppercase tracking-[0.1em] bg-positive/10 border border-positive/20 px-2.5 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-2 font-mono text-xs font-medium text-positive uppercase tracking-[0.1em] bg-positive/10 border border-positive/20 px-2.5 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-positive animate-pulse" />
                   LIVE
                 </span>
@@ -110,7 +110,7 @@ export function EndorsementHeader({
             </div>
 
             {/* Right: Stake info */}
-            <div className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
+            <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground whitespace-nowrap">
               {stakeNum > 0 && (
                 <>
                   <span className="font-medium text-foreground">{stakeNum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>

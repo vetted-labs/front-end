@@ -21,7 +21,7 @@ function SuccessRateGauge({ rate, successful, total }: { rate: number; successfu
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
         Success Rate
       </p>
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         {/* SVG Gauge */}
         <div className="relative w-[100px] h-[100px] shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -119,7 +119,7 @@ function ActiveEndorsementsStat({ count, totalStaked }: { count: number; totalSt
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
         Active Endorsements
       </p>
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         {/* Spinning conic-gradient ring */}
         <div className="relative w-[100px] h-[100px] shrink-0">
           <div

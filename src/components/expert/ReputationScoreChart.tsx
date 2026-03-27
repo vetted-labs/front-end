@@ -132,11 +132,11 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
           <div className="flex items-center justify-between mb-7">
             <p className="font-display text-xl font-bold">6-Month Trend</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary" />
                 Score
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-muted-foreground/20" />
                 Avg
               </span>

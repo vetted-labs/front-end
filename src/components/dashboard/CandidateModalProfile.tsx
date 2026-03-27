@@ -21,7 +21,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
   const hasLegacy = candidate.linkedIn || candidate.github;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Resume card */}
       <div className="rounded-lg border border-border p-4">
         <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
@@ -131,12 +131,12 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
       {/* Experience & Wallet */}
       <div className="flex flex-wrap gap-3">
         {candidate.experienceLevel && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground/80 capitalize">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground/80 capitalize">
             {candidate.experienceLevel} level
           </span>
         )}
         {candidate.walletAddress && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-mono text-muted-foreground">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-mono text-muted-foreground">
             <Wallet className="w-3 h-3" />
             {truncateAddress(candidate.walletAddress)}
           </span>

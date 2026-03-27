@@ -127,7 +127,7 @@ export function ReputationLeaderboard({
           <Info className="h-4 w-4 text-primary" />
           How Rankings Work
         </h3>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+        <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>Rankings are determined by total VETD token earnings from completed reviews</li>
           <li><span className="font-medium text-foreground">Earnings</span> accumulate each time you submit a review and the reveal phase resolves</li>
           <li><span className="font-medium text-foreground">Consensus rate</span> shows the balance between your approval and rejection decisions — a higher rate means more varied, balanced reviewing</li>
@@ -277,7 +277,7 @@ export function ReputationLeaderboard({
                   {/* Guilds (global view only) */}
                   {!guildId && (
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-muted-foreground" />
                         <span className="text-foreground font-medium">{entry.guildCount || 0}</span>
                       </div>

@@ -311,7 +311,7 @@ export default function CandidateDashboard() {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -328,7 +328,7 @@ export default function CandidateDashboard() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <Link
               href="/candidate/profile"
               className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
@@ -353,7 +353,7 @@ export default function CandidateDashboard() {
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <FileText className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.total}</span>
               <span className="text-xs text-muted-foreground font-medium">Applications</span>
             </div>
@@ -364,7 +364,7 @@ export default function CandidateDashboard() {
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Calendar className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.interviewed}</span>
               <span className="text-xs text-muted-foreground font-medium">Interviews</span>
             </div>
@@ -376,7 +376,7 @@ export default function CandidateDashboard() {
             <div className="relative w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-warning/15">
               <Star className="w-[18px] h-[18px] text-warning" />
             </div>
-            <div className="relative flex flex-col gap-0.5">
+            <div className="relative flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-warning">{stats.accepted}</span>
               <span className="text-xs text-muted-foreground font-medium">{stats.accepted === 1 ? "Offer" : "Offers"}</span>
             </div>
@@ -387,7 +387,7 @@ export default function CandidateDashboard() {
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Eye className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.reviewing}</span>
               <span className="text-xs text-muted-foreground font-medium">In Review</span>
             </div>
@@ -412,7 +412,7 @@ export default function CandidateDashboard() {
                 {profileCompletion.percentage}%
               </div>
             </div>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-foreground">{profileCompletion.percentage}%</span>
               <span className="text-xs text-muted-foreground font-medium">Profile Strength</span>
             </div>
@@ -420,10 +420,10 @@ export default function CandidateDashboard() {
         </div>
 
         {/* ── Two-Column Main Grid ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
           {/* ── Left Column (3 cols) ── */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-6">
 
             {/* Active Applications */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -437,7 +437,7 @@ export default function CandidateDashboard() {
                 {applications.length > 5 && (
                   <Link
                     href="/candidate/applications"
-                    className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+                    className="text-xs text-primary hover:underline flex items-center gap-2 font-semibold"
                   >
                     View All ({applications.length}) <ChevronRight className="w-3 h-3" />
                   </Link>
@@ -481,12 +481,12 @@ export default function CandidateDashboard() {
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                 {app.job.companyName && (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-2">
                                     <Building2 className="w-3 h-3" />
                                     {app.job.companyName}
                                   </span>
                                 )}
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-2">
                                   <MapPin className="w-3 h-3" />
                                   {app.job.location}
                                 </span>
@@ -511,7 +511,7 @@ export default function CandidateDashboard() {
           </div>
 
           {/* ── Right Column (2 cols) ── */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-6">
 
             {/* Profile Completion Ring */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -528,7 +528,7 @@ export default function CandidateDashboard() {
                   {profileCompletion.items.map((item) => (
                     <div
                       key={item.label}
-                      className={`flex items-center gap-2.5 py-1.5 text-sm ${item.done ? "text-muted-foreground" : "text-foreground"}`}
+                      className={`flex items-center gap-3 py-1.5 text-sm ${item.done ? "text-muted-foreground" : "text-foreground"}`}
                     >
                       <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
                         item.done ? STATUS_COLORS.positive.bgSubtle : "bg-muted/40"
@@ -563,7 +563,7 @@ export default function CandidateDashboard() {
                 {guildApplications.length > 3 && (
                   <Link
                     href="/candidate/guilds"
-                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                    className="text-xs text-primary hover:underline flex items-center gap-2"
                   >
                     View all <ArrowRight className="w-3 h-3" />
                   </Link>
@@ -599,7 +599,7 @@ export default function CandidateDashboard() {
                             </span>
                           </div>
                           {app.jobTitle && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground flex items-center gap-2">
                               <Briefcase className="w-3 h-3" />
                               {app.jobTitle}
                             </p>
@@ -633,7 +633,7 @@ export default function CandidateDashboard() {
                 {conversations.length > 0 && (
                   <Link
                     href="/candidate/messages"
-                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                    className="text-xs text-primary hover:underline flex items-center gap-2"
                   >
                     View Inbox <ChevronRight className="w-3 h-3" />
                   </Link>

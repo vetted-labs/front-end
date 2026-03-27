@@ -218,21 +218,21 @@ export function HiringDashboard() {
                             {job.title}
                           </h3>
                           <div className="flex items-center gap-4 text-sm text-card-foreground">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-2">
                               <Building2 className="w-4 h-4" />
                               {job.department || "N/A"}
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-2">
                               <MapPin className="w-4 h-4" />
                               {job.location}
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-2">
                               <DollarSign className="w-4 h-4" />
                               {job.salary.min || job.salary.max
                                 ? formatSalaryRange(job.salary)
                                 : "N/A"}
                             </span>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
                               {job.type}
                             </span>
@@ -286,7 +286,7 @@ export function HiringDashboard() {
                         <span className="text-sm text-card-foreground">
                           <strong>{job.views}</strong> views
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                        <span className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
                           <Shield className="w-3 h-3" />
                           {job.guild}
                         </span>

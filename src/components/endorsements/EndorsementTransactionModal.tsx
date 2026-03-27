@@ -152,7 +152,7 @@ export function EndorsementTransactionModal({
           </div>
 
           {/* ── Content ── */}
-          <div className="px-6 pt-5 pb-6 space-y-3.5 flex-1 overflow-y-auto min-h-0">
+          <div className="px-6 pt-5 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
 
             {/* Progress Steps — fixed-width circles with separate flex lines */}
             {(txStep === 'signing' || txStep === 'approving' || txStep === 'bidding' || txStep === 'success') && (
@@ -160,7 +160,7 @@ export function EndorsementTransactionModal({
                 {progressSteps.map((stepName, idx) => (
                   <Fragment key={idx}>
                     {/* Step circle + label */}
-                    <div className="w-16 flex flex-col items-center gap-1.5">
+                    <div className="w-16 flex flex-col items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                         idx <= currentStepIndex
                           ? 'bg-primary text-primary-foreground shadow-sm'
@@ -216,7 +216,7 @@ export function EndorsementTransactionModal({
             </div>
 
             {/* Bidding Period Countdown */}
-            <div className={`rounded-xl border p-3 flex items-center gap-2.5 ${
+            <div className={`rounded-xl border p-4 flex items-center gap-3 ${
               biddingExpired
                 ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`
                 : biddingUrgent
@@ -258,14 +258,14 @@ export function EndorsementTransactionModal({
               <>
                 {/* Balance/Staked inline row */}
                 <div className="flex items-center justify-between text-xs px-1">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Balance:</span>
                     <span className="font-medium tabular-nums">
                       {parseFloat(userBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} VETD
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5 text-primary" />
                     <span className="text-primary/70">Staked:</span>
                     <span className="font-medium text-primary tabular-nums">
@@ -307,7 +307,7 @@ export function EndorsementTransactionModal({
                 </div>
 
                 {/* Quick Select */}
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-4 gap-2">
                   {[
                     { label: 'Min +10%', action: () => handleQuickAmount(0.1, 'min') },
                     { label: 'Min +50%', action: () => handleQuickAmount(0.5, 'min') },
@@ -410,7 +410,7 @@ export function EndorsementTransactionModal({
                   </p>
                   {approvalTxHash && (
                     <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline flex items-center justify-center gap-1 mt-2">
+                      className="text-xs text-primary hover:underline flex items-center justify-center gap-2 mt-2">
                       View on Etherscan <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
@@ -437,7 +437,7 @@ export function EndorsementTransactionModal({
                   </p>
                   {bidTxHash && (
                     <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline flex items-center justify-center gap-1 mt-2">
+                      className="text-xs text-primary hover:underline flex items-center justify-center gap-2 mt-2">
                       View on Etherscan <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
@@ -476,7 +476,7 @@ export function EndorsementTransactionModal({
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Approval</span>
                             <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-1">
+                              className="text-primary hover:underline flex items-center gap-2">
                               {truncateAddress(approvalTxHash)} <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
@@ -485,7 +485,7 @@ export function EndorsementTransactionModal({
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Endorsement</span>
                             <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-1">
+                              className="text-primary hover:underline flex items-center gap-2">
                               {truncateAddress(bidTxHash)} <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
@@ -528,7 +528,7 @@ export function EndorsementTransactionModal({
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Approval</span>
                           <a href={getExplorerTxUrl(approvalTxHash)} target="_blank" rel="noopener noreferrer"
-                            className="text-primary hover:underline flex items-center gap-1">
+                            className="text-primary hover:underline flex items-center gap-2">
                             {truncateAddress(approvalTxHash)} <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>
@@ -537,7 +537,7 @@ export function EndorsementTransactionModal({
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Endorsement</span>
                           <a href={getExplorerTxUrl(bidTxHash)} target="_blank" rel="noopener noreferrer"
-                            className="text-primary hover:underline flex items-center gap-1">
+                            className="text-primary hover:underline flex items-center gap-2">
                             {truncateAddress(bidTxHash)} <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>

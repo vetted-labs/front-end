@@ -411,7 +411,7 @@ export function ReviewGuildApplicationModal({
 
             {templateError && <Alert variant="error">{templateError}</Alert>}
             {loadingTemplates && (
-              <div className="flex items-center gap-3 p-3.5 mb-4 rounded-xl bg-warning/[0.06] border border-warning/15">
+              <div className="flex items-center gap-3 p-4 mb-4 rounded-xl bg-warning/[0.06] border border-warning/15">
                 <Loader2 className="w-4 h-4 text-warning animate-spin" />
                 <p className="text-sm text-primary/80">Loading review template and rubric...</p>
               </div>
@@ -496,7 +496,7 @@ export function ReviewGuildApplicationModal({
             )}
 
             {validationError && (
-              <div className={`mt-4 flex items-center gap-2.5 p-3.5 rounded-xl ${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`}>
+              <div className={`mt-4 flex items-center gap-3 p-4 rounded-xl ${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`}>
                 <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} shrink-0`} />
                 <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{validationError}</p>
               </div>

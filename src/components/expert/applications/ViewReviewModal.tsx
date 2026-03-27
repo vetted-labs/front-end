@@ -118,10 +118,10 @@ export function ViewReviewModal({
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-bold text-foreground">{applicantName}</h2>
               {review && (
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}>
+                <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}>
                   {statusBadge.icon}
                   {statusBadge.label}
                 </span>
@@ -155,7 +155,7 @@ export function ViewReviewModal({
         )}
 
         {error && (
-          <div className={`flex items-center gap-2.5 p-3.5 rounded-xl ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border}`}>
+          <div className={`flex items-center gap-3 p-4 rounded-xl ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border}`}>
             <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} shrink-0`} />
             <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{error}</p>
           </div>
@@ -346,7 +346,7 @@ export function ViewReviewModal({
 
             {/* Feedback */}
             {review.feedback && (
-              <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-2">
+              <div className="rounded-xl border border-border bg-muted/20 p-6 space-y-2">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-muted-foreground" />
                   <h4 className="text-sm font-bold text-foreground">Your Feedback</h4>

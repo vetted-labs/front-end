@@ -236,7 +236,7 @@ export default function CandidatesPage() {
         {selectedApplication ? (
           <button
             onClick={() => setSelectedApplication(null)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to list
@@ -245,7 +245,7 @@ export default function CandidatesPage() {
           <div>
             <button
               onClick={() => router.push("/dashboard")}
-              className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors mb-1.5 flex items-center gap-1"
+              className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors mb-1.5 flex items-center gap-2"
             >
               <ArrowLeft className="w-3 h-3" />
               Dashboard
@@ -259,7 +259,7 @@ export default function CandidatesPage() {
       <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-5 py-2 border-b border-border/30 dark:border-border">
         <button
           onClick={() => router.push("/dashboard")}
-          className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors flex items-center gap-1"
+          className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="w-3 h-3" />
           Dashboard

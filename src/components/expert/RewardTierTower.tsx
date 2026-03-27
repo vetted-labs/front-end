@@ -92,7 +92,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
               {/* Tier card */}
               <div
                 className={`
-                  rounded-xl p-5 transition-all
+                  rounded-xl p-6 transition-all
                   ${isCurrent
                     ? "bg-warning/5 border border-warning/20"
                     : isLocked
@@ -132,7 +132,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
 
                 {/* Expanded benefits for current tier */}
                 {isCurrent && (
-                  <div className="mt-4 pt-4 border-t border-warning/10 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="mt-4 pt-4 border-t border-warning/10 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {benefits.map((benefit) => (
                       <div key={benefit} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Check className="w-3.5 h-3.5 text-warning flex-shrink-0" />
@@ -144,8 +144,8 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
 
                 {/* Points needed for locked tiers */}
                 {isLocked && pointsNeeded > 0 && (
-                  <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <span className="flex gap-1">
+                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="flex gap-2">
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}

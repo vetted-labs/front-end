@@ -43,14 +43,14 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
     .join("");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
       {/* Applicant Header Card — accent bar style */}
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         {/* Orange gradient accent bar */}
         <div className="h-[3px] bg-primary" />
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-6">
           {/* Profile header */}
           <div className="flex items-start gap-4">
             {/* Avatar */}
@@ -62,7 +62,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
 
             {/* Name + badge + email */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h3 className="text-xl font-bold text-foreground tracking-tight">
                   {displayName}
                 </h3>
@@ -80,7 +80,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           {((displayTitle || displayCompany) || (application.yearsOfExperience != null && application.yearsOfExperience > 0)) && (
             <div className="grid grid-cols-2 gap-3">
               {(displayTitle || displayCompany) && (
-                <div className="border border-border rounded-lg bg-muted/20 p-3.5">
+                <div className="border border-border rounded-lg bg-muted/20 p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Position
                   </p>
@@ -90,7 +90,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                 </div>
               )}
               {application.yearsOfExperience != null && application.yearsOfExperience > 0 && (
-                <div className="border border-border rounded-lg bg-muted/20 p-3.5">
+                <div className="border border-border rounded-lg bg-muted/20 p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Experience
                   </p>
@@ -104,13 +104,13 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
 
           {/* Links */}
           {(application.resumeUrl || application.socialLinks?.some((l) => l.url?.trim()) || application.linkedinUrl || application.portfolioUrl) && (
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-3">
               {application.resumeUrl && (
                 <a
                   href={getAssetUrl(application.resumeUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                  className="group inline-flex items-center gap-2 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                 >
                   <FileText className="w-3.5 h-3.5 shrink-0" />
                   Resume / CV
@@ -129,7 +129,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                          className="group inline-flex items-center gap-2 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                         >
                           <Icon className="w-3.5 h-3.5 shrink-0" />
                           {link.label}
@@ -144,7 +144,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                         href={application.linkedinUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                        className="group inline-flex items-center gap-2 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                       >
                         <Linkedin className="w-3.5 h-3.5 shrink-0" />
                         LinkedIn
@@ -156,7 +156,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                         href={application.portfolioUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                        className="group inline-flex items-center gap-2 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                       >
                         <Globe className="w-3.5 h-3.5 shrink-0" />
                         Portfolio
@@ -173,7 +173,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
       {/* Bio & Motivation — preserved even when anonymized (content-based evaluation) */}
       <div className="grid gap-4">
         {application.bio && (
-          <div className="rounded-xl border border-border bg-muted/30 p-5">
+          <div className="rounded-xl border border-border bg-muted/30 p-6">
             <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-2">Bio</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.bio}
@@ -181,7 +181,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           </div>
         )}
         {application.motivation && (
-          <div className="rounded-xl border border-border bg-muted/30 p-5">
+          <div className="rounded-xl border border-border bg-muted/30 p-6">
             <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.motivation}

@@ -51,7 +51,7 @@ export function DomainReviewStep({
   return (
     <div className="space-y-6">
       {/* Domain / Level Questions */}
-      <div className="space-y-5">
+      <div className="space-y-6">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
             <Award className="w-4 h-4 text-warning" />
@@ -80,7 +80,7 @@ export function DomainReviewStep({
                   <p className="text-sm font-semibold text-foreground">
                     {topic.title || topic.id}
                   </p>
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-full rounded-full bg-primary transition-all duration-500"
@@ -96,7 +96,7 @@ export function DomainReviewStep({
                 <div className="p-5 space-y-4">
                   <div className="space-y-3">
                     {renderPromptLines(topic.prompt)}
-                    <div className="rounded-lg bg-muted/30 border border-border p-3.5">
+                    <div className="rounded-lg bg-muted/30 border border-border p-4">
                       <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                         {topicAnswers[topic.id] || <span className="text-muted-foreground italic">No response</span>}
                       </p>
@@ -106,9 +106,9 @@ export function DomainReviewStep({
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                     <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
                     {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <p className="text-xs font-medium text-foreground">What to look for</p>
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                           {topic.whatToLookFor.map((item: string, idx: number) => (
                             <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
                               {item}
@@ -176,11 +176,11 @@ export function DomainReviewStep({
           {generalRedFlags.length === 0 ? (
             <p className="text-sm text-muted-foreground">No red flags defined for this rubric.</p>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {generalRedFlags.map((flag) => (
                 <label
                   key={flag.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all duration-200 ${
                     redFlags[flag.id]
                       ? "bg-negative/10 border border-negative/25"
                       : "bg-muted/30 border border-border hover:border-border"
@@ -211,7 +211,7 @@ export function DomainReviewStep({
       </div>
 
       {/* Overall Score Summary */}
-      <div className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-5">
+      <div className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-6">
         <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">

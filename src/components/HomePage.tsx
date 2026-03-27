@@ -91,7 +91,7 @@ export function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-12">
+          <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-8">
             {/* Brand */}
             <div>
               <div className="font-display font-bold text-xl mb-2.5">

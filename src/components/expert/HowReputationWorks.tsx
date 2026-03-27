@@ -17,7 +17,7 @@ import { STATUS_COLORS } from "@/config/colors";
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-4">
-      <div className="flex items-center gap-2.5 mb-3">
+      <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -61,7 +61,7 @@ export function HowReputationWorks() {
         <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
             <Section icon={Vote} title="Vetting">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Review candidates and submit your score</Bullet>
                 <Bullet>Scores are compared to <strong className="text-foreground/80">IQR-based consensus</strong> after finalization</Bullet>
                 <Bullet>The closer your score to consensus, the more reputation you earn</Bullet>
@@ -69,7 +69,7 @@ export function HowReputationWorks() {
             </Section>
 
             <Section icon={Award} title="Endorsements">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Stake on candidates you believe in</Bullet>
                 <Bullet>Earn <strong className="text-foreground/80">+20 reputation</strong> when your endorsed candidate gets hired</Bullet>
                 <Bullet>Failed endorsements have no reputation penalty</Bullet>
@@ -77,7 +77,7 @@ export function HowReputationWorks() {
             </Section>
 
             <Section icon={Landmark} title="Governance">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Vote on guild proposals and governance decisions</Bullet>
                 <Bullet>Earn <strong className="text-foreground/80">+5 to +10 reputation</strong> per vote</Bullet>
                 <Bullet>Active participation builds reputation over time</Bullet>
@@ -85,7 +85,7 @@ export function HowReputationWorks() {
             </Section>
 
             <Section icon={ShieldAlert} title="Slashing Risk">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Scores far from consensus trigger stake slashing</Bullet>
                 <Bullet>Up to <strong className="text-foreground/80">25% of staked VETD</strong> may be slashed</Bullet>
                 <Bullet>Inactivity decays <strong className="text-foreground/80">-10 reputation</strong> per cycle</Bullet>
@@ -94,7 +94,7 @@ export function HowReputationWorks() {
 
             {/* Alignment Calculation — full width */}
             <div className="sm:col-span-2 rounded-xl border border-border bg-muted/20 p-4">
-              <div className="flex items-center gap-2.5 mb-3">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
                   <Calculator className="w-4 h-4 text-muted-foreground" />
                 </div>
@@ -167,7 +167,7 @@ export function HowReputationWorks() {
             </div>
 
             <Section icon={TrendingUp} title="Reward Tiers">
-              <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation <span className="text-muted-foreground/50 text-xs">0 &ndash; 999</span></span>
                   <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>

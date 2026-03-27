@@ -71,7 +71,7 @@ export function EarningsChart({ items }: EarningsChartProps) {
           <h3 className="text-sm font-bold">Earnings Over Time</h3>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
             <span className="text-xs text-muted-foreground">Earned</span>
           </div>

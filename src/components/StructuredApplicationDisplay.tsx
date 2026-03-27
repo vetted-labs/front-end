@@ -125,7 +125,7 @@ export function StructuredApplicationDisplay({
           <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Portfolio &amp; Credibility
           </h3>
-          <div className="text-base text-foreground leading-relaxed space-y-1">
+          <div className="text-base text-foreground leading-relaxed space-y-2">
             {application.credibility_evidence.split('\n').map((line, index) => {
               const trimmedLine = line.trim();
               if (!trimmedLine) return null;
@@ -156,7 +156,7 @@ export function StructuredApplicationDisplay({
           <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
             Key Achievements
           </h3>
-          <ul className="list-disc pl-4 space-y-1.5">
+          <ul className="list-disc pl-4 space-y-2">
             {application.achievements.map((achievement, index) => (
               <li key={index} className="text-base text-foreground leading-relaxed">
                 {typeof achievement === "string"

@@ -46,18 +46,18 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
             {guild.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-2.5 mb-4">
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
               {guild.memberCount || 0} members
             </span>
             <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/40" />
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Target className="w-3.5 h-3.5" />
               {guild.candidateCount || 0} candidates
             </span>
             <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/40" />
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground capitalize">
+            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground capitalize">
               <Award className="w-3.5 h-3.5" />
               {guild.expertRole}
             </span>
@@ -76,7 +76,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
 
         {/* ── Your Position (right, row 1) ── */}
         <div className=" rounded-xl border border-border p-6 flex flex-col animate-fade-up animate-delay-100">
-          <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-4 flex items-center gap-1.5">
+          <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-4 flex items-center gap-2">
             <User className="w-3 h-3 text-primary" />
             Your Position
           </div>
@@ -85,7 +85,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
           </div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Reputation</div>
           <div className="mb-1.5">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-xs font-bold uppercase tracking-[1px] text-primary">
+            <span className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-xs font-bold uppercase tracking-[1px] text-primary">
               <span className="w-1 h-1 rounded-full bg-primary" />
               {guild.expertRole}
             </span>
@@ -115,11 +115,11 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
 
         {/* ── Staking (right, row 2) ── */}
         <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
-          <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-2.5 flex items-center gap-1.5">
+          <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-2.5 flex items-center gap-2">
             <Shield className="w-3 h-3 text-primary" />
             Guild Staking
           </div>
-          <div className="flex items-baseline gap-1.5 mb-1">
+          <div className="flex items-baseline gap-2 mb-1">
             <span className="font-mono text-3xl font-bold text-foreground">
               {guild.totalVetdStaked != null
                 ? Number(guild.totalVetdStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })
@@ -131,7 +131,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
           {onStakeClick && (
             <button
               onClick={onStakeClick}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary font-display text-xs font-bold transition-all hover:bg-primary/[0.15] w-fit"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary font-display text-xs font-bold transition-all hover:bg-primary/[0.15] w-fit"
             >
               <Shield className="w-3.5 h-3.5" />
               Stake VETD

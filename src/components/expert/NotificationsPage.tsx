@@ -223,7 +223,7 @@ export default function NotificationsPage() {
             </h1>
             {unreadCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-sm font-medium px-3.5 py-1 rounded-full"
+                className="inline-flex items-center gap-2 bg-primary/15 border border-primary/25 text-primary text-sm font-medium px-3.5 py-1 rounded-full"
                 style={{ animation: "notif-badge-pulse 2s ease-in-out infinite" }}
               >
                 <span className="w-[7px] h-[7px] bg-primary rounded-full animate-pulse" />
@@ -299,7 +299,7 @@ export default function NotificationsPage() {
                 <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
                   {group.label}
                 </p>
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {group.items.map((notification) => {
                     const Icon = getNotificationIcon(notification.type);
                     const isUnread = !notification.isRead;

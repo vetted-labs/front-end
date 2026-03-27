@@ -178,7 +178,7 @@ export function ProposalTypeSection({
 
       {/* Conditional: Parameter Change Details */}
       {proposalType === "parameter_change" && (
-        <div className="rounded-xl border border-info-blue/20 bg-info-blue/5 p-5 space-y-4">
+        <div className="rounded-xl border border-info-blue/20 bg-info-blue/5 p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Settings2 className="w-4 h-4 text-info-blue" />
             <p className="text-sm font-medium text-info-blue">
@@ -213,7 +213,7 @@ export function ProposalTypeSection({
 
       {/* Conditional: Election Details */}
       {proposalType === "guild_master_election" && (
-        <div className="rounded-xl border border-warning/20 bg-warning/5 p-5 space-y-4">
+        <div className="rounded-xl border border-warning/20 bg-warning/5 p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Crown className="w-4 h-4 text-warning" />
             <p className="text-sm font-medium text-warning">

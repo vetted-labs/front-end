@@ -113,7 +113,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
                   <p className="text-xs font-mono text-foreground break-all">
                     {address}
                   </p>
-                  <div className="mt-1 flex items-center gap-1.5">
+                  <div className="mt-1 flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-positive" />
                     <span className="text-xs text-muted-foreground">
                       {getNetworkName(chainId)}
@@ -162,7 +162,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
 
         {/* User card */}
         {!isCollapsed && auth.email && (
-          <div className="rounded-lg bg-muted px-3 py-2 space-y-0.5">
+          <div className="rounded-lg bg-muted px-3 py-2 space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
               Hiring Manager
             </p>
@@ -214,7 +214,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
 
         {/* User card */}
         {!isCollapsed && auth.email && (
-          <div className="rounded-lg bg-muted px-3 py-2 space-y-0.5">
+          <div className="rounded-lg bg-muted px-3 py-2 space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
               Candidate
             </p>
@@ -269,7 +269,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
       {auth.isAuthenticated && !(auth.userType === "expert" && !isConnected) ? (
         <>
           {!isCollapsed && (
-            <div className="rounded-lg bg-muted px-3 py-2 space-y-1">
+            <div className="rounded-lg bg-muted px-3 py-2 space-y-2">
               {userTypeLabel && (
                 <p className="text-xs font-medium uppercase tracking-wider text-primary">
                   {userTypeLabel}

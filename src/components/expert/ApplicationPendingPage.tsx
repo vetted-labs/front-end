@@ -175,7 +175,7 @@ export default function ApplicationPendingPage() {
                 <div className="flex items-center gap-3">
                   {guild.status === "pending" ? (
                     <>
-                      <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="w-3.5 h-3.5" />
                         <span className="font-medium">{guild.reviewCount ?? expert.reviewCount ?? 0}</span>
                         <span>reviewed</span>
@@ -183,19 +183,19 @@ export default function ApplicationPendingPage() {
                       {(() => {
                         const time = getTimeRemaining(guild.votingDeadline);
                         return time ? (
-                          <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${time.color}`}>
+                          <span className={`hidden sm:inline-flex items-center gap-2 text-xs font-medium whitespace-nowrap ${time.color}`}>
                             <Timer className="w-3 h-3 flex-shrink-0" />
                             {time.label}
                           </span>
                         ) : null;
                       })()}
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.warning.badge}`}>
+                      <span className={`inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.warning.badge}`}>
                         <Clock className="w-3 h-3" />
                         Pending
                       </span>
                     </>
                   ) : (
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
+                    <span className={`inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
                       <CheckCircle className="w-3 h-3" />
                       {guild.role || "Member"}
                     </span>
@@ -221,7 +221,7 @@ export default function ApplicationPendingPage() {
           )}
 
           {/* Auto-Approval Info */}
-          <div className="rounded-lg p-5 mb-8 border border-border bg-muted/30">
+          <div className="rounded-lg p-6 mb-8 border border-border bg-muted/30">
             <div className="flex items-start">
               <Shield className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
@@ -265,7 +265,7 @@ export default function ApplicationPendingPage() {
                         href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-1.5 mt-1.5 text-sm ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
+                        className={`inline-flex items-center gap-2 mt-1.5 text-sm ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
                       >
                         View on Etherscan <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -292,7 +292,7 @@ export default function ApplicationPendingPage() {
                   const time = getTimeRemaining(earliest);
                   if (!time) return null;
                   return (
-                    <p className={`text-sm font-medium mt-1.5 flex items-center gap-1.5 ${time.color}`}>
+                    <p className={`text-sm font-medium mt-1.5 flex items-center gap-2 ${time.color}`}>
                       <Timer className="w-3.5 h-3.5" />
                       Review period: {time.label}
                     </p>

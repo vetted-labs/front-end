@@ -128,7 +128,7 @@ export function GovernanceProposalDetailPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Governance
@@ -168,7 +168,7 @@ export function GovernanceProposalDetailPage() {
       {/* ─── Back link ─── */}
       <button
         onClick={() => router.back()}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Governance
@@ -211,14 +211,14 @@ export function GovernanceProposalDetailPage() {
                 {proposal.guild_name}
               </Badge>
             )}
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-muted-foreground flex items-center justify-center text-xs font-bold text-white">
                 {(proposal.proposer_name || "??").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
               </span>
               {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
             </span>
             <span className="tabular-nums">{formatVETD(proposal.stake_amount)} VETD staked</span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-2">
               <Scale className="w-3.5 h-3.5" />
               {thresholdConfig.label}
             </span>
@@ -229,22 +229,22 @@ export function GovernanceProposalDetailPage() {
           {!isFinalized && (
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 pt-4 border-t border-border text-sm">
               {deadlineStr && (
-                <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                <span className="inline-flex items-center gap-2 font-medium text-foreground">
                   <Clock className="w-4 h-4 text-primary" />
                   {deadlineStr}
                 </span>
               )}
               {!deadlineStr && deadlineDate && (
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <span className="inline-flex items-center gap-2 text-muted-foreground">
                   <Clock className="w-4 h-4" />
                   Ends {deadlineDate}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <span className="inline-flex items-center gap-2 text-muted-foreground">
                 <Users className="w-4 h-4" />
                 {proposal.voter_count} voter{proposal.voter_count !== 1 ? "s" : ""}
               </span>
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <span className="inline-flex items-center gap-2 text-muted-foreground">
                 <Zap className="w-4 h-4" />
                 {formatVETD(proposal.total_voting_power)} / {formatVETD(proposal.quorum_required)} vote weight quorum
               </span>
@@ -298,7 +298,7 @@ export function GovernanceProposalDetailPage() {
           </div>
 
           {/* Vote bar */}
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="rounded-xl border border-border bg-card p-6">
             <VotingPowerBar
               forPercent={forPercent}
               againstPercent={againstPercent}
@@ -311,7 +311,7 @@ export function GovernanceProposalDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Your Vote */}
             {proposal.has_voted && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
                   Your Vote
                 </h3>
@@ -330,7 +330,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Type-specific */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -339,7 +339,7 @@ export function GovernanceProposalDetailPage() {
               </div>
             )}
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -350,7 +350,7 @@ export function GovernanceProposalDetailPage() {
 
           {/* Vote History */}
           {proposal.votes && proposal.votes.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="rounded-xl border border-border bg-card p-6">
               <VoteHistorySection votes={proposal.votes} />
             </div>
           )}
@@ -362,7 +362,7 @@ export function GovernanceProposalDetailPage() {
           <div className="lg:col-span-7 space-y-6">
             {/* Type-specific details */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -372,7 +372,7 @@ export function GovernanceProposalDetailPage() {
             )}
 
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -382,7 +382,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Vote History */}
             {proposal.votes && proposal.votes.length > 0 && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <VoteHistorySection votes={proposal.votes} />
               </div>
             )}
@@ -403,7 +403,7 @@ export function GovernanceProposalDetailPage() {
           {/* Sidebar */}
           <div className="order-first lg:order-none lg:col-span-5 lg:sticky lg:top-24 lg:self-start space-y-4">
             {/* Voting Status */}
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4 relative overflow-hidden">
+            <div className="rounded-xl border border-border bg-card p-6 space-y-4 relative overflow-hidden">
               {/* Top accent line */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary" />
 
@@ -460,7 +460,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Vote Form */}
             {canVote && (
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="rounded-xl border border-border bg-card p-6">
                 <GovernanceVoteForm
                   voteWeight={voteWeight}
                   reputation={reputation}
@@ -472,7 +472,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Already Voted */}
             {proposal.has_voted && (
-              <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-5`}>
+              <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-6`}>
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.text} shrink-0`} />
                   <div>
@@ -495,7 +495,7 @@ export function GovernanceProposalDetailPage() {
 
 function DetailStatCard({ label, value, sub, colorClass }: { label: string; value: string; sub: string; colorClass: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 relative overflow-hidden">
+    <div className="rounded-xl border border-border bg-card p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-transparent pointer-events-none" />
       <p className="text-xs text-muted-foreground mb-1 relative">{label}</p>
       <p className={`text-2xl font-bold tabular-nums font-mono ${colorClass} relative`}>{value}</p>
@@ -586,7 +586,7 @@ function VoteHistorySection({ votes }: { votes: GovernanceProposalDetail["votes"
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                   v.vote === "for"
                     ? STATUS_COLORS.positive.badge
                     : v.vote === "against"

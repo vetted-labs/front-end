@@ -11,7 +11,7 @@ const STEPS = [
 
 export function StepIndicator({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center justify-center gap-1 mb-8">
+    <div className="flex items-center justify-center gap-2 mb-8">
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.number;
         const isCompleted = currentStep > step.number;
@@ -27,7 +27,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
                 }`}
               />
             )}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-3">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted

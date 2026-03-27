@@ -25,7 +25,7 @@ export function AuthTabSelector({ tabs, activeType, onSelect }: AuthTabSelectorP
             key={tab.type}
             type="button"
             onClick={() => onSelect(tab.type)}
-            className={`relative flex-1 flex flex-col items-center gap-1 px-2 py-3.5 text-xs font-medium transition-colors ${
+            className={`relative flex-1 flex flex-col items-center gap-2 px-2 py-3.5 text-xs font-medium transition-colors ${
               isActive
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"

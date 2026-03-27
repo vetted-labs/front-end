@@ -134,7 +134,7 @@ export function ReviewSubmitStep({
         {formData.expertiseAreas.length > 0 && (
           <div className="flex gap-2">
             <span className="font-medium text-foreground/70 min-w-[140px]">Expertise Areas:</span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {formData.expertiseAreas.map((area) => (
                 <span
                   key={area}
@@ -161,14 +161,14 @@ export function ReviewSubmitStep({
         </div>
 
         {formData.bio && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="font-medium text-foreground/70">Professional Bio:</p>
             <p className="text-foreground line-clamp-3 pl-2 border-l-2 border-border">{formData.bio}</p>
           </div>
         )}
 
         {formData.motivation && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             <p className="font-medium text-foreground/70">Motivation:</p>
             <p className="text-foreground line-clamp-3 pl-2 border-l-2 border-border">{formData.motivation}</p>
           </div>
@@ -177,7 +177,7 @@ export function ReviewSubmitStep({
         {(Object.keys(generalAnswers) as Array<keyof typeof generalAnswers>)
           .filter((key) => generalAnswers[key])
           .map((key) => (
-            <div key={key} className="space-y-1">
+            <div key={key} className="space-y-2">
               <p className="font-medium text-foreground/70">{GENERAL_QUESTION_LABELS[key] ?? key}:</p>
               <p className="text-foreground line-clamp-2 pl-2 border-l-2 border-border">
                 {generalAnswers[key]}
@@ -191,7 +191,7 @@ export function ReviewSubmitStep({
             {levelTemplate.topics.map((topic: GuildDomainTopic) => {
               const answer = levelAnswers[topic.id];
               return answer ? (
-                <div key={topic.id} className="space-y-0.5">
+                <div key={topic.id} className="space-y-2">
                   <p className="text-foreground/60 text-xs font-medium">{topic.title}:</p>
                   <p className="text-foreground line-clamp-2 pl-2 border-l-2 border-border text-xs">
                     {answer}
