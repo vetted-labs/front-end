@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Modal, Button, Alert, Textarea } from "@/components/ui";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
+import { STATUS_COLORS } from "@/config/colors";
 import { candidateApi, applicationsApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
@@ -272,7 +273,7 @@ export default function JobApplicationModal({
                         setResumeFile(null);
                         setUseProfileResume(true);
                       }}
-                      className="text-destructive hover:text-red-700 text-sm cursor-pointer"
+                      className={`${STATUS_COLORS.negative.text} hover:opacity-80 text-sm cursor-pointer`}
                     >
                       Remove
                     </button>
@@ -394,8 +395,8 @@ export default function JobApplicationModal({
         size="md"
       >
         <div className="text-center py-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          <div className={`w-16 h-16 ${STATUS_COLORS.positive.bgSubtle} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <CheckCircle2 className={`w-10 h-10 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">
             Application Submitted!

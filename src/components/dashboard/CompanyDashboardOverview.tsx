@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import type { CompanyActivityItem } from "@/types/api-responses";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -32,17 +33,17 @@ import type { LucideIcon } from "lucide-react";
 function getActivityIcon(actionType: string): { icon: LucideIcon; bg: string; color: string } {
   switch (actionType) {
     case "job_created":
-      return { icon: Briefcase, bg: "bg-green-500/10", color: "text-green-600 dark:text-green-400" };
+      return { icon: Briefcase, bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
     case "job_updated":
-      return { icon: Edit, bg: "bg-blue-500/10", color: "text-blue-600 dark:text-blue-400" };
+      return { icon: Edit, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
     case "status_changed":
-      return { icon: FileText, bg: "bg-amber-500/10", color: "text-amber-600 dark:text-amber-400" };
+      return { icon: FileText, bg: STATUS_COLORS.warning.bgSubtle, color: STATUS_COLORS.warning.text };
     case "message_sent":
-      return { icon: MessageSquare, bg: "bg-green-500/10", color: "text-green-600 dark:text-green-400" };
+      return { icon: MessageSquare, bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
     case "meeting_scheduled":
-      return { icon: Video, bg: "bg-purple-500/10", color: "text-purple-600 dark:text-purple-400" };
+      return { icon: Video, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
     default:
-      return { icon: Zap, bg: "bg-gray-500/10", color: "text-gray-600 dark:text-gray-400" };
+      return { icon: Zap, bg: STATUS_COLORS.neutral.bgSubtle, color: STATUS_COLORS.neutral.text };
   }
 }
 
@@ -322,7 +323,7 @@ export function CompanyDashboardOverview() {
             {/* Pending Actions */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
               <div className="flex items-center gap-2 px-5 py-4 border-b border-border/40">
-                <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                <Zap className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Pending Actions
                 </h3>
@@ -333,8 +334,8 @@ export function CompanyDashboardOverview() {
                     href="/dashboard/messages"
                     className="w-full flex items-start gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group"
                   >
-                    <div className="w-9 h-9 bg-green-500/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-500/20 transition-colors">
-                      <MessageSquare className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <div className={`w-9 h-9 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-positive/20 transition-colors`}>
+                      <MessageSquare className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
                     </div>
                     <div className="flex-1 text-left">
                       <p className="font-semibold text-foreground text-sm mb-0.5">
@@ -353,8 +354,8 @@ export function CompanyDashboardOverview() {
                     href="/dashboard/candidates"
                     className="w-full flex items-start gap-3 p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:shadow-sm transition-all group"
                   >
-                    <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                      <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <div className={`w-9 h-9 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-info-blue/20 transition-colors`}>
+                      <Users className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
                     </div>
                     <div className="flex-1 text-left">
                       <p className="font-semibold text-foreground text-sm mb-0.5">
@@ -383,7 +384,7 @@ export function CompanyDashboardOverview() {
             {/* Upcoming Meetings */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
               <div className="flex items-center gap-2 px-5 py-4 border-b border-border/40">
-                <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Calendar className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Upcoming Meetings
                 </h3>
@@ -406,8 +407,8 @@ export function CompanyDashboardOverview() {
                           key={`${meeting.conversationId}-${idx}`}
                           className="flex items-start gap-3 p-3 rounded-xl border border-border/40"
                         >
-                          <div className="w-9 h-9 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Video className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <div className={`w-9 h-9 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                            <Video className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-foreground truncate">

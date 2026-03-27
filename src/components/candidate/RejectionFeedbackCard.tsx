@@ -11,6 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { STATUS_COLORS, getMatchScoreColors } from "@/config/colors";
 import type { CandidateRejectionFeedback } from "@/types";
 
 interface RejectionFeedbackCardProps {
@@ -26,16 +27,16 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
     : 0;
 
   return (
-    <div className="rounded-xl border border-red-500/20 bg-red-500/5 overflow-hidden">
+    <div className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}>
       {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-red-500/5 transition-colors"
+        className={`w-full flex items-center justify-between px-5 py-4 text-left hover:${STATUS_COLORS.negative.bgSubtle} transition-colors`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
+          <div className={`w-9 h-9 rounded-lg ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} flex items-center justify-center shrink-0`}>
+            <AlertTriangle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">
@@ -55,7 +56,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-5 pb-5 space-y-4 border-t border-red-500/10">
+        <div className={`px-5 pb-5 space-y-4 border-t ${STATUS_COLORS.negative.border}`}>
           {/* Score breakdown */}
           {feedback.criteriaAverages.length > 0 && (
             <div className="pt-4">
@@ -78,9 +79,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className={`h-full rounded-full transition-all ${
-                            pct >= 70 ? "bg-green-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500"
-                          }`}
+                          className={`h-full rounded-full transition-all ${getMatchScoreColors(pct).bg}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -132,7 +131,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
 
           {/* Resubmit CTA */}
           {feedback.canResubmit && onResubmit && (
-            <div className="pt-2 border-t border-red-500/10">
+            <div className={`pt-2 border-t ${STATUS_COLORS.negative.border}`}>
               <Button
                 variant="outline"
                 size="sm"

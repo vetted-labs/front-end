@@ -2,6 +2,7 @@
 
 import { Award, Vote, Coins, TrendingUp } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertActivity } from "@/types";
 
 interface RecentActivityProps {
@@ -14,23 +15,23 @@ const ACTIVITY_CONFIG: Record<
 > = {
   proposal_vote: {
     icon: Vote,
-    color: "text-indigo-400",
-    bgColor: "bg-indigo-500/[0.12]",
+    color: STATUS_COLORS.info.text,
+    bgColor: STATUS_COLORS.info.bgSubtle,
   },
   endorsement: {
     icon: Award,
-    color: "text-amber-400",
-    bgColor: "bg-amber-500/[0.12]",
+    color: STATUS_COLORS.warning.text,
+    bgColor: STATUS_COLORS.warning.bgSubtle,
   },
   earning: {
     icon: Coins,
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/[0.12]",
+    color: STATUS_COLORS.positive.text,
+    bgColor: STATUS_COLORS.positive.bgSubtle,
   },
   reputation_gain: {
     icon: TrendingUp,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/[0.12]",
+    color: STATUS_COLORS.info.text,
+    bgColor: STATUS_COLORS.info.bgSubtle,
   },
 };
 
@@ -74,7 +75,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                   </div>
                 </div>
                 {activity.amount != null && activity.amount > 0 && (
-                  <span className="shrink-0 text-[11px] font-semibold text-emerald-400">
+                  <span className={`shrink-0 text-[11px] font-semibold ${STATUS_COLORS.positive.text}`}>
                     +{activity.amount}
                   </span>
                 )}

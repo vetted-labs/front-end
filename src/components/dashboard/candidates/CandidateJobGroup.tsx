@@ -3,6 +3,7 @@
 import { Briefcase, Award, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { CompanyApplication } from "@/types";
 
 interface CandidateJobGroupProps {
@@ -98,8 +99,8 @@ export function CandidateJobGroup({
                     <p className="text-sm font-medium text-foreground truncate">{app.candidate.fullName}</p>
                     {endorsementCount > 0 && (
                       <span className="flex items-center gap-0.5 flex-shrink-0">
-                        <Award className="w-3 h-3 text-green-600 dark:text-green-400" />
-                        <span className="text-[10px] font-medium text-green-600 dark:text-green-400">{endorsementCount}</span>
+                        <Award className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`} />
+                        <span className={`text-[10px] font-medium ${STATUS_COLORS.positive.text}`}>{endorsementCount}</span>
                       </span>
                     )}
                   </div>

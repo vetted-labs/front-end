@@ -3,16 +3,17 @@
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui";
+import { STATUS_COLORS } from "@/config/colors";
 import { Trophy, Building2, Briefcase, X } from "lucide-react";
 import type { CandidateApplication } from "@/types";
 
 const CONFETTI_COLORS = [
-  "bg-emerald-400",
-  "bg-emerald-500",
-  "bg-green-400",
-  "bg-teal-400",
-  "bg-amber-400",
-  "bg-yellow-400",
+  STATUS_COLORS.positive.bg,
+  STATUS_COLORS.positive.bg,
+  STATUS_COLORS.positive.bg,
+  STATUS_COLORS.info.bg,
+  STATUS_COLORS.warning.bg,
+  STATUS_COLORS.warning.bg,
   "bg-primary",
   "bg-accent",
 ];
@@ -58,7 +59,7 @@ function SparkleDecoration() {
       {SPARKLE_POSITIONS.map((pos, i) => (
         <div
           key={i}
-          className="absolute w-2 h-2 bg-yellow-400 rounded-full animate-sparkle"
+          className={`absolute w-2 h-2 ${STATUS_COLORS.warning.bg} rounded-full animate-sparkle`}
           style={{ ...pos, animationDelay: pos.delay }}
           aria-hidden="true"
         />
@@ -93,7 +94,7 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
 
           {/* Trophy icon */}
           <div className="relative inline-flex mb-6 animate-celebrate-scale-in">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center animate-celebrate-glow">
+            <div className={`w-20 h-20 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center animate-celebrate-glow`}>
               <Trophy className="w-10 h-10 text-white" />
             </div>
             <SparkleDecoration />
@@ -108,7 +109,7 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
           </p>
 
           {/* Job details card */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10 p-4 mb-6 animate-fade-up animate-delay-400">
+          <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 mb-6 animate-fade-up animate-delay-400`}>
             <p className="font-semibold text-foreground text-lg mb-1">
               {application.job.title}
             </p>

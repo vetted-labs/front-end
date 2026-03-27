@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildApplication } from "@/types";
 
 interface ReviewQueueProps {
@@ -41,7 +42,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
           Review Queue
         </span>
         {applications.length > 0 && (
-          <span className="px-2.5 py-0.5 bg-amber-500/[0.12] text-amber-300 rounded-full text-[11px] font-semibold">
+          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS.warning.badge}`}>
             {applications.length} pending
           </span>
         )}
@@ -63,7 +64,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 onClick={() => router.push(getReviewUrl(app))}
                 className={`flex items-center gap-3 p-3 rounded-[10px] text-left transition-colors ${
                   isFirst
-                    ? "bg-amber-500/[0.05] border border-amber-500/[0.10] hover:bg-amber-500/[0.08]"
+                    ? `${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} hover:bg-warning/[0.08]`
                     : "bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04]"
                 }`}
               >
@@ -71,8 +72,8 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 <div
                   className={`w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-[12px] font-bold shrink-0 ${
                     isFirst
-                      ? "bg-amber-500/[0.12] text-amber-400"
-                      : "bg-indigo-500/[0.12] text-indigo-300"
+                      ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
+                      : `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.text}`
                   }`}
                 >
                   {getInitials(name)}

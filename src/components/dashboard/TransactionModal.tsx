@@ -3,6 +3,7 @@ import Image from "next/image";
 import { X, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getExplorerTxUrl } from "@/lib/blockchain";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -78,7 +79,7 @@ export function TransactionModal({
                   href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                  className={`inline-flex items-center gap-2 text-sm ${STATUS_COLORS.pending.text} hover:opacity-80 transition-colors`}
                 >
                   View on Etherscan
                   <ExternalLink className="w-4 h-4" />
@@ -92,12 +93,12 @@ export function TransactionModal({
             <div className="text-center space-y-5">
               <div className="relative w-28 h-28 mx-auto">
                 {/* Outer success glow */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-500 to-emerald-600 opacity-15 animate-pulse" />
-                <div className="absolute -inset-3 rounded-full bg-green-500/10 animate-in fade-in zoom-in duration-700" />
+                <div className={`absolute inset-0 rounded-full ${STATUS_COLORS.positive.bg} opacity-15 animate-pulse`} />
+                <div className={`absolute -inset-3 rounded-full ${STATUS_COLORS.positive.bgSubtle} animate-in fade-in zoom-in duration-700`} />
 
                 {/* Inner container */}
                 <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                  <div className={`w-20 h-20 ${STATUS_COLORS.positive.bg} rounded-full flex items-center justify-center animate-in zoom-in duration-500`}>
                     <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={2.5} />
                   </div>
                 </div>
@@ -107,11 +108,11 @@ export function TransactionModal({
                 <h4 className="text-2xl font-bold text-foreground">
                   {actionType === "stake" ? "Stake Confirmed!" : "Withdrawal Confirmed!"}
                 </h4>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
-                  <span className="text-lg font-bold text-green-700 dark:text-green-400">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border}`}>
+                  <span className={`text-lg font-bold ${STATUS_COLORS.positive.text}`}>
                     {amount} VETD
                   </span>
-                  <span className="text-sm text-green-600/70 dark:text-green-400/70">
+                  <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>
                     {actionType === "stake" ? "staked" : "withdrawn"}
                   </span>
                 </div>
@@ -133,7 +134,7 @@ export function TransactionModal({
                   href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-green-700 dark:text-green-400 bg-green-500/10 hover:bg-green-500/20 transition-colors"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${STATUS_COLORS.positive.text} ${STATUS_COLORS.positive.bgSubtle} hover:bg-positive/20 transition-colors`}
                 >
                   View on Etherscan
                   <ExternalLink className="w-4 h-4" />
@@ -142,7 +143,7 @@ export function TransactionModal({
 
               <Button
                 onClick={onClose}
-                className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/20 transition-all rounded-xl font-semibold text-base"
+                className={`w-full h-12 ${STATUS_COLORS.positive.bg} hover:opacity-90 shadow-lg shadow-positive/20 transition-all rounded-xl font-semibold text-base text-white`}
               >
                 Done
               </Button>
@@ -154,11 +155,11 @@ export function TransactionModal({
             <div className="text-center space-y-6">
               <div className="relative w-24 h-24 mx-auto">
                 {/* Error glow effect */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-red-500 to-rose-600 opacity-20 animate-pulse" />
+                <div className={`absolute inset-0 rounded-full ${STATUS_COLORS.negative.bg} opacity-20 animate-pulse`} />
 
                 {/* Inner container */}
                 <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-16 h-16 bg-gradient-to-br from-red-500 via-rose-500 to-red-600 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                  <div className={`w-16 h-16 ${STATUS_COLORS.negative.bg} rounded-full flex items-center justify-center animate-in zoom-in duration-500`}>
                     <XCircle className="w-8 h-8 text-white" strokeWidth={2.5} />
                   </div>
                 </div>
@@ -174,8 +175,8 @@ export function TransactionModal({
                     : `Failed to withdraw ${amount} VETD tokens.`}
                 </p>
                 {errorMessage && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                    <p className="text-xs text-red-700 dark:text-red-400 break-words">
+                  <div className={`p-3 ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} rounded-xl`}>
+                    <p className={`text-xs ${STATUS_COLORS.negative.text} break-words`}>
                       {errorMessage}
                     </p>
                   </div>
@@ -187,7 +188,7 @@ export function TransactionModal({
                   href={getExplorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-700 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${STATUS_COLORS.negative.text} ${STATUS_COLORS.negative.bgSubtle} hover:bg-negative/20 transition-colors`}
                 >
                   View on Etherscan
                   <ExternalLink className="w-4 h-4" />

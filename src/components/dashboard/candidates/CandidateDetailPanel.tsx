@@ -18,6 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { applicationsApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
 import { toast } from "sonner";
@@ -406,10 +407,10 @@ export function CandidateDetailPanel({
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Guild Review Summary</p>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${
                       guildReport.guildApplication.guildApproved
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                        ? STATUS_COLORS.positive.badge
                         : guildReport.guildApplication.status === "rejected"
-                          ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          ? STATUS_COLORS.negative.badge
+                          : STATUS_COLORS.warning.badge
                     }`}>
                       {guildReport.guildApplication.guildApproved ? "Approved" : guildReport.guildApplication.status}
                     </span>
@@ -419,12 +420,12 @@ export function CandidateDetailPanel({
                       <p className="text-lg font-semibold text-foreground">{guildReport.guildApplication.reviewCount}</p>
                       <p className="text-[11px] text-muted-foreground">Reviews</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-green-500/5">
-                      <p className="text-lg font-semibold text-green-600 dark:text-green-400">{guildReport.guildApplication.approvalCount}</p>
+                    <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.positive.bgSubtle}`}>
+                      <p className={`text-lg font-semibold ${STATUS_COLORS.positive.text}`}>{guildReport.guildApplication.approvalCount}</p>
                       <p className="text-[11px] text-muted-foreground">Approvals</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-red-500/5">
-                      <p className="text-lg font-semibold text-red-600 dark:text-red-400">{guildReport.guildApplication.rejectionCount}</p>
+                    <div className={`text-center p-3 rounded-lg ${STATUS_COLORS.negative.bgSubtle}`}>
+                      <p className={`text-lg font-semibold ${STATUS_COLORS.negative.text}`}>{guildReport.guildApplication.rejectionCount}</p>
                       <p className="text-[11px] text-muted-foreground">Rejections</p>
                     </div>
                   </div>
@@ -445,14 +446,14 @@ export function CandidateDetailPanel({
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
                               <span className={`inline-flex items-center gap-0.5 text-[11px] font-medium ${
-                                review.vote === "approve" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                                review.vote === "approve" ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                               }`}>
                                 {review.vote === "approve" ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                 {review.vote === "approve" ? "Approved" : "Rejected"}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-amber-500" />
+                              <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
                               <span className="text-xs font-medium text-foreground">{review.overallScore}</span>
                             </div>
                           </div>

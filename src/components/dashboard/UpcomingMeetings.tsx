@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Video, Calendar, ArrowRight, ChevronRight } from "lucide-react";
 import { messagingApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 import type { UpcomingMeeting, MeetingStatus } from "@/types";
 
 interface UpcomingMeetingsProps {
@@ -11,10 +12,10 @@ interface UpcomingMeetingsProps {
 }
 
 const STATUS_STYLES: Record<MeetingStatus, { color: string; iconColor: string }> = {
-  pending: { color: "text-amber-500 bg-amber-500/10 border-amber-500/20", iconColor: "text-amber-500" },
-  accepted: { color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20", iconColor: "text-emerald-500" },
-  declined: { color: "text-red-500 bg-red-500/10 border-red-500/20", iconColor: "text-red-500" },
-  new_time_proposed: { color: "text-blue-500 bg-blue-500/10 border-blue-500/20", iconColor: "text-blue-500" },
+  pending: { color: STATUS_COLORS.warning.badge, iconColor: STATUS_COLORS.warning.icon },
+  accepted: { color: STATUS_COLORS.positive.badge, iconColor: STATUS_COLORS.positive.icon },
+  declined: { color: STATUS_COLORS.negative.badge, iconColor: STATUS_COLORS.negative.icon },
+  new_time_proposed: { color: STATUS_COLORS.info.badge, iconColor: STATUS_COLORS.info.icon },
 };
 
 function formatMeetingTime(scheduledAt: string): string {

@@ -13,6 +13,7 @@ import {
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
 import { toast } from "sonner";
+import { STATUS_COLORS } from "@/config/colors";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { CompanyNotificationPreferences } from "@/types";
@@ -185,9 +186,9 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <div className={`${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-lg p-4`}>
                     <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
                       <div>
                         <p className="font-medium text-foreground mb-1">Password Management</p>
                         <p className="text-sm text-muted-foreground">

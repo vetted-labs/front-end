@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { TEAM_MEMBER_STATUS_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { TeamMember, TeamMemberRole } from "@/types";
 
 const ROLE_CONFIG: Record<TeamMemberRole, { label: string; icon: typeof Shield; className: string }> = {
-  admin: { label: "Admin", icon: Crown, className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" },
-  manager: { label: "Manager", icon: Shield, className: "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20" },
+  admin: { label: "Admin", icon: Crown, className: STATUS_COLORS.warning.badge },
+  manager: { label: "Manager", icon: Shield, className: STATUS_COLORS.info.badge },
   recruiter: { label: "Recruiter", icon: User, className: "text-foreground/70 bg-muted/50 border-border/40" },
 };
 
@@ -147,7 +148,7 @@ function MemberActions({
           )}
           <button
             onClick={() => handleAction(() => onRemove(member.id))}
-            className="w-full text-left px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
+            className={`w-full text-left px-3 py-1.5 text-sm ${STATUS_COLORS.negative.text} hover:${STATUS_COLORS.negative.bgSubtle} transition-colors`}
           >
             Remove
           </button>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { STATUS_COLORS } from "@/config/colors";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
 
@@ -66,13 +67,13 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
                   {job.title}
                 </h3>
                 {job.featured && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded text-xs font-bold">
+                  <span className={`flex items-center gap-1 px-2 py-0.5 ${STATUS_COLORS.warning.bg} text-white rounded text-xs font-bold`}>
                     <Star className="w-3 h-3 fill-white" />
                     FEATURED
                   </span>
                 )}
                 {showAppliedBadge && hasApplied && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium flex items-center gap-1">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1 ${STATUS_COLORS.positive.badge}`}>
                     <CheckCircle2 className="w-3 h-3" />
                     Applied
                   </span>

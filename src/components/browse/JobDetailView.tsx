@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button, Alert } from "@/components/ui";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useFetch } from "@/lib/hooks/useFetch";

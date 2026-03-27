@@ -11,6 +11,7 @@ import {
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface SlimNotificationsFeedProps {
   walletAddress: string;
@@ -95,7 +96,7 @@ export function SlimNotificationsFeed({
                   </div>
                 </div>
                 {!notification.isRead && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-2" />
+                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.info.dot} shrink-0 mt-2`} />
                 )}
               </button>
             );

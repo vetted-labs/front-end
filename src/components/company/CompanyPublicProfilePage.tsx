@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { companyApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 import { EmptyState } from "@/components/ui/empty-state";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { formatSalaryRange } from "@/lib/utils";
@@ -86,7 +87,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-2xl font-semibold text-foreground">{profile.name}</h1>
                 {profile.verified && (
-                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon} flex-shrink-0`} />
                 )}
               </div>
 

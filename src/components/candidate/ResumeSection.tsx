@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface ResumeSectionProps {
   resumeUrl?: string;
@@ -47,10 +48,10 @@ export default function ResumeSection({
       </div>
       <div className="p-6">
         {resumeUrl ? (
-          <div className="flex items-center justify-between p-4 bg-green-500/5 border border-green-500/15 rounded-lg">
+          <div className={`flex items-center justify-between p-4 ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} rounded-lg`}>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div className={`p-2 ${STATUS_COLORS.positive.bgSubtle} rounded-lg`}>
+                <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">

@@ -9,6 +9,7 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 export default function AnalyticsPage() {
   return (
@@ -85,10 +86,10 @@ export default function AnalyticsPage() {
                 </div>
                 <div className="p-5 space-y-4">
                   {[
-                    { label: "Pending", value: 48, color: "bg-amber-500/10 border-amber-500/20", icon: Clock, iconColor: "text-amber-500" },
-                    { label: "Reviewing", value: 36, color: "bg-blue-500/10 border-blue-500/20", icon: Eye, iconColor: "text-blue-500" },
-                    { label: "Accepted", value: 18, color: "bg-green-500/10 border-green-500/20", icon: CheckCircle, iconColor: "text-green-500" },
-                    { label: "Rejected", value: 22, color: "bg-red-500/10 border-red-500/20", icon: Users, iconColor: "text-red-500" },
+                    { label: "Pending", value: 48, color: `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`, icon: Clock, iconColor: STATUS_COLORS.warning.icon },
+                    { label: "Reviewing", value: 36, color: `${STATUS_COLORS.info.bgSubtle} ${STATUS_COLORS.info.border}`, icon: Eye, iconColor: STATUS_COLORS.info.icon },
+                    { label: "Accepted", value: 18, color: `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}`, icon: CheckCircle, iconColor: STATUS_COLORS.positive.icon },
+                    { label: "Rejected", value: 22, color: `${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`, icon: Users, iconColor: STATUS_COLORS.negative.icon },
                   ].map((status) => (
                     <div key={status.label} className={`flex items-center justify-between p-4 ${status.color} border rounded-xl`}>
                       <div className="flex items-center gap-3">
@@ -119,7 +120,7 @@ export default function AnalyticsPage() {
                         <p className="text-sm text-muted-foreground">24 applicants · 156 views</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400">active</span>
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>active</span>
                   </div>
                 ))}
               </div>

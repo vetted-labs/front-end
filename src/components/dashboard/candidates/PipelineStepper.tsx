@@ -1,6 +1,7 @@
 import { Check, X } from "lucide-react";
 import { PIPELINE_STAGES } from "@/lib/statusTransitions";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import { formatDate } from "@/lib/utils";
 import type { ApplicationStatus, StatusTransition } from "@/types";
 
@@ -96,10 +97,10 @@ export function PipelineStepper({ currentStatus, history }: PipelineStepperProps
       {/* Rejection branch — shown after the stepper if rejected */}
       {isRejected && (
         <div className="flex flex-col items-center ml-1.5">
-          <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500 text-white shadow-sm shadow-red-500/25">
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${STATUS_COLORS.negative.bg} text-white shadow-sm`}>
             <X className="w-3 h-3" />
           </div>
-          <span className="text-[10px] font-medium mt-1 text-red-600 dark:text-red-400">
+          <span className={`text-[10px] font-medium mt-1 ${STATUS_COLORS.negative.text}`}>
             Rejected
           </span>
         </div>

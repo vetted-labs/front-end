@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface CandidateStatsBarProps {
   total: number;
@@ -14,10 +15,10 @@ interface CandidateStatsBarProps {
 
 const stats = [
   { key: "all", label: "total", color: "text-foreground" },
-  { key: "pending", label: "pending", color: "text-amber-600 dark:text-amber-400" },
-  { key: "reviewing", label: "reviewing", color: "text-blue-600 dark:text-blue-400" },
-  { key: "interviewed", label: "interviewed", color: "text-purple-600 dark:text-purple-400" },
-  { key: "accepted", label: "accepted", color: "text-green-600 dark:text-green-400" },
+  { key: "pending", label: "pending", color: STATUS_COLORS.warning.text },
+  { key: "reviewing", label: "reviewing", color: STATUS_COLORS.info.text },
+  { key: "interviewed", label: "interviewed", color: STATUS_COLORS.neutral.text },
+  { key: "accepted", label: "accepted", color: STATUS_COLORS.positive.text },
 ] as const;
 
 export function CandidateStatsBar({

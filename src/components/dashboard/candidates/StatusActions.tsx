@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { getNextStatuses, isTerminalStatus } from "@/lib/statusTransitions";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ApplicationStatus } from "@/types";
 
 interface StatusActionsProps {
@@ -69,7 +70,7 @@ export function StatusActions({
               isLoading={isUpdating && !isReject}
               className={
                 isReject
-                  ? "text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-950/30 h-7 text-xs"
+                  ? `${STATUS_COLORS.negative.text} border-negative/20 hover:${STATUS_COLORS.negative.bgSubtle} h-7 text-xs`
                   : "h-7 text-xs"
               }
               onClick={() => {

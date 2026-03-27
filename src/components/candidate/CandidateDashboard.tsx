@@ -19,6 +19,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { candidateApi, applicationsApi, messagingApi, extractApiError } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -186,10 +187,10 @@ export default function CandidateDashboard() {
   // Active stats to show (non-zero, or always show total + pending)
   const statEntries: { key: string; label: string; value: number; color: string }[] = [
     { key: "total",    label: "Applied",     value: stats.total,       color: "text-primary" },
-    { key: "pending",  label: "Pending",     value: stats.pending,     color: "text-amber-500" },
-    { key: "reviewing",label: "In Review",   value: stats.reviewing,   color: "text-blue-500" },
-    { key: "accepted", label: "Accepted",    value: stats.accepted,    color: "text-emerald-500" },
-    { key: "rejected", label: "Rejected",    value: stats.rejected,    color: "text-red-500" },
+    { key: "pending",  label: "Pending",     value: stats.pending,     color: STATUS_COLORS.warning.text },
+    { key: "reviewing",label: "In Review",   value: stats.reviewing,   color: STATUS_COLORS.info.text },
+    { key: "accepted", label: "Accepted",    value: stats.accepted,    color: STATUS_COLORS.positive.text },
+    { key: "rejected", label: "Rejected",    value: stats.rejected,    color: STATUS_COLORS.negative.text },
   ];
 
   return (

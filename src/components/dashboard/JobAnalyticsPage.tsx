@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 export default function JobAnalyticsPage() {
   const router = useRouter();
@@ -71,10 +72,10 @@ export default function JobAnalyticsPage() {
                 <h3 className="text-lg font-semibold text-foreground mb-6">Application Status</h3>
                 <div className="space-y-4">
                   {[
-                    { label: "Pending Review", value: 12, bg: "bg-yellow-50 dark:bg-yellow-900/20", icon: Clock },
-                    { label: "Under Review", value: 8, bg: "bg-blue-50 dark:bg-blue-900/20", icon: Eye },
-                    { label: "Accepted", value: 4, bg: "bg-green-50 dark:bg-green-900/20", icon: CheckCircle },
-                    { label: "Rejected", value: 4, bg: "bg-red-50 dark:bg-red-900/20", icon: Users },
+                    { label: "Pending Review", value: 12, bg: STATUS_COLORS.warning.bgSubtle, icon: Clock },
+                    { label: "Under Review", value: 8, bg: STATUS_COLORS.info.bgSubtle, icon: Eye },
+                    { label: "Accepted", value: 4, bg: STATUS_COLORS.positive.bgSubtle, icon: CheckCircle },
+                    { label: "Rejected", value: 4, bg: STATUS_COLORS.negative.bgSubtle, icon: Users },
                   ].map((s) => (
                     <div key={s.label} className={`flex items-center justify-between p-4 ${s.bg} rounded-lg`}>
                       <div className="flex items-center gap-3">

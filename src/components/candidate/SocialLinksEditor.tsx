@@ -2,6 +2,7 @@
 
 import { Plus, X, AlertTriangle } from "lucide-react";
 import { SOCIAL_PLATFORMS } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import { getPlatformIcon, getPlatformPlaceholder } from "@/lib/social-links";
 import type { SocialLink } from "@/types";
 
@@ -63,13 +64,13 @@ export default function SocialLinksEditor({
     <div className="space-y-3">
       {/* Missing required platforms warning */}
       {missingRequired.length > 0 && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm">
-          <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+        <div className={`flex items-start gap-2 p-3 rounded-lg ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} text-sm`}>
+          <AlertTriangle className={`w-4 h-4 ${STATUS_COLORS.warning.icon} mt-0.5 shrink-0`} />
           <div>
-            <p className="font-medium text-amber-700 dark:text-amber-400">
+            <p className={`font-medium ${STATUS_COLORS.warning.text}`}>
               Required social links missing
             </p>
-            <p className="text-amber-600 dark:text-amber-400/80">
+            <p className={`${STATUS_COLORS.warning.text} opacity-80`}>
               {missingRequired
                 .map(
                   (p) =>
@@ -124,7 +125,7 @@ export default function SocialLinksEditor({
                 placeholder={getPlatformPlaceholder(link.platform)}
                 className={`w-full h-10 pl-9 pr-3 text-sm rounded-lg border-2 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isRequired && !link.url.trim()
-                    ? "border-amber-500/50"
+                    ? `border-warning/50`
                     : "border-input"
                 }`}
               />

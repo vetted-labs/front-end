@@ -18,6 +18,7 @@ import { candidateApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { getGuildIcon, getGuildColor } from "@/lib/guildHelpers";
+import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationSummary } from "@/types";
@@ -29,9 +30,9 @@ const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
 };
 
 const GUILD_STATUS_GLOW: Record<string, string> = {
-  pending:  "shadow-amber-500/5",
-  approved: "shadow-emerald-500/5",
-  rejected: "shadow-red-500/5",
+  pending:  "shadow-warning/5",
+  approved: "shadow-positive/5",
+  rejected: "shadow-negative/5",
 };
 
 /** Map guild-specific statuses to APPLICATION_STATUS_CONFIG keys */
@@ -196,7 +197,7 @@ export default function CandidateGuilds() {
                           {app.reviewCount || 0} review{(app.reviewCount || 0) !== 1 ? "s" : ""}
                         </span>
                         {(app.approvalCount ?? 0) > 0 && (
-                          <span className="flex items-center gap-1 text-emerald-500">
+                          <span className={`flex items-center gap-1 ${STATUS_COLORS.positive.text}`}>
                             <Star className="w-3 h-3" />
                             {app.approvalCount} approval{app.approvalCount !== 1 ? "s" : ""}
                           </span>

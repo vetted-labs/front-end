@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { Button, Input, Textarea, NativeSelect, Alert } from "@/components/ui";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { companyApi, getAssetUrl } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { TeamManagement } from "./TeamManagement";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
@@ -403,7 +404,7 @@ export default function CompanyProfilePage() {
 
               {profile.verified && (
                 <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 text-green-600">
+                  <div className={`flex items-center gap-2 ${STATUS_COLORS.positive.text}`}>
                     <CheckCircle2 className="w-5 h-5" />
                     <span className="font-medium">Verified Company</span>
                   </div>
