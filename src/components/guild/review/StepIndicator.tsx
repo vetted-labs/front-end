@@ -1,5 +1,7 @@
 "use client";
 
+import { STATUS_COLORS } from "@/config/colors";
+
 const STEPS = [
   { number: 1, label: "Profile" },
   { number: 2, label: "General" },
@@ -29,7 +31,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted
-                    ? "bg-green-500/15 border-2 border-green-500/40"
+                    ? `${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border}`
                     : isActive
                     ? "bg-primary/15 border-2 border-primary/50"
                     : "bg-muted/50 border border-border"
@@ -37,7 +39,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
               >
                 {isCompleted ? (
                   <svg
-                    className="w-4 h-4 text-green-500"
+                    className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`}
                     viewBox="0 0 16 16"
                     fill="none"
                     aria-hidden="true"

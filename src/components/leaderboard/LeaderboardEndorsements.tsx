@@ -99,7 +99,7 @@ export function LeaderboardEndorsements({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <Coins className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <Coins className="w-3.5 h-3.5 text-positive shrink-0" />
                       <span className="text-sm font-semibold tabular-nums">
                         {formatVetd(bidVetd)}
                       </span>

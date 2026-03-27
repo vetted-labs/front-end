@@ -23,8 +23,8 @@ export function JobDetailsSection({
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-        <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <div className="w-10 h-10 bg-positive/10 rounded-lg flex items-center justify-center">
+          <MapPin className="w-5 h-5 text-positive" />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-foreground">
@@ -46,13 +46,13 @@ export function JobDetailsSection({
             value={formData.location}
             onChange={(e) => onFieldChange("location", e.target.value)}
             className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.location ? "border-red-500" : "border-border/60"
+              fieldErrors.location ? "border-negative" : "border-border/60"
             }`}
             placeholder="e.g., Remote or San Francisco"
           />
         </div>
         {fieldErrors.location && (
-          <p className="text-red-500 text-sm mt-1">{fieldErrors.location}</p>
+          <p className="text-negative text-sm mt-1">{fieldErrors.location}</p>
         )}
       </div>
 
@@ -121,13 +121,13 @@ export function JobDetailsSection({
                 )
               }
               className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.salaryMin ? "border-red-500" : "border-border/60"
+                fieldErrors.salaryMin ? "border-negative" : "border-border/60"
               }`}
               placeholder="e.g., 100000"
             />
           </div>
           {fieldErrors.salaryMin && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-negative text-sm mt-1">
               {fieldErrors.salaryMin}
             </p>
           )}
@@ -188,7 +188,7 @@ export function JobDetailsSection({
               value={formData.guild}
               onChange={(e) => onFieldChange("guild", e.target.value)}
               className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.guild ? "border-red-500" : "border-border/60"
+                fieldErrors.guild ? "border-negative" : "border-border/60"
               }`}
             >
               <option value="">Select a guild</option>
@@ -200,7 +200,7 @@ export function JobDetailsSection({
             </select>
           </div>
           {fieldErrors.guild && (
-            <p className="text-red-500 text-sm mt-1">{fieldErrors.guild}</p>
+            <p className="text-negative text-sm mt-1">{fieldErrors.guild}</p>
           )}
         </div>
       </div>

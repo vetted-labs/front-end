@@ -1,6 +1,7 @@
 "use client";
 
 import { Bookmark } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface BookmarkButtonProps {
   targetId: string;
@@ -24,12 +25,12 @@ export function BookmarkButton({
       title="Bookmark"
       className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
         isBookmarked
-          ? "text-blue-500 bg-blue-500/10"
+          ? `${STATUS_COLORS.info.text} ${STATUS_COLORS.info.bgSubtle}`
           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
       }`}
     >
       <Bookmark
-        className={`w-3.5 h-3.5 ${isBookmarked ? "fill-blue-500" : ""}`}
+        className={`w-3.5 h-3.5 ${isBookmarked ? "fill-info-blue" : ""}`}
       />
     </button>
   );

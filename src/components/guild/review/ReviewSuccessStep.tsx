@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ReviewSubmitResponse } from "@/types";
 
 export interface ReviewSuccessStepProps {
@@ -33,8 +34,8 @@ export function ReviewSuccessStep({
     <div className="space-y-6">
       {/* Success Banner */}
       <div className="text-center py-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
-          <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} mb-4`}>
+          <CheckCircle className={`w-8 h-8 ${STATUS_COLORS.positive.icon}`} />
         </div>
         <h3 className="text-xl font-bold text-foreground mb-1">
           {isCommitPhase ? "Commitment Submitted" : "Review Submitted"}
@@ -46,8 +47,8 @@ export function ReviewSuccessStep({
 
       {/* Vote Locked Confirmation (commit-reveal only) */}
       {isCommitPhase && (
-        <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4 text-center">
-          <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-2" />
+        <div className={`rounded-lg ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 text-center`}>
+          <CheckCircle2 className={`h-6 w-6 ${STATUS_COLORS.positive.icon} mx-auto mb-2`} />
           <p className="font-semibold text-foreground">Vote committed!</p>
           <p className="text-sm text-muted-foreground mt-1">
             You&apos;ll need to reveal it during the reveal phase.
@@ -76,7 +77,7 @@ export function ReviewSuccessStep({
           </div>
           <div className="text-center p-3 rounded-lg bg-card border border-border">
             <p className="text-xs text-muted-foreground mb-1">Deductions</p>
-            <p className={`text-lg font-bold ${redFlagDeductions > 0 ? "text-red-400" : "text-foreground"}`}>
+            <p className={`text-lg font-bold ${redFlagDeductions > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
               {redFlagDeductions > 0 ? `-${redFlagDeductions}` : "0"}
             </p>
           </div>
@@ -94,10 +95,10 @@ export function ReviewSuccessStep({
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 scorePercent >= 70
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                  ? STATUS_COLORS.positive.bg
                   : scorePercent >= 40
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500"
-                  : "bg-gradient-to-r from-red-500 to-rose-500"
+                  ? STATUS_COLORS.warning.bg
+                  : STATUS_COLORS.negative.bg
               }`}
               style={{ width: `${Math.min(scorePercent, 100)}%` }}
             />
@@ -108,9 +109,9 @@ export function ReviewSuccessStep({
 
       {/* On-chain transaction */}
       {commitTxHash && (
-        <div className="rounded-xl border border-green-500/20 bg-green-500/[0.04] p-4">
+        <div className={`rounded-xl ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4`}>
           <div className="flex items-start gap-3">
-            <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+            <CheckCircle className={`w-4 h-4 ${STATUS_COLORS.positive.icon} mt-0.5 shrink-0`} />
             <div className="text-sm flex-1 min-w-0">
               <p className="font-medium text-foreground mb-1">On-Chain Transaction Confirmed</p>
               <p className="text-muted-foreground mb-2">
@@ -136,9 +137,9 @@ export function ReviewSuccessStep({
       )}
 
       {/* What happens next */}
-      <div className="rounded-xl border border-border bg-blue-500/[0.04] p-4">
+      <div className={`rounded-xl border border-border ${STATUS_COLORS.info.bgSubtle} p-4`}>
         <div className="flex items-start gap-3">
-          <Sparkles className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+          <Sparkles className={`w-4 h-4 ${STATUS_COLORS.info.icon} mt-0.5 shrink-0`} />
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">What happens next?</p>
             <p>

@@ -256,14 +256,14 @@ export function GovernanceProposalDetailPage() {
         <div className="space-y-6">
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard label="For" value={`${forPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_for)} weight`} color="text-green-500" />
-            <StatCard label="Against" value={`${againstPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_against)} weight`} color="text-red-500" />
+            <StatCard label="For" value={`${forPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_for)} weight`} color="text-positive" />
+            <StatCard label="Against" value={`${againstPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_against)} weight`} color="text-negative" />
             <StatCard label="Abstain" value={`${abstainPercent.toFixed(0)}%`} sub={`${formatVETD(proposal.votes_abstain)} weight`} color="text-muted-foreground" />
             <StatCard
               label="Quorum"
               value={quorumPercent >= 100 ? "Reached" : `${Math.min(quorumPercent, 100).toFixed(0)}%`}
               sub={`${formatVETD(proposal.total_voting_power)} / ${formatVETD(proposal.quorum_required)} weight`}
-              color={quorumPercent >= 100 ? "text-green-500" : "text-amber-500"}
+              color={quorumPercent >= 100 ? "text-positive" : "text-warning"}
             />
           </div>
 
@@ -286,9 +286,9 @@ export function GovernanceProposalDetailPage() {
                 </h3>
                 <div className="flex items-center gap-3">
                   {proposal.my_vote === "for" ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <CheckCircle2 className="w-5 h-5 text-positive" />
                   ) : proposal.my_vote === "against" ? (
-                    <XCircle className="w-5 h-5 text-red-500" />
+                    <XCircle className="w-5 h-5 text-negative" />
                   ) : (
                     <span className="w-5 h-5 rounded-full bg-muted-foreground/20 inline-block" />
                   )}
@@ -401,7 +401,7 @@ export function GovernanceProposalDetailPage() {
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    className={`h-full rounded-full transition-all ${quorumPercent >= 100 ? "bg-green-500" : "bg-primary"}`}
+                    className={`h-full rounded-full transition-all ${quorumPercent >= 100 ? "bg-positive" : "bg-primary"}`}
                     style={{ width: `${Math.min(quorumPercent, 100)}%` }}
                   />
                 </div>
@@ -438,9 +438,9 @@ export function GovernanceProposalDetailPage() {
 
             {/* Already Voted */}
             {proposal.has_voted && (
-              <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-5">
+              <div className="rounded-xl border border-positive/30 bg-positive/5 p-5">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-positive shrink-0" />
                   <div>
                     <p className="text-sm font-semibold">
                       You voted: <span className="capitalize">{proposal.my_vote}</span>
@@ -486,14 +486,14 @@ function ParameterChangeSection({
         Parameter Change
       </h3>
       <div className="flex items-center gap-3">
-        <div className="flex-1 rounded-lg bg-red-500/5 border border-red-500/20 p-3">
+        <div className="flex-1 rounded-lg bg-negative/5 border border-negative/20 p-3">
           <p className="text-xs text-muted-foreground mb-0.5">Current</p>
-          <p className="text-sm font-bold text-red-500">{currentValue ?? "\u2014"}</p>
+          <p className="text-sm font-bold text-negative">{currentValue ?? "\u2014"}</p>
         </div>
         <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-        <div className="flex-1 rounded-lg bg-green-500/5 border border-green-500/20 p-3">
+        <div className="flex-1 rounded-lg bg-positive/5 border border-positive/20 p-3">
           <p className="text-xs text-muted-foreground mb-0.5">Proposed</p>
-          <p className="text-sm font-bold text-green-500">{proposedValue ?? "\u2014"}</p>
+          <p className="text-sm font-bold text-positive">{proposedValue ?? "\u2014"}</p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground mt-2">Parameter: <span className="font-medium text-foreground">{parameterName}</span></p>

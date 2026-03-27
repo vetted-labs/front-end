@@ -174,7 +174,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
       <div className="grid gap-4">
         {application.bio && (
           <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-semibold mb-2">Bio</p>
+            <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-2">Bio</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.bio}
             </p>
@@ -182,7 +182,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
         )}
         {application.motivation && (
           <div className="rounded-xl border border-border bg-muted/30 p-5">
-            <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
+            <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.motivation}
             </p>
@@ -193,7 +193,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
       {/* Expertise Areas — preserved (skills-based evaluation) */}
       {application.expertiseAreas && application.expertiseAreas.length > 0 && (
         <div>
-          <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-semibold mb-3">
+          <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-3">
             Expertise Areas
           </p>
           <div className="flex flex-wrap gap-2">

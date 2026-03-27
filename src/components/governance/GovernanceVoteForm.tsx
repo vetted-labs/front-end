@@ -44,7 +44,7 @@ export function GovernanceVoteForm({
             Vote weight: <span className="font-semibold text-foreground tabular-nums">{voteWeight.toFixed(2)}x</span>
           </p>
           {isGuildMaster && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">
               <Crown className="w-3 h-3" />
               1.5x Master
             </span>
@@ -59,7 +59,7 @@ export function GovernanceVoteForm({
       <div className="grid grid-cols-3 gap-2">
         <Button
           variant={selectedVote === "for" ? "default" : "outline"}
-          className={selectedVote === "for" ? "bg-green-600 hover:bg-green-700" : "hover:border-green-500 hover:text-green-500"}
+          className={selectedVote === "for" ? "bg-positive hover:bg-positive/90" : "hover:border-positive hover:text-positive"}
           onClick={() => setSelectedVote("for")}
           disabled={disabled || isSubmitting}
           size="lg"
@@ -68,7 +68,7 @@ export function GovernanceVoteForm({
         </Button>
         <Button
           variant={selectedVote === "against" ? "default" : "outline"}
-          className={selectedVote === "against" ? "bg-red-600 hover:bg-red-700" : "hover:border-red-500 hover:text-red-500"}
+          className={selectedVote === "against" ? "bg-negative hover:bg-negative/90" : "hover:border-negative hover:text-negative"}
           onClick={() => setSelectedVote("against")}
           disabled={disabled || isSubmitting}
           size="lg"
@@ -77,7 +77,7 @@ export function GovernanceVoteForm({
         </Button>
         <Button
           variant={selectedVote === "abstain" ? "default" : "outline"}
-          className={selectedVote === "abstain" ? "bg-gray-600 hover:bg-gray-700" : ""}
+          className={selectedVote === "abstain" ? "bg-neutral hover:bg-neutral/90" : ""}
           onClick={() => setSelectedVote("abstain")}
           disabled={disabled || isSubmitting}
           size="lg"

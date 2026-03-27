@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Award, Loader2 } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
+import { STATUS_COLORS } from "@/config/colors";
 import type { LevelReviewTemplate, ReviewDomainTopic, RubricRedFlag } from "@/types";
 
 export interface DomainReviewStepProps {
@@ -52,15 +53,15 @@ export function DomainReviewStep({
       {/* Domain / Level Questions */}
       <div className="space-y-5">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-            <Award className="w-4 h-4 text-amber-300" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning/20 to-primary/20 flex items-center justify-center">
+            <Award className="w-4 h-4 text-warning" />
           </div>
           <h3 className="text-base font-bold text-foreground">Domain Review</h3>
         </div>
 
         {loadingTemplates && !levelTemplate ? (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-            <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+            <Loader2 className="w-4 h-4 text-warning animate-spin" />
             <p className="text-sm text-muted-foreground">Loading topic rubric...</p>
           </div>
         ) : topicList.length === 0 ? (
@@ -103,7 +104,7 @@ export function DomainReviewStep({
                   </div>
 
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-bold">Scoring</p>
+                    <p className="text-[11px] text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
                     {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
                       <div className="space-y-1.5">
                         <p className="text-xs font-semibold text-foreground">What to look for</p>
@@ -119,10 +120,10 @@ export function DomainReviewStep({
                     {topic.scoring && (
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { label: "5 pts", value: topic.scoring.five, color: "text-green-400" },
-                          { label: "3-4", value: topic.scoring.threeToFour, color: "text-amber-300" },
-                          { label: "1-2", value: topic.scoring.oneToTwo, color: "text-orange-400" },
-                          { label: "0", value: topic.scoring.zero, color: "text-red-400" },
+                          { label: "5 pts", value: topic.scoring.five, color: STATUS_COLORS.positive.text },
+                          { label: "3-4", value: topic.scoring.threeToFour, color: STATUS_COLORS.warning.text },
+                          { label: "1-2", value: topic.scoring.oneToTwo, color: "text-primary" },
+                          { label: "0", value: topic.scoring.zero, color: STATUS_COLORS.negative.text },
                         ].map((s) => (
                           <div key={s.label} className="text-xs text-muted-foreground rounded-lg bg-muted/30 border border-border p-2">
                             <span className={`font-bold ${s.color}`}>{s.label}:</span> {s.value}
@@ -142,7 +143,7 @@ export function DomainReviewStep({
                     />
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">
-                        Justification <span className="text-red-400/60">*</span>
+                        Justification <span className={`${STATUS_COLORS.negative.text} opacity-60`}>*</span>
                       </p>
                       <textarea
                         value={topicJustifications[topic.id] || ""}
@@ -166,9 +167,9 @@ export function DomainReviewStep({
       </div>
 
       {/* Red Flags */}
-      <div className="rounded-2xl border border-red-500/15 bg-red-500/[0.03] overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-red-500/10 bg-red-500/[0.03]">
-          <AlertTriangle className="w-4 h-4 text-red-400" />
+      <div className={`rounded-2xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}>
+        <div className={`flex items-center gap-3 px-5 py-3.5 border-b ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`}>
+          <AlertTriangle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
           <h3 className="text-sm font-bold text-foreground">Red Flags (Deductions)</h3>
         </div>
         <div className="p-5">
@@ -181,7 +182,7 @@ export function DomainReviewStep({
                   key={flag.id}
                   className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
                     redFlags[flag.id]
-                      ? "bg-red-500/10 border border-red-500/25"
+                      ? "bg-negative/10 border border-negative/25"
                       : "bg-muted/30 border border-border hover:border-border"
                   }`}
                 >
@@ -194,12 +195,12 @@ export function DomainReviewStep({
                         [flag.id]: e.target.checked,
                       }))
                     }
-                    className="h-4 w-4 rounded border-border bg-muted/50 accent-red-500"
+                    className="h-4 w-4 rounded border-border bg-muted/50 accent-negative"
                   />
-                  <span className={`text-sm flex-1 ${redFlags[flag.id] ? "text-red-300" : "text-muted-foreground"}`}>
+                  <span className={`text-sm flex-1 ${redFlags[flag.id] ? STATUS_COLORS.negative.text : "text-muted-foreground"}`}>
                     {flag.label}
                   </span>
-                  <span className={`text-xs font-bold ${redFlags[flag.id] ? "text-red-400" : "text-muted-foreground/60"}`}>
+                  <span className={`text-xs font-bold ${redFlags[flag.id] ? STATUS_COLORS.negative.text : "text-muted-foreground/60"}`}>
                     -{Math.abs(flag.points || 0)} pts
                   </span>
                 </label>
@@ -210,12 +211,12 @@ export function DomainReviewStep({
       </div>
 
       {/* Overall Score Summary */}
-      <div className="relative overflow-hidden rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/[0.08] via-orange-500/[0.05] to-transparent p-5">
-        <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-warning/20 bg-gradient-to-br from-warning/[0.08] via-primary/[0.05] to-transparent p-5">
+        <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold text-foreground">Overall Score</p>
-            <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400 tabular-nums">
+            <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-warning to-primary tabular-nums">
               {overallScore}
             </p>
           </div>
@@ -232,9 +233,9 @@ export function DomainReviewStep({
                 {topicTotal}{topicMax ? `/${topicMax}` : ""}
               </p>
             </div>
-            <div className="text-center p-2.5 rounded-lg bg-red-500/[0.06] border border-red-500/15">
+            <div className={`text-center p-2.5 rounded-lg ${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`}>
               <p className="text-xs text-muted-foreground mb-0.5">Deductions</p>
-              <p className="text-sm font-bold text-red-400 tabular-nums">-{redFlagDeductions}</p>
+              <p className={`text-sm font-bold ${STATUS_COLORS.negative.text} tabular-nums`}>-{redFlagDeductions}</p>
             </div>
           </div>
         </div>
@@ -242,7 +243,7 @@ export function DomainReviewStep({
 
       {/* Feedback */}
       <div>
-        <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-semibold mb-3">
+        <p className="text-[11px] text-warning/70 uppercase tracking-wider font-semibold mb-3">
           Feedback (Optional)
         </p>
         <textarea

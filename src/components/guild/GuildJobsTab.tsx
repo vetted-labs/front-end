@@ -228,8 +228,8 @@ export function GuildJobsTab({
                 >
                   {/* Glassmorphism background layers */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_55%)] opacity-60" />
-                  <div className="pointer-events-none absolute -top-20 right-[-5%] h-40 w-40 rounded-full bg-orange-500/8 blur-3xl" />
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/40 to-transparent opacity-60" />
+                  <div className="pointer-events-none absolute -top-20 right-[-5%] h-40 w-40 rounded-full bg-primary/8 blur-3xl" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-60" />
 
                   <div className="relative z-10 p-6">
                     {/* Header: Job title + Match score */}
@@ -239,7 +239,7 @@ export function GuildJobsTab({
                           {application.jobTitle}
                         </h4>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-border flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-border flex items-center justify-center">
                             <span className="text-xs font-bold text-primary">
                               {application.candidateName.charAt(0)}
                             </span>
@@ -289,7 +289,7 @@ export function GuildJobsTab({
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                       <div className="flex items-center gap-2 text-sm">
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
-                          <Award className="w-3.5 h-3.5 text-amber-300" />
+                          <Award className="w-3.5 h-3.5 text-warning" />
                           <span className="text-foreground font-medium">
                             {application.endorsementCount}
                           </span>
@@ -301,7 +301,7 @@ export function GuildJobsTab({
 
                       <button
                         onClick={() => handleEndorseClick(application.id)}
-                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-primary/30 text-primary font-medium text-sm transition-all hover:border-primary/50 hover:from-amber-500/25 hover:via-orange-500/20 hover:to-amber-500/25 hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98]"
+                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 border border-primary/30 text-primary font-medium text-sm transition-all hover:border-primary/50 hover:from-primary/25 hover:via-primary/20 hover:to-primary/25 hover:shadow-lg hover:shadow-primary/10 active:scale-[0.98]"
                       >
                         <Sparkles className="w-4 h-4" />
                         Endorse

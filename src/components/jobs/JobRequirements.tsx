@@ -24,8 +24,8 @@ export function JobRequirements({
       {/* Guild & Publishing Section */}
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-          <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
+            <Shield className="w-5 h-5 text-info-blue" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
@@ -65,8 +65,8 @@ export function JobRequirements({
       {/* Requirements Section */}
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-          <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-info-blue" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
@@ -91,13 +91,13 @@ export function JobRequirements({
               )
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.requirements ? "border-red-500" : "border-border/60"
+              fieldErrors.requirements ? "border-negative" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., 5+ years experience"
           />
           {fieldErrors.requirements && (
-            <p className="text-red-500 text-sm mt-1">{fieldErrors.requirements}</p>
+            <p className="text-negative text-sm mt-1">{fieldErrors.requirements}</p>
           )}
         </div>
 
@@ -111,13 +111,13 @@ export function JobRequirements({
               onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.skills ? "border-red-500" : "border-border/60"
+              fieldErrors.skills ? "border-negative" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., Solidity, React"
           />
           {fieldErrors.skills && (
-            <p className="text-red-500 text-sm mt-1">{fieldErrors.skills}</p>
+            <p className="text-negative text-sm mt-1">{fieldErrors.skills}</p>
           )}
         </div>
 
@@ -134,13 +134,13 @@ export function JobRequirements({
               )
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.screeningQuestions ? "border-red-500" : "border-border/60"
+              fieldErrors.screeningQuestions ? "border-negative" : "border-border/60"
             }`}
             rows={4}
             placeholder="e.g., Describe your experience with DeFi"
           />
           {fieldErrors.screeningQuestions && (
-            <p className="text-red-500 text-sm mt-1">{fieldErrors.screeningQuestions}</p>
+            <p className="text-negative text-sm mt-1">{fieldErrors.screeningQuestions}</p>
           )}
         </div>
       </div>

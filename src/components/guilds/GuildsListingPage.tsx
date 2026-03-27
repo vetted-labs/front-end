@@ -56,8 +56,8 @@ export default function GlobalGuildsPage() {
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground animate-page-enter">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
-        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />
-        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-amber-500/6 dark:bg-amber-500/12 blur-3xl" />
+        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-primary/8 dark:bg-primary/15 blur-3xl" />
+        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-primary/6 dark:bg-primary/12 blur-3xl" />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-transparent to-transparent" />
       </div>
 
@@ -65,13 +65,13 @@ export default function GlobalGuildsPage() {
       {/* Hero Section */}
       <div className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.10),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.22),transparent_60%)]" />
-        <div className="absolute -bottom-20 left-1/2 h-40 w-96 -translate-x-1/2 bg-amber-500/5 dark:bg-amber-500/10 blur-3xl" />
+        <div className="absolute -bottom-20 left-1/2 h-40 w-96 -translate-x-1/2 bg-primary/5 dark:bg-primary/10 blur-3xl" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-muted/50 text-[11px] uppercase tracking-[0.3em] text-primary mb-6">
               Noble Protocol Guilds
             </div>
-            <h1 className="text-5xl md:text-6xl font-semibold mb-4 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 dark:from-amber-200 dark:via-orange-200 dark:to-amber-100 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-semibold mb-4 bg-gradient-to-r from-primary via-accent to-primary dark:from-amber-200 dark:via-orange-200 dark:to-amber-100 bg-clip-text text-transparent">
               Guilds
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">

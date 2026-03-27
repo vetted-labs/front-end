@@ -17,7 +17,7 @@ function StepIndicator({
   return (
     <div className="flex items-center gap-2.5">
       {status === "done" ? (
-        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+        <CheckCircle2 className="w-4 h-4 text-positive shrink-0" />
       ) : status === "active" ? (
         <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
       ) : (
@@ -26,7 +26,7 @@ function StepIndicator({
       <span
         className={`text-sm ${
           status === "done"
-            ? "text-green-600 dark:text-green-400"
+            ? "text-positive"
             : status === "active"
               ? "text-foreground font-medium"
               : "text-muted-foreground"
@@ -58,8 +58,8 @@ export function ProposalSubmitSection({
   return (
     <div className="p-6 sm:p-8 bg-gradient-to-r from-primary/5 to-accent/5 border-t border-border/40">
       {!address && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 mb-5">
-          <Wallet className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-4 mb-5">
+          <Wallet className="w-5 h-5 text-warning mt-0.5 shrink-0" />
           <div>
             <p className="text-sm font-medium text-foreground">
               Wallet not connected

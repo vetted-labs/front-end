@@ -84,7 +84,7 @@ export function StartConversationButton({
         />
 
         {error && (
-          <p className="text-xs text-red-500">{error}</p>
+          <p className="text-xs text-negative">{error}</p>
         )}
 
         {/* Actions */}

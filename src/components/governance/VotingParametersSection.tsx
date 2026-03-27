@@ -31,8 +31,8 @@ export function VotingParametersSection({
   return (
     <div className="p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-        <div className="w-10 h-10 bg-green-600/10 rounded-lg flex items-center justify-center">
-          <Coins className="w-5 h-5 text-green-600" />
+        <div className="w-10 h-10 bg-positive/10 rounded-lg flex items-center justify-center">
+          <Coins className="w-5 h-5 text-positive" />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-foreground">

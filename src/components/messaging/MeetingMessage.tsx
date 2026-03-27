@@ -18,10 +18,10 @@ const providerLabels: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<MeetingStatus, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: "text-amber-500", bg: "bg-amber-500/10 border-amber-500/30" },
-  accepted: { label: "Accepted", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/30" },
-  declined: { label: "Declined", color: "text-red-500", bg: "bg-red-500/10 border-red-500/30" },
-  new_time_proposed: { label: "New Time Proposed", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/30" },
+  pending: { label: "Pending", color: "text-warning", bg: "bg-warning/10 border-warning/30" },
+  accepted: { label: "Accepted", color: "text-positive", bg: "bg-positive/10 border-positive/30" },
+  declined: { label: "Declined", color: "text-negative", bg: "bg-negative/10 border-negative/30" },
+  new_time_proposed: { label: "New Time Proposed", color: "text-info-blue", bg: "bg-info-blue/10 border-info-blue/30" },
 };
 
 export function MeetingMessage({
@@ -112,8 +112,8 @@ export function MeetingMessage({
 
           {/* Proposed new time info */}
           {meeting.response?.proposedTime && (
-            <div className="mt-2 p-2 rounded-lg bg-blue-500/5 border border-blue-500/20">
-              <p className="text-xs font-medium text-blue-500 flex items-center gap-1 mb-1">
+            <div className="mt-2 p-2 rounded-lg bg-info-blue/5 border border-info-blue/20">
+              <p className="text-xs font-medium text-info-blue flex items-center gap-1 mb-1">
                 <CalendarClock className="w-3 h-3" />
                 Proposed New Time
               </p>
@@ -145,7 +145,7 @@ export function MeetingMessage({
               <button
                 onClick={() => handleRespond("accepted")}
                 disabled={isResponding}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-positive/10 text-positive border border-positive/30 hover:bg-positive/20 transition-colors disabled:opacity-50"
               >
                 <Check className="w-3 h-3" />
                 Accept
@@ -153,7 +153,7 @@ export function MeetingMessage({
               <button
                 onClick={() => handleRespond("declined")}
                 disabled={isResponding}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-red-500/40 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-negative/40 transition-colors disabled:opacity-50"
               >
                 <X className="w-3 h-3" />
                 Decline
@@ -162,7 +162,7 @@ export function MeetingMessage({
                 <button
                   onClick={() => onProposeNewTime(meetingId)}
                   disabled={isResponding}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-blue-500/40 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-info-blue/40 transition-colors disabled:opacity-50"
                 >
                   <CalendarClock className="w-3 h-3" />
                   New Time

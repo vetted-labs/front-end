@@ -49,13 +49,13 @@ export function JobBasicInfo({
             value={formData.title}
             onChange={(e) => onFieldChange("title", e.target.value)}
             className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.title ? "border-red-500" : "border-border/60"
+              fieldErrors.title ? "border-negative" : "border-border/60"
             }`}
             placeholder="e.g., Senior Solidity Developer"
           />
         </div>
         {fieldErrors.title && (
-          <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+          <p className="text-negative text-sm mt-1">{fieldErrors.title}</p>
         )}
       </div>
 
@@ -89,13 +89,13 @@ export function JobBasicInfo({
           value={formData.description}
           onChange={(e) => onFieldChange("description", e.target.value)}
           className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-            fieldErrors.description ? "border-red-500" : "border-border/60"
+            fieldErrors.description ? "border-negative" : "border-border/60"
           }`}
           rows={6}
           placeholder="Describe the job responsibilities..."
         />
         {fieldErrors.description && (
-          <p className="text-red-500 text-sm mt-1">
+          <p className="text-negative text-sm mt-1">
             {fieldErrors.description}
           </p>
         )}

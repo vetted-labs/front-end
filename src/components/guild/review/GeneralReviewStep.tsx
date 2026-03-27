@@ -2,6 +2,7 @@
 
 import { Loader2, Sparkles } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
+import { STATUS_COLORS } from "@/config/colors";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,
@@ -45,15 +46,15 @@ export function GeneralReviewStep({
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3 mb-1">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-amber-300" />
+        <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
+          <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
         </div>
         <h3 className="text-base font-bold text-foreground">General Review</h3>
       </div>
 
       {loadingTemplates && !generalTemplate ? (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-          <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+          <Loader2 className={`w-4 h-4 ${STATUS_COLORS.warning.icon} animate-spin`} />
           <p className="text-sm text-muted-foreground">Loading general rubric...</p>
         </div>
       ) : Object.keys(generalRubricQuestions).length === 0 ? (
@@ -133,7 +134,7 @@ export function GeneralReviewStep({
 
                   {/* Scoring area */}
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className="text-[11px] text-amber-300/70 uppercase tracking-wider font-bold">Scoring</p>
+                    <p className={`text-[11px] ${STATUS_COLORS.warning.text} opacity-70 uppercase tracking-wider font-bold`}>Scoring</p>
                     {criteria.map((criterion) => (
                       <div key={criterion.id} className="space-y-2">
                         <p className="text-xs text-muted-foreground">
@@ -154,7 +155,7 @@ export function GeneralReviewStep({
                     ))}
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">
-                        Justification <span className="text-red-400/60">*</span>
+                        Justification <span className="text-negative/60">*</span>
                       </p>
                       <textarea
                         value={generalJustifications[question.id] || ""}
@@ -207,7 +208,7 @@ export function GeneralReviewStep({
       )}
 
       {/* Running subtotal */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-amber-500/[0.06] to-orange-500/[0.06] border border-amber-400/15">
+      <div className={`flex items-center justify-between p-4 rounded-xl ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}>
         <p className="text-sm text-muted-foreground font-medium">General Subtotal</p>
         <p className="text-sm font-bold text-primary tabular-nums">
           {generalTotal}{generalMax ? ` / ${generalMax}` : ""}

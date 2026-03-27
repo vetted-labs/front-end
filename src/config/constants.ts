@@ -222,8 +222,8 @@ export const REPUTATION_DECAY_CYCLE_DAYS = 30;
  * Used specifically for timeline visualization where dot + text colors are needed.
  */
 export const APPLICATION_STATUS_TIMELINE_CONFIG: Record<string, { dotClass: string; textClass: string }> = {
-  accepted: { dotClass: "bg-green-500 shadow-sm shadow-green-500/30", textClass: "text-green-600 dark:text-green-400" },
-  rejected: { dotClass: "bg-red-500 shadow-sm shadow-red-500/30", textClass: "text-red-600 dark:text-red-400" },
+  accepted: { dotClass: "bg-positive shadow-sm shadow-positive/30", textClass: "text-positive" },
+  rejected: { dotClass: "bg-negative shadow-sm shadow-negative/30", textClass: "text-negative" },
 };
 
 export const APPLICATION_STATUS_TIMELINE_DEFAULT = {

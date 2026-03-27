@@ -221,7 +221,7 @@ export function NotificationsPage<T extends BaseNotification>({
               {label}
               {count > 0 && (
                 <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                  key === "unread" && activeFilter !== key ? "bg-red-500 text-white" : "bg-primary-foreground/20"
+                  key === "unread" && activeFilter !== key ? "bg-negative text-white" : "bg-primary-foreground/20"
                 }`}>
                   {count}
                 </span>

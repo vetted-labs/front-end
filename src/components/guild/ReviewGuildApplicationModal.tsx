@@ -411,8 +411,8 @@ export function ReviewGuildApplicationModal({
 
             {templateError && <Alert variant="error">{templateError}</Alert>}
             {loadingTemplates && (
-              <div className="flex items-center gap-3 p-3.5 mb-4 rounded-xl bg-amber-500/[0.06] border border-amber-400/15">
-                <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+              <div className="flex items-center gap-3 p-3.5 mb-4 rounded-xl bg-warning/[0.06] border border-warning/15">
+                <Loader2 className="w-4 h-4 text-warning animate-spin" />
                 <p className="text-sm text-primary/80">Loading review template and rubric...</p>
               </div>
             )}

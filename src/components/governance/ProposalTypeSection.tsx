@@ -105,8 +105,8 @@ export function ProposalTypeSection({
   return (
     <div className="p-6 sm:p-8 space-y-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-        <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-          <Settings2 className="w-5 h-5 text-blue-500" />
+        <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
+          <Settings2 className="w-5 h-5 text-info-blue" />
         </div>
         <div>
           <h3 className="text-lg font-semibold text-foreground">
@@ -178,10 +178,10 @@ export function ProposalTypeSection({
 
       {/* Conditional: Parameter Change Details */}
       {proposalType === "parameter_change" && (
-        <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-5 space-y-4">
+        <div className="rounded-xl border border-info-blue/20 bg-info-blue/5 p-5 space-y-4">
           <div className="flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-blue-500" />
-            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            <Settings2 className="w-4 h-4 text-info-blue" />
+            <p className="text-sm font-medium text-info-blue">
               Parameter Change Details
             </p>
           </div>
@@ -213,10 +213,10 @@ export function ProposalTypeSection({
 
       {/* Conditional: Election Details */}
       {proposalType === "guild_master_election" && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-4">
+        <div className="rounded-xl border border-warning/20 bg-warning/5 p-5 space-y-4">
           <div className="flex items-center gap-2">
-            <Crown className="w-4 h-4 text-amber-500" />
-            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
+            <Crown className="w-4 h-4 text-warning" />
+            <p className="text-sm font-medium text-warning">
               Election Details
             </p>
           </div>

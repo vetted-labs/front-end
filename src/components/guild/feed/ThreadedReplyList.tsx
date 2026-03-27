@@ -6,6 +6,7 @@ import { guildFeedApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { formatTimeAgo } from "@/lib/utils";
 import { toast } from "sonner";
+import { STATUS_COLORS } from "@/config/colors";
 import { useFeedContext } from "./FeedContext";
 import { VoteButton } from "./VoteButton";
 import { AuthorBadge } from "./AuthorBadge";
@@ -44,7 +45,7 @@ export function ThreadedReplyList({
     <div className="space-y-3">
       {/* Accepted answer pinned to top */}
       {acceptedReply && (
-        <div className="rounded-lg border-2 border-emerald-500/40 bg-emerald-500/5 p-3">
+        <div className={`rounded-lg border-2 ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-3`}>
           <AcceptedAnswerBadge variant="reply" />
           <div className="mt-2">
             <ReplyNode
@@ -177,7 +178,7 @@ function ReplyNode({
               {formatTimeAgo(reply.createdAt)}
             </span>
             {reply.isAccepted && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-500">
+              <span className={`flex items-center gap-1 text-xs font-semibold ${STATUS_COLORS.positive.text}`}>
                 <CheckCircle2 className="w-3 h-3" />
                 Accepted
               </span>
@@ -200,7 +201,7 @@ function ReplyNode({
             {canAccept && (
               <button
                 onClick={() => onAcceptAnswer(reply.id)}
-                className="flex items-center gap-1 text-xs text-emerald-500 hover:text-emerald-400 transition-colors"
+                className={`flex items-center gap-1 text-xs ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
               >
                 <CheckCircle2 className="w-3 h-3" />
                 Accept
