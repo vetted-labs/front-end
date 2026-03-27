@@ -53,10 +53,10 @@ export function PipelineStepper({ currentStatus, history }: PipelineStepperProps
               <div
                 className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
                   isCompleted
-                    ? "bg-primary text-white shadow-sm shadow-primary/25"
+                    ? "bg-primary text-white shadow-sm"
                     : isCurrent
                       ? "border-2 border-primary bg-primary/10"
-                      : "border-2 border-border/50 bg-muted/20"
+                      : "border-2 border-border bg-muted/20"
                 }`}
               >
                 {isCompleted ? (
@@ -85,7 +85,7 @@ export function PipelineStepper({ currentStatus, history }: PipelineStepperProps
                   className={`h-0.5 w-full rounded-full transition-colors ${
                     isCompleted && !isUpcoming
                       ? "bg-primary/80"
-                      : "bg-border/30 dark:bg-white/[0.05]"
+                      : "bg-border/30 dark:bg-muted/30"
                   }`}
                 />
               </div>

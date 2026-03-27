@@ -50,7 +50,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
       </p>
       <div className="relative flex flex-col gap-0 max-w-[520px] mx-auto">
         {/* Connecting rail */}
-        <div className="absolute left-[32px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-warning/10 via-warning/40 to-neutral/15 dark:from-warning/10 dark:via-warning/40 dark:to-neutral/15" />
+        <div className="absolute left-[32px] top-0 bottom-0 w-0.5 bg-border" />
 
         {TOWER_TIERS.map(({ tier, symbol, benefits }) => {
           const isCurrent = tier.name === currentTier.name;
@@ -70,7 +70,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
                   absolute left-[22px] top-1/2 -translate-y-1/2 w-[22px] h-[22px]
                   rounded-full border-2 flex items-center justify-center z-10
                   ${isCurrent
-                    ? "border-warning bg-warning/15 shadow-[0_0_20px_hsl(var(--warning)/0.3)]"
+                    ? "border-warning bg-warning/15"
                     : isLocked
                       ? "border-muted-foreground/20 bg-muted-foreground/[0.04]"
                       : "border-muted-foreground/30 bg-muted-foreground/[0.06]"
@@ -81,7 +81,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
                 <div
                   className={`w-2 h-2 rounded-full ${
                     isCurrent
-                      ? "bg-warning shadow-[0_0_8px_hsl(var(--warning))]"
+                      ? "bg-warning"
                       : isLocked
                         ? "bg-muted-foreground/15"
                         : "bg-muted-foreground/50"
@@ -94,7 +94,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
                 className={`
                   rounded-2xl p-5 transition-all
                   ${isCurrent
-                    ? "bg-gradient-to-br from-warning/[0.08] to-primary/[0.04] border border-warning/20 shadow-[0_0_40px_hsl(var(--warning)/0.06)]"
+                    ? "bg-warning/5 border border-warning/20"
                     : isLocked
                       ? "bg-muted-foreground/[0.02] border border-dashed border-muted-foreground/10 opacity-60"
                       : "bg-muted-foreground/[0.02] border border-muted-foreground/[0.06] opacity-50"

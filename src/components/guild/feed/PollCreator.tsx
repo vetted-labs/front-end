@@ -83,7 +83,7 @@ export function PollCreator({ poll, onChange }: PollCreatorProps) {
       </button>
 
       {isOpen && poll && (
-        <div className="rounded-lg border border-border bg-card/50 p-4 space-y-4">
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
           {/* Choice Mode */}
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-2">

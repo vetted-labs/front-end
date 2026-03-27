@@ -102,11 +102,11 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             {showWalletMenu && (
               <div
                 className={cn(
-                  "absolute z-50 w-64 rounded-xl border border-border bg-card shadow-xl overflow-hidden dark:bg-card/80 dark:backdrop-blur-2xl dark:border-white/[0.08]",
+                  "absolute z-50 w-64 rounded-xl border border-border bg-card shadow-xl overflow-hidden",
                   isCollapsed ? "bottom-0 left-full ml-2" : "bottom-full left-0 mb-2"
                 )}
               >
-                <div className="bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-3 border-b border-border">
+                <div className="bg-primary/5 px-4 py-3 border-b border-border">
                   <p className="text-xs font-medium text-foreground mb-1">
                     Connected Wallet
                   </p>
@@ -320,7 +320,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
           {!isCollapsed ? (
             <button
               onClick={() => router.push("/auth/login")}
-              className="w-full rounded-full bg-gradient-to-r from-primary to-accent px-4 py-2 text-sm font-medium text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+              className="w-full rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Sign In
             </button>

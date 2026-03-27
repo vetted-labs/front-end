@@ -119,7 +119,7 @@ export function CompanyForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted flex items-center justify-center p-4 animate-page-enter">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 animate-page-enter">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-6">
@@ -132,7 +132,7 @@ export function CompanyForm() {
           <p className="text-muted-foreground">Start hiring vetted Web3 talent</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-xl p-8">
+        <div className="bg-card rounded-2xl shadow-sm p-8">
           {/* Wallet Connection Section */}
           <div className="mb-6 p-6 bg-primary/10 rounded-xl border-2 border-primary/20">
             <div className="flex items-center justify-between">

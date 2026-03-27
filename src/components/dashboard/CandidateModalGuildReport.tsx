@@ -29,7 +29,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
   return (
     <>
       {/* Score Card */}
-      <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+      <div className="rounded-lg border border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Guild Review Summary
@@ -45,7 +45,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
           </span>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-3 rounded-lg bg-muted/30 dark:bg-white/[0.02]">
+          <div className="text-center p-3 rounded-lg bg-muted/30">
             <p className="text-sm font-medium text-foreground">{guildApplication.reviewCount}</p>
             <p className="text-xs text-muted-foreground">Reviews</p>
           </div>
@@ -73,7 +73,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
           </p>
           <div className="space-y-3">
             {reviews.map((review) => (
-              <div key={review.id} className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+              <div key={review.id} className="rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>

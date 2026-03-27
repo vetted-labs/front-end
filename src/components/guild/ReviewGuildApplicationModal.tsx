@@ -372,19 +372,19 @@ export function ReviewGuildApplicationModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/70 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-sm dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg"
+          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative gradients */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.06),transparent_50%)]" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-border" />
 
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
@@ -399,7 +399,7 @@ export function ReviewGuildApplicationModal({
             <button
               onClick={onClose}
               aria-label="Close review modal"
-              className="w-8 h-8 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+              className="w-8 h-8 rounded-lg bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -504,7 +504,7 @@ export function ReviewGuildApplicationModal({
           </div>
 
           {/* Navigation */}
-          <div className="border-t border-border/40 px-7 py-5">
+          <div className="border-t border-border px-7 py-5">
             <ReviewNavigation
               currentStep={currentStep}
               isReviewing={isReviewing}

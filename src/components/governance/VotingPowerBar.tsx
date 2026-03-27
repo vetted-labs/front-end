@@ -27,7 +27,7 @@ export function VotingPowerBar({
             style={{ width: `${forPercent}%` }}
           >
             {large && forPercent > 0 && (
-              <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white/70 rounded-sm shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+              <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white/70 rounded-sm" />
             )}
           </div>
         )}

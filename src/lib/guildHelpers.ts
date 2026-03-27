@@ -68,29 +68,29 @@ export const getGuildIcon = (guildName: string): LucideIcon => {
 export const getGuildColor = (guildName: string): string => {
   const name = guildName.toLowerCase();
 
-  // Primary guilds: Full saturation orange gradients
+  // Primary guilds: brand orange tones
   if (name.includes('engineering') || name.includes('technology')) {
-    return 'from-primary to-orange-secondary';
+    return 'bg-primary';
   } else if (name.includes('design') || name.includes('ux')) {
-    return 'from-orange-secondary to-orange-light';
+    return 'bg-orange-secondary';
   } else if (name.includes('product')) {
-    return 'from-primary/90 to-orange-secondary/90';
+    return 'bg-primary/90';
   } else if (name.includes('marketing') || name.includes('growth')) {
-    return 'from-primary to-orange-light';
+    return 'bg-primary';
   } else if (name.includes('sales') || name.includes('success')) {
-    return 'from-primary/70 to-orange-secondary/70';
+    return 'bg-primary/70';
   }
 
-  // Supporting guilds: Neutral grays
+  // Supporting guilds: neutral tones
   else if (name.includes('operations') || name.includes('strategy')) {
-    return 'from-gray-medium to-gray-light';
+    return 'bg-muted-foreground/50';
   } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
-    return 'from-tan-accent to-beige-light';
+    return 'bg-muted-foreground/40';
   } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
-    return 'from-gray-light to-gray-lighter';
+    return 'bg-muted-foreground/30';
   }
 
-  return 'from-primary to-orange-secondary'; // Default
+  return 'bg-primary'; // Default
 };
 
 // TypeScript interface for guild detailed information

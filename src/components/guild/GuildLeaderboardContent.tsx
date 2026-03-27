@@ -41,22 +41,22 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
               className={`w-full bg-card border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all text-left ${
                 entry.role !== 'candidate' && entry.walletAddress ? 'cursor-pointer' : 'cursor-default'
               } ${
-                index < 3 ? `border-2 ${STATUS_COLORS.warning.border} bg-gradient-to-r from-warning/5 to-transparent` : "border-border"
+                index < 3 ? `border-2 ${STATUS_COLORS.warning.border} bg-warning/5` : "border-border"
               }`}
             >
               <div className="flex items-center gap-4">
                 {/* Rank Badge */}
                 <div className="flex-shrink-0">
                   {index === 0 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-master to-rank-officer flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-rank-master flex items-center justify-center shadow-sm">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : index === 1 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-recruit to-neutral flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-rank-recruit flex items-center justify-center shadow-sm">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : index === 2 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-craftsman to-rank-officer flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-rank-craftsman flex items-center justify-center shadow-sm">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : (

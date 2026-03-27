@@ -35,7 +35,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
   const hasMore = applications.length > 5;
 
   return (
-    <div className="bg-card border border-border/60 rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border rounded-[14px] p-5 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-bold text-foreground">
@@ -65,7 +65,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 className={`flex items-center gap-3 p-3 rounded-[10px] text-left transition-colors ${
                   isFirst
                     ? `${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} hover:bg-warning/[0.08]`
-                    : "bg-muted/30 border border-border/40 hover:bg-muted/50"
+                    : "bg-muted/30 border border-border hover:bg-muted/50"
                 }`}
               >
                 {/* Avatar */}
@@ -91,7 +91,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 </div>
 
                 {/* Action */}
-                <span className="shrink-0 px-3 py-1.5 bg-muted/30 border border-border/40 text-muted-foreground rounded-[7px] text-xs font-medium">
+                <span className="shrink-0 px-3 py-1.5 bg-muted/30 border border-border text-muted-foreground rounded-[7px] text-xs font-medium">
                   Review →
                 </span>
               </button>

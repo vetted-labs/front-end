@@ -66,7 +66,7 @@ export function WalletStatusBanner({
               </p>
               <Button
                 onClick={onSwitchToSepolia}
-                className="bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
+                className="bg-primary text-primary-foreground"
               >
                 Switch to Sepolia Testnet
               </Button>
@@ -77,7 +77,7 @@ export function WalletStatusBanner({
 
       {/* Connected Wallet Info */}
       {address && (
-        <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
+        <Card className="rounded-2xl border border-border bg-card">
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
@@ -97,7 +97,7 @@ export function WalletStatusBanner({
                   </p>
                 </div>
               </div>
-              <div className="rounded-xl border border-border/60 bg-muted/50 px-4 py-3">
+              <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Network</p>
                 <div className="mt-1 flex items-center gap-2 text-sm font-medium">
                   <Network className="h-4 w-4 text-muted-foreground" />

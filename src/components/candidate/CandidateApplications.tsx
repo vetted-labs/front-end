@@ -91,12 +91,12 @@ function VettingPipeline({ status }: { status: ApplicationStatus }) {
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                     nodeState === "completed"
-                      ? STATUS_COLORS.positive.bgSubtle + " " + STATUS_COLORS.positive.text + " shadow-[0_0_8px_hsl(var(--positive)/0.15)]"
+                      ? STATUS_COLORS.positive.bgSubtle + " " + STATUS_COLORS.positive.text + ""
                       : nodeState === "active"
-                        ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.25)] animate-pulse"
+                        ? "bg-primary text-primary-foreground animate-pulse"
                         : nodeState === "rejected"
-                          ? STATUS_COLORS.negative.bgSubtle + " " + STATUS_COLORS.negative.text + " shadow-[0_0_8px_hsl(var(--negative)/0.15)]"
-                          : "bg-muted/40 border border-border/60 text-muted-foreground/40"
+                          ? STATUS_COLORS.negative.bgSubtle + " " + STATUS_COLORS.negative.text + ""
+                          : "bg-muted/40 border border-border text-muted-foreground/40"
                   }`}
                 >
                   {nodeState === "completed" ? (
@@ -124,7 +124,7 @@ function VettingPipeline({ status }: { status: ApplicationStatus }) {
                   connectorState === "completed"
                     ? "bg-positive/40"
                     : connectorState === "active"
-                      ? "bg-gradient-to-r from-positive/40 to-primary/40"
+                      ? "bg-positive/30"
                       : "bg-border/30"
                 }`} />
               )}
@@ -203,7 +203,7 @@ export default function CandidateApplications() {
   }
 
   return (
-    <div className="min-h-full relative animate-page-enter">
+    <div className="min-h-full relative">
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
@@ -213,7 +213,7 @@ export default function CandidateApplications() {
 
         {/* ── Header ── */}
         <div className="flex items-center gap-4 mb-8 flex-wrap">
-          <h1 className="text-2xl font-display font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
             My Applications
           </h1>
           {activeCount > 0 && (
@@ -227,23 +227,23 @@ export default function CandidateApplications() {
         {/* ── Stats Row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {/* Total Applied */}
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Total Applied</p>
             <p className="text-2xl font-display font-bold text-foreground tabular-nums">{stats.total}</p>
           </div>
           {/* Under Review */}
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Under Review</p>
             <p className={`text-2xl font-display font-bold tabular-nums ${STATUS_COLORS.info.text}`}>{stats.reviewing}</p>
           </div>
           {/* Interviews */}
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Interviews</p>
             <p className={`text-2xl font-display font-bold tabular-nums ${STATUS_COLORS.positive.text}`}>{stats.interviewed}</p>
           </div>
           {/* Offers -- gold glow */}
-          <div className="rounded-2xl border border-warning/20 bg-card/40 backdrop-blur-md px-5 py-4 hover:-translate-y-0.5 transition-transform relative overflow-hidden shadow-[0_0_20px_hsl(var(--warning)/0.12)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-warning/[0.06] to-transparent pointer-events-none rounded-2xl" />
+          <div className="rounded-2xl border border-warning/20 bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform relative overflow-hidden">
+            <div className="absolute inset-0 bg-transparent pointer-events-none rounded-2xl" />
             <p className="relative text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Offers</p>
             <p className="relative text-2xl font-display font-bold tabular-nums text-warning">{stats.accepted}</p>
           </div>
@@ -258,7 +258,7 @@ export default function CandidateApplications() {
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all select-none ${
                 filter === opt.value
                   ? "bg-primary/10 text-primary border-primary/25"
-                  : "bg-card/40 text-muted-foreground border-border/60 hover:bg-muted/40 hover:text-foreground hover:border-border"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted/40 hover:text-foreground hover:border-border"
               }`}
             >
               {opt.label}
@@ -268,7 +268,7 @@ export default function CandidateApplications() {
 
         {/* ── Application Cards ── */}
         {filteredApplications.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-12 text-center">
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Send className="w-14 h-14 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">
               {filter === "all" ? "No applications yet" : "No applications in this category"}
@@ -279,7 +279,7 @@ export default function CandidateApplications() {
             {filter === "all" && (
               <button
                 onClick={() => router.push("/browse/jobs")}
-                className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-lg hover:opacity-90 transition-all text-sm font-semibold"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all text-sm font-semibold"
               >
                 Browse Jobs
               </button>
@@ -295,7 +295,7 @@ export default function CandidateApplications() {
               return (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden hover:-translate-y-0.5 hover:border-border hover:shadow-lg transition-all group"
+                  className="rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-0.5 hover:border-border hover:shadow-lg transition-all group"
                 >
                   <div className="grid grid-cols-[6px_1fr]">
                     {/* Accent bar */}
@@ -305,7 +305,7 @@ export default function CandidateApplications() {
                       {/* Top row: company + status badge */}
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                          <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border/40 flex items-center justify-center text-sm font-bold text-muted-foreground">
+                          <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-sm font-bold text-muted-foreground">
                             {companyInitial}
                           </div>
                           <div className="min-w-0">
@@ -319,7 +319,7 @@ export default function CandidateApplications() {
                         </div>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${statusStyle.className}`}>
                           <span className={`w-[7px] h-[7px] rounded-full ${
-                            application.status === "accepted" ? "bg-warning shadow-[0_0_6px_hsl(var(--warning)/0.5)]"
+                            application.status === "accepted" ? "bg-warning"
                               : application.status === "rejected" ? STATUS_COLORS.negative.dot
                               : application.status === "interviewed" ? STATUS_COLORS.positive.dot
                               : application.status === "reviewing" ? STATUS_COLORS.info.dot
@@ -339,7 +339,7 @@ export default function CandidateApplications() {
                           <MapPin className="w-3.5 h-3.5 opacity-50" />
                           {application.job.location}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs border border-border/40 bg-muted/30">
+                        <span className="px-2 py-0.5 rounded-full text-xs border border-border bg-muted/30">
                           {application.job.type}
                         </span>
                         {application.job.salary && (
@@ -386,7 +386,7 @@ export default function CandidateApplications() {
                           {application.status !== "accepted" && application.status !== "rejected" && (
                             <button
                               onClick={() => router.push(`/browse/jobs/${application.job.id}`)}
-                              className={`px-4 py-2 rounded-md text-xs font-semibold border bg-card/40 text-muted-foreground border-border/60 hover:bg-muted/40 hover:text-foreground hover:border-border transition-all`}
+                              className={`px-4 py-2 rounded-md text-xs font-semibold border bg-card text-muted-foreground border-border hover:bg-muted/40 hover:text-foreground hover:border-border transition-all`}
                             >
                               View Job
                             </button>

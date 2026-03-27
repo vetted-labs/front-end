@@ -35,11 +35,11 @@ export function ProposeNewTimeModal({
       <div className="fixed inset-0 bg-black/50 dark:bg-black/70" onClick={onClose} />
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-card/90 backdrop-blur-xl rounded-2xl shadow-xl w-full max-w-md border border-border/60 dark:bg-card/60 dark:border-white/[0.08]"
+          className="relative bg-card rounded-2xl shadow-xl w-full max-w-md border border-border"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 dark:border-white/[0.04]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-border">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
               <h3 className="text-sm font-medium text-foreground">Propose New Time</h3>
@@ -62,7 +62,7 @@ export function ProposeNewTimeModal({
                 type="datetime-local"
                 value={proposedTime}
                 onChange={(e) => setProposedTime(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
               />
             </div>
 
@@ -75,7 +75,7 @@ export function ProposeNewTimeModal({
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 placeholder="Let them know why this time works better..."
-                className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
               />
             </div>
 

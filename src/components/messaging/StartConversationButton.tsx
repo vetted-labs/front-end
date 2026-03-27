@@ -73,7 +73,7 @@ export function StartConversationButton({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={`Write a message to ${candidateName}...`}
           rows={4}
-          className="w-full px-4 py-3 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
+          className="w-full px-4 py-3 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

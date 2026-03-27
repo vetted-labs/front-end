@@ -60,9 +60,9 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -135,7 +135,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
           </div>
         ) : (
           <div
-            className="relative pl-5 border-l-2 border-border/40 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+            className="relative pl-5 border-l-2 border-border space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
             style={{ maxHeight: "360px" }}
           >
             {displayed.map((notification) => {

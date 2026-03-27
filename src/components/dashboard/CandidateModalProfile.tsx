@@ -23,7 +23,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
   return (
     <div className="space-y-5">
       {/* Resume card */}
-      <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+      <div className="rounded-lg border border-border p-4">
         <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
           Resume
         </p>
@@ -46,7 +46,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
       </div>
 
       {/* Contact info */}
-      <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+      <div className="rounded-lg border border-border p-4">
         <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
           Contact Info
         </p>
@@ -72,7 +72,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
 
       {/* Social links */}
       {(hasSocialLinks || hasLegacy) && (
-        <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+        <div className="rounded-lg border border-border p-4">
           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
             Social Profiles
           </p>
@@ -131,12 +131,12 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
       {/* Experience & Wallet */}
       <div className="flex flex-wrap gap-3">
         {candidate.experienceLevel && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/40 dark:border-white/[0.06] text-xs font-medium text-foreground/80 capitalize">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground/80 capitalize">
             {candidate.experienceLevel} level
           </span>
         )}
         {candidate.walletAddress && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/40 dark:border-white/[0.06] text-xs font-mono text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-mono text-muted-foreground">
             <Wallet className="w-3 h-3" />
             {truncateAddress(candidate.walletAddress)}
           </span>

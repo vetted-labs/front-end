@@ -38,14 +38,14 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
   return (
     <div className="mb-8 relative">
       {/* Animated pulsing border */}
-      <div className="absolute -inset-[2px] rounded-[22px] bg-gradient-to-br from-negative via-primary to-negative bg-[length:300%_300%] animate-[border-pulse_3s_ease-in-out_infinite] opacity-70 -z-10" />
+      <div className="absolute -inset-[2px] rounded-[22px] bg-border opacity-70 -z-10" />
 
       <div
         onClick={onClick}
-        className="relative rounded-2xl bg-gradient-to-br from-card/97 to-card/97 p-7 sm:p-9 overflow-hidden cursor-pointer"
+        className="relative rounded-2xl bg-card p-7 sm:p-9 overflow-hidden cursor-pointer"
       >
         {/* Top glow line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-border" />
 
         {/* Live tag */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-negative/10 border border-negative/20 text-xs font-bold text-negative uppercase tracking-wider mb-4">
@@ -63,7 +63,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
               {proposal.title}
             </h2>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs font-bold text-white">
+              <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">
                 {initials}
               </span>
               Proposed by{" "}
@@ -124,7 +124,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
               style={{ width: `${forPct}%` }}
             >
               {forPct > 0 && (
-                <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-white rounded-sm shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+                <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-white rounded-sm" />
               )}
             </div>
             <div
@@ -141,7 +141,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
           </span>
           <div className="flex-1 h-1.5 rounded-full bg-muted/30 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-1000"
+              className="h-full rounded-full bg-primary transition-all duration-1000"
               style={{ width: `${quorumPct}%` }}
             />
           </div>

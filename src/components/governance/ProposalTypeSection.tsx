@@ -104,7 +104,7 @@ export function ProposalTypeSection({
 
   return (
     <div className="p-6 sm:p-8 space-y-6">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
         <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
           <Settings2 className="w-5 h-5 text-info-blue" />
         </div>
@@ -130,7 +130,7 @@ export function ProposalTypeSection({
               className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
                 isSelected
                   ? "border-primary bg-primary/5 shadow-sm"
-                  : "border-border/60 hover:border-primary/30 hover:bg-accent/5"
+                  : "border-border hover:border-primary/30 hover:bg-accent/5"
               }`}
             >
               <div
@@ -162,7 +162,7 @@ export function ProposalTypeSection({
       </div>
 
       {/* Threshold info based on selected type */}
-      <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3 flex items-center gap-3 text-sm">
+      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 flex items-center gap-3 text-sm">
         <Scale className="w-4 h-4 text-primary shrink-0" />
         <span className="text-muted-foreground">
           This proposal type requires{" "}

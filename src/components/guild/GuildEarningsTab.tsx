@@ -19,7 +19,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
     <div className="space-y-6">
       {/* Earnings Summary */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
+        <div className="bg-primary/5 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-4">
             <Coins className="w-10 h-10 text-primary" />
             <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
@@ -33,7 +33,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
+        <div className="bg-primary/5 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-4">
             <DollarSign className="w-10 h-10 text-primary" />
             <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />

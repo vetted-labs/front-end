@@ -80,9 +80,9 @@ export function CandidateDetailsModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
       <div
-        className="relative max-w-[740px] w-full mx-4 max-h-[88vh] flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 bg-gradient-to-b from-card/95 to-card/85 backdrop-blur-2xl border border-white/[0.07]"
+        className="relative max-w-[740px] w-full mx-4 max-h-[88vh] flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -94,11 +94,11 @@ export function CandidateDetailsModal({
           <div className="relative flex items-start gap-4">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <Avatar className="w-14 h-14 rounded-xl border border-primary/20 shadow-lg shadow-primary/10">
+              <Avatar className="w-14 h-14 rounded-xl border border-primary/20 shadow-lg">
                 {application.candidate_profile_picture_url && (
                   <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} className="rounded-xl" />
                 )}
-                <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-lg font-bold">
+                <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-bold">
                   {candidateInitials}
                 </AvatarFallback>
               </Avatar>
@@ -123,31 +123,31 @@ export function CandidateDetailsModal({
               {application.linkedin && (
                 <a href={ensureHttps(application.linkedin)} target="_blank" rel="noopener noreferrer"
                   aria-label="LinkedIn profile"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted/30 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all">
                   <Linkedin className="w-3.5 h-3.5 text-muted-foreground" />
                 </a>
               )}
               {application.github && (
                 <a href={ensureHttps(application.github)} target="_blank" rel="noopener noreferrer"
                   aria-label="GitHub profile"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted/30 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all">
                   <Github className="w-3.5 h-3.5 text-muted-foreground" />
                 </a>
               )}
               {application.resume_url && (
                 <a href={`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`} target="_blank" rel="noopener noreferrer"
                   aria-label="View resume"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-primary/30 transition-all">
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted/30 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all">
                   <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                 </a>
               )}
               {(application.linkedin || application.github || application.resume_url) && (
-                <div className="w-px h-5 bg-white/[0.06] mx-0.5" />
+                <div className="w-px h-5 bg-muted/30 mx-0.5" />
               )}
               <button
                 onClick={onClose}
                 aria-label="Close candidate details"
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all flex-shrink-0"
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-muted/30 border border-border hover:bg-muted/40 transition-all flex-shrink-0"
               >
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -157,7 +157,7 @@ export function CandidateDetailsModal({
           {/* Stats row */}
           <div className="relative flex items-center gap-2.5 mt-4 pb-5">
             {skillMatchData.percentage > 0 && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2">
+              <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <CheckCircle className="w-4 h-4 text-primary" />
                 </div>
@@ -168,7 +168,7 @@ export function CandidateDetailsModal({
               </div>
             )}
             {guildScore && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2">
+              <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Star className="w-4 h-4 text-primary" />
                 </div>
@@ -178,7 +178,7 @@ export function CandidateDetailsModal({
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2">
+            <div className="flex items-center gap-2.5 rounded-xl bg-muted/20 border border-border px-3.5 py-2">
               <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
                 <Clock className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
               </div>
@@ -191,7 +191,7 @@ export function CandidateDetailsModal({
         </div>
 
         {/* Separator glow line */}
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="h-px bg-border" />
 
         {/* ── Tab Bar ── */}
         <div className="px-6 pt-3 flex-shrink-0">
@@ -202,8 +202,8 @@ export function CandidateDetailsModal({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all border ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-primary/15 to-accent/10 text-primary border-primary/30'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04] border-transparent'
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 border-transparent'
                 }`}
               >
                 <tab.icon className="w-3.5 h-3.5" />
@@ -220,7 +220,7 @@ export function CandidateDetailsModal({
           {activeTab === 'overview' && (
             <>
               {/* Bio */}
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+              <div className="rounded-xl bg-muted/20 border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                     <User className="w-3 h-3 text-primary" />
@@ -235,7 +235,7 @@ export function CandidateDetailsModal({
               </div>
 
               {/* Application Summary */}
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+              <div className="rounded-xl bg-muted/20 border border-border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                     <Briefcase className="w-3 h-3 text-primary" />
@@ -243,11 +243,11 @@ export function CandidateDetailsModal({
                   <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Application Summary</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2.5">
+                  <div className="flex items-center justify-between border-b border-border pb-2.5">
                     <span className="text-xs text-muted-foreground">Position</span>
                     <span className="text-sm font-medium text-foreground">{application.job_title}</span>
                   </div>
-                  <div className="flex items-center justify-between border-b border-white/[0.04] pb-2.5">
+                  <div className="flex items-center justify-between border-b border-border pb-2.5">
                     <span className="text-xs text-muted-foreground">Company</span>
                     <span className="text-sm font-medium text-foreground">{application.company_name}</span>
                   </div>
@@ -267,7 +267,7 @@ export function CandidateDetailsModal({
 
               {/* Highlights */}
               {(application.experience_level || skillMatchData.percentage > 0) && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <Zap className="w-3 h-3 text-primary" />
@@ -276,7 +276,7 @@ export function CandidateDetailsModal({
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {application.experience_level && (
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-muted/30 border border-border text-foreground">
                         {application.experience_level}
                       </span>
                     )}
@@ -286,7 +286,7 @@ export function CandidateDetailsModal({
                       </span>
                     )}
                     {skillMatchData.matched.length > 0 && skillMatchData.matched.slice(0, 4).map((skill: string, i: number) => (
-                      <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground capitalize">
+                      <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-muted/30 border border-border text-foreground capitalize">
                         {skill}
                       </span>
                     ))}
@@ -300,7 +300,7 @@ export function CandidateDetailsModal({
           {activeTab === 'application' && (
             <>
               {application.cover_letter && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <Mail className="w-3 h-3 text-primary" />
@@ -314,7 +314,7 @@ export function CandidateDetailsModal({
               )}
 
               {application.screening_answers && Object.keys(application.screening_answers).length > 0 && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
                       <HelpCircle className="w-3 h-3 text-primary" />
@@ -323,7 +323,7 @@ export function CandidateDetailsModal({
                   </div>
                   <div className="space-y-2.5">
                     {Object.entries(application.screening_answers).map(([question, answer], idx) => (
-                      <div key={idx} className="rounded-lg bg-white/[0.02] border border-white/[0.04] p-3">
+                      <div key={idx} className="rounded-lg bg-muted/20 border border-border p-3">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">{question}</p>
                         <p className="text-sm text-foreground">{answer}</p>
                       </div>
@@ -343,7 +343,7 @@ export function CandidateDetailsModal({
 
           {/* Job Details */}
           {activeTab === 'job' && (
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-4">
+            <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-4">
               {/* Job header */}
               <div className="flex items-start justify-between">
                 <div>
@@ -355,17 +355,17 @@ export function CandidateDetailsModal({
               {/* Meta chips */}
               <div className="flex flex-wrap gap-2">
                 {application.location && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <MapPin className="w-3 h-3" /> {application.location}
                   </span>
                 )}
                 {application.job_type && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <Briefcase className="w-3 h-3" /> {application.job_type}
                   </span>
                 )}
                 {(application.salary_min || application.salary_max) && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/20 border border-border rounded-lg px-2.5 py-1.5">
                     <DollarSign className="w-3 h-3" />
                     {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
                   </span>
@@ -374,7 +374,7 @@ export function CandidateDetailsModal({
 
               {application.job_description && (
                 <>
-                  <div className="h-px bg-white/[0.06]" />
+                  <div className="h-px bg-muted/30" />
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Description</h4>
                     <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{application.job_description}</p>
@@ -384,7 +384,7 @@ export function CandidateDetailsModal({
 
               {application.requirements && application.requirements.length > 0 && (
                 <>
-                  <div className="h-px bg-white/[0.06]" />
+                  <div className="h-px bg-muted/30" />
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Requirements</h4>
                     <div className="space-y-2">
@@ -403,7 +403,7 @@ export function CandidateDetailsModal({
 
               {application.job_skills && (
                 <>
-                  <div className="h-px bg-white/[0.06]" />
+                  <div className="h-px bg-muted/30" />
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Required Skills</h4>
                     <div className="flex flex-wrap gap-1.5">
@@ -411,7 +411,7 @@ export function CandidateDetailsModal({
                         ? application.job_skills
                         : application.job_skills.split(',')
                       ).map((skill: string, i: number) => (
-                        <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-foreground">
+                        <span key={i} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-muted/30 border border-border text-foreground">
                           {skill.trim()}
                         </span>
                       ))}
@@ -426,7 +426,7 @@ export function CandidateDetailsModal({
           {activeTab === 'skills' && (
             <>
               {/* Overall match */}
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+              <div className="rounded-xl bg-muted/20 border border-border p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
@@ -440,7 +440,7 @@ export function CandidateDetailsModal({
                   value={skillMatchData.percentage}
                   className={`h-2 ${
                     skillMatchData.percentage >= 70
-                      ? '[&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-accent'
+                      ? '[&>div]:bg-primary'
                       : skillMatchData.percentage >= 40
                       ? '[&>div]:bg-warning'
                       : '[&>div]:bg-negative'
@@ -453,7 +453,7 @@ export function CandidateDetailsModal({
 
               {/* Matched skills */}
               {skillMatchData.matched.length > 0 && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
                       <CheckCircle className={`w-3 h-3 ${STATUS_COLORS.positive.text}`} />
@@ -474,7 +474,7 @@ export function CandidateDetailsModal({
 
               {/* Missing skills */}
               {skillMatchData.missing.length > 0 && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center`}>
                       <XCircle className={`w-3 h-3 ${STATUS_COLORS.negative.text}`} />
@@ -495,7 +495,7 @@ export function CandidateDetailsModal({
 
               {/* Guild review score */}
               {guildScore && (
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+                <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -518,12 +518,12 @@ export function CandidateDetailsModal({
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-6 pb-5 pt-4 border-t border-white/[0.06] flex-shrink-0">
+        <div className="px-6 pb-5 pt-4 border-t border-border flex-shrink-0">
           <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 h-11 text-sm font-medium rounded-xl border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] transition-all"
+              className="flex-1 h-11 text-sm font-medium rounded-xl border-border bg-muted/20 hover:bg-muted/30 transition-all"
             >
               Close
             </Button>
@@ -533,7 +533,7 @@ export function CandidateDetailsModal({
                 onClose();
                 onEndorseCandidate?.(application);
               }}
-              className="flex-[1.4] h-11 flex items-center justify-center gap-2 text-sm font-bold rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/15 hover:shadow-xl hover:shadow-primary/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex-[1.4] h-11 flex items-center justify-center gap-2 text-sm font-bold rounded-xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               <Zap className="w-4 h-4" />
               Endorse Candidate

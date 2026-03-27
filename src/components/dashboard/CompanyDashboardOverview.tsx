@@ -220,9 +220,9 @@ export function CompanyDashboardOverview() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         {/* ═══ HEADER ═══ */}
-        <div className="flex items-center justify-between mb-8 pb-5 border-b border-border/30 dark:border-white/[0.04]">
+        <div className="flex items-center justify-between mb-8 pb-5 border-b border-border/30 dark:border-border">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center flex-shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
               <span className="text-white font-display font-bold text-xl">
                 {companyName ? companyName.charAt(0).toUpperCase() : "C"}
               </span>
@@ -239,14 +239,14 @@ export function CompanyDashboardOverview() {
           <div className="flex items-center gap-2">
             <Link
               href="/dashboard/settings"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground border border-border/40 dark:border-white/[0.06] rounded-xl hover:bg-muted/30 dark:hover:bg-white/[0.03] hover:text-foreground transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
             >
               <Settings className="w-4 h-4 opacity-60" />
               Settings
             </Link>
             <Link
               href="/jobs/new"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Post New Job
@@ -286,8 +286,8 @@ export function CompanyDashboardOverview() {
 
         {/* ═══ HIRING PIPELINE (Kanban) ═══ */}
         {recentApplications.length > 0 && (
-          <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden mb-8">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border/20 dark:border-white/[0.04]">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/20 dark:border-border">
               <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                 <Activity className="w-4 h-4 text-primary" />
                 Hiring Pipeline
@@ -305,7 +305,7 @@ export function CompanyDashboardOverview() {
                   return (
                     <div key={stage} className="flex flex-col">
                       {/* Column header */}
-                      <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg bg-muted/20 dark:bg-white/[0.02] border border-border/20 dark:border-white/[0.04] border-t-2 ${PIPELINE_COL_ACCENT[stage] ?? "border-t-border"} mb-2`}>
+                      <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg bg-muted/20 border border-border/20 dark:border-border border-t-2 ${PIPELINE_COL_ACCENT[stage] ?? "border-t-border"} mb-2`}>
                         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           {config?.label ?? stage}
                         </span>
@@ -320,7 +320,7 @@ export function CompanyDashboardOverview() {
                           <Link
                             key={app.id}
                             href="/dashboard/candidates"
-                            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/10 dark:bg-white/[0.015] border border-border/15 dark:border-white/[0.04] hover:bg-muted/20 dark:hover:bg-white/[0.03] hover:border-border/30 transition-all group"
+                            className="flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/10 border border-border/15 dark:border-border hover:bg-muted/20 dark:hover:bg-muted/20 hover:border-border/30 transition-all group"
                           >
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${getAvatarBg(app.candidate.fullName)}`}>
                               <span className="text-xs font-medium">
@@ -360,8 +360,8 @@ export function CompanyDashboardOverview() {
 
             {/* Recent Activity */}
             {activityFeed.length > 0 && (
-              <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-white/[0.04]">
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                   <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" />
                     Recent Activity
@@ -399,8 +399,8 @@ export function CompanyDashboardOverview() {
             )}
 
             {/* Recent Applications */}
-            <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-white/[0.04]">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground">
                   Recent Applications
                 </h2>
@@ -422,7 +422,7 @@ export function CompanyDashboardOverview() {
                     <Link
                       key={app.id}
                       href="/dashboard/candidates"
-                      className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-white/[0.02] transition-colors group"
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getAvatarBg(app.candidate.fullName)}`}>
                         <span className="text-xs font-medium">
@@ -450,8 +450,8 @@ export function CompanyDashboardOverview() {
           <div className="space-y-6">
 
             {/* Your Jobs */}
-            <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-white/[0.04]">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-primary" />
                   Your Jobs
@@ -482,7 +482,7 @@ export function CompanyDashboardOverview() {
                       <Link
                         key={job.id}
                         href={`/dashboard/jobs/${job.id}`}
-                        className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-white/[0.02] transition-colors group"
+                        className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                       >
                         <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                           job.status === "active" ? "bg-positive" : job.status === "paused" ? "bg-warning" : "bg-muted-foreground/30"
@@ -503,8 +503,8 @@ export function CompanyDashboardOverview() {
             </div>
 
             {/* Upcoming Meetings */}
-            <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-white/[0.04]">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-primary" />
                   Upcoming Meetings
@@ -567,8 +567,8 @@ export function CompanyDashboardOverview() {
             </div>
 
             {/* Pending Actions */}
-            <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-white/[0.04]">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <Zap className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-display font-bold text-foreground">
                   Pending Actions
@@ -578,7 +578,7 @@ export function CompanyDashboardOverview() {
                 {unreadCount > 0 && (
                   <Link
                     href="/dashboard/messages"
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-white/[0.02] transition-colors group"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-positive/10 flex items-center justify-center flex-shrink-0">
                       <MessageSquare className="w-3.5 h-3.5 text-positive" />
@@ -596,7 +596,7 @@ export function CompanyDashboardOverview() {
                 {recentApplications.some((a) => a.status === "pending") && (
                   <Link
                     href="/dashboard/candidates"
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-white/[0.02] transition-colors group"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Users className="w-3.5 h-3.5 text-primary" />
@@ -626,10 +626,10 @@ export function CompanyDashboardOverview() {
         </div>
 
         {/* ═══ QUICK ACTIONS ═══ */}
-        <div className="rounded-2xl border border-border/40 dark:border-white/[0.06] bg-card/30 backdrop-blur-md px-6 py-4 flex items-center gap-3 flex-wrap">
+        <div className="rounded-2xl border border-border bg-card px-6 py-4 flex items-center gap-3 flex-wrap">
           <Link
             href="/dashboard/candidates"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border/40 dark:border-white/[0.06] rounded-xl hover:bg-muted/30 dark:hover:bg-white/[0.03] hover:text-foreground transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
           >
             <Users className="w-4 h-4 opacity-50" />
             Candidates
@@ -641,7 +641,7 @@ export function CompanyDashboardOverview() {
           </Link>
           <Link
             href="/dashboard/messages"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border/40 dark:border-white/[0.06] rounded-xl hover:bg-muted/30 dark:hover:bg-white/[0.03] hover:text-foreground transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
           >
             <MessageSquare className="w-4 h-4 opacity-50" />
             Messages
@@ -653,7 +653,7 @@ export function CompanyDashboardOverview() {
           </Link>
           <Link
             href="/dashboard/jobs"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border/40 dark:border-white/[0.06] rounded-xl hover:bg-muted/30 dark:hover:bg-white/[0.03] hover:text-foreground transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"
           >
             <Briefcase className="w-4 h-4 opacity-50" />
             Manage Jobs
@@ -661,7 +661,7 @@ export function CompanyDashboardOverview() {
           <div className="flex-1" />
           <Link
             href="/jobs/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Post New Job

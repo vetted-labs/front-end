@@ -40,7 +40,7 @@ export function LeaderboardTable({
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-border/40">
+          <tr className="border-b border-border">
             <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-12">
               #
             </th>

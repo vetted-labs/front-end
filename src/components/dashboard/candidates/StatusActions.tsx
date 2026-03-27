@@ -117,7 +117,7 @@ export function StatusActions({
               placeholder="Add a reason or note for this decision..."
               rows={3}
               maxLength={1000}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
             />
           </div>
           <div className="flex justify-end gap-2">

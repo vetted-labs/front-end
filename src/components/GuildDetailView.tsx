@@ -364,7 +364,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const pendingCount = (guild.guildApplications?.length || 0) + (candidateApplications?.length || 0);
 
   return (
-    <div className="relative min-h-screen text-foreground overflow-x-hidden animate-page-enter">
+    <div className="relative min-h-screen text-foreground overflow-x-hidden">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="profile-ambient-orb profile-ambient-orb-1" />
@@ -385,7 +385,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           {/* Sticky tab bar */}
-          <div className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border/60 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+          <div className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
             <PillTabs
               tabs={[
                 { value: "feed" as const, label: "Feed" },

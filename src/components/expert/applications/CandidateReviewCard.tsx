@@ -21,19 +21,19 @@ function getInitials(fullName: string): string {
 export function CandidateReviewCard({ application, onReview, onViewReview, showGuildBadge }: CandidateReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
 
-  const avatarGradient = isReviewed
-    ? "from-positive/80 to-positive/60"
-    : "from-primary/80 to-primary/60";
+  const avatarBg = isReviewed
+    ? "bg-positive/70"
+    : "bg-primary/70";
 
   const initials = getInitials(application.candidateName);
 
   return (
-    <div className="group rounded-2xl bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] transition-all hover:border-primary/30 dark:hover:border-white/[0.12]">
+    <div className="group rounded-2xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
         <div
-          className={`shrink-0 w-[46px] h-[46px] rounded-xl bg-gradient-to-br ${avatarGradient} flex items-center justify-center`}
+          className={`shrink-0 w-[46px] h-[46px] rounded-xl ${avatarBg} flex items-center justify-center`}
           aria-hidden="true"
         >
           <span className="text-sm font-bold text-white leading-none">{initials}</span>
@@ -46,7 +46,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
             <h4 className="text-base font-bold text-foreground truncate">
               {application.candidateName}
             </h4>
-            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border/50">
+            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border">
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (

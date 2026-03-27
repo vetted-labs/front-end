@@ -183,7 +183,7 @@ function LoginForm() {
     : "Sign in to your account to continue";
 
   return (
-    <div className="flex min-h-screen bg-background animate-page-enter">
+    <div className="flex min-h-screen bg-background">
       {/* ===== LEFT: Brand Showcase (hidden on mobile) ===== */}
       <div className="hidden lg:flex flex-[0_0_60%] relative flex-col items-center justify-center p-16 overflow-hidden">
         {/* Grid pattern background */}
@@ -216,7 +216,7 @@ function LoginForm() {
 
         {/* Brand content */}
         <div className="relative z-10 text-center max-w-[560px]">
-          <h1 className="text-7xl sm:text-8xl font-bold tracking-[0.12em] leading-none bg-gradient-to-br from-foreground via-foreground/70 to-primary bg-clip-text text-transparent mb-4">
+          <h1 className="text-7xl sm:text-8xl font-bold tracking-[0.12em] leading-none text-foreground mb-4">
             VETTED
           </h1>
           <p className="text-sm sm:text-sm text-muted-foreground mb-14">
@@ -225,15 +225,15 @@ function LoginForm() {
 
           {/* Stat pills */}
           <div className="flex gap-4 justify-center flex-wrap">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card/20 backdrop-blur-xl border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float">
               <Users className="w-4 h-4 opacity-60" />
               <span><span className="text-primary font-bold">2,400+</span> Experts</span>
             </div>
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card/20 backdrop-blur-xl border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "2s" }}>
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "2s" }}>
               <Briefcase className="w-4 h-4 opacity-60" />
               <span><span className="text-primary font-bold">180+</span> Companies</span>
             </div>
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card/20 backdrop-blur-xl border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "4s" }}>
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "4s" }}>
               <Star className="w-4 h-4 opacity-60" />
               <span><span className="text-primary font-bold">15</span> Guilds</span>
             </div>
@@ -244,11 +244,11 @@ function LoginForm() {
       {/* ===== RIGHT: Auth Form ===== */}
       <div className="flex-1 lg:flex-[0_0_40%] flex items-center justify-center p-6 sm:p-8 relative z-10">
         {/* Vertical separator line (desktop only) */}
-        <div className="hidden lg:block absolute left-0 top-[10%] bottom-[10%] w-px bg-gradient-to-b from-transparent via-border/30 to-transparent" />
+        <div className="hidden lg:block absolute left-0 top-[10%] bottom-[10%] w-px bg-border/30" />
 
         <div className="w-full max-w-[420px]">
           {/* Auth card */}
-          <div className="bg-card/20 backdrop-blur-[40px] border border-border/30 rounded-[20px] overflow-hidden">
+          <div className="bg-card border border-border/30 rounded-[20px] overflow-hidden">
             {/* Accent shimmer bar */}
             <div
               className="h-[3px]"
@@ -275,7 +275,7 @@ function LoginForm() {
                       onClick={() => handleUserTypeChange(tab.type)}
                       className={`flex-1 py-2.5 px-2 text-sm font-medium rounded-[9px] transition-all whitespace-nowrap ${
                         isActive
-                          ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md shadow-primary/30"
+                          ? "bg-primary text-primary-foreground shadow-md"
                           : "text-muted-foreground hover:text-foreground/70"
                       }`}
                     >
@@ -307,7 +307,7 @@ function LoginForm() {
                         key={connector.id}
                         type="button"
                         onClick={() => handleWalletConnect(connector.id)}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-border/40 bg-card/20 text-sm font-medium text-foreground transition-all hover:-translate-y-px group"
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground transition-all hover:-translate-y-px group"
                         style={
                           connector.name === "MetaMask"
                             ? { ["--hover-border" as string]: "rgba(226,118,27,0.5)" }
@@ -371,7 +371,7 @@ function LoginForm() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 text-sm bg-card/20 border border-border/40 rounded-[10px] focus:ring-2 focus:ring-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground/30 transition-all outline-none hover:border-border/60 hover:bg-card/30"
+                        className="w-full px-4 py-3 text-sm bg-card border border-border rounded-[10px] focus:ring-2 focus:ring-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground/30 transition-all outline-none hover:border-border hover:bg-card"
                         placeholder={userType === "company" ? "hiring@company.com" : "you@example.com"}
                         required
                       />
@@ -385,7 +385,7 @@ function LoginForm() {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 text-sm bg-card/20 border border-border/40 rounded-[10px] focus:ring-2 focus:ring-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground/30 transition-all outline-none hover:border-border/60 hover:bg-card/30"
+                        className="w-full px-4 py-3 text-sm bg-card border border-border rounded-[10px] focus:ring-2 focus:ring-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground/30 transition-all outline-none hover:border-border hover:bg-card"
                         placeholder="Enter your password"
                         required
                       />
@@ -394,7 +394,7 @@ function LoginForm() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full py-3 px-4 mt-2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-[10px] font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-px transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0"
+                      className="w-full py-3 px-4 mt-2 bg-primary text-primary-foreground rounded-[10px] font-bold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-px transition-all disabled:opacity-50 disabled:cursor-not-allowed active:translate-y-0"
                     >
                       {isLoading ? (
                         <>
@@ -418,7 +418,7 @@ function LoginForm() {
                       <button
                         type="button"
                         onClick={handleLinkedInLogin}
-                        className="w-full py-3 px-4 bg-card/20 border rounded-[10px] font-medium text-sm text-foreground flex items-center justify-center gap-2.5 transition-all hover:-translate-y-px hover:bg-[rgba(10,102,194,0.08)] hover:shadow-[0_2px_16px_rgba(10,102,194,0.15)]"
+                        className="w-full py-3 px-4 bg-card border rounded-[10px] font-medium text-sm text-foreground flex items-center justify-center gap-2.5 transition-all hover:-translate-y-px hover:bg-[rgba(10,102,194,0.08)] hover:shadow-[0_2px_16px_rgba(10,102,194,0.15)]"
                         style={{ borderColor: "rgba(10,102,194,0.3)" }}
                       >
                         <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="#0a66c2">

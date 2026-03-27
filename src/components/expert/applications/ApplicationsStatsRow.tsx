@@ -15,7 +15,7 @@ function StatCell({
   last?: boolean;
 }) {
   return (
-    <div className={`px-5 py-4 ${last ? "" : "border-r border-border/40"}`}>
+    <div className={`px-5 py-4 ${last ? "" : "border-r border-border"}`}>
       <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>

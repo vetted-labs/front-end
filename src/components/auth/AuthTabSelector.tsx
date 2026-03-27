@@ -16,7 +16,7 @@ interface AuthTabSelectorProps {
 
 export function AuthTabSelector({ tabs, activeType, onSelect }: AuthTabSelectorProps) {
   return (
-    <div className="flex border-b border-border/50 bg-muted/30">
+    <div className="flex border-b border-border bg-muted/30">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeType === tab.type;

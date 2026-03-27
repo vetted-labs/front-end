@@ -31,10 +31,10 @@ export function TransactionModal({
   const canClose = status !== "pending";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-2xl border border-border/60 max-w-md w-full mx-4 animate-in zoom-in-95 duration-200 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
+      <div className="bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="relative flex items-center justify-between p-6 border-b border-border/50">
+        <div className="relative flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-foreground">Transaction Status</h3>
           {canClose && (
             <button
@@ -143,7 +143,7 @@ export function TransactionModal({
 
               <Button
                 onClick={onClose}
-                className={`w-full h-12 ${STATUS_COLORS.positive.bg} hover:opacity-90 shadow-lg shadow-positive/20 transition-all rounded-xl font-medium text-base text-white`}
+                className={`w-full h-12 ${STATUS_COLORS.positive.bg} hover:opacity-90 shadow-lg transition-all rounded-xl font-medium text-base text-white`}
               >
                 Done
               </Button>

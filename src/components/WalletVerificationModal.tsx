@@ -24,7 +24,7 @@ export function WalletVerificationModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-md mx-4 overflow-hidden">
@@ -39,7 +39,7 @@ export function WalletVerificationModal({
         {/* Content */}
         <div className="p-8">
           {/* Icon */}
-          <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <Shield className="w-8 h-8 text-primary" />
           </div>
 
@@ -108,7 +108,7 @@ export function WalletVerificationModal({
             <Button
               onClick={onVerify}
               disabled={isSigning}
-              className="flex-1 bg-gradient-to-r from-primary to-accent text-white"
+              className="flex-1 bg-primary text-primary-foreground"
             >
               {isSigning ? (
                 <>

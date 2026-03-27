@@ -151,13 +151,13 @@ function MiniPipeline({ status }: { status: string }) {
               className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 isCompleted
                   ? isOffer
-                    ? "bg-warning text-warning-foreground shadow-[0_0_8px_hsl(var(--warning)/0.3)]"
-                    : "bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.2)]"
+                    ? "bg-warning text-warning-foreground"
+                    : "bg-primary text-primary-foreground"
                   : isCurrent
-                    ? "border-2 border-primary text-primary shadow-[0_0_10px_hsl(var(--primary)/0.2)]"
+                    ? "border-2 border-primary text-primary"
                     : isRejected && i === currentStep + 1
-                      ? "bg-negative text-white shadow-[0_0_8px_hsl(var(--negative)/0.2)]"
-                      : "border border-border/60 text-muted-foreground/40 bg-muted/30"
+                      ? "bg-negative text-white"
+                      : "border border-border text-muted-foreground/40 bg-muted/30"
               }`}
               title={label}
             >
@@ -316,7 +316,7 @@ export default function CandidateDashboard() {
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-display font-bold text-xl shadow-[0_0_20px_hsl(var(--primary)/0.15)] flex-shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-display font-bold text-xl flex-shrink-0">
               {initials}
             </div>
             <div>
@@ -331,14 +331,14 @@ export default function CandidateDashboard() {
           <div className="flex items-center gap-2.5">
             <Link
               href="/candidate/profile"
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg border border-border bg-card/60 backdrop-blur text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
             >
               <UserPen className="w-3.5 h-3.5" />
               Edit Profile
             </Link>
             <Link
               href="/browse/jobs"
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               <Search className="w-3.5 h-3.5" />
               Browse Jobs
@@ -349,7 +349,7 @@ export default function CandidateDashboard() {
         {/* ── Quick Stats Strip ── */}
         <div className="flex items-stretch gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {/* Applications */}
-          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
             <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <FileText className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
@@ -360,7 +360,7 @@ export default function CandidateDashboard() {
           </div>
 
           {/* Interviews */}
-          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
             <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Calendar className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
@@ -371,8 +371,8 @@ export default function CandidateDashboard() {
           </div>
 
           {/* Offers -- golden glow */}
-          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-warning/20 bg-card/40 backdrop-blur-md px-4 py-3.5 relative overflow-hidden shadow-[0_0_20px_hsl(var(--warning)/0.12)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-warning/[0.06] to-transparent pointer-events-none rounded-xl" />
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-warning/20 bg-card px-4 py-3.5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-transparent pointer-events-none rounded-xl" />
             <div className="relative w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 bg-warning/15">
               <Star className="w-[18px] h-[18px] text-warning" />
             </div>
@@ -383,7 +383,7 @@ export default function CandidateDashboard() {
           </div>
 
           {/* In Review */}
-          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+          <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
             <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Eye className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
@@ -394,7 +394,7 @@ export default function CandidateDashboard() {
           </div>
 
           {/* Profile Strength Mini Ring */}
-          <div className="flex-1 min-w-[160px] flex items-center gap-3 rounded-xl border border-border/60 bg-card/40 backdrop-blur-md px-4 py-3.5">
+          <div className="flex-1 min-w-[160px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
             <div className="relative flex-shrink-0" style={{ width: 40, height: 40 }}>
               <svg width={40} height={40} className="-rotate-90">
                 <circle cx={20} cy={20} r={16} fill="none" className="stroke-border/20" strokeWidth={3} />
@@ -426,8 +426,8 @@ export default function CandidateDashboard() {
           <div className="lg:col-span-3 space-y-5">
 
             {/* Active Applications */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-muted-foreground/50" />
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
@@ -451,7 +451,7 @@ export default function CandidateDashboard() {
                   <p className="text-sm text-muted-foreground mb-4">No applications yet -- start exploring</p>
                   <Link
                     href="/browse/jobs"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     <Briefcase className="w-4 h-4" />
                     Browse Jobs
@@ -469,7 +469,7 @@ export default function CandidateDashboard() {
                         className="flex items-start gap-4 w-full px-5 py-4 text-left hover:bg-muted/30 transition-colors group"
                       >
                         {/* Company avatar */}
-                        <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border/40 flex items-center justify-center text-sm font-bold text-muted-foreground">
+                        <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-sm font-bold text-muted-foreground">
                           {companyInitial}
                         </div>
                         {/* Details */}
@@ -514,8 +514,8 @@ export default function CandidateDashboard() {
           <div className="lg:col-span-2 space-y-5">
 
             {/* Profile Completion Ring */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Profile Completion
                 </h2>
@@ -546,7 +546,7 @@ export default function CandidateDashboard() {
                 {profileCompletion.percentage < 100 && (
                   <Link
                     href="/candidate/profile"
-                    className="block w-full mt-4 px-4 py-2.5 text-center text-sm font-semibold rounded-lg bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+                    className="block w-full mt-4 px-4 py-2.5 text-center text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
                     Complete Your Profile
                   </Link>
@@ -555,8 +555,8 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Guild Applications */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Guild Applications
                 </h2>
@@ -618,8 +618,8 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Messages */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                     Messages
@@ -657,11 +657,11 @@ export default function CandidateDashboard() {
                       <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center relative ${
                         convo.unreadCount > 0
                           ? "bg-primary/10 border border-primary/20"
-                          : "bg-muted/50 border border-border/40"
+                          : "bg-muted/50 border border-border"
                       }`}>
                         <Building2 className={`w-4 h-4 ${convo.unreadCount > 0 ? "text-primary" : "text-muted-foreground"}`} />
                         {convo.unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -691,8 +691,8 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-              <div className="px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Quick Actions
                 </h2>

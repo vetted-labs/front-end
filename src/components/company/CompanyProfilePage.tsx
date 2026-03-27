@@ -161,7 +161,7 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted animate-page-enter">
+    <div className="min-h-screen bg-background animate-page-enter">
       {/* Header */}
       <div className="bg-card shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -201,7 +201,7 @@ export default function CompanyProfilePage() {
                   className="w-24 h-24 rounded-lg object-cover border-2 border-border"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-primary/10 to-primary/15 flex items-center justify-center border-2 border-border">
+                <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-border">
                   <Building2 className="w-12 h-12 text-primary" />
                 </div>
               )}

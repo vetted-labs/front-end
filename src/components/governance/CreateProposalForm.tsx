@@ -233,7 +233,7 @@ export function CreateProposalForm() {
 
   return (
     <>
-      <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <form onSubmit={handleSubmit}>
           <ProposalDetailsSection
             title={title}
@@ -242,7 +242,7 @@ export function CreateProposalForm() {
             onDescriptionChange={setDescription}
           />
 
-          <div className="border-t border-border/40" />
+          <div className="border-t border-border" />
 
           <ProposalTypeSection
             proposalType={proposalType}
@@ -260,7 +260,7 @@ export function CreateProposalForm() {
             guilds={guildRecords}
           />
 
-          <div className="border-t border-border/40" />
+          <div className="border-t border-border" />
 
           <VotingParametersSection
             stakeAmount={stakeAmount}

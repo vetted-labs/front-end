@@ -132,7 +132,7 @@ export default function CandidateConversationView() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col animate-page-enter">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] flex items-center gap-3 bg-card/30 dark:bg-card/15">
+      <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3 bg-card">
         <button
           onClick={() => router.push("/candidate/messages")}
           className="text-muted-foreground hover:text-foreground transition-colors"

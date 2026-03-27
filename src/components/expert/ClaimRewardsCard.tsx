@@ -23,7 +23,7 @@ export function ClaimRewardsCard({
   return (
     <Card padding="none" className="relative overflow-hidden">
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-border opacity-50" />
 
       <div className="p-5 sm:p-6">
         {/* Header row */}

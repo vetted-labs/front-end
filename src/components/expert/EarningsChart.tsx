@@ -72,7 +72,7 @@ export function EarningsChart({ items }: EarningsChartProps) {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.4)]" />
+            <span className="w-2 h-2 rounded-full bg-primary" />
             <span className="text-xs text-muted-foreground">Earned</span>
           </div>
         </div>

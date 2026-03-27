@@ -236,7 +236,7 @@ export default function JobDetailView() {
   const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
 
   return (
-    <div className="min-h-full animate-page-enter">
+    <div className="min-h-full">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
@@ -261,12 +261,12 @@ export default function JobDetailView() {
           {/* ---- LEFT COLUMN ---- */}
           <div className="flex flex-col gap-6">
             {/* Job Header Card */}
-            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-7 sm:p-9 transition-colors hover:border-border/80">
+            <div className="bg-card rounded-[20px] border border-border p-7 sm:p-9 transition-colors hover:border-border">
               <JobHeader job={job} />
             </div>
 
             {/* Job Description / Requirements / Skills / Screening */}
-            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-7 sm:p-9 transition-colors hover:border-border/80">
+            <div className="bg-card rounded-[20px] border border-border p-7 sm:p-9 transition-colors hover:border-border">
               <JobRequirements job={job} />
             </div>
           </div>
@@ -334,9 +334,9 @@ export default function JobDetailView() {
             )}
 
             {/* Apply Card */}
-            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 overflow-hidden transition-colors hover:border-border/80">
+            <div className="bg-card rounded-[20px] border border-border overflow-hidden transition-colors hover:border-border">
               {/* Gradient top bar */}
-              <div className="h-[3px] bg-gradient-to-r from-primary via-primary/80 to-warning bg-[length:200%_100%] animate-shimmer-bar" />
+              <div className="h-[3px] bg-primary" />
 
               <div className="p-6">
                 {/* Salary display */}
@@ -414,7 +414,7 @@ export default function JobDetailView() {
                 {/* Apply Button */}
                 <Button
                   onClick={handleApply}
-                  className="w-full !rounded-[14px] !text-base !font-bold !tracking-tight shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-px transition-all"
+                  className="w-full !rounded-[14px] !text-base !font-bold !tracking-tight shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
                   size="lg"
                   disabled={
                     hasAlreadyApplied ||
@@ -456,9 +456,9 @@ export default function JobDetailView() {
             </div>
 
             {/* Company Info Mini Card */}
-            <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-6 transition-colors hover:border-border/80">
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border/40">
-                <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center flex-shrink-0">
+            <div className="bg-card rounded-[20px] border border-border p-6 transition-colors hover:border-border">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
                   <Briefcase className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div>
@@ -494,7 +494,7 @@ export default function JobDetailView() {
 
             {/* Guild Info Mini Card */}
             {guildColors && job.guild && (
-              <div className="bg-card/70 backdrop-blur-xl rounded-[20px] border border-border/60 p-6 transition-colors hover:border-border/80">
+              <div className="bg-card rounded-[20px] border border-border p-6 transition-colors hover:border-border">
                 <div className="flex items-center gap-3 mb-3.5">
                   <div className={`w-10 h-10 rounded-xl ${guildColors.bg} border ${guildColors.border} flex items-center justify-center flex-shrink-0`}>
                     <Code2 className={`w-[18px] h-[18px] ${guildColors.text}`} />
@@ -518,7 +518,7 @@ export default function JobDetailView() {
                   return (
                     <Link
                       href={`/guilds/${guildUuid}`}
-                      className="flex items-center gap-1.5 text-sm text-primary font-medium hover:gap-2.5 transition-all pt-3.5 border-t border-border/40"
+                      className="flex items-center gap-1.5 text-sm text-primary font-medium hover:gap-2.5 transition-all pt-3.5 border-t border-border"
                     >
                       View Guild Profile
                       <ArrowRight className="w-3.5 h-3.5" />

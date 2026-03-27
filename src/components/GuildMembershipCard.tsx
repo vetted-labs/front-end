@@ -38,13 +38,13 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
     return (
       <div
         onClick={handleClick}
-        className="bg-card rounded-xl shadow-md border border-border/50 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 overflow-hidden cursor-pointer"
+        className="bg-card rounded-xl shadow-md border border-border hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 overflow-hidden cursor-pointer"
       >
         {/* Branded Guild Header - Compact */}
         <div className="bg-secondary/50 dark:bg-muted/50 px-4 py-3 rounded-t-xl border-b border-border">
           <div className="flex items-start gap-2.5">
             {/* Guild Icon Badge with Nested Gradients */}
-            <div className="w-10 h-10 bg-muted dark:bg-card rounded-lg flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
+            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
               <GuildIcon className="w-5 h-5 text-muted-foreground" />
             </div>
 
@@ -88,7 +88,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
 
         {/* Simplified Footer - Compact */}
         {guild.joinedAt && (
-          <div className="px-4 pb-3 pt-2 border-t border-border/50">
+          <div className="px-4 pb-3 pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               Member since {formatDate(guild.joinedAt)}
@@ -103,13 +103,13 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
   return (
     <div
       onClick={handleClick}
-      className="bg-card rounded-xl shadow-md border border-border/50 hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 overflow-hidden group cursor-pointer"
+      className="bg-card rounded-xl shadow-md border border-border hover:shadow-lg hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 overflow-hidden group cursor-pointer"
     >
       {/* Branded Guild Header */}
       <div className="bg-secondary/50 dark:bg-muted/50 px-5 py-4 rounded-t-xl border-b border-border">
         <div className="flex items-center gap-3">
           {/* Guild Icon Badge with Nested Gradients */}
-          <div className="w-14 h-14 bg-muted dark:bg-card rounded-xl flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
+          <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
             <GuildIcon className="w-7 h-7 text-muted-foreground" />
           </div>
 
@@ -170,7 +170,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
       </div>
 
       {/* Minimal Footer */}
-      <div className="px-5 pb-4 pt-3 border-t border-border/50">
+      <div className="px-5 pb-4 pt-3 border-t border-border">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" />

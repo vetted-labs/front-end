@@ -41,7 +41,7 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-5 animate-pulse dark:bg-card/40 dark:border-white/[0.06]">
+        <div key={i} className="rounded-2xl border border-border bg-card p-5 animate-pulse">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-2.5">
               <div className="flex items-center gap-2">

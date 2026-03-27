@@ -58,7 +58,7 @@ export default function CandidateMessagesInbox() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border/60 dark:border-white/[0.06] bg-card/40 dark:bg-card/30 backdrop-blur-md overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           {conversations.length === 0 ? (
             <EmptyInbox variant="candidate" />
           ) : (

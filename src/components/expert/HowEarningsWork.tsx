@@ -15,7 +15,7 @@ import {
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-xl border border-border bg-muted/20 p-4">
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
@@ -57,7 +57,7 @@ export function HowEarningsWork() {
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-border/40">
+        <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
             <Section icon={Vote} title="Vetting Rewards">
               <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -110,7 +110,7 @@ export function HowEarningsWork() {
             </Section>
 
             <Section icon={Calculator} title="Reward Formula">
-              <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border/40 font-mono text-xs text-center text-muted-foreground leading-relaxed">
+              <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border font-mono text-xs text-center text-muted-foreground leading-relaxed">
                 Reward = (Your Weight / Total Aligned Weights) &times; Pool
               </div>
               <p className="text-xs text-muted-foreground/60 mt-2.5 text-center">

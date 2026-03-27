@@ -132,7 +132,7 @@ export function ApplicationQuestionsSection({
               : "guildImprovement";
 
             return (
-              <div key={question.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
+              <div key={question.id} className="space-y-4 p-4 border border-border rounded-lg bg-card">
                 <div>
                   <h3 className="text-sm font-bold text-foreground">Question {index + 1}</h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">{question.title}</p>
@@ -205,7 +205,7 @@ export function ApplicationQuestionsSection({
           <p className="text-sm text-muted-foreground">Loading level questions...</p>
         ) : levelTemplate?.topics?.length ? (
           levelTemplate.topics.map((topic: GuildDomainTopic) => (
-            <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
+            <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card">
               <div>
                 <h3 className="text-sm font-bold text-foreground">{topic.title}</h3>
                 {topic.prompt && (

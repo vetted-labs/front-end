@@ -187,7 +187,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
 
   if (!isConnected) {
     return (
-      <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md">
+      <Card className="rounded-2xl border border-border bg-card">
         <CardContent className="p-12 text-center">
           <Coins className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-xl font-bold mb-2">Connect Your Wallet</h3>
@@ -220,7 +220,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const isOnSepolia = chain?.id === sepolia.id;
 
   return (
-    <div className="min-h-screen space-y-6 animate-page-enter">
+    <div className="min-h-screen space-y-6">
       <EndorsementHeader
         address={address!}
         shortAddress={shortAddress}

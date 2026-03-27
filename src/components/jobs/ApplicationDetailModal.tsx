@@ -46,13 +46,13 @@ export function ApplicationDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0">
-        <DialogHeader className="px-6 py-5 border-b border-border/40">
+        <DialogHeader className="px-6 py-5 border-b border-border">
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
 
         <div>
           {/* Candidate Info + Status */}
-          <div className="flex items-start gap-4 px-6 py-5 border-b border-border/40">
+          <div className="flex items-start gap-4 px-6 py-5 border-b border-border">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               <span className="text-xl font-bold text-primary">
                 {application.candidate.fullName.charAt(0).toUpperCase()}
@@ -110,8 +110,8 @@ export function ApplicationDetailModal({
           </div>
 
           {/* Cover Letter */}
-          <div className="border-b border-border/40">
-            <div className="px-5 py-4 border-b border-border/40">
+          <div className="border-b border-border">
+            <div className="px-5 py-4 border-b border-border">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Cover Letter
               </h4>
@@ -123,8 +123,8 @@ export function ApplicationDetailModal({
 
           {/* Screening Answers */}
           {application.screeningAnswers && application.screeningAnswers.length > 0 && (
-            <div className="border-b border-border/40">
-              <div className="px-5 py-4 border-b border-border/40">
+            <div className="border-b border-border">
+              <div className="px-5 py-4 border-b border-border">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Screening Answers
                 </h4>
@@ -141,7 +141,7 @@ export function ApplicationDetailModal({
           )}
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-border/40">
+        <DialogFooter className="px-6 py-4 border-t border-border">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>

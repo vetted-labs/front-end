@@ -38,7 +38,7 @@ export function StatCard({
   };
 
   return (
-    <div className="relative bg-card/40 backdrop-blur-md border border-border/40 dark:border-white/[0.06] rounded-2xl p-5 overflow-hidden">
+    <div className="relative bg-card border border-border rounded-2xl p-5 overflow-hidden">
       {/* Top accent bar */}
       <div className={`absolute top-0 left-0 right-0 h-[2px] ${accentBar[accentColor]} opacity-60`} />
 
@@ -69,7 +69,7 @@ export function StatCard({
       {/* Progress bar for target-based metrics */}
       {progress && (
         <div className="flex items-center gap-2.5 mt-3">
-          <div className="flex-1 h-1.5 bg-border/20 dark:bg-white/[0.06] rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-border/20 dark:bg-muted/40 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full bg-positive transition-all duration-1000"
               style={{ width: `${Math.min((progress.current / progress.target) * 100, 100)}%` }}

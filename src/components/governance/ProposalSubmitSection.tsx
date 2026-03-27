@@ -56,7 +56,7 @@ export function ProposalSubmitSection({
   const isSubmitting = submitStep !== "idle";
 
   return (
-    <div className="p-6 sm:p-8 bg-gradient-to-r from-primary/5 to-accent/5 border-t border-border/40">
+    <div className="p-6 sm:p-8 bg-primary/5 border-t border-border">
       {!address && (
         <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-4 mb-5">
           <Wallet className="w-5 h-5 text-warning mt-0.5 shrink-0" />
@@ -73,7 +73,7 @@ export function ProposalSubmitSection({
 
       {/* Transaction step indicator */}
       {isSubmitting && (
-        <div className="mb-5 rounded-xl border border-border/40 bg-card/60 p-4">
+        <div className="mb-5 rounded-xl border border-border bg-card p-4">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
             Transaction Progress
           </p>

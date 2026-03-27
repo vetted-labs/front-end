@@ -117,7 +117,7 @@ export function CandidateDetailModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
         {/* ── Header ── */}
-        <div className="flex-shrink-0 border-b border-border/40 px-6 py-4">
+        <div className="flex-shrink-0 border-b border-border px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -233,7 +233,7 @@ export function CandidateDetailModal({
         </div>
 
         {/* ── Tabs ── */}
-        <div className="flex-shrink-0 px-6 py-3 border-b border-border/30 dark:border-white/[0.04]">
+        <div className="flex-shrink-0 px-6 py-3 border-b border-border/30 dark:border-border">
           <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
@@ -248,7 +248,7 @@ export function CandidateDetailModal({
           {activeTab === "application" && (
             <div className="space-y-5">
               {/* Position summary */}
-              <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4 bg-muted/20 dark:bg-white/[0.02]">
+              <div className="rounded-lg border border-border p-4 bg-muted/20">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
                   Applied For
                 </p>
@@ -274,7 +274,7 @@ export function CandidateDetailModal({
                   Cover Letter
                 </p>
                 {application.coverLetter ? (
-                  <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+                  <div className="rounded-lg border border-border p-4">
                     <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
                       {application.coverLetter}
                     </p>
@@ -298,7 +298,7 @@ export function CandidateDetailModal({
                         (answer: string, idx: number) => (
                           <div
                             key={idx}
-                            className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4"
+                            className="rounded-lg border border-border p-4"
                           >
                             <p className="text-xs font-medium text-muted-foreground mb-1.5">
                               Question {idx + 1}
@@ -334,7 +334,7 @@ export function CandidateDetailModal({
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add internal notes about this candidate..."
                   rows={8}
-                  className="w-full px-4 py-3 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
+                  className="w-full px-4 py-3 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
                 />
               </div>
               <Button
@@ -349,7 +349,7 @@ export function CandidateDetailModal({
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex-shrink-0 border-t border-border/40 px-6 py-4 space-y-3">
+        <div className="flex-shrink-0 border-t border-border px-6 py-4 space-y-3">
           {/* Chat input pill */}
           <div className="flex items-end gap-2">
             <div className="flex-1 relative">
@@ -364,7 +364,7 @@ export function CandidateDetailModal({
                   }
                 }}
                 placeholder={`Message ${candidate.fullName}...`}
-                className="w-full pl-4 pr-12 py-2.5 text-sm rounded-full border border-border/60 dark:border-white/[0.08] bg-muted/30 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
+                className="w-full pl-4 pr-12 py-2.5 text-sm rounded-full border border-border bg-muted/30 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
               />
               <button
                 onClick={handleSendMessage}

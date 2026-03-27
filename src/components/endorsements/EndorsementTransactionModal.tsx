@@ -114,11 +114,11 @@ export function EndorsementTransactionModal({
   const currentStepIndex = txStep === 'idle' ? 0 : txStep === 'signing' ? 0 : txStep === 'approving' ? 0 : txStep === 'bidding' ? 1 : 2;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-modal-backdrop-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in">
       {/* Gradient border glow wrapper */}
-      <div className="max-w-[480px] w-full mx-4 rounded-3xl bg-gradient-to-b from-white/[0.12] via-white/[0.04] to-transparent p-px animate-modal-scale-in">
+      <div className="max-w-[480px] w-full mx-4 rounded-3xl border border-border p-px animate-modal-scale-in">
         <div
-          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-card/70 backdrop-blur-3xl"
+          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-card"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
@@ -141,14 +141,14 @@ export function EndorsementTransactionModal({
                 onClick={onClose}
                 disabled={txStep === 'signing' || txStep === 'approving' || txStep === 'bidding'}
                 aria-label="Close endorsement modal"
-                className="group w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                className="group w-8 h-8 flex items-center justify-center rounded-full bg-muted/30 hover:bg-muted/50 border border-border transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
                 <X className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
             </div>
 
             {/* Gradient divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+            <div className="h-px bg-border" />
           </div>
 
           {/* ── Content ── */}
@@ -163,8 +163,8 @@ export function EndorsementTransactionModal({
                     <div className="w-16 flex flex-col items-center gap-1.5">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                         idx <= currentStepIndex
-                          ? 'bg-gradient-to-br from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-sm'
-                          : 'bg-white/[0.06] border border-white/[0.08] text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted/30 border border-border text-muted-foreground'
                       } ${idx === currentStepIndex && txStep !== 'success' ? 'ring-4 ring-primary/15' : ''}`}>
                         {idx < currentStepIndex ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                       </div>
@@ -174,9 +174,9 @@ export function EndorsementTransactionModal({
                     </div>
                     {/* Connecting line between steps */}
                     {idx < progressSteps.length - 1 && (
-                      <div className="flex-1 h-px bg-white/[0.06] relative -mt-5">
+                      <div className="flex-1 h-px bg-muted/30 relative -mt-5">
                         <div
-                          className={`absolute inset-y-0 left-0 bg-gradient-to-r from-primary/40 to-primary/20 transition-all duration-500 ${
+                          className={`absolute inset-y-0 left-0 bg-primary/20 transition-all duration-500 ${
                             idx < currentStepIndex ? 'w-full' : 'w-0'
                           }`}
                         />
@@ -188,11 +188,11 @@ export function EndorsementTransactionModal({
             )}
 
             {/* Candidate Card */}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 flex overflow-hidden">
+            <div className="rounded-2xl bg-muted/20 border border-border p-4 flex overflow-hidden">
               {/* Left accent bar */}
-              <div className="w-0.5 bg-gradient-to-b from-primary to-accent rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
+              <div className="w-0.5 bg-border rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Avatar className="w-12 h-12 border-2 border-primary/15 shadow-md shadow-primary/10 flex-shrink-0">
+                <Avatar className="w-12 h-12 border-2 border-primary/15 shadow-md flex-shrink-0">
                   {application.candidate_profile_picture_url && (
                     <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
                   )}
@@ -221,10 +221,10 @@ export function EndorsementTransactionModal({
                 ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`
                 : biddingUrgent
                 ? `${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`
-                : "border-white/[0.08] bg-white/[0.03]"
+                : "border-border bg-muted/20"
             }`}>
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                biddingExpired ? STATUS_COLORS.negative.bgSubtle : biddingUrgent ? STATUS_COLORS.warning.bgSubtle : "bg-white/[0.06]"
+                biddingExpired ? STATUS_COLORS.negative.bgSubtle : biddingUrgent ? STATUS_COLORS.warning.bgSubtle : "bg-muted/30"
               }`}>
                 <Clock className={`w-4 h-4 ${
                   biddingExpired ? STATUS_COLORS.negative.icon : biddingUrgent ? STATUS_COLORS.warning.icon : "text-primary"
@@ -275,7 +275,7 @@ export function EndorsementTransactionModal({
                 </div>
 
                 {/* Amount Input Card */}
-                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                <div className="rounded-2xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Your bid</span>
                     <button
@@ -296,9 +296,9 @@ export function EndorsementTransactionModal({
                       disabled={!!application?.current_bid}
                       className="flex-1 bg-transparent text-3xl font-bold text-foreground placeholder:text-muted-foreground/30 outline-none tabular-nums min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                        <span className="text-xs font-bold text-[hsl(var(--gradient-button-text))]">V</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-xs font-bold text-primary-foreground">V</span>
                       </div>
                       <span className="text-sm font-medium">VETD</span>
                     </div>
@@ -317,7 +317,7 @@ export function EndorsementTransactionModal({
                     <button
                       key={idx}
                       onClick={btn.action}
-                      className="h-10 text-xs font-medium rounded-lg border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all"
+                      className="h-10 text-xs font-medium rounded-lg border border-border bg-muted/20 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all"
                     >
                       {btn.label}
                     </button>
@@ -326,8 +326,8 @@ export function EndorsementTransactionModal({
 
                 {/* Blind bidding info */}
                 {bidAmount && parseFloat(bidAmount) > 0 && (
-                  <div className="rounded-2xl border border-white/[0.04] bg-white/[0.02] p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                  <div className="rounded-2xl border border-border bg-muted/20 p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
                       <Award className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <p className="text-xs text-muted-foreground flex-1">
@@ -352,14 +352,14 @@ export function EndorsementTransactionModal({
                   <Button
                     variant="outline"
                     onClick={onClose}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] font-medium"
+                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border bg-muted/30 hover:bg-muted/40 font-medium"
                   >
                     Cancel
                   </Button>
                   <button
                     onClick={handleSubmit}
                     disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid || biddingExpired}
-                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 hover:shadow-primary/35 hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     <Zap className="w-4 h-4" />
                     {biddingExpired ? 'Bidding Closed' : application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
@@ -382,7 +382,7 @@ export function EndorsementTransactionModal({
                 </div>
                 <h3 className="text-xl font-bold mb-2">Sign Permit...</h3>
                 <p className="text-sm text-muted-foreground mb-4">Sign the message in your wallet</p>
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-4 max-w-xs mx-auto">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 max-w-xs mx-auto">
                   <p className="text-xs text-muted-foreground">
                     Authorizing <span className="text-primary font-medium">{bidAmount} VETD</span> for endorsement
                   </p>
@@ -404,7 +404,7 @@ export function EndorsementTransactionModal({
                 </div>
                 <h3 className="text-xl font-bold mb-2">Approving Tokens...</h3>
                 <p className="text-sm text-muted-foreground mb-4">Confirm the approval in your wallet</p>
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-4 max-w-xs mx-auto">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 max-w-xs mx-auto">
                   <p className="text-xs text-muted-foreground">
                     Step 1/2: Approving <span className="text-primary font-medium">{bidAmount} VETD</span>
                   </p>
@@ -431,7 +431,7 @@ export function EndorsementTransactionModal({
                 </div>
                 <h3 className="text-xl font-bold mb-2">Placing Endorsement...</h3>
                 <p className="text-sm text-muted-foreground mb-4">Confirm the transaction in your wallet</p>
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-4 max-w-xs mx-auto">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 max-w-xs mx-auto">
                   <p className="text-xs text-muted-foreground">
                     {isPermitPath ? 'Endorsing' : 'Step 2/2: Endorsing'} with <span className="text-primary font-medium">{bidAmount} VETD</span>
                   </p>
@@ -450,15 +450,15 @@ export function EndorsementTransactionModal({
               <div className="text-center py-8">
                 <div className="relative w-24 h-24 mx-auto mb-6 animate-celebrate-scale-in">
                   <div className="absolute inset-0 rounded-full bg-primary/20 animate-celebrate-glow" />
-                  <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-xl shadow-primary/30">
-                    <CheckCircle2 className="w-10 h-10 text-[hsl(var(--gradient-button-text))]" />
+                  <div className="relative w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-xl">
+                    <CheckCircle2 className="w-10 h-10 text-primary-foreground" />
                   </div>
                 </div>
 
                 <h3 className="text-2xl font-bold text-foreground mb-1">Endorsement Confirmed!</h3>
                 <p className="text-sm text-muted-foreground mb-6">Top 3 endorsers earn rewards when candidate is hired.</p>
 
-                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-3 mb-6 text-left">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-3 mb-6 text-left">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Bid Amount</span>
                     <span className="text-lg font-bold text-primary">{bidAmount} VETD</span>
@@ -470,7 +470,7 @@ export function EndorsementTransactionModal({
 
                   {(approvalTxHash || bidTxHash) && (
                     <>
-                      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+                      <div className="h-px bg-border" />
                       <div className="space-y-2">
                         {approvalTxHash && (
                           <div className="flex items-center justify-between text-xs">
@@ -497,7 +497,7 @@ export function EndorsementTransactionModal({
 
                 <button
                   onClick={onClose}
-                  className="w-full h-[3.25rem] rounded-2xl font-bold text-sm bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 transition-all duration-300"
+                  className="w-full h-[3.25rem] rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
                 >
                   Done
                 </button>
@@ -548,12 +548,12 @@ export function EndorsementTransactionModal({
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={onClose}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] font-medium">
+                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border bg-muted/30 hover:bg-muted/40 font-medium">
                     Cancel
                   </Button>
                   <button
                     onClick={() => { setErrorMessage(''); handleSubmit(); }}
-                    className="flex-[0.6] h-[3.25rem] rounded-2xl font-bold text-sm bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 transition-all duration-300"
+                    className="flex-[0.6] h-[3.25rem] rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
                   >
                     Try Again
                   </button>

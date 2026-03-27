@@ -159,7 +159,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
         </button>
 
         {/* Header */}
-        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] mb-6">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
           <div className="p-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">
@@ -205,8 +205,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
         <div className={`grid grid-cols-1 ${dashboardContext ? "" : "lg:grid-cols-3"} gap-6`}>
           {/* Left Column - Applicants (hidden in dashboard context) */}
           {!dashboardContext && <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06] sticky top-6">
-              <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden sticky top-6">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Applicants
                 </h2>
@@ -215,7 +215,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                 </span>
               </div>
 
-              <div className="px-5 py-3 border-b border-border/40">
+              <div className="px-5 py-3 border-b border-border">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Filter by status" />
@@ -304,10 +304,10 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
 
           {/* Right Column - Job Details */}
           <div className={dashboardContext ? "" : "lg:col-span-2"}>
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
               {/* Basic Information */}
-              <div className="border-b border-border/40">
-                <div className="px-5 py-4 border-b border-border/40">
+              <div className="border-b border-border">
+                <div className="px-5 py-4 border-b border-border">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
                     Basic Information
@@ -337,8 +337,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               </div>
 
               {/* Location & Type */}
-              <div className="border-b border-border/40">
-                <div className="px-5 py-4 border-b border-border/40">
+              <div className="border-b border-border">
+                <div className="px-5 py-4 border-b border-border">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     Location & Type
@@ -373,8 +373,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               </div>
 
               {/* Compensation & Experience */}
-              <div className="border-b border-border/40">
-                <div className="px-5 py-4 border-b border-border/40">
+              <div className="border-b border-border">
+                <div className="px-5 py-4 border-b border-border">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
                     Compensation & Experience
@@ -417,8 +417,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               </div>
 
               {/* Guild Assignment */}
-              <div className="border-b border-border/40">
-                <div className="px-5 py-4 border-b border-border/40">
+              <div className="border-b border-border">
+                <div className="px-5 py-4 border-b border-border">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     Guild Assignment
@@ -437,8 +437,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
 
               {/* Requirements */}
               {job.requirements && job.requirements.length > 0 && (
-                <div className="border-b border-border/40">
-                  <div className="px-5 py-4 border-b border-border/40">
+                <div className="border-b border-border">
+                  <div className="px-5 py-4 border-b border-border">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Requirements
@@ -459,8 +459,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
 
               {/* Skills */}
               {job.skills && job.skills.length > 0 && (
-                <div className="border-b border-border/40">
-                  <div className="px-5 py-4 border-b border-border/40">
+                <div className="border-b border-border">
+                  <div className="px-5 py-4 border-b border-border">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Skills
                     </h2>
@@ -483,7 +483,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
               {/* Screening Questions */}
               {job.screeningQuestions && job.screeningQuestions.length > 0 && (
                 <div>
-                  <div className="px-5 py-4 border-b border-border/40">
+                  <div className="px-5 py-4 border-b border-border">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                       <HelpCircle className="w-4 h-4" />
                       Screening Questions

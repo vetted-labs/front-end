@@ -53,15 +53,9 @@ const formatJobType = (type: string) => {
 
 // Get match score color based on value
 const getMatchScoreColor = (score: number) => {
-  if (score >= 80) return "from-positive to-positive/80";
-  if (score >= 60) return "from-warning to-primary";
-  return "from-negative to-negative/80";
-};
-
-const getMatchScoreGlow = (score: number) => {
-  if (score >= 80) return "shadow-positive/30";
-  if (score >= 60) return "shadow-warning/30";
-  return "shadow-negative/30";
+  if (score >= 80) return "bg-positive";
+  if (score >= 60) return "bg-warning";
+  return "bg-negative";
 };
 
 export function GuildJobsTab({
@@ -139,7 +133,7 @@ export function GuildJobsTab({
               {sortedJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="rounded-2xl p-5 border border-border bg-card shadow-sm dark:shadow-lg transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
+                  className="rounded-2xl p-5 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
                 >
                   {/* Job Title */}
                   <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
@@ -224,12 +218,12 @@ export function GuildJobsTab({
               {applications.map((application) => (
                 <div
                   key={application.id}
-                  className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   {/* Glassmorphism background layers */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_55%)] opacity-60" />
                   <div className="pointer-events-none absolute -top-20 right-[-5%] h-40 w-40 rounded-full bg-primary/8 blur-3xl" />
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-60" />
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-border opacity-60" />
 
                   <div className="relative z-10 p-6">
                     {/* Header: Job title + Match score */}
@@ -239,7 +233,7 @@ export function GuildJobsTab({
                           {application.jobTitle}
                         </h4>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-border flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 border border-border flex items-center justify-center">
                             <span className="text-xs font-bold text-primary">
                               {application.candidateName.charAt(0)}
                             </span>
@@ -267,8 +261,8 @@ export function GuildJobsTab({
 
                       {/* Match Score Circle */}
                       <div className="flex-shrink-0">
-                        <div className={`relative w-[72px] h-[72px] rounded-2xl bg-gradient-to-br ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-lg ${getMatchScoreGlow(application.matchScore ?? 0)}`}>
-                          <div className="w-full h-full rounded-[14px] bg-card flex flex-col items-center justify-center backdrop-blur-sm">
+                        <div className={`relative w-[72px] h-[72px] rounded-2xl ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-sm`}>
+                          <div className="w-full h-full rounded-[14px] bg-card flex flex-col items-center justify-center">
                             <span className="text-2xl font-bold text-white leading-none">
                               {application.matchScore}
                             </span>
@@ -301,7 +295,7 @@ export function GuildJobsTab({
 
                       <button
                         onClick={() => handleEndorseClick(application.id)}
-                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary/15 via-primary/10 to-primary/15 border border-primary/30 text-primary font-medium text-sm transition-all hover:border-primary/50 hover:from-primary/25 hover:via-primary/20 hover:to-primary/25 hover:shadow-lg hover:shadow-primary/10 active:scale-[0.98]"
+                        className="group/btn relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/[0.08] border border-primary/30 text-primary font-medium text-sm transition-all hover:border-primary/50 hover:shadow-lg active:scale-[0.98]"
                       >
                         <Sparkles className="w-4 h-4" />
                         Endorse

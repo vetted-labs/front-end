@@ -41,7 +41,7 @@ export function SlimNotificationsFeed({
   };
 
   return (
-    <div className="bg-card border border-border/60 rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border rounded-[14px] p-5 h-full">
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-foreground">
           Notifications
@@ -73,7 +73,7 @@ export function SlimNotificationsFeed({
               <button
                 key={notification.id}
                 onClick={() => handleClick(notification)}
-                className="flex items-start gap-3 p-2.5 rounded-[10px] bg-muted/30 border border-border/40 text-left hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-3 p-2.5 rounded-[10px] bg-muted/30 border border-border text-left hover:bg-muted/50 transition-colors"
               >
                 <div
                   className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"

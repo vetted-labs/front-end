@@ -83,7 +83,7 @@ export function PollDisplay({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">
           Poll &middot; {poll.choiceMode === "single" ? "Single choice" : "Multiple choice"}
@@ -109,7 +109,7 @@ export function PollDisplay({
                   }`}
                   style={{ width: `${pct}%` }}
                 />
-                <div className="relative flex items-center justify-between px-3 py-2 rounded-lg border border-border/50">
+                <div className="relative flex items-center justify-between px-3 py-2 rounded-lg border border-border">
                   <span className="text-sm text-foreground">
                     {option.hasVoted && <span className="mr-1.5">&#10003;</span>}
                     {option.text}
@@ -130,7 +130,7 @@ export function PollDisplay({
               className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-all ${
                 isSelected
                   ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-border/60 text-foreground hover:border-primary/30"
+                  : "border-border text-foreground hover:border-primary/30"
               }`}
             >
               {option.text}

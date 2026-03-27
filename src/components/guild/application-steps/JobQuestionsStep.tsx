@@ -23,7 +23,7 @@ export default function JobQuestionsStep({
   return (
     <div className="space-y-8">
       {/* Job context header */}
-      <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-border/60 p-6">
+      <div className="bg-primary/5 rounded-2xl border border-border p-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             <Briefcase className="w-5 h-5 text-primary" />
@@ -38,7 +38,7 @@ export default function JobQuestionsStep({
       </div>
 
       {/* Cover Letter */}
-      <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8">
+      <div className="bg-card rounded-2xl border border-border p-8">
         <h2 className="text-xl font-bold text-foreground mb-1">
           Cover Letter <span className="text-destructive">*</span>
         </h2>
@@ -59,7 +59,7 @@ export default function JobQuestionsStep({
 
       {/* Screening Questions */}
       {screeningQuestions.length > 0 && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8 space-y-6">
+        <div className="bg-card rounded-2xl border border-border p-8 space-y-6">
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
               <HelpCircle className="w-5 h-5" />

@@ -19,7 +19,7 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
           <button
             key={expert.id}
             onClick={() => onNavigate(`/experts/${expert.walletAddress}`)}
-            className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)] hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
+            className="rounded-2xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
           >
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -44,7 +44,7 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
               {(expert.expertise ?? []).map((skill, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border/60"
+                  className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border"
                 >
                   {skill}
                 </span>

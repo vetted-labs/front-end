@@ -88,7 +88,7 @@ export function LeaderboardTrending({
                         +{entry.reputationDelta}
                       </span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-muted/50 dark:bg-white/[0.06] overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-muted/50 dark:bg-muted/40 overflow-hidden">
                       <div
                         className={cn("h-full rounded-full transition-all duration-500", STATUS_COLORS.positive.bg)}
                         style={{ width: `${barWidth}%` }}

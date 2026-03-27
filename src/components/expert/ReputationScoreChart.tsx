@@ -125,7 +125,7 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
       </p>
       <Card padding="none" className="relative overflow-hidden">
         {/* Top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-border" />
 
         <div className="p-6 sm:p-8">
           {/* Header */}
@@ -226,7 +226,7 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
                   cy={p.y}
                   r={hoveredIdx === i ? 6 : 0}
                   className={`fill-background stroke-primary transition-all duration-200 cursor-pointer ${
-                    hoveredIdx === i ? "fill-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.5)]" : ""
+                    hoveredIdx === i ? "fill-primary drop-" : ""
                   }`}
                   strokeWidth="2.5"
                   style={
@@ -243,7 +243,7 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
             {/* Tooltip */}
             {hoveredIdx !== null && (
               <div
-                className="absolute bg-card/95 dark:bg-surface-2/95 backdrop-blur-lg border border-primary/20 rounded-xl px-3.5 py-2.5 pointer-events-none z-10 shadow-lg"
+                className="absolute bg-card dark:bg-surface-2/95 border border-primary/20 rounded-xl px-3.5 py-2.5 pointer-events-none z-10 shadow-lg"
                 style={{
                   left: `${(points[hoveredIdx].x / viewW) * 100}%`,
                   top: `${(points[hoveredIdx].y / viewH) * 100 - 18}%`,

@@ -182,7 +182,7 @@ export default function CompanyMessagesInbox() {
 
       <div className="relative h-[calc(100vh-4rem)]">
         {/* Page header — visible on mobile when no conversation selected */}
-        <div className="px-6 py-4 border-b border-border/40 dark:border-white/[0.04] md:hidden">
+        <div className="px-6 py-4 border-b border-border dark:border-border md:hidden">
           {selectedConversation ? (
             <button
               onClick={() => setSelectedConversation(null)}
@@ -199,17 +199,17 @@ export default function CompanyMessagesInbox() {
         <div className="flex h-full">
           {/* Conversation list panel */}
           <div
-            className={`w-full md:w-80 md:border-r border-border/40 dark:border-white/[0.06] flex flex-col bg-card/20 dark:bg-card/10 ${
+            className={`w-full md:w-80 md:border-r border-border flex flex-col bg-card ${
               selectedConversation ? "hidden md:flex" : "flex"
             }`}
           >
-            <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] hidden md:block">
+            <div className="px-4 py-3 border-b border-border dark:border-border hidden md:block">
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-medium text-foreground uppercase tracking-wider">
                   Messages
                 </h1>
                 {conversations.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-muted/60 dark:bg-white/[0.06] text-xs font-medium text-muted-foreground tabular-nums">
+                  <span className="px-1.5 py-0.5 rounded-full bg-muted/60 dark:bg-muted/40 text-xs font-medium text-muted-foreground tabular-nums">
                     {conversations.length}
                   </span>
                 )}
@@ -247,7 +247,7 @@ export default function CompanyMessagesInbox() {
             {selectedConversation ? (
               <>
                 {/* Conversation header */}
-                <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] flex items-center justify-between gap-3 bg-card/30 dark:bg-card/15">
+                <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between gap-3 bg-card">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <span className="text-primary font-medium text-xs">
@@ -268,7 +268,7 @@ export default function CompanyMessagesInbox() {
                   </div>
                   <button
                     onClick={() => setShowScheduleModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-border/60 dark:border-white/[0.08] bg-card/60 dark:bg-card/30 text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     Schedule Meeting

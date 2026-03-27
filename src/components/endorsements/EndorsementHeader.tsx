@@ -73,7 +73,7 @@ export function EndorsementHeader({
               </p>
               <Button
                 onClick={onSwitchToSepolia}
-                className="bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
+                className="bg-primary text-primary-foreground"
               >
                 Switch to Sepolia Testnet
               </Button>
@@ -84,7 +84,7 @@ export function EndorsementHeader({
 
       {/* Sticky header bar */}
       {address && (
-        <div className="sticky top-0 z-30 bg-background/88 backdrop-blur-xl border-b border-white/[0.06] -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+        <div className="sticky top-0 z-30 bg-background/88 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
           <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
             {/* Left: Title + LIVE badge + Guild selector */}
             <div className="flex items-center gap-3.5 flex-wrap">
@@ -96,7 +96,7 @@ export function EndorsementHeader({
                 </span>
               </h2>
               <Select value={selectedGuildId ?? ""} onValueChange={onGuildChange}>
-                <SelectTrigger className="h-9 w-44 rounded-[10px] border-white/[0.06] bg-white/[0.04] text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectTrigger className="h-9 w-44 rounded-[10px] border-border bg-muted/30 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
                   <SelectValue placeholder="Select guild" />
                 </SelectTrigger>
                 <SelectContent>

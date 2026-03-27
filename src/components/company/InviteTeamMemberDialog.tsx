@@ -47,7 +47,7 @@ export function InviteTeamMemberDialog({ isOpen, onClose, onInvite }: InviteTeam
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Jane Smith"
             required
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
@@ -59,7 +59,7 @@ export function InviteTeamMemberDialog({ isOpen, onClose, onInvite }: InviteTeam
             onChange={(e) => setEmail(e.target.value)}
             placeholder="jane@company.com"
             required
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
@@ -68,7 +68,7 @@ export function InviteTeamMemberDialog({ isOpen, onClose, onInvite }: InviteTeam
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as TeamMemberRole)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
           >
             <option value="recruiter">Recruiter</option>
             <option value="manager">Manager</option>

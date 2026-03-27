@@ -101,7 +101,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
               </div>
               <div className="space-y-2">
                 {feedback.feedbackSummary.map((fb, i) => (
-                  <p key={i} className="text-sm text-foreground/80 bg-muted/30 rounded-lg px-3 py-2 border border-border/40">
+                  <p key={i} className="text-sm text-foreground/80 bg-muted/30 rounded-lg px-3 py-2 border border-border">
                     {fb}
                   </p>
                 ))}

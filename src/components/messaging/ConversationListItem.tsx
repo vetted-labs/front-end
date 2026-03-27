@@ -32,10 +32,10 @@ export function ConversationListItem({
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-4 py-3 transition-colors border-b border-border/20 dark:border-white/[0.03]",
+        "w-full text-left px-4 py-3 transition-colors border-b border-border/20",
         isSelected
           ? "bg-primary/5 dark:bg-primary/10 border-l-2 border-l-primary"
-          : "hover:bg-muted/50 dark:hover:bg-white/[0.04]"
+          : "hover:bg-muted/50 dark:hover:bg-muted/30"
       )}
     >
       <div className="flex items-start gap-3">

@@ -105,7 +105,7 @@ export default function GovernancePage() {
                 Protocol Governance
               </div>
 
-              <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-[1.05] mb-4 bg-gradient-to-br from-foreground via-muted-foreground to-primary bg-clip-text text-transparent">
+              <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-[1.05] mb-4 text-foreground">
                 Shape the<br />Protocol
               </h1>
 
@@ -145,7 +145,7 @@ export default function GovernancePage() {
             <div className="flex flex-col items-end gap-4 pt-3 lg:pt-8">
               <button
                 onClick={() => router.push("/expert/governance/create")}
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold text-white bg-gradient-to-br from-primary to-primary/80 shadow-[0_0_40px_hsl(var(--primary)/0.15),0_4px_16px_rgba(0,0,0,0.4)] hover:translate-y-[-2px] hover:shadow-[0_0_60px_hsl(var(--primary)/0.25),0_8px_24px_rgba(0,0,0,0.5)] transition-all"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold text-white bg-primary hover:translate-y-[-2px] transition-all"
               >
                 <Plus className="w-[18px] h-[18px]" />
                 Create Proposal
@@ -289,7 +289,7 @@ function PastProposalRow({
   return (
     <div
       onClick={onClick}
-      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-5 p-5 sm:px-7 rounded-2xl border border-border bg-card/50 backdrop-blur-sm cursor-pointer hover:border-border transition-colors"
+      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-5 p-5 sm:px-7 rounded-2xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
     >
       {/* Meta */}
       <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">

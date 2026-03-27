@@ -75,7 +75,7 @@ export function StatsBar({ guilds, jobs }: StatsBarProps) {
 
   return (
     <div className="max-w-[1120px] mx-auto px-6 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
-      <div className="bg-card/20 border border-border/30 rounded-2xl backdrop-blur-sm py-5 flex items-center justify-center">
+      <div className="bg-card border border-border/30 rounded-2xl py-5 flex items-center justify-center">
         <div className="flex items-center flex-wrap justify-center gap-y-2">
           <StatItem label="Expert Reviewers" target={expertReviewers || 120} />
           <StatItem label="Candidates Vetted" target={candidatesVetted || 350} suffix="+" />

@@ -17,7 +17,7 @@ function SuccessRateGauge({ rate, successful, total }: { rate: number; successfu
   const offset = GAUGE_CIRCUMFERENCE - (rate / 100) * GAUGE_CIRCUMFERENCE;
 
   return (
-    <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.025] p-6 transition-all hover:border-white/[0.10] hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]">
+    <div className="rounded-[20px] border border-border bg-card p-6 transition-all hover:border-border">
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
         Success Rate
       </p>
@@ -66,7 +66,7 @@ function SuccessRateGauge({ rate, successful, total }: { rate: number; successfu
 
 function EarningsChart({ total }: { total: number }) {
   return (
-    <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.025] p-6 transition-all hover:border-white/[0.10] hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]">
+    <div className="rounded-[20px] border border-border bg-card p-6 transition-all hover:border-border">
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
         Earnings from Endorsements
       </p>
@@ -115,7 +115,7 @@ function EarningsChart({ total }: { total: number }) {
 
 function ActiveEndorsementsStat({ count, totalStaked }: { count: number; totalStaked: string }) {
   return (
-    <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.025] p-6 transition-all hover:border-white/[0.10] hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.3)]">
+    <div className="rounded-[20px] border border-border bg-card p-6 transition-all hover:border-border">
       <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-4">
         Active Endorsements
       </p>

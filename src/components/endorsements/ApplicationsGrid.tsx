@@ -14,7 +14,7 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-80 bg-white/[0.025] animate-pulse rounded-[20px]" />
+          <div key={i} className="h-80 bg-card animate-pulse rounded-[20px]" />
         ))}
       </div>
     );

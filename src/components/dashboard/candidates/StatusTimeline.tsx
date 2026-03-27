@@ -114,7 +114,7 @@ export function StatusTimeline({ history }: StatusTimelineProps) {
   return (
     <div className="relative">
       {/* Timeline line */}
-      <div className="absolute left-[23px] top-0 bottom-0 w-px bg-border/60 dark:bg-white/[0.06]" />
+      <div className="absolute left-[23px] top-0 bottom-0 w-px bg-border/60 dark:bg-muted/40" />
 
       <div className="space-y-1">
         {history.map((entry) => (

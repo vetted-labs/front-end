@@ -98,7 +98,7 @@ export function ApplicationsFilters({
 
         <div className="flex items-center gap-2.5">
           <Select value={selectedGuildId} onValueChange={onGuildChange}>
-            <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg border-border/60 bg-background/70">
+            <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg border-border bg-background/70">
               <SelectValue placeholder="All Guilds" />
             </SelectTrigger>
             <SelectContent>
@@ -111,7 +111,7 @@ export function ApplicationsFilters({
             </SelectContent>
           </Select>
 
-          <div className="flex items-center rounded-lg border border-border/60 overflow-hidden">
+          <div className="flex items-center rounded-lg border border-border overflow-hidden">
             <button
               onClick={() => onFilterModeChange("assigned")}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${

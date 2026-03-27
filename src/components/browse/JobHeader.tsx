@@ -29,13 +29,13 @@ export default function JobHeader({ job }: JobHeaderProps) {
             <img
               src={getAssetUrl(job.companyLogo)}
               alt={job.companyName || "Company"}
-              className="w-12 h-12 rounded-[14px] object-cover border border-border/60 flex-shrink-0 shadow-sm"
+              className="w-12 h-12 rounded-[14px] object-cover border border-border flex-shrink-0 shadow-sm"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
           ) : (
-            <div className="w-12 h-12 rounded-[14px] bg-muted/50 border border-border/60 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-[14px] bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
               <Building2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}
@@ -49,7 +49,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
       </div>
 
       {/* Job Title */}
-      <h1 className="font-display text-3xl sm:text-3xl font-bold tracking-tight leading-[1.15] mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+      <h1 className="font-display text-3xl sm:text-3xl font-bold tracking-tight leading-[1.15] mb-4 text-foreground">
         {job.title}
       </h1>
 
@@ -72,7 +72,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
       </div>
 
       {/* Meta Row */}
-      <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-border/40">
+      <div className="flex flex-wrap items-center gap-4 pt-5 border-t border-border">
         {job.salary?.min && job.salary?.max && (
           <>
             <div className="flex items-center gap-1.5 text-sm font-semibold text-positive">

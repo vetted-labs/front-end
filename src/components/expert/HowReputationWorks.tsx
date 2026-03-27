@@ -16,7 +16,7 @@ import { STATUS_COLORS } from "@/config/colors";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+    <div className="rounded-xl border border-border bg-muted/20 p-4">
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
@@ -58,7 +58,7 @@ export function HowReputationWorks() {
       </button>
 
       {open && (
-        <div className="px-5 pb-5 border-t border-border/40">
+        <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
             <Section icon={Vote} title="Vetting">
               <ul className="space-y-1.5 text-sm text-muted-foreground">
@@ -93,7 +93,7 @@ export function HowReputationWorks() {
             </Section>
 
             {/* Alignment Calculation — full width */}
-            <div className="sm:col-span-2 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="sm:col-span-2 rounded-xl border border-border bg-muted/20 p-4">
               <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
                   <Calculator className="w-4 h-4 text-muted-foreground" />
@@ -103,7 +103,7 @@ export function HowReputationWorks() {
               <p className="text-sm text-muted-foreground mb-3">
                 After a vetting round finalizes, the consensus score is calculated using <strong className="text-foreground/80">IQR-based filtering</strong> (statistical outlier removal). Your deviation is measured as a multiple of the IQR distance from the median.
               </p>
-              <div className="rounded-lg border border-border/40 overflow-hidden">
+              <div className="rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider">
@@ -185,7 +185,7 @@ export function HowReputationWorks() {
             </Section>
 
             <Section icon={Calculator} title="Pool Distribution">
-              <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border/40 font-mono text-xs text-center text-muted-foreground leading-relaxed">
+              <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border font-mono text-xs text-center text-muted-foreground leading-relaxed">
                 Reward = (Your Weight / Total Aligned Weights) &times; Pool
               </div>
               <p className="text-xs text-muted-foreground/60 mt-2.5 text-center">

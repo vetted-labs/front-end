@@ -53,13 +53,13 @@ export function CandidateJobGroup({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/30 dark:hover:bg-white/[0.03] transition-colors border-b border-border/20 dark:border-white/[0.04]"
+        className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors border-b border-border/20 dark:border-border"
       >
         <Briefcase className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
           {job.title}
         </span>
-        <span className="text-xs font-medium text-muted-foreground/40 bg-muted/40 dark:bg-white/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
+        <span className="text-xs font-medium text-muted-foreground/40 bg-muted/40 dark:bg-muted/30 px-1.5 py-0.5 rounded flex-shrink-0">
           {applications.length}
         </span>
         <ChevronDown
@@ -86,7 +86,7 @@ export function CandidateJobGroup({
                   "w-full flex items-center gap-2.5 px-4 h-[52px] text-left transition-colors border-l-2",
                   isSelected
                     ? "bg-primary/[0.04] border-l-primary"
-                    : "hover:bg-muted/20 dark:hover:bg-white/[0.02] border-l-transparent"
+                    : "hover:bg-muted/20 dark:hover:bg-muted/20 border-l-transparent"
                 )}
               >
                 {/* Avatar */}
@@ -127,7 +127,7 @@ export function CandidateJobGroup({
             <button
               type="button"
               onClick={onShowMore}
-              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors border-b border-border/20 dark:border-white/[0.03]"
+              className="w-full py-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors border-b border-border/20"
             >
               Show {remaining <= 10 ? `all ${remaining}` : "10 more"} candidates
             </button>

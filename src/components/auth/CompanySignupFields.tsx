@@ -2,9 +2,9 @@
 import { Building2 } from "lucide-react";
 
 const inputClass =
-  "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
+  "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
 const inputClassNoIcon =
-  "w-full px-4 py-2.5 text-sm bg-background/50 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
+  "w-full px-4 py-2.5 text-sm bg-background/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
 
 interface Props {
   companyName: string;

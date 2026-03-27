@@ -61,9 +61,9 @@ export function ReputationLeaderboard({
   };
 
   const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return `bg-gradient-to-br ${PODIUM_COLORS[1].gradient} text-white`;
-    if (rank === 2) return `bg-gradient-to-br ${PODIUM_COLORS[2].gradient} text-white`;
-    if (rank === 3) return `bg-gradient-to-br ${PODIUM_COLORS[3].gradient} text-white`;
+    if (rank === 1) return `${PODIUM_COLORS[1].solid} text-white`;
+    if (rank === 2) return `${PODIUM_COLORS[2].solid} text-white`;
+    if (rank === 3) return `${PODIUM_COLORS[3].solid} text-white`;
     return "bg-muted text-card-foreground";
   };
 
@@ -90,7 +90,7 @@ export function ReputationLeaderboard({
   }
 
   return (
-    <div className="min-h-screen space-y-6 animate-page-enter">
+    <div className="min-h-screen space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -138,7 +138,7 @@ export function ReputationLeaderboard({
 
       {/* Stats Overview */}
       <div className="grid md:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
+        <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-primary" />
@@ -148,7 +148,7 @@ export function ReputationLeaderboard({
           <p className="text-2xl font-bold text-foreground">{entries.length}</p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
+        <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
               <Activity className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
@@ -164,7 +164,7 @@ export function ReputationLeaderboard({
           </p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
+        <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
               <Coins className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
@@ -176,7 +176,7 @@ export function ReputationLeaderboard({
           </p>
         </div>
 
-        <div className="bg-card rounded-xl p-4 border border-border dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06]">
+        <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
               <DollarSign className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
@@ -190,10 +190,10 @@ export function ReputationLeaderboard({
       </div>
 
       {/* Leaderboard Table */}
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20">
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted border-b border-border dark:bg-white/[0.03]">
+            <thead className="bg-muted border-b border-border dark:bg-muted/20">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Rank

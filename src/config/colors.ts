@@ -366,22 +366,28 @@ export const STAT_ICON = {
 export const PODIUM_COLORS = {
   1: {
     gradient: "from-rank-master to-rank-officer",
+    solid: "bg-rank-master",
     ring: "ring-rank-master/60",
     platform: "from-rank-master/20 to-rank-officer/10",
+    platformSolid: "bg-rank-master/15",
     border: "border-rank-master/40",
     label: "text-rank-master",
   },
   2: {
     gradient: "from-rank-recruit to-neutral",
+    solid: "bg-rank-recruit",
     ring: "ring-rank-recruit/60",
     platform: "from-rank-recruit/20 to-neutral/10",
+    platformSolid: "bg-rank-recruit/15",
     border: "border-rank-recruit/40",
     label: "text-rank-recruit",
   },
   3: {
     gradient: "from-rank-craftsman to-rank-officer",
+    solid: "bg-rank-craftsman",
     ring: "ring-rank-craftsman/60",
     platform: "from-rank-craftsman/20 to-rank-officer/10",
+    platformSolid: "bg-rank-craftsman/15",
     border: "border-rank-craftsman/40",
     label: "text-rank-craftsman",
   },

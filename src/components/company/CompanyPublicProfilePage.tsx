@@ -70,13 +70,13 @@ export default function CompanyPublicProfilePage({ params }: Props) {
         </Link>
 
         {/* Company Header */}
-        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06] mb-6">
+        <div className="rounded-2xl border border-border bg-card p-6 mb-6">
           <div className="flex items-start gap-5">
             {profile.logoUrl ? (
               <img
                 src={getAssetUrl(profile.logoUrl)}
                 alt={profile.name}
-                className="w-20 h-20 rounded-xl object-cover border border-border/40 flex-shrink-0"
+                className="w-20 h-20 rounded-xl object-cover border border-border flex-shrink-0"
               />
             ) : (
               <div className="w-20 h-20 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -136,14 +136,14 @@ export default function CompanyPublicProfilePage({ params }: Props) {
 
         {/* About */}
         {profile.description && (
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06] mb-6">
+          <div className="rounded-2xl border border-border bg-card p-6 mb-6">
             <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">About</h2>
             <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{profile.description}</p>
           </div>
         )}
 
         {/* Active Jobs */}
-        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-6 dark:bg-card/30 dark:border-white/[0.06]">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-4">
             Open Positions {jobs && jobs.length > 0 && <span className="text-xs text-muted-foreground/60 ml-1">({jobs.length})</span>}
           </h2>
@@ -162,7 +162,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
                 <Link
                   key={job.id}
                   href={`/jobs/${job.id}`}
-                  className="flex items-center justify-between gap-4 p-4 rounded-xl border border-border/40 dark:border-white/[0.06] hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors group"
+                  className="flex items-center justify-between gap-4 p-4 rounded-xl border border-border hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors group"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">

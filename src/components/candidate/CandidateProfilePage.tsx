@@ -243,8 +243,8 @@ export default function CandidateProfilePage() {
           />
 
           {/* Social Links */}
-          <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
-            <div className="px-6 py-4 border-b border-border/40">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Link2 className="w-4 h-4 text-muted-foreground" />
                 Social Links
@@ -273,7 +273,7 @@ export default function CandidateProfilePage() {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all group"
+                          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all group"
                         >
                           <Icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                           <span className="text-sm font-medium text-foreground">

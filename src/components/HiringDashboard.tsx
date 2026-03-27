@@ -116,7 +116,7 @@ export function HiringDashboard() {
   if (!ready || (isLoading && !data)) return null;
 
   return (
-    <div className="min-h-full relative animate-page-enter">
+    <div className="min-h-full relative">
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
@@ -131,22 +131,22 @@ export function HiringDashboard() {
 
         {/* Compact Stat Chips */}
         <div className="flex flex-wrap gap-3 mb-6">
-          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3">
             <Briefcase className="w-4 h-4 text-primary" />
             <span className="text-xs text-muted-foreground">Total Jobs</span>
             <span className="text-sm font-medium text-foreground">{stats?.totalJobs || 0}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3">
             <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
             <span className="text-xs text-muted-foreground">Active</span>
             <span className="text-sm font-medium text-foreground">{stats?.activeJobs || 0}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3">
             <Users className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />
             <span className="text-xs text-muted-foreground">Applicants</span>
             <span className="text-sm font-medium text-foreground">{stats?.totalApplicants || 0}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3">
             <Clock className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
             <span className="text-xs text-muted-foreground">Avg. Days</span>
             <span className="text-sm font-medium text-foreground">{stats?.averageTimeToHire || 0}</span>
@@ -159,8 +159,8 @@ export function HiringDashboard() {
         </div>
 
         {/* Job Postings */}
-        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
-          <div className="px-5 py-4 border-b border-border/40">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Job Postings</h2>
               <div className="flex items-center gap-3">
@@ -171,13 +171,13 @@ export function HiringDashboard() {
                     placeholder="Search jobs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-2 rounded-xl bg-card/40 backdrop-blur-sm border border-border/60 focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
+                    className="pl-9 pr-4 py-2 rounded-xl bg-card border border-border focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
                   />
                 </div>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-card/40 backdrop-blur-sm border border-border/60 focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
+                  className="px-3 py-2 rounded-xl bg-card border border-border focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
                 >
                   <option value="all">All Status</option>
                   {JOB_STATUSES.map((status) => (
@@ -251,7 +251,7 @@ export function HiringDashboard() {
                             <MoreVertical className="w-5 h-5 text-muted-foreground" />
                           </button>
                           {showActionMenu === job.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-card/70 backdrop-blur-sm rounded-xl shadow-lg border border-border/60 py-1 z-10 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]">
+                            <div className="absolute right-0 mt-2 w-48 bg-card rounded-xl shadow-lg border border-border py-1 z-10">
                               <button
                                 onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
                                 className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2"

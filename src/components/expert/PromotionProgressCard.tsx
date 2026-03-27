@@ -94,7 +94,7 @@ export function PromotionProgressCard({
   const allMet = metCount === checks.length;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/40 backdrop-blur-md p-5">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
@@ -135,7 +135,7 @@ export function PromotionProgressCard({
       </div>
 
       {allMet && !criteria.requiresElection && (
-        <p className={`text-xs ${STATUS_COLORS.positive.text} font-medium mt-3 pt-3 border-t border-border/40`}>
+        <p className={`text-xs ${STATUS_COLORS.positive.text} font-medium mt-3 pt-3 border-t border-border`}>
           All criteria met! Your promotion will be applied in the next cycle.
         </p>
       )}

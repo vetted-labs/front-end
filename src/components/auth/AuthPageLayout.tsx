@@ -22,9 +22,9 @@ export function AuthPageLayout({
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col animate-page-enter">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation */}
-      <nav className="border-b border-border/50 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Logo onClick={() => router.push("/")} />
@@ -59,7 +59,7 @@ export function AuthPageLayout({
           </div>
 
           {/* Card */}
-          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/20 overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             {children}
           </div>
         </div>

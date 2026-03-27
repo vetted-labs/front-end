@@ -46,7 +46,7 @@ export function GuildPublicOverviewTab({
     <div className="grid lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         {/* Top Experts */}
-        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <Award className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
             Top Experts
@@ -56,7 +56,7 @@ export function GuildPublicOverviewTab({
               <button
                 key={expert.id}
                 onClick={() => onNavigate(`/experts/${expert.walletAddress}`)}
-                className="rounded-xl border border-border/80 bg-card/60 p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left cursor-pointer"
+                className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -80,7 +80,7 @@ export function GuildPublicOverviewTab({
                   {(expert.expertise ?? []).slice(0, 3).map((skill, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border/60"
+                      className="px-2 py-1 bg-muted/60 text-foreground text-xs rounded-md border border-border"
                     >
                       {skill}
                     </span>
@@ -105,7 +105,7 @@ export function GuildPublicOverviewTab({
         </div>
 
         {/* Recent Jobs */}
-        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-primary" />
             Recent Positions
@@ -116,7 +116,7 @@ export function GuildPublicOverviewTab({
                 <button
                   key={job.id}
                   onClick={() => onNavigate(`/browse/jobs/${job.id}`)}
-                  className="w-full rounded-xl border border-border/80 bg-card/60 p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left"
+                  className="w-full rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-lg transition-all hover:-translate-y-0.5 text-left"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -167,7 +167,7 @@ export function GuildPublicOverviewTab({
       {/* Sidebar */}
       <div className="space-y-6">
         {/* Why Join */}
-        <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Why Join This Guild?
@@ -214,7 +214,7 @@ export function GuildPublicOverviewTab({
 
         {/* Recent Activity */}
         {guild.recentActivity && guild.recentActivity.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
+          <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
               Recent Activity
@@ -231,7 +231,7 @@ export function GuildPublicOverviewTab({
 
         {/* CTA */}
         {showCta && (
-          <div className="bg-gradient-to-br from-primary/15 via-primary/10 to-accent/10 rounded-2xl border border-primary/30 p-6 shadow-[0_0_30px_rgba(255,122,0,0.12)]">
+          <div className="bg-primary/5 rounded-2xl border border-primary/30 p-6">
             <h3 className="text-xl font-bold text-foreground mb-2">Ready to Join?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Submit your application and get vetted by our expert community

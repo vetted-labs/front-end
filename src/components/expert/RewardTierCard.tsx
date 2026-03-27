@@ -35,7 +35,7 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
               <span>Progress to {nextTier.name} ({nextTier.rewardWeight}x)</span>
               <span className="tabular-nums">{reputation} / {nextTier.minReputation}</span>
             </div>
-            <div className="h-2 rounded-full bg-muted/50 dark:bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-muted/50 dark:bg-muted/40 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${colors.bar}`}
                 style={{ width: `${progress}%` }}
@@ -52,7 +52,7 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
         )}
 
         {/* All tiers reference */}
-        <div className="mt-4 pt-4 border-t border-border/40">
+        <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-3 gap-2">
             {REWARD_TIERS.map((t) => {
               const isActive = t.name === tier.name;
@@ -63,7 +63,7 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
                   className={`rounded-lg px-3 py-2 border transition-all ${
                     isActive
                       ? `${tc.bg} ${tc.border} ring-1 ring-offset-1 ring-offset-background ${tc.border}`
-                      : "bg-muted/30 dark:bg-white/[0.02] border-border/40"
+                      : "bg-muted/30 border-border"
                   }`}
                 >
                   <p className={`text-xs font-medium ${isActive ? tc.text : "text-muted-foreground"}`}>

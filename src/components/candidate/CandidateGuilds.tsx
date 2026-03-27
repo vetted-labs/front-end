@@ -30,9 +30,9 @@ const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
 };
 
 const GUILD_STATUS_GLOW: Record<string, string> = {
-  pending:  "shadow-warning/5",
-  approved: "shadow-positive/5",
-  rejected: "shadow-negative/5",
+  pending:  "",
+  approved: "",
+  rejected: "",
 };
 
 /** Map guild-specific statuses to APPLICATION_STATUS_CONFIG keys */
@@ -87,7 +87,7 @@ export default function CandidateGuilds() {
           </div>
           <button
             onClick={() => router.push("/guilds")}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
             Explore Guilds
             <ArrowRight className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export default function CandidateGuilds() {
 
         {/* Content */}
         {guildApplications.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-14 text-center">
+          <div className="rounded-2xl border border-border bg-card p-14 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
               <Users className="w-8 h-8 text-muted-foreground/40" />
             </div>
@@ -128,13 +128,13 @@ export default function CandidateGuilds() {
             </p>
             <button
               onClick={() => router.push("/guilds")}
-              className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-full hover:opacity-90 transition-all text-sm font-medium"
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-all text-sm font-medium"
             >
               Browse Guilds
             </button>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-12 text-center">
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No {filter} applications</p>
             <button onClick={() => setFilter("all")} className="mt-2 text-sm text-primary hover:underline">
               Show all
@@ -159,13 +159,13 @@ export default function CandidateGuilds() {
                     const guildId = app.guildId || app.guild?.id;
                     if (guildId) router.push(`/guilds/${guildId}`);
                   }}
-                  className={`group relative text-left rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all ${glow}`}
+                  className={`group relative text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all ${glow}`}
                 >
                   {/* Top gradient banner */}
-                  <div className={`h-20 bg-gradient-to-br ${gradient} relative`}>
+                  <div className={`h-20 ${gradient} relative`}>
                     <div className="absolute inset-0 bg-black/20" />
                     <div className="absolute bottom-3 left-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
+                      <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center border border-muted-foreground/20">
                         <GuildIcon className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -173,7 +173,7 @@ export default function CandidateGuilds() {
                       </div>
                     </div>
                     {/* Status badge top-right */}
-                    <div className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border backdrop-blur-sm ${statusStyle.className}`}>
+                    <div className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.className}`}>
                       <StatusIcon className="w-3 h-3" />
                       {statusStyle.label}
                     </div>

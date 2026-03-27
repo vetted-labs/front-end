@@ -88,7 +88,7 @@ export function UserMenu({
           {userType === "expert" && address ? (
             // Expert wallet dropdown menu
             <div className="absolute right-0 mt-2 w-72 bg-card rounded-xl shadow-xl border border-border overflow-hidden z-50">
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 border-b border-border">
+              <div className="bg-primary/5 px-4 py-3 border-b border-border">
                 <p className="text-xs font-medium text-foreground mb-2">
                   Connected Wallet
                 </p>

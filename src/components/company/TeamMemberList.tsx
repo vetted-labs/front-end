@@ -12,7 +12,7 @@ import type { TeamMember, TeamMemberRole } from "@/types";
 const ROLE_CONFIG: Record<TeamMemberRole, { label: string; icon: typeof Shield; className: string }> = {
   admin: { label: "Admin", icon: Crown, className: STATUS_COLORS.warning.badge },
   manager: { label: "Manager", icon: Shield, className: STATUS_COLORS.info.badge },
-  recruiter: { label: "Recruiter", icon: User, className: "text-foreground/70 bg-muted/50 border-border/40" },
+  recruiter: { label: "Recruiter", icon: User, className: "text-foreground/70 bg-muted/50 border-border" },
 };
 
 interface TeamMemberListProps {
@@ -121,7 +121,7 @@ function MemberActions({
         <MoreHorizontal className="w-4 h-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-10 w-40 rounded-lg border border-border/60 bg-card shadow-lg py-1 dark:bg-card/90 dark:border-white/[0.08]">
+        <div className="absolute right-0 top-full mt-1 z-10 w-40 rounded-lg border border-border bg-card shadow-lg py-1">
           {member.role !== "admin" && (
             <button
               onClick={() => handleAction(() => onUpdateRole(member.id, "admin"))}

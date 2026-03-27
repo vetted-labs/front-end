@@ -27,9 +27,9 @@ export function JobForm() {
   } = useJobForm(jobId);
 
   return (
-    <div className="min-h-screen min-h-full animate-page-enter">
+    <div className="min-h-screen min-h-full">
       {/* Header */}
-      <nav className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+      <nav className="border-b border-border bg-card sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <button
@@ -71,7 +71,7 @@ export function JobForm() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <form onSubmit={handleSubmit}>
             {/* Basic Information Section */}
             <JobBasicInfo
@@ -98,7 +98,7 @@ export function JobForm() {
             />
 
             {/* Submit Section */}
-            <div className="p-8 bg-gradient-to-r from-primary/5 to-accent/5">
+            <div className="p-8 bg-primary/5">
               {error && (
                 <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                   <p className="text-destructive text-sm font-medium">
@@ -112,7 +112,7 @@ export function JobForm() {
                     type="button"
                     disabled={isLoading}
                     onClick={handleSaveDraft}
-                    className="flex-1 py-3.5 px-6 border border-border/60 text-foreground font-bold rounded-xl hover:bg-muted/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-3.5 px-6 border border-border text-foreground font-bold rounded-xl hover:bg-muted/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -124,7 +124,7 @@ export function JobForm() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 py-3.5 px-6 bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900 font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  className="flex-1 py-3.5 px-6 bg-primary text-gray-900 dark:text-gray-900 font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

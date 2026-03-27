@@ -131,12 +131,12 @@ export function ReputationScoreHero({
 
         <div className="animate-rep-score-glow">
           <span
-            className="font-display text-[clamp(100px,15vw,160px)] font-bold leading-none bg-gradient-to-b from-foreground via-primary to-primary bg-clip-text text-transparent"
+            className="font-display text-[clamp(100px,15vw,160px)] font-bold leading-none text-foreground"
             ref={scoreRef}
           >
             {reputation}
           </span>
-          <span className="text-[clamp(24px,4vw,36px)] font-normal bg-gradient-to-r from-muted-foreground to-muted-foreground/50 bg-clip-text text-transparent align-super ml-1">
+          <span className="text-[clamp(24px,4vw,36px)] font-normal text-muted-foreground align-super ml-1">
             /1000
           </span>
         </div>
@@ -144,7 +144,7 @@ export function ReputationScoreHero({
         {/* Tier badge with shimmer */}
         <div className={`inline-flex items-center gap-2 mt-7 px-7 py-2.5 rounded-full border relative overflow-hidden ${tierColors.bg} ${tierColors.border}`}>
           {/* Shimmer overlay */}
-          <div className="absolute top-0 -left-full w-3/5 h-full bg-gradient-to-r from-transparent via-[hsl(var(--warning)/0.15)] to-transparent animate-rep-shimmer pointer-events-none" />
+          <div className="absolute top-0 -left-full w-3/5 h-full bg-transparent animate-rep-shimmer pointer-events-none" />
           <Star className={`w-5 h-5 ${tierColors.text}`} />
           <span className={`text-sm font-bold tracking-wider font-display ${tierColors.text}`}>
             {tier.name.toUpperCase()} TIER

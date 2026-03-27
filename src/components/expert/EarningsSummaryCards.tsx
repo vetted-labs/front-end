@@ -58,7 +58,7 @@ export function EarningsSummaryCards({ summary, reputation }: EarningsSummaryCar
             className="relative overflow-hidden group"
           >
             {/* Top accent line on hover */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-border opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="p-5">
               {/* Icon box */}

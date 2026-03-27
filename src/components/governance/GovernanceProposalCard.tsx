@@ -49,7 +49,7 @@ export function GovernanceProposalCard({
   return (
     <div
       onClick={onClick}
-      className="group grid grid-cols-1 md:grid-cols-[140px_1fr_220px] items-center gap-4 md:gap-6 p-6 md:px-8 rounded-2xl border border-border bg-card/50 backdrop-blur-sm cursor-pointer hover:translate-y-[-1px] hover:border-border hover:bg-muted/30 transition-all"
+      className="group grid grid-cols-1 md:grid-cols-[140px_1fr_220px] items-center gap-4 md:gap-6 p-6 md:px-8 rounded-2xl border border-border bg-card cursor-pointer hover:translate-y-[-1px] hover:border-border hover:bg-muted/30 transition-all"
     >
       {/* ─── Left: Meta ─── */}
       <div className="flex md:flex-col items-center md:items-start gap-2.5 md:gap-2">
@@ -84,7 +84,7 @@ export function GovernanceProposalCard({
           {proposal.description}
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="w-5 h-5 rounded-full bg-gradient-to-br from-muted-foreground to-muted-foreground/60 flex items-center justify-center text-xs font-bold text-white">
+          <span className="w-5 h-5 rounded-full bg-muted-foreground flex items-center justify-center text-xs font-bold text-white">
             {initials}
           </span>
           <span>{proposal.proposer_name || "Unknown"}</span>

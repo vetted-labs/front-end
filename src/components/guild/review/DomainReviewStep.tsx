@@ -53,7 +53,7 @@ export function DomainReviewStep({
       {/* Domain / Level Questions */}
       <div className="space-y-5">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-warning/20 to-primary/20 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
             <Award className="w-4 h-4 text-warning" />
           </div>
           <h3 className="text-sm font-bold text-foreground">Domain Review</h3>
@@ -211,12 +211,12 @@ export function DomainReviewStep({
       </div>
 
       {/* Overall Score Summary */}
-      <div className="relative overflow-hidden rounded-2xl border border-warning/20 bg-gradient-to-br from-warning/[0.08] via-primary/[0.05] to-transparent p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-warning/20 bg-warning/5 p-5">
         <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold text-foreground">Overall Score</p>
-            <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-warning to-primary tabular-nums">
+            <p className="text-2xl font-bold text-warning tabular-nums">
               {overallScore}
             </p>
           </div>

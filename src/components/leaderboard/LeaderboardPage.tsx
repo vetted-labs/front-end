@@ -115,12 +115,12 @@ function FilterDropdown({
         onClick={() => setOpen(!open)}
         className={cn(
           "flex items-center gap-2 h-9 px-3 rounded-xl text-xs font-medium cursor-pointer",
-          "bg-card/70 backdrop-blur-sm border shadow-sm",
-          "dark:shadow-black/10",
+          "bg-card border shadow-sm",
+          "",
           "transition-all duration-150",
           open
-            ? "border-primary/30 ring-2 ring-primary/10 bg-card dark:bg-white/[0.06]"
-            : "border-border/60 dark:border-white/[0.08] hover:border-primary/25 hover:bg-card/90 dark:hover:bg-white/[0.06]",
+            ? "border-primary/30 ring-2 ring-primary/10 bg-card dark:bg-muted/40"
+            : "border-border hover:border-primary/25 hover:bg-card dark:hover:bg-muted/30",
         )}
       >
         {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />}
@@ -134,9 +134,9 @@ function FilterDropdown({
       {open && (
         <div className={cn(
           "absolute top-full left-0 mt-1.5 z-50 min-w-[160px]",
-          "rounded-xl border border-border/60 shadow-xl",
-          "bg-card/95 backdrop-blur-xl",
-          "dark:bg-[#1a1d27]/95 dark:border-white/[0.08] dark:shadow-black/40",
+          "rounded-xl border border-border shadow-xl",
+          "bg-card",
+          "dark:bg-[#1a1d27]/95",
           "py-1 animate-in fade-in-0 zoom-in-95",
         )}>
           {options.map((opt) => {
@@ -149,7 +149,7 @@ function FilterDropdown({
                   "w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors",
                   isSelected
                     ? "text-primary bg-primary/[0.06] font-semibold"
-                    : "text-foreground hover:bg-muted/50 dark:hover:bg-white/[0.04]",
+                    : "text-foreground hover:bg-muted/50 dark:hover:bg-muted/30",
                 )}
               >
                 <span className="flex-1">{opt.label}</span>
@@ -274,7 +274,7 @@ export default function LeaderboardPage() {
   }, [activeTab, guildId, period, role, router]);
 
   return (
-    <div className="space-y-6 animate-page-enter">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
@@ -308,7 +308,7 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-border/40 mx-3 mt-1.5" />
+        <div className="border-t border-border mx-3 mt-1.5" />
 
         {/* Filters row */}
         <div className="flex items-center gap-2.5 px-3 py-2.5 flex-wrap">

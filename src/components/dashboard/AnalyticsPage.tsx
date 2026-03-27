@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
         <div className="relative">
           {/* Coming Soon Overlay */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
-            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-8 py-6 text-center shadow-lg dark:bg-card/60">
+            <div className="rounded-2xl border border-border bg-card px-8 py-6 text-center shadow-sm">
               <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
               <h2 className="text-xl font-bold text-foreground mb-2">Coming Soon</h2>
               <p className="text-muted-foreground text-sm max-w-sm">
@@ -47,7 +47,7 @@ export default function AnalyticsPage() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="flex items-center gap-2 rounded-xl bg-card/40 backdrop-blur-md border border-border/60 px-4 py-3 dark:bg-card/30 dark:border-white/[0.06]"
+                  className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3"
                 >
                   <stat.icon className="w-4 h-4 text-primary" />
                   <span className="text-xs text-muted-foreground">{stat.label}</span>
@@ -58,8 +58,8 @@ export default function AnalyticsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Placeholder chart */}
-              <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
-                <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Applications Over Time</h3>
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                 </div>
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
                         <span className="text-sm text-muted-foreground">32 applications</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-gradient-to-r from-primary to-accent h-2 rounded-full" style={{ width: "65%" }} />
+                        <div className="bg-primary h-2 rounded-full" style={{ width: "65%" }} />
                       </div>
                     </div>
                   ))}
@@ -79,8 +79,8 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Placeholder status breakdown */}
-              <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
-                <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between">
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Applications by Status</h3>
                   <CheckCircle className="w-5 h-5 text-muted-foreground" />
                 </div>
@@ -104,8 +104,8 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Placeholder jobs list */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden dark:bg-card/30 dark:border-white/[0.06]">
-              <div className="px-5 py-4 border-b border-border/40">
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-4 border-b border-border">
                 <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">My Posted Jobs</h3>
               </div>
               <div className="divide-y divide-border/30">

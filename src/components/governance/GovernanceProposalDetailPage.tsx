@@ -175,9 +175,9 @@ export function GovernanceProposalDetailPage() {
       </button>
 
       {/* ─── Hero header card ─── */}
-      <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-6 sm:p-8 mb-6 relative overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 mb-6 relative overflow-hidden">
         {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-transparent pointer-events-none" />
 
         <div className="relative">
           <div className="flex items-start justify-between gap-4 mb-4">
@@ -212,7 +212,7 @@ export function GovernanceProposalDetailPage() {
               </Badge>
             )}
             <span className="flex items-center gap-1.5">
-              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-muted-foreground to-muted-foreground/60 flex items-center justify-center text-xs font-bold text-white">
+              <span className="w-5 h-5 rounded-full bg-muted-foreground flex items-center justify-center text-xs font-bold text-white">
                 {(proposal.proposer_name || "??").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
               </span>
               {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
@@ -298,7 +298,7 @@ export function GovernanceProposalDetailPage() {
           </div>
 
           {/* Vote bar */}
-          <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <VotingPowerBar
               forPercent={forPercent}
               againstPercent={againstPercent}
@@ -311,7 +311,7 @@ export function GovernanceProposalDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Your Vote */}
             {proposal.has_voted && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
                   Your Vote
                 </h3>
@@ -330,7 +330,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Type-specific */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -339,7 +339,7 @@ export function GovernanceProposalDetailPage() {
               </div>
             )}
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -350,7 +350,7 @@ export function GovernanceProposalDetailPage() {
 
           {/* Vote History */}
           {proposal.votes && proposal.votes.length > 0 && (
-            <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <VoteHistorySection votes={proposal.votes} />
             </div>
           )}
@@ -362,7 +362,7 @@ export function GovernanceProposalDetailPage() {
           <div className="lg:col-span-7 space-y-6">
             {/* Type-specific details */}
             {proposal.proposal_type === "parameter_change" && proposal.parameter_name && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <ParameterChangeSection
                   parameterName={proposal.parameter_name}
                   currentValue={proposal.current_value}
@@ -372,7 +372,7 @@ export function GovernanceProposalDetailPage() {
             )}
 
             {proposal.proposal_type === "guild_master_election" && proposal.nominee_wallet && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <NomineeSection
                   nomineeName={proposal.nominee_name}
                   nomineeWallet={proposal.nominee_wallet}
@@ -382,7 +382,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Vote History */}
             {proposal.votes && proposal.votes.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <VoteHistorySection votes={proposal.votes} />
               </div>
             )}
@@ -391,7 +391,7 @@ export function GovernanceProposalDetailPage() {
             {(!proposal.votes || proposal.votes.length === 0) &&
               proposal.proposal_type !== "parameter_change" &&
               proposal.proposal_type !== "guild_master_election" && (
-              <div className="rounded-2xl border border-dashed border-border bg-card/30 p-8 text-center">
+              <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
                 <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">
                   No votes yet. Be the first to vote on this proposal.
@@ -403,9 +403,9 @@ export function GovernanceProposalDetailPage() {
           {/* Sidebar */}
           <div className="order-first lg:order-none lg:col-span-5 lg:sticky lg:top-24 lg:self-start space-y-4">
             {/* Voting Status */}
-            <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5 space-y-4 relative overflow-hidden">
+            <div className="rounded-2xl border border-border bg-card p-5 space-y-4 relative overflow-hidden">
               {/* Top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary" />
 
               <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 Voting Status
@@ -435,7 +435,7 @@ export function GovernanceProposalDetailPage() {
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted/30">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ${quorumPercent >= 100 ? "bg-positive" : "bg-gradient-to-r from-primary to-primary/70"}`}
+                    className={`h-full rounded-full transition-all duration-700 ${quorumPercent >= 100 ? "bg-positive" : "bg-primary"}`}
                     style={{ width: `${Math.min(quorumPercent, 100)}%` }}
                   />
                 </div>
@@ -460,7 +460,7 @@ export function GovernanceProposalDetailPage() {
 
             {/* Vote Form */}
             {canVote && (
-              <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5">
+              <div className="rounded-2xl border border-border bg-card p-5">
                 <GovernanceVoteForm
                   voteWeight={voteWeight}
                   reputation={reputation}
@@ -495,8 +495,8 @@ export function GovernanceProposalDetailPage() {
 
 function DetailStatCard({ label, value, sub, colorClass }: { label: string; value: string; sub: string; colorClass: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-5 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+    <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-transparent pointer-events-none" />
       <p className="text-xs text-muted-foreground mb-1 relative">{label}</p>
       <p className={`text-2xl font-bold tabular-nums font-mono ${colorClass} relative`}>{value}</p>
       <p className="text-xs text-muted-foreground tabular-nums mt-0.5 relative">{sub}</p>

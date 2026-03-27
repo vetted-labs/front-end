@@ -175,8 +175,8 @@ export default function EarningsPage() {
 
         {/* ── Page header ── */}
         <div>
-          <div className="w-12 h-[3px] rounded-full bg-gradient-to-r from-primary to-primary/60 mb-4" />
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
+          <div className="w-12 h-[3px] rounded-full bg-primary mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             Earnings
           </h1>
           <p className="text-sm text-muted-foreground/60 mt-1">
@@ -202,15 +202,15 @@ export default function EarningsPage() {
 
         {/* ── Time range filter pills ── */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1 p-1 rounded-xl bg-muted/30 dark:bg-white/[0.03] border border-border/60 dark:border-white/[0.06]">
+          <div className="flex gap-1 p-1 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border">
             {(["day", "week", "month", "all"] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeChange(range)}
                 className={`px-4 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
                   timeRange === range
-                    ? "text-primary bg-primary/[0.08] border-primary/20 shadow-[0_0_12px_hsl(var(--primary)/0.1)]"
-                    : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/40 dark:hover:bg-white/[0.03]"
+                    ? "text-primary bg-primary/[0.08] border-primary/20"
+                    : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/40 dark:hover:bg-muted/20"
                 }`}
               >
                 {TIME_RANGE_LABELS[range]}

@@ -53,7 +53,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
 
       {/* Skills */}
       {job.skills && job.skills.length > 0 && (
-        <div className="pt-8 border-t border-border/40">
+        <div className="pt-8 border-t border-border">
           <h2 className="font-display text-xl font-bold tracking-tight text-foreground mb-5">
             Required Skills
           </h2>
@@ -61,7 +61,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
             {job.skills.map((skill, index) => (
               <span
                 key={index}
-                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground bg-muted/20 border border-border/40 transition-all hover:border-primary/20 hover:text-primary hover:bg-primary/[0.08] cursor-default"
+                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground bg-muted/20 border border-border transition-all hover:border-primary/20 hover:text-primary hover:bg-primary/[0.08] cursor-default"
               >
                 {skill}
               </span>
@@ -72,7 +72,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
 
       {/* Screening Questions */}
       {job.screeningQuestions && job.screeningQuestions.length > 0 && (
-        <div className="pt-8 border-t border-border/40">
+        <div className="pt-8 border-t border-border">
           <h2 className="font-display text-xl font-bold tracking-tight text-foreground mb-5 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
             Screening Questions
@@ -81,7 +81,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
             {job.screeningQuestions.map((question, index) => (
               <div
                 key={index}
-                className="p-5 rounded-[14px] bg-muted/10 border border-border/40"
+                className="p-5 rounded-[14px] bg-muted/10 border border-border"
               >
                 <div className="text-xs font-bold uppercase tracking-[1.2px] text-primary mb-2">
                   Question {index + 1}

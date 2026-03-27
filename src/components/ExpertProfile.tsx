@@ -76,7 +76,7 @@ function ReputationRing({ score, className = "" }: { score: number; className?: 
           strokeWidth="7"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          className="animate-rep-gauge-draw drop-shadow-[0_0_6px_hsl(var(--primary)/0.4)]"
+          className="animate-rep-gauge-draw drop-"
           style={{ "--gauge-target": `${targetOffset}` } as React.CSSProperties}
         />
       </svg>
@@ -104,7 +104,7 @@ interface ProfileStatCellProps {
 
 function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary", iconBg = "bg-primary/10" }: ProfileStatCellProps) {
   return (
-    <div className="glass-card rounded-2xl border border-border/60 p-5 text-center transition-all hover:border-primary/30 hover:shadow-[0_0_30px_-8px_hsl(var(--primary)/0.06)]">
+    <div className=" rounded-2xl border border-border p-5 text-center transition-all hover:border-primary/30">
       <div className={`w-8 h-8 ${iconBg} rounded-[10px] flex items-center justify-center mx-auto mb-3`}>
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
@@ -246,7 +246,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </button>
           )}
-          <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm dark:shadow-lg">
+          <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm">
             <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-foreground">Application Under Review</h2>
             <p className="text-muted-foreground mb-4">
@@ -268,7 +268,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const memberSince = profile.createdAt ? formatDate(profile.createdAt) : "N/A";
 
   return (
-    <div className="min-h-screen text-foreground animate-page-enter relative overflow-hidden">
+    <div className="min-h-screen text-foreground relative overflow-hidden">
       {/* Ambient background effects */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="profile-ambient-orb profile-ambient-orb-1" />
@@ -288,12 +288,12 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* ── Identity Card (left, spans 3 rows) ── */}
-          <div className="md:row-span-3 glass-card glass-border-shimmer rounded-2xl border border-border/60 p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
+          <div className="md:row-span-3 rounded-2xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
             {/* Avatar */}
             <div className="relative mb-7">
               <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
               <div className="w-[120px] h-[120px] rounded-full p-[3px] bg-[conic-gradient(from_0deg,hsl(var(--primary)),hsl(var(--warning)),hsl(var(--primary)),hsl(24_90%_48%),hsl(var(--primary)))] relative z-[1]">
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-secondary to-card flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-muted flex items-center justify-center">
                   {mode === "private" ? (
                     <User className="w-12 h-12 text-primary" />
                   ) : (
@@ -306,7 +306,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             </div>
 
             {/* Name */}
-            <h1 className="text-3xl font-bold font-display tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
               {profile.fullName || "Unknown Expert"}
             </h1>
 
@@ -314,7 +314,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             {mode === "private" ? (
               <button
                 onClick={copyAddress}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30"
               >
                 <Wallet className="w-3.5 h-3.5 opacity-70" />
                 {truncateAddress(profile.walletAddress)}
@@ -331,7 +331,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                     href={getExplorerAddressUrl(profile.walletAddress)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30"
                   >
                     <Wallet className="w-3.5 h-3.5 opacity-70" />
                     {truncateAddress(profile.walletAddress)}
@@ -384,7 +384,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
 
             {/* Bio */}
             {profile.bio && (
-              <div className="w-full mt-6 pt-6 border-t border-border/60 text-left">
+              <div className="w-full mt-6 pt-6 border-t border-border text-left">
                 <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
                 <p className="text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
               </div>
@@ -392,19 +392,19 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Reputation Ring Card (right, row 1) ── */}
-          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
+          <div className=" rounded-2xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
             <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
               Reputation Score
             </div>
             <ReputationRing score={profile.reputation} className="mb-4" />
-            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/15 to-warning/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               Master
             </div>
           </div>
 
           {/* ── Earnings Card (right, row 2) ── */}
-          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
+          <div className=" rounded-2xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <DollarSign className="w-3.5 h-3.5 text-success" />
               Total Earnings
@@ -417,7 +417,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
             </div>
             <div className="w-full h-1 rounded-full bg-border/40 mt-3 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-success to-success/40 shadow-[0_0_8px_hsl(var(--success)/0.3)]"
+                className="h-full rounded-full bg-positive"
                 style={{ width: displayEarnings > 0 ? `${Math.min((displayEarnings / 1000) * 100, 100)}%` : "0%" }}
               />
             </div>
@@ -427,7 +427,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Active Guilds Card (right, row 3) ── */}
-          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
+          <div className=" rounded-2xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <Shield className="w-3.5 h-3.5 text-primary" />
               Active Guilds
@@ -440,7 +440,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                 <div
                   key={guild.id}
                   title={guild.name}
-                  className="w-2.5 h-2.5 rounded-full bg-primary/70 shadow-[0_0_6px_hsl(var(--primary)/0.3)] transition-all hover:scale-150 hover:bg-primary hover:shadow-[0_0_12px_hsl(var(--primary)/0.5)] cursor-pointer"
+                  className="w-2.5 h-2.5 rounded-full bg-primary/70 transition-all hover:scale-150 hover:bg-primary cursor-pointer"
                 />
               ))}
             </div>
@@ -516,7 +516,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         {/* ═══ Recent Activity (public mode only) ═══ */}
         {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
           <div className="mt-4 animate-fade-up animate-delay-500">
-            <div className="glass-card rounded-2xl border border-border/60 p-6">
+            <div className=" rounded-2xl border border-border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
@@ -560,14 +560,14 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           <div className="mt-12 mb-6 flex items-center gap-3">
             <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
-            <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border/60 bg-card/50">
+            <div className="flex-1 h-px bg-border" />
+            <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border bg-card">
               {profile.guilds.length} active
             </span>
           </div>
 
           {profile.guilds.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-border/60 glass-card">
+            <div className="text-center py-12 rounded-2xl border border-border">
               <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
               <p className="text-sm font-medium text-foreground mb-2">
                 {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}

@@ -168,7 +168,7 @@ function StatsGrid({ stats }: { stats: ExpertStats }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {items.map((item) => (
-        <Card key={item.label} className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md" padding="none">
+        <Card key={item.label} className="rounded-2xl border border-border bg-card" padding="none">
           <div className="p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
@@ -227,7 +227,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
 
         {/* Term Rules for Guild Master */}
         {rank.role === "master" && (
-          <div className="mt-5 pt-5 border-t border-border/40">
+          <div className="mt-5 pt-5 border-t border-border">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2.5">
               Term Rules
             </p>
@@ -248,7 +248,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
         )}
 
         {/* Reward Tier */}
-        <div className="mt-5 pt-5 border-t border-border/40">
+        <div className="mt-5 pt-5 border-t border-border">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
               <Gift className="w-4 h-4 text-primary" />
@@ -273,7 +273,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
                       {stats.reputation} / {nextTier.minReputation}
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-muted/50 dark:bg-white/[0.06] overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-muted/50 dark:bg-muted/40 overflow-hidden">
                     <div
                       className={cn("h-full rounded-full transition-all duration-500", colors.bg)}
                       style={{ width: `${progress}%` }}
@@ -381,7 +381,7 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
               )}
             </div>
             {req.quantifiable && req.target !== null && (
-              <div className="ml-7 h-1.5 rounded-full bg-muted/50 dark:bg-white/[0.06] overflow-hidden">
+              <div className="ml-7 h-1.5 rounded-full bg-muted/50 dark:bg-muted/40 overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
@@ -418,7 +418,7 @@ function RankLadder({
       <div className="relative">
         {/* Vertical timeline line */}
         <div
-          className="absolute left-[23px] top-6 bottom-6 w-px bg-border/60 dark:bg-white/[0.06]"
+          className="absolute left-[23px] top-6 bottom-6 w-px bg-border/60 dark:bg-muted/40"
           aria-hidden="true"
         />
         {/* Achieved portion of the line */}
@@ -487,7 +487,7 @@ function RankLadder({
                   </button>
 
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-border/40">
+                    <div className="px-4 pb-4 border-t border-border">
                       <div className="grid sm:grid-cols-2 gap-6 pt-4">
                         {/* Requirements */}
                         <div>
@@ -554,7 +554,7 @@ function RankLadder({
                       "w-[34px] h-[34px] rounded-full flex items-center justify-center transition-all",
                       isAchieved && cn(STATUS_COLORS.positive.bgSubtle, "ring-2 ring-positive/30"),
                       isCurrent && cn(colors.bgSubtle, "ring-2", `ring-current`, colors.text, "shadow-lg", colors.glow),
-                      isLocked && "bg-muted/50 dark:bg-white/[0.04]",
+                      isLocked && "bg-muted/50 dark:bg-muted/30",
                     )}
                   >
                     {isAchieved ? (

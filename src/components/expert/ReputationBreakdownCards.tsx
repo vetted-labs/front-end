@@ -92,7 +92,7 @@ function SocialGraph() {
         />
       ))}
       {/* Center node */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-positive shadow-[0_0_12px_hsl(var(--positive)/0.4)]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-positive" />
       {/* Orbit nodes */}
       {orbits.map((pos, i) => (
         <div
@@ -139,28 +139,26 @@ export function ReputationBreakdownCards({
           bgColorClass="stroke-positive/10"
         />
       ),
-      gradientFrom: "from-positive/[0.06]",
+      cardBg: "bg-positive/[0.04]",
       borderColor: "border-positive/[0.12]",
-      hoverShadow: "hover:shadow-[0_20px_60px_hsl(var(--positive)/0.08)]",
       hoverBorder: "hover:border-positive/25",
       iconBg: "bg-positive/10 border border-positive/15",
       iconColor: "text-positive",
       valueColor: STATUS_COLORS.positive.text,
-      barGradient: "from-positive to-positive/60",
+      barColor: "bg-positive",
     },
     {
       name: "Consistency",
       value: consistencyPct,
       icon: Activity,
       viz: <MiniBarChart values={miniChartValues} />,
-      gradientFrom: "from-info-blue/[0.06]",
+      cardBg: "bg-info-blue/[0.04]",
       borderColor: "border-info-blue/[0.12]",
-      hoverShadow: "hover:shadow-[0_20px_60px_hsl(var(--info-blue)/0.08)]",
       hoverBorder: "hover:border-info-blue/25",
       iconBg: "bg-info-blue/10 border border-info-blue/15",
       iconColor: "text-info-blue",
       valueColor: STATUS_COLORS.info.text,
-      barGradient: "from-info-blue to-info-blue/60",
+      barColor: "bg-info-blue",
     },
     {
       name: "Timeliness",
@@ -173,28 +171,26 @@ export function ReputationBreakdownCards({
           bgColorClass="stroke-primary/10"
         />
       ),
-      gradientFrom: "from-primary/[0.06]",
+      cardBg: "bg-primary/[0.04]",
       borderColor: "border-primary/[0.12]",
-      hoverShadow: "hover:shadow-[0_20px_60px_hsl(var(--primary)/0.08)]",
       hoverBorder: "hover:border-primary/25",
       iconBg: "bg-primary/10 border border-primary/15",
       iconColor: "text-primary",
       valueColor: "text-primary",
-      barGradient: "from-primary to-primary/60",
+      barColor: "bg-primary",
     },
     {
       name: "Community Trust",
       value: trustPct,
       icon: Users,
       viz: <SocialGraph />,
-      gradientFrom: "from-positive/[0.06]",
+      cardBg: "bg-positive/[0.04]",
       borderColor: "border-positive/[0.12]",
-      hoverShadow: "hover:shadow-[0_20px_60px_hsl(var(--positive)/0.08)]",
       hoverBorder: "hover:border-positive/25",
       iconBg: "bg-positive/10 border border-positive/15",
       iconColor: "text-positive",
       valueColor: STATUS_COLORS.positive.text,
-      barGradient: "from-positive to-positive/60",
+      barColor: "bg-positive",
     },
   ];
 
@@ -211,12 +207,11 @@ export function ReputationBreakdownCards({
               key={card.name}
               className={`
                 relative rounded-[20px] p-7 overflow-hidden border
-                bg-gradient-to-br ${card.gradientFrom} to-background/95
-                dark:to-surface-0/95
+                ${card.cardBg}
                 ${card.borderColor}
                 transition-all duration-300
                 hover:-translate-y-1
-                ${card.hoverShadow} ${card.hoverBorder}
+                ${card.hoverBorder}
               `}
             >
               {/* Header: icon + visualization */}
@@ -238,9 +233,9 @@ export function ReputationBreakdownCards({
               </p>
 
               {/* Progress bar */}
-              <div className="h-1 rounded-full bg-muted/50 dark:bg-white/5 overflow-hidden">
+              <div className="h-1 rounded-full bg-muted/50 dark:bg-muted/30 overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${card.barGradient} transition-all duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]`}
+                  className={`h-full rounded-full ${card.barColor} transition-all duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]`}
                   style={{ width: `${card.value}%` }}
                 />
               </div>

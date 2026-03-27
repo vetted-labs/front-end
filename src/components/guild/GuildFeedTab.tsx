@@ -120,7 +120,7 @@ export function GuildFeedTab({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         {/* Sort Controls — grouped pill bar */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex gap-[3px] p-[3px] bg-white/[0.02] dark:bg-white/[0.02] rounded-[10px] border border-border/60">
+          <div className="flex gap-[3px] p-[3px] bg-muted/20 rounded-[10px] border border-border">
             {(["hot", "new", "top"] as const).map((mode) => {
               const icons = { hot: Flame, new: Clock, top: TrendingUp };
               const Icon = icons[mode];
@@ -131,7 +131,7 @@ export function GuildFeedTab({
                   className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                     sortMode === mode
                       ? "bg-primary/[0.08] text-primary border border-primary/15"
-                      : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
+                      : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-muted/20"
                   }`}
                 >
                   <Icon className="w-3 h-3" />
@@ -145,7 +145,7 @@ export function GuildFeedTab({
               <select
                 value={timeWindow}
                 onChange={(e) => setTimeWindow(e.target.value as TopTimeWindow)}
-                className="px-2.5 py-[6px] rounded-[8px] text-xs font-medium border border-border/60 bg-transparent text-foreground"
+                className="px-2.5 py-[6px] rounded-[8px] text-xs font-medium border border-border bg-transparent text-foreground"
               >
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
@@ -160,7 +160,7 @@ export function GuildFeedTab({
                 className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-xs font-medium transition-all ${
                   showBookmarked
                     ? "bg-primary/[0.08] text-primary border border-primary/15"
-                    : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
+                    : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-muted/20"
                 }`}
               >
                 <Bookmark className={`w-3 h-3 ${showBookmarked ? "fill-current" : ""}`} />
@@ -181,7 +181,7 @@ export function GuildFeedTab({
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   tagFilter === tag.value
                     ? "bg-primary/[0.08] text-primary border border-primary/20"
-                    : "text-muted-foreground border border-border/60 hover:text-foreground hover:border-border"
+                    : "text-muted-foreground border border-border hover:text-foreground hover:border-border"
                 }`}
               >
                 {tag.label}
@@ -194,7 +194,7 @@ export function GuildFeedTab({
         {showNewPostButton && (
           <button
             onClick={() => setShowNewPost(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-[10px] font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-[10px] font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             New Post
@@ -211,7 +211,7 @@ export function GuildFeedTab({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="rounded-xl border border-border bg-card/60 p-5 animate-pulse"
+              className="rounded-xl border border-border bg-card p-5 animate-pulse"
             >
               <div className="h-4 bg-muted rounded w-3/4 mb-3" />
               <div className="h-3 bg-muted rounded w-1/2 mb-2" />

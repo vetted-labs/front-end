@@ -199,19 +199,19 @@ export default function GuildDetailPage() {
 
           {/* Floating stat pills */}
           <div className="absolute inset-0 z-[5] pointer-events-none hidden lg:block">
-            <div className="absolute top-[22%] left-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] backdrop-blur-xl text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite] whitespace-nowrap pointer-events-auto">
+            <div className="absolute top-[22%] left-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite] whitespace-nowrap pointer-events-auto">
               <Users className="w-4 h-4 text-[hsl(var(--gd))]" />
               <span className="font-mono font-medium text-[hsl(var(--gd))]">{totalMembers}</span> Members
             </div>
-            <div className="absolute top-[18%] right-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] backdrop-blur-xl text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_1.5s] whitespace-nowrap pointer-events-auto">
+            <div className="absolute top-[18%] right-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_1.5s] whitespace-nowrap pointer-events-auto">
               <Briefcase className="w-4 h-4 text-[hsl(var(--gd))]" />
               <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.openPositions}</span> Open Jobs
             </div>
-            <div className="absolute bottom-[22%] left-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] backdrop-blur-xl text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_3s] whitespace-nowrap pointer-events-auto">
+            <div className="absolute bottom-[22%] left-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_3s] whitespace-nowrap pointer-events-auto">
               <Target className="w-4 h-4 text-[hsl(var(--gd))]" />
               <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.totalProposalsReviewed || 0}</span> Reviews
             </div>
-            <div className="absolute bottom-[18%] right-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] backdrop-blur-xl text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_4.5s] whitespace-nowrap pointer-events-auto">
+            <div className="absolute bottom-[18%] right-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_4.5s] whitespace-nowrap pointer-events-auto">
               <Trophy className="w-4 h-4 text-[hsl(var(--gd))]" />
               <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.expertCount}</span> Experts
             </div>
@@ -233,7 +233,7 @@ export default function GuildDetailPage() {
             className="relative z-10 w-[120px] h-[120px] mb-7"
             style={{ animation: "guild-emblem-breathe 4s ease-in-out infinite" }}
           >
-            <div className="w-full h-full rounded-2xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center shadow-[0_0_30px_hsl(var(--gd)/0.15),0_0_60px_hsl(var(--gd)/0.06)]">
+            <div className="w-full h-full rounded-2xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center">
               <GuildIcon className="w-14 h-14 text-[hsl(var(--gd))]" />
             </div>
           </div>
@@ -241,7 +241,6 @@ export default function GuildDetailPage() {
           {/* Title */}
           <h1
             className="relative z-10 font-display text-3xl sm:text-5xl font-bold tracking-tight leading-none text-center text-white mb-3.5"
-            style={{ textShadow: "0 0 60px rgba(var(--gd-rgb), 0.4), 0 0 120px rgba(var(--gd-rgb), 0.15)" }}
           >
             {guild.name}
           </h1>
@@ -274,12 +273,7 @@ export default function GuildDetailPage() {
             {showApplyButton && (
               <button
                 onClick={handleApplyToGuild}
-                className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-[14px] text-base font-bold text-white font-display tracking-wide transition-all hover:translate-y-[-2px] hover:shadow-[0_6px_35px_hsl(var(--gd)/0.4),0_0_80px_hsl(var(--gd)/0.15)]"
-                style={{
-                  background: `linear-gradient(135deg, hsl(var(--gd)) 0%, hsl(var(--gd)) 50%, hsl(var(--primary)) 100%)`,
-                  backgroundSize: "200% 200%",
-                  boxShadow: `0 4px 25px rgba(var(--gd-rgb), 0.3), 0 0 60px rgba(var(--gd-rgb), 0.1)`,
-                }}
+                className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-[14px] text-base font-bold text-white font-display tracking-wide transition-all hover:translate-y-[-2px] bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
               >
                 Join Guild
               </button>
@@ -287,7 +281,7 @@ export default function GuildDetailPage() {
             {membership?.isMember && auth.userType === "expert" && (
               <button
                 onClick={() => router.push(`/expert/guild/${guildId}`)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-[14px] bg-white/[0.03] border border-white/[0.06] text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground hover:bg-white/[0.05] transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-[14px] bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground hover:bg-muted/30 transition-all"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Expert Dashboard
@@ -298,7 +292,7 @@ export default function GuildDetailPage() {
 
         {/* ═══ TAB BAR — Glassmorphic ═══ */}
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 p-1.5 bg-white/[0.025] border border-white/[0.06] rounded-2xl backdrop-blur-xl mb-10 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1 p-1.5 bg-card border border-border rounded-2xl mb-10 overflow-x-auto scrollbar-none">
             {(
               [
                 { value: "feed" as const, label: "Overview" },
@@ -313,8 +307,8 @@ export default function GuildDetailPage() {
                 onClick={() => setActiveTab(value)}
                 className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all border ${
                   activeTab === value
-                    ? "text-[hsl(var(--gd))] bg-[hsl(var(--gd)/0.08)] border-[hsl(var(--gd)/0.15)] shadow-[0_0_20px_hsl(var(--gd)/0.1),inset_0_0_20px_hsl(var(--gd)/0.05)] font-semibold"
-                    : "text-muted-foreground/50 border-transparent hover:text-muted-foreground hover:bg-white/[0.03]"
+                    ? "text-[hsl(var(--gd))] bg-[hsl(var(--gd)/0.08)] border-[hsl(var(--gd)/0.15)] font-semibold"
+                    : "text-muted-foreground/50 border-transparent hover:text-muted-foreground hover:bg-muted/20"
                 }`}
               >
                 {label}
@@ -380,7 +374,7 @@ export default function GuildDetailPage() {
                       <button
                         key={job.id}
                         onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                        className="bg-white/[0.02] border border-white/[0.06] rounded-[20px] p-6 backdrop-blur-2xl text-left transition-all hover:border-[hsl(var(--gd)/0.2)] hover:shadow-[0_0_30px_hsl(var(--gd)/0.06)] hover:translate-y-[-2px]"
+                        className="bg-muted/20 border border-border rounded-[20px] p-6 text-left transition-all hover:border-[hsl(var(--gd)/0.2)] hover:translate-y-[-2px]"
                       >
                         <h3 className="font-display text-base font-bold text-foreground mb-2 tracking-tight">
                           {job.title}
@@ -392,12 +386,12 @@ export default function GuildDetailPage() {
                         )}
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {job.location && (
-                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-white/[0.04] border border-white/[0.06]">
+                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
                               {job.location}
                             </span>
                           )}
                           {job.type && (
-                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-white/[0.04] border border-white/[0.06]">
+                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
                               {job.type}
                             </span>
                           )}
@@ -417,7 +411,7 @@ export default function GuildDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-white/[0.02] rounded-[20px] border border-white/[0.06]">
+                  <div className="text-center py-12 bg-muted/20 rounded-[20px] border border-border">
                     <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
                     <p className="text-muted-foreground">No open positions at the moment</p>
                   </div>

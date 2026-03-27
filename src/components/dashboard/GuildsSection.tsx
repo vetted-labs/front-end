@@ -28,7 +28,7 @@ export function GuildsSection({
 
   if (guilds.length === 0) {
     return (
-      <div className="bg-card border border-border/60 rounded-[14px] p-8 text-center">
+      <div className="bg-card border border-border rounded-[14px] p-8 text-center">
         <p className="text-sm text-muted-foreground">No guild memberships yet</p>
       </div>
     );
@@ -44,7 +44,7 @@ export function GuildsSection({
         {rest.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="px-3 py-1.5 rounded-[7px] bg-muted/30 border border-border/40 text-muted-foreground text-xs font-medium hover:text-foreground hover:bg-muted/50 transition-colors"
+            className="px-3 py-1.5 rounded-[7px] bg-muted/30 border border-border text-muted-foreground text-xs font-medium hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             {expanded ? "Show less" : `Show all ${guilds.length} →`}
           </button>

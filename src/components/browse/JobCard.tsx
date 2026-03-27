@@ -31,12 +31,12 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
   return (
     <Link
       href={`/browse/jobs/${job.id}`}
-      className={`block bg-card/70 backdrop-blur-sm rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border/60 group relative overflow-hidden ${
+      className={`block bg-card rounded-2xl p-6 hover:shadow-md hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border group relative overflow-hidden ${
         job.featured ? "border-t-2 border-t-warning" : ""
       }`}
     >
       {/* Hover gradient border overlay */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-primary/[0.06] to-transparent" />
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
 
       {/* Featured Badge */}
       {job.featured && (
@@ -54,7 +54,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
             <img
               src={getAssetUrl(job.companyLogo)}
               alt={job.companyName || "Company"}
-              className="w-10 h-10 rounded-[10px] object-cover border border-border/60 flex-shrink-0"
+              className="w-10 h-10 rounded-[10px] object-cover border border-border flex-shrink-0"
               onError={(e) => {
                 const target = e.currentTarget;
                 target.style.display = "none";
@@ -64,7 +64,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
             />
           ) : null}
           <div
-            className={`w-10 h-10 rounded-[10px] bg-muted/50 border border-border/60 flex items-center justify-center flex-shrink-0 ${job.companyLogo ? "hidden" : "flex"}`}
+            className={`w-10 h-10 rounded-[10px] bg-muted/50 border border-border flex items-center justify-center flex-shrink-0 ${job.companyLogo ? "hidden" : "flex"}`}
           >
             <Building2 className="w-5 h-5 text-muted-foreground" />
           </div>
@@ -106,11 +106,11 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
             {job.guild?.replace(/ Guild$/i, "")}
           </button>
         )}
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border/40">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <MapPin className="w-3 h-3 opacity-60" />
           {job.locationType || job.location}
         </span>
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border/40">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <Briefcase className="w-3 h-3 opacity-60" />
           {job.type}
         </span>
@@ -132,7 +132,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
           {job.skills.slice(0, 5).map((skill, index) => (
             <span
               key={index}
-              className="px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/20 border border-border/40 transition-colors hover:text-foreground hover:bg-muted/40"
+              className="px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/20 border border-border transition-colors hover:text-foreground hover:bg-muted/40"
             >
               {skill}
             </span>
@@ -146,12 +146,12 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
       )}
 
       {/* Card Footer: Applicants + Apply Button */}
-      <div className="flex items-center justify-between pt-4 border-t border-border/40">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
           <Users className="w-3.5 h-3.5 opacity-50" />
           {job.applicants || 0} applicants
         </div>
-        <span className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-medium shadow-sm shadow-primary/25 group-hover:shadow-md group-hover:shadow-primary/35 group-hover:-translate-y-px transition-all">
+        <span className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm group-hover:shadow-md group-hover:-translate-y-px transition-all">
           Apply
           <ArrowRight className="w-3.5 h-3.5" />
         </span>

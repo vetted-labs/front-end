@@ -111,7 +111,7 @@ export function GuildsOverview() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold font-display tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent mb-1">
+          <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-1">
             My Guilds
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -120,7 +120,7 @@ export function GuildsOverview() {
         </div>
         <button
           onClick={openGuildPicker}
-          className="flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] font-display font-bold rounded-xl hover:shadow-[0_6px_24px_hsl(var(--primary)/0.35)] hover:scale-[1.02] transition-all text-sm"
+          className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-primary-foreground font-display font-bold rounded-xl hover:shadow-[0_6px_24px_hsl(var(--primary)/0.35)] hover:scale-[1.02] transition-all text-sm"
         >
           <Plus className="w-4 h-4" />
           Join Guild
@@ -128,7 +128,7 @@ export function GuildsOverview() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-border/60">
+      <div className="border-b border-border">
         <div className="flex gap-0">
           <button
             onClick={() => setActiveTab("guilds")}
@@ -169,14 +169,14 @@ export function GuildsOverview() {
               placeholder="Search guilds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-card/60 backdrop-blur-xl border border-border/60 rounded-xl focus:outline-none focus:ring-0 focus:border-primary/30 focus:shadow-[0_0_20px_hsl(var(--primary)/0.06)] text-foreground placeholder:text-muted-foreground transition-all text-sm"
+              className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-primary/30 focus: text-foreground placeholder:text-muted-foreground transition-all text-sm"
             />
           </div>
 
           {/* Action Required */}
           {totalPendingApplications > 0 && (
-            <div className="rounded-2xl p-6 bg-warning/[0.04] border border-warning/15 backdrop-blur-xl relative overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-warning/40 to-transparent opacity-80" />
+            <div className="rounded-2xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden">
+              <div className="absolute inset-x-0 top-0 h-px bg-border opacity-80" />
               <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
                 <div className="flex items-start gap-3">
                   <div className="w-[38px] h-[38px] rounded-[11px] bg-warning/[0.06] border border-warning/15 flex items-center justify-center flex-shrink-0">
@@ -191,7 +191,7 @@ export function GuildsOverview() {
                 </div>
                 <button
                   onClick={() => router.push("/expert/voting")}
-                  className="px-4 py-2 rounded-[10px] bg-warning/[0.12] border border-warning/25 text-warning font-display text-xs font-bold transition-all hover:bg-warning/[0.2] hover:shadow-[0_0_14px_hsl(var(--warning)/0.1)] whitespace-nowrap"
+                  className="px-4 py-2 rounded-[10px] bg-warning/[0.12] border border-warning/25 text-warning font-display text-xs font-bold transition-all hover:bg-warning/[0.2] whitespace-nowrap"
                 >
                   Review All
                 </button>
@@ -205,7 +205,7 @@ export function GuildsOverview() {
                       <button
                         key={guild.id}
                         onClick={() => router.push(`/expert/voting?guild=${guild.id}`)}
-                        className="w-full flex items-center justify-between p-2.5 rounded-[10px] bg-white/[0.02] border border-white/[0.04] hover:border-warning/15 hover:bg-warning/[0.03] transition-all group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-[10px] bg-muted/20 border border-border hover:border-warning/15 hover:bg-warning/[0.03] transition-all group"
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="w-[30px] h-[30px] rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center">
@@ -228,7 +228,7 @@ export function GuildsOverview() {
 
           {/* Guild Cards Grid */}
           {sortedGuilds.length === 0 ? (
-            <div className="glass-card rounded-2xl p-12 text-center border border-border/60">
+            <div className=" rounded-2xl p-12 text-center border border-border">
               {searchQuery ? (
                 <>
                   <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
@@ -242,7 +242,7 @@ export function GuildsOverview() {
                   <p className="text-muted-foreground mb-4">Browse available guilds and apply to start reviewing candidates.</p>
                   <button
                     onClick={openGuildPicker}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] font-display font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all text-sm"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-display font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all text-sm"
                   >
                     <Plus className="w-4 h-4" />
                     Browse Guilds
@@ -283,7 +283,7 @@ export function GuildsOverview() {
             placeholder="Search available guilds..."
             value={guildSearchQuery}
             onChange={(e) => setGuildSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border border-border/60 rounded-xl text-sm focus:outline-none focus:ring-0 focus:border-primary/30 text-foreground placeholder:text-muted-foreground transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-muted/20 border border-border rounded-xl text-sm focus:outline-none focus:ring-0 focus:border-primary/30 text-foreground placeholder:text-muted-foreground transition-all"
             autoFocus
           />
         </div>
@@ -313,7 +313,7 @@ export function GuildsOverview() {
                     setShowGuildPicker(false);
                     router.push(`/expert/apply?guild=${encodeURIComponent(guild.id)}`);
                   }}
-                  className="group w-full text-left flex items-center gap-3.5 p-3 rounded-xl border border-border/60 bg-white/[0.015] hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-[0_0_16px_hsl(var(--primary)/0.04)] transition-all"
+                  className="group w-full text-left flex items-center gap-3.5 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/[0.03] transition-all"
                 >
                   <div className="w-[38px] h-[38px] rounded-[10px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0">
                     <GIcon className="w-[18px] h-[18px] text-primary" />

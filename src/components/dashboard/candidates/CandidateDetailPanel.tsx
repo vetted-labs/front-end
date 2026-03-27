@@ -162,7 +162,7 @@ export function CandidateDetailPanel({
   return (
     <div className="flex flex-col w-full h-full overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-border/40 px-6 pt-4 pb-3">
+      <div className="flex-shrink-0 border-b border-border px-6 pt-4 pb-3">
         {/* Row 1 — Back + status actions */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export function CandidateDetailPanel({
 
         {/* Row 2 — Avatar + name + contacts + pipeline stepper */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
             <span className="text-primary font-display font-bold text-xl">
               {candidate.fullName.charAt(0).toUpperCase()}
             </span>
@@ -224,7 +224,7 @@ export function CandidateDetailPanel({
       </div>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 px-6 py-2 border-b border-border/30 dark:border-white/[0.04]">
+      <div className="flex-shrink-0 px-6 py-2 border-b border-border/30 dark:border-border">
         <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
@@ -233,7 +233,7 @@ export function CandidateDetailPanel({
         {activeTab === "profile" && (
           <div className="space-y-5">
             {/* Applied For — hero card */}
-            <div className="rounded-xl border border-border/40 dark:border-white/[0.06] bg-gradient-to-br from-muted/40 via-transparent to-primary/[0.03] p-5">
+            <div className="rounded-xl border border-border bg-muted/30 p-5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
               <p className="text-sm font-medium text-foreground">{job.title}</p>
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
@@ -262,9 +262,9 @@ export function CandidateDetailPanel({
                     href={resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 rounded-xl border border-border/40 dark:border-white/[0.06] hover:border-primary/20 hover:bg-primary/[0.02] transition-all group"
+                    className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all group"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -274,7 +274,7 @@ export function CandidateDetailPanel({
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                   </a>
                 ) : (
-                  <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border/40 dark:border-white/[0.06]">
+                  <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border">
                     <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
                       <FileText className="w-5 h-5 text-muted-foreground/50" />
                     </div>
@@ -285,14 +285,14 @@ export function CandidateDetailPanel({
 
               {/* Experience */}
               {candidate.experienceLevel && (
-                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                <div className="rounded-xl border border-border p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Experience</p>
                   <p className="text-sm font-medium text-foreground capitalize">{candidate.experienceLevel} Level</p>
                 </div>
               )}
 
               {/* Contact card */}
-              <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+              <div className="rounded-xl border border-border p-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2.5">Contact</p>
                 <div className="space-y-2">
                   <a href={`mailto:${candidate.email}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-primary transition-colors">
@@ -309,7 +309,7 @@ export function CandidateDetailPanel({
 
               {/* Links card */}
               {(candidate.socialLinks?.filter((l) => l.url?.trim()).length || candidate.linkedIn || candidate.github) && (
-                <div className="rounded-xl border border-border/40 dark:border-white/[0.06] p-4">
+                <div className="rounded-xl border border-border p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2.5">Links</p>
                   <div className="space-y-2">
                     {candidate.socialLinks?.filter((l) => l.url?.trim()).map((link, idx) => {
@@ -339,7 +339,7 @@ export function CandidateDetailPanel({
 
         {activeTab === "application" && (
           <div className="space-y-5">
-            <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4 bg-muted/20 dark:bg-white/[0.02]">
+            <div className="rounded-lg border border-border p-4 bg-muted/20">
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Applied For</p>
               <p className="text-sm font-medium text-foreground">{job.title}</p>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
@@ -358,7 +358,7 @@ export function CandidateDetailPanel({
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Cover Letter</p>
               {application.coverLetter ? (
-                <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+                <div className="rounded-lg border border-border p-4">
                   <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{application.coverLetter}</p>
                 </div>
               ) : (
@@ -371,7 +371,7 @@ export function CandidateDetailPanel({
                 <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Screening Answers</p>
                 <div className="space-y-3">
                   {application.screeningAnswers.map((answer: string, idx: number) => (
-                    <div key={idx} className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+                    <div key={idx} className="rounded-lg border border-border p-4">
                       <p className="text-xs font-medium text-muted-foreground mb-1.5">Question {idx + 1}</p>
                       <p className="text-sm text-foreground/90 leading-relaxed">{answer}</p>
                     </div>
@@ -402,7 +402,7 @@ export function CandidateDetailPanel({
               />
             ) : (
               <>
-                <div className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+                <div className="rounded-lg border border-border p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Guild Review Summary</p>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
@@ -416,7 +416,7 @@ export function CandidateDetailPanel({
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 rounded-lg bg-muted/30 dark:bg-white/[0.02]">
+                    <div className="text-center p-3 rounded-lg bg-muted/30">
                       <p className="text-sm font-medium text-foreground">{guildReport.guildApplication.reviewCount}</p>
                       <p className="text-xs text-muted-foreground">Reviews</p>
                     </div>
@@ -441,7 +441,7 @@ export function CandidateDetailPanel({
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Expert Reviews</p>
                     <div className="space-y-3">
                       {guildReport.reviews.map((review) => (
-                        <div key={review.id} className="rounded-lg border border-border/40 dark:border-white/[0.06] p-4">
+                        <div key={review.id} className="rounded-lg border border-border p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-foreground">{review.reviewerName}</span>
@@ -491,7 +491,7 @@ export function CandidateDetailPanel({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add internal notes about this candidate..."
                 rows={8}
-                className="w-full px-4 py-3 text-sm rounded-lg border border-border/60 dark:border-white/[0.08] bg-background/60 dark:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
+                className="w-full px-4 py-3 text-sm rounded-lg border border-border bg-background/60 dark:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none leading-relaxed"
               />
             </div>
             <Button onClick={handleSaveNotes} disabled={isSavingNotes} size="sm">
@@ -502,7 +502,7 @@ export function CandidateDetailPanel({
       </div>
 
       {/* Footer — Message compose */}
-      <div className="flex-shrink-0 border-t border-border/30 dark:border-white/[0.04] px-6 py-3">
+      <div className="flex-shrink-0 border-t border-border/30 dark:border-border px-6 py-3">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -515,7 +515,7 @@ export function CandidateDetailPanel({
               }
             }}
             placeholder={`Message ${firstName}...`}
-            className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-border/50 dark:border-white/[0.06] bg-muted/20 dark:bg-white/[0.03] focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
+            className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-border bg-muted/20 dark:bg-muted/20 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-background text-foreground placeholder:text-muted-foreground transition-all"
           />
           <button
             onClick={handleSendMessage}

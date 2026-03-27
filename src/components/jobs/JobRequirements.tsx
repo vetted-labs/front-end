@@ -23,7 +23,7 @@ export function JobRequirements({
     <>
       {/* Guild & Publishing Section */}
       <div className="p-8 space-y-6">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
           <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-info-blue" />
           </div>
@@ -51,7 +51,7 @@ export function JobRequirements({
                   e.target.value as "draft" | "active" | "paused" | "closed"
                 )
               }
-              className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+              className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
             >
               <option value="draft">Draft</option>
               <option value="active">Active</option>
@@ -64,7 +64,7 @@ export function JobRequirements({
 
       {/* Requirements Section */}
       <div className="p-8 space-y-6">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
           <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-info-blue" />
           </div>
@@ -91,7 +91,7 @@ export function JobRequirements({
               )
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.requirements ? "border-negative" : "border-border/60"
+              fieldErrors.requirements ? "border-negative" : "border-border"
             }`}
             rows={4}
             placeholder="e.g., 5+ years experience"
@@ -111,7 +111,7 @@ export function JobRequirements({
               onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.skills ? "border-negative" : "border-border/60"
+              fieldErrors.skills ? "border-negative" : "border-border"
             }`}
             rows={4}
             placeholder="e.g., Solidity, React"
@@ -134,7 +134,7 @@ export function JobRequirements({
               )
             }
             className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.screeningQuestions ? "border-negative" : "border-border/60"
+              fieldErrors.screeningQuestions ? "border-negative" : "border-border"
             }`}
             rows={4}
             placeholder="e.g., Describe your experience with DeFi"

@@ -64,7 +64,7 @@ export default function ExpertApplicationFlow() {
   return (
     <div className="min-h-screen animate-page-enter">
       {/* Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-border bg-background/80 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <h1 className="text-xl font-bold text-foreground">Expert Application</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -142,7 +142,7 @@ export default function ExpertApplicationFlow() {
         </div>
 
         {/* Sticky bottom navigation */}
-        <div className="sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border/60 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-4 mt-8">
+        <div className="sticky bottom-0 bg-background/80 border-t border-border -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-4 mt-8">
           <div className="flex gap-4">
             {flow.currentStep > 0 ? (
               <Button

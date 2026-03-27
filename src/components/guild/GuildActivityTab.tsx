@@ -110,7 +110,7 @@ export function GuildActivityFeed({
     return (
       <div>
         <div
-          className="relative pl-5 border-l-2 border-border/40 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+          className="relative pl-5 border-l-2 border-border space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
           style={{ maxHeight: maxHeight || "320px" }}
         >
           {sliced.map((activity) => {
@@ -196,12 +196,12 @@ export function GuildActivityFeed({
           <div className="space-y-8">
             {Object.entries(grouped).map(([dateLabel, items]) => (
               <div key={dateLabel}>
-                <div className="sticky top-0 z-10 bg-gradient-to-r from-background via-background to-transparent pb-2 mb-3">
+                <div className="sticky top-0 z-10 bg-background pb-2 mb-3">
                   <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">
                     {dateLabel}
                   </span>
                 </div>
-                <div className="relative pl-6 border-l-2 border-border/50 space-y-1">
+                <div className="relative pl-6 border-l-2 border-border space-y-1">
                   {items.map((activity) => {
                     const meta = ACTIVITY_META[activity.type] || FALLBACK_META;
                     const Icon = meta.icon;
@@ -211,7 +211,7 @@ export function GuildActivityFeed({
                         <div
                           className={`absolute -left-[calc(0.75rem+5px)] top-3.5 w-2.5 h-2.5 rounded-full ring-2 ring-background ${meta.colorClass.replace("text-", "bg-")}`}
                         />
-                        <div className="rounded-xl border border-transparent bg-card/50 px-4 py-3 hover:border-border hover:bg-card transition-all">
+                        <div className="rounded-xl border border-transparent bg-card px-4 py-3 hover:border-border hover:bg-card transition-all">
                           <div className="flex items-start gap-3">
                             <div
                               className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${meta.badgeClass} border`}

@@ -41,8 +41,8 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Participation Ring */}
-          <div className="relative rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-7 text-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
+          <div className="relative rounded-2xl border border-border bg-card p-7 text-center overflow-hidden">
+            <div className="absolute inset-0 bg-transparent pointer-events-none" />
             <div className="relative w-16 h-16 mx-auto mb-2.5">
               <svg width="64" height="64" viewBox="0 0 64 64">
                 <circle
@@ -133,7 +133,7 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
               return (
                 <div
                   key={p.id}
-                  className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] items-center gap-3 sm:gap-4 px-5 py-3.5 rounded-xl border border-border bg-card/50 hover:border-border transition-colors"
+                  className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] items-center gap-3 sm:gap-4 px-5 py-3.5 rounded-xl border border-border bg-card hover:border-border transition-colors"
                 >
                   <p className="text-sm font-medium truncate">
                     #{p.id.slice(0, 6)} {p.title}
@@ -189,8 +189,8 @@ function StatCard({
   sub: string;
 }) {
   return (
-    <div className="relative rounded-2xl border border-border bg-card/50 backdrop-blur-sm p-7 text-center overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
+    <div className="relative rounded-2xl border border-border bg-card p-7 text-center overflow-hidden">
+      <div className="absolute inset-0 bg-transparent pointer-events-none" />
       <div className={`w-11 h-11 rounded-xl ${STAT_ICON.bg} border border-primary/25 flex items-center justify-center mx-auto mb-3.5 ${STAT_ICON.text}`}>
         {icon}
       </div>

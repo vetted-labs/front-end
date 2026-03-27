@@ -95,7 +95,7 @@ export function AppealReviewPanel({
         </div>
 
         {/* Appeal Info */}
-        <div className="rounded-lg bg-muted/30 dark:bg-white/[0.02] p-3 mb-4 space-y-2">
+        <div className="rounded-lg bg-muted/30 p-3 mb-4 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Candidate</span>
             <span className="font-medium">{appeal.applicationName ?? "—"}</span>
@@ -126,7 +126,7 @@ export function AppealReviewPanel({
               Appeal Justification
             </span>
           </div>
-          <div className="rounded-lg bg-muted/30 dark:bg-white/[0.02] border border-border/40 p-3">
+          <div className="rounded-lg bg-muted/30 border border-border p-3">
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {appeal.justification}
             </p>
@@ -134,7 +134,7 @@ export function AppealReviewPanel({
         </div>
 
         {/* Vote Progress */}
-        <div className="flex items-center justify-between mb-4 rounded-lg bg-muted/30 dark:bg-white/[0.02] px-3 py-2">
+        <div className="flex items-center justify-between mb-4 rounded-lg bg-muted/30 px-3 py-2">
           <div className="flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Panel Progress</span>
@@ -164,7 +164,7 @@ export function AppealReviewPanel({
               {appeal.votes.map((vote) => (
                 <div
                   key={vote.id}
-                  className="flex items-start gap-2.5 rounded-lg bg-muted/20 dark:bg-white/[0.01] border border-border/30 px-3 py-2"
+                  className="flex items-start gap-2.5 rounded-lg bg-muted/20 border border-border/30 px-3 py-2"
                 >
                   <Shield className="w-3.5 h-3.5 mt-0.5 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -222,7 +222,7 @@ export function AppealReviewPanel({
 
         {/* Vote Form (if not voted and not resolved) */}
         {!hasVoted && !isResolved && (
-          <div className="border-t border-border/40 pt-4">
+          <div className="border-t border-border pt-4">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               Your Decision
             </p>
@@ -295,7 +295,7 @@ export function AppealReviewPanel({
         )}
 
         {hasVoted && !isResolved && (
-          <div className="border-t border-border/40 pt-4 text-center">
+          <div className="border-t border-border pt-4 text-center">
             <CheckCircle2 className="w-6 h-6 text-primary mx-auto mb-1" />
             <p className="text-sm text-muted-foreground">
               You have voted. Waiting for remaining panel members.

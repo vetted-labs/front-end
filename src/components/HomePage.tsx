@@ -89,7 +89,7 @@ export function HomePage() {
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
 
       {/* Footer */}
-      <footer className="border-t border-border/40">
+      <footer className="border-t border-border">
         <div className="max-w-[1120px] mx-auto px-6 py-12">
           <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-12">
             {/* Brand */}

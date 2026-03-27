@@ -134,11 +134,11 @@ export default function GuildMyStatsPage() {
   return (
     <div className="min-h-full animate-page-enter">
       {/* Hero Section - Personal Overview */}
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
+      <div className="bg-primary/5 border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-6">
-              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center shadow-sm">
                 <User className="w-10 h-10 text-primary" />
               </div>
               <div>
@@ -429,7 +429,7 @@ export default function GuildMyStatsPage() {
           <div className="space-y-6">
             {/* Role Progress */}
             {stats.nextRole && (
-              <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl p-6 border-2 border-primary/20">
+              <div className="bg-primary/5 rounded-xl p-6 border-2 border-primary/20">
                 <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Role Progression
@@ -446,7 +446,7 @@ export default function GuildMyStatsPage() {
                     </div>
                     <div className="w-full bg-muted rounded-full h-3">
                       <div
-                        className="bg-gradient-to-r from-primary to-accent h-3 rounded-full transition-all"
+                        className="bg-primary h-3 rounded-full transition-all"
                         style={{
                           width: `${stats.progressToNextRole || 0}%`,
                         }}

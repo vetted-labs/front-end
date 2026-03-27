@@ -45,7 +45,7 @@ export function JobsFilterModal({
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                   selectedGuilds.includes(guild)
                     ? "bg-foreground text-background"
-                    : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
+                    : "bg-card text-card-foreground border border-border hover:border-foreground/30"
                 }`}
               >
                 {guild}
@@ -67,7 +67,7 @@ export function JobsFilterModal({
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                   selectedJobTypes.includes(type)
                     ? "bg-foreground text-background"
-                    : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
+                    : "bg-card text-card-foreground border border-border hover:border-foreground/30"
                 }`}
               >
                 {type}
@@ -89,7 +89,7 @@ export function JobsFilterModal({
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
                   selectedLocationTypes.includes(type)
                     ? "bg-foreground text-background"
-                    : "bg-card/70 text-card-foreground border border-border/60 hover:border-foreground/30"
+                    : "bg-card text-card-foreground border border-border hover:border-foreground/30"
                 }`}
               >
                 {type}

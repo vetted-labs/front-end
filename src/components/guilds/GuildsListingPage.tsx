@@ -147,10 +147,10 @@ export default function GlobalGuildsPage() {
                           navigateToGuild(guild.id);
                         }
                       }}
-                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-2xl border border-border bg-card px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {/* Left: Icon with subtle container */}
-                      <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-[14px] bg-muted/40 dark:bg-white/[0.04] border border-border/40 dark:border-white/[0.06]">
+                      <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-[14px] bg-muted/40 dark:bg-muted/30 border border-border">
                         <GuildIcon
                           className="w-[22px] h-[22px] md:w-6 md:h-6 text-foreground/70"
                           strokeWidth={1.8}
@@ -200,7 +200,7 @@ export default function GlobalGuildsPage() {
                       </div>
 
                       {/* Right: Arrow */}
-                      <div className="shrink-0 hidden sm:flex items-center justify-center w-9 h-9 rounded-full border border-border/40 dark:border-white/[0.06] bg-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/[0.06]">
+                      <div className="shrink-0 hidden sm:flex items-center justify-center w-9 h-9 rounded-full border border-border bg-transparent transition-all duration-300 group-hover:border-primary/30 group-hover:bg-primary/[0.06]">
                         <ArrowUpRight className="w-[14px] h-[14px] text-muted-foreground/50 transition-all duration-300 group-hover:text-primary group-hover:translate-x-[1px] group-hover:-translate-y-[1px]" />
                       </div>
 
@@ -230,7 +230,7 @@ export default function GlobalGuildsPage() {
 
         {/* ── CTA ── */}
         <section className="pb-24">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-border/50 bg-card/40 px-8 py-7">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-border bg-card px-8 py-7">
             <div>
               <p className="font-display font-bold text-xl text-foreground tracking-tight">
                 Ready to join a guild?
@@ -241,7 +241,7 @@ export default function GlobalGuildsPage() {
             </div>
             <button
               onClick={() => router.push("/expert/register")}
-              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium transition-all duration-200 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/15"
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium transition-all duration-200 hover:bg-primary/90 hover:shadow-lg"
             >
               Apply as Expert
               <ArrowUpRight className="w-3.5 h-3.5" />

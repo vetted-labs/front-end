@@ -240,7 +240,7 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Available Balance */}
-        <div className="rounded-[14px] bg-card border border-border/60 p-5">
+        <div className="rounded-[14px] bg-card border border-border p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Available Balance
           </div>
@@ -266,7 +266,7 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Active Guilds */}
-        <div className="rounded-[14px] bg-card border border-border/60 p-5">
+        <div className="rounded-[14px] bg-card border border-border p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Active Guilds
           </div>
@@ -321,7 +321,7 @@ export default function WithdrawalsPage() {
                   "flex items-center justify-between rounded-xl px-5 py-4 text-left transition-colors cursor-pointer",
                   hasCooldown
                     ? "bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 hover:bg-[#d9b45f]/[0.07]"
-                    : "bg-card border border-border/60 hover:bg-muted/50"
+                    : "bg-card border border-border hover:bg-muted/50"
                 )}
               >
                 {/* Left: icon + name */}

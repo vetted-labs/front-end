@@ -12,7 +12,7 @@ interface HeroSectionProps {
 }
 
 /** All guild dots use brand orange — no per-guild rainbow. */
-const GUILD_DOT_STYLE = "bg-primary shadow-[0_0_6px_rgba(249,115,22,0.4)]";
+const GUILD_DOT_STYLE = "bg-primary";
 
 function getGuildDotStyle(_guildName: string): string {
   return GUILD_DOT_STYLE;
@@ -94,8 +94,8 @@ export function HeroSection({
                 onClick={handlers[card.key]}
                 className={`relative text-left rounded-2xl p-7 pb-6 border transition-all duration-300 cursor-pointer group overflow-hidden ${
                   card.featured
-                    ? "border-primary/15 bg-primary/[0.04] hover:border-primary/25 hover:bg-primary/[0.06] hover:shadow-[0_0_40px_rgba(249,115,22,0.08)]"
-                    : "bg-card/30 border-border/40 hover:border-border/80 hover:bg-card/60"
+                    ? "border-primary/15 bg-primary/[0.04] hover:border-primary/25 hover:bg-primary/[0.06]"
+                    : "bg-card border-border hover:border-border hover:bg-card"
                 } hover:-translate-y-0.5`}
               >
                 {/* Featured radial glow */}
@@ -135,7 +135,7 @@ export function HeroSection({
               return (
                 <div
                   key={g.id}
-                  className="inline-flex items-center gap-[7px] px-3.5 py-1.5 bg-card/20 border border-border/30 rounded-full text-xs font-medium text-muted-foreground hover:bg-card/40 hover:border-border/50 hover:text-foreground transition-all cursor-default"
+                  className="inline-flex items-center gap-[7px] px-3.5 py-1.5 bg-card border border-border/30 rounded-full text-xs font-medium text-muted-foreground hover:bg-card hover:border-border hover:text-foreground transition-all cursor-default"
                 >
                   <span className={`w-[7px] h-[7px] rounded-full flex-shrink-0 ${getGuildDotStyle(name)}`} />
                   {name}

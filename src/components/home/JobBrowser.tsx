@@ -20,18 +20,18 @@ interface JobBrowserProps {
  * These are per-discipline brand identifiers (like brand logos), not status indicators.
  */
 const GUILD_DOT_STYLES: Record<string, string> = {
-  engineering: "bg-[#60a5fa] shadow-[0_0_6px_rgba(96,165,250,0.4)]",
-  design: "bg-[#c084fc] shadow-[0_0_6px_rgba(192,132,252,0.4)]",
-  "data science": "bg-[#2dd4bf] shadow-[0_0_6px_rgba(45,212,191,0.4)]",
-  data: "bg-[#2dd4bf] shadow-[0_0_6px_rgba(45,212,191,0.4)]",
-  security: "bg-[#f87171] shadow-[0_0_6px_rgba(248,113,113,0.4)]",
-  marketing: "bg-[#fbbf24] shadow-[0_0_6px_rgba(251,191,36,0.4)]",
-  devops: "bg-[#4ade80] shadow-[0_0_6px_rgba(74,222,128,0.4)]",
+  engineering: "bg-[#60a5fa]",
+  design: "bg-[#c084fc]",
+  "data science": "bg-[#2dd4bf]",
+  data: "bg-[#2dd4bf]",
+  security: "bg-[#f87171]",
+  marketing: "bg-[#fbbf24]",
+  devops: "bg-[#4ade80]",
 };
 
 function getGuildDotStyle(guildName: string): string {
   const key = guildName.toLowerCase().replace(/ guild$/i, "").trim();
-  return GUILD_DOT_STYLES[key] ?? "bg-primary shadow-[0_0_6px_rgba(249,115,22,0.4)]";
+  return GUILD_DOT_STYLES[key] ?? "bg-primary";
 }
 
 export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
@@ -76,7 +76,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
               <div
                 key={job.id}
                 onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                className="bg-card/30 border border-border/40 rounded-[10px] p-5 cursor-pointer group hover:border-border/80 hover:bg-card/60 hover:-translate-y-px transition-all duration-250"
+                className="bg-card border border-border rounded-[10px] p-5 cursor-pointer group hover:border-border hover:bg-card hover:-translate-y-px transition-all duration-250"
               >
                 {/* Top meta */}
                 <div className="flex items-center justify-between mb-2.5">
@@ -121,7 +121,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
           })}
         </div>
       ) : (
-        <div className="text-center py-16 bg-card/20 rounded-2xl border border-border/30">
+        <div className="text-center py-16 bg-card rounded-2xl border border-border/30">
           <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-5">
             <Briefcase className="w-8 h-8 text-muted-foreground/40" />
           </div>

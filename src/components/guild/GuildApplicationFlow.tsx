@@ -44,7 +44,7 @@ export default function GuildApplicationFlow() {
   if (!flow.template) return null;
 
   return (
-    <div className="min-h-screen animate-page-enter">
+    <div className="min-h-screen">
       <ApplicationNav
         backHref={`/guilds/${flow.guildId}`}
         onBack={() => router.push(`/guilds/${flow.guildId}`)}
@@ -130,7 +130,7 @@ export default function GuildApplicationFlow() {
         </div>
 
         {/* Navigation buttons */}
-        <div className="sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border/60 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-4 mt-8">
+        <div className="sticky bottom-0 bg-background/80 border-t border-border -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-4 mt-8">
           <div className="flex gap-4">
             {flow.currentStep > 0 ? (
               <Button

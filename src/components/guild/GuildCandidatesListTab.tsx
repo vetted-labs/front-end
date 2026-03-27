@@ -17,7 +17,7 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
         {candidates && candidates.map((candidate) => (
           <div
             key={candidate.id}
-            className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)] hover:border-primary/50 transition-all"
+            className="rounded-2xl border border-border bg-card p-6 hover:border-primary/50 transition-all"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">

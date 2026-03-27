@@ -29,7 +29,7 @@ export function MyEndorsementsHistory() {
   if (!isConnected || !address) {
     return (
       <WalletRequiredState
-        className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md"
+        className="rounded-2xl border border-border bg-card"
         message="Please connect your wallet to view your active endorsements"
       />
     );
@@ -37,7 +37,7 @@ export function MyEndorsementsHistory() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 backdrop-blur-md p-12 text-center">
+      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-12 text-center">
         <p className="text-destructive">
           Error loading active endorsements: {error}
         </p>
@@ -55,7 +55,7 @@ export function MyEndorsementsHistory() {
         icon={Award}
         title="No Active Endorsements"
         description="You haven't placed any active endorsements yet. Browse available applications to start endorsing candidates."
-        className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-16"
+        className="rounded-2xl border border-border bg-card p-16"
       />
     );
   }
@@ -69,7 +69,7 @@ export function MyEndorsementsHistory() {
   ).length;
 
   return (
-    <div className="min-h-screen space-y-8 animate-page-enter">
+    <div className="min-h-screen space-y-8">
       {/* ── Stats Row ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
@@ -95,7 +95,7 @@ export function MyEndorsementsHistory() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-5"
+            className="rounded-2xl border border-border bg-card p-5"
           >
             <div className="flex items-center gap-4">
               <div
@@ -173,7 +173,7 @@ export function MyEndorsementsHistory() {
           return (
             <div
               key={endorsementId}
-              className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden transition-all hover:border-primary/40"
+              className="rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40"
             >
               {/* Collapsed Row */}
               <div
@@ -240,7 +240,7 @@ export function MyEndorsementsHistory() {
                     {statusConfig.label}
                   </Badge>
                   <div
-                    className={`flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-white/[0.03] transition-transform duration-200 ${
+                    className={`flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/20 transition-transform duration-200 ${
                       isExpanded ? "rotate-180" : ""
                     }`}
                   >
@@ -252,7 +252,7 @@ export function MyEndorsementsHistory() {
               {/* ── Expanded Details ── */}
               {isExpanded && (
                 <div className="px-5 pb-5 pt-0 animate-in slide-in-from-top-2 fade-in duration-200">
-                  <div className="border-t border-border/40 pt-5">
+                  <div className="border-t border-border pt-5">
                     {/* Flat metrics row — no boxes, just columns with dividers */}
                     <div className="flex flex-wrap gap-y-4">
                       <div className="flex-1 min-w-[120px] pr-6">
@@ -329,7 +329,7 @@ export function MyEndorsementsHistory() {
       </div>
 
       {/* ── Info Banner ── */}
-      <div className="rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-md p-5 flex items-start gap-3">
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 flex items-start gap-3">
         <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
           <span className="font-medium text-primary">Tip:</span> Top 3

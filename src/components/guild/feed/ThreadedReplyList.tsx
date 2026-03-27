@@ -160,8 +160,8 @@ function ReplyNode({
   };
 
   return (
-    <div className={depth > 0 ? "ml-6 border-l-2 border-border/40 pl-3" : ""}>
-      <div className="flex gap-2.5 rounded-lg border border-border/60 bg-card/50 p-3">
+    <div className={depth > 0 ? "ml-6 border-l-2 border-border pl-3" : ""}>
+      <div className="flex gap-2.5 rounded-lg border border-border bg-card p-3">
         <div className="flex-shrink-0">
           <VoteButton
             targetId={reply.id}

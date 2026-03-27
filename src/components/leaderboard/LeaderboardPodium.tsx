@@ -62,10 +62,10 @@ function getDelta(entry: LeaderboardEntryV2, activeTab: string): number {
 
 const RANK_STYLES = {
   1: {
-    gradient: PODIUM_COLORS[1].gradient,
+    solid: PODIUM_COLORS[1].solid,
     ring: PODIUM_COLORS[1].ring,
     podiumHeight: "h-20",
-    podiumBg: PODIUM_COLORS[1].platform,
+    podiumBg: PODIUM_COLORS[1].platformSolid,
     podiumBorder: PODIUM_COLORS[1].border,
     avatarSize: "w-14 h-14",
     avatarText: "text-base",
@@ -73,10 +73,10 @@ const RANK_STYLES = {
     order: 2,
   },
   2: {
-    gradient: PODIUM_COLORS[2].gradient,
+    solid: PODIUM_COLORS[2].solid,
     ring: PODIUM_COLORS[2].ring,
     podiumHeight: "h-12",
-    podiumBg: PODIUM_COLORS[2].platform,
+    podiumBg: PODIUM_COLORS[2].platformSolid,
     podiumBorder: PODIUM_COLORS[2].border,
     avatarSize: "w-11 h-11",
     avatarText: "text-sm",
@@ -84,10 +84,10 @@ const RANK_STYLES = {
     order: 1,
   },
   3: {
-    gradient: PODIUM_COLORS[3].gradient,
+    solid: PODIUM_COLORS[3].solid,
     ring: PODIUM_COLORS[3].ring,
     podiumHeight: "h-8",
-    podiumBg: PODIUM_COLORS[3].platform,
+    podiumBg: PODIUM_COLORS[3].platformSolid,
     podiumBorder: PODIUM_COLORS[3].border,
     avatarSize: "w-11 h-11",
     avatarText: "text-sm",
@@ -128,7 +128,7 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
     >
       {/* Crown for #1 */}
       {rank === 1 && (
-        <Crown className={`w-5 h-5 ${PODIUM_COLORS[1].label} drop-shadow-[0_0_8px_hsl(var(--rank-master)/0.8)]`} />
+        <Crown className={`w-5 h-5 ${PODIUM_COLORS[1].label}`} />
       )}
       {rank !== 1 && <div className="w-5 h-5" />}
 
@@ -136,9 +136,9 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
       <div
         className={`
           relative flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl
-          border backdrop-blur-md bg-card/60
+          border bg-card
           ${styles.podiumBorder}
-          ${rank === 1 ? "w-36 shadow-xl shadow-rank-master/10" : "w-28 shadow-lg"}
+          ${rank === 1 ? "w-36 shadow-sm" : "w-28 shadow-sm"}
           transition-transform hover:-translate-y-1 duration-200
         `}
       >
@@ -158,10 +158,10 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
         <div
           className={`
             ${styles.avatarSize} rounded-full
-            bg-gradient-to-br ${styles.gradient}
+            ${styles.solid}
             ring-2 ${styles.ring}
             flex items-center justify-center
-            shadow-lg
+            shadow-sm
           `}
         >
           <span className={`font-bold text-white ${styles.avatarText}`}>
@@ -220,7 +220,7 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
       <div
         className={`
           ${styles.podiumHeight} w-full rounded-t-lg
-          bg-gradient-to-b ${styles.podiumBg}
+          ${styles.podiumBg}
           border-t border-x ${styles.podiumBorder}
           flex items-start justify-center pt-1
         `}
@@ -245,11 +245,8 @@ export function LeaderboardPodium({
   const [first, second, third] = top3;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm px-4 pt-4 pb-0">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-rank-master/10 rounded-full blur-3xl" />
-      </div>
+    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-card px-4 pt-4 pb-0">
+      {/* Top accent */}
 
       {/* Podium layout: 2nd | 1st | 3rd */}
       <div className="relative flex items-end justify-center gap-3">

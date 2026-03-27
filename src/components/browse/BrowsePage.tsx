@@ -30,7 +30,7 @@ export default function BrowsePage() {
   );
 
   return (
-    <div className="min-h-full animate-page-enter">
+    <div className="min-h-full">
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto">
@@ -40,7 +40,7 @@ export default function BrowsePage() {
           </div>
           <h1 className="font-display text-5xl font-bold text-foreground mb-6 tracking-tight">
             Find Your Next{" "}
-            <span className="bg-gradient-to-r from-primary via-accent to-primary/80 bg-clip-text text-transparent">
+            <span className="text-primary">
               Web3 Opportunity
             </span>
           </h1>
@@ -50,7 +50,7 @@ export default function BrowsePage() {
           </p>
           <Link
             href="/browse/jobs"
-            className="inline-flex items-center px-8 py-4 text-sm font-bold text-white bg-gradient-to-r from-primary to-primary/80 rounded-[14px] hover:opacity-90 transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transform hover:-translate-y-0.5"
+            className="inline-flex items-center px-8 py-4 text-sm font-bold text-white bg-primary rounded-[14px] hover:opacity-90 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
           >
             Find the Job for You
             <ArrowRight className="ml-2 w-5 h-5" />
@@ -90,10 +90,10 @@ export default function BrowsePage() {
                   <Link
                     key={job.id}
                     href={`/browse/jobs/${job.id}`}
-                    className="block bg-card/70 backdrop-blur-sm rounded-2xl p-6 hover:shadow-xl hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border/60 group overflow-hidden relative"
+                    className="block bg-card rounded-2xl p-6 hover:shadow-md/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border group overflow-hidden relative"
                   >
                     {/* Hover gradient overlay */}
-                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-primary/[0.04] to-transparent" />
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
 
                     <div className="relative">
                       <div className="flex items-start justify-between mb-4">
@@ -102,13 +102,13 @@ export default function BrowsePage() {
                             <img
                               src={getAssetUrl(job.companyLogo)}
                               alt={job.companyName || "Company"}
-                              className="w-10 h-10 rounded-[10px] object-cover border border-border/60 flex-shrink-0"
+                              className="w-10 h-10 rounded-[10px] object-cover border border-border flex-shrink-0"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                               }}
                             />
                           ) : (
-                            <div className="p-2 bg-muted/50 border border-border/60 rounded-[10px]">
+                            <div className="p-2 bg-muted/50 border border-border rounded-[10px]">
                               <Briefcase className="w-5 h-5 text-foreground" />
                             </div>
                           )}
@@ -132,7 +132,7 @@ export default function BrowsePage() {
                             {job.guild?.replace(/ Guild$/i, "")}
                           </span>
                         )}
-                        <span className="px-2 py-0.5 bg-muted/30 rounded-full text-xs text-muted-foreground border border-border/40">
+                        <span className="px-2 py-0.5 bg-muted/30 rounded-full text-xs text-muted-foreground border border-border">
                           {job.type}
                         </span>
                       </div>
@@ -141,7 +141,7 @@ export default function BrowsePage() {
                         {job.description}
                       </p>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                      <div className="flex items-center justify-between pt-4 border-t border-border">
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5 opacity-60" />
                           {job.location}
@@ -159,7 +159,7 @@ export default function BrowsePage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-card/70 backdrop-blur-sm rounded-2xl border border-border/60">
+            <div className="text-center py-12 bg-card rounded-2xl border border-border">
               <p className="text-muted-foreground mb-4">
                 No featured jobs available at the moment
               </p>
@@ -176,7 +176,7 @@ export default function BrowsePage() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="glass-card-glow border border-border/60 rounded-2xl p-12 text-center">
+        <div className=" border border-border rounded-2xl p-12 text-center">
           <h2 className="font-display text-3xl font-bold text-foreground mb-4 tracking-tight">
             Ready to Start Your Web3 Journey?
           </h2>
@@ -186,7 +186,7 @@ export default function BrowsePage() {
           </p>
           <Link
             href="/browse/jobs"
-            className="inline-block px-8 py-4 bg-card text-primary rounded-[14px] hover:bg-muted transition-all font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="inline-block px-8 py-4 bg-card text-primary rounded-[14px] hover:bg-muted transition-all font-bold shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
           >
             Explore All Opportunities
           </Link>

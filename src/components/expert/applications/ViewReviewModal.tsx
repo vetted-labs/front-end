@@ -142,7 +142,7 @@ export function ViewReviewModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all shrink-0"
+            className="w-8 h-8 rounded-lg bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -206,21 +206,21 @@ export function ViewReviewModal({
 
               <div className="grid grid-cols-4 gap-3">
                 {/* General */}
-                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                <div className="border border-border rounded-xl bg-muted/20 p-4 text-center">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">General</p>
                   <p className="text-2xl font-bold text-foreground">{generalTotal}</p>
                   <p className="text-sm text-muted-foreground">/{generalMax || "?"}</p>
                 </div>
 
                 {/* Domain */}
-                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                <div className="border border-border rounded-xl bg-muted/20 p-4 text-center">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Domain</p>
                   <p className="text-2xl font-bold text-foreground">{domainTotal}</p>
                   <p className="text-sm text-muted-foreground">/{domainMax || "?"}</p>
                 </div>
 
                 {/* Deductions */}
-                <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
+                <div className="border border-border rounded-xl bg-muted/20 p-4 text-center">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Deductions</p>
                   <p className={`text-2xl font-bold ${(review.redFlagDeductions ?? 0) > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
                     {(review.redFlagDeductions ?? 0) > 0 ? `-${review.redFlagDeductions}` : "0"}
@@ -239,7 +239,7 @@ export function ViewReviewModal({
               {/* Progress bar */}
               <div className="h-1.5 rounded-full bg-muted/20 overflow-hidden mt-4 mb-6">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${STATUS_COLORS.positive.bg} to-positive/60 transition-all duration-500`}
+                  className={`h-full rounded-full ${STATUS_COLORS.positive.bg} transition-all duration-500`}
                   style={{ width: `${Math.min(scorePercent, 100)}%` }}
                 />
               </div>
@@ -247,7 +247,7 @@ export function ViewReviewModal({
 
             {/* Consensus Result (shown when finalized) */}
             {isFinalized && finalization && (
-              <div className="border border-border/40 rounded-xl bg-muted/20 p-4">
+              <div className="border border-border rounded-xl bg-muted/20 p-4">
                 <div className="flex items-stretch gap-0">
                   {/* Consensus score */}
                   <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
@@ -308,7 +308,7 @@ export function ViewReviewModal({
 
                 {generalJustifications && Object.entries(generalJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border">
                       General
                     </p>
                     {Object.entries(generalJustifications).map(([key, value]) => (
@@ -316,7 +316,7 @@ export function ViewReviewModal({
                         <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
-                        <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
+                        <div className="rounded-lg bg-muted/20 border border-border p-3">
                           <p className="text-sm text-muted-foreground leading-relaxed">{value}</p>
                         </div>
                       </div>
@@ -326,7 +326,7 @@ export function ViewReviewModal({
 
                 {domainJustifications && Object.entries(domainJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border">
                       Domain
                     </p>
                     {Object.entries(domainJustifications).map(([key, value]) => (
@@ -334,7 +334,7 @@ export function ViewReviewModal({
                         <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
-                        <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
+                        <div className="rounded-lg bg-muted/20 border border-border p-3">
                           <p className="text-sm text-muted-foreground leading-relaxed">{value}</p>
                         </div>
                       </div>

@@ -45,7 +45,7 @@ interface SummarySectionProps {
 
 function SummarySection({ icon, title, children }: SummarySectionProps) {
   return (
-    <div className="p-6 border border-border rounded-xl bg-card/60 space-y-4">
+    <div className="p-6 border border-border rounded-xl bg-card space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">

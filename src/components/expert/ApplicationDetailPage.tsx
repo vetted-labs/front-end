@@ -155,7 +155,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
         </button>
 
         {/* Application Header */}
-        <div className="bg-card rounded-2xl p-8 border border-border shadow-lg mb-6">
+        <div className="bg-card rounded-2xl p-8 border border-border shadow-sm mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">

@@ -75,9 +75,9 @@ export function MeetingMessage({
 
   return (
     <div className="flex justify-center py-2">
-      <div className="w-full max-w-sm rounded-xl border border-border/40 dark:border-white/[0.10] bg-card/60 dark:bg-card/30 backdrop-blur-sm overflow-hidden shadow-sm">
+      <div className="w-full max-w-sm rounded-xl border border-border dark:border-border bg-card overflow-hidden shadow-sm">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-border/40 dark:border-white/[0.04] bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/15 dark:to-primary/5">
+        <div className="px-4 py-3 border-b border-border dark:border-border bg-primary/5 dark:from-primary/15 dark:to-primary/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Video className="w-4 h-4 text-primary" />
@@ -139,7 +139,7 @@ export function MeetingMessage({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-border/40 dark:border-white/[0.04]">
+        <div className="px-4 py-3 border-t border-border dark:border-border">
           {canRespond ? (
             <div className="flex items-center gap-2">
               <button
@@ -153,7 +153,7 @@ export function MeetingMessage({
               <button
                 onClick={() => handleRespond("declined")}
                 disabled={isResponding}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-negative/40 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-negative/40 transition-colors disabled:opacity-50"
               >
                 <X className="w-3 h-3" />
                 Decline
@@ -162,7 +162,7 @@ export function MeetingMessage({
                 <button
                   onClick={() => onProposeNewTime(meetingId)}
                   disabled={isResponding}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border/60 dark:border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-info-blue/40 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-info-blue/40 transition-colors disabled:opacity-50"
                 >
                   <CalendarClock className="w-3 h-3" />
                   New Time

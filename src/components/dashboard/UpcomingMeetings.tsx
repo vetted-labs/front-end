@@ -66,8 +66,8 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
   const messagesPath = userType === "candidate" ? "/candidate/messages" : "/dashboard/messages";
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
           Upcoming Meetings
         </h2>
@@ -102,7 +102,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
                 onClick={() => router.push(getConversationPath(meeting.conversationId))}
                 className="flex items-center gap-3 w-full px-5 py-3.5 text-left hover:bg-muted/30 transition-colors group"
               >
-                <div className={`flex-shrink-0 w-9 h-9 rounded-lg bg-card/60 border border-border/40 flex items-center justify-center`}>
+                <div className={`flex-shrink-0 w-9 h-9 rounded-lg bg-card border border-border flex items-center justify-center`}>
                   <Video className={`w-4 h-4 ${style.iconColor}`} />
                 </div>
                 <div className="flex-1 min-w-0">

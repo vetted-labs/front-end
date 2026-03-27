@@ -268,7 +268,7 @@ export function NotificationsPage<T extends BaseNotification>({
               <button
                 onClick={handleMarkAllAsRead}
                 disabled={isMarkingAllRead}
-                className="inline-flex items-center gap-2 bg-white/[0.025] border border-white/[0.06] text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-[10px] backdrop-blur-xl hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 bg-card border border-border text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-[10px] hover:bg-muted/30 hover:border-border hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isMarkingAllRead ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -278,7 +278,7 @@ export function NotificationsPage<T extends BaseNotification>({
                 Mark all read
               </button>
             )}
-            <button className="w-10 h-10 grid place-items-center bg-white/[0.025] border border-white/[0.06] text-muted-foreground rounded-[10px] backdrop-blur-xl hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground transition-all">
+            <button className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-[10px] hover:bg-muted/30 hover:border-border hover:text-foreground transition-all">
               <Settings className="w-[18px] h-[18px]" />
             </button>
           </div>
@@ -290,17 +290,17 @@ export function NotificationsPage<T extends BaseNotification>({
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium whitespace-nowrap backdrop-blur-2xl transition-all ${
+              className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeFilter === key
                   ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-white/[0.025] border-white/[0.06] text-muted-foreground hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground"
+                  : "bg-card border-border text-muted-foreground hover:bg-muted/30 hover:border-border hover:text-foreground"
               }`}
             >
               {TabIcon && <TabIcon className="w-4 h-4 shrink-0" />}
               {label}
               {count > 0 && (
                 <span className={`px-2 py-px text-xs font-medium rounded-lg ${
-                  activeFilter === key ? "bg-primary/20" : "bg-white/[0.08]"
+                  activeFilter === key ? "bg-primary/20" : "bg-muted/40"
                 }`}>
                   {count}
                 </span>
@@ -311,7 +311,7 @@ export function NotificationsPage<T extends BaseNotification>({
 
         {/* Notifications grouped by date */}
         {filteredNotifications.length === 0 ? (
-          <div className="bg-white/[0.025] rounded-2xl p-12 text-center border border-white/[0.06]">
+          <div className="bg-card rounded-2xl p-12 text-center border border-border">
             <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-medium text-foreground mb-2">No notifications</h3>
             <p className="text-muted-foreground">
@@ -341,7 +341,7 @@ export function NotificationsPage<T extends BaseNotification>({
                         key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
                         disabled={isClicked}
-                        className={`w-full flex items-start gap-4 px-6 py-5 bg-white/[0.025] border border-white/[0.06] rounded-2xl relative overflow-hidden cursor-pointer backdrop-blur-3xl text-left transition-all duration-200 hover:bg-white/[0.045] hover:border-white/[0.12] hover:translate-y-[-1px] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] ${
+                        className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-2xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                           isClicked ? "opacity-60 cursor-wait" : ""
                         } ${
                           isUnread ? "" : "opacity-60"
@@ -389,7 +389,7 @@ export function NotificationsPage<T extends BaseNotification>({
                         </div>
 
                         {/* Dismiss button (shows on hover) */}
-                        <div className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-white/[0.06] hover:text-muted-foreground transition-all mt-1">
+                        <div className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-muted/30 hover:text-muted-foreground transition-all mt-1">
                           <X className="w-4 h-4" />
                         </div>
                       </button>

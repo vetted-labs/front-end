@@ -61,11 +61,11 @@ function ImpactRow({
     <div
       className={`
         group relative flex items-center gap-4 px-6 py-[18px]
-        bg-card/40 dark:bg-surface-1/40
-        border border-border/60 dark:border-white/[0.06]
+        bg-card dark:bg-surface-1/40
+        border border-border
         transition-all duration-200
-        hover:bg-card/70 dark:hover:bg-surface-2/60
-        hover:border-border dark:hover:border-white/[0.08]
+        hover:bg-card dark:hover:bg-surface-2/60
+        hover:border-border dark:hover:border-border
         first:rounded-t-2xl last:rounded-b-2xl
         overflow-hidden
       `}
@@ -127,15 +127,15 @@ function ImpactRow({
         {/* Vote details grid */}
         {isProposalVote && (
           <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+            <div className="rounded-lg bg-muted/50 dark:bg-muted/20 px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Your Vote</p>
               <p className="text-sm font-medium tabular-nums mt-0.5">{entry.vote_score}</p>
             </div>
-            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+            <div className="rounded-lg bg-muted/50 dark:bg-muted/20 px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Consensus</p>
               <p className="text-sm font-medium tabular-nums mt-0.5">{Number(entry.consensus_score).toFixed(1)}</p>
             </div>
-            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+            <div className="rounded-lg bg-muted/50 dark:bg-muted/20 px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Distance</p>
               <p className="text-sm font-medium tabular-nums mt-0.5">{Number(entry.alignment_distance).toFixed(1)}</p>
             </div>

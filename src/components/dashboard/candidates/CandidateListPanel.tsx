@@ -104,7 +104,7 @@ export function CandidateListPanel({
   };
 
   const selectClasses =
-    "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-medium rounded-md bg-transparent border border-border/40 dark:border-white/[0.06] focus:outline-none focus:ring-1 focus:ring-primary/40 text-muted-foreground appearance-none cursor-pointer";
+    "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-medium rounded-md bg-transparent border border-border focus:outline-none focus:ring-1 focus:ring-primary/40 text-muted-foreground appearance-none cursor-pointer";
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -118,7 +118,7 @@ export function CandidateListPanel({
             placeholder="Search candidates..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-transparent border border-border/40 dark:border-white/[0.06] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 text-foreground placeholder:text-muted-foreground/40 transition-colors"
+            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg bg-transparent border border-border focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 text-foreground placeholder:text-muted-foreground/40 transition-colors"
           />
         </div>
 
@@ -152,7 +152,7 @@ export function CandidateListPanel({
         </div>
 
         {/* Sort + expand/collapse */}
-        <div className="flex items-center gap-1.5 pb-2.5 border-b border-border/20 dark:border-white/[0.04]">
+        <div className="flex items-center gap-1.5 pb-2.5 border-b border-border/20 dark:border-border">
           <span className="text-xs font-medium text-muted-foreground/40">Sort:</span>
           <select
             value={sortBy}

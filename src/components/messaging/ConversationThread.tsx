@@ -48,11 +48,11 @@ export function ConversationThread({
       {groups.map((group) => (
         <div key={group.date} className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border/30 dark:bg-white/[0.06]" />
+            <div className="flex-1 h-px bg-border/30 dark:bg-muted/40" />
             <span className="text-xs font-medium text-muted-foreground/70 flex-shrink-0">
               {group.date}
             </span>
-            <div className="flex-1 h-px bg-border/30 dark:bg-white/[0.06]" />
+            <div className="flex-1 h-px bg-border/30 dark:bg-muted/40" />
           </div>
           {group.messages.map((message) => (
             <MessageBubble

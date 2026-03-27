@@ -114,7 +114,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
   const hoursLeft = isExpired ? 0 : Math.floor(remaining / (1000 * 60 * 60));
   const isBlindBidding = !isExpired && hoursLeft > 24;
   const countdownStyles = isExpired
-    ? 'bg-muted/50 text-muted-foreground border-border/60'
+    ? 'bg-muted/50 text-muted-foreground border-border'
     : getUrgencyColors(hoursLeft);
 
   const salaryDisplay = (application.salary_min || application.salary_max)
@@ -122,7 +122,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     : null;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-[20px] border border-white/[0.06] bg-white/[0.03] transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
+    <div className="group flex flex-col overflow-hidden rounded-[20px] border border-border bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
       {/* Top section: Avatar with match ring + candidate info */}
       <div className="flex items-start gap-3.5 px-5 pt-5">
         <MatchScoreAvatar
@@ -144,7 +144,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
               {skillsArray.slice(0, 3).map((skill: string, idx: number) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.04] px-2 py-px text-xs font-medium text-muted-foreground"
+                  className="inline-flex items-center rounded-full border border-border bg-muted/30 px-2 py-px text-xs font-medium text-muted-foreground"
                 >
                   {skill}
                 </span>
@@ -160,7 +160,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       </div>
 
       {/* Job section */}
-      <div className="px-5 py-3.5 border-t border-white/[0.06] mt-3.5">
+      <div className="px-5 py-3.5 border-t border-border mt-3.5">
         <p className="font-medium text-sm text-foreground truncate">
           {application.job_title}
         </p>
@@ -176,7 +176,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       </div>
 
       {/* Deadline bar */}
-      <div className="px-5 py-2.5 bg-white/[0.025] flex items-center justify-between gap-2.5">
+      <div className="px-5 py-2.5 bg-card flex items-center justify-between gap-2.5">
         <span className={`inline-flex items-center gap-1.5 font-mono text-xs font-medium ${
           isBlindBidding ? 'text-warning' : isExpired ? 'text-muted-foreground' : hoursLeft < 6 ? 'text-primary' : 'text-muted-foreground'
         }`}>
@@ -204,7 +204,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       <div className="px-5 py-3.5 flex gap-2.5 mt-auto">
         <Button
           variant="ghost"
-          className="flex-1 h-10 rounded-[10px] border border-white/[0.06] text-muted-foreground text-sm font-medium hover:bg-white/[0.04] hover:border-white/[0.12] hover:text-foreground"
+          className="flex-1 h-10 rounded-[10px] border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails(application);
@@ -213,7 +213,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           View Details
         </Button>
         <Button
-          className="flex-1 h-10 rounded-[10px] bg-gradient-to-br from-primary to-primary/80 text-sm font-medium text-[hsl(var(--gradient-button-text))] shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
+          className="flex-1 h-10 rounded-[10px] bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
           disabled={isExpired || !onQuickEndorse}
           onClick={(e) => {
             e.stopPropagation();

@@ -16,7 +16,7 @@ export default function JobAnalyticsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-full animate-page-enter">
+    <div className="min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -35,7 +35,7 @@ export default function JobAnalyticsPage() {
         <div className="relative">
           {/* Coming Soon Overlay */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
-            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-8 py-6 text-center shadow-lg dark:bg-card/60">
+            <div className="rounded-2xl border border-border bg-card px-8 py-6 text-center shadow-sm">
               <BarChart3 className="w-12 h-12 text-primary mx-auto mb-3" />
               <h2 className="text-xl font-bold text-foreground mb-2">Coming Soon</h2>
               <p className="text-muted-foreground text-sm max-w-sm">

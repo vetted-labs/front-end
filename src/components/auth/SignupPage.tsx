@@ -177,7 +177,7 @@ function SignupForm() {
   };
 
   const inputClass =
-    "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
+    "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
 
   return (
     <AuthPageLayout
@@ -322,7 +322,7 @@ function SignupForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2.5 px-4 mt-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-sm shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="w-full py-2.5 px-4 mt-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {isLoading ? (
               <>
@@ -343,10 +343,10 @@ function SignupForm() {
           <>
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/40"></div>
+                <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 bg-card/70 text-xs text-muted-foreground uppercase tracking-wider">
+                <span className="px-3 bg-card text-xs text-muted-foreground uppercase tracking-wider">
                   or
                 </span>
               </div>

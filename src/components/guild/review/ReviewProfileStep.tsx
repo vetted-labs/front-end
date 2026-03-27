@@ -46,15 +46,15 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
     <div className="space-y-5">
 
       {/* Applicant Header Card — accent bar style */}
-      <div className="border border-white/[0.06] rounded-2xl bg-card/40 backdrop-blur-md overflow-hidden">
+      <div className="border border-border rounded-2xl bg-card overflow-hidden">
         {/* Orange gradient accent bar */}
-        <div className="h-[3px] bg-gradient-to-r from-primary to-primary/30" />
+        <div className="h-[3px] bg-primary" />
 
         <div className="p-6 space-y-5">
           {/* Profile header */}
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center shrink-0">
               <span className="text-lg font-bold text-white tracking-tight">
                 {initials}
               </span>
@@ -80,7 +80,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           {((displayTitle || displayCompany) || (application.yearsOfExperience != null && application.yearsOfExperience > 0)) && (
             <div className="grid grid-cols-2 gap-3">
               {(displayTitle || displayCompany) && (
-                <div className="border border-border/40 rounded-lg bg-muted/20 p-3.5">
+                <div className="border border-border rounded-lg bg-muted/20 p-3.5">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Position
                   </p>
@@ -90,7 +90,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                 </div>
               )}
               {application.yearsOfExperience != null && application.yearsOfExperience > 0 && (
-                <div className="border border-border/40 rounded-lg bg-muted/20 p-3.5">
+                <div className="border border-border rounded-lg bg-muted/20 p-3.5">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1">
                     Experience
                   </p>
@@ -110,7 +110,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                   href={getAssetUrl(application.resumeUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/40 px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                  className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                 >
                   <FileText className="w-3.5 h-3.5 shrink-0" />
                   Resume / CV
@@ -129,7 +129,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/40 px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                          className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                         >
                           <Icon className="w-3.5 h-3.5 shrink-0" />
                           {link.label}
@@ -144,7 +144,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                         href={application.linkedinUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/40 px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                       >
                         <Linkedin className="w-3.5 h-3.5 shrink-0" />
                         LinkedIn
@@ -156,7 +156,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                         href={application.portfolioUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border/40 px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
+                        className="group inline-flex items-center gap-1.5 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                       >
                         <Globe className="w-3.5 h-3.5 shrink-0" />
                         Portfolio

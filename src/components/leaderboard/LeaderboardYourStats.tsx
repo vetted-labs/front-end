@@ -40,7 +40,7 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
             key={stat.label}
             className={cn(
               "px-4 py-3 flex items-center gap-2.5",
-              i < stats.length - 1 && "border-r border-border/40"
+              i < stats.length - 1 && "border-r border-border"
             )}
           >
             <stat.icon className={cn("w-3.5 h-3.5 shrink-0", stat.color)} />

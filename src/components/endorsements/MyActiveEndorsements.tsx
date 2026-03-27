@@ -151,7 +151,7 @@ function EndorsementSpinCard({
                     className="rounded-full"
                   />
                 )}
-                <AvatarFallback className="rounded-full bg-white/[0.06] text-foreground text-sm font-bold">
+                <AvatarFallback className="rounded-full bg-muted/30 text-foreground text-sm font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -179,7 +179,7 @@ function EndorsementSpinCard({
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-white/[0.06]" />
+          <div className="h-px bg-muted/30" />
 
           {/* Bid + Rank */}
           <div className="flex items-center justify-between">
@@ -282,7 +282,7 @@ export function MyActiveEndorsements({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-white/[0.10] text-muted-foreground hover:bg-white/[0.04] hover:border-white/[0.18]"
+                className="gap-2 border-border text-muted-foreground hover:bg-muted/30 hover:border-border"
               >
                 View All ({allUserEndorsements.length})
               </Button>
@@ -293,7 +293,7 @@ export function MyActiveEndorsements({
 
       {/* Horizontally scrollable cards */}
       {userEndorsements.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md p-8 text-center">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
           <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground mb-2">
             You haven&apos;t endorsed any candidates in {guildName} yet

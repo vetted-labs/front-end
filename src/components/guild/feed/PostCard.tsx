@@ -37,7 +37,7 @@ export function PostCard({
   return (
     <div
       onClick={onClick}
-      className="group flex overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur-xl hover:border-primary/30 hover:shadow-[0_0_24px_hsl(var(--primary)/0.04)] transition-all cursor-pointer glass-border-shimmer"
+      className="group flex overflow-hidden rounded-xl border border-border bg-card hover:border-primary/30 transition-all cursor-pointer"
     >
       {/* Colored left accent border */}
       <div className={`w-[3px] flex-shrink-0 rounded-l-xl ${accentColor}`} />

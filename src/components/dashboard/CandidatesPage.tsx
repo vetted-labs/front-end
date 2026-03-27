@@ -232,7 +232,7 @@ export default function CandidatesPage() {
   return (
     <div className="h-full flex flex-col animate-page-enter">
       {/* Mobile header */}
-      <div className="flex-shrink-0 px-4 py-2.5 border-b border-border/30 dark:border-white/[0.04] lg:hidden">
+      <div className="flex-shrink-0 px-4 py-2.5 border-b border-border/30 dark:border-border lg:hidden">
         {selectedApplication ? (
           <button
             onClick={() => setSelectedApplication(null)}
@@ -256,7 +256,7 @@ export default function CandidatesPage() {
       </div>
 
       {/* Desktop header */}
-      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-5 py-2 border-b border-border/30 dark:border-white/[0.04]">
+      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-5 py-2 border-b border-border/30 dark:border-border">
         <button
           onClick={() => router.push("/dashboard")}
           className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors flex items-center gap-1"
@@ -282,7 +282,7 @@ export default function CandidatesPage() {
       <div className="flex flex-1 min-h-0">
         {/* Left panel */}
         <div
-          className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-white/[0.04] ${
+          className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-border ${
             selectedApplication ? "hidden lg:flex" : "flex"
           }`}
         >

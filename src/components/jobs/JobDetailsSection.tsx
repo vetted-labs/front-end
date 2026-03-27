@@ -22,7 +22,7 @@ export function JobDetailsSection({
 }: JobDetailsSectionProps) {
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
         <div className="w-10 h-10 bg-positive/10 rounded-lg flex items-center justify-center">
           <MapPin className="w-5 h-5 text-positive" />
         </div>
@@ -46,7 +46,7 @@ export function JobDetailsSection({
             value={formData.location}
             onChange={(e) => onFieldChange("location", e.target.value)}
             className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.location ? "border-negative" : "border-border/60"
+              fieldErrors.location ? "border-negative" : "border-border"
             }`}
             placeholder="e.g., Remote or San Francisco"
           />
@@ -70,7 +70,7 @@ export function JobDetailsSection({
                 e.target.value as "remote" | "onsite" | "hybrid"
               )
             }
-            className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
           >
             <option value="remote">Remote</option>
             <option value="onsite">Onsite</option>
@@ -93,7 +93,7 @@ export function JobDetailsSection({
                   | "Freelance"
               )
             }
-            className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
           >
             <option value="Full-time">Full-time</option>
             <option value="Part-time">Part-time</option>
@@ -121,7 +121,7 @@ export function JobDetailsSection({
                 )
               }
               className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.salaryMin ? "border-negative" : "border-border/60"
+                fieldErrors.salaryMin ? "border-negative" : "border-border"
               }`}
               placeholder="e.g., 100000"
             />
@@ -147,7 +147,7 @@ export function JobDetailsSection({
                   parseInt(e.target.value) || undefined
                 )
               }
-              className="w-full pl-10 pr-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+              className="w-full pl-10 pr-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
               placeholder="e.g., 150000"
             />
           </div>
@@ -168,7 +168,7 @@ export function JobDetailsSection({
                 e.target.value || undefined
               )
             }
-            className="w-full px-3 py-2.5 border border-border/60 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
           >
             <option value="">Select level</option>
             <option value="junior">Junior</option>
@@ -188,7 +188,7 @@ export function JobDetailsSection({
               value={formData.guild}
               onChange={(e) => onFieldChange("guild", e.target.value)}
               className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.guild ? "border-negative" : "border-border/60"
+                fieldErrors.guild ? "border-negative" : "border-border"
               }`}
             >
               <option value="">Select a guild</option>

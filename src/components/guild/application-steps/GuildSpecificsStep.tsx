@@ -42,7 +42,7 @@ export default function GuildSpecificsStep({
     <div className="space-y-8">
       {/* Experience Level Selection */}
       {template.levels && template.levels.length > 0 && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8">
+        <div className="bg-card rounded-2xl border border-border p-8">
           <h2 className="text-xl font-bold text-foreground mb-1">
             Experience Level <span className="text-destructive">*</span>
           </h2>
@@ -85,7 +85,7 @@ export default function GuildSpecificsStep({
 
       {/* Domain Questions */}
       {currentDomainLevel && currentDomainLevel.topics.length > 0 && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-8 space-y-6">
+        <div className="bg-card rounded-2xl border border-border p-8 space-y-6">
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">
               {currentDomainLevel.templateName}
@@ -163,7 +163,7 @@ export default function GuildSpecificsStep({
 
       {/* No-AI Declaration */}
       {template.noAiDeclarationText && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/60 p-6">
+        <div className="bg-card rounded-2xl border border-border p-6">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"

@@ -39,8 +39,8 @@ export default function ResumeSection({
   onClearResume,
 }: ResumeSectionProps) {
   return (
-    <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
-      <div className="px-6 py-4 border-b border-border/40">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="px-6 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           <FileText className="w-4 h-4 text-muted-foreground" />
           Resume / CV

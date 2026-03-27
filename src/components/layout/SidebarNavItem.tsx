@@ -47,7 +47,7 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         isActive
-          ? "bg-gradient-to-r from-primary/12 to-primary/[0.03] text-primary font-medium border-l-2 border-primary"
+          ? "bg-primary/[0.08] text-primary font-medium border-l-2 border-primary"
           : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
         isCollapsed && "justify-center px-2"
       )}

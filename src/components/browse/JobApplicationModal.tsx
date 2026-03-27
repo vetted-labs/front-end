@@ -323,7 +323,7 @@ export default function JobApplicationModal({
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all group text-sm"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all group text-sm"
                     >
                       <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                       <span className="font-medium text-foreground">
