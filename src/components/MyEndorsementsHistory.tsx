@@ -19,6 +19,7 @@ import {
   Shield,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 
 export function MyEndorsementsHistory() {
   const { address, isConnected } = useAccount();
@@ -100,19 +101,19 @@ export function MyEndorsementsHistory() {
               <div
                 className={`flex h-11 w-11 items-center justify-center rounded-xl ${
                   stat.accent === "primary"
-                    ? "bg-primary/10"
+                    ? STAT_ICON.bg
                     : stat.accent === "amber"
-                    ? "bg-amber-500/10"
-                    : "bg-emerald-500/10"
+                    ? STATUS_COLORS.warning.bgSubtle
+                    : STATUS_COLORS.positive.bgSubtle
                 }`}
               >
                 <stat.icon
                   className={`w-5 h-5 ${
                     stat.accent === "primary"
-                      ? "text-primary"
+                      ? STAT_ICON.text
                       : stat.accent === "amber"
-                      ? "text-amber-400"
-                      : "text-emerald-400"
+                      ? STATUS_COLORS.warning.icon
+                      : STATUS_COLORS.positive.icon
                   }`}
                 />
               </div>
@@ -230,7 +231,7 @@ export function MyEndorsementsHistory() {
                     (endorsement.blockchainData?.rank ?? 0) <= 3 && (
                       <Badge
                         variant="outline"
-                        className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px] px-2"
+                        className={`${STATUS_COLORS.warning.badge} text-[10px] px-2`}
                       >
                         <Trophy className="w-3 h-3 mr-1" />#{endorsement.blockchainData!.rank}
                       </Badge>

@@ -2,6 +2,7 @@
 
 import { TrendingUp, CheckCircle2, Circle } from "lucide-react";
 import { GUILD_RANK_CRITERIA, GUILD_RANK_ORDER } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertRole } from "@/types";
 
 interface PromotionProgressCardProps {
@@ -35,9 +36,9 @@ export function PromotionProgressCard({
   // Already at max rank
   if (currentIndex >= GUILD_RANK_ORDER.length - 1) {
     return (
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
+      <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-5`}>
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="w-4 h-4 text-amber-500" />
+          <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Rank: Guild Master
           </p>
@@ -109,7 +110,7 @@ export function PromotionProgressCard({
       {/* Progress bar */}
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted mb-3">
         <div
-          className={`h-full rounded-full transition-all ${allMet ? "bg-green-500" : "bg-primary"}`}
+          className={`h-full rounded-full transition-all ${allMet ? STATUS_COLORS.positive.bg : "bg-primary"}`}
           style={{ width: `${(metCount / checks.length) * 100}%` }}
         />
       </div>
@@ -119,7 +120,7 @@ export function PromotionProgressCard({
         {checks.map((check) => (
           <div key={check.label} className="flex items-center gap-2.5">
             {check.met ? (
-              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+              <CheckCircle2 className={`w-4 h-4 ${STATUS_COLORS.positive.icon} shrink-0`} />
             ) : (
               <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
             )}
@@ -134,7 +135,7 @@ export function PromotionProgressCard({
       </div>
 
       {allMet && !criteria.requiresElection && (
-        <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-3 pt-3 border-t border-border/40">
+        <p className={`text-xs ${STATUS_COLORS.positive.text} font-medium mt-3 pt-3 border-t border-border/40`}>
           All criteria met! Your promotion will be applied in the next cycle.
         </p>
       )}

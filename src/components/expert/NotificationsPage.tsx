@@ -26,6 +26,7 @@ import {
 } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
+import { STATUS_COLORS } from "@/config/colors";
 
 type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
@@ -232,7 +233,7 @@ export default function NotificationsPage() {
                 <span
                   className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
                     key === "all" && unreadCount > 0
-                      ? "bg-red-500 text-white"
+                      ? `${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.text}`
                       : "bg-primary-foreground/20"
                   }`}
                 >
@@ -271,7 +272,7 @@ export default function NotificationsPage() {
                   disabled={isClicked}
                   className={`w-full rounded-2xl p-6 border transition-all text-left hover:shadow-lg ${
                     isDeadline
-                      ? "bg-amber-500/5 border-amber-500/30 hover:border-amber-500/60"
+                      ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border} hover:border-warning/60`
                       : isUnread
                       ? "bg-card border-primary/20 hover:border-primary/50"
                       : "bg-card border-border opacity-75 hover:opacity-100 hover:border-primary/50"
@@ -295,7 +296,7 @@ export default function NotificationsPage() {
                           <h3
                             className={`text-base font-semibold text-foreground ${
                               isUnread ? "font-bold" : ""
-                            } ${isDeadline ? "text-amber-700 dark:text-amber-400" : ""}`}
+                            } ${isDeadline ? STATUS_COLORS.warning.text : ""}`}
                           >
                             {notification.title}
                           </h3>
@@ -309,13 +310,13 @@ export default function NotificationsPage() {
                           )}
                         </div>
                         {isUnread && (
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1.5 ${isDeadline ? "bg-amber-500" : "bg-primary"}`} />
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1.5 ${isDeadline ? STATUS_COLORS.warning.dot : "bg-primary"}`} />
                         )}
                       </div>
                       <p
                         className={`text-sm mb-2 ${
                           isDeadline
-                            ? "text-amber-700/80 dark:text-amber-300/80 font-medium"
+                            ? `${STATUS_COLORS.warning.text} font-medium`
                             : isUnread
                             ? "text-muted-foreground font-medium"
                             : "text-muted-foreground"

@@ -3,6 +3,7 @@
 import { RefObject } from "react";
 import { User, Upload, Paperclip, X } from "lucide-react";
 import { Input } from "../ui/input";
+import { STATUS_COLORS } from "@/config/colors";
 import type { FieldErrors } from "@/types";
 
 export interface PersonalInfoSectionProps {
@@ -37,8 +38,8 @@ export function PersonalInfoSection({
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-        <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-          <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className={`w-10 h-10 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center`}>
+          <User className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
         </div>
         <div>
           <h2 className="text-lg font-semibold text-foreground">Personal Information</h2>

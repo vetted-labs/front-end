@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface DeadlineWarningBannerProps {
   deadline: Date | string;
@@ -20,10 +21,10 @@ export function DeadlineWarningBanner({ deadline, phase }: DeadlineWarningBanner
       : "You need to reveal your vote or it won't be included in consensus. This affects your reputation.";
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 mb-4">
-      <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+    <div className={`flex items-center gap-3 rounded-lg border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-3 mb-4`}>
+      <AlertTriangle className={`h-5 w-5 ${STATUS_COLORS.warning.icon} shrink-0`} />
       <div className="flex-1">
-        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{message}</p>
+        <p className={`text-sm font-medium ${STATUS_COLORS.warning.text}`}>{message}</p>
       </div>
       <CountdownBadge deadline={deadline} label={`${phase} deadline`} />
     </div>

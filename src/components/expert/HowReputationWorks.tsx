@@ -12,6 +12,7 @@ import {
   Calculator,
   TrendingUp,
 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -118,7 +119,7 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">within IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-0.5 rounded">+10</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.positive.badge} px-2 py-0.5 rounded`}>+10</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <span className="font-mono text-xs text-muted-foreground/50">0%</span>
@@ -130,10 +131,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">1 &ndash; 1.5x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">-5</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.warning.badge} px-2 py-0.5 rounded`}>-5</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-amber-500">5%</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.warning.text}`}>5%</span>
                       </td>
                     </tr>
                     <tr>
@@ -142,10 +143,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">1.5 &ndash; 2x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded">-10</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-10</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-orange-500">15%</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.text}`}>15%</span>
                       </td>
                     </tr>
                     <tr>
@@ -154,10 +155,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">&gt; 2x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">-20</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-20</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className="font-mono text-xs font-semibold text-red-500">25%</span>
+                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.text}`}>25%</span>
                       </td>
                     </tr>
                   </tbody>

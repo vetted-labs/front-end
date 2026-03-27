@@ -4,6 +4,7 @@ import { Briefcase, Award, X } from "lucide-react";
 import { Input } from "../ui/input";
 import { NativeSelect } from "../ui/native-select";
 import { Button } from "../ui/button";
+import { STATUS_COLORS } from "@/config/colors";
 import type { FieldErrors, ExpertiseLevel } from "@/types";
 import type { GuildOption } from "@/types/guild";
 
@@ -47,8 +48,8 @@ export function ProfessionalBackgroundSection({
       {/* Professional Background */}
       <div className="p-8 space-y-6 bg-muted/30">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Professional Background</h2>
@@ -137,8 +138,8 @@ export function ProfessionalBackgroundSection({
       {/* Areas of Expertise */}
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-            <Award className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <Award className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Areas of Expertise</h2>

@@ -3,6 +3,7 @@ import { Users, ArrowRight, CheckCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildApplication } from "@/types";
 
 interface ProposalCardProps {
@@ -61,15 +62,15 @@ export function ProposalCard({
               <Badge variant="default" className="text-xs shrink-0">Assigned</Badge>
             )}
             {proposal.consensus_failed && !isFinalized && (
-              <Badge variant="outline" className="border-orange-500/40 text-orange-500 text-xs shrink-0">
+              <Badge variant="outline" className={`${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.text} text-xs shrink-0`}>
                 Consensus Failed
               </Badge>
             )}
             {proposal.is_tiebreaker_reviewer && !hasVoted && !isFinalized && (
-              <Badge className="text-xs shrink-0 bg-violet-600">Tiebreaker</Badge>
+              <Badge className={`text-xs shrink-0 ${STATUS_COLORS.info.bg}`}>Tiebreaker</Badge>
             )}
             {hasVoted && (
-              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+              <span className={`inline-flex items-center gap-1 text-xs ${STATUS_COLORS.positive.text}`}>
                 <CheckCircle className="w-3 h-3" />
                 Voted
               </span>
@@ -132,14 +133,14 @@ export function ProposalCard({
           <span>
             Your score: {proposal.my_vote_score}/100
             {proposal.alignment_distance !== undefined && (
-              <span className={proposal.alignment_distance < 10 ? " text-green-600 dark:text-green-400" : " text-red-500"}>
+              <span className={proposal.alignment_distance < 10 ? ` ${STATUS_COLORS.positive.text}` : ` ${STATUS_COLORS.negative.text}`}>
                 {" "}({proposal.alignment_distance < 10 ? "High" : "Low"} alignment)
               </span>
             )}
           </span>
         )}
         {proposal.voting_phase && proposal.voting_phase !== "direct" && (
-          <Badge variant="outline" className="border-orange-500/30 text-orange-500 text-[10px] py-0">
+          <Badge variant="outline" className={`${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.text} text-[10px] py-0`}>
             {proposal.voting_phase}
           </Badge>
         )}
@@ -148,11 +149,11 @@ export function ProposalCard({
       {/* Finalization result summary */}
       {isFinalized && proposal.my_reputation_change !== undefined && (
         <div className="mt-3 pt-3 border-t border-border/30 flex items-center gap-4 text-xs">
-          <span className={`font-medium ${(proposal.my_reputation_change ?? 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+          <span className={`font-medium ${(proposal.my_reputation_change ?? 0) >= 0 ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text}`}>
             {(proposal.my_reputation_change ?? 0) >= 0 ? "+" : ""}{proposal.my_reputation_change} Rep
           </span>
           {proposal.my_reward_amount !== undefined && parseFloat(String(proposal.my_reward_amount)) > 0 && (
-            <span className="text-amber-600 dark:text-amber-400 font-medium">
+            <span className={`${STATUS_COLORS.warning.text} font-medium`}>
               +{proposal.my_reward_amount} VETD
             </span>
           )}

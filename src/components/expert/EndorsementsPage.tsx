@@ -5,6 +5,7 @@ import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
 import { Sparkles, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { STATUS_COLORS } from "@/config/colors";
 
 export default function EndorsementsPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function EndorsementsPage() {
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-400">
+              <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider ${STATUS_COLORS.pending.badge}`}>
                 <Sparkles className="h-3.5 w-3.5" />
                 Live Market
               </div>

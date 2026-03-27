@@ -1,6 +1,7 @@
 "use client";
 
 import { User, Briefcase, FileText, CheckCircle2 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildDomainLevel, GuildDomainTopic } from "@/types";
 import { WalletVerificationStep } from "./WalletVerificationStep";
 
@@ -52,7 +53,7 @@ function SummarySection({ icon, title, children }: SummarySectionProps) {
           </div>
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
         </div>
-        <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0" />
+        <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon} flex-shrink-0`} />
       </div>
       <div className="space-y-3 text-sm text-muted-foreground pl-12">
         {children}
@@ -154,7 +155,7 @@ export function ReviewSubmitStep({
       >
         <div className="flex gap-2 mb-1">
           <span className="font-medium text-foreground/70 min-w-[140px]">No-AI Declaration:</span>
-          <span className={noAiDeclaration ? "text-green-600 dark:text-green-400 font-medium" : "text-destructive font-medium"}>
+          <span className={noAiDeclaration ? `${STATUS_COLORS.positive.text} font-medium` : "text-destructive font-medium"}>
             {noAiDeclaration ? "Confirmed" : "Not confirmed"}
           </span>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight, Clock, Briefcase, Users } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 import type { CandidateGuildApplication } from "@/types";
 
 interface CandidateReviewCardProps {
@@ -21,8 +22,8 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
   const isReviewed = application.expertHasReviewed;
 
   const avatarGradient = isReviewed
-    ? "from-green-500/80 to-green-600/60"
-    : "from-orange-500/80 to-orange-600/60";
+    ? "from-positive/80 to-positive/60"
+    : "from-primary/80 to-primary/60";
 
   const initials = getInitials(application.candidateName);
 
@@ -49,7 +50,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (
-              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-500/8 border border-indigo-500/15 text-[11px] text-indigo-400 font-medium">
+              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-[11px] ${STATUS_COLORS.info.text} font-medium`}>
                 {application.guildName}
               </span>
             )}
@@ -77,10 +78,10 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
               </span>
             )}
             <span className={`inline-flex items-center gap-1.5 font-medium ${
-              isReviewed ? "text-green-500" : "text-primary"
+              isReviewed ? STATUS_COLORS.positive.text : "text-primary"
             }`}>
               <span className={`w-[5px] h-[5px] rounded-full ${
-                isReviewed ? "bg-green-500" : "bg-primary"
+                isReviewed ? STATUS_COLORS.positive.dot : "bg-primary"
               }`} />
               {isReviewed ? "Reviewed" : "Pending"}
             </span>

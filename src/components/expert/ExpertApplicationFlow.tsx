@@ -10,6 +10,7 @@ import {
   Info,
 } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { STATUS_COLORS } from "@/config/colors";
 import { Button } from "@/components/ui/button";
 import { StepProgress } from "@/components/ui/step-progress";
 import { useExpertApplicationFlow } from "@/lib/hooks/useExpertApplicationFlow";
@@ -28,8 +29,8 @@ export default function ExpertApplicationFlow() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+            <div className={`w-20 h-20 rounded-full ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
+              <CheckCircle className={`w-10 h-10 ${STATUS_COLORS.positive.icon}`} />
             </div>
           </div>
           <div className="space-y-2">

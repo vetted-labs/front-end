@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Activity } from "lucide-react";
 import { REPUTATION_DECAY_WARNING_DAYS, REPUTATION_DECAY_CYCLE_DAYS } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertActivity } from "@/types";
 
 interface InactivityWarningBannerProps {
@@ -44,11 +45,11 @@ function Banner({ daysInactive }: { daysInactive: number | null }) {
   return (
     <div className={`rounded-xl border px-5 py-4 flex items-start gap-3 ${
       isDecaying
-        ? "border-red-500/30 bg-red-500/5"
-        : "border-amber-500/30 bg-amber-500/5"
+        ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`
+        : `${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`
     }`}>
       <AlertTriangle className={`w-5 h-5 mt-0.5 shrink-0 ${
-        isDecaying ? "text-red-500" : "text-amber-500"
+        isDecaying ? STATUS_COLORS.negative.icon : STATUS_COLORS.warning.icon
       }`} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground">

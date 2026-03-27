@@ -5,6 +5,7 @@ import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -25,13 +26,13 @@ function getAccentColors(vettingState: string): {
     case "finalized":
     case "revealed":
       return {
-        bar: "from-green-500 to-green-500/30",
-        avatar: "from-green-500/80 to-green-600/60",
+        bar: "from-positive to-positive/30",
+        avatar: "from-positive/80 to-positive/60",
       };
     case "committed":
       return {
-        bar: "from-blue-500 to-blue-500/30",
-        avatar: "from-blue-500/80 to-blue-600/60",
+        bar: "from-info-blue to-info-blue/30",
+        avatar: "from-info-blue/80 to-info-blue/60",
       };
     default: // needs_review
       return {
@@ -63,9 +64,9 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   };
 
   const phaseColor: Record<string, string> = {
-    commit: "text-amber-400",
-    reveal: "text-blue-400",
-    finalized: "text-green-400",
+    commit: STATUS_COLORS.warning.text,
+    reveal: STATUS_COLORS.info.text,
+    finalized: STATUS_COLORS.positive.text,
   };
 
   // Derive vetting review state for the status badge
@@ -104,7 +105,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (
-              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-500/8 border border-indigo-500/15 text-[11px] text-indigo-400 font-medium">
+              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-[11px] ${STATUS_COLORS.info.text} font-medium`}>
                 {application.guildName}
               </span>
             )}
@@ -166,7 +167,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-green-500/80 hover:text-green-400 transition-colors"
+                className={`inline-flex items-center gap-1 ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <ShieldCheck className="w-3 h-3" />
@@ -175,16 +176,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
             )}
             <span className={`inline-flex items-center gap-1.5 font-medium ${
               vettingState === "finalized" || vettingState === "revealed"
-                ? "text-green-500"
+                ? STATUS_COLORS.positive.text
                 : vettingState === "committed"
-                ? "text-blue-400"
+                ? STATUS_COLORS.info.text
                 : "text-primary"
             }`}>
               <span className={`w-[5px] h-[5px] rounded-full ${
                 vettingState === "finalized" || vettingState === "revealed"
-                  ? "bg-green-500"
+                  ? STATUS_COLORS.positive.dot
                   : vettingState === "committed"
-                  ? "bg-blue-400"
+                  ? STATUS_COLORS.info.dot
                   : "bg-primary"
               }`} />
               {stateConfig.label}

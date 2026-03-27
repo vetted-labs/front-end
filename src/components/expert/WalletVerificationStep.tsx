@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Shield, AlertTriangle, Loader2 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface WalletVerificationStepProps {
   isVerified: boolean;
@@ -21,11 +22,11 @@ export function WalletVerificationStep({
       <div className="flex items-start gap-4">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
           isVerified
-            ? "bg-green-100 dark:bg-green-900/30"
+            ? STATUS_COLORS.positive.bgSubtle
             : "bg-primary/10"
         }`}>
           {isVerified ? (
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           ) : (
             <Shield className="w-5 h-5 text-primary" />
           )}
@@ -35,7 +36,7 @@ export function WalletVerificationStep({
             Wallet Ownership Verification
           </h3>
           {isVerified ? (
-            <p className="text-sm text-green-600 dark:text-green-400">
+            <p className={`text-sm ${STATUS_COLORS.positive.text}`}>
               Wallet verified &mdash; you&apos;re good to go.
             </p>
           ) : (

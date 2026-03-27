@@ -7,6 +7,7 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { logger } from "@/lib/logger";
 import { Modal } from "@/components/ui/modal";
 import { Alert } from "@/components/ui/alert";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertCRPhaseStatus, CommitRevealPhaseStatus, ExpertApplicationFinalization } from "@/types";
 
 interface ViewReviewModalProps {
@@ -104,12 +105,12 @@ export function ViewReviewModal({
 
   // Status badge config
   const statusBadge = isCommitPhase
-    ? { label: "Vote Submitted (Pending Reveal)", className: "bg-amber-500/10 text-amber-500 border border-amber-500/20", icon: <Lock className="w-3.5 h-3.5" /> }
+    ? { label: "Vote Submitted (Pending Reveal)", className: STATUS_COLORS.warning.badge, icon: <Lock className="w-3.5 h-3.5" /> }
     : review?.vote === "approve"
-    ? { label: "Approved", className: "bg-green-500/10 text-green-500 border border-green-500/20", icon: <CheckCircle className="w-3.5 h-3.5" /> }
+    ? { label: "Approved", className: STATUS_COLORS.positive.badge, icon: <CheckCircle className="w-3.5 h-3.5" /> }
     : review?.vote === "reject"
-    ? { label: "Rejected", className: "bg-red-500/10 text-red-500 border border-red-500/20", icon: <XCircle className="w-3.5 h-3.5" /> }
-    : { label: "Pending", className: "bg-orange-500/10 text-orange-500 border border-orange-500/20", icon: null };
+    ? { label: "Rejected", className: STATUS_COLORS.negative.badge, icon: <XCircle className="w-3.5 h-3.5" /> }
+    : { label: "Pending", className: STATUS_COLORS.pending.badge, icon: null };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="">
@@ -154,9 +155,9 @@ export function ViewReviewModal({
         )}
 
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/[0.08] border border-red-500/20">
-            <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-            <p className="text-sm text-red-400">{error}</p>
+          <div className={`flex items-center gap-2.5 p-3.5 rounded-xl ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border}`}>
+            <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} shrink-0`} />
+            <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{error}</p>
           </div>
         )}
 
@@ -197,7 +198,7 @@ export function ViewReviewModal({
                   Score Summary
                 </p>
                 {isCommitPhase && (
-                  <span className="text-[10px] text-amber-400 font-medium uppercase tracking-wider">
+                  <span className={`text-[10px] ${STATUS_COLORS.warning.text} font-medium uppercase tracking-wider`}>
                     Hidden until all votes are in
                   </span>
                 )}
@@ -221,16 +222,16 @@ export function ViewReviewModal({
                 {/* Deductions */}
                 <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Deductions</p>
-                  <p className={`text-2xl font-extrabold ${(review.redFlagDeductions ?? 0) > 0 ? "text-red-400" : "text-foreground"}`}>
+                  <p className={`text-2xl font-extrabold ${(review.redFlagDeductions ?? 0) > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
                     {(review.redFlagDeductions ?? 0) > 0 ? `-${review.redFlagDeductions}` : "0"}
                   </p>
                   <p className="text-sm text-muted-foreground">pts</p>
                 </div>
 
                 {/* Overall */}
-                <div className="border border-green-500/15 rounded-xl bg-green-500/[0.04] p-4 text-center">
+                <div className={`border ${STATUS_COLORS.positive.border} rounded-xl ${STATUS_COLORS.positive.bgSubtle} p-4 text-center`}>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Overall</p>
-                  <p className="text-2xl font-extrabold text-green-500">{scorePercent}%</p>
+                  <p className={`text-2xl font-extrabold ${STATUS_COLORS.positive.text}`}>{scorePercent}%</p>
                   <p className="text-sm text-muted-foreground">{overallScore}/{overallMax}</p>
                 </div>
               </div>
@@ -238,7 +239,7 @@ export function ViewReviewModal({
               {/* Progress bar */}
               <div className="h-1.5 rounded-full bg-muted/20 overflow-hidden mt-4 mb-6">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-500/60 transition-all duration-500"
+                  className={`h-full rounded-full bg-gradient-to-r ${STATUS_COLORS.positive.bg} to-positive/60 transition-all duration-500`}
                   style={{ width: `${Math.min(scorePercent, 100)}%` }}
                 />
               </div>
@@ -271,9 +272,9 @@ export function ViewReviewModal({
                         <p className="text-[11px] text-muted-foreground mb-1">Reputation change</p>
                         <p className={`text-lg font-bold ${
                           expertVote.reputationChange > 0
-                            ? "text-green-500"
+                            ? STATUS_COLORS.positive.text
                             : expertVote.reputationChange < 0
-                            ? "text-red-500"
+                            ? STATUS_COLORS.negative.text
                             : "text-muted-foreground"
                         }`}>
                           {expertVote.reputationChange > 0 ? "+" : ""}{expertVote.reputationChange}
@@ -399,8 +400,8 @@ function CRStatusSection({
   };
 
   const phaseColor: Record<string, string> = {
-    commit: "text-amber-400",
-    finalized: "text-green-400",
+    commit: STATUS_COLORS.warning.text,
+    finalized: STATUS_COLORS.positive.text,
     direct: "text-muted-foreground",
     none: "text-muted-foreground",
   };
@@ -439,7 +440,7 @@ function CRStatusSection({
           <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">On-Chain</p>
-            <p className={`text-xs font-semibold ${isOnChain ? "text-green-400" : "text-muted-foreground"}`}>
+            <p className={`text-xs font-semibold ${isOnChain ? STATUS_COLORS.positive.text : "text-muted-foreground"}`}>
               {isOnChain ? "Recorded" : "Off-chain only"}
             </p>
           </div>

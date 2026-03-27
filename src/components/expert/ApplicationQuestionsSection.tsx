@@ -2,6 +2,7 @@
 
 import { Shield, FileText, Briefcase } from "lucide-react";
 import { Textarea } from "../ui/textarea";
+import { STATUS_COLORS } from "@/config/colors";
 import type {
   FieldErrors,
   GeneralAnswers,
@@ -50,8 +51,8 @@ export function ApplicationQuestionsSection({
       {/* Application Guidance */}
       <div className="p-8 space-y-6 bg-muted/30">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.pending.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <Shield className={`w-5 h-5 ${STATUS_COLORS.pending.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Before You Start</h2>
@@ -75,10 +76,10 @@ export function ApplicationQuestionsSection({
           data-field-error={fieldErrors.noAiDeclaration ? "" : undefined}
           className={`mt-4 rounded-lg border-2 p-4 transition-colors ${
             noAiDeclaration
-              ? "border-green-500/50 bg-green-500/5"
+              ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`
               : fieldErrors.noAiDeclaration
                 ? "border-destructive bg-destructive/5"
-                : "border-orange-500/30 bg-orange-500/5"
+                : `${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.bgSubtle}`
           }`}
         >
           <label className="flex items-start gap-3 cursor-pointer">
@@ -89,7 +90,7 @@ export function ApplicationQuestionsSection({
                 onNoAiDeclarationChange(e.target.checked);
                 onBlur?.("noAiDeclaration");
               }}
-              className={`mt-0.5 h-5 w-5 rounded border-2 accent-green-500 ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
+              className={`mt-0.5 h-5 w-5 rounded border-2 accent-positive ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
             />
             <span className="text-sm font-semibold text-foreground">
               {generalTemplate?.noAiDeclarationText ||
@@ -105,8 +106,8 @@ export function ApplicationQuestionsSection({
       {/* General Application Questions */}
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">General Application</h2>
@@ -189,8 +190,8 @@ export function ApplicationQuestionsSection({
       {/* Level-Specific Questions */}
       <div className="p-8 space-y-6 bg-muted/30">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Level-Specific Questions</h2>
@@ -253,8 +254,8 @@ export function ApplicationQuestionsSection({
       {/* Bio & Motivation Section */}
       <div className="p-8 space-y-6 bg-muted/30">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+          <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
+            <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">About You</h2>

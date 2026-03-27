@@ -22,6 +22,7 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, PendingGuildInfo } from "@/types";
 
 function getTimeRemaining(deadline?: string) {
@@ -29,16 +30,16 @@ function getTimeRemaining(deadline?: string) {
   const now = Date.now();
   const end = new Date(deadline).getTime();
   const diff = end - now;
-  if (diff <= 0) return { label: "Voting ended", color: "text-red-400" };
+  if (diff <= 0) return { label: "Voting ended", color: STATUS_COLORS.negative.text };
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   if (days > 0) {
-    const color = days > 3 ? "text-green-400" : "text-amber-400";
+    const color = days > 3 ? STATUS_COLORS.positive.text : STATUS_COLORS.warning.text;
     return { label: hours > 0 ? `${days}d ${hours}h remaining` : `${days}d remaining`, color };
   }
-  if (hours > 0) return { label: `${hours}h remaining`, color: "text-red-400" };
+  if (hours > 0) return { label: `${hours}h remaining`, color: STATUS_COLORS.negative.text };
   const minutes = Math.floor(diff / (1000 * 60));
-  return { label: `${minutes}m remaining`, color: "text-red-400" };
+  return { label: `${minutes}m remaining`, color: STATUS_COLORS.negative.text };
 }
 
 /**
@@ -188,13 +189,13 @@ export default function ApplicationPendingPage() {
                           </span>
                         ) : null;
                       })()}
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.warning.badge}`}>
                         <Clock className="w-3 h-3" />
                         Pending
                       </span>
                     </>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500 border border-green-500/20">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
                       <CheckCircle className="w-3 h-3" />
                       {guild.role || "Member"}
                     </span>
@@ -237,7 +238,7 @@ export default function ApplicationPendingPage() {
           {/* Status Timeline */}
           <div className="space-y-3 mb-8">
             <div className="flex items-start text-left p-4 rounded-lg border border-border bg-muted/30">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+              <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon} mt-0.5 mr-3 flex-shrink-0`} />
               <div>
                 <p className="font-semibold text-foreground mb-0.5">Application Received</p>
                 <p className="text-sm text-muted-foreground">
@@ -252,8 +253,8 @@ export default function ApplicationPendingPage() {
               if (!onChainApp) return null;
               const txHash = onChainApp.blockchainSessionTxHash;
               return (
-                <div className="flex items-start text-left p-4 rounded-lg border border-green-500/30 bg-green-500/5">
-                  <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                <div className={`flex items-start text-left p-4 rounded-lg border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`}>
+                  <ShieldCheck className={`w-5 h-5 ${STATUS_COLORS.positive.icon} mt-0.5 mr-3 flex-shrink-0`} />
                   <div>
                     <p className="font-semibold text-foreground mb-0.5">On-Chain Voting Session Created</p>
                     <p className="text-sm text-muted-foreground">
@@ -264,7 +265,7 @@ export default function ApplicationPendingPage() {
                         href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 mt-1.5 text-sm text-green-500 hover:text-green-400 transition-colors"
+                        className={`inline-flex items-center gap-1.5 mt-1.5 text-sm ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
                       >
                         View on Etherscan <ExternalLink className="w-3.5 h-3.5" />
                       </a>

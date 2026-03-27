@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DisputeVoteForm } from "@/components/endorsements/DisputeVoteForm";
+import { STATUS_COLORS } from "@/config/colors";
 
 function getTimeRemaining(deadline: string) {
   const now = new Date();
@@ -128,8 +129,8 @@ export function EndorsementDisputeDetailPage() {
           <Card
             className={`mb-6 border-2 ${
               dispute.resolution === "upheld"
-                ? "border-red-500 bg-red-500/5"
-                : "border-green-500 bg-green-500/5"
+                ? `border-negative ${STATUS_COLORS.negative.bgSubtle}`
+                : `border-positive ${STATUS_COLORS.positive.bgSubtle}`
             }`}
           >
             <CardContent className="p-6 text-center">
@@ -303,7 +304,7 @@ export function EndorsementDisputeDetailPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Uphold</span>
-                  <span className="text-sm font-medium text-red-500">
+                  <span className={`text-sm font-medium ${STATUS_COLORS.negative.text}`}>
                     {dispute.upholdCount}
                   </span>
                 </div>
@@ -311,7 +312,7 @@ export function EndorsementDisputeDetailPage() {
                   <span className="text-sm text-muted-foreground">
                     Dismiss
                   </span>
-                  <span className="text-sm font-medium text-green-500">
+                  <span className={`text-sm font-medium ${STATUS_COLORS.positive.text}`}>
                     {dispute.dismissCount}
                   </span>
                 </div>
@@ -325,7 +326,7 @@ export function EndorsementDisputeDetailPage() {
 
             {/* Already Voted */}
             {dispute.hasVoted && (
-              <Card className="border-green-500/50">
+              <Card className={`${STATUS_COLORS.positive.border}`}>
                 <CardContent className="p-6 text-center">
                   <Badge variant="default" className="text-lg px-6 py-2 mb-2">
                     Voted: {dispute.myVote}
