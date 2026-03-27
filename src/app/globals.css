@@ -46,6 +46,30 @@
     --info: 24 100% 50%;
     --info-foreground: 0 0% 100%;
 
+    /* Semantic status colors — desaturated for light mode */
+    --positive: 155 55% 38%;           /* #2a9d6e — muted teal-green */
+    --positive-foreground: 0 0% 100%;
+    --negative: 0 45% 53%;             /* #c44b4b — muted red */
+    --negative-foreground: 0 0% 100%;
+    --info-blue: 213 30% 50%;          /* #5a7fa8 — muted steel blue */
+    --info-blue-foreground: 0 0% 100%;
+    --neutral: 240 4% 46%;             /* #71717a — zinc gray */
+    --neutral-foreground: 0 0% 100%;
+
+    /* Rank progression — cool to warm */
+    --rank-recruit: 215 17% 63%;       /* #94a3b8 — slate */
+    --rank-apprentice: 160 59% 52%;    /* #34d399 — emerald */
+    --rank-craftsman: 24 100% 60%;     /* #ff8a33 — light orange */
+    --rank-officer: 24 100% 50%;       /* #ff6a00 — brand orange */
+    --rank-master: 40 100% 50%;        /* #ffaa00 — gold */
+
+    /* Surface hierarchy — light mode maps to existing semantic vars */
+    --surface-0: 30 40% 98%;           /* same as --background */
+    --surface-1: 0 0% 100%;            /* same as --card */
+    --surface-2: 0 0% 100%;            /* same as --popover */
+    --surface-3: 30 20% 95%;           /* same as --muted */
+    --surface-border: 30 10% 90%;      /* same as --border */
+
     /* Gradient button text - dark for contrast on orange */
     --gradient-button-text: 0 0% 4%;
 
@@ -120,6 +144,30 @@
     --info: 24 100% 60%;
     --info-foreground: 24 15% 10%;
 
+    /* Semantic status colors — brighter for dark backgrounds */
+    --positive: 160 59% 52%;           /* #34d399 */
+    --positive-foreground: 160 30% 10%;
+    --negative: 0 90% 71%;             /* #f87171 */
+    --negative-foreground: 0 0% 100%;
+    --info-blue: 217 91% 68%;          /* #60a5fa */
+    --info-blue-foreground: 217 30% 10%;
+    --neutral: 240 5% 65%;             /* #a1a1aa */
+    --neutral-foreground: 0 0% 100%;
+
+    /* Rank progression — same hues, adjusted brightness */
+    --rank-recruit: 215 17% 63%;
+    --rank-apprentice: 160 59% 52%;
+    --rank-craftsman: 24 100% 60%;
+    --rank-officer: 24 100% 60%;
+    --rank-master: 40 100% 50%;
+
+    /* Dark surface hierarchy (replaces white/[0.0X] opacity hacks) */
+    --surface-0: 220 20% 5%;           /* #0c0f14 — page base */
+    --surface-1: 222 17% 10%;          /* #141820 — cards */
+    --surface-2: 222 16% 13%;          /* #1a1f2a — elevated (modals, dropdowns) */
+    --surface-3: 221 16% 17%;          /* #222938 — hover / nested */
+    --surface-border: 220 15% 19%;     /* #252d3a — borders */
+
     /* Chart colors - Orange spectrum for dark mode */
     --chart-1: 24 100% 60%;
     --chart-2: 22 83% 65%;
@@ -185,6 +233,24 @@
     --color-beige-light: hsl(var(--beige-light));
     --color-orange-secondary: hsl(var(--orange-secondary));
     --color-orange-light: hsl(var(--orange-light));
+    --color-positive: hsl(var(--positive));
+    --color-positive-foreground: hsl(var(--positive-foreground));
+    --color-negative: hsl(var(--negative));
+    --color-negative-foreground: hsl(var(--negative-foreground));
+    --color-info-blue: hsl(var(--info-blue));
+    --color-info-blue-foreground: hsl(var(--info-blue-foreground));
+    --color-neutral: hsl(var(--neutral));
+    --color-neutral-foreground: hsl(var(--neutral-foreground));
+    --color-rank-recruit: hsl(var(--rank-recruit));
+    --color-rank-apprentice: hsl(var(--rank-apprentice));
+    --color-rank-craftsman: hsl(var(--rank-craftsman));
+    --color-rank-officer: hsl(var(--rank-officer));
+    --color-rank-master: hsl(var(--rank-master));
+    --color-surface-0: hsl(var(--surface-0));
+    --color-surface-1: hsl(var(--surface-1));
+    --color-surface-2: hsl(var(--surface-2));
+    --color-surface-3: hsl(var(--surface-3));
+    --color-surface-border: hsl(var(--surface-border));
     --font-sans: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
     --font-display: var(--font-display), 'Bricolage Grotesque', 'Inter', sans-serif;
@@ -515,5 +581,98 @@ body {
     .animate-modal-scale-in {
         animation: none !important;
         opacity: 1 !important;
+    }
+}
+
+/* ── Expert profile bento card animations ── */
+
+@keyframes avatar-ring-spin {
+    from { --ring-angle: 0deg; }
+    to   { --ring-angle: 360deg; }
+}
+
+@keyframes avatar-glow-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50%      { opacity: 0.7; transform: scale(1.08); }
+}
+
+@keyframes rep-gauge-draw {
+    from { stroke-dashoffset: 440; }
+    to   { stroke-dashoffset: var(--gauge-target, 110); }
+}
+
+@keyframes ambient-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(60px, 30px) scale(1.08); }
+}
+
+@keyframes rank-badge-glow {
+    0%, 100% { box-shadow: 0 0 12px -2px hsl(var(--primary) / 0.3); }
+    50%      { box-shadow: 0 0 20px -2px hsl(var(--primary) / 0.5); }
+}
+
+.animate-avatar-glow-pulse {
+    animation: avatar-glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-rep-gauge-draw {
+    animation: rep-gauge-draw 1.8s ease-out 0.4s forwards;
+    stroke-dashoffset: 440;
+}
+
+.animate-rank-badge-glow {
+    animation: rank-badge-glow 3s ease-in-out infinite;
+}
+
+.profile-ambient-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(80px);
+}
+
+.profile-ambient-orb-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.06) 0%, transparent 70%);
+    top: -15%; left: -5%;
+    animation: ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.dark .profile-ambient-orb-1 {
+    background: radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%);
+}
+
+.profile-ambient-orb-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, hsl(158 64% 42% / 0.03) 0%, transparent 65%);
+    bottom: -10%; right: -5%;
+    animation: ambient-drift 22s ease-in-out infinite alternate-reverse;
+}
+
+.dark .profile-ambient-orb-2 {
+    background: radial-gradient(circle, hsl(200 80% 50% / 0.04) 0%, transparent 65%);
+}
+
+.profile-dot-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+.dark .profile-dot-grid {
+    background-image: radial-gradient(hsl(0 0% 100% / 0.03) 1px, transparent 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-avatar-glow-pulse,
+    .animate-rep-gauge-draw,
+    .animate-rank-badge-glow,
+    .profile-ambient-orb {
+        animation: none !important;
+    }
+    .animate-rep-gauge-draw {
+        stroke-dashoffset: var(--gauge-target, 110) !important;
     }
 }
