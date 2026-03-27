@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { MotionProvider } from "@/lib/motion";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { config } from "../../wagmi-config";
@@ -28,12 +29,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider initialChain={sepolia}>
           <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
-            <AuthProvider>
-              <Suspense>
-                <NavigationProgress />
-              </Suspense>
-              {children}
-            </AuthProvider>
+            <MotionProvider>
+              <AuthProvider>
+                <Suspense>
+                  <NavigationProgress />
+                </Suspense>
+                {children}
+              </AuthProvider>
+            </MotionProvider>
           </ThemeProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
