@@ -6,6 +6,7 @@ import { Clock } from 'lucide-react';
 import { useMemo } from 'react';
 import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
+import { getMatchScoreColors, getUrgencyColors } from "@/config/colors";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationCardProps {
@@ -14,53 +15,15 @@ interface ApplicationCardProps {
   onQuickEndorse?: (application: EndorsementApplication) => void;
 }
 
-type ScoreTier = 'high' | 'mid' | 'low';
-
-function getScoreTier(score: number): ScoreTier {
-  if (score >= 70) return 'high';
-  if (score >= 40) return 'mid';
-  return 'low';
-}
-
-const TIER_COLORS: Record<ScoreTier, { accent: string; glow: string; text: string; border: string; avatarBg: string }> = {
-  high: {
-    accent: 'from-green-500 to-green-500/30',
-    glow: 'shadow-[0_0_12px_rgba(34,197,94,0.15)]',
-    text: 'text-green-500',
-    border: 'border-green-500/20',
-    avatarBg: 'bg-gradient-to-br from-green-500/15 to-green-500/5 border-green-500/20',
-  },
-  mid: {
-    accent: 'from-amber-500 to-amber-500/30',
-    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.15)]',
-    text: 'text-amber-500',
-    border: 'border-amber-500/20',
-    avatarBg: 'bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/20',
-  },
-  low: {
-    accent: 'from-rose-500 to-rose-500/30',
-    glow: 'shadow-[0_0_12px_rgba(244,63,94,0.15)]',
-    text: 'text-rose-500',
-    border: 'border-rose-500/20',
-    avatarBg: 'bg-gradient-to-br from-rose-500/15 to-rose-500/5 border-rose-500/20',
-  },
-};
-
 const RING_CIRCUMFERENCE = 2 * Math.PI * 19;
 
-function ScoreRing({ score, tier }: { score: number; tier: ScoreTier }) {
+function ScoreRing({ score }: { score: number }) {
   const offset = RING_CIRCUMFERENCE - (score / 100) * RING_CIRCUMFERENCE;
-  const strokeColor = {
-    high: 'stroke-green-500',
-    mid: 'stroke-amber-500',
-    low: 'stroke-rose-500',
-  }[tier];
+  const matchColors = getMatchScoreColors(score);
 
   return (
     <div className="relative flex shrink-0 items-center justify-center w-[50px] h-[50px]">
-      <div className={`absolute inset-[-4px] rounded-full opacity-0 blur-lg transition-opacity group-hover:opacity-100 ${
-        tier === 'high' ? 'bg-green-500/15' : tier === 'mid' ? 'bg-amber-500/15' : 'bg-rose-500/15'
-      }`} />
+      <div className={`absolute inset-[-4px] rounded-full opacity-0 blur-lg transition-opacity group-hover:opacity-100 ${matchColors.bgSubtle}`} />
       <svg className="w-[50px] h-[50px] -rotate-90" viewBox="0 0 44 44">
         <circle cx="22" cy="22" r="19" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.06]" />
         <circle
@@ -70,10 +33,10 @@ function ScoreRing({ score, tier }: { score: number; tier: ScoreTier }) {
           strokeLinecap="round"
           strokeDasharray={RING_CIRCUMFERENCE}
           strokeDashoffset={offset}
-          className={strokeColor}
+          className={matchColors.text.replace('text-', 'stroke-')}
         />
       </svg>
-      <span className={`absolute font-semibold text-sm ${TIER_COLORS[tier].text}`}>
+      <span className={`absolute font-semibold text-sm ${matchColors.text}`}>
         {score}
       </span>
     </div>
@@ -105,24 +68,13 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
 
   const rawGuildScore = application.guild_score ? parseFloat(application.guild_score.toString()) : null;
   const guildScore = rawGuildScore && rawGuildScore > 0 ? Math.round(rawGuildScore) : null;
-  const tier: ScoreTier = guildScore ? getScoreTier(guildScore) : 'mid';
-  const tierColors = TIER_COLORS[tier];
+  const matchColors = getMatchScoreColors(guildScore ?? 50);
 
-  // Countdown color: urgent < 2h, mid < 6h, plenty >= 6h
-  const countdownTier = isExpired
-    ? 'expired'
-    : isUrgent
-    ? 'urgent'
-    : remaining < 6 * 60 * 60 * 1000
-    ? 'mid'
-    : 'plenty';
-
-  const countdownStyles = {
-    expired: 'bg-muted/50 text-muted-foreground border-border/60',
-    urgent: 'bg-rose-500/8 text-rose-500 border-rose-500/15',
-    mid: 'bg-amber-500/8 text-amber-500 border-amber-500/15',
-    plenty: 'bg-green-500/8 text-green-500 border-green-500/15',
-  }[countdownTier];
+  // Countdown urgency in hours
+  const hoursLeft = isExpired ? 0 : Math.floor(remaining / (1000 * 60 * 60));
+  const countdownStyles = isExpired
+    ? 'bg-muted/50 text-muted-foreground border-border/60'
+    : getUrgencyColors(hoursLeft);
 
   const salaryDisplay = (application.salary_min || application.salary_max)
     ? formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })
@@ -137,12 +89,12 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.12] hover:bg-card/60 hover:shadow-lg hover:shadow-black/20 h-full">
       {/* Accent Bar */}
-      <div className={`h-[3px] w-full bg-gradient-to-r ${tierColors.accent}`} />
+      <div className={`h-[3px] w-full ${matchColors.bg}`} />
 
       <div className="flex flex-1 flex-col p-5">
         {/* Header: Avatar + Info + Score Ring */}
         <div className="mb-4 flex items-start gap-3.5">
-          <Avatar className={`w-[46px] h-[46px] rounded-xl border ${tierColors.avatarBg}`}>
+          <Avatar className={`w-[46px] h-[46px] rounded-xl border ${matchColors.bgSubtle} ${matchColors.border}`}>
             {application.candidate_profile_picture_url && (
               <AvatarImage
                 src={application.candidate_profile_picture_url}
@@ -150,7 +102,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
                 className="rounded-xl"
               />
             )}
-            <AvatarFallback className={`rounded-xl text-[15px] font-semibold ${tierColors.avatarBg}`}>
+            <AvatarFallback className={`rounded-xl text-[15px] font-semibold ${matchColors.bgSubtle}`}>
               {candidateInitials}
             </AvatarFallback>
           </Avatar>
@@ -170,7 +122,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </div>
 
           {guildScore !== null && (
-            <ScoreRing score={guildScore} tier={tier} />
+            <ScoreRing score={guildScore} />
           )}
         </div>
 
