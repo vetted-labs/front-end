@@ -2,13 +2,15 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { RANK_COLORS } from "@/config/colors"
 
 // Helper function to get rank-based badge variant
-export function getRankBadgeVariant(role: string): "master" | "officer" | "craftsman" | "recruit" {
+export function getRankBadgeVariant(role: string): "master" | "officer" | "craftsman" | "apprentice" | "recruit" {
   const normalizedRole = role.toLowerCase();
   if (normalizedRole === "master") return "master";
   if (normalizedRole === "officer") return "officer";
   if (normalizedRole === "craftsman") return "craftsman";
+  if (normalizedRole === "apprentice") return "apprentice";
   return "recruit";
 }
 
@@ -26,14 +28,11 @@ const badgeVariants = cva(
         outline: "text-foreground",
         subtle:
           "bg-primary/30 text-primary border-primary/50 dark:bg-primary/40 dark:border-primary/70",
-        master:
-          "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700/60",
-        officer:
-          "bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-700/60",
-        craftsman:
-          "bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-900/50 dark:text-orange-100 dark:border-orange-700/60",
-        recruit:
-          "bg-cyan-100 text-cyan-900 border-cyan-300 dark:bg-cyan-900/50 dark:text-cyan-100 dark:border-cyan-700/60",
+        master: RANK_COLORS.master.badge,
+        officer: RANK_COLORS.officer.badge,
+        craftsman: RANK_COLORS.craftsman.badge,
+        apprentice: RANK_COLORS.apprentice.badge,
+        recruit: RANK_COLORS.recruit.badge,
       },
     },
     defaultVariants: {
