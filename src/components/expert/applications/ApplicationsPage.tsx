@@ -202,7 +202,7 @@ export default function ApplicationsPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-5xl mx-auto py-10 px-6 lg:px-8 space-y-8">
+      <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
         <Breadcrumb items={[
           { label: "Dashboard", href: "/expert/dashboard" },
           { label: "Applications" },
