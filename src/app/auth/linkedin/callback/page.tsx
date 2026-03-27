@@ -147,7 +147,7 @@ function LinkedInCallbackContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-muted flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl shadow-xl p-8 border max-w-md w-full">
+      <div className="bg-card rounded-xl shadow-xl p-8 border max-w-md w-full">
         <div className="text-center">
           {status === "loading" && (
             <>

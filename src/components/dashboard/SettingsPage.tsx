@@ -86,7 +86,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Settings Navigation */}
           <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-border bg-card overflow-hidden p-2 space-y-1">
+            <div className="rounded-xl border border-border bg-card overflow-hidden p-2 space-y-1">
               <button
                 onClick={() => router.push("/dashboard/company-profile")}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted/50"
@@ -135,7 +135,7 @@ export default function SettingsPage() {
 
           {/* Settings Content */}
           <div className="lg:col-span-3">
-            <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="rounded-xl border border-border bg-card p-6">
               {/* Notification Settings */}
               {activeTab === "notifications" && (
                 <div className="space-y-6">

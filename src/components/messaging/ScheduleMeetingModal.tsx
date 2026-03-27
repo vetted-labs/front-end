@@ -66,7 +66,7 @@ export function ScheduleMeetingModal({
       <div className="fixed inset-0 bg-black/50 dark:bg-black/70" onClick={onClose} />
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-card rounded-2xl shadow-xl w-full max-w-md border border-border"
+          className="relative bg-card rounded-xl shadow-xl w-full max-w-md border border-border"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

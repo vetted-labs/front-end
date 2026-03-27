@@ -133,7 +133,7 @@ export function GuildJobsTab({
               {sortedJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="rounded-2xl p-5 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
+                  className="rounded-xl p-5 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer group"
                 >
                   {/* Job Title */}
                   <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
@@ -198,7 +198,7 @@ export function GuildJobsTab({
       {activeSection === "applications" && (
         <div>
           {applications.length === 0 ? (
-            <div className="relative rounded-2xl border border-border bg-card p-12 text-center overflow-hidden">
+            <div className="relative rounded-xl border border-border bg-card p-12 text-center overflow-hidden">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)]" />
               <div className="relative z-10">
                 <div className="w-16 h-16 bg-muted/50 rounded-full border border-border flex items-center justify-center mx-auto mb-4">
@@ -218,7 +218,7 @@ export function GuildJobsTab({
               {applications.map((application) => (
                 <div
                   key={application.id}
-                  className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   {/* Glassmorphism background layers */}
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.12),transparent_55%)] opacity-60" />
@@ -261,8 +261,8 @@ export function GuildJobsTab({
 
                       {/* Match Score Circle */}
                       <div className="flex-shrink-0">
-                        <div className={`relative w-[72px] h-[72px] rounded-2xl ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-sm`}>
-                          <div className="w-full h-full rounded-[14px] bg-card flex flex-col items-center justify-center">
+                        <div className={`relative w-[72px] h-[72px] rounded-xl ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-sm`}>
+                          <div className="w-full h-full rounded-xl bg-card flex flex-col items-center justify-center">
                             <span className="text-2xl font-bold text-white leading-none">
                               {application.matchScore}
                             </span>

@@ -206,7 +206,7 @@ export function ReputationBreakdownCards({
             <div
               key={card.name}
               className={`
-                relative rounded-[20px] p-7 overflow-hidden border
+                relative rounded-xl p-7 overflow-hidden border
                 ${card.cardBg}
                 ${card.borderColor}
                 transition-all duration-300

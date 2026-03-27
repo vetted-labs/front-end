@@ -159,7 +159,7 @@ export function HiringDashboard() {
         </div>
 
         {/* Job Postings */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-4 border-b border-border">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Job Postings</h2>

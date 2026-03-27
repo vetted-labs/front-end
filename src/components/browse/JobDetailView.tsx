@@ -261,12 +261,12 @@ export default function JobDetailView() {
           {/* ---- LEFT COLUMN ---- */}
           <div className="flex flex-col gap-6">
             {/* Job Header Card */}
-            <div className="bg-card rounded-[20px] border border-border p-7 sm:p-9 transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border p-7 sm:p-9 transition-colors hover:border-border">
               <JobHeader job={job} />
             </div>
 
             {/* Job Description / Requirements / Skills / Screening */}
-            <div className="bg-card rounded-[20px] border border-border p-7 sm:p-9 transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border p-7 sm:p-9 transition-colors hover:border-border">
               <JobRequirements job={job} />
             </div>
           </div>
@@ -276,7 +276,7 @@ export default function JobDetailView() {
 
             {/* Already Applied / Accepted */}
             {hasAlreadyApplied && existingApplication.status === "accepted" && (
-              <div className={`relative overflow-hidden p-4 rounded-[20px] border-2 ${STATUS_COLORS.positive.border} animate-celebrate-glow ${STATUS_COLORS.positive.bgSubtle} animate-shimmer-border`}>
+              <div className={`relative overflow-hidden p-4 rounded-xl border-2 ${STATUS_COLORS.positive.border} animate-celebrate-glow ${STATUS_COLORS.positive.bgSubtle} animate-shimmer-border`}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-10 h-10 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center flex-shrink-0`}>
                     <Trophy className="w-5 h-5 text-white" />
@@ -304,7 +304,7 @@ export default function JobDetailView() {
               </div>
             )}
             {hasAlreadyApplied && existingApplication.status !== "accepted" && (
-              <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border} rounded-[20px]`}>
+              <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border} rounded-xl`}>
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                   <span className={`font-semibold ${STATUS_COLORS.positive.text}`}>
@@ -334,7 +334,7 @@ export default function JobDetailView() {
             )}
 
             {/* Apply Card */}
-            <div className="bg-card rounded-[20px] border border-border overflow-hidden transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border overflow-hidden transition-colors hover:border-border">
               {/* Gradient top bar */}
               <div className="h-[3px] bg-primary" />
 
@@ -414,7 +414,7 @@ export default function JobDetailView() {
                 {/* Apply Button */}
                 <Button
                   onClick={handleApply}
-                  className="w-full !rounded-[14px] !text-base !font-bold !tracking-tight shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
+                  className="w-full !rounded-xl !text-base !font-bold !tracking-tight shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
                   size="lg"
                   disabled={
                     hasAlreadyApplied ||
@@ -456,7 +456,7 @@ export default function JobDetailView() {
             </div>
 
             {/* Company Info Mini Card */}
-            <div className="bg-card rounded-[20px] border border-border p-6 transition-colors hover:border-border">
+            <div className="bg-card rounded-xl border border-border p-6 transition-colors hover:border-border">
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
                 <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
                   <Briefcase className="w-5 h-5 text-muted-foreground" />
@@ -494,7 +494,7 @@ export default function JobDetailView() {
 
             {/* Guild Info Mini Card */}
             {guildColors && job.guild && (
-              <div className="bg-card rounded-[20px] border border-border p-6 transition-colors hover:border-border">
+              <div className="bg-card rounded-xl border border-border p-6 transition-colors hover:border-border">
                 <div className="flex items-center gap-3 mb-3.5">
                   <div className={`w-10 h-10 rounded-xl ${guildColors.bg} border ${guildColors.border} flex items-center justify-center flex-shrink-0`}>
                     <Code2 className={`w-[18px] h-[18px] ${guildColors.text}`} />

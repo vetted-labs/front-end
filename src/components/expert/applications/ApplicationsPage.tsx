@@ -208,7 +208,7 @@ export default function ApplicationsPage() {
           { label: "Applications" },
         ]} />
         {/* Header + Stats merged card */}
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <div className="rounded-xl bg-card border border-border overflow-hidden">
           <div className="px-6 py-5">
             <h1 className="text-xl font-bold tracking-tight">Reviews</h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -229,9 +229,9 @@ export default function ApplicationsPage() {
 
         {/* Staking Warning */}
         {data.guildStakes && !data.hasAnyStake && (
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                 <Shield className="w-6 h-6 text-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">

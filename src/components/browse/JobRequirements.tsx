@@ -81,7 +81,7 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
             {job.screeningQuestions.map((question, index) => (
               <div
                 key={index}
-                className="p-5 rounded-[14px] bg-muted/10 border border-border"
+                className="p-5 rounded-xl bg-muted/10 border border-border"
               >
                 <div className="text-xs font-bold uppercase tracking-[1.2px] text-primary mb-2">
                   Question {index + 1}

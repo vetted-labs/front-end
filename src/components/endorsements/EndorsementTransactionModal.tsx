@@ -116,9 +116,9 @@ export function EndorsementTransactionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in">
       {/* Gradient border glow wrapper */}
-      <div className="max-w-[480px] w-full mx-4 rounded-3xl border border-border p-px animate-modal-scale-in">
+      <div className="max-w-[480px] w-full mx-4 rounded-xl border border-border p-px animate-modal-scale-in">
         <div
-          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-card"
+          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-xl shadow-2xl bg-card"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
@@ -188,7 +188,7 @@ export function EndorsementTransactionModal({
             )}
 
             {/* Candidate Card */}
-            <div className="rounded-2xl bg-muted/20 border border-border p-4 flex overflow-hidden">
+            <div className="rounded-xl bg-muted/20 border border-border p-4 flex overflow-hidden">
               {/* Left accent bar */}
               <div className="w-0.5 bg-border rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -216,7 +216,7 @@ export function EndorsementTransactionModal({
             </div>
 
             {/* Bidding Period Countdown */}
-            <div className={`rounded-2xl border p-3 flex items-center gap-2.5 ${
+            <div className={`rounded-xl border p-3 flex items-center gap-2.5 ${
               biddingExpired
                 ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`
                 : biddingUrgent
@@ -242,7 +242,7 @@ export function EndorsementTransactionModal({
 
             {/* Existing Bid Warning */}
             {application?.current_bid && (
-              <div className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-4 flex items-start gap-3`}>
+              <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-4 flex items-start gap-3`}>
                 <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} mt-0.5 flex-shrink-0`} />
                 <div>
                   <p className="text-sm font-medium text-foreground">Already endorsed</p>
@@ -275,7 +275,7 @@ export function EndorsementTransactionModal({
                 </div>
 
                 {/* Amount Input Card */}
-                <div className="rounded-2xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Your bid</span>
                     <button
@@ -326,7 +326,7 @@ export function EndorsementTransactionModal({
 
                 {/* Blind bidding info */}
                 {bidAmount && parseFloat(bidAmount) > 0 && (
-                  <div className="rounded-2xl border border-border bg-muted/20 p-4 flex items-center gap-3">
+                  <div className="rounded-xl border border-border bg-muted/20 p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
                       <Award className="w-5 h-5 text-muted-foreground" />
                     </div>
@@ -338,7 +338,7 @@ export function EndorsementTransactionModal({
 
                 {/* Error */}
                 {errorMessage && (
-                  <div className={`rounded-2xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4 flex items-start gap-3`}>
+                  <div className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4 flex items-start gap-3`}>
                     <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
                     <div>
                       <p className={`text-sm font-medium ${STATUS_COLORS.negative.text}`}>Error</p>
@@ -352,14 +352,14 @@ export function EndorsementTransactionModal({
                   <Button
                     variant="outline"
                     onClick={onClose}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border bg-muted/30 hover:bg-muted/40 font-medium"
+                    className="flex-[0.4] h-[3.25rem] rounded-xl border-border bg-muted/30 hover:bg-muted/40 font-medium"
                   >
                     Cancel
                   </Button>
                   <button
                     onClick={handleSubmit}
                     disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid || biddingExpired}
-                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     <Zap className="w-4 h-4" />
                     {biddingExpired ? 'Bidding Closed' : application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
@@ -497,7 +497,7 @@ export function EndorsementTransactionModal({
 
                 <button
                   onClick={onClose}
-                  className="w-full h-[3.25rem] rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
+                  className="w-full h-[3.25rem] rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
                 >
                   Done
                 </button>
@@ -548,12 +548,12 @@ export function EndorsementTransactionModal({
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={onClose}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border bg-muted/30 hover:bg-muted/40 font-medium">
+                    className="flex-[0.4] h-[3.25rem] rounded-xl border-border bg-muted/30 hover:bg-muted/40 font-medium">
                     Cancel
                   </Button>
                   <button
                     onClick={() => { setErrorMessage(''); handleSubmit(); }}
-                    className="flex-[0.6] h-[3.25rem] rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
+                    className="flex-[0.6] h-[3.25rem] rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl transition-all duration-300"
                   >
                     Try Again
                   </button>

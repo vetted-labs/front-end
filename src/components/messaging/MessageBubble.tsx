@@ -57,8 +57,8 @@ export function MessageBubble({
         className={cn(
           "max-w-[70%] px-4 py-2.5",
           isOwn
-            ? "bg-primary text-white rounded-2xl rounded-br-sm shadow-md"
-            : "bg-muted/50 dark:bg-muted/50 text-foreground rounded-2xl rounded-bl-sm shadow-sm"
+            ? "bg-primary text-white rounded-xl rounded-br-sm shadow-md"
+            : "bg-muted/50 dark:bg-muted/50 text-foreground rounded-xl rounded-bl-sm shadow-sm"
         )}
       >
         {!isOwn && (

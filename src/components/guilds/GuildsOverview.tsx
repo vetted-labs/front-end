@@ -175,7 +175,7 @@ export function GuildsOverview() {
 
           {/* Action Required */}
           {totalPendingApplications > 0 && (
-            <div className="rounded-2xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden">
+            <div className="rounded-xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-border opacity-80" />
               <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
                 <div className="flex items-start gap-3">
@@ -191,7 +191,7 @@ export function GuildsOverview() {
                 </div>
                 <button
                   onClick={() => router.push("/expert/voting")}
-                  className="px-4 py-2 rounded-[10px] bg-warning/[0.12] border border-warning/25 text-warning font-display text-xs font-bold transition-all hover:bg-warning/[0.2] whitespace-nowrap"
+                  className="px-4 py-2 rounded-lg bg-warning/[0.12] border border-warning/25 text-warning font-display text-xs font-bold transition-all hover:bg-warning/[0.2] whitespace-nowrap"
                 >
                   Review All
                 </button>
@@ -205,7 +205,7 @@ export function GuildsOverview() {
                       <button
                         key={guild.id}
                         onClick={() => router.push(`/expert/voting?guild=${guild.id}`)}
-                        className="w-full flex items-center justify-between p-2.5 rounded-[10px] bg-muted/20 border border-border hover:border-warning/15 hover:bg-warning/[0.03] transition-all group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border hover:border-warning/15 hover:bg-warning/[0.03] transition-all group"
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="w-[30px] h-[30px] rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center">
@@ -228,7 +228,7 @@ export function GuildsOverview() {
 
           {/* Guild Cards Grid */}
           {sortedGuilds.length === 0 ? (
-            <div className=" rounded-2xl p-12 text-center border border-border">
+            <div className=" rounded-xl p-12 text-center border border-border">
               {searchQuery ? (
                 <>
                   <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
@@ -315,7 +315,7 @@ export function GuildsOverview() {
                   }}
                   className="group w-full text-left flex items-center gap-3.5 p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/[0.03] transition-all"
                 >
-                  <div className="w-[38px] h-[38px] rounded-[10px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0">
+                  <div className="w-[38px] h-[38px] rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0">
                     <GIcon className="w-[18px] h-[18px] text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">

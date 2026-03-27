@@ -60,7 +60,7 @@ export function EndorsementHeader({
     <>
       {/* Wrong Network Warning */}
       {!isOnSepolia && (
-        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <Card className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
             <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
@@ -96,7 +96,7 @@ export function EndorsementHeader({
                 </span>
               </h2>
               <Select value={selectedGuildId ?? ""} onValueChange={onGuildChange}>
-                <SelectTrigger className="h-9 w-44 rounded-[10px] border-border bg-muted/30 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
+                <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-muted/30 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
                   <SelectValue placeholder="Select guild" />
                 </SelectTrigger>
                 <SelectContent>

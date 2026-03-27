@@ -24,7 +24,7 @@ export function GovernanceResultsBanner({
 
   return (
     <div
-      className={`rounded-2xl border ${statusColor.border} ${statusColor.bgSubtle} p-6 sm:p-8 relative overflow-hidden`}
+      className={`rounded-xl border ${statusColor.border} ${statusColor.bgSubtle} p-6 sm:p-8 relative overflow-hidden`}
     >
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-transparent pointer-events-none" />

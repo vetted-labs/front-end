@@ -48,7 +48,7 @@ export default function ResumeAndGeneralStep({
     <div className="space-y-8">
       {/* Guidance */}
       {template.guidance && template.guidance.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="bg-card rounded-xl border border-border p-6">
           <h3 className="font-bold text-foreground mb-3">
             Before You Start
           </h3>
@@ -68,7 +68,7 @@ export default function ResumeAndGeneralStep({
 
       {/* Required Social Links */}
       {requiredSocialLinks.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border p-6">
+        <div className="bg-card rounded-xl border border-border p-6">
           <h3 className="font-bold text-foreground mb-3">
             Required Social Links
           </h3>
@@ -121,7 +121,7 @@ export default function ResumeAndGeneralStep({
       )}
 
       {/* Resume Upload */}
-      <div className="bg-card rounded-2xl border border-border p-8">
+      <div className="bg-card rounded-xl border border-border p-8">
         <h2 className="text-xl font-bold text-foreground mb-1">
           Resume / CV{" "}
           <span className="text-destructive">*</span>
@@ -242,7 +242,7 @@ export default function ResumeAndGeneralStep({
 
       {/* General Questions */}
       {template.generalQuestions && template.generalQuestions.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border p-8 space-y-8">
+        <div className="bg-card rounded-xl border border-border p-8 space-y-8">
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">
               General Questions

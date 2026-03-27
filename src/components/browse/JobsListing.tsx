@@ -248,7 +248,7 @@ export default function JobsListing() {
               placeholder="Search by title, skill, or company..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card border border-border rounded-[14px] py-[18px] pl-[52px] pr-14 text-base text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/30 focus:ring-4 focus:ring-primary/[0.08] focus:shadow-sm transition-all"
+              className="w-full bg-card border border-border rounded-xl py-[18px] pl-[52px] pr-14 text-base text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/30 focus:ring-4 focus:ring-primary/[0.08] focus:shadow-sm transition-all"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
               <span className="px-2 py-0.5 bg-muted/30 border border-border rounded-md text-xs font-medium text-muted-foreground/50">
@@ -389,7 +389,7 @@ export default function JobsListing() {
               />
             </>
           ) : (
-            <div className="text-center py-16 bg-card rounded-2xl border border-border">
+            <div className="text-center py-16 bg-card rounded-xl border border-border">
               <Briefcase className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-foreground mb-2">
                 No jobs found

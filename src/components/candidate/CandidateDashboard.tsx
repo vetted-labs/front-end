@@ -316,7 +316,7 @@ export default function CandidateDashboard() {
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white font-display font-bold text-xl flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-white font-display font-bold text-xl flex-shrink-0">
               {initials}
             </div>
             <div>
@@ -350,7 +350,7 @@ export default function CandidateDashboard() {
         <div className="flex items-stretch gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {/* Applications */}
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
-            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <FileText className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -361,7 +361,7 @@ export default function CandidateDashboard() {
 
           {/* Interviews */}
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
-            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Calendar className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -373,7 +373,7 @@ export default function CandidateDashboard() {
           {/* Offers -- golden glow */}
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-warning/20 bg-card px-4 py-3.5 relative overflow-hidden">
             <div className="absolute inset-0 bg-transparent pointer-events-none rounded-xl" />
-            <div className="relative w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 bg-warning/15">
+            <div className="relative w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-warning/15">
               <Star className="w-[18px] h-[18px] text-warning" />
             </div>
             <div className="relative flex flex-col gap-0.5">
@@ -384,7 +384,7 @@ export default function CandidateDashboard() {
 
           {/* In Review */}
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
-            <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
               <Eye className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -426,7 +426,7 @@ export default function CandidateDashboard() {
           <div className="lg:col-span-3 space-y-5">
 
             {/* Active Applications */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-muted-foreground/50" />
@@ -445,7 +445,7 @@ export default function CandidateDashboard() {
               </div>
               {recentApplications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-14 px-6">
-                  <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
                     <Search className="w-7 h-7 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">No applications yet -- start exploring</p>
@@ -514,7 +514,7 @@ export default function CandidateDashboard() {
           <div className="lg:col-span-2 space-y-5">
 
             {/* Profile Completion Ring */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Profile Completion
@@ -555,7 +555,7 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Guild Applications */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Guild Applications
@@ -571,7 +571,7 @@ export default function CandidateDashboard() {
               </div>
               {recentGuildApps.length === 0 ? (
                 <div className="flex flex-col items-center py-10 px-6">
-                  <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
                     <Users className="w-6 h-6 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">No guild applications</p>
@@ -618,7 +618,7 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Messages */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
@@ -641,7 +641,7 @@ export default function CandidateDashboard() {
               </div>
               {recentConversations.length === 0 ? (
                 <div className="flex flex-col items-center py-10 px-6">
-                  <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
                     <MessageSquare className="w-6 h-6 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground">No messages yet</p>
@@ -691,7 +691,7 @@ export default function CandidateDashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Quick Actions

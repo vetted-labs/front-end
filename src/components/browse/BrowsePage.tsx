@@ -50,7 +50,7 @@ export default function BrowsePage() {
           </p>
           <Link
             href="/browse/jobs"
-            className="inline-flex items-center px-8 py-4 text-sm font-bold text-white bg-primary rounded-[14px] hover:opacity-90 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+            className="inline-flex items-center px-8 py-4 text-sm font-bold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
           >
             Find the Job for You
             <ArrowRight className="ml-2 w-5 h-5" />
@@ -90,10 +90,10 @@ export default function BrowsePage() {
                   <Link
                     key={job.id}
                     href={`/browse/jobs/${job.id}`}
-                    className="block bg-card rounded-2xl p-6 hover:shadow-md/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border group overflow-hidden relative"
+                    className="block bg-card rounded-xl p-6 hover:shadow-md/[0.04] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer border border-border group overflow-hidden relative"
                   >
                     {/* Hover gradient overlay */}
-                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
+                    <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
 
                     <div className="relative">
                       <div className="flex items-start justify-between mb-4">
@@ -102,13 +102,13 @@ export default function BrowsePage() {
                             <img
                               src={getAssetUrl(job.companyLogo)}
                               alt={job.companyName || "Company"}
-                              className="w-10 h-10 rounded-[10px] object-cover border border-border flex-shrink-0"
+                              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                               }}
                             />
                           ) : (
-                            <div className="p-2 bg-muted/50 border border-border rounded-[10px]">
+                            <div className="p-2 bg-muted/50 border border-border rounded-lg">
                               <Briefcase className="w-5 h-5 text-foreground" />
                             </div>
                           )}
@@ -159,7 +159,7 @@ export default function BrowsePage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border">
+            <div className="text-center py-12 bg-card rounded-xl border border-border">
               <p className="text-muted-foreground mb-4">
                 No featured jobs available at the moment
               </p>
@@ -176,7 +176,7 @@ export default function BrowsePage() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className=" border border-border rounded-2xl p-12 text-center">
+        <div className=" border border-border rounded-xl p-12 text-center">
           <h2 className="font-display text-3xl font-bold text-foreground mb-4 tracking-tight">
             Ready to Start Your Web3 Journey?
           </h2>
@@ -186,7 +186,7 @@ export default function BrowsePage() {
           </p>
           <Link
             href="/browse/jobs"
-            className="inline-block px-8 py-4 bg-card text-primary rounded-[14px] hover:bg-muted transition-all font-bold shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+            className="inline-block px-8 py-4 bg-card text-primary rounded-xl hover:bg-muted transition-all font-bold shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
           >
             Explore All Opportunities
           </Link>

@@ -32,7 +32,7 @@ export function TransactionModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
-      <div className="bg-card rounded-2xl shadow-2xl border border-border max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
+      <div className="bg-card rounded-xl shadow-2xl border border-border max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="relative flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-foreground">Transaction Status</h3>

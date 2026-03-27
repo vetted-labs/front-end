@@ -120,7 +120,7 @@ export function GuildFeedTab({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         {/* Sort Controls — grouped pill bar */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex gap-[3px] p-[3px] bg-muted/20 rounded-[10px] border border-border">
+          <div className="flex gap-[3px] p-[3px] bg-muted/20 rounded-lg border border-border">
             {(["hot", "new", "top"] as const).map((mode) => {
               const icons = { hot: Flame, new: Clock, top: TrendingUp };
               const Icon = icons[mode];
@@ -194,7 +194,7 @@ export function GuildFeedTab({
         {showNewPostButton && (
           <button
             onClick={() => setShowNewPost(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-[10px] font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-display text-xs font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             New Post

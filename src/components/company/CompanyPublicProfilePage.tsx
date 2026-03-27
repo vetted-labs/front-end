@@ -70,7 +70,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
         </Link>
 
         {/* Company Header */}
-        <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+        <div className="rounded-xl border border-border bg-card p-6 mb-6">
           <div className="flex items-start gap-5">
             {profile.logoUrl ? (
               <img
@@ -136,14 +136,14 @@ export default function CompanyPublicProfilePage({ params }: Props) {
 
         {/* About */}
         {profile.description && (
-          <div className="rounded-2xl border border-border bg-card p-6 mb-6">
+          <div className="rounded-xl border border-border bg-card p-6 mb-6">
             <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-3">About</h2>
             <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{profile.description}</p>
           </div>
         )}
 
         {/* Active Jobs */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-4">
             Open Positions {jobs && jobs.length > 0 && <span className="text-xs text-muted-foreground/60 ml-1">({jobs.length})</span>}
           </h2>

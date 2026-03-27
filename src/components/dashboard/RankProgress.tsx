@@ -83,7 +83,7 @@ export function RankProgress({ guilds }: RankProgressProps) {
   const topGuilds = selectTopGuilds(guilds);
 
   return (
-    <div className="bg-card border border-border rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-5 h-full">
       <span className="text-sm font-bold text-foreground">
         Rank Progress
       </span>
@@ -99,7 +99,7 @@ export function RankProgress({ guilds }: RankProgressProps) {
           return (
             <div
               key={guild.id}
-              className={`p-3 rounded-[10px] ${
+              className={`p-3 rounded-lg ${
                 isHighlighted
                   ? "bg-primary/[0.06] border border-primary/[0.12]"
                   : "bg-muted/30 border border-border"

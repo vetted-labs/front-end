@@ -92,7 +92,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
               {/* Tier card */}
               <div
                 className={`
-                  rounded-2xl p-5 transition-all
+                  rounded-xl p-5 transition-all
                   ${isCurrent
                     ? "bg-warning/5 border border-warning/20"
                     : isLocked

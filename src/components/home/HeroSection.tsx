@@ -92,7 +92,7 @@ export function HeroSection({
               <button
                 key={card.key}
                 onClick={handlers[card.key]}
-                className={`relative text-left rounded-2xl p-7 pb-6 border transition-all duration-300 cursor-pointer group overflow-hidden ${
+                className={`relative text-left rounded-xl p-7 pb-6 border transition-all duration-300 cursor-pointer group overflow-hidden ${
                   card.featured
                     ? "border-primary/15 bg-primary/[0.04] hover:border-primary/25 hover:bg-primary/[0.06]"
                     : "bg-card border-border hover:border-border hover:bg-card"
@@ -100,7 +100,7 @@ export function HeroSection({
               >
                 {/* Featured radial glow */}
                 {card.featured && (
-                  <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.06)_0%,transparent_70%)] pointer-events-none" />
+                  <div className="absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.06)_0%,transparent_70%)] pointer-events-none" />
                 )}
 
                 {/* Arrow on hover */}
@@ -109,7 +109,7 @@ export function HeroSection({
                 </span>
 
                 <div className="relative">
-                  <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center mb-4 ${card.iconBg}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${card.iconBg}`}>
                     <Icon
                       className={`w-5 h-5 ${card.iconStroke ? "" : "text-primary"}`}
                       style={card.iconStroke ? { color: card.iconStroke } : undefined}

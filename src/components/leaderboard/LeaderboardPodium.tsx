@@ -245,7 +245,7 @@ export function LeaderboardPodium({
   const [first, second, third] = top3;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-card px-4 pt-4 pb-0">
+    <div className="relative w-full overflow-hidden rounded-xl border border-border bg-card px-4 pt-4 pb-0">
       {/* Top accent */}
 
       {/* Podium layout: 2nd | 1st | 3rd */}

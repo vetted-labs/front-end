@@ -39,7 +39,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
   const displayed = activities.slice(0, 6);
 
   return (
-    <div className="bg-card border border-border rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-5 h-full">
       <span className="text-sm font-bold text-foreground">
         Recent Activity
       </span>
@@ -57,7 +57,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             return (
               <div
                 key={activity.id}
-                className="flex items-center gap-3 p-2.5 rounded-[10px] bg-muted/30 border border-border"
+                className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border"
               >
                 <div
                   className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 ${config.bgColor}`}

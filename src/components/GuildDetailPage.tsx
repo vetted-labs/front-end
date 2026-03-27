@@ -233,7 +233,7 @@ export default function GuildDetailPage() {
             className="relative z-10 w-[120px] h-[120px] mb-7"
             style={{ animation: "guild-emblem-breathe 4s ease-in-out infinite" }}
           >
-            <div className="w-full h-full rounded-2xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center">
+            <div className="w-full h-full rounded-xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center">
               <GuildIcon className="w-14 h-14 text-[hsl(var(--gd))]" />
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function GuildDetailPage() {
             {showApplyButton && (
               <button
                 onClick={handleApplyToGuild}
-                className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-[14px] text-base font-bold text-white font-display tracking-wide transition-all hover:translate-y-[-2px] bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
+                className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-xl text-base font-bold text-white font-display tracking-wide transition-all hover:translate-y-[-2px] bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
               >
                 Join Guild
               </button>
@@ -281,7 +281,7 @@ export default function GuildDetailPage() {
             {membership?.isMember && auth.userType === "expert" && (
               <button
                 onClick={() => router.push(`/expert/guild/${guildId}`)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-[14px] bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground hover:bg-muted/30 transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground hover:bg-muted/30 transition-all"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Expert Dashboard
@@ -292,7 +292,7 @@ export default function GuildDetailPage() {
 
         {/* ═══ TAB BAR — Glassmorphic ═══ */}
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 p-1.5 bg-card border border-border rounded-2xl mb-10 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1 p-1.5 bg-card border border-border rounded-xl mb-10 overflow-x-auto scrollbar-none">
             {(
               [
                 { value: "feed" as const, label: "Overview" },
@@ -374,7 +374,7 @@ export default function GuildDetailPage() {
                       <button
                         key={job.id}
                         onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                        className="bg-muted/20 border border-border rounded-[20px] p-6 text-left transition-all hover:border-[hsl(var(--gd)/0.2)] hover:translate-y-[-2px]"
+                        className="bg-muted/20 border border-border rounded-xl p-6 text-left transition-all hover:border-[hsl(var(--gd)/0.2)] hover:translate-y-[-2px]"
                       >
                         <h3 className="font-display text-base font-bold text-foreground mb-2 tracking-tight">
                           {job.title}
@@ -411,7 +411,7 @@ export default function GuildDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-muted/20 rounded-[20px] border border-border">
+                  <div className="text-center py-12 bg-muted/20 rounded-xl border border-border">
                     <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
                     <p className="text-muted-foreground">No open positions at the moment</p>
                   </div>

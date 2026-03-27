@@ -82,7 +82,7 @@ export function CandidateDetailsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
       <div
-        className="relative max-w-[740px] w-full mx-4 max-h-[88vh] flex flex-col rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card border border-border"
+        className="relative max-w-[740px] w-full mx-4 max-h-[88vh] flex flex-col rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}

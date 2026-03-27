@@ -155,7 +155,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
         </button>
 
         {/* Application Header */}
-        <div className="bg-card rounded-2xl p-8 border border-border shadow-sm mb-6">
+        <div className="bg-card rounded-xl p-8 border border-border shadow-sm mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -197,7 +197,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
           {/* Left Column - Application Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Candidate Info */}
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-xl p-6 border border-border">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
                 Candidate Information
@@ -217,7 +217,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
             </div>
 
             {/* Application Text */}
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-xl p-6 border border-border">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 Application Details
@@ -228,7 +228,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
             </div>
 
             {/* Votes List */}
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-xl p-6 border border-border">
               <h2 className="text-xl font-bold text-foreground mb-4">Vote History</h2>
               {application.votes.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No votes yet</p>
@@ -280,7 +280,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
           {/* Right Column - Voting Stats & Actions */}
           <div className="space-y-6">
             {/* Vote Distribution */}
-            <div className="bg-card rounded-2xl p-6 border border-border">
+            <div className="bg-card rounded-xl p-6 border border-border">
               <h3 className="text-xl font-bold text-foreground mb-4">Vote Distribution</h3>
               <div className="space-y-4">
                 <div>
@@ -318,7 +318,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
 
             {/* Voting Actions */}
             {application.status === "ongoing" && (
-              <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="bg-card rounded-xl p-6 border border-border">
                 <h3 className="text-xl font-bold text-foreground mb-4">Cast Your Vote</h3>
                 {expertHasVoted ? (
                   <div className="text-center py-4">

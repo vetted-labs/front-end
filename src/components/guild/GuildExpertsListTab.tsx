@@ -19,7 +19,7 @@ export function GuildExpertsListTab({ experts, onNavigate }: GuildExpertsListTab
           <button
             key={expert.id}
             onClick={() => onNavigate(`/experts/${expert.walletAddress}`)}
-            className="rounded-2xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
+            className="rounded-xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all text-left cursor-pointer group"
           >
             <div className="flex items-start justify-between mb-4">
               <div>

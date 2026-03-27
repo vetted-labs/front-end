@@ -28,7 +28,7 @@ export function GuildsSection({
 
   if (guilds.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-[14px] p-8 text-center">
+      <div className="bg-card border border-border rounded-xl p-8 text-center">
         <p className="text-sm text-muted-foreground">No guild memberships yet</p>
       </div>
     );

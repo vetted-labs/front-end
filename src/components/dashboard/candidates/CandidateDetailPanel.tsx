@@ -185,7 +185,7 @@ export function CandidateDetailPanel({
 
         {/* Row 2 — Avatar + name + contacts + pipeline stepper */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
+          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
             <span className="text-primary font-display font-bold text-xl">
               {candidate.fullName.charAt(0).toUpperCase()}
             </span>

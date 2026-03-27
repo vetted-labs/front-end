@@ -74,7 +74,7 @@ export function GeneralReviewStep({
             return (
               <div
                 key={question.id}
-                className="rounded-2xl border border-border bg-card overflow-hidden"
+                className="rounded-xl border border-border bg-card overflow-hidden"
               >
                 {/* Question header with score */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
@@ -179,7 +179,7 @@ export function GeneralReviewStep({
 
       {/* Interpretation Guide */}
       {interpretationGuide.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3.5 border-b border-border bg-muted/30">
             <p className="text-sm font-semibold text-foreground">Interpretation Guide</p>
           </div>

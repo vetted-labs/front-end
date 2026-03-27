@@ -289,7 +289,7 @@ function PastProposalRow({
   return (
     <div
       onClick={onClick}
-      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-5 p-5 sm:px-7 rounded-2xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
+      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-5 p-5 sm:px-7 rounded-xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
     >
       {/* Meta */}
       <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">

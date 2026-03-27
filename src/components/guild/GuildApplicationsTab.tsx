@@ -51,19 +51,19 @@ export function GuildApplicationsTab({
     <div className="space-y-8">
       {/* Proposal Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className={`text-center p-4 rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <div className={`text-center p-4 rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <p className="text-2xl font-bold text-primary">
             {applications.pending.length}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Pending</p>
         </div>
-        <div className={`text-center p-4 rounded-2xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
+        <div className={`text-center p-4 rounded-xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
           <p className={`text-2xl font-bold ${STATUS_COLORS.info.text}`}>
             {applications.ongoing.length}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Ongoing</p>
         </div>
-        <div className="text-center p-4 rounded-2xl border border-border bg-muted/50">
+        <div className="text-center p-4 rounded-xl border border-border bg-muted/50">
           <p className="text-2xl font-bold text-foreground">
             {applications.closed.length}
           </p>
@@ -77,7 +77,7 @@ export function GuildApplicationsTab({
           Pending Reviews
         </h3>
         {applications.pending.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+          <div className="rounded-xl border border-border bg-muted/50 p-12 text-center">
             <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -99,7 +99,7 @@ export function GuildApplicationsTab({
               return (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted"
+                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -188,7 +188,7 @@ export function GuildApplicationsTab({
       <div>
         <h3 className="text-xl font-bold text-foreground mb-4">Ongoing Reviews</h3>
         {applications.ongoing.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-muted/50 p-8 text-center">
+          <div className="rounded-xl border border-border bg-muted/50 p-8 text-center">
             <p className="text-sm text-muted-foreground">
               No ongoing reviews at the moment
             </p>
@@ -204,7 +204,7 @@ export function GuildApplicationsTab({
               return (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-primary/20 bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-primary/20 bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">

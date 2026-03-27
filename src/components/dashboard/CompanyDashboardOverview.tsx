@@ -286,7 +286,7 @@ export function CompanyDashboardOverview() {
 
         {/* ═══ HIRING PIPELINE (Kanban) ═══ */}
         {recentApplications.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
+          <div className="rounded-xl border border-border bg-card overflow-hidden mb-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border/20 dark:border-border">
               <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                 <Activity className="w-4 h-4 text-primary" />
@@ -360,7 +360,7 @@ export function CompanyDashboardOverview() {
 
             {/* Recent Activity */}
             {activityFeed.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                   <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" />
@@ -399,7 +399,7 @@ export function CompanyDashboardOverview() {
             )}
 
             {/* Recent Applications */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground">
                   Recent Applications
@@ -450,7 +450,7 @@ export function CompanyDashboardOverview() {
           <div className="space-y-6">
 
             {/* Your Jobs */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-primary" />
@@ -503,7 +503,7 @@ export function CompanyDashboardOverview() {
             </div>
 
             {/* Upcoming Meetings */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-primary" />
@@ -567,7 +567,7 @@ export function CompanyDashboardOverview() {
             </div>
 
             {/* Pending Actions */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <Zap className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-display font-bold text-foreground">
@@ -626,7 +626,7 @@ export function CompanyDashboardOverview() {
         </div>
 
         {/* ═══ QUICK ACTIONS ═══ */}
-        <div className="rounded-2xl border border-border bg-card px-6 py-4 flex items-center gap-3 flex-wrap">
+        <div className="rounded-xl border border-border bg-card px-6 py-4 flex items-center gap-3 flex-wrap">
           <Link
             href="/dashboard/candidates"
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground border border-border rounded-xl hover:bg-muted/30 dark:hover:bg-muted/20 hover:text-foreground transition-all"

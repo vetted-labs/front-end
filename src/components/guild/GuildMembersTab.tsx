@@ -73,7 +73,7 @@ export function GuildMembersTab({
                 <button
                   key={expert.id}
                   onClick={() => router.push(`/experts/${expert.walletAddress}`)}
-                  className="rounded-2xl p-6 text-left cursor-pointer border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 group"
+                  className="rounded-xl p-6 text-left cursor-pointer border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 group"
                 >
                   {/* Header: Name and Role */}
                   <div className="flex items-start justify-between mb-4">
@@ -174,7 +174,7 @@ export function GuildMembersTab({
               {sortedCandidates.slice(0, candidatesVisible).map((candidate) => (
                 <div
                   key={candidate.id}
-                  className="rounded-2xl p-6 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl p-6 border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   {/* Header: Name and Experience Level */}
                   <div className="flex items-start justify-between mb-3">

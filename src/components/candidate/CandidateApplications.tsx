@@ -227,23 +227,23 @@ export default function CandidateApplications() {
         {/* ── Stats Row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {/* Total Applied */}
-          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Total Applied</p>
             <p className="text-2xl font-display font-bold text-foreground tabular-nums">{stats.total}</p>
           </div>
           {/* Under Review */}
-          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Under Review</p>
             <p className={`text-2xl font-display font-bold tabular-nums ${STATUS_COLORS.info.text}`}>{stats.reviewing}</p>
           </div>
           {/* Interviews */}
-          <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
+          <div className="rounded-xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Interviews</p>
             <p className={`text-2xl font-display font-bold tabular-nums ${STATUS_COLORS.positive.text}`}>{stats.interviewed}</p>
           </div>
           {/* Offers -- gold glow */}
-          <div className="rounded-2xl border border-warning/20 bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform relative overflow-hidden">
-            <div className="absolute inset-0 bg-transparent pointer-events-none rounded-2xl" />
+          <div className="rounded-xl border border-warning/20 bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform relative overflow-hidden">
+            <div className="absolute inset-0 bg-transparent pointer-events-none rounded-xl" />
             <p className="relative text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Offers</p>
             <p className="relative text-2xl font-display font-bold tabular-nums text-warning">{stats.accepted}</p>
           </div>
@@ -268,7 +268,7 @@ export default function CandidateApplications() {
 
         {/* ── Application Cards ── */}
         {filteredApplications.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <div className="rounded-xl border border-border bg-card p-12 text-center">
             <Send className="w-14 h-14 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">
               {filter === "all" ? "No applications yet" : "No applications in this category"}
@@ -295,7 +295,7 @@ export default function CandidateApplications() {
               return (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-border bg-card overflow-hidden hover:-translate-y-0.5 hover:border-border hover:shadow-lg transition-all group"
+                  className="rounded-xl border border-border bg-card overflow-hidden hover:-translate-y-0.5 hover:border-border hover:shadow-lg transition-all group"
                 >
                   <div className="grid grid-cols-[6px_1fr]">
                     {/* Accent bar */}

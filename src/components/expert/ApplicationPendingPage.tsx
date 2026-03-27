@@ -137,7 +137,7 @@ export default function ApplicationPendingPage() {
     <div className="min-h-full animate-page-enter">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Main Card */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-8 md:p-12 mb-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-8 md:p-12 mb-6">
           {/* Icon */}
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
             <Clock className="w-10 h-10" />

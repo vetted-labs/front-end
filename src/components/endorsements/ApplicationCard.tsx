@@ -122,7 +122,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     : null;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-[20px] border border-border bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
       {/* Top section: Avatar with match ring + candidate info */}
       <div className="flex items-start gap-3.5 px-5 pt-5">
         <MatchScoreAvatar
@@ -204,7 +204,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
       <div className="px-5 py-3.5 flex gap-2.5 mt-auto">
         <Button
           variant="ghost"
-          className="flex-1 h-10 rounded-[10px] border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"
+          className="flex-1 h-10 rounded-lg border border-border text-muted-foreground text-sm font-medium hover:bg-muted/30 hover:border-border hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails(application);
@@ -213,7 +213,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           View Details
         </Button>
         <Button
-          className="flex-1 h-10 rounded-[10px] bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
+          className="flex-1 h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
           disabled={isExpired || !onQuickEndorse}
           onClick={(e) => {
             e.stopPropagation();

@@ -34,7 +34,7 @@ export function ProposalCard({
           : null;
 
   return (
-    <div className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 dark:hover:border-border">
+    <div className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 dark:hover:border-border">
       {/* Top row: name + badges + actions */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">

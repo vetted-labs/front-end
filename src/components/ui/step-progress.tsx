@@ -19,7 +19,7 @@ export function StepProgress({
   onStepClick,
 }: StepProgressProps) {
   return (
-    <div className="bg-card/80 backdrop-blur-sm border border-border rounded-2xl p-6">
+    <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-6">
       {/* Step indicator */}
       <div className="relative">
         {/* Connecting lines layer (behind circles) */}

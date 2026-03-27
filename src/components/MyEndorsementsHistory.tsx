@@ -29,7 +29,7 @@ export function MyEndorsementsHistory() {
   if (!isConnected || !address) {
     return (
       <WalletRequiredState
-        className="rounded-2xl border border-border bg-card"
+        className="rounded-xl border border-border bg-card"
         message="Please connect your wallet to view your active endorsements"
       />
     );
@@ -37,7 +37,7 @@ export function MyEndorsementsHistory() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-12 text-center">
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-12 text-center">
         <p className="text-destructive">
           Error loading active endorsements: {error}
         </p>
@@ -55,7 +55,7 @@ export function MyEndorsementsHistory() {
         icon={Award}
         title="No Active Endorsements"
         description="You haven't placed any active endorsements yet. Browse available applications to start endorsing candidates."
-        className="rounded-2xl border border-border bg-card p-16"
+        className="rounded-xl border border-border bg-card p-16"
       />
     );
   }
@@ -95,7 +95,7 @@ export function MyEndorsementsHistory() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-border bg-card p-5"
+            className="rounded-xl border border-border bg-card p-5"
           >
             <div className="flex items-center gap-4">
               <div
@@ -173,7 +173,7 @@ export function MyEndorsementsHistory() {
           return (
             <div
               key={endorsementId}
-              className="rounded-2xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40"
+              className="rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40"
             >
               {/* Collapsed Row */}
               <div
@@ -329,7 +329,7 @@ export function MyEndorsementsHistory() {
       </div>
 
       {/* ── Info Banner ── */}
-      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 flex items-start gap-3">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 flex items-start gap-3">
         <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
           <span className="font-medium text-primary">Tip:</span> Top 3

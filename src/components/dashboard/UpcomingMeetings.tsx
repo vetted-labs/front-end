@@ -66,7 +66,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
   const messagesPath = userType === "candidate" ? "/candidate/messages" : "/dashboard/messages";
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
           Upcoming Meetings
@@ -87,7 +87,7 @@ export function UpcomingMeetings({ userType }: UpcomingMeetingsProps) {
         </div>
       ) : meetings.length === 0 ? (
         <div className="flex flex-col items-center py-10 px-6">
-          <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+          <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
             <Calendar className="w-6 h-6 text-muted-foreground/40" />
           </div>
           <p className="text-sm text-muted-foreground">No upcoming meetings</p>

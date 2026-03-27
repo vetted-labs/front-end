@@ -46,7 +46,7 @@ export function GuildPublicOverviewTab({
     <div className="grid lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 space-y-6">
         {/* Top Experts */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <Award className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
             Top Experts
@@ -105,7 +105,7 @@ export function GuildPublicOverviewTab({
         </div>
 
         {/* Recent Jobs */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-primary" />
             Recent Positions
@@ -167,7 +167,7 @@ export function GuildPublicOverviewTab({
       {/* Sidebar */}
       <div className="space-y-6">
         {/* Why Join */}
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-6">
           <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Why Join This Guild?
@@ -214,7 +214,7 @@ export function GuildPublicOverviewTab({
 
         {/* Recent Activity */}
         {guild.recentActivity && guild.recentActivity.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card p-6">
+          <div className="rounded-xl border border-border bg-card p-6">
             <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
               Recent Activity
@@ -231,7 +231,7 @@ export function GuildPublicOverviewTab({
 
         {/* CTA */}
         {showCta && (
-          <div className="bg-primary/5 rounded-2xl border border-primary/30 p-6">
+          <div className="bg-primary/5 rounded-xl border border-primary/30 p-6">
             <h3 className="text-xl font-bold text-foreground mb-2">Ready to Join?</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Submit your application and get vetted by our expert community

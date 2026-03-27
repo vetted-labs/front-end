@@ -11,7 +11,7 @@ export function Skeleton({ className }: SkeletonProps) {
   );
 }
 
-/** Card skeleton matching app's rounded-2xl card style */
+/** Card skeleton matching app's rounded-xl card style */
 export function SkeletonCard({ className }: SkeletonProps) {
   return (
     <div className={cn(

@@ -42,7 +42,7 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
 
       <div
         onClick={onClick}
-        className="relative rounded-2xl bg-card p-7 sm:p-9 overflow-hidden cursor-pointer"
+        className="relative rounded-xl bg-card p-7 sm:p-9 overflow-hidden cursor-pointer"
       >
         {/* Top glow line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-border" />

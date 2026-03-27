@@ -132,7 +132,7 @@ export function CompanyForm() {
           <p className="text-muted-foreground">Start hiring vetted Web3 talent</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-sm p-8">
+        <div className="bg-card rounded-xl shadow-sm p-8">
           {/* Wallet Connection Section */}
           <div className="mb-6 p-6 bg-primary/10 rounded-xl border-2 border-primary/20">
             <div className="flex items-center justify-between">

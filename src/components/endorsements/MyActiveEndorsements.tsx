@@ -130,7 +130,7 @@ function EndorsementSpinCard({
           animationDelay,
         }}
       >
-        <div className="bg-background rounded-[20px] p-5 flex flex-col gap-3.5 h-full relative z-[1]">
+        <div className="bg-background rounded-xl p-5 flex flex-col gap-3.5 h-full relative z-[1]">
           {/* Top: Avatar with spinning ring + info */}
           <div className="flex items-center gap-3.5">
             {/* Avatar with ring */}
@@ -293,7 +293,7 @@ export function MyActiveEndorsements({
 
       {/* Horizontally scrollable cards */}
       {userEndorsements.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center">
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
           <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground mb-2">
             You haven&apos;t endorsed any candidates in {guildName} yet

@@ -42,7 +42,7 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
+        className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
       >
         {/* Top accent line */}
         <div className="absolute inset-x-0 top-0 h-[2px] bg-border opacity-60" />
@@ -113,7 +113,7 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
-        className={`group relative cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 ${
+        className={`group relative cursor-pointer overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-0.5 ${
           isUrgent
             ? "border-warning/20 hover:border-warning/35 bg-card"
             : "border-border bg-card hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"

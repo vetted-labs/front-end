@@ -59,7 +59,7 @@ export function AuthPageLayout({
           </div>
 
           {/* Card */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
             {children}
           </div>
         </div>

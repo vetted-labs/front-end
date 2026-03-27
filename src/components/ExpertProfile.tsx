@@ -104,8 +104,8 @@ interface ProfileStatCellProps {
 
 function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary", iconBg = "bg-primary/10" }: ProfileStatCellProps) {
   return (
-    <div className=" rounded-2xl border border-border p-5 text-center transition-all hover:border-primary/30">
-      <div className={`w-8 h-8 ${iconBg} rounded-[10px] flex items-center justify-center mx-auto mb-3`}>
+    <div className=" rounded-xl border border-border p-5 text-center transition-all hover:border-primary/30">
+      <div className={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center mx-auto mb-3`}>
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
       <div className="text-2xl font-bold font-display text-foreground mb-1">{value}</div>
@@ -246,7 +246,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </button>
           )}
-          <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm">
+          <div className="rounded-xl p-12 text-center border border-border bg-card shadow-sm">
             <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-foreground">Application Under Review</h2>
             <p className="text-muted-foreground mb-4">
@@ -288,7 +288,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* ── Identity Card (left, spans 3 rows) ── */}
-          <div className="md:row-span-3 rounded-2xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
+          <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
             {/* Avatar */}
             <div className="relative mb-7">
               <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
@@ -392,7 +392,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Reputation Ring Card (right, row 1) ── */}
-          <div className=" rounded-2xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
+          <div className=" rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
             <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
               Reputation Score
             </div>
@@ -404,7 +404,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Earnings Card (right, row 2) ── */}
-          <div className=" rounded-2xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
+          <div className=" rounded-xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <DollarSign className="w-3.5 h-3.5 text-success" />
               Total Earnings
@@ -427,7 +427,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {/* ── Active Guilds Card (right, row 3) ── */}
-          <div className=" rounded-2xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
+          <div className=" rounded-xl border border-border p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
               <Shield className="w-3.5 h-3.5 text-primary" />
               Active Guilds
@@ -516,7 +516,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         {/* ═══ Recent Activity (public mode only) ═══ */}
         {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
           <div className="mt-4 animate-fade-up animate-delay-500">
-            <div className=" rounded-2xl border border-border p-6">
+            <div className=" rounded-xl border border-border p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
@@ -567,7 +567,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           </div>
 
           {profile.guilds.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border border-border">
+            <div className="text-center py-12 rounded-xl border border-border">
               <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
               <p className="text-sm font-medium text-foreground mb-2">
                 {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}

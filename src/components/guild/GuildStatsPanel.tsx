@@ -44,7 +44,7 @@ export function GuildStatsPanel({
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-6">
       {/* Health stats bar */}
-      <div className=" rounded-2xl border border-border p-5 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
+      <div className=" rounded-xl border border-border p-5 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
         <div className="flex-1 text-center px-2">
           <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
             <Target className="w-3.5 h-3.5 text-primary" />
@@ -76,7 +76,7 @@ export function GuildStatsPanel({
       </div>
 
       {/* Why join callout */}
-      <div className=" rounded-2xl border border-border p-6 animate-fade-up animate-delay-300">
+      <div className=" rounded-xl border border-border p-6 animate-fade-up animate-delay-300">
         <h2 className="text-xl font-bold font-display text-foreground mb-3">Guild Overview</h2>
         <p className="text-sm text-muted-foreground mb-5 leading-relaxed line-clamp-3">{description}</p>
 

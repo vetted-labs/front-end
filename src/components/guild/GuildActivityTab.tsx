@@ -97,7 +97,7 @@ export function GuildActivityFeed({
   if (sorted.length === 0) {
     return (
       <div className="text-center py-16">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-muted/50 flex items-center justify-center">
           <Activity className="w-8 h-8 text-muted-foreground/50" />
         </div>
         <p className="text-sm font-medium text-muted-foreground">No recent activity</p>
@@ -251,7 +251,7 @@ export function GuildActivityFeed({
         </div>
       ) : (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-muted/50 flex items-center justify-center">
             <Activity className="w-8 h-8 text-muted-foreground/50" />
           </div>
           <p className="text-muted-foreground mb-1">No activity matching this filter</p>

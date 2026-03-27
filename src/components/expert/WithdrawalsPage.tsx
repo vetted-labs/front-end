@@ -229,7 +229,7 @@ export default function WithdrawalsPage() {
       {/* ── Stats Row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Staked — purple accent */}
-        <div className="rounded-[14px] bg-primary/[0.08] border border-primary/20 p-5">
+        <div className="rounded-xl bg-primary/[0.08] border border-primary/20 p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-primary font-medium mb-1.5">
             Total Staked
           </div>
@@ -240,7 +240,7 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Available Balance */}
-        <div className="rounded-[14px] bg-card border border-border p-5">
+        <div className="rounded-xl bg-card border border-border p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Available Balance
           </div>
@@ -251,7 +251,7 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Pending Unstake — muted gold */}
-        <div className="rounded-[14px] bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 p-5">
+        <div className="rounded-xl bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-[#d9b45f] font-medium mb-1.5">
             Pending Unstake
           </div>
@@ -266,7 +266,7 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Active Guilds */}
-        <div className="rounded-[14px] bg-card border border-border p-5">
+        <div className="rounded-xl bg-card border border-border p-5">
           <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Active Guilds
           </div>
@@ -328,7 +328,7 @@ export default function WithdrawalsPage() {
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div
                     className={cn(
-                      "w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-sm font-medium flex-shrink-0",
+                      "w-[38px] h-[38px] rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0",
                       hasCooldown
                         ? "bg-[#d9b45f]/12 text-[#d9b45f]"
                         : "bg-muted/50 text-muted-foreground"

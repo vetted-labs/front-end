@@ -187,7 +187,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
 
   if (!isConnected) {
     return (
-      <Card className="rounded-2xl border border-border bg-card">
+      <Card className="rounded-xl border border-border bg-card">
         <CardContent className="p-12 text-center">
           <Coins className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-xl font-bold mb-2">Connect Your Wallet</h3>
@@ -238,7 +238,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       />
 
       {!meetsMinimumStake && (
-        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <Card className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="flex items-center gap-3 p-4">
             <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} shrink-0`} />
             <p className="text-sm text-muted-foreground">

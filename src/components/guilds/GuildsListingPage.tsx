@@ -147,16 +147,16 @@ export default function GlobalGuildsPage() {
                           navigateToGuild(guild.id);
                         }
                       }}
-                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-2xl border border-border bg-card px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-xl border border-border bg-card px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {/* Left: Icon with subtle container */}
-                      <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-[14px] bg-muted/40 dark:bg-muted/30 border border-border">
+                      <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">
                         <GuildIcon
                           className="w-[22px] h-[22px] md:w-6 md:h-6 text-foreground/70"
                           strokeWidth={1.8}
                         />
                         {/* Hover glow — single orange, not per-guild */}
-                        <div className="absolute inset-0 rounded-[14px] bg-primary/0 transition-colors duration-300 group-hover:bg-primary/[0.06]" />
+                        <div className="absolute inset-0 rounded-xl bg-primary/0 transition-colors duration-300 group-hover:bg-primary/[0.06]" />
                       </div>
 
                       {/* Center: Text content */}
@@ -205,7 +205,7 @@ export default function GlobalGuildsPage() {
                       </div>
 
                       {/* Hover overlay — very subtle border brightening + lift */}
-                      <div className="absolute inset-0 rounded-2xl border border-transparent transition-all duration-300 pointer-events-none group-hover:border-primary/[0.12] group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]" />
+                      <div className="absolute inset-0 rounded-xl border border-transparent transition-all duration-300 pointer-events-none group-hover:border-primary/[0.12] group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:group-hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]" />
                     </article>
                   );
                 })}
@@ -223,14 +223,14 @@ export default function GlobalGuildsPage() {
               icon={Shield}
               title="No guilds available yet"
               description="Check back soon for new professional communities"
-              className="py-16 rounded-2xl border border-border bg-card"
+              className="py-16 rounded-xl border border-border bg-card"
             />
           )}
         </section>
 
         {/* ── CTA ── */}
         <section className="pb-24">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-border bg-card px-8 py-7">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-border bg-card px-8 py-7">
             <div>
               <p className="font-display font-bold text-xl text-foreground tracking-tight">
                 Ready to join a guild?

@@ -29,13 +29,13 @@ export default function JobHeader({ job }: JobHeaderProps) {
             <img
               src={getAssetUrl(job.companyLogo)}
               alt={job.companyName || "Company"}
-              className="w-12 h-12 rounded-[14px] object-cover border border-border flex-shrink-0 shadow-sm"
+              className="w-12 h-12 rounded-xl object-cover border border-border flex-shrink-0 shadow-sm"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
           ) : (
-            <div className="w-12 h-12 rounded-[14px] bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
               <Building2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}

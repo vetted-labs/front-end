@@ -168,7 +168,7 @@ function StatsGrid({ stats }: { stats: ExpertStats }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {items.map((item) => (
-        <Card key={item.label} className="rounded-2xl border border-border bg-card" padding="none">
+        <Card key={item.label} className="rounded-xl border border-border bg-card" padding="none">
           <div className="p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
@@ -207,7 +207,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
           {/* Rank Icon */}
           <div className={cn(
-            "flex h-16 w-16 items-center justify-center rounded-2xl shrink-0",
+            "flex h-16 w-16 items-center justify-center rounded-xl shrink-0",
             "shadow-lg",
             colors.bgSubtle,
             colors.glow,

@@ -118,8 +118,8 @@ export default function CandidateGuilds() {
 
         {/* Content */}
         {guildApplications.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-14 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+          <div className="rounded-xl border border-border bg-card p-14 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-muted/50 flex items-center justify-center">
               <Users className="w-8 h-8 text-muted-foreground/40" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">No guild applications yet</h3>
@@ -134,7 +134,7 @@ export default function CandidateGuilds() {
             </button>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No {filter} applications</p>
             <button onClick={() => setFilter("all")} className="mt-2 text-sm text-primary hover:underline">
               Show all
@@ -159,7 +159,7 @@ export default function CandidateGuilds() {
                     const guildId = app.guildId || app.guild?.id;
                     if (guildId) router.push(`/guilds/${guildId}`);
                   }}
-                  className={`group relative text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all ${glow}`}
+                  className={`group relative text-left rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all ${glow}`}
                 >
                   {/* Top gradient banner */}
                   <div className={`h-20 ${gradient} relative`}>

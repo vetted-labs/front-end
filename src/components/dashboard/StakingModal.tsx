@@ -287,9 +287,9 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in">
       {/* Gradient border glow wrapper — matches endorsement modal */}
-      <div className="max-w-[480px] w-full mx-4 rounded-3xl border border-border p-px animate-modal-scale-in">
+      <div className="max-w-[480px] w-full mx-4 rounded-xl border border-border p-px animate-modal-scale-in">
         <div
-          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-card"
+          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-xl shadow-2xl bg-card"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
@@ -324,7 +324,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
           <div className="px-6 pt-5 pb-6 space-y-3.5 flex-1 overflow-y-auto min-h-0">
             {/* Wrong Network Warning */}
             {!isOnSepolia && (
-              <div className={`p-3.5 ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} rounded-2xl flex items-center gap-3`}>
+              <div className={`p-3.5 ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} rounded-xl flex items-center gap-3`}>
                 <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center flex-shrink-0`}>
                   <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.warning.text}`} />
                 </div>
@@ -344,7 +344,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
 
             {/* Contract Paused Warning */}
             {isPaused && isOnSepolia && (
-              <div className={`p-3.5 ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} rounded-2xl flex items-center gap-3`}>
+              <div className={`p-3.5 ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} rounded-xl flex items-center gap-3`}>
                 <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center flex-shrink-0`}>
                   <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.negative.text}`} />
                 </div>
@@ -358,7 +358,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
             {(
               <>
                 {/* ── Action Mode Toggle ── */}
-                <div className="flex p-1 bg-muted/30 rounded-2xl border border-border">
+                <div className="flex p-1 bg-muted/30 rounded-xl border border-border">
                   <button
                     onClick={() => setActionMode("stake")}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
@@ -385,7 +385,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                 </div>
 
                 {/* ── Guild Card (with left accent bar like endorsement candidate card) ── */}
-                <div className="relative rounded-2xl bg-muted/20 border border-border p-4 flex overflow-hidden">
+                <div className="relative rounded-xl bg-muted/20 border border-border p-4 flex overflow-hidden">
                   {/* Left accent bar */}
                   <div className="w-0.5 bg-border rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
                   {isGuildLocked ? (
@@ -422,7 +422,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
 
                 {/* Guild dropdown */}
                 {!isGuildLocked && showGuildDropdown && guilds && guilds.length > 0 && (
-                  <div className="rounded-2xl shadow-2xl border border-border bg-card max-h-48 overflow-y-auto -mt-2">
+                  <div className="rounded-xl shadow-2xl border border-border bg-card max-h-48 overflow-y-auto -mt-2">
                     {guilds.map((guild) => (
                       <button
                         key={guild.id}
@@ -466,7 +466,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                 </div>
 
                 {/* ── Amount Input Card ── */}
-                <div className="rounded-2xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
                       {actionMode === "stake" ? "Your stake" : "You withdraw"}
@@ -546,7 +546,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                     variant="outline"
                     onClick={handleClose}
                     disabled={step === "transaction"}
-                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-border bg-muted/30 hover:bg-muted/50 font-medium"
+                    className="flex-[0.4] h-[3.25rem] rounded-xl border-border bg-muted/30 hover:bg-muted/50 font-medium"
                   >
                     Cancel
                   </Button>
@@ -560,7 +560,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                       parseFloat(stakeAmount) <= 0 ||
                       !selectedGuild
                     }
-                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     {actionMode === "stake" ? (
                       <>

@@ -31,12 +31,12 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
   return (
     <Link
       href={`/browse/jobs/${job.id}`}
-      className={`block bg-card rounded-2xl p-6 hover:shadow-md hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border group relative overflow-hidden ${
+      className={`block bg-card rounded-xl p-6 hover:shadow-md hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border group relative overflow-hidden ${
         job.featured ? "border-t-2 border-t-warning" : ""
       }`}
     >
       {/* Hover gradient border overlay */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
+      <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
 
       {/* Featured Badge */}
       {job.featured && (
@@ -54,7 +54,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
             <img
               src={getAssetUrl(job.companyLogo)}
               alt={job.companyName || "Company"}
-              className="w-10 h-10 rounded-[10px] object-cover border border-border flex-shrink-0"
+              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
               onError={(e) => {
                 const target = e.currentTarget;
                 target.style.display = "none";
@@ -64,7 +64,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
             />
           ) : null}
           <div
-            className={`w-10 h-10 rounded-[10px] bg-muted/50 border border-border flex items-center justify-center flex-shrink-0 ${job.companyLogo ? "hidden" : "flex"}`}
+            className={`w-10 h-10 rounded-lg bg-muted/50 border border-border flex items-center justify-center flex-shrink-0 ${job.companyLogo ? "hidden" : "flex"}`}
           >
             <Building2 className="w-5 h-5 text-muted-foreground" />
           </div>

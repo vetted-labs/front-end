@@ -64,7 +64,7 @@ export function TeamManagement() {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-border">
         <div>
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Team</h2>

@@ -27,7 +27,7 @@ export function WalletVerificationModal({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-card rounded-2xl shadow-2xl border border-border w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-card rounded-xl shadow-2xl border border-border w-full max-w-md mx-4 overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}

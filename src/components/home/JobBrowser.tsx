@@ -76,7 +76,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
               <div
                 key={job.id}
                 onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                className="bg-card border border-border rounded-[10px] p-5 cursor-pointer group hover:border-border hover:bg-card hover:-translate-y-px transition-all duration-250"
+                className="bg-card border border-border rounded-lg p-5 cursor-pointer group hover:border-border hover:bg-card hover:-translate-y-px transition-all duration-250"
               >
                 {/* Top meta */}
                 <div className="flex items-center justify-between mb-2.5">
@@ -121,8 +121,8 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
           })}
         </div>
       ) : (
-        <div className="text-center py-16 bg-card rounded-2xl border border-border/30">
-          <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-5">
+        <div className="text-center py-16 bg-card rounded-xl border border-border/30">
+          <div className="w-16 h-16 rounded-xl bg-muted/30 flex items-center justify-center mx-auto mb-5">
             <Briefcase className="w-8 h-8 text-muted-foreground/40" />
           </div>
           <h3 className="text-xl font-display font-bold text-foreground mb-2">

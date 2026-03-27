@@ -46,7 +46,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
     <div className="space-y-5">
 
       {/* Applicant Header Card — accent bar style */}
-      <div className="border border-border rounded-2xl bg-card overflow-hidden">
+      <div className="border border-border rounded-xl bg-card overflow-hidden">
         {/* Orange gradient accent bar */}
         <div className="h-[3px] bg-primary" />
 

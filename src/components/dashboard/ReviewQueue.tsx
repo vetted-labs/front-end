@@ -35,7 +35,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
   const hasMore = applications.length > 5;
 
   return (
-    <div className="bg-card border border-border rounded-[14px] p-5 h-full">
+    <div className="bg-card border border-border rounded-xl p-5 h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-bold text-foreground">
@@ -62,7 +62,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
               <button
                 key={`${app.item_type ?? "proposal"}-${app.id}`}
                 onClick={() => router.push(getReviewUrl(app))}
-                className={`flex items-center gap-3 p-3 rounded-[10px] text-left transition-colors ${
+                className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
                   isFirst
                     ? `${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} hover:bg-warning/[0.08]`
                     : "bg-muted/30 border border-border hover:bg-muted/50"
@@ -70,7 +70,7 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
               >
                 {/* Avatar */}
                 <div
-                  className={`w-[34px] h-[34px] rounded-[10px] flex items-center justify-center text-xs font-bold shrink-0 ${
+                  className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
                     isFirst
                       ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
                       : `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.text}`

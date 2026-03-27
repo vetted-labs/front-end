@@ -28,7 +28,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
   const initials = getInitials(application.candidateName);
 
   return (
-    <div className="group rounded-2xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
+    <div className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}

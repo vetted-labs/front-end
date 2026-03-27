@@ -36,7 +36,7 @@ export function WalletStatusBanner({
     <>
       {/* Backend Wallet Test Mode Indicator */}
       {isBackendWallet && (
-        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <Card className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
             <AlertCircle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
@@ -53,7 +53,7 @@ export function WalletStatusBanner({
 
       {/* Wrong Network Warning */}
       {!isOnSepolia && (
-        <Card className={`rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
+        <Card className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <CardContent className="p-4 flex items-start gap-4">
             <AlertTriangle className={`w-6 h-6 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-1`} />
             <div className="flex-1">
@@ -77,7 +77,7 @@ export function WalletStatusBanner({
 
       {/* Connected Wallet Info */}
       {address && (
-        <Card className="rounded-2xl border border-border bg-card">
+        <Card className="rounded-xl border border-border bg-card">
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">

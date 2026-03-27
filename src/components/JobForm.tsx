@@ -71,7 +71,7 @@ export function JobForm() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
           <form onSubmit={handleSubmit}>
             {/* Basic Information Section */}
             <JobBasicInfo

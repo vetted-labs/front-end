@@ -74,7 +74,7 @@ export function DomainReviewStep({
             return (
               <div
                 key={topic.id}
-                className="rounded-2xl border border-border bg-card overflow-hidden"
+                className="rounded-xl border border-border bg-card overflow-hidden"
               >
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                   <p className="text-sm font-semibold text-foreground">
@@ -167,7 +167,7 @@ export function DomainReviewStep({
       </div>
 
       {/* Red Flags */}
-      <div className={`rounded-2xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}>
+      <div className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}>
         <div className={`flex items-center gap-3 px-5 py-3.5 border-b ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`}>
           <AlertTriangle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
           <h3 className="text-sm font-bold text-foreground">Red Flags (Deductions)</h3>
@@ -211,7 +211,7 @@ export function DomainReviewStep({
       </div>
 
       {/* Overall Score Summary */}
-      <div className="relative overflow-hidden rounded-2xl border border-warning/20 bg-warning/5 p-5">
+      <div className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-5">
         <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">

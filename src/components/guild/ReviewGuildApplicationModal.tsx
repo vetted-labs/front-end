@@ -379,7 +379,7 @@ export function ReviewGuildApplicationModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative gradients */}

@@ -236,7 +236,7 @@ export default function NotificationsPage() {
               <button
                 onClick={handleMarkAllAsRead}
                 disabled={isMarkingAllRead}
-                className="inline-flex items-center gap-2 bg-card border border-border text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-[10px] hover:bg-muted/30 hover:border-border hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 bg-card border border-border text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isMarkingAllRead ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -283,7 +283,7 @@ export default function NotificationsPage() {
 
         {/* Notifications grouped by date */}
         {filteredNotifications.length === 0 ? (
-          <div className="bg-card rounded-2xl p-12 text-center border border-border">
+          <div className="bg-card rounded-xl p-12 text-center border border-border">
             <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">No notifications</h3>
             <p className="text-muted-foreground">
@@ -313,7 +313,7 @@ export default function NotificationsPage() {
                         key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
                         disabled={isClicked}
-                        className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-2xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
+                        className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                           isClicked ? "opacity-60 cursor-wait" : ""
                         } ${isUnread ? "" : "opacity-60"} ${isUrgent ? "border-negative/12" : ""}`}
                         style={isUrgent ? { animation: "notif-urgent-glow 3s ease-in-out infinite" } : undefined}
@@ -322,7 +322,7 @@ export default function NotificationsPage() {
                         <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-r ${stripe}`} />
 
                         {/* Icon */}
-                        <div className={`relative w-12 h-12 rounded-[14px] grid place-items-center shrink-0 ${iconBg}`}>
+                        <div className={`relative w-12 h-12 rounded-xl grid place-items-center shrink-0 ${iconBg}`}>
                           {isClicked ? (
                             <Loader2 className="w-[22px] h-[22px] animate-spin" />
                           ) : (

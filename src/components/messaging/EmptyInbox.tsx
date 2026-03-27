@@ -9,7 +9,7 @@ interface EmptyInboxProps {
 export function EmptyInbox({ variant }: EmptyInboxProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6">
-      <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+      <div className="w-14 h-14 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
         {variant === "company" ? (
           <MessageSquare className="w-7 h-7 text-muted-foreground/40" />
         ) : (

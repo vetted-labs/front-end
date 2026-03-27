@@ -60,9 +60,9 @@ export function GuildMembershipApplicationsTab({
   return (
     <div className="space-y-4">
       {!isStaked && (expertCount > 0 || candidateCount > 0) && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-sm">
               <Shield className="w-6 h-6 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
@@ -146,7 +146,7 @@ export function GuildMembershipApplicationsTab({
           </div>
 
           {expertCount === 0 ? (
-            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+            <div className="rounded-xl border border-border bg-muted/50 p-12 text-center">
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
@@ -162,7 +162,7 @@ export function GuildMembershipApplicationsTab({
               {(guildApplications || []).slice(0, expertVisible).map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -335,7 +335,7 @@ export function GuildMembershipApplicationsTab({
           </div>
 
           {candidateCount === 0 ? (
-            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+            <div className="rounded-xl border border-border bg-muted/50 p-12 text-center">
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus className="w-8 h-8 text-muted-foreground" />
               </div>
@@ -351,7 +351,7 @@ export function GuildMembershipApplicationsTab({
               {candidateApplications.slice(0, candidateVisible).map((application) => (
                 <div
                   key={application.id}
-                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -447,11 +447,11 @@ export function GuildMembershipApplicationsTab({
           </div>
 
           {proposalsLoading ? (
-            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+            <div className="rounded-xl border border-border bg-muted/50 p-12 text-center">
               <p className="text-sm text-muted-foreground">Loading proposals...</p>
             </div>
           ) : (proposals ?? []).length === 0 ? (
-            <div className="rounded-2xl border border-border bg-muted/50 p-12 text-center">
+            <div className="rounded-xl border border-border bg-muted/50 p-12 text-center">
               <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Vote className="w-8 h-8 text-muted-foreground" />
               </div>
@@ -467,7 +467,7 @@ export function GuildMembershipApplicationsTab({
               {(proposals ?? []).map((proposal) => (
                 <div
                   key={proposal.id}
-                  className="rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer"
+                  className="rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 cursor-pointer"
                   onClick={() => router.push(`/expert/voting/applications/${proposal.id}`)}
                 >
                   <div className="flex items-start gap-4">

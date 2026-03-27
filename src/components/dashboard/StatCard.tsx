@@ -38,7 +38,7 @@ export function StatCard({
   };
 
   return (
-    <div className="relative bg-card border border-border rounded-2xl p-5 overflow-hidden">
+    <div className="relative bg-card border border-border rounded-xl p-5 overflow-hidden">
       {/* Top accent bar */}
       <div className={`absolute top-0 left-0 right-0 h-[2px] ${accentBar[accentColor]} opacity-60`} />
 

@@ -41,7 +41,7 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Participation Ring */}
-          <div className="relative rounded-2xl border border-border bg-card p-7 text-center overflow-hidden">
+          <div className="relative rounded-xl border border-border bg-card p-7 text-center overflow-hidden">
             <div className="absolute inset-0 bg-transparent pointer-events-none" />
             <div className="relative w-16 h-16 mx-auto mb-2.5">
               <svg width="64" height="64" viewBox="0 0 64 64">
@@ -189,7 +189,7 @@ function StatCard({
   sub: string;
 }) {
   return (
-    <div className="relative rounded-2xl border border-border bg-card p-7 text-center overflow-hidden">
+    <div className="relative rounded-xl border border-border bg-card p-7 text-center overflow-hidden">
       <div className="absolute inset-0 bg-transparent pointer-events-none" />
       <div className={`w-11 h-11 rounded-xl ${STAT_ICON.bg} border border-primary/25 flex items-center justify-center mx-auto mb-3.5 ${STAT_ICON.text}`}>
         {icon}
