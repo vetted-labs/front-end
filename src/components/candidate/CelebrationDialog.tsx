@@ -4,69 +4,8 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui";
 import { STATUS_COLORS } from "@/config/colors";
-import { Trophy, Building2, Briefcase, X } from "lucide-react";
+import { CheckCircle2, Building2, Briefcase, X } from "lucide-react";
 import type { CandidateApplication } from "@/types";
-
-const CONFETTI_COLORS = [
-  STATUS_COLORS.positive.bg,
-  STATUS_COLORS.positive.bg,
-  STATUS_COLORS.positive.bg,
-  STATUS_COLORS.info.bg,
-  STATUS_COLORS.warning.bg,
-  STATUS_COLORS.warning.bg,
-  "bg-primary",
-  "bg-accent",
-];
-
-// Deterministic positions (no Math.random, SSR-safe)
-const CONFETTI_PARTICLES = Array.from({ length: 24 }, (_, i) => ({
-  left: `${((i * 17 + 7) % 100)}%`,
-  delay: `${(i * 130) % 3000}ms`,
-  duration: `${2200 + (i * 170) % 1200}ms`,
-  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  size: i % 3 === 0 ? "w-2 h-2" : i % 3 === 1 ? "w-1.5 h-1.5" : "w-2.5 h-1",
-}));
-
-const SPARKLE_POSITIONS = [
-  { top: "-8px", left: "-8px", delay: "0ms" },
-  { top: "-8px", right: "-8px", delay: "375ms" },
-  { bottom: "-8px", left: "-8px", delay: "750ms" },
-  { bottom: "-8px", right: "-8px", delay: "1125ms" },
-];
-
-function ConfettiParticles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {CONFETTI_PARTICLES.map((p, i) => (
-        <div
-          key={i}
-          className={`absolute ${p.size} ${p.color} rounded-sm animate-confetti-fall`}
-          style={{
-            left: p.left,
-            top: "-10px",
-            animationDelay: p.delay,
-            animationDuration: p.duration,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SparkleDecoration() {
-  return (
-    <>
-      {SPARKLE_POSITIONS.map((pos, i) => (
-        <div
-          key={i}
-          className={`absolute w-2 h-2 ${STATUS_COLORS.warning.bg} rounded-full animate-sparkle`}
-          style={{ ...pos, animationDelay: pos.delay }}
-          aria-hidden="true"
-        />
-      ))}
-    </>
-  );
-}
 
 interface CelebrationDialogProps {
   application: CandidateApplication;
@@ -79,10 +18,8 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-md overflow-hidden">
-        <ConfettiParticles />
-
-        <div className="relative p-6 sm:p-8 text-center">
+      <DialogContent className="max-w-md">
+        <div className="p-6 sm:p-8">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -92,28 +29,23 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
             <X className="w-4 h-4" />
           </button>
 
-          {/* Trophy icon */}
-          <div className="relative inline-flex mb-6 animate-celebrate-scale-in">
-            <div className={`w-20 h-20 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center animate-celebrate-glow`}>
-              <Trophy className="w-10 h-10 text-white" />
-            </div>
-            <SparkleDecoration />
-          </div>
+          {/* Success icon */}
+          <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
 
           {/* Heading */}
-          <h2 className="text-2xl font-bold text-foreground mb-2 animate-fade-up animate-delay-200">
+          <h2 className="text-xl font-bold text-foreground mb-1">
             Congratulations!
           </h2>
-          <p className="text-muted-foreground mb-6 animate-fade-up animate-delay-300">
+          <p className="text-sm text-muted-foreground mb-6">
             You&apos;ve been accepted for a position
           </p>
 
           {/* Job details card */}
-          <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 mb-6 animate-fade-up animate-delay-400`}>
-            <p className="font-bold text-foreground text-xl mb-1">
+          <div className={`rounded-xl border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 mb-6`}>
+            <p className="font-bold text-foreground text-lg mb-1">
               {application.job.title}
             </p>
-            <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
               {application.job.companyName && (
                 <span className="flex items-center gap-1">
                   <Building2 className="w-3.5 h-3.5" />
@@ -128,7 +60,7 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
           </div>
 
           {/* CTAs */}
-          <div className="space-y-3 animate-fade-up animate-delay-500">
+          <div className="space-y-3">
             <Button
               onClick={() => {
                 onClose();

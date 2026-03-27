@@ -8,8 +8,6 @@ import {
   Briefcase,
   CheckCircle2,
   Clock,
-  Target,
-  Trophy,
   LayoutDashboard,
 } from "lucide-react";
 import { Alert } from "@/components/ui";
@@ -181,77 +179,63 @@ export default function GuildDetailPage() {
 
   return (
     <div
-      className="guild-detail-page relative min-h-screen overflow-x-hidden animate-page-enter"
+      className="guild-detail-page relative min-h-screen overflow-x-hidden"
       data-guild={guildAccent}
     >
-      {/* Background effects -- guild-colored orbs */}
-      <div className="guild-orb guild-orb-1" />
-      <div className="guild-orb guild-orb-2" />
-      <div className="guild-orb guild-orb-3" />
-
       {/* Page content */}
-      <div className="relative z-[2]">
+      <div className="relative">
 
-        {/* ═══ EPIC HERO BANNER ═══ */}
-        <div className="relative min-h-[44vh] flex flex-col items-center justify-center px-6 pt-16 pb-12 overflow-hidden guild-hero-fade">
-          {/* Dramatic mesh background */}
-          <div className="absolute inset-0 z-0 overflow-hidden guild-hero-aurora" />
-
-          {/* Floating stat pills */}
-          <div className="absolute inset-0 z-[5] pointer-events-none hidden lg:block">
-            <div className="absolute top-[22%] left-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite] whitespace-nowrap pointer-events-auto">
-              <Users className="w-4 h-4 text-[hsl(var(--gd))]" />
-              <span className="font-mono font-medium text-[hsl(var(--gd))]">{totalMembers}</span> Members
-            </div>
-            <div className="absolute top-[18%] right-[8%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_1.5s] whitespace-nowrap pointer-events-auto">
-              <Briefcase className="w-4 h-4 text-[hsl(var(--gd))]" />
-              <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.openPositions}</span> Open Jobs
-            </div>
-            <div className="absolute bottom-[22%] left-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_3s] whitespace-nowrap pointer-events-auto">
-              <Target className="w-4 h-4 text-[hsl(var(--gd))]" />
-              <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.totalProposalsReviewed || 0}</span> Reviews
-            </div>
-            <div className="absolute bottom-[18%] right-[10%] inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-sm font-medium text-foreground animate-[pill-float_6s_ease-in-out_infinite_4.5s] whitespace-nowrap pointer-events-auto">
-              <Trophy className="w-4 h-4 text-[hsl(var(--gd))]" />
-              <span className="font-mono font-medium text-[hsl(var(--gd))]">{guild.expertCount}</span> Experts
-            </div>
-          </div>
-
+        {/* ═══ HERO ═══ */}
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
           {/* Breadcrumb */}
-          <div className="relative z-10 self-start max-w-[1240px] w-full mx-auto mb-8">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground/50">
-              <button onClick={() => router.push("/guilds")} className="hover:text-muted-foreground transition-colors">
-                Guilds
-              </button>
-              <span>/</span>
-              <span className="text-[hsl(var(--gd))] font-medium">{guild.name.replace(/ Guild$/i, "")}</span>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground/50 mb-8">
+            <button onClick={() => router.push("/guilds")} className="hover:text-muted-foreground transition-colors">
+              Guilds
+            </button>
+            <span>/</span>
+            <span className="text-[hsl(var(--gd))] font-medium">{guild.name.replace(/ Guild$/i, "")}</span>
+          </div>
+
+          <div className="flex items-start gap-5 mb-6">
+            {/* Guild icon */}
+            <div className="w-16 h-16 rounded-xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center flex-shrink-0">
+              <GuildIcon className="w-8 h-8 text-[hsl(var(--gd))]" />
+            </div>
+
+            <div>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground mb-1.5">
+                {guild.name}
+              </h1>
+              <p className="text-sm text-muted-foreground max-w-lg">
+                {guild.description}
+              </p>
             </div>
           </div>
 
-          {/* Guild emblem */}
-          <div
-            className="relative z-10 w-[120px] h-[120px] mb-7"
-            style={{ animation: "guild-emblem-breathe 4s ease-in-out infinite" }}
-          >
-            <div className="w-full h-full rounded-xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center">
-              <GuildIcon className="w-14 h-14 text-[hsl(var(--gd))]" />
+          {/* Stats row */}
+          <div className="flex items-center gap-6 mb-6 flex-wrap">
+            <div>
+              <p className="text-xl font-bold text-foreground tabular-nums">{totalMembers}</p>
+              <p className="text-xs text-muted-foreground">Members</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground tabular-nums">{guild.openPositions}</p>
+              <p className="text-xs text-muted-foreground">Open Jobs</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground tabular-nums">{guild.totalProposalsReviewed || 0}</p>
+              <p className="text-xs text-muted-foreground">Reviews</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground tabular-nums">{guild.expertCount}</p>
+              <p className="text-xs text-muted-foreground">Experts</p>
             </div>
           </div>
-
-          {/* Title */}
-          <h1
-            className="relative z-10 font-display text-3xl sm:text-5xl font-bold tracking-tight leading-none text-center text-white mb-3.5"
-          >
-            {guild.name}
-          </h1>
-          <p className="relative z-10 text-xl text-muted-foreground text-center mb-9 max-w-lg font-normal tracking-wide">
-            {guild.description}
-          </p>
 
           {/* Member badge / Apply / Pending */}
-          <div className="relative z-10 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             {showMemberBadge && (
-              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-positive/10 border border-positive/20 text-sm font-medium text-positive">
+              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-positive/10 border border-positive/20 text-sm font-medium text-positive">
                 <CheckCircle2 className="w-4 h-4" />
                 Member
                 {membership.role && (
@@ -265,15 +249,15 @@ export default function GuildDetailPage() {
               </div>
             )}
             {showPendingStatus && (
-              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-warning/[0.08] border border-warning/20 text-sm font-medium text-warning">
-                <Clock className="w-4 h-4 animate-pulse" />
+              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm font-medium text-warning">
+                <Clock className="w-4 h-4" />
                 Pending Review
               </div>
             )}
             {showApplyButton && (
               <button
                 onClick={handleApplyToGuild}
-                className="inline-flex items-center gap-2.5 px-9 py-3.5 rounded-xl text-base font-bold text-white font-display tracking-wide transition-all hover:translate-y-[-2px] bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
+                className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-colors bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
               >
                 Join Guild
               </button>
@@ -281,7 +265,7 @@ export default function GuildDetailPage() {
             {membership?.isMember && auth.userType === "expert" && (
               <button
                 onClick={() => router.push(`/expert/guild/${guildId}`)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground hover:bg-muted/30 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Expert Dashboard
