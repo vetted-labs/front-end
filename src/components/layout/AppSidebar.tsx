@@ -132,7 +132,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-border bg-card dark:bg-card/80 dark:backdrop-blur-2xl dark:border-white/[0.06] md:block",
+          "fixed inset-y-0 left-0 z-40 hidden border-r border-border bg-card dark:bg-gradient-to-b dark:from-[hsl(var(--surface-1))] dark:to-[hsl(var(--surface-0))] dark:backdrop-blur-2xl dark:border-primary/10 md:block",
           hasMounted && "transition-[width] duration-300",
           isCollapsed ? "w-16" : "w-52"
         )}
@@ -152,7 +152,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-52 border-r border-border bg-card dark:bg-card/80 dark:backdrop-blur-2xl dark:border-white/[0.06] transition-transform duration-300 md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-52 border-r border-border bg-card dark:bg-gradient-to-b dark:from-[hsl(var(--surface-1))] dark:to-[hsl(var(--surface-0))] dark:backdrop-blur-2xl dark:border-primary/10 transition-transform duration-300 md:hidden",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

@@ -15,7 +15,7 @@ export function SidebarNavGroup({ group, badgeCounts }: SidebarNavGroupProps) {
   return (
     <div className="space-y-1">
       {!isCollapsed && (
-        <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+        <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 dark:text-primary/35">
           {group.label}
         </p>
       )}
