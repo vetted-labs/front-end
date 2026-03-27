@@ -240,7 +240,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   if (mode === "public" && profile.status === "pending") {
     return (
       <div className="min-h-screen text-foreground">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           {showBackButton && (
             <button onClick={() => router.back()} className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
@@ -276,7 +276,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         <div className="profile-dot-grid" />
       </div>
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Back button */}
         {mode === "public" && showBackButton && (
           <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">

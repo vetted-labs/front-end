@@ -171,7 +171,7 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
 
         {/* ── Page header ── */}
         <div>

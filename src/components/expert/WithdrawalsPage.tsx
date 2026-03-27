@@ -206,7 +206,7 @@ export default function WithdrawalsPage() {
   }
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto px-4 py-8 animate-page-enter">
+    <div className="min-h-screen max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-page-enter">
       {/* ── Header ── */}
       <div className="mb-8">
         <Link

@@ -60,7 +60,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
     <div className="min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Link
           href="/browse/jobs"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 flex items-center gap-1.5"

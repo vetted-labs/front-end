@@ -246,7 +246,7 @@ export function NotificationsPage<T extends BaseNotification>({
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-[860px] mx-auto px-4 sm:px-6 py-12 relative z-[1]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-[1]">
         {/* Header */}
         <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
           <div className="flex items-center gap-4">

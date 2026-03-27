@@ -209,7 +209,7 @@ export default function CandidateApplications() {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* ── Header ── */}
         <div className="flex items-center gap-4 mb-8 flex-wrap">

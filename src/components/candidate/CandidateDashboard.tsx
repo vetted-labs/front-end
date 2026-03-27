@@ -311,7 +311,7 @@ export default function CandidateDashboard() {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
 
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">

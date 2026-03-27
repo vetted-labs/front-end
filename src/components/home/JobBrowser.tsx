@@ -39,7 +39,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
   const displayedJobs = jobs.slice(0, 6);
 
   return (
-    <section className="max-w-[1120px] mx-auto px-6 pb-20 pt-8">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-8">
       {/* Section header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display font-bold text-2xl sm:text-2xl tracking-tight text-foreground">

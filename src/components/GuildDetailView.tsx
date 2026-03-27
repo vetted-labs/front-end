@@ -373,7 +373,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
       </div>
 
       <div className="relative z-10">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <Breadcrumb items={[
             { label: "Dashboard", href: "/expert/dashboard" },
             { label: "Guilds", href: "/expert/guilds" },
@@ -383,7 +383,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         <GuildHeader guild={guild} onStakeClick={() => setShowVetdStakingModal(true)} />
         <GuildApplicationCTA guildId={guildId} onNavigateToPublicPage={() => router.push(`/guilds/${guildId}`)} />
 
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           {/* Sticky tab bar */}
           <div className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
             <PillTabs

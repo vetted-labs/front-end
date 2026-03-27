@@ -219,7 +219,7 @@ export default function JobsListing() {
 
   return (
     <div className="min-h-full">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <section className="text-center py-16 sm:py-20 relative">
           <div className="inline-flex items-center gap-1.5 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">

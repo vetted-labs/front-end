@@ -47,7 +47,7 @@ export function HeroSection({
   };
 
   return (
-    <section className="max-w-[1120px] mx-auto px-6 pt-36 pb-10">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-10">
       {/* Badge */}
       <div className="mb-7">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/[0.08] border border-primary/15 rounded-full text-xs font-semibold text-primary tracking-wide">

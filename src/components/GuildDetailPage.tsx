@@ -186,7 +186,7 @@ export default function GuildDetailPage() {
       <div className="relative">
 
         {/* ═══ HERO ═══ */}
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground/50 mb-8">
             <button onClick={() => router.push("/guilds")} className="hover:text-muted-foreground transition-colors">
@@ -275,7 +275,7 @@ export default function GuildDetailPage() {
         </div>
 
         {/* ═══ TAB BAR — Glassmorphic ═══ */}
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 p-1.5 bg-card border border-border rounded-xl mb-10 overflow-x-auto scrollbar-none">
             {(
               [

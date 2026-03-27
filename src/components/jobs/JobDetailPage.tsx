@@ -149,7 +149,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
   return (
     <div className="min-h-screen min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.push(backHref)}
           className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"

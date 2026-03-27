@@ -28,7 +28,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
   const GuildIcon = getGuildIcon(guild.name);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* ═══ BENTO GRID ═══ */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-3 mb-3">
 

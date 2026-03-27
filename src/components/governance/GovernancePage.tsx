@@ -94,7 +94,7 @@ export default function GovernancePage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ─── Hero Section ─── */}
         <section className="pt-14 pb-10 relative">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">

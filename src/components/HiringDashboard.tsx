@@ -120,7 +120,7 @@ export function HiringDashboard() {
       {/* Background glow */}
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="mb-6">
             <Alert variant="error">

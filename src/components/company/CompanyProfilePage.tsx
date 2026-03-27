@@ -164,7 +164,7 @@ export default function CompanyProfilePage() {
     <div className="min-h-screen bg-background animate-page-enter">
       {/* Header */}
       <div className="bg-card shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
@@ -179,7 +179,7 @@ export default function CompanyProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Message */}
         {error && (
           <div className="mb-6">

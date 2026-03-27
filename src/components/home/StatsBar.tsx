@@ -74,7 +74,7 @@ export function StatsBar({ guilds, jobs }: StatsBarProps) {
   const candidatesVetted = guilds.reduce((sum, g) => sum + (g.candidateCount ?? 0), 0);
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
       <div className="bg-card border border-border/30 rounded-xl py-5 flex items-center justify-center">
         <div className="flex items-center flex-wrap justify-center gap-y-2">
           <StatItem label="Expert Reviewers" target={expertReviewers || 120} />

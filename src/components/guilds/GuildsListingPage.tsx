@@ -69,7 +69,7 @@ export default function GlobalGuildsPage() {
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.07] blur-[120px]" />
       </div>
 
-      <div className="relative z-10 max-w-[920px] mx-auto px-5 sm:px-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── Hero ── */}
         <header className="pt-16 pb-14 md:pt-20 md:pb-16">
           {/* Overline */}

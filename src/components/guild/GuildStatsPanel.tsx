@@ -42,7 +42,7 @@ export function GuildStatsPanel({
   ];
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
       {/* Health stats bar */}
       <div className=" rounded-xl border border-border p-5 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
         <div className="flex-1 text-center px-2">

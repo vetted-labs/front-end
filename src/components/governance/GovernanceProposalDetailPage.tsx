@@ -125,7 +125,7 @@ export function GovernanceProposalDetailPage() {
   /* ─── Not found ─── */
   if (!proposal) {
     return (
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.back()}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -159,7 +159,7 @@ export function GovernanceProposalDetailPage() {
   const typeColors = getProposalTypeColors(proposal.proposal_type);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb items={[
         { label: "Governance", href: "/expert/governance" },
         { label: proposal?.title ?? "Proposal" },

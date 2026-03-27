@@ -588,7 +588,7 @@ export function GuildRanksProgression() {
 
   if (!address) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <EmptyState
           icon={Wallet}
           title="Wallet not connected"
@@ -602,7 +602,7 @@ export function GuildRanksProgression() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Alert variant="error">Failed to load rank progression data.</Alert>
       </div>
     );
@@ -622,7 +622,7 @@ export function GuildRanksProgression() {
     : { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Advance Your Guild Rank</h1>

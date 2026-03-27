@@ -109,7 +109,7 @@ export default function ReputationPage() {
         reviewCount={profile?.reviewCount ?? 0}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-20">
         {/* Breakdown Cards */}
         <ReputationBreakdownCards
           reputation={reputation}
