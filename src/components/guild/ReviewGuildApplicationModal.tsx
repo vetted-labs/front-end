@@ -384,7 +384,7 @@ export function ReviewGuildApplicationModal({
         >
           {/* Decorative gradients */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.06),transparent_50%)]" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
