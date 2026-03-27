@@ -1,34 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { getRewardTierProgress, REWARD_TIERS } from "@/types";
+import { REWARD_TIER_COLORS } from "@/config/colors";
 
 interface RewardTierCardProps {
   reputation: number;
 }
 
-const tierColors: Record<string, { bg: string; border: string; text: string; bar: string }> = {
-  Foundation: {
-    bg: "bg-slate-500/10 dark:bg-slate-500/15",
-    border: "border-slate-500/20",
-    text: "text-slate-600 dark:text-slate-400",
-    bar: "bg-slate-500",
-  },
-  Established: {
-    bg: "bg-blue-500/10 dark:bg-blue-500/15",
-    border: "border-blue-500/20",
-    text: "text-blue-600 dark:text-blue-400",
-    bar: "bg-blue-500",
-  },
-  Authority: {
-    bg: "bg-amber-500/10 dark:bg-amber-500/15",
-    border: "border-amber-500/20",
-    text: "text-amber-600 dark:text-amber-400",
-    bar: "bg-amber-500",
-  },
-};
-
 export function RewardTierCard({ reputation }: RewardTierCardProps) {
   const { tier, nextTier, progress } = getRewardTierProgress(reputation);
-  const colors = tierColors[tier.name];
+  const colors = REWARD_TIER_COLORS[tier.name] ?? REWARD_TIER_COLORS.Foundation;
 
   return (
     <Card padding="none">
@@ -76,7 +56,7 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
           <div className="grid grid-cols-3 gap-2">
             {REWARD_TIERS.map((t) => {
               const isActive = t.name === tier.name;
-              const tc = tierColors[t.name];
+              const tc = REWARD_TIER_COLORS[t.name] ?? REWARD_TIER_COLORS.Foundation;
               return (
                 <div
                   key={t.name}

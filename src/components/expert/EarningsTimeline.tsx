@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { Coins, Vote, Award } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 import type { EarningsEntry, PaginationInfo } from "@/types";
 
 const typeLabels: Record<string, string> = {
@@ -91,8 +92,8 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                     const currency = entry.currency || "VETD";
                     return (
                       <div key={i} className="px-5 py-3.5 flex items-center gap-4 hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                          <TypeIcon className="w-4 h-4 text-emerald-500" />
+                        <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center flex-shrink-0`}>
+                          <TypeIcon className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -114,7 +115,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                         </div>
 
                         <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                          <p className={`text-sm font-semibold tabular-nums ${STATUS_COLORS.positive.text}`}>
                             +{Number(entry.amount).toFixed(2)}{" "}
                             <span className="text-[10px] font-normal text-muted-foreground/60">{currency}</span>
                           </p>

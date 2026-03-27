@@ -462,8 +462,8 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                 icon={FileText}
                 value={calculateTotalProposals()}
                 label="Proposals"
-                iconColor="text-sky-500 dark:text-sky-400"
-                iconBg="bg-sky-500/10"
+                iconColor="text-primary"
+                iconBg="bg-primary/[0.08]"
               />
               <ProfileStatCell
                 icon={ThumbsUp}
@@ -476,8 +476,8 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                 icon={Eye}
                 value={profile.reviewCount || 0}
                 label="Reviews"
-                iconColor="text-violet-500 dark:text-violet-400"
-                iconBg="bg-violet-500/10"
+                iconColor="text-primary"
+                iconBg="bg-primary/[0.08]"
               />
               <ProfileStatCell
                 icon={Zap}

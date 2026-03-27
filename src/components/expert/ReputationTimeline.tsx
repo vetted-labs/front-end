@@ -3,38 +3,39 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Activity } from "lucide-react";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatTimeAgo, formatDate } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ReputationTimelineEntry, ReputationTierConfig, PaginationInfo } from "@/types";
 
 const tierConfig: Record<string, ReputationTierConfig> = {
   aligned: {
     label: "Aligned",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/10 dark:bg-emerald-500/15",
-    border: "border-emerald-500/20 dark:border-emerald-500/25",
+    color: STATUS_COLORS.positive.text,
+    bg: STATUS_COLORS.positive.bgSubtle,
+    border: STATUS_COLORS.positive.border,
   },
   mild_deviation: {
     label: "Mild Deviation",
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/10 dark:bg-amber-500/15",
-    border: "border-amber-500/20 dark:border-amber-500/25",
+    color: STATUS_COLORS.warning.text,
+    bg: STATUS_COLORS.warning.bgSubtle,
+    border: STATUS_COLORS.warning.border,
   },
   moderate_deviation: {
     label: "Moderate Deviation",
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-500/10 dark:bg-orange-500/15",
-    border: "border-orange-500/20 dark:border-orange-500/25",
+    color: STATUS_COLORS.pending.text,
+    bg: STATUS_COLORS.pending.bgSubtle,
+    border: STATUS_COLORS.pending.border,
   },
   severe_deviation: {
     label: "Severe Deviation",
-    color: "text-red-600 dark:text-red-400",
-    bg: "bg-red-500/10 dark:bg-red-500/15",
-    border: "border-red-500/20 dark:border-red-500/25",
+    color: STATUS_COLORS.negative.text,
+    bg: STATUS_COLORS.negative.bgSubtle,
+    border: STATUS_COLORS.negative.border,
   },
   vote_with_majority: {
     label: "Majority Vote",
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/10 dark:bg-blue-500/15",
-    border: "border-blue-500/20 dark:border-blue-500/25",
+    color: STATUS_COLORS.info.text,
+    bg: STATUS_COLORS.info.bgSubtle,
+    border: STATUS_COLORS.info.border,
   },
 };
 
@@ -61,8 +62,8 @@ function TimelineEntry({ entry }: { entry: ReputationTimelineEntry }) {
       <div
         className={`absolute left-[16px] top-[20px] w-[15px] h-[15px] rounded-full border-2 border-background z-10 ${
           isPositive
-            ? "bg-emerald-500 shadow-sm shadow-emerald-500/30"
-            : "bg-red-500 shadow-sm shadow-red-500/30"
+            ? `${STATUS_COLORS.positive.dot} shadow-sm`
+            : `${STATUS_COLORS.negative.dot} shadow-sm`
         }`}
       />
 
@@ -77,9 +78,7 @@ function TimelineEntry({ entry }: { entry: ReputationTimelineEntry }) {
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={`inline-flex items-center gap-1 text-sm font-semibold tabular-nums ${
-                  isPositive
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
+                  isPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                 }`}
               >
                 {isPositive ? (
@@ -122,8 +121,8 @@ function TimelineEntry({ entry }: { entry: ReputationTimelineEntry }) {
                   <span
                     className={
                       entry.outcome === "approved"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-red-500 dark:text-red-400"
+                        ? STATUS_COLORS.positive.text
+                        : STATUS_COLORS.negative.text
                     }
                   >
                     {entry.outcome}
@@ -149,9 +148,9 @@ function TimelineEntry({ entry }: { entry: ReputationTimelineEntry }) {
                 <p className="text-sm font-semibold tabular-nums mt-0.5">{Number(entry.alignment_distance).toFixed(1)}</p>
               </div>
               {entry.reward_amount !== null && Number(entry.reward_amount) > 0 && (
-                <div className="rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/15 px-3 py-2">
-                  <p className="text-[10px] font-medium text-emerald-600/60 dark:text-emerald-400/60 uppercase tracking-wider">Reward</p>
-                  <p className="text-sm font-semibold tabular-nums mt-0.5 text-emerald-600 dark:text-emerald-400">
+                <div className={`rounded-lg ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} px-3 py-2`}>
+                  <p className={`text-[10px] font-medium uppercase tracking-wider ${STATUS_COLORS.positive.text} opacity-60`}>Reward</p>
+                  <p className={`text-sm font-semibold tabular-nums mt-0.5 ${STATUS_COLORS.positive.text}`}>
                     +{Number(entry.reward_amount).toFixed(2)}
                   </p>
                 </div>
