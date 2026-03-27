@@ -184,33 +184,22 @@ export function CompanyDashboardOverview() {
         {/* Stat Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Active Jobs"
+            label="Active Jobs"
             value={stats?.activeJobs ?? 0}
-            icon={Briefcase}
-            iconBgColor="bg-primary/10"
-            iconColor="text-primary"
           />
           <StatCard
-            title="Total Applicants"
+            label="Total Applicants"
             value={stats?.totalApplicants ?? 0}
-            icon={Users}
-            iconBgColor="bg-blue-500/10"
-            iconColor="text-blue-600 dark:text-blue-400"
           />
           <StatCard
-            title="Unread Messages"
+            label="Unread Messages"
             value={unreadCount}
-            icon={MessageSquare}
-            iconBgColor="bg-green-500/10"
-            iconColor="text-green-600 dark:text-green-400"
-            badge={unreadCount > 0 ? { text: "New", variant: "info" } : undefined}
+            subtext={unreadCount > 0 ? "new" : undefined}
+            subtextVariant={unreadCount > 0 ? "success" : "default"}
           />
           <StatCard
-            title="Avg Days to Hire"
+            label="Avg Days to Hire"
             value={stats?.averageTimeToHire ?? "—"}
-            icon={Clock}
-            iconBgColor="bg-orange-500/10"
-            iconColor="text-orange-600 dark:text-orange-400"
           />
         </div>
 
