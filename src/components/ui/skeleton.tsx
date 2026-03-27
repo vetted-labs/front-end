@@ -15,7 +15,7 @@ export function Skeleton({ className }: SkeletonProps) {
 export function SkeletonCard({ className }: SkeletonProps) {
   return (
     <div className={cn(
-      "rounded-2xl border border-border/60 bg-card/40 p-5 space-y-3",
+      "rounded-xl border border-border bg-card p-5 space-y-3",
       className
     )}>
       <Skeleton className="h-4 w-1/3" />
@@ -28,7 +28,7 @@ export function SkeletonCard({ className }: SkeletonProps) {
 /** Stat card skeleton matching StatCard component */
 export function SkeletonStatCard() {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/40 p-6">
+    <div className="rounded-xl border border-border bg-card p-6">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="w-12 h-12 rounded-lg" />
       </div>
@@ -65,7 +65,7 @@ export function SkeletonSectionHeader() {
 /** Job card skeleton matching JobsListing cards */
 export function SkeletonJobCard() {
   return (
-    <div className="bg-card/40 rounded-2xl p-6 border border-border/60">
+    <div className="bg-card rounded-xl p-6 border border-border">
       <div className="flex gap-5">
         <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
         <div className="flex-1 space-y-3">

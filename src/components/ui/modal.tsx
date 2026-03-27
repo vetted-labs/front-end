@@ -123,7 +123,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
               role="dialog"
               aria-modal="true"
               {...(title ? { "aria-label": title } : {})}
-              className={`relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] flex flex-col overflow-hidden border border-border/60 dark:bg-card/40 dark:backdrop-blur-xl dark:border-white/[0.06]`}
+              className={`relative bg-card rounded-xl shadow-lg border border-border w-full ${sizeStyles[size]} max-h-[90vh] flex flex-col overflow-hidden`}
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}

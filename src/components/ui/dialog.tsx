@@ -164,8 +164,7 @@ export function DialogContent({ children, className, "aria-label": ariaLabel }: 
           aria-modal="true"
           {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
           className={cn(
-            "relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] border border-border/60",
-            "dark:bg-card/95 dark:backdrop-blur-xl dark:border-white/[0.08]",
+            "relative bg-card rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] border border-border",
             "transition-all duration-200",
             isAnimatingIn
               ? "opacity-100 scale-100"

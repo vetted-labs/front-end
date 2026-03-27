@@ -83,8 +83,8 @@
     /* Radius - Slightly larger for modern feel */
     --radius: 0.75rem;
 
-    /* Card elevation - cool-toned shadow for light mode */
-    --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    /* Card elevation - minimal flat shadow */
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
     /* Brand gray scale - Slate tones */
     --gray-medium: 215 16% 47%;                  /* CHANGED */
@@ -275,38 +275,25 @@ body {
     min-height: 100dvh;
 }
 
-/* Glass card effect — light mode */
+/* Legacy glass-card classes — flat opaque replacements (will remove class usage in Phase 2b) */
 .glass-card {
-    background: hsl(var(--card) / 0.7);
-    backdrop-filter: blur(12px) saturate(1.1);
-    -webkit-backdrop-filter: blur(12px) saturate(1.1);
-    border-color: hsl(var(--border) / 0.6);
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
 }
 
-/* Glass card effect — dark mode */
 .dark .glass-card {
-    background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(20px) saturate(1.2);
-    -webkit-backdrop-filter: blur(20px) saturate(1.2);
-    border-color: hsl(0 0% 100% / 0.06);
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
 }
 
-/* Subtle ambient glow on glass cards — light mode */
 .glass-card-glow {
-    background: hsl(var(--card) / 0.65);
-    backdrop-filter: blur(16px) saturate(1.15);
-    -webkit-backdrop-filter: blur(16px) saturate(1.15);
-    border-color: hsl(var(--border) / 0.5);
-    box-shadow: 0 0 40px -12px hsl(var(--primary) / 0.06);
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
 }
 
-/* Subtle ambient glow on glass cards — dark mode */
 .dark .glass-card-glow {
-    background: hsl(var(--card) / 0.5);
-    backdrop-filter: blur(24px) saturate(1.3);
-    -webkit-backdrop-filter: blur(24px) saturate(1.3);
-    border-color: hsl(0 0% 100% / 0.08);
-    box-shadow: 0 0 40px -12px hsl(var(--primary) / 0.08);
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
 }
 
 /* Main content area gradient background — light mode */
@@ -323,34 +310,10 @@ body {
         linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
 }
 
-/* ── Page enter animation — smooth skeleton→content transition ── */
-
-@keyframes page-enter {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-page-enter {
-    animation: page-enter 350ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
-}
-
-.animate-section-enter {
-    animation: page-enter 400ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .animate-page-enter,
-    .animate-section-enter {
-        animation: none !important;
-        opacity: 1 !important;
-    }
-}
+/* === Ambient Animations (CSS) ===
+ * Infinite/ambient animations remain as CSS keyframes.
+ * Entrance/exit/interactive animations use Framer Motion.
+ */
 
 /* ── Landing page animations & utilities ── */
 
@@ -457,23 +420,6 @@ body {
     opacity: 1;
 }
 
-/* ── Message entry animation ── */
-
-@keyframes message-in {
-    from {
-        opacity: 0;
-        transform: translateY(8px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@utility animate-message-in {
-    animation: message-in 0.25s ease-out;
-}
-
 /* ── Navigation progress bar ── */
 
 @keyframes nav-progress {
@@ -560,34 +506,6 @@ body {
     .animate-sparkle,
     .animate-shimmer-border {
         animation: none !important;
-    }
-}
-
-/* ── Modal entrance animations ── */
-
-@keyframes modal-backdrop-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes modal-scale-in {
-    from { opacity: 0; transform: scale(0.95) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.animate-modal-backdrop-in {
-    animation: modal-backdrop-in 200ms ease-out both;
-}
-
-.animate-modal-scale-in {
-    animation: modal-scale-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .animate-modal-backdrop-in,
-    .animate-modal-scale-in {
-        animation: none !important;
-        opacity: 1 !important;
     }
 }
 
