@@ -83,6 +83,9 @@
     /* Radius - Slightly larger for modern feel */
     --radius: 0.75rem;
 
+    /* Card elevation - cool-toned shadow for light mode */
+    --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+
     /* Brand gray scale - Slate tones */
     --gray-medium: 215 16% 47%;                  /* CHANGED */
     --gray-light: 215 16% 57%;                   /* CHANGED */
@@ -191,6 +194,9 @@
     /* Secondary oranges - brighter for contrast */
     --orange-secondary: 24 85% 65%;
     --orange-light: 24 100% 75%;
+
+    /* Card elevation - keep existing dark mode shadows */
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 @theme inline {
@@ -251,6 +257,7 @@
     --color-surface-2: hsl(var(--surface-2));
     --color-surface-3: hsl(var(--surface-3));
     --color-surface-border: hsl(var(--surface-border));
+    --shadow-card: var(--card-shadow);
     --font-sans: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
     --font-display: var(--font-display), 'Bricolage Grotesque', 'Inter', sans-serif;
