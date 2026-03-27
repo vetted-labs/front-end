@@ -12,6 +12,8 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
 import { RankProgress } from "@/components/dashboard/RankProgress";
 import { GuildsSection } from "@/components/dashboard/GuildsSection";
+import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { SlimNotificationsFeed } from "@/components/dashboard/SlimNotificationsFeed";
 import { WalletVerificationModal } from "@/components/WalletVerificationModal";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -346,7 +348,13 @@ export function EnhancedExpertDashboard() {
         <RankProgress guilds={profile.guilds ?? []} />
       </div>
 
-      {/* Section 4: Your Guilds */}
+      {/* Section 4: Recent Activity + Notifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+        <RecentActivity activities={profile.recentActivity ?? []} />
+        <SlimNotificationsFeed walletAddress={address!} />
+      </div>
+
+      {/* Section 5: Your Guilds */}
       <GuildsSection
         guilds={profile.guilds ?? []}
         guildStakes={guildStakes}
