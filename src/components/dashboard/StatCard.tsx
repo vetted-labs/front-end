@@ -1,63 +1,44 @@
 "use client";
-import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
-  title: string;
+  label: string;
   value: string | number;
-  icon: LucideIcon;
-  iconBgColor?: string;
-  iconColor?: string;
-  trend?: string | number;
-  trendDirection?: "up" | "down" | "neutral";
-  badge?: {
-    text: string;
-    variant: "warning" | "success" | "info";
-  };
+  subtext?: string;
+  subtextVariant?: "default" | "success" | "warning";
+  warningDot?: boolean;
 }
 
 export function StatCard({
-  title,
+  label,
   value,
-  icon: Icon,
-  iconBgColor = "bg-primary/10",
-  iconColor = "text-primary",
-  trend,
-  trendDirection = "neutral",
-  badge,
+  subtext,
+  subtextVariant = "default",
+  warningDot = false,
 }: StatCardProps) {
-  const badgeStyles = {
-    warning: "bg-yellow-500/10 border-yellow-500/20 text-yellow-700 dark:text-yellow-300",
-    success: "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-300",
-    info: "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300",
-  };
-
-  const trendStyles = {
-    up: "text-green-600 dark:text-green-400",
-    down: "text-red-600 dark:text-red-400",
-    neutral: "text-muted-foreground",
+  const subtextColors = {
+    default: "text-zinc-500",
+    success: "text-emerald-400",
+    warning: "text-amber-500",
   };
 
   return (
-    <div className="bg-card rounded-2xl p-6 shadow-md border border-border hover:shadow-lg transition-all dark:bg-card/60 dark:backdrop-blur-xl dark:border-white/[0.06] dark:shadow-lg dark:shadow-black/20 dark:hover:border-white/[0.1]">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 ${iconBgColor} rounded-lg flex items-center justify-center`}>
-          <Icon className={`w-6 h-6 ${iconColor}`} />
-        </div>
-        {trend && (
-          <span className={`text-sm font-semibold ${trendStyles[trendDirection]}`}>
-            {trendDirection === "up" && "↑ "}
-            {trendDirection === "down" && "↓ "}
-            {trend}
-          </span>
-        )}
-        {badge && (
-          <span className={`px-2 py-1 border text-xs font-semibold rounded-full ${badgeStyles[badge.variant]}`}>
-            {badge.text}
-          </span>
+    <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-[18px]">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">
+          {label}
+        </span>
+        {warningDot && (
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
         )}
       </div>
-      <p className="text-sm text-muted-foreground mb-1">{title}</p>
-      <p className="text-3xl font-bold text-foreground">{value}</p>
+      <div className="text-[28px] font-bold text-zinc-50 tracking-tight mt-1.5">
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </div>
+      {subtext && (
+        <div className={`text-[11px] mt-1 ${subtextColors[subtextVariant]}`}>
+          {subtext}
+        </div>
+      )}
     </div>
   );
 }
