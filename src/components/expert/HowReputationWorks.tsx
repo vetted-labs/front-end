@@ -2,7 +2,39 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Info, ChevronDown } from "lucide-react";
+import {
+  Info,
+  ChevronDown,
+  Vote,
+  Award,
+  Landmark,
+  ShieldAlert,
+  Calculator,
+  TrendingUp,
+} from "lucide-react";
+
+function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <h4 className="text-sm font-semibold">{title}</h4>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Bullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <span className="mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-muted-foreground/40" />
+      {children}
+    </li>
+  );
+}
 
 export function HowReputationWorks() {
   const [open, setOpen] = useState(false);
@@ -14,7 +46,7 @@ export function HowReputationWorks() {
         className="w-full flex items-center justify-between px-5 py-4 text-left"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-primary" />
+          <Info className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-semibold">How Reputation Works</span>
         </div>
         <ChevronDown
@@ -26,102 +58,139 @@ export function HowReputationWorks() {
 
       {open && (
         <div className="px-5 pb-5 border-t border-border/40">
-          <div className="grid sm:grid-cols-2 gap-6 pt-4">
-            {/* What is Reputation */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                What is Reputation?
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Reputation measures your standing as an expert within the Vetted protocol. It determines your guild rank, your reward tier, and your share of VETD rewards from each vetting pool.
-              </p>
-            </div>
+          <div className="grid sm:grid-cols-2 gap-4 pt-4">
+            <Section icon={Vote} title="Vetting">
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <Bullet>Review candidates and submit your score</Bullet>
+                <Bullet>Scores are compared to <strong className="text-foreground/80">IQR-based consensus</strong> after finalization</Bullet>
+                <Bullet>The closer your score to consensus, the more reputation you earn</Bullet>
+              </ul>
+            </Section>
 
-            {/* How You Earn It */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                How You Earn Reputation
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Reputation is gained through three activities: Vetting (+10 per aligned vote), Endorsements (+20 for successful hires), and Governance participation (+5 to +10 per vote). Deviating from consensus costs -20 points. Inactivity decays -10 per cycle.
-              </p>
-            </div>
+            <Section icon={Award} title="Endorsements">
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <Bullet>Stake on candidates you believe in</Bullet>
+                <Bullet>Earn <strong className="text-foreground/80">+20 reputation</strong> when your endorsed candidate gets hired</Bullet>
+                <Bullet>Failed endorsements have no reputation penalty</Bullet>
+              </ul>
+            </Section>
 
-            {/* Reputation Sources */}
-            <div className="sm:col-span-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                Reputation Sources
-              </h4>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                <div className="flex items-start gap-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 px-3 py-2.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Vetting</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Review candidates and align with guild consensus. The closer your score to the consensus after finalization, the more reputation you earn.
-                    </p>
-                  </div>
+            <Section icon={Landmark} title="Governance">
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <Bullet>Vote on guild proposals and governance decisions</Bullet>
+                <Bullet>Earn <strong className="text-foreground/80">+5 to +10 reputation</strong> per vote</Bullet>
+                <Bullet>Active participation builds reputation over time</Bullet>
+              </ul>
+            </Section>
+
+            <Section icon={ShieldAlert} title="Slashing Risk">
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <Bullet>Scores far from consensus trigger stake slashing</Bullet>
+                <Bullet>Up to <strong className="text-foreground/80">25% of staked VETD</strong> may be slashed</Bullet>
+                <Bullet>Inactivity decays <strong className="text-foreground/80">-10 reputation</strong> per cycle</Bullet>
+              </ul>
+            </Section>
+
+            {/* Alignment Calculation — full width */}
+            <div className="sm:col-span-2 rounded-xl border border-border/60 bg-muted/20 p-4">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+                  <Calculator className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <div className="flex items-start gap-2.5 rounded-lg bg-blue-500/5 border border-blue-500/10 px-3 py-2.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">Endorsement</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Stake on candidates you believe in. Successful endorsements (candidate gets hired) earn reputation and rewards.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10 px-3 py-2.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-semibold text-purple-600 dark:text-purple-400">Governance Participation</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Participate in guild governance by voting on proposals. Active governance participation earns reputation over time.
-                    </p>
-                  </div>
-                </div>
+                <h4 className="text-sm font-semibold">How Alignment Is Calculated</h4>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                After a vetting round finalizes, the consensus score is calculated using <strong className="text-foreground/80">IQR-based filtering</strong> (statistical outlier removal). Your deviation is measured as a multiple of the IQR distance from the median.
+              </p>
+              <div className="rounded-lg border border-border/40 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider">
+                      <th className="text-left px-3 py-2 font-semibold">Deviation</th>
+                      <th className="text-center px-3 py-2 font-semibold">Reputation</th>
+                      <th className="text-center px-3 py-2 font-semibold">Slash</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    <tr>
+                      <td className="px-3 py-2.5">
+                        <span className="font-medium text-foreground">Aligned</span>
+                        <span className="text-muted-foreground/60 text-xs ml-1.5">within IQR</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-0.5 rounded">+10</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs text-muted-foreground/50">0%</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2.5">
+                        <span className="font-medium text-foreground">Mild</span>
+                        <span className="text-muted-foreground/60 text-xs ml-1.5">1 &ndash; 1.5x IQR</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">-5</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-amber-500">5%</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2.5">
+                        <span className="font-medium text-foreground">Moderate</span>
+                        <span className="text-muted-foreground/60 text-xs ml-1.5">1.5 &ndash; 2x IQR</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded">-10</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-orange-500">15%</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2.5">
+                        <span className="font-medium text-foreground">Severe</span>
+                        <span className="text-muted-foreground/60 text-xs ml-1.5">&gt; 2x IQR</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">-20</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className="font-mono text-xs font-semibold text-red-500">25%</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Scoring */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Alignment Scoring
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                After a vetting is finalized, the consensus score is calculated using IQR-based filtering (statistical outlier removal). Your &quot;distance&quot; is how far your score was from this consensus. Lower distance = better alignment.
-              </p>
-            </div>
+            <Section icon={TrendingUp} title="Reward Tiers">
+              <ul className="space-y-1.5 text-sm text-muted-foreground">
+                <li className="flex items-center justify-between">
+                  <span>Foundation <span className="text-muted-foreground/50 text-xs">0 &ndash; 999</span></span>
+                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Established <span className="text-muted-foreground/50 text-xs">1,000 &ndash; 1,999</span></span>
+                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.25x</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Authority <span className="text-muted-foreground/50 text-xs">2,000+</span></span>
+                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.50x</span>
+                </li>
+              </ul>
+              <p className="text-xs text-muted-foreground/60 mt-2.5">Higher tiers earn a larger share of every vetting reward pool</p>
+            </Section>
 
-            {/* Reward Tiers */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Reward Tiers
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Your reputation determines your reward tier: Foundation (0–999, 1.0x), Established (1,000–1,999, 1.25x), and Authority (2,000+, 1.50x). Higher tiers earn a proportionally larger share of every vetting reward pool.
+            <Section icon={Calculator} title="Pool Distribution">
+              <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border/40 font-mono text-xs text-center text-muted-foreground leading-relaxed">
+                Reward = (Your Weight / Total Aligned Weights) &times; Pool
+              </div>
+              <p className="text-xs text-muted-foreground/60 mt-2.5 text-center">
+                The pool is fixed per round &mdash; higher tiers earn more by proportion, not by inflating the pool
               </p>
-            </div>
-
-            {/* Ranks */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Guild Ranks
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Reputation also unlocks guild ranks: Recruit, Apprentice (50+), Craftsman (150+), Officer (300+), and Guild Master (500+). Higher ranks grant governance influence and endorsement eligibility.
-              </p>
-            </div>
-
-            {/* Pool Distribution */}
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Pool Distribution Formula
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Each vetting round has a fixed reward pool. Your share is calculated as: Your Tier Weight / Sum of All Aligned Experts&apos; Weights &times; Pool. The pool total never changes — higher-tier experts earn more by receiving a larger proportion, not by inflating the pool.
-              </p>
-            </div>
+            </Section>
           </div>
         </div>
       )}

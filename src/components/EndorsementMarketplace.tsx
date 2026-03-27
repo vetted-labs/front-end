@@ -13,7 +13,7 @@ import { useEndorsementTransaction } from "@/lib/hooks/useEndorsementTransaction
 import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransaction";
 import { blockchainApi } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
-import type { EndorsementApplication } from "@/types";
+import type { EndorsementApplication, GuildRecord } from "@/types";
 
 import {
   Card,
@@ -22,12 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Coins,
   Users,
   AlertCircle,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -42,8 +40,7 @@ const EndorsementTransactionModal = dynamic(
   () => import("./endorsements/EndorsementTransactionModal").then(m => ({ default: m.EndorsementTransactionModal })),
   { ssr: false }
 );
-import { WalletStatusBanner } from "./endorsements/WalletStatusBanner";
-import { EndorsementStatsGrid } from "./endorsements/EndorsementStatsGrid";
+import { EndorsementHeader } from "./endorsements/EndorsementHeader";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 
 interface EndorsementMarketplaceProps {
@@ -51,9 +48,12 @@ interface EndorsementMarketplaceProps {
   guildName: string;
   blockchainGuildId?: `0x${string}`;
   initialApplicationId?: string;
+  guilds: GuildRecord[];
+  selectedGuildId: string | undefined;
+  onGuildChange: (guildId: string) => void;
 }
 
-export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId }: EndorsementMarketplaceProps) {
+export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId, guilds, selectedGuildId, onGuildChange }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
@@ -221,20 +221,23 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   }
 
   const isOnSepolia = chain?.id === sepolia.id;
-  const BACKEND_WALLET = process.env.NEXT_PUBLIC_BACKEND_WALLET || "0x5b3141560e335f813047CFCB5D209fc8312B80c5";
-  const isBackendWallet = address?.toLowerCase() === BACKEND_WALLET.toLowerCase();
 
   return (
     <div className="min-h-screen space-y-6 animate-page-enter">
-      <WalletStatusBanner
-        isBackendWallet={isBackendWallet}
-        backendWalletAddress={BACKEND_WALLET}
-        isOnSepolia={isOnSepolia}
-        chainName={chain?.name}
+      <EndorsementHeader
         address={address!}
         shortAddress={shortAddress}
         formattedBalance={formattedBalance}
+        isOnSepolia={isOnSepolia}
+        chainName={chain?.name}
         onSwitchToSepolia={() => switchChain({ chainId: sepolia.id })}
+        guilds={guilds}
+        selectedGuildId={selectedGuildId}
+        onGuildChange={onGuildChange}
+        totalEndorsementsCount={allUserEndorsements.length}
+        userEndorsementsCount={userEndorsements.length}
+        applicationsCount={applicationsTotalItems}
+        userStake={userStake}
       />
 
       {!meetsMinimumStake && (
@@ -248,21 +251,6 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           </CardContent>
         </Card>
       )}
-
-      {/* Header Stats */}
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Sparkles className="w-4 h-4" />
-          Endorsement Dashboard
-        </h2>
-      </div>
-
-      <EndorsementStatsGrid
-        userStake={userStake}
-        userEndorsementsCount={userEndorsements.length}
-        applicationsCount={applicationsTotalItems}
-        minimumBid={minimumBidFormatted}
-      />
 
       <MyActiveEndorsements
         userEndorsements={userEndorsements}

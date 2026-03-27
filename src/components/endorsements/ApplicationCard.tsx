@@ -1,11 +1,10 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { MapPin, Briefcase, DollarSign, Award, Star, Linkedin, Github, FileText, ExternalLink, Eye, Zap, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useMemo } from 'react';
-import { ensureHttps, formatSalaryRange } from "@/lib/utils";
+import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import type { EndorsementApplication } from "@/types";
 
@@ -15,8 +14,74 @@ interface ApplicationCardProps {
   onQuickEndorse?: (application: EndorsementApplication) => void;
 }
 
+type ScoreTier = 'high' | 'mid' | 'low';
+
+function getScoreTier(score: number): ScoreTier {
+  if (score >= 70) return 'high';
+  if (score >= 40) return 'mid';
+  return 'low';
+}
+
+const TIER_COLORS: Record<ScoreTier, { accent: string; glow: string; text: string; border: string; avatarBg: string }> = {
+  high: {
+    accent: 'from-green-500 to-green-500/30',
+    glow: 'shadow-[0_0_12px_rgba(34,197,94,0.15)]',
+    text: 'text-green-500',
+    border: 'border-green-500/20',
+    avatarBg: 'bg-gradient-to-br from-green-500/15 to-green-500/5 border-green-500/20',
+  },
+  mid: {
+    accent: 'from-amber-500 to-amber-500/30',
+    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.15)]',
+    text: 'text-amber-500',
+    border: 'border-amber-500/20',
+    avatarBg: 'bg-gradient-to-br from-amber-500/15 to-amber-500/5 border-amber-500/20',
+  },
+  low: {
+    accent: 'from-rose-500 to-rose-500/30',
+    glow: 'shadow-[0_0_12px_rgba(244,63,94,0.15)]',
+    text: 'text-rose-500',
+    border: 'border-rose-500/20',
+    avatarBg: 'bg-gradient-to-br from-rose-500/15 to-rose-500/5 border-rose-500/20',
+  },
+};
+
+const RING_CIRCUMFERENCE = 2 * Math.PI * 19;
+
+function ScoreRing({ score, tier }: { score: number; tier: ScoreTier }) {
+  const offset = RING_CIRCUMFERENCE - (score / 100) * RING_CIRCUMFERENCE;
+  const strokeColor = {
+    high: 'stroke-green-500',
+    mid: 'stroke-amber-500',
+    low: 'stroke-rose-500',
+  }[tier];
+
+  return (
+    <div className="relative flex shrink-0 items-center justify-center w-[50px] h-[50px]">
+      <div className={`absolute inset-[-4px] rounded-full opacity-0 blur-lg transition-opacity group-hover:opacity-100 ${
+        tier === 'high' ? 'bg-green-500/15' : tier === 'mid' ? 'bg-amber-500/15' : 'bg-rose-500/15'
+      }`} />
+      <svg className="w-[50px] h-[50px] -rotate-90" viewBox="0 0 44 44">
+        <circle cx="22" cy="22" r="19" fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.06]" />
+        <circle
+          cx="22" cy="22" r="19"
+          fill="none"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDashoffset={offset}
+          className={strokeColor}
+        />
+      </svg>
+      <span className={`absolute font-semibold text-sm ${TIER_COLORS[tier].text}`}>
+        {score}
+      </span>
+    </div>
+  );
+}
+
 export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
-  const { label: countdownLabel, isExpired, isUrgent } = useCountdown(
+  const { label: countdownLabel, isExpired, isUrgent, remaining } = useCountdown(
     application.bidding_deadline,
     { fallbackStart: application.applied_at, expiredLabel: "Bidding closed" },
   );
@@ -28,256 +93,154 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     .toUpperCase()
     .substring(0, 2);
 
-  // Calculate skill match percentage by checking job skills against candidate bio + headline
-  const skillMatch = useMemo(() => {
-    if (!application.job_skills) return null;
-
-    const searchText = [application.candidate_bio, application.candidate_headline]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-
-    if (!searchText) return null;
-
-    try {
-      const jobSkills = typeof application.job_skills === 'string'
-        ? application.job_skills.toLowerCase().split(',').map((s: string) => s.trim())
-        : application.job_skills.map((s: string) => s.toLowerCase().trim());
-
-      const matchedSkills = jobSkills.filter((skill: string) =>
-        searchText.includes(skill)
-      );
-
-      const pct = Math.round((matchedSkills.length / jobSkills.length) * 100);
-      // Don't show 0% — it's noise, not signal
-      return pct > 0 ? pct : null;
-    } catch {
-      return null;
-    }
-  }, [application.job_skills, application.candidate_bio, application.candidate_headline]);
-
-  // Parse skills for display
   const skillsArray = useMemo(() => {
     if (!application.job_skills) return [];
-
     try {
-      if (Array.isArray(application.job_skills)) {
-        return application.job_skills;
-      }
+      if (Array.isArray(application.job_skills)) return application.job_skills;
       return application.job_skills.split(',').map((s: string) => s.trim()).filter(Boolean);
     } catch {
       return [];
     }
   }, [application.job_skills]);
 
-  // guild_score is already on a 0-100 scale (consensus score from expert reviews)
-  // Only show it if the application has actually been reviewed (not for fresh pending applications)
   const rawGuildScore = application.guild_score ? parseFloat(application.guild_score.toString()) : null;
-  const guildScore = rawGuildScore && rawGuildScore > 0 ? rawGuildScore.toFixed(0) : null;
+  const guildScore = rawGuildScore && rawGuildScore > 0 ? Math.round(rawGuildScore) : null;
+  const tier: ScoreTier = guildScore ? getScoreTier(guildScore) : 'mid';
+  const tierColors = TIER_COLORS[tier];
+
+  // Countdown color: urgent < 2h, mid < 6h, plenty >= 6h
+  const countdownTier = isExpired
+    ? 'expired'
+    : isUrgent
+    ? 'urgent'
+    : remaining < 6 * 60 * 60 * 1000
+    ? 'mid'
+    : 'plenty';
+
+  const countdownStyles = {
+    expired: 'bg-muted/50 text-muted-foreground border-border/60',
+    urgent: 'bg-rose-500/8 text-rose-500 border-rose-500/15',
+    mid: 'bg-amber-500/8 text-amber-500 border-amber-500/15',
+    plenty: 'bg-green-500/8 text-green-500 border-green-500/15',
+  }[countdownTier];
+
+  const salaryDisplay = (application.salary_min || application.salary_max)
+    ? formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })
+    : null;
+
+  const jobMetaParts = [
+    application.company_name,
+    application.location,
+    salaryDisplay,
+  ].filter(Boolean);
 
   return (
-    <Card className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md overflow-hidden transition-all hover:border-primary/40 hover:shadow-sm h-full flex flex-col">
-      <CardContent className="p-6 flex flex-col flex-1">
-        {/* Header with Avatar and Basic Info */}
-        <div className="flex items-start gap-4 mb-4">
-          <Avatar className="w-16 h-16 border-2 border-border">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-card/40 backdrop-blur-md transition-all duration-300 hover:translate-y-[-2px] hover:border-white/[0.12] hover:bg-card/60 hover:shadow-lg hover:shadow-black/20 h-full">
+      {/* Accent Bar */}
+      <div className={`h-[3px] w-full bg-gradient-to-r ${tierColors.accent}`} />
+
+      <div className="flex flex-1 flex-col p-5">
+        {/* Header: Avatar + Info + Score Ring */}
+        <div className="mb-4 flex items-start gap-3.5">
+          <Avatar className={`w-[46px] h-[46px] rounded-xl border ${tierColors.avatarBg}`}>
             {application.candidate_profile_picture_url && (
-              <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
+              <AvatarImage
+                src={application.candidate_profile_picture_url}
+                alt={application.candidate_name}
+                className="rounded-xl"
+              />
             )}
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+            <AvatarFallback className={`rounded-xl text-[15px] font-semibold ${tierColors.avatarBg}`}>
               {candidateInitials}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg truncate">{application.candidate_name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
+            <h3 className="font-semibold text-[15px] leading-tight text-foreground">
+              {application.candidate_name}
+            </h3>
+            <p className="text-[12.5px] text-muted-foreground truncate mb-2">
               {application.candidate_headline}
             </p>
-
-            {/* Badges Row */}
-            <div className="flex flex-wrap gap-2">
-              {application.experience_level && (
-                <Badge variant="secondary" className="text-xs">
-                  {application.experience_level}
-                </Badge>
-              )}
-              {skillMatch !== null && (
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${
-                    skillMatch >= 70
-                      ? 'bg-primary/10 text-primary border-primary/20'
-                      : skillMatch >= 40
-                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/20'
-                  }`}
-                >
-                  <Star className="w-3 h-3 mr-1" />
-                  {skillMatch}% Match
-                </Badge>
-              )}
-              {guildScore && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                  <Award className="w-3 h-3 mr-1" />
-                  {guildScore}/100
-                </Badge>
-              )}
-            </div>
+            {application.experience_level && (
+              <Badge variant="outline" className="text-[10.5px] font-medium px-2.5 py-0 h-5 bg-white/[0.04] border-white/[0.08] text-muted-foreground capitalize">
+                {application.experience_level}
+              </Badge>
+            )}
           </div>
+
+          {guildScore !== null && (
+            <ScoreRing score={guildScore} tier={tier} />
+          )}
         </div>
 
-        {/* Bio Preview */}
-        {application.candidate_bio && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-              {application.candidate_bio}
-            </p>
-          </div>
-        )}
-
-        {/* Quick Links */}
-        {(application.linkedin || application.github || application.resume_url) && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {application.linkedin && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(ensureHttps(application.linkedin!), '_blank', 'noopener,noreferrer');
-                }}
-              >
-                <Linkedin className="w-3 h-3 mr-1" />
-                LinkedIn
-                <ExternalLink className="w-2 h-2 ml-1" />
-              </Button>
-            )}
-            {application.github && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(ensureHttps(application.github!), '_blank', 'noopener,noreferrer');
-                }}
-              >
-                <Github className="w-3 h-3 mr-1" />
-                GitHub
-                <ExternalLink className="w-2 h-2 ml-1" />
-              </Button>
-            )}
-            {application.resume_url && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/candidates/${application.candidate_id}/resume`, '_blank', 'noopener,noreferrer');
-                }}
-              >
-                <FileText className="w-3 h-3 mr-1" />
-                Resume
-                <ExternalLink className="w-2 h-2 ml-1" />
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Skills Preview */}
+        {/* Skills */}
         {skillsArray.length > 0 && (
-          <div className="mb-4">
-            <div className="flex flex-wrap gap-1.5">
-              {skillsArray.slice(0, 5).map((skill: string, idx: number) => (
-                <Badge key={idx} variant="outline" className="text-xs">
-                  {skill}
-                </Badge>
-              ))}
-              {skillsArray.length > 5 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{skillsArray.length - 5} more
-                </Badge>
-              )}
-            </div>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {skillsArray.slice(0, 3).map((skill: string, idx: number) => (
+              <span
+                key={idx}
+                className="inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors group-hover:bg-white/[0.05] group-hover:border-white/[0.10]"
+              >
+                {skill}
+              </span>
+            ))}
+            {skillsArray.length > 3 && (
+              <span className="px-2 py-0.5 text-[11px] font-medium text-muted-foreground/60">
+                +{skillsArray.length - 3}
+              </span>
+            )}
           </div>
         )}
+
+        {/* Divider */}
+        <div className="mb-3.5 h-px bg-border/60" />
 
         {/* Job Section */}
-        <div className="border-t border-border/60 pt-4 mb-4">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-medium text-xs text-muted-foreground">Applied to:</h4>
-          </div>
-          <p className="font-semibold truncate text-sm">{application.job_title}</p>
-          <p className="text-xs text-muted-foreground truncate">{application.company_name}</p>
-
-          <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
-            {application.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-primary" />
-                {application.location}
-              </span>
-            )}
-            {application.job_type && (
-              <span className="flex items-center gap-1">
-                <Briefcase className="w-3 h-3 text-primary" />
-                {application.job_type}
-              </span>
-            )}
-            {(application.salary_min || application.salary_max) && (
-              <span className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-primary" />
-                {formatSalaryRange({ min: application.salary_min, max: application.salary_max, currency: application.salary_currency })}
-              </span>
-            )}
-          </div>
+        <div className="mb-3.5">
+          <p className="font-medium text-[13px] text-foreground truncate">
+            {application.job_title}
+          </p>
+          <p className="text-[11.5px] text-muted-foreground/60 truncate">
+            {jobMetaParts.join(' · ')}
+          </p>
         </div>
 
-        {/* Bidding Period Countdown */}
-        <div className="flex items-center justify-between pt-4 border-t border-border/60 text-xs mb-4">
-          <span className="text-muted-foreground">
+        {/* Footer: Applied time + Countdown */}
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-[11px] text-muted-foreground/50">
             Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
           </span>
-          <span className={`flex items-center gap-1 font-medium ${
-            isExpired
-              ? "text-muted-foreground"
-              : isUrgent
-              ? "text-red-500"
-              : "text-primary"
-          }`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${countdownStyles}`}>
             <Clock className="w-3 h-3" />
             {countdownLabel}
           </span>
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2 mt-auto">
+        <div className="mt-auto grid grid-cols-2 gap-2">
           <Button
-            variant="outline"
-            className="w-full"
+            variant="ghost"
+            className="h-9 rounded-[10px] border border-white/[0.10] text-muted-foreground text-[13px] font-medium hover:bg-white/[0.04] hover:border-white/[0.18] hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
               onViewDetails(application);
             }}
           >
-            <Eye className="w-4 h-4 mr-2" />
-            View Details
+            Details
           </Button>
           <Button
-            className="w-full bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))]"
+            className="h-9 rounded-[10px] bg-gradient-to-br from-primary via-primary to-amber-700 text-[13px] font-semibold text-[hsl(var(--gradient-button-text))] hover:from-amber-400 hover:via-primary hover:to-primary"
             disabled={isExpired || !onQuickEndorse}
             onClick={(e) => {
               e.stopPropagation();
               onQuickEndorse?.(application);
             }}
           >
-            <Zap className="w-4 h-4 mr-2" />
-            {isExpired ? "Bidding Closed" : "Endorse"}
+            Endorse
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

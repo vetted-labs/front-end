@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { Shield, Loader2, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
@@ -28,7 +28,6 @@ export default function ReputationPage() {
   const [timeline, setTimeline] = useState<ReputationTimelineEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [page, setPage] = useState(1);
-  const [showExplainer, setShowExplainer] = useState(false);
 
   const { isLoading: loading, refetch } = useFetch(
     async () => {
@@ -106,42 +105,6 @@ export default function ReputationPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Your reputation score and history across all guilds
           </p>
-        </div>
-
-        {/* Reputation Calculation Explainer */}
-        <div className="rounded-lg border bg-muted/30 p-3 mb-6">
-          <button
-            onClick={() => setShowExplainer(!showExplainer)}
-            className="flex items-center gap-2 text-sm font-medium w-full text-left"
-            aria-expanded={showExplainer}
-          >
-            <HelpCircle className="h-4 w-4 text-primary" />
-            How is reputation calculated?
-            {showExplainer ? <ChevronUp className="h-4 w-4 ml-auto" /> : <ChevronDown className="h-4 w-4 ml-auto" />}
-          </button>
-          {showExplainer && (
-            <div className="mt-3 pl-6 space-y-2 text-sm text-muted-foreground">
-              <p>Your reputation score changes based on your review alignment:</p>
-              <ul className="space-y-1.5">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-mono text-xs">+10</span>
-                  <span>Vote aligned with consensus</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-5</span>
-                  <span>Mild deviation from consensus</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-10</span>
-                  <span>Moderate deviation from consensus</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-20</span>
-                  <span>Severe deviation from consensus</span>
-                </li>
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Score Overview */}

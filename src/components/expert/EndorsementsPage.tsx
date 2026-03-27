@@ -2,15 +2,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Sparkles, ShieldCheck, Award } from "lucide-react";
+import { Sparkles, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 
@@ -45,11 +37,10 @@ export default function EndorsementsPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-400">
                 <Sparkles className="h-3.5 w-3.5" />
@@ -61,50 +52,15 @@ export default function EndorsementsPage() {
               <p className="max-w-2xl text-muted-foreground">
                 Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when the candidate is hired.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/expert/earnings")}
-                className="mt-2"
-              >
-                <Award className="w-4 h-4 mr-2" />
-                View Rewards
-              </Button>
             </div>
-
-            <div className="w-full lg:max-w-sm">
-              <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4 text-orange-400" />
-                    Select Guild
-                  </div>
-                  <Badge className="border-orange-500/30 bg-orange-500/10 text-orange-400">
-                    Verified
-                  </Badge>
-                </div>
-                <Select
-                  value={selectedGuild?.id ?? ""}
-                  onValueChange={(value) => {
-                    setManualGuildId(value);
-                  }}
-                >
-                  <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-background/70 text-base shadow-sm transition hover:border-orange-500/40">
-                    <SelectValue placeholder="Select a guild" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {guildRecords.map((guild) => (
-                      <SelectItem key={guild.id} value={guild.id}>
-                        {guild.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Choose a guild to see live candidates and endorsement liquidity.
-                </p>
-              </div>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/expert/earnings")}
+            >
+              <Award className="w-4 h-4 mr-2" />
+              View Rewards
+            </Button>
           </div>
         </div>
 
@@ -115,6 +71,9 @@ export default function EndorsementsPage() {
             guildName={selectedGuild.name}
             blockchainGuildId={selectedGuild.blockchainGuildId as `0x${string}` | undefined}
             initialApplicationId={applicationIdParam || undefined}
+            guilds={guildRecords}
+            selectedGuildId={selectedGuild.id}
+            onGuildChange={setManualGuildId}
           />
         )}
       </div>
