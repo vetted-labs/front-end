@@ -328,7 +328,7 @@ export function EndorsementDisputeDetailPage() {
             {dispute.hasVoted && (
               <Card className={`${STATUS_COLORS.positive.border}`}>
                 <CardContent className="p-6 text-center">
-                  <Badge variant="default" className="text-lg px-6 py-2 mb-2">
+                  <Badge variant="default" className="text-xl px-6 py-2 mb-2">
                     Voted: {dispute.myVote}
                   </Badge>
                   <p className="text-sm text-muted-foreground">

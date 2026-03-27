@@ -17,15 +17,15 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reward Tier</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`text-lg font-bold ${colors.text}`}>{tier.name}</span>
-              <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${colors.bg} ${colors.text} ${colors.border}`}>
+              <span className={`text-xl font-bold ${colors.text}`}>{tier.name}</span>
+              <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${colors.bg} ${colors.text} ${colors.border}`}>
                 {tier.rewardWeight}x rewards
               </span>
             </div>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Reputation</p>
-            <p className="text-lg font-bold tabular-nums">{reputation}</p>
+            <p className="text-xl font-bold tabular-nums">{reputation}</p>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground/60 mt-1.5">
+            <p className="text-xs text-muted-foreground/60 mt-1.5">
               {nextTier.minReputation - reputation} more reputation needed
             </p>
           </div>
@@ -66,13 +66,13 @@ export function RewardTierCard({ reputation }: RewardTierCardProps) {
                       : "bg-muted/30 dark:bg-white/[0.02] border-border/40"
                   }`}
                 >
-                  <p className={`text-[11px] font-semibold ${isActive ? tc.text : "text-muted-foreground"}`}>
+                  <p className={`text-xs font-medium ${isActive ? tc.text : "text-muted-foreground"}`}>
                     {t.name}
                   </p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                  <p className="text-xs text-muted-foreground/60 mt-0.5">
                     {t.maxReputation ? `${t.minReputation}–${t.maxReputation}` : `${t.minReputation}+`} rep
                   </p>
-                  <p className={`text-xs font-semibold tabular-nums mt-0.5 ${isActive ? tc.text : "text-muted-foreground"}`}>
+                  <p className={`text-xs font-medium tabular-nums mt-0.5 ${isActive ? tc.text : "text-muted-foreground"}`}>
                     {t.rewardWeight}x
                   </p>
                 </div>

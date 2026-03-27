@@ -16,10 +16,10 @@ function StatCell({
 }) {
   return (
     <div className={`px-5 py-4 ${last ? "" : "border-r border-border/40"}`}>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <p className="text-xl font-extrabold tabular-nums mt-1 text-foreground">
+      <p className="text-xl font-bold tabular-nums mt-1 text-foreground">
         {value}
       </p>
     </div>

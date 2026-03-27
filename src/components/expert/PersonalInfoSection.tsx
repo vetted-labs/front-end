@@ -42,7 +42,7 @@ export function PersonalInfoSection({
           <User className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Personal Information</h2>
+          <h2 className="text-xl font-bold text-foreground">Personal Information</h2>
           <p className="text-sm text-muted-foreground">Tell us about yourself</p>
         </div>
       </div>

@@ -47,7 +47,7 @@ export function FinalizedView({
       {/* Vote History */}
       {voteHistory.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">
             Vote History
           </h3>
           <div className="space-y-3">
@@ -90,7 +90,7 @@ export function FinalizedView({
                     </p>
                   )}
                 </div>
-                <p className="text-base font-semibold tabular-nums shrink-0">
+                <p className="text-sm font-medium tabular-nums shrink-0">
                   {vote.score}/100
                 </p>
               </div>
@@ -103,7 +103,7 @@ export function FinalizedView({
       <div>
         <div className="flex items-center gap-4 mb-6">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Application
           </span>
           <div className="h-px flex-1 bg-border" />

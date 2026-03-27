@@ -52,7 +52,7 @@ export function ProfessionalBackgroundSection({
             <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Professional Background</h2>
+            <h2 className="text-xl font-bold text-foreground">Professional Background</h2>
             <p className="text-sm text-muted-foreground">Your experience and expertise</p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function ProfessionalBackgroundSection({
             <Award className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Areas of Expertise</h2>
+            <h2 className="text-xl font-bold text-foreground">Areas of Expertise</h2>
             <p className="text-sm text-muted-foreground">
               Add specific skills or technologies you can evaluate (e.g., React, Machine Learning, Product Strategy)
             </p>

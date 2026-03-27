@@ -118,7 +118,7 @@ export default function ApplicationPendingPage() {
         {isInsufficientMembers ? (
           <div className="max-w-md text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-foreground mb-2">Not Enough Guild Members</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">Not Enough Guild Members</h2>
             <p className="text-sm text-muted-foreground">
               This guild needs at least {MIN_REVIEWS} members to process applications. Your application will be reviewed once more experts join.
             </p>
@@ -144,7 +144,7 @@ export default function ApplicationPendingPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 text-center">
+          <h1 className="text-3xl md:text-3xl font-bold text-foreground mb-2 text-center">
             Application Under Review
           </h1>
           <p className="text-muted-foreground text-center mb-8">
@@ -153,7 +153,7 @@ export default function ApplicationPendingPage() {
 
           {/* Guild Applications List */}
           <div className="space-y-4 mb-8">
-            <h2 className="text-lg font-semibold text-foreground">Your Guild Applications</h2>
+            <h2 className="text-xl font-bold text-foreground">Your Guild Applications</h2>
 
             {guildApplications.map((guild) => (
               <div
@@ -165,7 +165,7 @@ export default function ApplicationPendingPage() {
                     <Swords className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold text-foreground">{guild.name}</p>
+                    <p className="font-medium text-foreground">{guild.name}</p>
                     {guild.description && (
                       <p className="text-sm text-muted-foreground line-clamp-1">{guild.description}</p>
                     )}
@@ -225,7 +225,7 @@ export default function ApplicationPendingPage() {
             <div className="flex items-start">
               <Shield className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-1">Auto-Approval System</p>
+                <p className="font-bold text-foreground mb-1">Auto-Approval System</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Your application needs <strong className="text-foreground">{MIN_REVIEWS} reviews</strong> from guild members to be
                   evaluated. Once the consensus threshold is met, you&apos;ll get instant access to the expert
@@ -240,7 +240,7 @@ export default function ApplicationPendingPage() {
             <div className="flex items-start text-left p-4 rounded-lg border border-border bg-muted/30">
               <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon} mt-0.5 mr-3 flex-shrink-0`} />
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Application Received</p>
+                <p className="font-bold text-foreground mb-0.5">Application Received</p>
                 <p className="text-sm text-muted-foreground">
                   We&apos;ve successfully received your application and wallet information.
                 </p>
@@ -256,7 +256,7 @@ export default function ApplicationPendingPage() {
                 <div className={`flex items-start text-left p-4 rounded-lg border ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`}>
                   <ShieldCheck className={`w-5 h-5 ${STATUS_COLORS.positive.icon} mt-0.5 mr-3 flex-shrink-0`} />
                   <div>
-                    <p className="font-semibold text-foreground mb-0.5">On-Chain Voting Session Created</p>
+                    <p className="font-bold text-foreground mb-0.5">On-Chain Voting Session Created</p>
                     <p className="text-sm text-muted-foreground">
                       Your application review is secured on the blockchain.
                     </p>
@@ -278,7 +278,7 @@ export default function ApplicationPendingPage() {
             <div className="flex items-start text-left p-4 rounded-lg border border-primary/30 bg-primary/5">
               <Clock className="w-5 h-5 text-primary mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Under Guild Review</p>
+                <p className="font-bold text-foreground mb-0.5">Under Guild Review</p>
                 <p className="text-sm text-muted-foreground">
                   Guild members are reviewing your credentials. You currently have{" "}
                   {expert.reviewCount ?? 0} review(s).
@@ -304,7 +304,7 @@ export default function ApplicationPendingPage() {
             <div className="flex items-start text-left p-4 rounded-lg border border-border bg-muted/30 opacity-60">
               <Mail className="w-5 h-5 text-muted-foreground mt-0.5 mr-3 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-foreground mb-0.5">Approval &amp; Dashboard Access</p>
+                <p className="font-bold text-foreground mb-0.5">Approval &amp; Dashboard Access</p>
                 <p className="text-sm text-muted-foreground">
                   Once you receive 3 approvals, you&apos;ll automatically be accepted as a &quot;Recruit&quot;
                   member and gain access to the dashboard.
@@ -316,7 +316,7 @@ export default function ApplicationPendingPage() {
 
         {/* Browse Guilds CTA */}
         <div className="bg-card rounded-xl shadow-sm border border-border p-6 text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">
+          <h2 className="text-xl font-bold text-foreground mb-2">
             Explore More Guilds
           </h2>
           <p className="text-muted-foreground mb-4">

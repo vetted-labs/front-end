@@ -20,7 +20,7 @@ function Section({ icon: Icon, title, children }: { icon: React.ElementType; tit
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
         </div>
-        <h4 className="text-sm font-semibold">{title}</h4>
+        <h4 className="text-sm font-bold">{title}</h4>
       </div>
       {children}
     </div>
@@ -47,7 +47,7 @@ export function HowEarningsWork() {
       >
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">How Earnings Work</span>
+          <span className="text-sm font-bold">How Earnings Work</span>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-muted-foreground transition-transform ${
@@ -71,15 +71,15 @@ export function HowEarningsWork() {
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation</span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Established</span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.25x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.25x</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Authority</span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.50x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.50x</span>
                 </li>
               </ul>
               <p className="text-xs text-muted-foreground/60 mt-2.5">Higher tiers earn a larger share of every pool</p>

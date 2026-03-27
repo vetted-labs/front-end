@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Coins, Vote, Award, TrendingUp } from "lucide-react";
 import type { EarningsSummary } from "@/types";
 import { getRewardTierProgress } from "@/types";
-import { STAT_ICON, STATUS_COLORS, REWARD_TIER_COLORS } from "@/config/colors";
+import { STAT_ICON, REWARD_TIER_COLORS } from "@/config/colors";
 
 interface EarningsSummaryCardsProps {
   summary: EarningsSummary | null;
@@ -14,59 +14,74 @@ export function EarningsSummaryCards({ summary, reputation }: EarningsSummaryCar
   const votingTotal = summary?.byType?.find((t) => t.type === "voting_reward")?.total ?? 0;
   const endorsementTotal = summary?.byType?.find((t) => t.type === "endorsement")?.total ?? 0;
 
+  const cards = [
+    {
+      icon: Coins,
+      label: "Total Earned",
+      value: (summary?.totalVetd ?? 0).toFixed(2),
+      sub: "VETD",
+    },
+    {
+      icon: Vote,
+      label: "Voting",
+      value: votingTotal.toFixed(2),
+      sub: "VETD",
+    },
+    {
+      icon: Award,
+      label: "Endorsements",
+      value: endorsementTotal.toFixed(2),
+      sub: "VETD",
+    },
+    {
+      icon: TrendingUp,
+      label: "Reward Tier",
+      value: tier.name,
+      sub: `${tier.rewardWeight}x multiplier`,
+      tierName: tier.name,
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <Card hover>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
-            <Coins className={`w-5 h-5 ${STATUS_COLORS.positive.text}`} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Earned</p>
-            <p className="text-2xl font-bold tabular-nums">{(summary?.totalVetd ?? 0).toFixed(2)}</p>
-            <p className="text-[11px] text-muted-foreground/60">VETD</p>
-          </div>
-        </div>
-      </Card>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        const tierTextColor = card.tierName
+          ? REWARD_TIER_COLORS[card.tierName]?.text ?? "text-foreground"
+          : undefined;
 
-      <Card hover>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${STAT_ICON.bg} flex items-center justify-center`}>
-            <Vote className={`w-5 h-5 ${STAT_ICON.text}`} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Voting</p>
-            <p className="text-2xl font-bold tabular-nums">{votingTotal.toFixed(2)}</p>
-            <p className="text-[11px] text-muted-foreground/60">VETD</p>
-          </div>
-        </div>
-      </Card>
+        return (
+          <Card
+            key={card.label}
+            hover
+            padding="none"
+            className="relative overflow-hidden group"
+          >
+            {/* Top accent line on hover */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      <Card hover>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${STAT_ICON.bg} flex items-center justify-center`}>
-            <Award className={`w-5 h-5 ${STAT_ICON.text}`} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Endorsements</p>
-            <p className="text-2xl font-bold tabular-nums">{endorsementTotal.toFixed(2)}</p>
-            <p className="text-[11px] text-muted-foreground/60">VETD</p>
-          </div>
-        </div>
-      </Card>
+            <div className="p-5">
+              {/* Icon box */}
+              <div className={`w-10 h-10 rounded-xl ${STAT_ICON.bg} border border-primary/10 flex items-center justify-center mb-4`}>
+                <Icon className={`w-5 h-5 ${STAT_ICON.text}`} />
+              </div>
 
-      <Card hover>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
-            <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.warning.text}`} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reward Tier</p>
-            <p className={`text-lg font-bold ${REWARD_TIER_COLORS[tier.name]?.text ?? "text-foreground"}`}>{tier.name}</p>
-            <p className="text-[11px] text-muted-foreground/60">{tier.rewardWeight}x multiplier</p>
-          </div>
-        </div>
-      </Card>
+              {/* Label */}
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                {card.label}
+              </p>
+
+              {/* Value */}
+              <p className={`text-2xl font-bold tracking-tight tabular-nums leading-none mb-1 ${tierTextColor ?? "text-foreground"}`}>
+                {card.value}
+              </p>
+
+              {/* Sub label */}
+              <p className="text-xs text-muted-foreground/50">{card.sub}</p>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export function WalletVerificationStep({
           )}
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-foreground mb-1">
+          <h3 className="text-sm font-bold text-foreground mb-1">
             Wallet Ownership Verification
           </h3>
           {isVerified ? (

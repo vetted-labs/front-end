@@ -51,7 +51,7 @@ function SummarySection({ icon, title, children }: SummarySectionProps) {
           <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
             {icon}
           </div>
-          <h3 className="text-base font-semibold text-foreground">{title}</h3>
+          <h3 className="text-sm font-bold text-foreground">{title}</h3>
         </div>
         <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon} flex-shrink-0`} />
       </div>
@@ -94,7 +94,7 @@ export function ReviewSubmitStep({
   return (
     <div className="space-y-6 p-8">
       <div className="mb-2">
-        <h2 className="text-xl font-semibold text-foreground">Review Your Application</h2>
+        <h2 className="text-xl font-bold text-foreground">Review Your Application</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Check everything looks correct before submitting. You won&apos;t be able to edit after submission.
         </p>

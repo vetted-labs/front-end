@@ -55,7 +55,7 @@ export function ApplicationQuestionsSection({
             <Shield className={`w-5 h-5 ${STATUS_COLORS.pending.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Before You Start</h2>
+            <h2 className="text-xl font-bold text-foreground">Before You Start</h2>
             <p className="text-sm text-muted-foreground">Read this carefully</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function ApplicationQuestionsSection({
               }}
               className={`mt-0.5 h-5 w-5 rounded border-2 accent-positive ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
             />
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-sm font-medium text-foreground">
               {generalTemplate?.noAiDeclarationText ||
                 "I wrote this myself and did not use AI or automated tools."}
             </span>
@@ -110,7 +110,7 @@ export function ApplicationQuestionsSection({
             <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">General Application</h2>
+            <h2 className="text-xl font-bold text-foreground">General Application</h2>
             <p className="text-sm text-muted-foreground">
               These questions are the same across all guilds
             </p>
@@ -134,7 +134,7 @@ export function ApplicationQuestionsSection({
             return (
               <div key={question.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
                 <div>
-                  <h3 className="text-base font-semibold text-foreground">Question {index + 1}</h3>
+                  <h3 className="text-sm font-bold text-foreground">Question {index + 1}</h3>
                   <p className="text-sm text-muted-foreground font-medium mt-1">{question.title}</p>
                   {question.prompt && (
                     <div className="space-y-2 mt-2">
@@ -194,7 +194,7 @@ export function ApplicationQuestionsSection({
             <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Level-Specific Questions</h2>
+            <h2 className="text-xl font-bold text-foreground">Level-Specific Questions</h2>
             <p className="text-sm text-muted-foreground">
               Based on your selected level
             </p>
@@ -207,7 +207,7 @@ export function ApplicationQuestionsSection({
           levelTemplate.topics.map((topic: GuildDomainTopic) => (
             <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card/60">
               <div>
-                <h3 className="text-base font-semibold text-foreground">{topic.title}</h3>
+                <h3 className="text-sm font-bold text-foreground">{topic.title}</h3>
                 {topic.prompt && (
                   <div className="space-y-2">
                     {topic.prompt
@@ -258,7 +258,7 @@ export function ApplicationQuestionsSection({
             <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">About You</h2>
+            <h2 className="text-xl font-bold text-foreground">About You</h2>
             <p className="text-sm text-muted-foreground">Share your story and motivation</p>
           </div>
         </div>

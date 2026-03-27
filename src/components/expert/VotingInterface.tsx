@@ -47,7 +47,7 @@ export function VotingInterface({
                 </p>
               </div>
             )}
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
               Your Vote
             </h3>
             {hasVoted ? (
@@ -86,7 +86,7 @@ export function VotingInterface({
           !crPhase.userCommitted &&
           expertId && (
             <div className="bg-card border border-border border-t-2 border-t-primary rounded-xl p-6">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 Submit Your Vote
               </h3>
               <p className="text-sm text-muted-foreground mb-4">

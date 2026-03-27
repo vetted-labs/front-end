@@ -93,28 +93,28 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     switch (status) {
       case "ongoing":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.info.badge}`}>
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.info.badge}`}>
             <Clock className="w-4 h-4" />
             Ongoing
           </span>
         );
       case "approved":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.positive.badge}`}>
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.positive.badge}`}>
             <CheckCircle className="w-4 h-4" />
             Approved
           </span>
         );
       case "rejected":
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.negative.badge}`}>
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.negative.badge}`}>
             <XCircle className="w-4 h-4" />
             Rejected
           </span>
         );
       default:
         return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.neutral.badge}`}>
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${STATUS_COLORS.neutral.badge}`}>
             <Clock className="w-4 h-4" />
             Pending
           </span>
@@ -171,7 +171,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
               <Calendar className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Deadline</p>
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-sm font-medium text-foreground">
                   {formatDeadline(application.votingDeadline, "Voting ended")}
                 </p>
               </div>
@@ -180,14 +180,14 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
               <Users className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Votes</p>
-                <p className="text-sm font-semibold text-foreground">{totalVotes}</p>
+                <p className="text-sm font-medium text-foreground">{totalVotes}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
               <Coins className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Required Stake</p>
-                <p className="text-sm font-semibold text-foreground">{application.requiredStake} VTD</p>
+                <p className="text-sm font-medium text-foreground">{application.requiredStake} VTD</p>
               </div>
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-semibold text-foreground">{vote.expertName}</p>
+                          <p className="text-sm font-medium text-foreground">{vote.expertName}</p>
                           <span className="text-xs text-muted-foreground">
                             {new Date(vote.votedAt).toLocaleDateString()}
                           </span>
@@ -281,7 +281,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
           <div className="space-y-6">
             {/* Vote Distribution */}
             <div className="bg-card rounded-2xl p-6 border border-border">
-              <h3 className="text-lg font-bold text-foreground mb-4">Vote Distribution</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">Vote Distribution</h3>
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -319,13 +319,13 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
             {/* Voting Actions */}
             {application.status === "ongoing" && (
               <div className="bg-card rounded-2xl p-6 border border-border">
-                <h3 className="text-lg font-bold text-foreground mb-4">Cast Your Vote</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">Cast Your Vote</h3>
                 {expertHasVoted ? (
                   <div className="text-center py-4">
                     <CheckCircle className={`w-12 h-12 ${STATUS_COLORS.positive.text} mx-auto mb-3`} />
-                    <p className="text-sm font-semibold text-foreground mb-2">You have voted</p>
+                    <p className="text-sm font-medium text-foreground mb-2">You have voted</p>
                     <p className="text-xs text-muted-foreground">
-                      Your vote: <span className="font-semibold">{expertVote?.vote}</span>
+                      Your vote: <span className="font-medium">{expertVote?.vote}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Stake: {expertVote?.stakeAmount} VTD

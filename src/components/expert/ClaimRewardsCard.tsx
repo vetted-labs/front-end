@@ -1,8 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Wallet, ArrowDownToLine, ExternalLink } from "lucide-react";
+import { Loader2, Wallet, ExternalLink } from "lucide-react";
 import { getExplorerTxUrl } from "@/lib/blockchain";
-import { STATUS_COLORS } from "@/config/colors";
 
 interface ClaimRewardsCardProps {
   pendingAmount: string;
@@ -22,33 +21,35 @@ export function ClaimRewardsCard({
   onClaim,
 }: ClaimRewardsCardProps) {
   return (
-    <Card padding="none" className="overflow-hidden">
-      <div className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-2xl ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center flex-shrink-0`}>
-            <ArrowDownToLine className={`w-6 h-6 ${STATUS_COLORS.positive.text}`} />
-          </div>
+    <Card padding="none" className="relative overflow-hidden">
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+
+      <div className="p-5 sm:p-6">
+        {/* Header row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <p className="text-sm font-semibold">Withdraw to Wallet</p>
-            <div className="flex items-baseline gap-3 mt-0.5">
-              <span className={`text-2xl font-bold tabular-nums ${STATUS_COLORS.positive.text}`}>
-                {Number(pendingAmount).toFixed(2)}
-              </span>
-              <span className="text-xs text-muted-foreground/60">VETD claimable</span>
-            </div>
+            <p className="text-sm font-bold">Claimable Payouts</p>
             {Number(claimedAmount) > 0 && (
-              <p className="text-xs text-muted-foreground/60 mt-1 tabular-nums">
+              <p className="text-xs text-muted-foreground/50 mt-0.5 tabular-nums">
                 {Number(claimedAmount).toFixed(2)} VETD previously claimed
               </p>
             )}
           </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold text-primary tabular-nums">
+              {Number(pendingAmount).toFixed(2)} VETD
+            </span>
+            <span className="text-xs text-muted-foreground/50">ready to claim</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        {/* Claim button row */}
+        <div className="flex items-center gap-3">
           <Button
             onClick={onClaim}
             disabled={!hasPending || isConfirming}
-            className="flex-1 sm:flex-none"
+            size="lg"
           >
             {isConfirming ? (
               <>
@@ -58,7 +59,7 @@ export function ClaimRewardsCard({
             ) : (
               <>
                 <Wallet className="w-4 h-4 mr-2" />
-                Claim Rewards
+                Claim All ({Number(pendingAmount).toFixed(2)} VETD)
               </>
             )}
           </Button>

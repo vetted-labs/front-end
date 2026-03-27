@@ -39,7 +39,7 @@ export function PromotionProgressCard({
       <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-5`}>
         <div className="flex items-center gap-2 mb-1">
           <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Rank: Guild Master
           </p>
         </div>
@@ -98,7 +98,7 @@ export function PromotionProgressCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Next Rank: {RANK_LABELS[nextRank] ?? nextRank}
           </p>
         </div>

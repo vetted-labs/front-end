@@ -119,9 +119,9 @@ export function ViewReviewModal({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-xl font-extrabold text-foreground">{applicantName}</h2>
+              <h2 className="text-xl font-bold text-foreground">{applicantName}</h2>
               {review && (
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusBadge.className}`}>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}>
                   {statusBadge.icon}
                   {statusBadge.label}
                 </span>
@@ -194,11 +194,11 @@ export function ViewReviewModal({
             {/* Score Summary */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                   Score Summary
                 </p>
                 {isCommitPhase && (
-                  <span className={`text-[10px] ${STATUS_COLORS.warning.text} font-medium uppercase tracking-wider`}>
+                  <span className={`text-xs ${STATUS_COLORS.warning.text} font-medium uppercase tracking-wider`}>
                     Hidden until all votes are in
                   </span>
                 )}
@@ -207,22 +207,22 @@ export function ViewReviewModal({
               <div className="grid grid-cols-4 gap-3">
                 {/* General */}
                 <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">General</p>
-                  <p className="text-2xl font-extrabold text-foreground">{generalTotal}</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">General</p>
+                  <p className="text-2xl font-bold text-foreground">{generalTotal}</p>
                   <p className="text-sm text-muted-foreground">/{generalMax || "?"}</p>
                 </div>
 
                 {/* Domain */}
                 <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Domain</p>
-                  <p className="text-2xl font-extrabold text-foreground">{domainTotal}</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Domain</p>
+                  <p className="text-2xl font-bold text-foreground">{domainTotal}</p>
                   <p className="text-sm text-muted-foreground">/{domainMax || "?"}</p>
                 </div>
 
                 {/* Deductions */}
                 <div className="border border-border/40 rounded-xl bg-muted/20 p-4 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Deductions</p>
-                  <p className={`text-2xl font-extrabold ${(review.redFlagDeductions ?? 0) > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Deductions</p>
+                  <p className={`text-2xl font-bold ${(review.redFlagDeductions ?? 0) > 0 ? STATUS_COLORS.negative.text : "text-foreground"}`}>
                     {(review.redFlagDeductions ?? 0) > 0 ? `-${review.redFlagDeductions}` : "0"}
                   </p>
                   <p className="text-sm text-muted-foreground">pts</p>
@@ -230,8 +230,8 @@ export function ViewReviewModal({
 
                 {/* Overall */}
                 <div className={`border ${STATUS_COLORS.positive.border} rounded-xl ${STATUS_COLORS.positive.bgSubtle} p-4 text-center`}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Overall</p>
-                  <p className={`text-2xl font-extrabold ${STATUS_COLORS.positive.text}`}>{scorePercent}%</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">Overall</p>
+                  <p className={`text-2xl font-bold ${STATUS_COLORS.positive.text}`}>{scorePercent}%</p>
                   <p className="text-sm text-muted-foreground">{overallScore}/{overallMax}</p>
                 </div>
               </div>
@@ -251,16 +251,16 @@ export function ViewReviewModal({
                 <div className="flex items-stretch gap-0">
                   {/* Consensus score */}
                   <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
-                    <p className="text-[11px] text-muted-foreground mb-1">Consensus score</p>
-                    <p className="text-lg font-bold text-foreground">{finalization.consensusScore}%</p>
+                    <p className="text-xs text-muted-foreground mb-1">Consensus score</p>
+                    <p className="text-xl font-bold text-foreground">{finalization.consensusScore}%</p>
                   </div>
 
                   <div className="w-px h-8 bg-border/40 self-center" />
 
                   {/* Your score */}
                   <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
-                    <p className="text-[11px] text-muted-foreground mb-1">Your score</p>
-                    <p className="text-lg font-bold text-foreground">{scorePercent}%</p>
+                    <p className="text-xs text-muted-foreground mb-1">Your score</p>
+                    <p className="text-xl font-bold text-foreground">{scorePercent}%</p>
                   </div>
 
                   {expertVote && (
@@ -269,8 +269,8 @@ export function ViewReviewModal({
 
                       {/* Reputation change */}
                       <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
-                        <p className="text-[11px] text-muted-foreground mb-1">Reputation change</p>
-                        <p className={`text-lg font-bold ${
+                        <p className="text-xs text-muted-foreground mb-1">Reputation change</p>
+                        <p className={`text-xl font-bold ${
                           expertVote.reputationChange > 0
                             ? STATUS_COLORS.positive.text
                             : expertVote.reputationChange < 0
@@ -285,8 +285,8 @@ export function ViewReviewModal({
 
                       {/* VETD reward */}
                       <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
-                        <p className="text-[11px] text-muted-foreground mb-1">VETD reward</p>
-                        <p className="text-lg font-bold text-primary">
+                        <p className="text-xs text-muted-foreground mb-1">VETD reward</p>
+                        <p className="text-xl font-bold text-primary">
                           {(expertVote as typeof expertVote & { vetdReward?: number }).vetdReward != null
                             ? `+${(expertVote as typeof expertVote & { vetdReward?: number }).vetdReward}`
                             : "—"}
@@ -302,18 +302,18 @@ export function ViewReviewModal({
             {((generalJustifications && Object.keys(generalJustifications).length > 0) ||
               (domainJustifications && Object.keys(domainJustifications).length > 0)) && (
               <div className="space-y-4">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                   Your Justifications
                 </p>
 
                 {generalJustifications && Object.entries(generalJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
                       General
                     </p>
                     {Object.entries(generalJustifications).map(([key, value]) => (
                       <div key={key}>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 capitalize">
+                        <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
                         <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
@@ -326,12 +326,12 @@ export function ViewReviewModal({
 
                 {domainJustifications && Object.entries(domainJustifications).length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 pb-1.5 border-b border-border/40">
                       Domain
                     </p>
                     {Object.entries(domainJustifications).map(([key, value]) => (
                       <div key={key}>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 capitalize">
+                        <p className="text-xs font-medium text-muted-foreground mb-1 capitalize">
                           {key.replace(/_/g, " ")}
                         </p>
                         <div className="rounded-lg bg-muted/20 border border-border/40 p-3">
@@ -349,7 +349,7 @@ export function ViewReviewModal({
               <div className="rounded-xl border border-border bg-muted/20 p-5 space-y-2">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="text-sm font-semibold text-foreground">Your Feedback</h4>
+                  <h4 className="text-sm font-bold text-foreground">Your Feedback</h4>
                 </div>
                 <p className="text-sm text-foreground whitespace-pre-wrap">{review.feedback}</p>
               </div>
@@ -358,7 +358,7 @@ export function ViewReviewModal({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="w-full py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+              className="w-full py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
             >
               Close
             </button>
@@ -408,7 +408,7 @@ function CRStatusSection({
 
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
-      <h4 className="text-sm font-semibold text-foreground tracking-wide uppercase">
+      <h4 className="text-sm font-bold text-foreground tracking-wide uppercase">
         Verification Status
       </h4>
 
@@ -417,8 +417,8 @@ function CRStatusSection({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
           <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Method</p>
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Method</p>
+            <p className="text-xs font-medium text-foreground">
               {isCommitReveal ? "Commit-Reveal" : "Direct Vote"}
             </p>
           </div>
@@ -428,8 +428,8 @@ function CRStatusSection({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
           <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Phase</p>
-            <p className={`text-xs font-semibold ${phaseColor[phase] ?? "text-foreground"}`}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Phase</p>
+            <p className={`text-xs font-medium ${phaseColor[phase] ?? "text-foreground"}`}>
               {phaseLabel[phase] ?? phase}
             </p>
           </div>
@@ -439,8 +439,8 @@ function CRStatusSection({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
           <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">On-Chain</p>
-            <p className={`text-xs font-semibold ${isOnChain ? STATUS_COLORS.positive.text : "text-muted-foreground"}`}>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">On-Chain</p>
+            <p className={`text-xs font-medium ${isOnChain ? STATUS_COLORS.positive.text : "text-muted-foreground"}`}>
               {isOnChain ? "Recorded" : "Off-chain only"}
             </p>
           </div>
@@ -451,8 +451,8 @@ function CRStatusSection({
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border">
             <CheckCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Votes</p>
-              <p className="text-xs font-semibold text-foreground">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Votes</p>
+              <p className="text-xs font-medium text-foreground">
                 {commitCount} voted
               </p>
             </div>
@@ -469,12 +469,12 @@ function CRStatusSection({
               href={`https://sepolia.etherscan.io/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-primary/70 hover:text-primary font-mono truncate transition-colors"
+              className="text-xs text-primary/70 hover:text-primary font-mono truncate transition-colors"
             >
               View on Etherscan &rarr;
             </a>
           ) : blockchainSessionId ? (
-            <p className="text-[10px] text-muted-foreground font-mono truncate">
+            <p className="text-xs text-muted-foreground font-mono truncate">
               Session: {blockchainSessionId.slice(0, 10)}...{blockchainSessionId.slice(-8)}
             </p>
           ) : null}

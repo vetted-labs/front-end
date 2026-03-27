@@ -21,7 +21,7 @@ function Section({ icon: Icon, title, children }: { icon: React.ElementType; tit
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-4 h-4 text-muted-foreground" />
         </div>
-        <h4 className="text-sm font-semibold">{title}</h4>
+        <h4 className="text-sm font-bold">{title}</h4>
       </div>
       {children}
     </div>
@@ -48,7 +48,7 @@ export function HowReputationWorks() {
       >
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">How Reputation Works</span>
+          <span className="text-sm font-bold">How Reputation Works</span>
         </div>
         <ChevronDown
           className={`w-4 h-4 text-muted-foreground transition-transform ${
@@ -98,7 +98,7 @@ export function HowReputationWorks() {
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
                   <Calculator className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <h4 className="text-sm font-semibold">How Alignment Is Calculated</h4>
+                <h4 className="text-sm font-bold">How Alignment Is Calculated</h4>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
                 After a vetting round finalizes, the consensus score is calculated using <strong className="text-foreground/80">IQR-based filtering</strong> (statistical outlier removal). Your deviation is measured as a multiple of the IQR distance from the median.
@@ -107,9 +107,9 @@ export function HowReputationWorks() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider">
-                      <th className="text-left px-3 py-2 font-semibold">Deviation</th>
-                      <th className="text-center px-3 py-2 font-semibold">Reputation</th>
-                      <th className="text-center px-3 py-2 font-semibold">Slash</th>
+                      <th className="text-left px-3 py-2 font-medium">Deviation</th>
+                      <th className="text-center px-3 py-2 font-medium">Reputation</th>
+                      <th className="text-center px-3 py-2 font-medium">Slash</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
@@ -119,7 +119,7 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">within IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.positive.badge} px-2 py-0.5 rounded`}>+10</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.positive.badge} px-2 py-0.5 rounded`}>+10</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <span className="font-mono text-xs text-muted-foreground/50">0%</span>
@@ -131,10 +131,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">1 &ndash; 1.5x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.warning.badge} px-2 py-0.5 rounded`}>-5</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.warning.badge} px-2 py-0.5 rounded`}>-5</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.warning.text}`}>5%</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.warning.text}`}>5%</span>
                       </td>
                     </tr>
                     <tr>
@@ -143,10 +143,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">1.5 &ndash; 2x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-10</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-10</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.text}`}>15%</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.negative.text}`}>15%</span>
                       </td>
                     </tr>
                     <tr>
@@ -155,10 +155,10 @@ export function HowReputationWorks() {
                         <span className="text-muted-foreground/60 text-xs ml-1.5">&gt; 2x IQR</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-20</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.negative.badge} px-2 py-0.5 rounded`}>-20</span>
                       </td>
                       <td className="px-3 py-2.5 text-center">
-                        <span className={`font-mono text-xs font-semibold ${STATUS_COLORS.negative.text}`}>25%</span>
+                        <span className={`font-mono text-xs font-medium ${STATUS_COLORS.negative.text}`}>25%</span>
                       </td>
                     </tr>
                   </tbody>
@@ -170,15 +170,15 @@ export function HowReputationWorks() {
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation <span className="text-muted-foreground/50 text-xs">0 &ndash; 999</span></span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.0x</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Established <span className="text-muted-foreground/50 text-xs">1,000 &ndash; 1,999</span></span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.25x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.25x</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Authority <span className="text-muted-foreground/50 text-xs">2,000+</span></span>
-                  <span className="font-mono text-xs font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.50x</span>
+                  <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">1.50x</span>
                 </li>
               </ul>
               <p className="text-xs text-muted-foreground/60 mt-2.5">Higher tiers earn a larger share of every vetting reward pool</p>

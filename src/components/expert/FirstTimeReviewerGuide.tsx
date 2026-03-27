@@ -28,7 +28,7 @@ export function FirstTimeReviewerGuide() {
       <div className="flex items-start gap-4">
         <BookOpen className="h-6 w-6 text-primary mt-0.5 shrink-0" />
         <div>
-          <h3 className="font-semibold mb-2">Welcome to your first review!</h3>
+          <h3 className="font-bold mb-2">Welcome to your first review!</h3>
           <p className="text-sm text-muted-foreground mb-3">Here&apos;s how vetting works:</p>
           <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
             <li><strong>Review the candidate profile</strong> — read their application, experience, and answers</li>

@@ -210,7 +210,7 @@ export default function ApplicationsPage() {
         {/* Header + Stats merged card */}
         <div className="rounded-2xl bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] overflow-hidden">
           <div className="px-6 py-5">
-            <h1 className="text-xl font-extrabold tracking-tight">Reviews</h1>
+            <h1 className="text-xl font-bold tracking-tight">Reviews</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Review applications, vote on proposals, and track your review history.
             </p>
@@ -235,7 +235,7 @@ export default function ApplicationsPage() {
                 <Shield className="w-6 h-6 text-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-foreground mb-1">
+                <h3 className="text-sm font-bold text-foreground mb-1">
                   Stake VETD to Start Reviewing
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">

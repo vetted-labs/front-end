@@ -52,7 +52,7 @@ function Banner({ daysInactive }: { daysInactive: number | null }) {
         isDecaying ? STATUS_COLORS.negative.icon : STATUS_COLORS.warning.icon
       }`} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">
+        <p className="text-sm font-bold text-foreground">
           {isDecaying ? "Reputation decay active" : "Inactivity warning"}
         </p>
         <p className="text-sm text-muted-foreground mt-0.5">

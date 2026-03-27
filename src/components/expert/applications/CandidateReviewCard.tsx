@@ -46,11 +46,11 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
             <h4 className="text-base font-bold text-foreground truncate">
               {application.candidateName}
             </h4>
-            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-[10px] uppercase tracking-wider text-muted-foreground font-medium border border-border/50">
+            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border/50">
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (
-              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-[11px] ${STATUS_COLORS.info.text} font-medium`}>
+              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-xs ${STATUS_COLORS.info.text} font-medium`}>
                 {application.guildName}
               </span>
             )}
@@ -94,7 +94,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
             onViewReview && (
               <button
                 onClick={() => onViewReview(application)}
-                className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 View
                 <ChevronRight className="w-4 h-4" />
@@ -103,7 +103,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
           ) : (
             <button
               onClick={() => onReview(application)}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Review
               <ChevronRight className="w-4 h-4" />

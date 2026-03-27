@@ -15,8 +15,10 @@ import type {
   PaginationInfo,
 } from "@/types";
 
-import { ReputationScoreCards } from "./ReputationScoreCards";
-import { RewardTierCard } from "./RewardTierCard";
+import { ReputationScoreHero } from "./ReputationScoreHero";
+import { ReputationBreakdownCards } from "./ReputationBreakdownCards";
+import { RewardTierTower } from "./RewardTierTower";
+import { ReputationScoreChart } from "./ReputationScoreChart";
 import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
 
@@ -98,17 +100,18 @@ export default function ReputationPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Reputation</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your reputation score and history across all guilds
-          </p>
-        </div>
+      {/* Hero Score Section */}
+      <ReputationScoreHero
+        reputation={reputation}
+        totalGains={totalGains}
+        alignedCount={alignedCount}
+        deviationCount={deviationCount}
+        reviewCount={profile?.reviewCount ?? 0}
+      />
 
-        {/* Score Overview */}
-        <ReputationScoreCards
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-20">
+        {/* Breakdown Cards */}
+        <ReputationBreakdownCards
           reputation={reputation}
           totalGains={totalGains}
           totalLosses={totalLosses}
@@ -116,13 +119,16 @@ export default function ReputationPage() {
           deviationCount={deviationCount}
         />
 
-        {/* Reward Tier */}
-        <RewardTierCard reputation={reputation} />
+        {/* Tier Progression Tower */}
+        <RewardTierTower reputation={reputation} />
+
+        {/* Score History Chart */}
+        <ReputationScoreChart timeline={timeline} reputation={reputation} />
 
         {/* How It Works */}
         <HowReputationWorks />
 
-        {/* Timeline */}
+        {/* Recent Impact Timeline */}
         <ReputationTimeline
           timeline={timeline}
           pagination={pagination}

@@ -176,40 +176,81 @@ export default function NotificationsPage() {
           n.type !== "guild_application"
         );
 
+  // Group filtered notifications by date
+  const dateGroups = (() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 86400000);
+    const weekAgo = new Date(today.getTime() - 7 * 86400000);
+    const groups: { label: string; items: typeof filteredNotifications }[] = [
+      { label: "Today", items: [] },
+      { label: "Yesterday", items: [] },
+      { label: "This Week", items: [] },
+      { label: "Earlier", items: [] },
+    ];
+    for (const n of filteredNotifications) {
+      const d = new Date(n.createdAt);
+      if (d >= today) groups[0].items.push(n);
+      else if (d >= yesterday) groups[1].items.push(n);
+      else if (d >= weekAgo) groups[2].items.push(n);
+      else groups[3].items.push(n);
+    }
+    return groups.filter((g) => g.items.length > 0);
+  })();
+
+  // Priority stripe helper
+  const getPriorityStyles = (type: string) => {
+    if (isDeadlineNotification(type)) {
+      return { stripe: "bg-negative", iconBg: "bg-negative/12 text-negative", isUrgent: true };
+    }
+    if (type === "reward_earned") {
+      return { stripe: "bg-positive", iconBg: "bg-positive/12 text-positive", isUrgent: false };
+    }
+    if (type === "guild_application" || type === "application_new" || type === "proposal_new") {
+      return { stripe: "bg-primary", iconBg: "bg-primary/12 text-primary", isUrgent: false };
+    }
+    return { stripe: "bg-info-blue", iconBg: "bg-info-blue/12 text-info-blue", isUrgent: false };
+  };
+
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[860px] mx-auto px-4 sm:px-6 py-12 relative z-[1]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Notifications</h1>
-            <p className="text-muted-foreground">
-              Stay updated with your guild activities and pending tasks
-            </p>
+        <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+              Notifications
+            </h1>
+            {unreadCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/25 text-primary text-sm font-medium px-3.5 py-1 rounded-full"
+                style={{ animation: "notif-badge-pulse 2s ease-in-out infinite" }}
+              >
+                <span className="w-[7px] h-[7px] bg-primary rounded-full animate-pulse" />
+                {unreadCount} new
+              </span>
+            )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllAsRead}
-              disabled={isMarkingAllRead}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isMarkingAllRead ? (
-                <>
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                disabled={isMarkingAllRead}
+                className="inline-flex items-center gap-2 bg-white/[0.025] border border-white/[0.06] text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-[10px] backdrop-blur-xl hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isMarkingAllRead ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Marking...
-                </>
-              ) : (
-                <>
+                ) : (
                   <CheckCheck className="w-4 h-4" />
-                  Mark All as Read
-                </>
-              )}
-            </button>
-          )}
+                )}
+                Mark all read
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Filter Navigation */}
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
           {(
             [
               { key: "all", label: "All", count: allNotifications.length },
@@ -222,149 +263,143 @@ export default function NotificationsPage() {
             <button
               key={key}
               onClick={() => setActiveFilter(key)}
-              className={`px-4 py-2 font-medium rounded-lg transition-all whitespace-nowrap ${
+              className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium whitespace-nowrap backdrop-blur-2xl transition-all ${
                 activeFilter === key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border"
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-white/[0.025] border-white/[0.06] text-muted-foreground hover:bg-white/[0.045] hover:border-white/[0.12] hover:text-foreground"
               }`}
             >
               {label}
               {count > 0 && (
-                <span
-                  className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${
-                    key === "all" && unreadCount > 0
-                      ? `${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.text}`
-                      : "bg-primary-foreground/20"
-                  }`}
-                >
-                  {key === "all" ? unreadCount > 0 ? unreadCount : count : count}
+                <span className={`px-2 py-px text-xs font-medium rounded-lg ${
+                  activeFilter === key ? "bg-primary/20" : "bg-white/[0.08]"
+                }`}>
+                  {key === "all" && unreadCount > 0 ? unreadCount : count}
                 </span>
               )}
             </button>
           ))}
         </div>
 
-        {/* Notifications List */}
-        <div className="space-y-3">
-          {filteredNotifications.length === 0 ? (
-            <div className="bg-card rounded-2xl p-12 text-center border border-border">
-              <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No notifications</h3>
-              <p className="text-muted-foreground">
-                {activeFilter === "all"
-                  ? "You have no notifications yet."
-                  : `No ${activeFilter} notifications found.`}
-              </p>
-            </div>
-          ) : (
-            filteredNotifications.map((notification) => {
-              const Icon = getNotificationIcon(notification.type);
-              const isUnread = !notification.isRead;
-              const isClicked = clickedNotificationId === notification.id;
-              const isDeadline = isDeadlineNotification(notification.type);
+        {/* Notifications grouped by date */}
+        {filteredNotifications.length === 0 ? (
+          <div className="bg-white/[0.025] rounded-2xl p-12 text-center border border-white/[0.06]">
+            <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-foreground mb-2">No notifications</h3>
+            <p className="text-muted-foreground">
+              {activeFilter === "all"
+                ? "You have no notifications yet."
+                : `No ${activeFilter} notifications found.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {dateGroups.map((group) => (
+              <div key={group.label}>
+                <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
+                  {group.label}
+                </p>
+                <div className="space-y-2.5">
+                  {group.items.map((notification) => {
+                    const Icon = getNotificationIcon(notification.type);
+                    const isUnread = !notification.isRead;
+                    const isClicked = clickedNotificationId === notification.id;
+                    const isDeadline = isDeadlineNotification(notification.type);
+                    const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
+                    const { stripe, iconBg, isUrgent } = getPriorityStyles(notification.type);
 
-              const applicantTag = notification.type === "guild_application" ? getApplicantTypeTag(notification.applicantType) : null;
+                    return (
+                      <button
+                        key={notification.id}
+                        onClick={() => handleNotificationClick(notification)}
+                        disabled={isClicked}
+                        className={`w-full flex items-start gap-4 px-6 py-5 bg-white/[0.025] border border-white/[0.06] rounded-2xl relative overflow-hidden cursor-pointer backdrop-blur-3xl text-left transition-all duration-200 hover:bg-white/[0.045] hover:border-white/[0.12] hover:translate-y-[-1px] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] ${
+                          isClicked ? "opacity-60 cursor-wait" : ""
+                        } ${isUnread ? "" : "opacity-60"} ${isUrgent ? "border-negative/12" : ""}`}
+                        style={isUrgent ? { animation: "notif-urgent-glow 3s ease-in-out infinite" } : undefined}
+                      >
+                        {/* Priority stripe */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-r ${stripe}`} />
 
-              return (
-                <button
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  disabled={isClicked}
-                  className={`w-full rounded-2xl p-6 border transition-all text-left hover:shadow-lg ${
-                    isDeadline
-                      ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border} hover:border-warning/60`
-                      : isUnread
-                      ? "bg-card border-primary/20 hover:border-primary/50"
-                      : "bg-card border-border opacity-75 hover:opacity-100 hover:border-primary/50"
-                  } ${isClicked ? "opacity-60 cursor-wait" : ""}`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${getNotificationColor(
-                        notification.type
-                      )}`}
-                    >
-                      {isClicked ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      ) : (
-                        <Icon className="w-6 h-6" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3
-                            className={`text-base font-semibold text-foreground ${
-                              isUnread ? "font-bold" : ""
-                            } ${isDeadline ? STATUS_COLORS.warning.text : ""}`}
-                          >
-                            {notification.title}
-                          </h3>
-                          {applicantTag && (
-                            <span className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full ${applicantTag.className}`}>
-                              {applicantTag.label}
-                            </span>
+                        {/* Icon */}
+                        <div className={`relative w-12 h-12 rounded-[14px] grid place-items-center shrink-0 ${iconBg}`}>
+                          {isClicked ? (
+                            <Loader2 className="w-[22px] h-[22px] animate-spin" />
+                          ) : (
+                            <Icon className="w-[22px] h-[22px]" />
                           )}
-                          {isDeadline && notification.expiresAt && (
-                            <CountdownBadge deadline={notification.expiresAt} label="Due" />
+                          {isUnread && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background animate-pulse" />
                           )}
                         </div>
-                        {isUnread && (
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-2 mt-1.5 ${isDeadline ? STATUS_COLORS.warning.dot : "bg-primary"}`} />
-                        )}
-                      </div>
-                      <p
-                        className={`text-sm mb-2 ${
-                          isDeadline
-                            ? `${STATUS_COLORS.warning.text} font-medium`
-                            : isUnread
-                            ? "text-muted-foreground font-medium"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {notification.message}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {notification.guildName && (
-                          <>
-                            <span className="font-medium">{notification.guildName}</span>
-                            <span>•</span>
-                          </>
-                        )}
-                        <span>{formatTimeAgo(notification.createdAt)}</span>
-                        {notification.isRead && notification.readAt && (
-                          <>
-                            <span>•</span>
-                            <Check className="w-3 h-3" />
-                            <span>Read</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })
-          )}
 
-          {/* Load More Button */}
-          {hasMore && filteredNotifications.length > 0 && (
-            <button
-              onClick={loadMore}
-              disabled={isLoadingMore}
-              className="w-full py-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Load more notifications"
-              )}
-            </button>
-          )}
-        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h3 className={`text-sm leading-snug ${isUnread ? "font-bold text-white" : "font-medium text-foreground"} ${isDeadline ? STATUS_COLORS.warning.text : ""}`}>
+                              {notification.title}
+                            </h3>
+                            {applicantTag && (
+                              <span className={`px-2 py-0.5 text-xs font-medium uppercase tracking-wider rounded-full ${applicantTag.className}`}>
+                                {applicantTag.label}
+                              </span>
+                            )}
+                            {isDeadline && notification.expiresAt && (
+                              <CountdownBadge deadline={notification.expiresAt} label="Due" />
+                            )}
+                          </div>
+                          <p className={`text-sm leading-relaxed line-clamp-2 mb-2 ${
+                            isDeadline
+                              ? `${STATUS_COLORS.warning.text} font-medium`
+                              : isUnread
+                              ? "text-muted-foreground font-medium"
+                              : "text-muted-foreground"
+                          }`}>
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground/50 font-medium">
+                            {notification.guildName && (
+                              <>
+                                <span className="font-medium">{notification.guildName}</span>
+                                <span>&bull;</span>
+                              </>
+                            )}
+                            <span>{formatTimeAgo(notification.createdAt)}</span>
+                            {notification.isRead && notification.readAt && (
+                              <>
+                                <span>&bull;</span>
+                                <Check className="w-3 h-3" />
+                                <span>Read</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {hasMore && filteredNotifications.length > 0 && (
+          <button
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="w-full py-4 mt-4 text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Load more notifications"
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

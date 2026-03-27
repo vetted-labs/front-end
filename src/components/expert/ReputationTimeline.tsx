@@ -1,8 +1,8 @@
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { formatTimeAgo, formatDate } from "@/lib/utils";
+import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ReputationTimelineEntry, ReputationTierConfig, PaginationInfo } from "@/types";
 
@@ -39,11 +39,6 @@ const tierConfig: Record<string, ReputationTierConfig> = {
   },
 };
 
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-}
-
 interface ReputationTimelineProps {
   timeline: ReputationTimelineEntry[];
   pagination: PaginationInfo | null;
@@ -51,119 +46,120 @@ interface ReputationTimelineProps {
   onPageChange: (page: number) => void;
 }
 
-function TimelineEntry({ entry }: { entry: ReputationTimelineEntry }) {
+function ImpactRow({
+  entry,
+  runningTotal,
+}: {
+  entry: ReputationTimelineEntry;
+  runningTotal: number;
+}) {
   const tier = tierConfig[entry.reason] || tierConfig.aligned;
   const isPositive = entry.change_amount >= 0;
   const isProposalVote = entry.vote_score !== null;
 
   return (
-    <div className="relative pl-14 group">
-      {/* Timeline dot */}
+    <div
+      className={`
+        group relative flex items-center gap-4 px-6 py-[18px]
+        bg-card/40 dark:bg-surface-1/40
+        border border-border/60 dark:border-white/[0.06]
+        transition-all duration-200
+        hover:bg-card/70 dark:hover:bg-surface-2/60
+        hover:border-border dark:hover:border-white/[0.08]
+        first:rounded-t-2xl last:rounded-b-2xl
+        overflow-hidden
+      `}
+    >
+      {/* Left color stripe */}
       <div
-        className={`absolute left-[16px] top-[20px] w-[15px] h-[15px] rounded-full border-2 border-background z-10 ${
-          isPositive
-            ? `${STATUS_COLORS.positive.dot} shadow-sm`
-            : `${STATUS_COLORS.negative.dot} shadow-sm`
+        className={`absolute left-0 top-0 bottom-0 w-[3px] ${
+          isPositive ? STATUS_COLORS.positive.bg : STATUS_COLORS.negative.bg
         }`}
       />
 
-      <Card
-        padding="none"
-        hover
-        className="transition-all"
+      {/* Delta */}
+      <div
+        className={`font-display text-xl font-bold min-w-[60px] text-right tabular-nums ${
+          isPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
+        }`}
       >
-        <div className="p-4 sm:p-5">
-          {/* Top row */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className={`inline-flex items-center gap-1 text-sm font-semibold tabular-nums ${
-                  isPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
-                }`}
-              >
-                {isPositive ? (
-                  <ArrowUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ArrowDown className="w-3.5 h-3.5" />
-                )}
-                {isPositive ? "+" : ""}
-                {entry.change_amount}
-              </span>
+        {isPositive ? "+" : ""}
+        {entry.change_amount}
+      </div>
 
-              <span
-                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${tier.bg} ${tier.color} ${tier.border}`}
-              >
-                {tier.label}
-              </span>
-
-              {entry.guild_name && (
-                <Badge variant="outline" className="text-[11px] font-normal">
-                  {entry.guild_name}
-                </Badge>
-              )}
-            </div>
-
-            <span className="text-[11px] text-muted-foreground/70 whitespace-nowrap tabular-nums flex-shrink-0">
-              {formatTimeAgo(entry.created_at)}
-            </span>
-          </div>
-
-          {/* Description */}
-          <p className="text-sm text-muted-foreground mt-2">{entry.description}</p>
-
-          {/* Candidate info */}
-          {entry.candidate_name && (
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              Candidate: <span className="text-foreground/80">{entry.candidate_name}</span>
-              {entry.outcome && (
-                <>
-                  {" \u00B7 "}
-                  <span
-                    className={
-                      entry.outcome === "approved"
-                        ? STATUS_COLORS.positive.text
-                        : STATUS_COLORS.negative.text
-                    }
-                  >
-                    {entry.outcome}
-                  </span>
-                </>
-              )}
-            </p>
+      {/* Description */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+          <p className="text-sm">{entry.description}</p>
+          <span
+            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${tier.bg} ${tier.color} ${tier.border}`}
+          >
+            {tier.label}
+          </span>
+          {entry.guild_name && (
+            <Badge variant="outline" className="text-xs font-normal">
+              {entry.guild_name}
+            </Badge>
           )}
-
-          {/* Vote details grid */}
-          {isProposalVote && (
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
-                <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">Your Vote</p>
-                <p className="text-sm font-semibold tabular-nums mt-0.5">{entry.vote_score}</p>
-              </div>
-              <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
-                <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">Consensus</p>
-                <p className="text-sm font-semibold tabular-nums mt-0.5">{Number(entry.consensus_score).toFixed(1)}</p>
-              </div>
-              <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
-                <p className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">Distance</p>
-                <p className="text-sm font-semibold tabular-nums mt-0.5">{Number(entry.alignment_distance).toFixed(1)}</p>
-              </div>
-              {entry.reward_amount !== null && Number(entry.reward_amount) > 0 && (
-                <div className={`rounded-lg ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} px-3 py-2`}>
-                  <p className={`text-[10px] font-medium uppercase tracking-wider ${STATUS_COLORS.positive.text} opacity-60`}>Reward</p>
-                  <p className={`text-sm font-semibold tabular-nums mt-0.5 ${STATUS_COLORS.positive.text}`}>
-                    +{Number(entry.reward_amount).toFixed(2)}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Full date on hover */}
-          <p className="text-[10px] text-muted-foreground/40 mt-2 tabular-nums">
-            {formatDate(entry.created_at)} at {formatTime(entry.created_at)}
-          </p>
         </div>
-      </Card>
+
+        {/* Candidate info */}
+        {entry.candidate_name && (
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            Candidate: <span className="text-foreground/80">{entry.candidate_name}</span>
+            {entry.outcome && (
+              <>
+                {" \u00B7 "}
+                <span
+                  className={
+                    entry.outcome === "approved"
+                      ? STATUS_COLORS.positive.text
+                      : STATUS_COLORS.negative.text
+                  }
+                >
+                  {entry.outcome}
+                </span>
+              </>
+            )}
+          </p>
+        )}
+
+        {/* Vote details grid */}
+        {isProposalVote && (
+          <div className="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+              <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Your Vote</p>
+              <p className="text-sm font-medium tabular-nums mt-0.5">{entry.vote_score}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+              <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Consensus</p>
+              <p className="text-sm font-medium tabular-nums mt-0.5">{Number(entry.consensus_score).toFixed(1)}</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 dark:bg-white/[0.03] px-3 py-2">
+              <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">Distance</p>
+              <p className="text-sm font-medium tabular-nums mt-0.5">{Number(entry.alignment_distance).toFixed(1)}</p>
+            </div>
+            {entry.reward_amount !== null && Number(entry.reward_amount) > 0 && (
+              <div className={`rounded-lg ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} px-3 py-2`}>
+                <p className={`text-xs font-medium uppercase tracking-wider ${STATUS_COLORS.positive.text} opacity-60`}>Reward</p>
+                <p className={`text-sm font-medium tabular-nums mt-0.5 ${STATUS_COLORS.positive.text}`}>
+                  +{Number(entry.reward_amount).toFixed(2)}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Time */}
+      <div className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0 hidden sm:block">
+        {formatTimeAgo(entry.created_at)}
+      </div>
+
+      {/* Running total */}
+      <div className="font-display text-sm font-bold min-w-[48px] text-right tabular-nums text-muted-foreground hidden md:block">
+        {runningTotal}
+      </div>
     </div>
   );
 }
@@ -174,10 +170,33 @@ export function ReputationTimeline({
   page,
   onPageChange,
 }: ReputationTimelineProps) {
+  // Compute running totals from cumulative changes
+  const runningTotals = timeline.length > 0
+    ? (() => {
+        const totals: number[] = [];
+        let running = 0;
+        // Sort by date ascending to build running sum
+        const sorted = [...timeline].sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        for (const entry of sorted) {
+          running += entry.change_amount;
+          totals.push(running);
+        }
+        // Map back to original order
+        return timeline.map((entry) => {
+          const idx = sorted.findIndex((e) => e === entry);
+          return totals[idx];
+        });
+      })()
+    : [];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold tracking-tight">Timeline</h2>
+    <section>
+      <div className="flex items-center justify-between mb-8">
+        <p className="text-xs font-bold tracking-[4px] uppercase text-muted-foreground pl-1">
+          Recent Impact
+        </p>
         {pagination && (
           <span className="text-xs text-muted-foreground tabular-nums">
             {pagination.total} events
@@ -196,15 +215,14 @@ export function ReputationTimeline({
           </div>
         </Card>
       ) : (
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-[23px] top-0 bottom-0 w-px bg-border/60 dark:bg-white/[0.06]" />
-
-          <div className="space-y-1">
-            {timeline.map((entry, i) => (
-              <TimelineEntry key={i} entry={entry} />
-            ))}
-          </div>
+        <div className="flex flex-col gap-px">
+          {timeline.map((entry, i) => (
+            <ImpactRow
+              key={`${entry.created_at}-${i}`}
+              entry={entry}
+              runningTotal={runningTotals[i] ?? 0}
+            />
+          ))}
         </div>
       )}
 
@@ -217,6 +235,6 @@ export function ReputationTimeline({
           className="mt-6"
         />
       )}
-    </div>
+    </section>
   );
 }

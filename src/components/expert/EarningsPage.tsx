@@ -10,7 +10,7 @@ import { useRewardClaiming } from "@/lib/hooks/useVettedContracts";
 import { GuildSelector } from "@/components/ui/guild-selector";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { Calendar, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import type {
@@ -26,6 +26,7 @@ import { EarningsSummaryCards } from "@/components/expert/EarningsSummaryCards";
 import { ClaimRewardsCard } from "@/components/expert/ClaimRewardsCard";
 import { HowEarningsWork } from "@/components/expert/HowEarningsWork";
 import { EarningsTimeline } from "@/components/expert/EarningsTimeline";
+import { EarningsChart } from "@/components/expert/EarningsChart";
 
 function getDateFrom(range: TimeRange): string | undefined {
   if (range === "all") return undefined;
@@ -35,6 +36,13 @@ function getDateFrom(range: TimeRange): string | undefined {
   else if (range === "month") now.setMonth(now.getMonth() - 1);
   return now.toISOString();
 }
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  day: "24h",
+  week: "7D",
+  month: "30D",
+  all: "All",
+};
 
 export default function EarningsPage() {
   const { address: wagmiAddress } = useExpertAccount();
@@ -163,22 +171,26 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+
+        {/* ── Page header ── */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Earnings</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            VETD rewards from voting and endorsements
+          <div className="w-12 h-[3px] rounded-full bg-gradient-to-r from-primary to-primary/60 mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
+            Earnings
+          </h1>
+          <p className="text-sm text-muted-foreground/60 mt-1">
+            Track your review income, pending payouts, and on-chain transactions
           </p>
         </div>
 
-        {/* Summary cards */}
+        {/* ── Summary stat cards ── */}
         <EarningsSummaryCards
           summary={summary}
           reputation={profile?.reputation ?? 0}
         />
 
-        {/* Claim Rewards */}
+        {/* ── Claim Rewards ── */}
         <ClaimRewardsCard
           pendingAmount={pendingAmount}
           claimedAmount={claimedAmount}
@@ -188,24 +200,20 @@ export default function EarningsPage() {
           onClaim={handleClaim}
         />
 
-        {/* How It Works */}
-        <HowEarningsWork />
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4 text-muted-foreground mr-1 flex-shrink-0" />
-            {(["all", "day", "week", "month"] as TimeRange[]).map((range) => (
+        {/* ── Time range filter pills ── */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-1 p-1 rounded-xl bg-muted/30 dark:bg-white/[0.03] border border-border/60 dark:border-white/[0.06]">
+            {(["day", "week", "month", "all"] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 onClick={() => handleTimeChange(range)}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 ${
+                className={`px-4 py-1.5 text-sm font-medium rounded-lg border transition-all duration-200 ${
                   timeRange === range
-                    ? "bg-primary/15 text-primary border-primary/40"
-                    : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
+                    ? "text-primary bg-primary/[0.08] border-primary/20 shadow-[0_0_12px_hsl(var(--primary)/0.1)]"
+                    : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/40 dark:hover:bg-white/[0.03]"
                 }`}
               >
-                {range === "all" ? "All Time" : range === "day" ? "24h" : range === "week" ? "7d" : "30d"}
+                {TIME_RANGE_LABELS[range]}
               </button>
             ))}
           </div>
@@ -220,13 +228,19 @@ export default function EarningsPage() {
           )}
         </div>
 
-        {/* Timeline */}
+        {/* ── Earnings chart ── */}
+        <EarningsChart items={items} />
+
+        {/* ── Transaction timeline ── */}
         <EarningsTimeline
           items={items}
           pagination={pagination}
           page={page}
           onPageChange={setPage}
         />
+
+        {/* ── How It Works (collapsible) ── */}
+        <HowEarningsWork />
       </div>
     </div>
   );

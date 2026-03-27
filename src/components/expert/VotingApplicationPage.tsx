@@ -55,7 +55,7 @@ function CandidateProfileSection({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
         Candidate Profile
       </h3>
 
@@ -258,7 +258,7 @@ export default function VotingApplicationPage({
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="max-w-md text-center">
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-lg text-muted-foreground mb-4">
+          <p className="text-sm font-medium text-muted-foreground mb-4">
             Application not found
           </p>
           <Button onClick={() => router.back()}>Go Back</Button>

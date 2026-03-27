@@ -43,7 +43,7 @@ export function ApplicationsFilters({
         <>
           Expert Reviews
           {pendingCounts.expert > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {pendingCounts.expert}
             </span>
           )}
@@ -56,7 +56,7 @@ export function ApplicationsFilters({
         <>
           Candidate Reviews
           {pendingCounts.candidate > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {pendingCounts.candidate}
             </span>
           )}
@@ -69,7 +69,7 @@ export function ApplicationsFilters({
         <>
           Proposals
           {pendingCounts.proposals > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-medium rounded-full">
               {pendingCounts.proposals}
             </span>
           )}
@@ -82,7 +82,7 @@ export function ApplicationsFilters({
         <>
           History
           {pendingCounts.history > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 bg-muted text-muted-foreground text-xs font-semibold rounded-full">
+            <span className="ml-2 px-1.5 py-0.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
               {pendingCounts.history}
             </span>
           )}

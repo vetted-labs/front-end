@@ -1,9 +1,8 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { Coins, Vote, Award } from "lucide-react";
-import { STATUS_COLORS } from "@/config/colors";
+import { Coins, Vote, Award, Layers } from "lucide-react";
+import { STAT_ICON, STATUS_COLORS } from "@/config/colors";
 import type { EarningsEntry, PaginationInfo } from "@/types";
 
 const typeLabels: Record<string, string> = {
@@ -48,26 +47,26 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
 
   if (items.length === 0) {
     return (
-      <>
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold tracking-tight">Earnings History</h2>
+          <h2 className="text-sm font-bold tracking-tight">Recent Transactions</h2>
         </div>
         <EmptyState
           icon={Coins}
           title="No earnings yet"
           description="No earnings found for this period."
         />
-      </>
+      </div>
     );
   }
 
   const grouped = groupByDate(items);
 
   return (
-    <>
+    <div className="space-y-5">
       {/* Section heading */}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold tracking-tight">Earnings History</h2>
+        <h2 className="text-sm font-bold tracking-tight">Recent Transactions</h2>
         {totalCount > 0 && (
           <span className="text-xs text-muted-foreground tabular-nums">
             {totalCount} {totalCount === 1 ? "entry" : "entries"}
@@ -76,61 +75,91 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
       </div>
 
       <div className="space-y-6">
-        {Object.entries(grouped).map(([date, entries]) => {
-          return (
-            <div key={date}>
-              {/* Day header */}
-              <div className="mb-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{date}</p>
-              </div>
+        {Object.entries(grouped).map(([date, entries]) => (
+          <div key={date}>
+            {/* Day header */}
+            <div className="mb-3">
+              <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
+                {date}
+              </p>
+            </div>
 
-              <Card padding="none">
-                <div className="divide-y divide-border/40 dark:divide-white/[0.04]">
-                  {entries.map((entry, i) => {
-                    const TypeIcon = typeIcons[entry.type] || Coins;
-                    const subLabel = typeSubLabels[entry.type];
-                    const currency = entry.currency || "VETD";
-                    return (
-                      <div key={i} className="px-5 py-3.5 flex items-center gap-4 hover:bg-muted/30 dark:hover:bg-white/[0.02] transition-colors">
-                        <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center flex-shrink-0`}>
-                          <TypeIcon className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
+            {/* Transaction rows */}
+            <div className="flex flex-col gap-1.5">
+              {entries.map((entry, i) => {
+                const TypeIcon = typeIcons[entry.type] || Coins;
+                const subLabel = typeSubLabels[entry.type];
+                const currency = entry.currency || "VETD";
+
+                return (
+                  <Card
+                    key={i}
+                    padding="none"
+                    className="overflow-hidden group"
+                  >
+                    <div className="grid grid-cols-[4px_1fr_auto] sm:grid-cols-[4px_1fr_auto] items-center">
+                      {/* Left accent stripe -- single brand color */}
+                      <div className="w-1 self-stretch bg-primary/60 group-hover:bg-primary transition-colors" />
+
+                      {/* Info section */}
+                      <div className="flex items-center gap-3.5 px-4 py-3.5 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg ${STAT_ICON.bg} flex items-center justify-center flex-shrink-0`}>
+                          <TypeIcon className={`w-4 h-4 ${STAT_ICON.text}`} />
                         </div>
 
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium">
+                            <p className="text-sm font-medium truncate">
                               {typeLabels[entry.type] || entry.type}
+                              {entry.candidate_name && (
+                                <span className="text-muted-foreground font-normal">
+                                  : {entry.candidate_name}
+                                </span>
+                              )}
                             </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground/50">
+                            <span>
+                              {new Date(entry.created_at).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
                             {entry.guild_name && (
-                              <Badge variant="outline" className="text-[10px] font-normal">
-                                {entry.guild_name}
-                              </Badge>
+                              <>
+                                <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/30" />
+                                <span className="flex items-center gap-1">
+                                  <Layers className="w-3 h-3" />
+                                  {entry.guild_name}
+                                </span>
+                              </>
+                            )}
+                            {subLabel && !entry.candidate_name && (
+                              <>
+                                <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/30" />
+                                <span>{subLabel}</span>
+                              </>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">
-                            {entry.candidate_name
-                              ? `${subLabel ?? "For"} · ${entry.candidate_name}`
-                              : (subLabel ?? null)}
-                          </p>
-                        </div>
-
-                        <div className="text-right flex-shrink-0">
-                          <p className={`text-sm font-semibold tabular-nums ${STATUS_COLORS.positive.text}`}>
-                            +{Number(entry.amount).toFixed(2)}{" "}
-                            <span className="text-[10px] font-normal text-muted-foreground/60">{currency}</span>
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/40 tabular-nums">
-                            {new Date(entry.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                          </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </Card>
+
+                      {/* Amount */}
+                      <div className="text-right pr-4 py-3.5 flex-shrink-0">
+                        <p className={`text-sm font-bold tabular-nums ${STATUS_COLORS.positive.text}`}>
+                          +{Number(entry.amount).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground/40 tabular-nums mt-0.5">
+                          {currency}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       {pagination && (
@@ -140,6 +169,6 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
           onPageChange={onPageChange}
         />
       )}
-    </>
+    </div>
   );
 }

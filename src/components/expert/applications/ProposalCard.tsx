@@ -40,7 +40,7 @@ export function ProposalCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
             <h3
-              className="text-base font-semibold text-foreground hover:text-primary cursor-pointer transition-colors truncate"
+              className="text-sm font-bold text-foreground hover:text-primary cursor-pointer transition-colors truncate"
               onClick={() => router.push(`/expert/voting/applications/${proposal.id}`)}
             >
               {proposal.candidate_name}
@@ -140,7 +140,7 @@ export function ProposalCard({
           </span>
         )}
         {proposal.voting_phase && proposal.voting_phase !== "direct" && (
-          <Badge variant="outline" className={`${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.text} text-[10px] py-0`}>
+          <Badge variant="outline" className={`${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.text} text-xs py-0`}>
             {proposal.voting_phase}
           </Badge>
         )}

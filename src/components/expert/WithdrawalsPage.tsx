@@ -230,35 +230,35 @@ export default function WithdrawalsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Staked — purple accent */}
         <div className="rounded-[14px] bg-primary/[0.08] border border-primary/20 p-5">
-          <div className="text-[11px] uppercase tracking-[1.2px] text-primary font-medium mb-1.5">
+          <div className="text-xs uppercase tracking-[1.2px] text-primary font-medium mb-1.5">
             Total Staked
           </div>
-          <div className="text-[28px] font-bold leading-tight tabular-nums">
+          <div className="text-3xl font-bold leading-tight tabular-nums">
             {totalStaked.toFixed(2)}
           </div>
-          <div className="text-[13px] text-primary/70 mt-0.5">VETD</div>
+          <div className="text-sm text-primary/70 mt-0.5">VETD</div>
         </div>
 
         {/* Available Balance */}
-        <div className="rounded-[14px] bg-white/[0.025] border border-white/[0.07] p-5">
-          <div className="text-[11px] uppercase tracking-[1.2px] text-zinc-500 font-medium mb-1.5">
+        <div className="rounded-[14px] bg-card border border-border/60 p-5">
+          <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Available Balance
           </div>
-          <div className="text-[28px] font-bold leading-tight tabular-nums">
+          <div className="text-3xl font-bold leading-tight tabular-nums">
             {availableBalance.toFixed(2)}
           </div>
-          <div className="text-[13px] text-zinc-500 mt-0.5">VETD</div>
+          <div className="text-sm text-muted-foreground mt-0.5">VETD</div>
         </div>
 
         {/* Pending Unstake — muted gold */}
         <div className="rounded-[14px] bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 p-5">
-          <div className="text-[11px] uppercase tracking-[1.2px] text-[#d9b45f] font-medium mb-1.5">
+          <div className="text-xs uppercase tracking-[1.2px] text-[#d9b45f] font-medium mb-1.5">
             Pending Unstake
           </div>
-          <div className="text-[28px] font-bold leading-tight tabular-nums">
+          <div className="text-3xl font-bold leading-tight tabular-nums">
             {pendingUnstake.totalAmount.toFixed(2)}
           </div>
-          <div className="text-[13px] text-[#d9b45f] mt-0.5">
+          <div className="text-sm text-[#d9b45f] mt-0.5">
             {pendingUnstake.earliestUnlock
               ? `VETD · ${getCooldownProgress(pendingUnstake.earliestUnlock).label} left`
               : "VETD"}
@@ -266,24 +266,24 @@ export default function WithdrawalsPage() {
         </div>
 
         {/* Active Guilds */}
-        <div className="rounded-[14px] bg-white/[0.025] border border-white/[0.07] p-5">
-          <div className="text-[11px] uppercase tracking-[1.2px] text-zinc-500 font-medium mb-1.5">
+        <div className="rounded-[14px] bg-card border border-border/60 p-5">
+          <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
             Active Guilds
           </div>
-          <div className="text-[28px] font-bold leading-tight tabular-nums">
+          <div className="text-3xl font-bold leading-tight tabular-nums">
             {positions.length}
           </div>
-          <div className="text-[13px] text-zinc-500 mt-0.5">guilds staked</div>
+          <div className="text-sm text-muted-foreground mt-0.5">guilds staked</div>
         </div>
       </div>
 
       {/* ── Positions List ── */}
       <div className="flex justify-between items-center mb-3.5">
-        <h2 className="text-[15px] font-semibold text-zinc-200">
+        <h2 className="text-sm font-bold text-foreground">
           Your Positions
         </h2>
         {positions.length > 0 && (
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted-foreground">
             Click any guild to withdraw
           </span>
         )}
@@ -321,28 +321,28 @@ export default function WithdrawalsPage() {
                   "flex items-center justify-between rounded-xl px-5 py-4 text-left transition-colors cursor-pointer",
                   hasCooldown
                     ? "bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 hover:bg-[#d9b45f]/[0.07]"
-                    : "bg-white/[0.025] border border-white/[0.06] hover:bg-white/[0.05]"
+                    : "bg-card border border-border/60 hover:bg-muted/50"
                 )}
               >
                 {/* Left: icon + name */}
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div
                     className={cn(
-                      "w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-[13px] font-semibold flex-shrink-0",
+                      "w-[38px] h-[38px] rounded-[10px] flex items-center justify-center text-sm font-medium flex-shrink-0",
                       hasCooldown
                         ? "bg-[#d9b45f]/12 text-[#d9b45f]"
-                        : "bg-white/[0.08] text-zinc-400"
+                        : "bg-muted/50 text-muted-foreground"
                     )}
                   >
                     {getGuildAbbreviation(guild.guildName || guild.guildId)}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-semibold truncate">
+                      <span className="text-sm font-medium truncate">
                         {guild.guildName || guild.guildId}
                       </span>
                       {hasCooldown && (
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.5px] bg-[#d9b45f]/12 text-[#d9b45f] px-2 py-0.5 rounded flex-shrink-0">
+                        <span className="text-xs font-medium uppercase tracking-[0.5px] bg-[#d9b45f]/12 text-[#d9b45f] px-2 py-0.5 rounded flex-shrink-0">
                           Cooldown
                         </span>
                       )}
@@ -366,7 +366,7 @@ export default function WithdrawalsPage() {
                     <div className="text-base font-bold tabular-nums">
                       {amount.toFixed(2)} VETD
                     </div>
-                    <div className="text-xs text-zinc-600">{pct}%</div>
+                    <div className="text-xs text-muted-foreground">{pct}%</div>
                   </div>
 
                   {/* Allocation / cooldown bar */}
@@ -374,7 +374,7 @@ export default function WithdrawalsPage() {
                     <div
                       className={cn(
                         "h-1 rounded-full",
-                        hasCooldown ? "bg-[#d9b45f]/15" : "bg-white/[0.06]"
+                        hasCooldown ? "bg-[#d9b45f]/15" : "bg-muted/50"
                       )}
                     >
                       <div
@@ -388,13 +388,13 @@ export default function WithdrawalsPage() {
                       />
                     </div>
                     {hasCooldown && cooldown && (
-                      <div className="text-[9px] text-[#d9b45f] mt-1 text-center">
+                      <div className="text-xs text-[#d9b45f] mt-1 text-center">
                         {Math.round(cooldown.percent)}%
                       </div>
                     )}
                   </div>
 
-                  <ChevronRight className="w-4 h-4 text-zinc-700 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </button>
             );
