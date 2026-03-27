@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Coins, Sparkles } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 const StakingModal = dynamic(
   () => import("./StakingModal").then((m) => ({ default: m.StakingModal })),
@@ -36,17 +37,17 @@ export function ActionButtonPanel({
           <Coins className="w-3.5 h-3.5" />
           {meetsMinimum ? "Manage Stake" : "Stake to Start Vetting"}
           {meetsMinimum && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1" />
+            <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.positive.dot} ml-1`} />
           )}
         </button>
         <button
           onClick={() => router.push("/expert/endorsements")}
-          className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-indigo-500/[0.12] border border-indigo-500/[0.25] text-indigo-300 text-xs font-medium hover:bg-indigo-500/[0.18] transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-[9px] bg-primary/[0.12] border border-primary/[0.25] text-primary text-xs font-medium hover:bg-primary/[0.18] transition-colors"
         >
           <Sparkles className="w-3.5 h-3.5" />
           Start Endorsing
           {!meetsMinimum && (
-            <span className="text-[10px] text-amber-400 ml-1">
+            <span className={`text-[10px] ${STATUS_COLORS.warning.text} ml-1`}>
               Stake Required
             </span>
           )}

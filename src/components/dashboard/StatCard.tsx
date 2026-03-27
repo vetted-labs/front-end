@@ -1,5 +1,7 @@
 "use client";
 
+import { STATUS_COLORS } from "@/config/colors";
+
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -16,22 +18,22 @@ export function StatCard({
   warningDot = false,
 }: StatCardProps) {
   const subtextColors = {
-    default: "text-zinc-500",
-    success: "text-emerald-400",
-    warning: "text-amber-500",
+    default: "text-muted-foreground",
+    success: STATUS_COLORS.positive.text,
+    warning: STATUS_COLORS.warning.text,
   };
 
   return (
     <div className="bg-white/[0.03] border border-white/[0.06] rounded-[14px] p-[18px]">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
           {label}
         </span>
         {warningDot && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.warning.dot}`} />
         )}
       </div>
-      <div className="text-[28px] font-bold text-zinc-50 tracking-tight mt-1.5">
+      <div className="text-[28px] font-bold text-foreground tracking-tight mt-1.5">
         {typeof value === "number" ? value.toLocaleString() : value}
       </div>
       {subtext && (

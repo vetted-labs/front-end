@@ -348,17 +348,17 @@ export function EnhancedExpertDashboard() {
         <RankProgress guilds={profile.guilds ?? []} />
       </div>
 
-      {/* Section 4: Recent Activity + Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-        <RecentActivity activities={profile.recentActivity ?? []} />
-        <SlimNotificationsFeed walletAddress={address!} />
-      </div>
-
-      {/* Section 5: Your Guilds */}
+      {/* Section 4: Your Guilds */}
       <GuildsSection
         guilds={profile.guilds ?? []}
         guildStakes={guildStakes}
       />
+
+      {/* Section 5: Recent Activity + Notifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+        <RecentActivity activities={profile.recentActivity ?? []} />
+        <SlimNotificationsFeed walletAddress={address!} />
+      </div>
     </div>
   );
 }

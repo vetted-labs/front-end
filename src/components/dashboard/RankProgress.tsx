@@ -101,21 +101,21 @@ export function RankProgress({ guilds }: RankProgressProps) {
               key={guild.id}
               className={`p-3 rounded-[10px] ${
                 isHighlighted
-                  ? "bg-indigo-500/[0.06] border border-indigo-500/[0.12]"
+                  ? "bg-primary/[0.06] border border-primary/[0.12]"
                   : "bg-white/[0.02] border border-white/[0.05]"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span
                   className={`text-[12px] font-semibold ${
-                    isHighlighted ? "text-indigo-200" : "text-zinc-300"
+                    isHighlighted ? "text-primary" : "text-zinc-300"
                   }`}
                 >
                   {guild.name}
                 </span>
                 <span
                   className={`text-[10px] uppercase tracking-wider font-semibold ${
-                    isHighlighted ? "text-indigo-400" : "text-zinc-500"
+                    isHighlighted ? "text-primary" : "text-zinc-500"
                   }`}
                 >
                   {RANK_LABELS[guild.expertRole] ?? guild.expertRole}
@@ -123,7 +123,7 @@ export function RankProgress({ guilds }: RankProgressProps) {
               </div>
               <div className="w-full h-[3px] bg-white/[0.06] rounded-full">
                 <div
-                  className="h-[3px] rounded-full bg-gradient-to-r from-indigo-400 to-indigo-500 transition-all duration-500"
+                  className="h-[3px] rounded-full bg-primary transition-all duration-500"
                   style={{
                     width: `${Math.round((isMaxRank ? 1 : progress) * 100)}%`,
                   }}
