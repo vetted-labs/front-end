@@ -19,7 +19,7 @@ import {
   Building2,
   Shield,
 } from "lucide-react";
-import { Button, Alert, StatusBadge } from "./ui";
+import { Button, Alert } from "./ui";
 import { Pagination } from "./ui/pagination";
 import { ConfirmationModal } from "./ui/confirmation-modal";
 import { GuildSelector } from "./ui/guild-selector";
@@ -28,7 +28,7 @@ import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { formatSalaryRange } from "@/lib/utils";
-import { JOB_STATUSES } from "@/config/constants";
+import { JOB_STATUSES, JOB_STATUS_CONFIG } from "@/config/constants";
 
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 
@@ -276,7 +276,9 @@ export function HiringDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-6 mt-4">
-                        <StatusBadge status={job.status ?? "draft"} />
+                        <span className={`inline-flex items-center rounded-full font-medium px-2.5 py-1 text-sm ${(JOB_STATUS_CONFIG[job.status ?? "draft"] ?? JOB_STATUS_CONFIG.draft).className}`}>
+                          {(JOB_STATUS_CONFIG[job.status ?? "draft"] ?? JOB_STATUS_CONFIG.draft).label}
+                        </span>
                         <span className="text-sm text-card-foreground">
                           <strong>{job.applicants}</strong> applicants
                         </span>

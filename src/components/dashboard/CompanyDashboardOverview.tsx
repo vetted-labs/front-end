@@ -21,7 +21,7 @@ import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from
 import type { CompanyActivityItem } from "@/types/api-responses";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { StatusBadge } from "@/components/ui/statusbadge";
+import { APPLICATION_STATUS_CONFIG, JOB_STATUS_CONFIG } from "@/config/constants";
 import { Alert } from "@/components/ui/alert";
 
 import { logger } from "@/lib/logger";
@@ -246,7 +246,9 @@ export function CompanyDashboardOverview() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                          <StatusBadge status={app.status} size="sm" />
+                          <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(APPLICATION_STATUS_CONFIG[app.status] ?? { className: "bg-muted text-muted-foreground" }).className}`}>
+                            {(APPLICATION_STATUS_CONFIG[app.status] ?? { label: app.status }).label}
+                          </span>
                           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                       </Link>
@@ -302,7 +304,9 @@ export function CompanyDashboardOverview() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                          <StatusBadge status={job.status ?? "active"} size="sm" />
+                          <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(JOB_STATUS_CONFIG[job.status ?? "active"] ?? JOB_STATUS_CONFIG.active).className}`}>
+                            {(JOB_STATUS_CONFIG[job.status ?? "active"] ?? JOB_STATUS_CONFIG.active).label}
+                          </span>
                           <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                       </Link>

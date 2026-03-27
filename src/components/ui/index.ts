@@ -8,7 +8,6 @@ export { Alert } from "./alert";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./card";
 export { Modal } from "./modal";
 export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./dialog";
-export { StatusBadge } from "./statusbadge";
 export { DynamicArrayField } from "./dynamicarrayfield";
 export { InfoTooltip } from "./InfoTooltip";
 export { DataView } from "./data-view";

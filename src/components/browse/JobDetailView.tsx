@@ -17,7 +17,8 @@ import {
   Trophy,
   Loader2,
 } from "lucide-react";
-import { Button, Alert, StatusBadge } from "@/components/ui";
+import { Button, Alert } from "@/components/ui";
+import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -296,7 +297,9 @@ export default function JobDetailView() {
                     <span className="text-sm text-green-700 dark:text-green-300">
                       Status:
                     </span>
-                    <StatusBadge status={existingApplication.status} size="sm" />
+                    <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { className: "bg-muted text-muted-foreground" }).className}`}>
+                      {(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { label: existingApplication.status }).label}
+                    </span>
                   </div>
                   <button
                     onClick={() => router.push("/candidate/applications")}
