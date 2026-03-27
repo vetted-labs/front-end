@@ -255,21 +255,21 @@ export default function JobDetailView() {
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl shadow-sm p-6 space-y-6 lg:sticky lg:top-24 border border-border/60">
               {/* Already Applied / Accepted */}
               {hasAlreadyApplied && existingApplication.status === "accepted" && (
-                <div className="relative overflow-hidden p-4 rounded-lg border-2 border-emerald-500/30 animate-celebrate-glow bg-gradient-to-r from-emerald-500/10 via-green-500/5 to-emerald-500/10 animate-shimmer-border">
+                <div className={`relative overflow-hidden p-4 rounded-lg border-2 ${STATUS_COLORS.positive.border} animate-celebrate-glow ${STATUS_COLORS.positive.bgSubtle} animate-shimmer-border`}>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center flex-shrink-0">
+                    <div className={`w-10 h-10 rounded-full ${STATUS_COLORS.positive.bg} flex items-center justify-center flex-shrink-0`}>
                       <Trophy className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <span className="font-bold text-emerald-700 dark:text-emerald-300 text-lg">
+                      <span className={`font-bold ${STATUS_COLORS.positive.text} text-lg`}>
                         Accepted!
                       </span>
-                      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                      <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-80`}>
                         Congratulations on your offer
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                  <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
                     You applied on{" "}
                     {new Date(existingApplication.appliedAt).toLocaleDateString()}
                   </p>
@@ -283,19 +283,19 @@ export default function JobDetailView() {
                 </div>
               )}
               {hasAlreadyApplied && existingApplication.status !== "accepted" && (
-                <div className="p-4 bg-green-500/10 border-2 border-green-500/20 rounded-lg">
+                <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} border-2 ${STATUS_COLORS.positive.border} rounded-lg`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-green-900 dark:text-green-300">
+                    <CheckCircle2 className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
+                    <span className={`font-semibold ${STATUS_COLORS.positive.text}`}>
                       Already Applied
                     </span>
                   </div>
-                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                  <p className={`text-sm ${STATUS_COLORS.positive.text} opacity-70 mb-3`}>
                     You applied on{" "}
                     {new Date(existingApplication.appliedAt).toLocaleDateString()}
                   </p>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm text-green-700 dark:text-green-300">
+                    <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>
                       Status:
                     </span>
                     <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-xs ${(APPLICATION_STATUS_CONFIG[existingApplication.status] ?? { className: "bg-muted text-muted-foreground" }).className}`}>

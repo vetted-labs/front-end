@@ -1,3 +1,4 @@
+import { STATUS_COLORS } from "@/config/colors";
 import type { PostTag as PostTagType } from "@/types";
 
 interface PostTagProps {
@@ -7,19 +8,19 @@ interface PostTagProps {
 const TAG_CONFIG: Record<PostTagType, { label: string; className: string }> = {
   discussion: {
     label: "Discussion",
-    className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    className: STATUS_COLORS.info.badge,
   },
   question: {
     label: "Question",
-    className: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+    className: STATUS_COLORS.pending.badge,
   },
   insight: {
     label: "Insight",
-    className: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    className: STATUS_COLORS.warning.badge,
   },
   job_related: {
     label: "Job-Related",
-    className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    className: STATUS_COLORS.positive.badge,
   },
 };
 

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
 import { useApi } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface StructuredProposalFormProps {
   guildId: string;
@@ -146,10 +147,10 @@ export function StructuredProposalForm({
                 value={formData.candidateName}
                 onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })}
                 placeholder="Full name"
-                className={errors.candidateName ? "border-red-500" : ""}
+                className={errors.candidateName ? STATUS_COLORS.negative.border : ""}
               />
               {errors.candidateName && (
-                <p className="text-xs text-red-500 mt-1">{errors.candidateName}</p>
+                <p className={`text-xs ${STATUS_COLORS.negative.text} mt-1`}>{errors.candidateName}</p>
               )}
             </div>
 
@@ -160,10 +161,10 @@ export function StructuredProposalForm({
                 value={formData.candidateEmail}
                 onChange={(e) => setFormData({ ...formData, candidateEmail: e.target.value })}
                 placeholder="email@example.com"
-                className={errors.candidateEmail ? "border-red-500" : ""}
+                className={errors.candidateEmail ? STATUS_COLORS.negative.border : ""}
               />
               {errors.candidateEmail && (
-                <p className="text-xs text-red-500 mt-1">{errors.candidateEmail}</p>
+                <p className={`text-xs ${STATUS_COLORS.negative.text} mt-1`}>{errors.candidateEmail}</p>
               )}
             </div>
 
@@ -198,10 +199,10 @@ export function StructuredProposalForm({
                 onChange={(e) => setFormData({ ...formData, skillsSummary: e.target.value })}
                 rows={4}
                 placeholder="Describe the candidate's key skills, technologies, frameworks, and technical expertise relevant to this guild..."
-                className={errors.skillsSummary ? "border-red-500" : ""}
+                className={errors.skillsSummary ? STATUS_COLORS.negative.border : ""}
               />
               {errors.skillsSummary && (
-                <p className="text-xs text-red-500 mt-1">{errors.skillsSummary}</p>
+                <p className={`text-xs ${STATUS_COLORS.negative.text} mt-1`}>{errors.skillsSummary}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Minimum 50 characters. Be specific about technical skills.
@@ -228,10 +229,10 @@ export function StructuredProposalForm({
                 onChange={(e) => setFormData({ ...formData, experienceSummary: e.target.value })}
                 rows={6}
                 placeholder="Describe the candidate's work history, notable projects, companies they've worked for, and relevant professional experience..."
-                className={errors.experienceSummary ? "border-red-500" : ""}
+                className={errors.experienceSummary ? STATUS_COLORS.negative.border : ""}
               />
               {errors.experienceSummary && (
-                <p className="text-xs text-red-500 mt-1">{errors.experienceSummary}</p>
+                <p className={`text-xs ${STATUS_COLORS.negative.text} mt-1`}>{errors.experienceSummary}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Minimum 100 characters. Include specific projects and roles.
@@ -258,10 +259,10 @@ export function StructuredProposalForm({
                 onChange={(e) => setFormData({ ...formData, motivationStatement: e.target.value })}
                 rows={4}
                 placeholder="Explain why the candidate wants to join this guild and what they hope to contribute..."
-                className={errors.motivationStatement ? "border-red-500" : ""}
+                className={errors.motivationStatement ? STATUS_COLORS.negative.border : ""}
               />
               {errors.motivationStatement && (
-                <p className="text-xs text-red-500 mt-1">{errors.motivationStatement}</p>
+                <p className={`text-xs ${STATUS_COLORS.negative.text} mt-1`}>{errors.motivationStatement}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Minimum 50 characters. Focus on alignment with guild values.
@@ -336,7 +337,7 @@ export function StructuredProposalForm({
                         size="sm"
                         onClick={() => removeAchievement(index)}
                       >
-                        <X className="w-4 h-4 text-red-500" />
+                        <X className={`w-4 h-4 ${STATUS_COLORS.negative.text}`} />
                       </Button>
                     </div>
                   ))}

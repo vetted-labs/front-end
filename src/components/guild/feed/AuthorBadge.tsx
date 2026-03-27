@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
+import { RANK_COLORS, STATUS_COLORS } from "@/config/colors";
 import type { PostAuthor } from "@/types";
 import type { ExpertRole } from "@/types";
 
@@ -10,19 +11,19 @@ interface AuthorBadgeProps {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  "Guild Lead": "bg-amber-500/15 text-amber-500 border-amber-500/30",
-  Expert: "bg-blue-500/15 text-blue-500 border-blue-500/30",
-  Candidate: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
-  expert: "bg-blue-500/15 text-blue-500 border-blue-500/30",
-  candidate: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  "Guild Lead": STATUS_COLORS.warning.badge,
+  Expert: STATUS_COLORS.info.badge,
+  Candidate: STATUS_COLORS.positive.badge,
+  expert: STATUS_COLORS.info.badge,
+  candidate: STATUS_COLORS.positive.badge,
 };
 
 const EXPERT_ROLE_COLORS: Record<ExpertRole, string> = {
-  recruit: "bg-cyan-500/15 text-cyan-500 border-cyan-500/30",
-  apprentice: "bg-teal-500/15 text-teal-500 border-teal-500/30",
-  craftsman: "bg-orange-500/15 text-orange-500 border-orange-500/30",
-  officer: "bg-blue-500/15 text-blue-500 border-blue-500/30",
-  master: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  recruit: RANK_COLORS.recruit.badge,
+  apprentice: RANK_COLORS.apprentice.badge,
+  craftsman: RANK_COLORS.craftsman.badge,
+  officer: RANK_COLORS.officer.badge,
+  master: RANK_COLORS.master.badge,
 };
 
 const EXPERT_ROLE_LABELS: Record<ExpertRole, string> = {
@@ -64,7 +65,7 @@ export function AuthorBadge({
       {/* Reputation */}
       {showReputation && author.reputation > 0 && (
         <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+          <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon} fill-warning`} />
           {author.reputation}
         </span>
       )}

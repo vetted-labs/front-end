@@ -18,10 +18,10 @@ interface PostCardProps {
 
 /** Colored left accent border based on post tag */
 const tagAccentColors: Record<string, string> = {
-  insight: "bg-violet-500",
-  question: "bg-cyan-500",
+  insight: "bg-warning",
+  question: "bg-info-blue",
   discussion: "bg-primary",
-  job_related: "bg-success",
+  job_related: "bg-positive",
 };
 
 export function PostCard({
