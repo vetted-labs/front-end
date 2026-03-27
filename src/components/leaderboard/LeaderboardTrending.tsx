@@ -1,10 +1,11 @@
 "use client";
 
-import { Flame, TrendingUp, Zap } from "lucide-react";
+import { Flame, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { LeaderboardEntryV2 } from "@/types";
 
 interface LeaderboardTrendingProps {
@@ -43,8 +44,8 @@ export function LeaderboardTrending({
       {/* Biggest Climbers */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+          <div className={cn("flex h-7 w-7 items-center justify-center rounded-lg", STATUS_COLORS.positive.bgSubtle)}>
+            <TrendingUp className={cn("w-3.5 h-3.5", STATUS_COLORS.positive.text)} />
           </div>
           <h3 className="text-sm font-semibold">Biggest Climbers</h3>
         </div>
@@ -83,13 +84,13 @@ export function LeaderboardTrending({
                           {entry.role}
                         </Badge>
                       </div>
-                      <span className="text-sm font-bold text-emerald-500 tabular-nums shrink-0 ml-2">
+                      <span className={cn("text-sm font-bold tabular-nums shrink-0 ml-2", STATUS_COLORS.positive.text)}>
                         +{entry.reputationDelta}
                       </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted/50 dark:bg-white/[0.06] overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                        className={cn("h-full rounded-full transition-all duration-500", STATUS_COLORS.positive.bg)}
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>
@@ -104,8 +105,8 @@ export function LeaderboardTrending({
       {/* Hot Streaks */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
-            <Flame className="w-3.5 h-3.5 text-orange-500" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <Flame className="w-3.5 h-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold">Hot Streaks</h3>
         </div>
@@ -132,7 +133,7 @@ export function LeaderboardTrending({
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="text-sm">
                         {Array.from({ length: fires }).map((_, j) => (
-                          <Flame key={j} className="w-3.5 h-3.5 text-orange-500 inline-block" />
+                          <Flame key={j} className="w-3.5 h-3.5 text-primary inline-block" />
                         ))}
                       </span>
                       <span className="text-sm font-semibold truncate">{entry.fullName}</span>
@@ -143,7 +144,7 @@ export function LeaderboardTrending({
                       )}
                     </div>
                     <div className="text-right shrink-0 ml-2">
-                      <p className="text-xs font-bold text-orange-500 tabular-nums">
+                      <p className="text-xs font-bold text-primary tabular-nums">
                         {entry.streak}w streak
                       </p>
                       <p className="text-[10px] text-muted-foreground tabular-nums">

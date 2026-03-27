@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Users, Flame, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { cn, truncateAddress } from "@/lib/utils";
+import { getRankColors, getMatchScoreColors, STATUS_COLORS } from "@/config/colors";
 import type { LeaderboardEntryV2 } from "@/types";
 
 interface LeaderboardTableProps {
@@ -19,21 +20,12 @@ const SORT_COLUMN_MAP: Record<string, string> = {
   consensus: "consensus",
 };
 
-const ROLE_PILL_COLORS: Record<string, string> = {
-  master: "bg-yellow-500/20 text-yellow-400",
-  officer: "bg-purple-500/20 text-purple-400",
-  craftsman: "bg-blue-500/20 text-blue-400",
-  recruit: "bg-slate-500/20 text-slate-400",
-};
-
 function getRolePillClass(role: string): string {
-  return ROLE_PILL_COLORS[role.toLowerCase()] ?? "bg-slate-500/20 text-slate-400";
+  return getRankColors(role.toLowerCase()).badge;
 }
 
 function getConsensusBarColor(rate: number): string {
-  if (rate >= 70) return "bg-emerald-500";
-  if (rate >= 40) return "bg-amber-500";
-  return "bg-rose-500";
+  return getMatchScoreColors(rate).bg;
 }
 
 export function LeaderboardTable({
@@ -165,7 +157,7 @@ export function LeaderboardTable({
                       <span
                         className={cn(
                           "text-[10px] font-medium tabular-nums",
-                          delta > 0 ? "text-emerald-500" : "text-rose-400"
+                          delta > 0 ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
                         )}
                       >
                         {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}
@@ -224,18 +216,20 @@ export function LeaderboardTable({
                 {/* Staked — hidden on mobile */}
                 <td className="px-4 py-3 hidden md:table-cell">
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {entry.stakedAmount} VETD
+                    {parseFloat(entry.stakedAmount) > 0
+                      ? `${Math.round(parseFloat(entry.stakedAmount) / 1e18).toLocaleString()} VETD`
+                      : "—"}
                   </span>
                 </td>
 
                 {/* Trend — hidden on mobile */}
                 <td className="px-4 py-3 text-center hidden md:table-cell">
                   {entry.streak > 2 ? (
-                    <Flame className="w-4 h-4 text-orange-500 inline-block" />
+                    <Flame className="w-4 h-4 text-primary inline-block" />
                   ) : delta > 0 ? (
-                    <ArrowUp className="w-4 h-4 text-emerald-500 inline-block" />
+                    <ArrowUp className={cn("w-4 h-4 inline-block", STATUS_COLORS.positive.text)} />
                   ) : delta < 0 ? (
-                    <ArrowDown className="w-4 h-4 text-rose-400 inline-block" />
+                    <ArrowDown className={cn("w-4 h-4 inline-block", STATUS_COLORS.negative.text)} />
                   ) : (
                     <Minus className="w-4 h-4 text-muted-foreground/40 inline-block" />
                   )}

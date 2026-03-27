@@ -3,6 +3,7 @@
 import { Crown } from "lucide-react";
 import type { LeaderboardEntryV2 } from "@/types";
 import { truncateAddress } from "@/lib/utils";
+import { PODIUM_COLORS, STATUS_COLORS } from "@/config/colors";
 
 interface LeaderboardPodiumProps {
   entries: LeaderboardEntryV2[];
@@ -61,36 +62,36 @@ function getDelta(entry: LeaderboardEntryV2, activeTab: string): number {
 
 const RANK_STYLES = {
   1: {
-    gradient: "from-[#f59e0b] to-[#d97706]",
-    ring: "ring-[#f59e0b]/60",
-    podiumHeight: "h-36",
-    podiumBg: "from-[#f59e0b]/20 to-[#d97706]/10",
-    podiumBorder: "border-[#f59e0b]/40",
-    avatarSize: "w-20 h-20",
-    avatarText: "text-xl",
-    rankLabel: "text-[#f59e0b]",
+    gradient: PODIUM_COLORS[1].gradient,
+    ring: PODIUM_COLORS[1].ring,
+    podiumHeight: "h-20",
+    podiumBg: PODIUM_COLORS[1].platform,
+    podiumBorder: PODIUM_COLORS[1].border,
+    avatarSize: "w-14 h-14",
+    avatarText: "text-base",
+    rankLabel: PODIUM_COLORS[1].label,
     order: 2,
   },
   2: {
-    gradient: "from-[#94a3b8] to-[#64748b]",
-    ring: "ring-[#94a3b8]/60",
-    podiumHeight: "h-24",
-    podiumBg: "from-[#94a3b8]/20 to-[#64748b]/10",
-    podiumBorder: "border-[#94a3b8]/40",
-    avatarSize: "w-16 h-16",
-    avatarText: "text-base",
-    rankLabel: "text-[#94a3b8]",
+    gradient: PODIUM_COLORS[2].gradient,
+    ring: PODIUM_COLORS[2].ring,
+    podiumHeight: "h-12",
+    podiumBg: PODIUM_COLORS[2].platform,
+    podiumBorder: PODIUM_COLORS[2].border,
+    avatarSize: "w-11 h-11",
+    avatarText: "text-sm",
+    rankLabel: PODIUM_COLORS[2].label,
     order: 1,
   },
   3: {
-    gradient: "from-[#d97706] to-[#92400e]",
-    ring: "ring-[#d97706]/60",
-    podiumHeight: "h-16",
-    podiumBg: "from-[#d97706]/20 to-[#92400e]/10",
-    podiumBorder: "border-[#d97706]/40",
-    avatarSize: "w-16 h-16",
-    avatarText: "text-base",
-    rankLabel: "text-[#d97706]",
+    gradient: PODIUM_COLORS[3].gradient,
+    ring: PODIUM_COLORS[3].ring,
+    podiumHeight: "h-8",
+    podiumBg: PODIUM_COLORS[3].platform,
+    podiumBorder: PODIUM_COLORS[3].border,
+    avatarSize: "w-11 h-11",
+    avatarText: "text-sm",
+    rankLabel: PODIUM_COLORS[3].label,
     order: 3,
   },
 } as const;
@@ -122,34 +123,34 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
 
   return (
     <div
-      className="flex flex-col items-center gap-3"
+      className="flex flex-col items-center gap-2"
       style={{ order: styles.order }}
     >
       {/* Crown for #1 */}
       {rank === 1 && (
-        <Crown className="w-6 h-6 text-[#f59e0b] drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+        <Crown className={`w-5 h-5 ${PODIUM_COLORS[1].label} drop-shadow-[0_0_8px_hsl(var(--rank-master)/0.8)]`} />
       )}
-      {rank !== 1 && <div className="w-6 h-6" />}
+      {rank !== 1 && <div className="w-5 h-5" />}
 
       {/* Card */}
       <div
         className={`
-          relative flex flex-col items-center gap-2 px-4 py-4 rounded-2xl
+          relative flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl
           border backdrop-blur-md bg-card/60
           ${styles.podiumBorder}
-          ${rank === 1 ? "w-44 shadow-xl shadow-[#f59e0b]/10" : "w-36 shadow-lg"}
+          ${rank === 1 ? "w-36 shadow-xl shadow-rank-master/10" : "w-28 shadow-lg"}
           transition-transform hover:-translate-y-1 duration-200
         `}
       >
         {/* YOU badge */}
         {isCurrentUser && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
+          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
             YOU
           </span>
         )}
 
         {/* Rank label */}
-        <span className={`text-xs font-bold uppercase tracking-widest ${styles.rankLabel}`}>
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${styles.rankLabel}`}>
           #{rank}
         </span>
 
@@ -172,46 +173,46 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
         <div className="text-center">
           <p
             className={`font-semibold text-foreground leading-tight ${
-              rank === 1 ? "text-sm" : "text-xs"
-            } max-w-[130px] truncate`}
+              rank === 1 ? "text-xs" : "text-[11px]"
+            } max-w-[110px] truncate`}
           >
             {entry.fullName}
           </p>
-          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+          <p className="text-[9px] text-muted-foreground font-mono mt-0.5">
             {truncateAddress(entry.walletAddress)}
           </p>
         </div>
 
         {/* Role & guilds */}
-        <div className="flex items-center gap-1.5 flex-wrap justify-center">
-          <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md font-medium capitalize">
+        <div className="flex items-center gap-1 flex-wrap justify-center">
+          <span className="text-[9px] bg-muted text-muted-foreground px-1 py-px rounded font-medium capitalize">
             {entry.role}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[9px] text-muted-foreground">
             {entry.guildCount} guild{entry.guildCount !== 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Metric */}
-        <div className="text-center mt-1">
+        <div className="text-center">
           <p
             className={`font-bold tabular-nums ${
-              rank === 1 ? "text-lg" : "text-base"
+              rank === 1 ? "text-base" : "text-sm"
             } text-foreground`}
           >
             {formattedValue}
           </p>
-          <p className="text-[10px] text-muted-foreground">{metric.label}</p>
+          <p className="text-[9px] text-muted-foreground">{metric.label}</p>
         </div>
 
         {/* Delta */}
         <div
-          className={`text-[11px] font-semibold tabular-nums ${
-            deltaPositive ? "text-emerald-400" : "text-rose-400"
+          className={`text-[10px] font-semibold tabular-nums ${
+            deltaPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text
           }`}
         >
           {deltaPositive ? "+" : ""}
-          {delta.toLocaleString()} this period
+          {delta.toLocaleString()}
         </div>
       </div>
 
@@ -221,10 +222,10 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
           ${styles.podiumHeight} w-full rounded-t-lg
           bg-gradient-to-b ${styles.podiumBg}
           border-t border-x ${styles.podiumBorder}
-          flex items-start justify-center pt-2
+          flex items-start justify-center pt-1
         `}
       >
-        <span className={`text-2xl font-black ${styles.rankLabel} opacity-30 select-none`}>
+        <span className={`text-lg font-black ${styles.rankLabel} opacity-20 select-none`}>
           {rank}
         </span>
       </div>
@@ -244,23 +245,14 @@ export function LeaderboardPodium({
   const [first, second, third] = top3;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm p-6 pb-0">
+    <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm px-4 pt-4 pb-0">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#f59e0b]/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Title row */}
-      <div className="relative flex items-center justify-center gap-2 mb-6">
-        <Crown className="w-5 h-5 text-[#f59e0b]" />
-        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          Top Performers
-        </h3>
-        <Crown className="w-5 h-5 text-[#f59e0b]" />
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-rank-master/10 rounded-full blur-3xl" />
       </div>
 
       {/* Podium layout: 2nd | 1st | 3rd */}
-      <div className="relative flex items-end justify-center gap-4">
+      <div className="relative flex items-end justify-center gap-3">
         {second && (
           <PodiumCard
             entry={second}
