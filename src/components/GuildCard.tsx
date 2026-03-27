@@ -3,8 +3,9 @@
 import { getGuildIcon, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { formatDateMonthYear, formatVetd } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
-import { Users, Briefcase, UserCheck, ArrowRight, CheckCircle2, Calendar, DollarSign, Star, Coins } from "lucide-react";
-import type { Guild, ExpertGuild, ExpertRole } from "@/types";
+import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
+import type { Guild, ExpertGuild } from "@/types";
 
 /** Union of public Guild and ExpertGuild fields, plus card-specific extras. */
 type GuildCardGuild = Partial<Guild> &
@@ -31,7 +32,8 @@ export function GuildCard({
   showDescription = true,
 }: GuildCardProps) {
   const GuildIcon = getGuildIcon(guild.name);
-  // Membership variant (shared styling with public guild cards)
+
+  // ── Membership variant (profile "Guild Positions" section) ──
   if (variant === "membership") {
     const totalProposals =
       (guild.pendingProposals || 0) + (guild.ongoingProposals || 0) + (guild.closedProposals || 0);
@@ -40,68 +42,61 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-lg backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)] glass-border-shimmer"
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.06),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)] opacity-60" />
-        <div className="pointer-events-none absolute -top-24 right-[-10%] h-48 w-48 rounded-full bg-orange-500/5 dark:bg-orange-500/12 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-[-10%] h-48 w-48 rounded-full bg-amber-500/5 dark:bg-amber-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/20 via-primary/50 to-amber-400/20 dark:from-amber-500/30 dark:via-orange-400/70 dark:to-amber-400/30 opacity-80" />
+        {/* Top accent line */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-60" />
+        {/* Inner glow */}
+        <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-44 rounded-full bg-primary/[0.06] blur-2xl" />
 
-        <div className="relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/10 border border-border flex items-center justify-center">
-                <GuildIcon className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {guild.name}
-                </h3>
-                {guild.expertRole && (
-                  <span className="inline-flex items-center gap-1 mt-1 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.2em] bg-primary/10 text-primary border border-primary/30">
+        <div className="relative p-6">
+          {/* Header: Icon + Name + Rank */}
+          <div className="flex items-start gap-3.5 mb-4">
+            <div className="w-11 h-11 rounded-[13px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow group-hover:shadow-[0_0_14px_hsl(var(--primary)/0.12)]">
+              <GuildIcon className="w-[22px] h-[22px] text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[17px] font-bold font-display text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
+                {guild.name}
+              </h3>
+              {guild.expertRole && (
+                <div className="mt-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/[0.08] border border-primary/20 text-[10px] font-bold uppercase tracking-[1.1px] text-primary">
+                    <span className="w-[5px] h-[5px] rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
                     {guild.expertRole}
                   </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-              <div className="flex items-center justify-center gap-1 mb-1 text-primary">
-                <Star className="w-4 h-4 fill-current" />
-              </div>
-              <p className="text-lg font-semibold text-foreground">{guild.reputation || 0}</p>
-              <p className="text-xs text-muted-foreground">Reputation</p>
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-2 mb-3.5">
+            <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
+              <div className="font-mono text-base font-semibold text-primary mb-0.5">{guild.reputation || 0}</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rep</div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-              <div className="flex items-center justify-center gap-1 mb-1 text-primary">
-                <DollarSign className="w-4 h-4" />
-              </div>
-              <p className="text-lg font-semibold text-foreground">
-                {formatVetd(guild.totalEarnings)}
-              </p>
-              <p className="text-xs text-muted-foreground">Earned</p>
+            <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
+              <div className="font-mono text-base font-semibold text-positive mb-0.5">{formatVetd(guild.totalEarnings)}</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Earned</div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-              <div className="flex items-center justify-center gap-1 mb-1 text-primary">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <p className="text-lg font-semibold text-foreground">{totalProposals}</p>
-              <p className="text-xs text-muted-foreground">Proposals</p>
+            <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border/40 transition-colors group-hover:border-border/60">
+              <div className="font-mono text-base font-semibold text-foreground mb-0.5">{totalProposals}</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Proposals</div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3">
-            <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              <span>{guild.memberCount || 0} members</span>
-            </div>
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-3 border-t border-border/60 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Users className="w-[11px] h-[11px] opacity-50" />
+              {guild.memberCount || 0} members
+            </span>
             {guild.joinedAt && (
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-primary" />
-                <span>Since {formatDate(guild.joinedAt)}</span>
-              </div>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-[11px] h-[11px] opacity-50" />
+                Since {formatDate(guild.joinedAt)}
+              </span>
             )}
           </div>
         </div>
@@ -109,157 +104,126 @@ export function GuildCard({
     );
   }
 
-  // Browse variant (public guild browsing and expert dashboard)
+  // ── Browse variant (expert dashboard "My Guilds" + public listing) ──
   if (variant === "browse") {
-    // Check if this is an expert view (has proposal data)
     const isExpertView = guild.pendingProposals !== undefined || guild.ongoingProposals !== undefined;
+    const pendingCount = (guild.pendingProposals || 0) + (guild.pendingApplications || 0);
+    const isUrgent = isExpertView && pendingCount > 0;
 
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-lg backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/40"
+        className={`group relative cursor-pointer overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 glass-border-shimmer ${
+          isUrgent
+            ? "border-warning/20 shadow-[0_0_30px_hsl(var(--warning)/0.05)] hover:border-warning/35 hover:shadow-[0_0_40px_hsl(var(--warning)/0.1)] bg-card/60"
+            : "border-border/60 bg-card/60 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
+        }`}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.06),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)] opacity-60" />
-        <div className="pointer-events-none absolute -top-24 right-[-10%] h-48 w-48 rounded-full bg-orange-500/5 dark:bg-orange-500/12 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-[-10%] h-48 w-48 rounded-full bg-amber-500/5 dark:bg-amber-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-500/20 via-primary/50 to-amber-400/20 dark:from-amber-500/30 dark:via-orange-400/70 dark:to-amber-400/30 opacity-80" />
+        {/* Top accent line */}
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
 
         <div className="relative">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/10 border border-border flex items-center justify-center">
-              <GuildIcon className="w-6 h-6 text-primary" />
+          {/* Urgent banner */}
+          {isUrgent && (
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-warning/15 bg-gradient-to-r from-warning/[0.05] to-primary/[0.02]">
+              <span className="w-[7px] h-[7px] rounded-full bg-warning shadow-[0_0_10px_hsl(var(--warning)/0.5)] animate-glow-pulse" />
+              <span className="font-display text-xs font-bold text-warning">
+                <span className="font-mono">{pendingCount}</span> pending review{pendingCount !== 1 ? "s" : ""}
+              </span>
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                {guild.name}
-              </h3>
-              {guild.expertRole && (
-                <p className="text-xs text-muted-foreground capitalize">
-                  {guild.expertRole} • {guild.memberCount} members
-                  {guild.pendingApplications !== undefined && guild.pendingApplications > 0 && (
-                    <span className="text-primary font-medium"> • {guild.pendingApplications} pending</span>
-                  )}
-                </p>
+          )}
+
+          <div className="p-5">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-3.5">
+              <div className="w-10 h-10 rounded-[11px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.12)]">
+                <GuildIcon className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[15px] font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">
+                  {guild.name}
+                </h3>
+                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  {guild.expertRole && <span className="capitalize">{guild.expertRole}</span>}
+                  {guild.expertRole && <span className="opacity-30">·</span>}
+                  <span>{guild.memberCount} members</span>
+                </div>
+              </div>
+              {isExpertView ? (
+                <div className="w-[26px] h-[26px] rounded-[7px] bg-muted/20 border border-border/30 flex items-center justify-center text-muted-foreground transition-all group-hover:bg-primary/[0.08] group-hover:border-primary/20 group-hover:text-primary group-hover:translate-x-0.5">
+                  <ArrowRight className="w-[13px] h-[13px]" />
+                </div>
+              ) : (
+                <InfoTooltip content={formatGuildTooltipContent(guild.name)} side="bottom" />
+              )}
+            </div>
+
+            {/* Description (public only) */}
+            {showDescription && !isExpertView && (
+              <p className="text-[13px] text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+                {getGuildPreviewDescription(guild.name)}
+              </p>
+            )}
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-[7px]">
+              {isExpertView ? (
+                <>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="w-[22px] h-[22px] rounded-[6px] bg-primary/[0.08] flex items-center justify-center mx-auto mb-1.5">
+                      <Coins className="w-[11px] h-[11px] text-primary" />
+                    </div>
+                    <div className="font-mono text-base font-bold text-primary">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Staked</div>
+                    <div className="font-mono text-[8px] text-muted-foreground tracking-wider mt-0.5">VETD</div>
+                  </div>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="w-[22px] h-[22px] rounded-[6px] bg-positive/10 flex items-center justify-center mx-auto mb-1.5">
+                      <DollarSign className="w-[11px] h-[11px] text-positive" />
+                    </div>
+                    <div className="font-mono text-base font-bold text-positive">{formatVetd(guild.totalEarnings)}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Earned</div>
+                  </div>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="w-[22px] h-[22px] rounded-[6px] bg-muted/20 flex items-center justify-center mx-auto mb-1.5">
+                      <Star className="w-[11px] h-[11px] text-muted-foreground" />
+                    </div>
+                    <div className="font-mono text-base font-bold text-foreground">{guild.reputation || 0}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Rep</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="font-mono text-base font-bold text-foreground">{guild.expertCount || 0}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Experts</div>
+                  </div>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="font-mono text-base font-bold text-foreground">{guild.totalProposalsReviewed || 0}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Reviewed</div>
+                  </div>
+                  <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border/40">
+                    <div className="font-mono text-base font-bold text-primary">{guild.jobCount || 0}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Open Jobs</div>
+                  </div>
+                </>
               )}
             </div>
           </div>
-          <InfoTooltip content={formatGuildTooltipContent(guild.name)} side="bottom" />
-        </div>
-
-        {/* Description */}
-        {showDescription && !isExpertView && (
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            {getGuildPreviewDescription(guild.name)}
-          </p>
-        )}
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          {isExpertView ? (
-            // Expert view: show proposals
-            <>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{(guild.pendingProposals || 0) + (guild.pendingApplications || 0)}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Coins className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</p>
-                <p className="text-xs text-muted-foreground">Staked</p>
-              </div>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{formatVetd(guild.totalEarnings)}</p>
-                <p className="text-xs text-muted-foreground">Earned</p>
-              </div>
-            </>
-          ) : (
-            // Public view: show experts, members, jobs
-            <>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{guild.expertCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Experts</p>
-              </div>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{guild.totalProposalsReviewed || 0}</p>
-                <p className="text-xs text-muted-foreground">Proposals</p>
-              </div>
-              <div className="text-center p-3 rounded-lg border border-border bg-muted/50">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                <p className="text-xl font-semibold text-foreground">{guild.jobCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Jobs</p>
-              </div>
-            </>
-          )}
-        </div>
         </div>
       </div>
     );
   }
 
-  // Dashboard variant (expert dashboard with proposals)
+  // ── Dashboard variant (legacy — redirects to browse) ──
   if (variant === "dashboard") {
     return (
-      <div
-        onClick={() => onViewDetails?.(guild.id)}
-        className="bg-card/50 backdrop-blur-sm rounded-2xl border border-border hover:border-2 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group"
-      >
-        {/* Guild Banner with Color and Icon */}
-        <div className="bg-secondary/50 dark:bg-muted/50 px-5 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-muted dark:bg-card rounded-xl flex items-center justify-center shadow-md ring-2 ring-border">
-              <GuildIcon className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-0.5">
-                {guild.name}
-              </h3>
-              <p className="text-xs text-muted-foreground capitalize">
-                {guild.expertRole} • {guild.memberCount} members
-                {guild.pendingApplications !== undefined && guild.pendingApplications > 0 && (
-                  <span className="text-primary font-medium"> • {guild.pendingApplications} pending</span>
-                )}
-              </p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all flex-shrink-0" />
-          </div>
-        </div>
-
-        {/* Guild Stats - Using design system tokens */}
-        <div className="p-5">
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">{(guild.pendingProposals || 0) + (guild.pendingApplications || 0)}</p>
-              <p className="text-muted-foreground">Pending</p>
-            </div>
-            <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">{guild.stakedAmount ? parseFloat(guild.stakedAmount).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "0"}</p>
-              <p className="text-muted-foreground">Staked</p>
-            </div>
-            <div className="text-center p-2 bg-secondary dark:bg-muted rounded border border-border">
-              <p className="font-semibold text-foreground">{formatVetd(guild.totalEarnings)}</p>
-              <p className="text-muted-foreground">Earned</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <GuildCard
+        guild={guild}
+        variant="browse"
+        onViewDetails={onViewDetails}
+        showDescription={showDescription}
+      />
     );
   }
 

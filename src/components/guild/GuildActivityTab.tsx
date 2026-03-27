@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatTimeAgo } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildActivity } from "@/types";
 import {
   FileText,
@@ -22,18 +23,18 @@ export const ACTIVITY_META: Record<
   string,
   { label: string; icon: typeof Activity; colorClass: string; badgeClass: string }
 > = {
-  expert_joined:         { label: "Expert Joined",       icon: ShieldCheck,   colorClass: "text-amber-500",    badgeClass: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  candidate_joined:      { label: "Candidate Joined",    icon: UserPlus,      colorClass: "text-emerald-500",  badgeClass: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  application_submitted: { label: "Application",         icon: Send,          colorClass: "text-blue-500",     badgeClass: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  job_posted:            { label: "Job Posted",           icon: Briefcase,     colorClass: "text-primary",      badgeClass: "bg-primary/10 text-primary border-primary/20" },
-  candidate_approved:    { label: "Candidate Approved",   icon: CheckCircle,   colorClass: "text-emerald-500",  badgeClass: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  member_approved:       { label: "Member Approved",      icon: CheckCircle,   colorClass: "text-emerald-500",  badgeClass: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  member_rejected:       { label: "Member Rejected",      icon: XCircle,       colorClass: "text-red-500",      badgeClass: "bg-red-500/10 text-red-500 border-red-500/20" },
-  proposal_submitted:    { label: "Proposal",             icon: FileText,      colorClass: "text-violet-500",   badgeClass: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
-  endorsement_given:     { label: "Endorsement",          icon: Award,         colorClass: "text-amber-500",    badgeClass: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  expert_applied:        { label: "Expert Applied",       icon: ShieldCheck,   colorClass: "text-amber-500",    badgeClass: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-  candidate_applied:     { label: "Candidate Applied",    icon: UserPlus,      colorClass: "text-blue-500",     badgeClass: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-  application_reviewed:  { label: "Application Reviewed", icon: ClipboardCheck, colorClass: "text-purple-500",  badgeClass: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  expert_joined:         { label: "Expert Joined",       icon: ShieldCheck,   colorClass: STATUS_COLORS.warning.text,  badgeClass: STATUS_COLORS.warning.badge },
+  candidate_joined:      { label: "Candidate Joined",    icon: UserPlus,      colorClass: STATUS_COLORS.positive.text, badgeClass: STATUS_COLORS.positive.badge },
+  application_submitted: { label: "Application",         icon: Send,          colorClass: STATUS_COLORS.info.text,     badgeClass: STATUS_COLORS.info.badge },
+  job_posted:            { label: "Job Posted",           icon: Briefcase,     colorClass: "text-primary",              badgeClass: "bg-primary/10 text-primary border border-primary/20" },
+  candidate_approved:    { label: "Candidate Approved",   icon: CheckCircle,   colorClass: STATUS_COLORS.positive.text, badgeClass: STATUS_COLORS.positive.badge },
+  member_approved:       { label: "Member Approved",      icon: CheckCircle,   colorClass: STATUS_COLORS.positive.text, badgeClass: STATUS_COLORS.positive.badge },
+  member_rejected:       { label: "Member Rejected",      icon: XCircle,       colorClass: STATUS_COLORS.negative.text, badgeClass: STATUS_COLORS.negative.badge },
+  proposal_submitted:    { label: "Proposal",             icon: FileText,      colorClass: STATUS_COLORS.neutral.text,  badgeClass: STATUS_COLORS.neutral.badge },
+  endorsement_given:     { label: "Endorsement",          icon: Award,         colorClass: STATUS_COLORS.warning.text,  badgeClass: STATUS_COLORS.warning.badge },
+  expert_applied:        { label: "Expert Applied",       icon: ShieldCheck,   colorClass: STATUS_COLORS.warning.text,  badgeClass: STATUS_COLORS.warning.badge },
+  candidate_applied:     { label: "Candidate Applied",    icon: UserPlus,      colorClass: STATUS_COLORS.info.text,     badgeClass: STATUS_COLORS.info.badge },
+  application_reviewed:  { label: "Application Reviewed", icon: ClipboardCheck, colorClass: STATUS_COLORS.neutral.text, badgeClass: STATUS_COLORS.neutral.badge },
 };
 
 const FALLBACK_META = ACTIVITY_META.endorsement_given;

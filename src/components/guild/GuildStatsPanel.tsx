@@ -1,4 +1,4 @@
-import { Target, Zap, Trophy, Shield, Star, TrendingUp, Users } from "lucide-react";
+import { Target, Zap, Trophy, Users, Star, TrendingUp } from "lucide-react";
 
 interface GuildStatsPanelProps {
   totalProposalsReviewed: number;
@@ -42,17 +42,47 @@ export function GuildStatsPanel({
   ];
 
   return (
-    <div className="border-b border-border bg-card/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Guild Overview</h2>
-        <p className="text-base md:text-lg text-muted-foreground mb-6 line-clamp-3">
-          {description}
-        </p>
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+      {/* Health stats bar */}
+      <div className="glass-card rounded-2xl border border-border/60 p-5 flex items-center divide-x divide-border/60 mb-4 animate-fade-up animate-delay-200">
+        <div className="flex-1 text-center px-2">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
+            <Target className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <div className="font-mono text-xl font-bold text-foreground">{totalProposalsReviewed || 0}</div>
+          <div className="text-[10px] text-muted-foreground">Reviewed</div>
+        </div>
+        <div className="flex-1 text-center px-2">
+          <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center mx-auto mb-1.5">
+            <Zap className="w-3.5 h-3.5 text-warning" />
+          </div>
+          <div className="font-mono text-xl font-bold text-foreground">{averageApprovalTime || "\u2014"}</div>
+          <div className="text-[10px] text-muted-foreground">Avg Time</div>
+        </div>
+        <div className="flex-1 text-center px-2">
+          <div className="w-7 h-7 rounded-lg bg-positive/10 flex items-center justify-center mx-auto mb-1.5">
+            <Trophy className="w-3.5 h-3.5 text-positive" />
+          </div>
+          <div className="font-mono text-xl font-bold text-foreground">{candidateCount || 0}</div>
+          <div className="text-[10px] text-muted-foreground">Candidates</div>
+        </div>
+        <div className="flex-1 text-center px-2">
+          <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center mx-auto mb-1.5">
+            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <div className="font-mono text-xl font-bold text-foreground">{memberCount || 0}</div>
+          <div className="text-[10px] text-muted-foreground">Members</div>
+        </div>
+      </div>
 
-        {/* Why join? */}
-        <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 px-5 py-4">
-          <p className="text-sm font-semibold text-foreground mb-3">Why join this guild?</p>
-          <ul className="space-y-2">
+      {/* Why join callout */}
+      <div className="glass-card rounded-2xl border border-border/60 p-6 animate-fade-up animate-delay-300">
+        <h2 className="text-lg font-bold font-display text-foreground mb-3">Guild Overview</h2>
+        <p className="text-sm text-muted-foreground mb-5 leading-relaxed line-clamp-3">{description}</p>
+
+        <div className="rounded-xl border border-primary/15 bg-primary/[0.04] px-5 py-4">
+          <p className="text-sm font-bold text-foreground mb-3">Why join this guild?</p>
+          <ul className="space-y-2.5">
             {whyJoinPoints.map((point, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
                 <span className="text-primary mt-0.5 shrink-0">{point.icon}</span>
@@ -60,41 +90,6 @@ export function GuildStatsPanel({
               </li>
             ))}
           </ul>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-              <Target className="w-5 h-5" />
-              <p className="text-xl font-semibold text-foreground">{totalProposalsReviewed || 0}</p>
-            </div>
-            <p className="text-xs text-muted-foreground">Applications Reviewed</p>
-          </div>
-          <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-              <Zap className="w-5 h-5" />
-              <p className="text-xl font-semibold text-foreground">{averageApprovalTime || "\u2014"}</p>
-            </div>
-            <p className="text-xs text-muted-foreground">Avg Approval Time</p>
-          </div>
-          <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-              <Trophy className="w-5 h-5" />
-              <p className="text-xl font-semibold text-foreground">{candidateCount || 0}</p>
-            </div>
-            <p className="text-xs text-muted-foreground">Active Candidates</p>
-          </div>
-          <div className="rounded-xl border border-border bg-muted/50 p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2 text-primary">
-              <Shield className="w-5 h-5" />
-              <p className="text-xl font-semibold text-foreground">
-                {totalVetdStaked != null
-                  ? Number(totalVetdStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })
-                  : "0"}
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground">Total VETD Staked</p>
-          </div>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildApplicationSummary } from "@/types";
 
 const ITEMS_PER_SECTION = 5;
@@ -31,12 +32,12 @@ function getTimeRemaining(deadline?: string) {
   const now = Date.now();
   const end = new Date(deadline).getTime();
   const diff = end - now;
-  if (diff <= 0) return { label: "Expired", color: "text-red-400", urgency: "red" as const };
+  if (diff <= 0) return { label: "Expired", color: STATUS_COLORS.negative.text, urgency: "red" as const };
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 3) return { label: `${days}d ${hours}h`, color: "text-green-400", urgency: "green" as const };
-  if (days >= 1) return { label: `${days}d ${hours}h`, color: "text-amber-400", urgency: "amber" as const };
-  return { label: `${hours}h`, color: "text-red-400", urgency: "red" as const };
+  if (days > 3) return { label: `${days}d ${hours}h`, color: STATUS_COLORS.positive.text, urgency: "green" as const };
+  if (days >= 1) return { label: `${days}d ${hours}h`, color: STATUS_COLORS.warning.text, urgency: "amber" as const };
+  return { label: `${hours}h`, color: STATUS_COLORS.negative.text, urgency: "red" as const };
 }
 
 export function GuildApplicationsTab({
@@ -50,14 +51,14 @@ export function GuildApplicationsTab({
     <div className="space-y-8">
       {/* Proposal Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="text-center p-4 rounded-2xl border border-amber-400/20 bg-amber-500/[0.06]">
+        <div className={`text-center p-4 rounded-2xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
           <p className="text-2xl font-bold text-primary">
             {applications.pending.length}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Pending</p>
         </div>
-        <div className="text-center p-4 rounded-2xl border border-orange-400/20 bg-orange-500/[0.06]">
-          <p className="text-2xl font-bold text-orange-200">
+        <div className={`text-center p-4 rounded-2xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
+          <p className={`text-2xl font-bold ${STATUS_COLORS.info.text}`}>
             {applications.ongoing.length}
           </p>
           <p className="text-xs text-muted-foreground mt-1">Ongoing</p>
@@ -146,7 +147,7 @@ export function GuildApplicationsTab({
                           </div>
                           <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
+                              className="h-full bg-primary rounded-full transition-all"
                               style={{ width: `${Math.round((completed / totalReviewers) * 100)}%` }}
                             />
                           </div>
@@ -155,7 +156,7 @@ export function GuildApplicationsTab({
                     </div>
                     <div className="shrink-0">
                       {application.expertHasStaked ? (
-                        <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-400 rounded-xl border border-green-500/20">
+                        <div className={`flex items-center px-4 py-2 ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text} rounded-xl border ${STATUS_COLORS.positive.border}`}>
                           <Unlock className="w-4 h-4 mr-2" />
                           <span className="text-sm font-medium">Staked</span>
                         </div>
@@ -211,7 +212,7 @@ export function GuildApplicationsTab({
                         <h4 className="font-semibold text-foreground text-base truncate">
                           {application.candidateName}
                         </h4>
-                        <span className="shrink-0 px-2.5 py-0.5 bg-orange-500/15 text-orange-300 dark:text-orange-300 border border-orange-400/30 text-xs font-semibold rounded-full">
+                        <span className={`shrink-0 px-2.5 py-0.5 text-xs font-semibold rounded-full ${STATUS_COLORS.warning.badge}`}>
                           Under Review
                         </span>
                       </div>
@@ -225,11 +226,11 @@ export function GuildApplicationsTab({
                         </span>
                         {totalVotes > 0 && (
                           <>
-                            <span className="flex items-center text-green-400">
+                            <span className={`flex items-center ${STATUS_COLORS.positive.text}`}>
                               <ThumbsUp className="w-3.5 h-3.5 mr-1.5" />
                               {application.votesFor}
                             </span>
-                            <span className="flex items-center text-red-400">
+                            <span className={`flex items-center ${STATUS_COLORS.negative.text}`}>
                               <ThumbsDown className="w-3.5 h-3.5 mr-1.5" />
                               {application.votesAgainst}
                             </span>
@@ -252,7 +253,7 @@ export function GuildApplicationsTab({
                           </div>
                           <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
+                              className="h-full bg-primary rounded-full transition-all"
                               style={{ width: `${Math.round((completed / totalReviewers) * 100)}%` }}
                             />
                           </div>
