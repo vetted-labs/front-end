@@ -83,9 +83,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const initials = getInitials(application.fullName);
 
   return (
-    <div className="group rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] transition-all hover:border-primary/30 dark:hover:border-white/[0.12]">
-      {/* Accent bar */}
-      <div className={`h-[3px] w-full bg-gradient-to-r ${accentColors.bar}`} />
+    <div className="group rounded-2xl bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] transition-all hover:border-primary/30 dark:hover:border-white/[0.12]">
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}

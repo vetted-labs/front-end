@@ -33,7 +33,7 @@ export function ApplicationsStatsRow({
   guildsActive,
 }: ApplicationsStatsRowProps) {
   return (
-    <div className="border border-white/[0.06] rounded-2xl bg-card/40 backdrop-blur-md overflow-hidden">
+    <div>
       <div className="grid grid-cols-2 sm:grid-cols-4">
         <StatCell label="Pending" value={pendingReviews} />
         <StatCell label="To Vote" value={proposalsToVote} />

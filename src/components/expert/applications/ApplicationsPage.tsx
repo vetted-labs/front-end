@@ -207,24 +207,25 @@ export default function ApplicationsPage() {
           { label: "Dashboard", href: "/expert/dashboard" },
           { label: "Applications" },
         ]} />
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reviews</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Review expert applications, candidate applications, and vote on proposals across your guilds.
-          </p>
+        {/* Header + Stats merged card */}
+        <div className="rounded-2xl bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] overflow-hidden">
+          <div className="px-6 py-5">
+            <h1 className="text-xl font-extrabold tracking-tight">Reviews</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Review applications, vote on proposals, and track your review history.
+            </p>
+          </div>
+          <div className="border-t border-border/40" />
+          <ApplicationsStatsRow
+            pendingReviews={data.pendingReviews}
+            proposalsToVote={data.proposalsToVote}
+            completedReviews={data.historyCount}
+            guildsActive={data.guildRecords.length}
+          />
         </div>
 
         {/* Onboarding guide for first-time reviewers */}
         <FirstTimeReviewerGuide />
-
-        {/* Stats */}
-        <ApplicationsStatsRow
-          pendingReviews={data.pendingReviews}
-          proposalsToVote={data.proposalsToVote}
-          completedReviews={data.historyCount}
-          guildsActive={data.guildRecords.length}
-        />
 
         {/* Staking Warning */}
         {data.guildStakes && !data.hasAnyStake && (

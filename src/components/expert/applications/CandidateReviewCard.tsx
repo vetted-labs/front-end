@@ -21,10 +21,6 @@ function getInitials(fullName: string): string {
 export function CandidateReviewCard({ application, onReview, onViewReview, showGuildBadge }: CandidateReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
 
-  const accentBar = isReviewed
-    ? "from-green-500 to-green-500/30"
-    : "from-orange-500 to-orange-500/30";
-
   const avatarGradient = isReviewed
     ? "from-green-500/80 to-green-600/60"
     : "from-orange-500/80 to-orange-600/60";
@@ -32,9 +28,7 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
   const initials = getInitials(application.candidateName);
 
   return (
-    <div className="group rounded-2xl overflow-hidden bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] transition-all hover:border-primary/30 dark:hover:border-white/[0.12]">
-      {/* Accent bar */}
-      <div className={`h-[3px] w-full bg-gradient-to-r ${accentBar}`} />
+    <div className="group rounded-2xl bg-card/40 backdrop-blur-md border border-border/60 dark:border-white/[0.06] transition-all hover:border-primary/30 dark:hover:border-white/[0.12]">
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
