@@ -387,13 +387,18 @@ export function ReviewGuildApplicationModal({
 
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground tracking-tight">
-              {proposalContext ? "Review Proposal" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
-            </h2>
+            <div>
+              <h2 className="text-xl font-extrabold text-foreground">
+                {proposalContext ? "Review Proposal" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
+              </p>
+            </div>
             <button
               onClick={onClose}
               aria-label="Close review modal"
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
+              className="w-8 h-8 rounded-lg bg-muted/50 border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -498,16 +503,18 @@ export function ReviewGuildApplicationModal({
           </div>
 
           {/* Navigation */}
-          <ReviewNavigation
-            currentStep={currentStep}
-            isReviewing={isReviewing}
-            isCommitting={isCommitting}
-            isCommitPhase={isCommitPhase}
-            onClose={onClose}
-            onNext={handleNext}
-            onBack={handleBack}
-            onSubmit={handleSubmit}
-          />
+          <div className="border-t border-border/40 px-7 py-5">
+            <ReviewNavigation
+              currentStep={currentStep}
+              isReviewing={isReviewing}
+              isCommitting={isCommitting}
+              isCommitPhase={isCommitPhase}
+              onClose={onClose}
+              onNext={handleNext}
+              onBack={handleBack}
+              onSubmit={handleSubmit}
+            />
+          </div>
         </div>
       </div>
     </div>
