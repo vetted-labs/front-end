@@ -19,6 +19,8 @@ import {
   ArrowLeft,
   Clock,
   Activity,
+  Eye,
+  Zap,
   LucideIcon,
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
@@ -27,7 +29,6 @@ import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from 
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { GuildCard } from "./GuildCard";
-import { GuildMembershipCard } from "./GuildMembershipCard";
 import {
   getActivityIconComponent,
   getActivityColorClasses,
@@ -35,55 +36,80 @@ import {
   getActivityIconColor,
 } from "@/lib/activityHelpers";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import type { ExpertProfile as ExpertProfileData, ExpertActivity, ExpertGuild } from "@/types";
+import type { ExpertProfile as ExpertProfileData } from "@/types";
 
 interface ExpertProfileProps {
   walletAddress?: string;
   showBackButton?: boolean;
 }
 
-interface StatCardProps {
-  icon: LucideIcon;
-  label: string;
-  value: string | number;
-  subtitle?: string;
-  colorScheme: "primary" | "emerald" | "neutral";
-}
-
-function StatCard({ icon: Icon, label, value, subtitle, colorScheme }: StatCardProps) {
-  const colorClasses = {
-    primary:
-      "bg-card border border-border hover:border-primary/40 shadow-sm dark:shadow-lg",
-    emerald:
-      "bg-card border border-border hover:border-emerald-400/40 shadow-sm dark:shadow-lg",
-    neutral:
-      "bg-card border border-border hover:border-primary/20 shadow-sm dark:shadow-lg",
-  };
-
-  const iconColorClasses = {
-    primary: "text-primary",
-    emerald: "text-emerald-600 dark:text-emerald-300",
-    neutral: "text-muted-foreground",
-  };
-
-  const iconBgClasses = {
-    primary: "bg-primary/10 border border-primary/20",
-    emerald: "bg-emerald-500/10 border border-emerald-400/20",
-    neutral: "bg-muted border border-border",
-  };
+// ── Reputation Ring (SVG circular gauge) ──
+function ReputationRing({ score, className = "" }: { score: number; className?: string }) {
+  const circumference = 2 * Math.PI * 70; // r=70
+  const maxScore = 2000;
+  const progress = Math.min(score / maxScore, 1);
+  const targetOffset = circumference - progress * circumference;
 
   return (
-    <div className={`rounded-2xl p-6 transition-colors ${colorClasses[colorScheme]}`}>
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 ${iconBgClasses[colorScheme]} rounded-xl flex items-center justify-center flex-shrink-0`}>
-          <Icon className={`w-6 h-6 ${iconColorClasses[colorScheme]}`} />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm text-muted-foreground mb-1">{label}</p>
-          <p className="text-3xl font-semibold text-foreground">{value}</p>
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-        </div>
+    <div className={`relative w-40 h-40 ${className}`}>
+      {/* Glow */}
+      <div className="absolute -inset-3 rounded-full bg-primary/10 blur-xl animate-avatar-glow-pulse" />
+      {/* SVG */}
+      <svg className="w-40 h-40 -rotate-90 relative z-[1]" viewBox="0 0 160 160">
+        <defs>
+          <linearGradient id="rep-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--primary))" />
+            <stop offset="50%" stopColor="hsl(var(--warning))" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" />
+          </linearGradient>
+        </defs>
+        <circle
+          cx="80" cy="80" r="70"
+          fill="none"
+          className="stroke-border/30"
+          strokeWidth="7"
+        />
+        <circle
+          cx="80" cy="80" r="70"
+          fill="none"
+          stroke="url(#rep-gradient)"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          className="animate-rep-gauge-draw drop-shadow-[0_0_6px_hsl(var(--primary)/0.4)]"
+          style={{ "--gauge-target": `${targetOffset}` } as React.CSSProperties}
+        />
+      </svg>
+      {/* Center content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-[2]">
+        <span className="text-[42px] font-extrabold font-display tracking-tight text-foreground">
+          {score.toLocaleString()}
+        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-primary">
+          points
+        </span>
       </div>
+    </div>
+  );
+}
+
+// ── Bento stat cell for the stats row ──
+interface ProfileStatCellProps {
+  icon: LucideIcon;
+  value: string | number;
+  label: string;
+  iconColor?: string;
+  iconBg?: string;
+}
+
+function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary", iconBg = "bg-primary/10" }: ProfileStatCellProps) {
+  return (
+    <div className="glass-card rounded-2xl border border-border/60 p-5 text-center transition-all hover:border-primary/30 hover:shadow-[0_0_30px_-8px_hsl(var(--primary)/0.06)]">
+      <div className={`w-8 h-8 ${iconBg} rounded-[10px] flex items-center justify-center mx-auto mb-3`}>
+        <Icon className={`w-4 h-4 ${iconColor}`} />
+      </div>
+      <div className="text-2xl font-bold font-display text-foreground mb-1">{value}</div>
+      <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -92,14 +118,12 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const router = useRouter();
   const { address: connectedAddress, isConnected } = useExpertAccount();
 
-  // Determine mode
   const mode = walletAddress ? "public" : "private";
   const effectiveAddress = mode === "public" ? walletAddress : connectedAddress;
 
   const [copiedAddress, setCopiedAddress] = useState(false);
   const { execute: executeToggleEmail, isLoading: isTogglingEmail } = useApi();
 
-  // Validate wallet address format for public mode upfront
   const isInvalidPublicAddress =
     mode === "public" && effectiveAddress && !/^0x[a-fA-F0-9]{40}$/.test(effectiveAddress);
 
@@ -111,35 +135,24 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const { data: profile, isLoading, error: fetchError, refetch } = useFetch(
     async () => {
       const profileData = await expertApi.getProfile(effectiveAddress!);
-
       if (!profileData || typeof profileData !== "object") {
         throw new Error("Invalid profile data structure");
       }
-
-      // Ensure guilds is an array
       const guilds = Array.isArray(profileData.guilds) ? profileData.guilds : [];
-
       return { ...profileData, guilds } as ExpertProfileData;
     },
     {
       skip: shouldSkip,
-      onError: (message) => {
-        toast.error(message);
-      },
+      onError: (message) => { toast.error(message); },
     }
   );
 
-  // Refetch when the effective address changes (useFetch only runs on mount/skip change)
+  // eslint-disable-next-line no-restricted-syntax -- refetch when effective address changes at runtime
   useEffect(() => {
-    if (!shouldSkip) {
-      refetch();
-    }
+    if (!shouldSkip) { refetch(); }
   }, [effectiveAddress]);
 
-  // Map fetch error, with special handling for invalid address and 404
-  const error = isInvalidPublicAddress
-    ? "Invalid wallet address format"
-    : fetchError;
+  const error = isInvalidPublicAddress ? "Invalid wallet address format" : fetchError;
 
   const copyAddress = () => {
     if (profile?.walletAddress) {
@@ -159,9 +172,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           refetch();
           toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
         },
-        onError: () => {
-          toast.error("Failed to update email visibility");
-        },
+        onError: () => { toast.error("Failed to update email visibility"); },
       }
     );
   };
@@ -192,25 +203,18 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const calculateTotalProposals = () => {
     if (!profile || !profile.guilds) return 0;
     return profile.guilds.reduce(
-      (sum, guild) =>
-        sum + guild.pendingProposals + guild.ongoingProposals + guild.closedProposals,
+      (sum, guild) => sum + guild.pendingProposals + guild.ongoingProposals + guild.closedProposals,
       0
     );
   };
 
-  // Loading state
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 text-foreground">
         <div className="max-w-md w-full">
-          <Alert variant="error" className="mb-4">
-            {error}
-          </Alert>
+          <Alert variant="error" className="mb-4">{error}</Alert>
           {mode === "public" && (
             <button
               onClick={() => router.back()}
@@ -225,7 +229,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  // No profile state
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center text-foreground">
@@ -234,21 +237,15 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  // Pending expert state (public mode only)
   if (mode === "public" && profile.status === "pending") {
     return (
       <div className="min-h-screen text-foreground">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           {showBackButton && (
-            <button
-              onClick={() => router.back()}
-              className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+            <button onClick={() => router.back()} className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </button>
           )}
-
           <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm dark:shadow-lg">
             <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-2 text-foreground">Application Under Review</h2>
@@ -264,131 +261,88 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  // Handle different earnings field names
   const displayEarnings = mode === "public"
     ? profile.endorsementEarnings || 0
     : profile.totalEarnings || 0;
 
-  const memberSince = profile.createdAt
-    ? formatDate(profile.createdAt)
-    : "N/A";
+  const memberSince = profile.createdAt ? formatDate(profile.createdAt) : "N/A";
 
-  // Main profile view
   return (
-    <div className="min-h-screen text-foreground animate-page-enter">
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Back button (public mode only) */}
+    <div className="min-h-screen text-foreground animate-page-enter relative overflow-hidden">
+      {/* Ambient background effects */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="profile-ambient-orb profile-ambient-orb-1" />
+        <div className="profile-ambient-orb profile-ambient-orb-2" />
+        <div className="profile-dot-grid" />
+      </div>
+
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Back button */}
         {mode === "public" && showBackButton && (
-          <button
-            onClick={() => router.back()}
-            className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+          <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back
           </button>
         )}
 
-        {/* Single-column layout */}
-        <div className="space-y-6">
-          {/* Profile Card */}
-          <div className="rounded-2xl p-8 border border-border bg-card shadow-sm dark:shadow-lg">
+        {/* ═══ Bento Grid ═══ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* ── Identity Card (left, spans 3 rows) ── */}
+          <div className="md:row-span-3 glass-card glass-border-shimmer rounded-2xl border border-border/60 p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-amber-300 via-orange-400 to-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_20px_60px_rgba(251,146,60,0.35)]">
-              {mode === "private" ? (
-                <User className="w-12 h-12 text-slate-900" />
-              ) : (
-                <span className="text-3xl font-bold text-slate-900">
-                  {getInitials(profile.fullName)}
-                </span>
-              )}
+            <div className="relative mb-7">
+              <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
+              <div className="w-[120px] h-[120px] rounded-full p-[3px] bg-[conic-gradient(from_0deg,hsl(var(--primary)),hsl(var(--warning)),hsl(var(--primary)),hsl(24_90%_48%),hsl(var(--primary)))] relative z-[1]">
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-secondary to-card flex items-center justify-center">
+                  {mode === "private" ? (
+                    <User className="w-12 h-12 text-primary" />
+                  ) : (
+                    <span className="text-[40px] font-bold font-display text-primary tracking-wider">
+                      {getInitials(profile.fullName)}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Name */}
-            <h1 className="text-3xl font-semibold text-foreground text-center mb-2">
+            <h1 className="text-3xl font-bold font-display tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent mb-4">
               {profile.fullName || "Unknown Expert"}
             </h1>
 
-            {/* Email */}
-            {mode === "private" && profile.email && (
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
-                <Mail className="w-4 h-4 text-primary" />
-                <span>{profile.email}</span>
-                <button
-                  onClick={toggleEmailVisibility}
-                  disabled={isTogglingEmail}
-                  className={`ml-1 px-2.5 py-0.5 text-xs font-medium rounded-full border transition-colors ${
-                    profile.showEmail
-                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 dark:text-emerald-400"
-                      : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                  }`}
-                  title={profile.showEmail ? "Email visible on public profile" : "Email hidden from public profile"}
-                >
-                  {profile.showEmail ? "Public" : "Hidden"}
-                </button>
-              </div>
-            )}
-            {mode === "public" && profile.showEmail && profile.email && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-2">
-                <Mail className="w-4 h-4 text-primary" />
-                {profile.email}
-              </div>
-            )}
-
-            {/* Member Since (centered) */}
-            <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-4">
-              <Calendar className="w-4 h-4 text-primary" />
-              Member since {memberSince}
-            </div>
-
-            {/* Wallet Address */}
+            {/* Wallet Chip */}
             {mode === "private" ? (
-              <details className="group">
-                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 py-2 justify-center">
-                  <Wallet className="w-3 h-3 text-primary" />
-                  <span>Show wallet address</span>
-                </summary>
-                <div className="mt-2 bg-muted/50 border border-border rounded-lg p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    <p className="font-mono text-xs text-foreground">{profile.walletAddress}</p>
-                  </div>
-                  <button
-                    onClick={copyAddress}
-                    className="px-2 py-1 rounded-md hover:bg-muted transition-all flex items-center gap-1"
-                  >
-                    {copiedAddress ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-300" />
-                        <span className="text-xs text-emerald-600 dark:text-emerald-300">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Copy</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </details>
+              <button
+                onClick={copyAddress}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-[13px] text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
+              >
+                <Wallet className="w-3.5 h-3.5 opacity-70" />
+                {truncateAddress(profile.walletAddress)}
+                {copiedAddress ? (
+                  <Check className="w-3 h-3 text-success" />
+                ) : (
+                  <Copy className="w-3 h-3 opacity-50" />
+                )}
+              </button>
             ) : (
               profile.walletAddress && (
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4">
                   <a
                     href={getExplorerAddressUrl(profile.walletAddress)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted transition-all text-xs font-mono text-muted-foreground hover:text-foreground"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-[13px] text-primary transition-all hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.15)]"
                   >
-                    <Wallet className="w-3 h-3 text-primary" />
+                    <Wallet className="w-3.5 h-3.5 opacity-70" />
                     {truncateAddress(profile.walletAddress)}
-                    <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                    <ExternalLink className="w-3 h-3 opacity-50" />
                   </a>
                   <button
                     onClick={copyAddress}
-                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full bg-muted/50 border border-border hover:border-primary/40 hover:bg-muted transition-all"
+                    className="inline-flex items-center gap-1 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
                   >
                     {copiedAddress ? (
-                      <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-300" />
+                      <Check className="w-3 h-3 text-success" />
                     ) : (
                       <Copy className="w-3 h-3 text-muted-foreground" />
                     )}
@@ -397,81 +351,178 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               )
             )}
 
-            {/* Bio Section */}
+            {/* Email */}
+            {mode === "private" && profile.email && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{profile.email}</span>
+                <button
+                  onClick={toggleEmailVisibility}
+                  disabled={isTogglingEmail}
+                  className={`ml-1 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full border transition-colors ${
+                    profile.showEmail
+                      ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
+                      : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                  }`}
+                >
+                  {profile.showEmail ? "Public" : "Hidden"}
+                </button>
+              </div>
+            )}
+            {mode === "public" && profile.showEmail && profile.email && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                {profile.email}
+              </div>
+            )}
+
+            {/* Member since */}
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5" />
+              Member since {memberSince}
+            </div>
+
+            {/* Bio */}
             {profile.bio && (
-              <div className="pt-4 border-t border-border mt-4">
-                <h3 className="text-sm font-semibold text-foreground mb-2">Bio</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {profile.bio}
-                </p>
+              <div className="w-full mt-6 pt-6 border-t border-border/60 text-left">
+                <div className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
+                <p className="text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
               </div>
             )}
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Reputation Score */}
-            <StatCard
-              icon={Star}
-              label="Reputation Score"
-              value={profile.reputation}
-              colorScheme="primary"
-            />
-
-            {/* Total Earnings */}
-            <StatCard
-              icon={DollarSign}
-              label="Total Earnings"
-              value={formatVetd(displayEarnings)}
-              subtitle={mode === "public" ? "From endorsements" : undefined}
-              colorScheme="emerald"
-            />
-
-            {/* Mode-specific stat cards */}
-            {mode === "public" && (
-              <>
-                <StatCard
-                  icon={TrendingUp}
-                  label="Consensus"
-                  value={`${calculateConsensusPercentage()}%`}
-                  subtitle={`${profile.approvalCount || 0} approvals, ${profile.rejectionCount || 0} rejections`}
-                  colorScheme="primary"
-                />
-                <StatCard
-                  icon={FileText}
-                  label="Vetted Proposals"
-                  value={calculateTotalProposals()}
-                  colorScheme="neutral"
-                />
-                <StatCard
-                  icon={ThumbsUp}
-                  label="Endorsements"
-                  value={profile.endorsementCount || 0}
-                  colorScheme="neutral"
-                />
-              </>
-            )}
-
-            {mode === "private" && (
-              <StatCard
-                icon={Shield}
-                label="Active Guilds"
-                value={profile.guilds.length}
-                colorScheme="neutral"
-              />
-            )}
+          {/* ── Reputation Ring Card (right, row 1) ── */}
+          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
+            <div className="text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-5">
+              Reputation Score
+            </div>
+            <ReputationRing score={profile.reputation} className="mb-4" />
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-primary/15 to-warning/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+              Master
+            </div>
           </div>
 
-          {/* Recent Activity (public mode only) */}
-          {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
-            <div className="rounded-2xl p-6 border border-border bg-card shadow-sm dark:shadow-lg">
+          {/* ── Earnings Card (right, row 2) ── */}
+          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-200">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-3">
+              <DollarSign className="w-3.5 h-3.5 text-success" />
+              Total Earnings
+            </div>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-4xl font-bold font-display text-foreground">
+                {formatVetd(displayEarnings)}
+              </span>
+              <span className="text-base font-medium text-success/80">VETD</span>
+            </div>
+            <div className="w-full h-1 rounded-full bg-border/40 mt-3 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-success to-success/40 shadow-[0_0_8px_hsl(var(--success)/0.3)]"
+                style={{ width: displayEarnings > 0 ? `${Math.min((displayEarnings / 1000) * 100, 100)}%` : "0%" }}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              {displayEarnings > 0 ? (mode === "public" ? "From endorsements" : "Total earned across all guilds") : "No earnings yet — start reviewing proposals"}
+            </div>
+          </div>
+
+          {/* ── Active Guilds Card (right, row 3) ── */}
+          <div className="glass-card glass-border-shimmer rounded-2xl border border-border/60 p-7 flex flex-col justify-center animate-fade-up animate-delay-300">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[1.2px] text-muted-foreground mb-3">
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              Active Guilds
+            </div>
+            <div className="text-5xl font-extrabold font-display text-foreground mb-3">
+              {profile.guilds.length}
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {profile.guilds.map((guild) => (
+                <div
+                  key={guild.id}
+                  title={guild.name}
+                  className="w-2.5 h-2.5 rounded-full bg-primary/70 shadow-[0_0_6px_hsl(var(--primary)/0.3)] transition-all hover:scale-150 hover:bg-primary hover:shadow-[0_0_12px_hsl(var(--primary)/0.5)] cursor-pointer"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Stats Row ═══ */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 animate-fade-up animate-delay-400">
+          {mode === "public" && (
+            <>
+              <ProfileStatCell
+                icon={TrendingUp}
+                value={`${calculateConsensusPercentage()}%`}
+                label="Consensus"
+                iconColor="text-primary"
+                iconBg="bg-primary/10"
+              />
+              <ProfileStatCell
+                icon={FileText}
+                value={calculateTotalProposals()}
+                label="Proposals"
+                iconColor="text-sky-500 dark:text-sky-400"
+                iconBg="bg-sky-500/10"
+              />
+              <ProfileStatCell
+                icon={ThumbsUp}
+                value={profile.endorsementCount || 0}
+                label="Endorsements"
+                iconColor="text-success"
+                iconBg="bg-success/10"
+              />
+              <ProfileStatCell
+                icon={Eye}
+                value={profile.reviewCount || 0}
+                label="Reviews"
+                iconColor="text-violet-500 dark:text-violet-400"
+                iconBg="bg-violet-500/10"
+              />
+              <ProfileStatCell
+                icon={Zap}
+                value={`${profile.approvalCount || 0}`}
+                label="Approvals"
+                iconColor="text-primary"
+                iconBg="bg-primary/10"
+              />
+            </>
+          )}
+          {mode === "private" && (
+            <>
+              <ProfileStatCell
+                icon={Star}
+                value={profile.reputation}
+                label="Reputation"
+                iconColor="text-primary"
+                iconBg="bg-primary/10"
+              />
+              <ProfileStatCell
+                icon={DollarSign}
+                value={formatVetd(displayEarnings)}
+                label="Earnings"
+                iconColor="text-success"
+                iconBg="bg-success/10"
+              />
+              <ProfileStatCell
+                icon={Shield}
+                value={profile.guilds.length}
+                label="Guilds"
+              />
+            </>
+          )}
+        </div>
+
+        {/* ═══ Recent Activity (public mode only) ═══ */}
+        {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
+          <div className="mt-4 animate-fade-up animate-delay-500">
+            <div className="glass-card rounded-2xl border border-border/60 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
                   Recent Activity
                 </h2>
               </div>
-
               <div className="space-y-3">
                 {profile.recentActivity.slice(0, 5).map((activity) => (
                   <div
@@ -486,57 +537,57 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                         })()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground mb-1">
-                          {activity.description}
-                        </p>
+                        <p className="text-sm font-medium text-foreground mb-1">{activity.description}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span className="truncate">{activity.guildName}</span>
-                          <span>•</span>
+                          <span>·</span>
                           <span>{formatTimeAgo(activity.timestamp)}</span>
                         </div>
                       </div>
                       {activity.amount && (
-                        <div className="text-sm font-semibold text-primary flex-shrink-0">
-                          +{activity.amount}
-                        </div>
+                        <div className="text-sm font-semibold text-primary flex-shrink-0">+{activity.amount}</div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Guild Memberships - Horizontal Grid */}
-          <div>
-            <h2 className="text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              Guild Memberships
-            </h2>
-
-            {profile.guilds.length === 0 ? (
-              <div className="text-center py-12 rounded-2xl border border-border bg-card">
-                <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                <p className="text-lg text-foreground mb-2">
-                  {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Join guilds to start vetting candidates and earning reputation
-                </p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profile.guilds.map((guild) => (
-                  <GuildCard
-                    key={guild.id}
-                    guild={guild}
-                    variant="membership"
-                    onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
+        )}
+
+        {/* ═══ Guild Positions ═══ */}
+        <div className="animate-fade-up animate-delay-500">
+          <div className="mt-12 mb-6 flex items-center gap-3">
+            <Shield className="w-5 h-5 text-primary" />
+            <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
+            <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border/60 bg-card/50">
+              {profile.guilds.length} active
+            </span>
+          </div>
+
+          {profile.guilds.length === 0 ? (
+            <div className="text-center py-12 rounded-2xl border border-border/60 glass-card">
+              <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
+              <p className="text-lg text-foreground mb-2">
+                {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Join guilds to start vetting candidates and earning reputation
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {profile.guilds.map((guild) => (
+                <GuildCard
+                  key={guild.id}
+                  guild={guild}
+                  variant="membership"
+                  onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

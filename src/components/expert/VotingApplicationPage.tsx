@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { guildApplicationsApi } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { useApi } from "@/lib/hooks/useFetch";
 import { formatDeadline, ensureHttps } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -314,14 +315,14 @@ export default function VotingApplicationPage({
               ) : isConsensusFailed ? (
                 <Badge
                   variant="outline"
-                  className="border-orange-500/40 text-orange-500"
+                  className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text}`}
                 >
                   {application.tiebreaker_required ? "Tiebreaker Pending" : "Consensus Failed"}
                 </Badge>
               ) : (
                 <Badge
                   variant="outline"
-                  className="border-amber-500/40 text-amber-500"
+                  className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text}`}
                 >
                   Voting Open
                 </Badge>
@@ -385,9 +386,9 @@ export default function VotingApplicationPage({
 
         {/* -- Staking warning -- */}
         {!isStakedInGuild && isReviewer && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 mb-6">
+          <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-4 mb-6`}>
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
+              <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.text} mt-0.5`} />
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground mb-1">
                   Staking Required to Vote

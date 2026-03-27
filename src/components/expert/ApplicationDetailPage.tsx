@@ -20,6 +20,7 @@ import {
   User,
 } from "lucide-react";
 import { guildApplicationsApi, expertApi } from "@/lib/api";
+import { STATUS_COLORS } from "@/config/colors";
 import { formatDeadline } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
@@ -92,28 +93,28 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     switch (status) {
       case "ongoing":
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-semibold rounded-full">
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.info.badge}`}>
             <Clock className="w-4 h-4" />
             Ongoing
           </span>
         );
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.positive.badge}`}>
             <CheckCircle className="w-4 h-4" />
             Approved
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-sm font-semibold rounded-full">
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.negative.badge}`}>
             <XCircle className="w-4 h-4" />
             Rejected
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-500/10 border border-gray-500/20 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-full">
+          <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full ${STATUS_COLORS.neutral.badge}`}>
             <Clock className="w-4 h-4" />
             Pending
           </span>
@@ -241,10 +242,10 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                       <div
                         className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                           vote.vote === "for"
-                            ? "bg-green-500/10 text-green-600"
+                            ? `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text}`
                             : vote.vote === "against"
-                            ? "bg-red-500/10 text-red-600"
-                            : "bg-gray-500/10 text-gray-600"
+                            ? `${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.text}`
+                            : `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.text}`
                         }`}
                       >
                         {vote.vote === "for" ? (
@@ -285,14 +286,14 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <ThumbsUp className="w-4 h-4 text-green-600" />
+                      <ThumbsUp className={`w-4 h-4 ${STATUS_COLORS.positive.text}`} />
                       For
                     </span>
                     <span className="text-sm font-bold text-foreground">{votesFor}</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
-                      className="bg-green-500 h-2 rounded-full transition-all"
+                      className={`${STATUS_COLORS.positive.bg} h-2 rounded-full transition-all`}
                       style={{ width: totalVotes > 0 ? `${(votesFor / totalVotes) * 100}%` : "0%" }}
                     />
                   </div>
@@ -300,14 +301,14 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <ThumbsDown className="w-4 h-4 text-red-600" />
+                      <ThumbsDown className={`w-4 h-4 ${STATUS_COLORS.negative.text}`} />
                       Against
                     </span>
                     <span className="text-sm font-bold text-foreground">{votesAgainst}</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
-                      className="bg-red-500 h-2 rounded-full transition-all"
+                      className={`${STATUS_COLORS.negative.bg} h-2 rounded-full transition-all`}
                       style={{ width: totalVotes > 0 ? `${(votesAgainst / totalVotes) * 100}%` : "0%" }}
                     />
                   </div>
@@ -321,7 +322,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                 <h3 className="text-lg font-bold text-foreground mb-4">Cast Your Vote</h3>
                 {expertHasVoted ? (
                   <div className="text-center py-4">
-                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                    <CheckCircle className={`w-12 h-12 ${STATUS_COLORS.positive.text} mx-auto mb-3`} />
                     <p className="text-sm font-semibold text-foreground mb-2">You have voted</p>
                     <p className="text-xs text-muted-foreground">
                       Your vote: <span className="font-semibold">{expertVote?.vote}</span>
@@ -337,7 +338,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                         setVoteType("for");
                         setShowVoteModal(true);
                       }}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      className={`w-full ${STATUS_COLORS.positive.bg} hover:opacity-90 text-white`}
                     >
                       <ThumbsUp className="w-4 h-4 mr-2" />
                       Vote For
@@ -347,7 +348,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
                         setVoteType("against");
                         setShowVoteModal(true);
                       }}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                      className={`w-full ${STATUS_COLORS.negative.bg} hover:opacity-90 text-white`}
                     >
                       <ThumbsDown className="w-4 h-4 mr-2" />
                       Vote Against

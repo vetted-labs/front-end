@@ -364,16 +364,16 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const pendingCount = (guild.guildApplications?.length || 0) + (candidateApplications?.length || 0);
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden animate-page-enter">
+    <div className="relative min-h-screen text-foreground overflow-x-hidden animate-page-enter">
+      {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.08),transparent_55%)] dark:bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.18),transparent_55%)]" />
-        <div className="absolute -top-24 right-[-10%] h-72 w-72 rounded-full bg-orange-500/8 dark:bg-orange-500/15 blur-3xl" />
-        <div className="absolute top-1/3 left-[-15%] h-96 w-96 rounded-full bg-amber-500/6 dark:bg-amber-500/12 blur-3xl" />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-transparent to-transparent" />
+        <div className="profile-ambient-orb profile-ambient-orb-1" />
+        <div className="profile-ambient-orb profile-ambient-orb-2" />
+        <div className="profile-dot-grid" />
       </div>
 
       <div className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <Breadcrumb items={[
             { label: "Dashboard", href: "/expert/dashboard" },
             { label: "Guilds", href: "/expert/guilds" },
@@ -383,37 +383,37 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         <GuildHeader guild={guild} onStakeClick={() => setShowVetdStakingModal(true)} />
         <GuildApplicationCTA guildId={guildId} onNavigateToPublicPage={() => router.push(`/guilds/${guildId}`)} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="rounded-2xl border border-border bg-card shadow-sm dark:shadow-lg mb-6 overflow-hidden">
-            <div className="border-b border-border px-6 py-4">
-              <PillTabs
-                tabs={[
-                  { value: "feed" as const, label: "Feed" },
-                  {
-                    value: "membershipApplications" as const,
-                    label: (
-                      <>
-                        Pending Reviews
-                        {pendingCount > 0 && (
-                          <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/30 text-xs font-semibold rounded-full">
-                            {pendingCount}
-                          </span>
-                        )}
-                      </>
-                    ),
-                  },
-                  { value: "jobs" as const, label: "Jobs" },
-                  { value: "activity" as const, label: "Activity" },
-                  { value: "earnings" as const, label: "Earnings" },
-                  { value: "members" as const, label: "Members" },
-                  { value: "leaderboard" as const, label: "Leaderboard" },
-                ]}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-            </div>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          {/* Sticky tab bar */}
+          <div className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl border-b border-border/60 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+            <PillTabs
+              tabs={[
+                { value: "feed" as const, label: "Feed" },
+                {
+                  value: "membershipApplications" as const,
+                  label: (
+                    <>
+                      Pending Reviews
+                      {pendingCount > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 font-mono text-[10px] font-semibold rounded-full">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </>
+                  ),
+                },
+                { value: "jobs" as const, label: "Jobs" },
+                { value: "activity" as const, label: "Activity" },
+                { value: "earnings" as const, label: "Earnings" },
+                { value: "members" as const, label: "Members" },
+                { value: "leaderboard" as const, label: "Leaderboard" },
+              ]}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
 
-            <div className="p-6" role="tabpanel">
+            <div role="tabpanel">
               {activeTab === "feed" && (
                 <GuildFeedTab guildId={guildId} isMember={true} membershipRole={guild.expertRole as ExpertRole} userType="expert" />
               )}
@@ -455,7 +455,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
               )}
               {activeTab === "earnings" && <GuildEarningsTab earnings={guild.earnings} />}
             </div>
-          </div>
         </div>
 
         {/* Modals */}

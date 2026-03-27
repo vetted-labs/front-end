@@ -117,99 +117,89 @@ export function GuildFeedTab({
     >
     <div className="space-y-6">
       {/* Controls Row */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/* Sort Controls — grouped pill bar */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex gap-[3px] p-[3px] bg-white/[0.02] dark:bg-white/[0.02] rounded-[10px] border border-border/60">
+            {(["hot", "new", "top"] as const).map((mode) => {
+              const icons = { hot: Flame, new: Clock, top: TrendingUp };
+              const Icon = icons[mode];
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setSortMode(mode)}
+                  className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-[12px] font-medium transition-all ${
+                    sortMode === mode
+                      ? "bg-primary/[0.08] text-primary border border-primary/15"
+                      : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <Icon className="w-3 h-3" />
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              );
+            })}
+
+            {/* Time window for Top sort */}
+            {sortMode === "top" && (
+              <select
+                value={timeWindow}
+                onChange={(e) => setTimeWindow(e.target.value as TopTimeWindow)}
+                className="px-2.5 py-[6px] rounded-[8px] text-[12px] font-medium border border-border/60 bg-transparent text-foreground"
+              >
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="all">All Time</option>
+              </select>
+            )}
+
+            {/* Bookmarked filter */}
+            {bookmarkCount > 0 && (
+              <button
+                onClick={() => setShowBookmarked((prev) => !prev)}
+                className={`flex items-center gap-1.5 px-3.5 py-[6px] rounded-[8px] text-[12px] font-medium transition-all ${
+                  showBookmarked
+                    ? "bg-primary/[0.08] text-primary border border-primary/15"
+                    : "text-muted-foreground border border-transparent hover:text-foreground hover:bg-white/[0.03]"
+                }`}
+              >
+                <Bookmark className={`w-3 h-3 ${showBookmarked ? "fill-current" : ""}`} />
+                Saved
+              </button>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-5 bg-border/60" />
+
+          {/* Tag Filters */}
+          <div className="flex flex-wrap gap-[5px]">
+            {TAG_OPTIONS.map((tag) => (
+              <button
+                key={tag.value}
+                onClick={() => setTagFilter(tag.value)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
+                  tagFilter === tag.value
+                    ? "bg-primary/[0.08] text-primary border border-primary/20"
+                    : "text-muted-foreground border border-border/60 hover:text-foreground hover:border-border"
+                }`}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* New Post Button */}
         {showNewPostButton && (
           <button
             onClick={() => setShowNewPost(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] rounded-[10px] font-display text-[12px] font-bold hover:shadow-[0_4px_16px_hsl(var(--primary)/0.25)] hover:-translate-y-px transition-all"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             New Post
           </button>
         )}
-
-        {/* Sort Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setSortMode("hot")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-              sortMode === "hot"
-                ? "bg-primary/20 text-primary border border-primary/40"
-                : "text-muted-foreground border border-border hover:text-foreground hover:border-primary/30"
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5" />
-            Hot
-          </button>
-          <button
-            onClick={() => setSortMode("new")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-              sortMode === "new"
-                ? "bg-primary/20 text-primary border border-primary/40"
-                : "text-muted-foreground border border-border hover:text-foreground hover:border-primary/30"
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            New
-          </button>
-          <button
-            onClick={() => setSortMode("top")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-              sortMode === "top"
-                ? "bg-primary/20 text-primary border border-primary/40"
-                : "text-muted-foreground border border-border hover:text-foreground hover:border-primary/30"
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            Top
-          </button>
-
-          {/* Time window dropdown for Top sort */}
-          {sortMode === "top" && (
-            <select
-              value={timeWindow}
-              onChange={(e) => setTimeWindow(e.target.value as TopTimeWindow)}
-              className="px-3 py-1.5 rounded-full text-sm font-medium border border-border bg-card text-foreground"
-            >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="all">All Time</option>
-            </select>
-          )}
-
-          {/* Bookmarked filter */}
-          {bookmarkCount > 0 && (
-            <button
-              onClick={() => setShowBookmarked((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                showBookmarked
-                  ? "bg-blue-500/20 text-blue-500 border border-blue-500/40"
-                  : "text-muted-foreground border border-border hover:text-foreground hover:border-primary/30"
-              }`}
-            >
-              <Bookmark className={`w-3.5 h-3.5 ${showBookmarked ? "fill-blue-500" : ""}`} />
-              Saved
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Tag Filters */}
-      <div className="flex flex-wrap gap-2">
-        {TAG_OPTIONS.map((tag) => (
-          <button
-            key={tag.value}
-            onClick={() => setTagFilter(tag.value)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-              tagFilter === tag.value
-                ? "bg-primary/15 text-primary border border-primary/30"
-                : "text-muted-foreground border border-border/60 hover:text-foreground hover:border-border"
-            }`}
-          >
-            {tag.label}
-          </button>
-        ))}
       </div>
 
       {/* Error State */}

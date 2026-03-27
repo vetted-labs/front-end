@@ -6,6 +6,7 @@ import { Clock, Users, Scale } from "lucide-react";
 import { formatDeadline } from "@/lib/utils";
 import { VotingPowerBar } from "./VotingPowerBar";
 import { GOVERNANCE_THRESHOLDS, DEFAULT_GOVERNANCE_THRESHOLD } from "@/config/constants";
+import { getProposalTypeColors } from "@/config/colors";
 
 interface GovernanceProposalCardProps {
   proposal: {
@@ -25,18 +26,11 @@ interface GovernanceProposalCardProps {
   onClick?: () => void;
 }
 
-const typeColors: Record<string, string> = {
-  parameter_change: "border-l-blue-500",
-  guild_master_election: "border-l-amber-500",
-  guild_creation: "border-l-green-500",
-  general: "border-l-purple-500",
-};
-
-const typeBadgeColors: Record<string, string> = {
-  parameter_change: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  guild_master_election: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  guild_creation: "bg-green-500/10 text-green-600 border-green-500/20",
-  general: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+const typeLeftBorder: Record<string, string> = {
+  parameter_change: "border-l-info-blue",
+  guild_master_election: "border-l-warning",
+  guild_creation: "border-l-positive",
+  general: "border-l-info-blue",
 };
 
 const typeLabels: Record<string, string> = {
@@ -67,7 +61,8 @@ export function GovernanceProposalCard({
   const forPercent = totalVotes > 0 ? (proposal.votes_for / totalVotes) * 100 : 0;
   const againstPercent = totalVotes > 0 ? (proposal.votes_against / totalVotes) * 100 : 0;
   const abstainPercent = totalVotes > 0 ? (proposal.votes_abstain / totalVotes) * 100 : 0;
-  const borderColor = typeColors[proposal.proposal_type] || "border-l-purple-500";
+  const borderColor = typeLeftBorder[proposal.proposal_type] || "border-l-info-blue";
+  const typeColors = getProposalTypeColors(proposal.proposal_type);
   const threshold = GOVERNANCE_THRESHOLDS[proposal.proposal_type] ?? DEFAULT_GOVERNANCE_THRESHOLD;
 
   return (
@@ -82,7 +77,7 @@ export function GovernanceProposalCard({
               <h3 className="text-lg font-semibold">{proposal.title}</h3>
               <Badge
                 variant="outline"
-                className={typeBadgeColors[proposal.proposal_type] || ""}
+                className={typeColors.badge}
               >
                 {typeLabels[proposal.proposal_type] || proposal.proposal_type}
               </Badge>

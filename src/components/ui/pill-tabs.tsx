@@ -21,17 +21,17 @@ export function PillTabs<T extends string>({
   className,
 }: PillTabsProps<T>) {
   return (
-    <div role="tablist" className={`flex flex-wrap gap-2 overflow-x-auto ${className ?? ""}`}>
+    <div role="tablist" className={`flex gap-0 overflow-x-auto scrollbar-none ${className ?? ""}`}>
       {tabs.map((tab) => (
         <button
           key={tab.value}
           role="tab"
           aria-selected={activeTab === tab.value}
           onClick={() => onTabChange(tab.value)}
-          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+          className={`px-5 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
             activeTab === tab.value
-              ? "bg-primary/20 text-primary border-primary/40 dark:shadow-[0_0_20px_rgba(255,122,0,0.15)]"
-              : "bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-primary/30"
+              ? "text-primary font-bold border-primary"
+              : "text-muted-foreground border-transparent hover:text-foreground"
           }`}
         >
           {tab.label}
