@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, XCircle, X } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
+import { STATUS_COLORS } from "@/config/colors";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { expertApi } from "@/lib/api";
@@ -495,9 +496,9 @@ export function ReviewGuildApplicationModal({
             )}
 
             {validationError && (
-              <div className="mt-4 flex items-center gap-2.5 p-3.5 rounded-xl bg-red-500/[0.08] border border-red-500/20">
-                <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                <p className="text-sm text-red-300">{validationError}</p>
+              <div className={`mt-4 flex items-center gap-2.5 p-3.5 rounded-xl ${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`}>
+                <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} shrink-0`} />
+                <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{validationError}</p>
               </div>
             )}
           </div>

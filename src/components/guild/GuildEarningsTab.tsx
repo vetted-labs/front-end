@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Coins, DollarSign, TrendingUp, FileText, Award, ChevronDown } from "lucide-react";
 import { formatVetd } from "@/lib/utils";
+import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import type { GuildEarningsOverview } from "@/types/guild";
 
 const EARNINGS_PER_PAGE = 10;
@@ -21,7 +22,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
         <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-4">
             <Coins className="w-10 h-10 text-primary" />
-            <TrendingUp className="w-5 h-5 text-green-500" />
+            <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <p className="text-sm text-muted-foreground mb-1">Total Points Earned</p>
           <p className="text-3xl font-bold text-foreground">
@@ -35,7 +36,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
         <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20">
           <div className="flex items-center justify-between mb-4">
             <DollarSign className="w-10 h-10 text-primary" />
-            <TrendingUp className="w-5 h-5 text-green-500" />
+            <TrendingUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
           </div>
           <p className="text-sm text-muted-foreground mb-1">Endorsement Earnings</p>
           <p className="text-3xl font-bold text-foreground">
@@ -79,8 +80,8 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
                       <FileText className="w-5 h-5 text-primary" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                      <Award className="w-5 h-5 text-green-600" />
+                    <div className={`w-10 h-10 ${STATUS_COLORS.positive.bgSubtle} rounded-lg flex items-center justify-center mr-4`}>
+                      <Award className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                     </div>
                   )}
                   <div>
@@ -93,7 +94,7 @@ export function GuildEarningsTab({ earnings }: GuildEarningsTabProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-semibold text-green-600">
+                  <p className={`text-lg font-semibold ${STATUS_COLORS.positive.text}`}>
                     {earning.type === "proposal"
                       ? `+${earning.amount} pts`
                       : `+$${earning.amount}`}

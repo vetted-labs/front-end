@@ -2,6 +2,7 @@
 
 import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 import { formatVetd } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { LeaderboardExpert } from "@/types/guild";
 
 interface GuildLeaderboardTabProps {
@@ -24,7 +25,7 @@ export function GuildLeaderboardTab({
 
     const isImproving = rankChange > 0;
     const Icon = isImproving ? ChevronUp : ChevronDown;
-    const color = isImproving ? "text-green-600" : "text-red-600";
+    const color = isImproving ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text;
 
     return (
       <span className={`inline-flex items-center ml-1 ${color}`} title={`${isImproving ? 'Up' : 'Down'} ${Math.abs(rankChange)} ${Math.abs(rankChange) === 1 ? 'position' : 'positions'}`}>
@@ -38,7 +39,7 @@ export function GuildLeaderboardTab({
     if (!reputationChange || reputationChange === 0) return null;
 
     const isPositive = reputationChange > 0;
-    const color = isPositive ? "text-green-600" : "text-red-600";
+    const color = isPositive ? STATUS_COLORS.positive.text : STATUS_COLORS.negative.text;
     const sign = isPositive ? "+" : "";
 
     return (

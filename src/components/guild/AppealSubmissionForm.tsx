@@ -12,6 +12,7 @@ import { useAppealStaking } from "@/lib/hooks/useVettedContracts";
 import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { getTransactionErrorMessage, isUserRejection, getExplorerTxUrl } from "@/lib/blockchain";
+import { STATUS_COLORS } from "@/config/colors";
 
 type StakingStep = "idle" | "signing" | "approving" | "staking" | "filing";
 type ModalView = "form" | "success";
@@ -173,10 +174,10 @@ export function AppealSubmissionForm({
   return (
     <>
       {/* Trigger Card */}
-      <Card className="border-amber-500/20 bg-amber-500/5">
+      <Card className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Gavel className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <Gavel className={`w-5 h-5 ${STATUS_COLORS.warning.icon} mt-0.5 flex-shrink-0`} />
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground mb-1">
                 Believe this rejection was incorrect?
@@ -189,7 +190,7 @@ export function AppealSubmissionForm({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsModalOpen(true)}
-                className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text} hover:${STATUS_COLORS.warning.bgSubtle}`}
               >
                 <Gavel className="w-3.5 h-3.5 mr-1.5" />
                 Appeal This Rejection
@@ -209,8 +210,8 @@ export function AppealSubmissionForm({
         {/* ── Success View ── */}
         {modalView === "success" && (
           <div className="text-center py-6 space-y-6">
-            <div className="w-20 h-20 mx-auto rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
+            <div className={`w-20 h-20 mx-auto rounded-full ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} flex items-center justify-center`}>
+              <CheckCircle2 className={`w-10 h-10 ${STATUS_COLORS.positive.icon}`} />
             </div>
 
             <div className="space-y-2">
@@ -220,11 +221,11 @@ export function AppealSubmissionForm({
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20">
-              <span className="text-lg font-bold text-green-600 dark:text-green-400 tabular-nums">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}`}>
+              <span className={`text-lg font-bold ${STATUS_COLORS.positive.text} tabular-nums`}>
                 {stakeAmount} VETD
               </span>
-              <span className="text-sm text-green-600/70 dark:text-green-400/70">staked</span>
+              <span className={`text-sm ${STATUS_COLORS.positive.text} opacity-70`}>staked</span>
             </div>
 
             <div className="space-y-1 text-sm text-muted-foreground">
@@ -308,7 +309,7 @@ export function AppealSubmissionForm({
 
               <div className="space-y-3 text-xs text-muted-foreground">
                 <div>
-                  <p className="font-medium text-green-500 mb-0.5">If appeal succeeds</p>
+                  <p className={`font-medium ${STATUS_COLORS.positive.text} mb-0.5`}>If appeal succeeds</p>
                   <ul className="space-y-0.5 pl-3">
                     <li>&bull; Stake returned</li>
                     <li>&bull; Application re-reviewed</li>
@@ -316,7 +317,7 @@ export function AppealSubmissionForm({
                   </ul>
                 </div>
                 <div>
-                  <p className="font-medium text-red-500 mb-0.5">If appeal fails</p>
+                  <p className={`font-medium ${STATUS_COLORS.negative.text} mb-0.5`}>If appeal fails</p>
                   <ul className="space-y-0.5 pl-3">
                     <li>&bull; Stake forfeited</li>
                     <li>&bull; Reputation penalty</li>

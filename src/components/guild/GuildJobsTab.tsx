@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Job, GuildJobApplication } from "@/types";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface GuildJobsTabProps {
   jobs: Job[];
@@ -30,13 +31,13 @@ const getJobTypeBadge = (type: string) => {
   const normalizedType = type.toLowerCase();
   switch (normalizedType) {
     case "full-time":
-      return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400";
+      return STATUS_COLORS.positive.badge;
     case "part-time":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400";
+      return STATUS_COLORS.info.badge;
     case "contract":
-      return "bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400";
+      return STATUS_COLORS.info.badge;
     case "freelance":
-      return "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400";
+      return STATUS_COLORS.warning.badge;
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -52,15 +53,15 @@ const formatJobType = (type: string) => {
 
 // Get match score color based on value
 const getMatchScoreColor = (score: number) => {
-  if (score >= 80) return "from-emerald-400 to-emerald-500";
-  if (score >= 60) return "from-amber-400 to-orange-500";
-  return "from-red-400 to-red-500";
+  if (score >= 80) return "from-positive to-positive/80";
+  if (score >= 60) return "from-warning to-primary";
+  return "from-negative to-negative/80";
 };
 
 const getMatchScoreGlow = (score: number) => {
-  if (score >= 80) return "shadow-emerald-500/30";
-  if (score >= 60) return "shadow-amber-500/30";
-  return "shadow-red-500/30";
+  if (score >= 80) return "shadow-positive/30";
+  if (score >= 60) return "shadow-warning/30";
+  return "shadow-negative/30";
 };
 
 export function GuildJobsTab({

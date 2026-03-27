@@ -5,6 +5,7 @@ import type {
   GuildApplicationTemplate,
   GuildDomainLevel,
 } from "@/types";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface GuildSpecificsStepProps {
   template: GuildApplicationTemplate;
@@ -120,7 +121,7 @@ export default function GuildSpecificsStep({
                         {topic.title}
                       </span>
                       {answerValue.trim() && (
-                        <span className="ml-2 text-xs text-green-600">
+                        <span className={`ml-2 text-xs ${STATUS_COLORS.positive.text}`}>
                           Answered
                         </span>
                       )}
@@ -148,7 +149,7 @@ export default function GuildSpecificsStep({
                       rows={8}
                     />
                     <div className="flex justify-end">
-                      <span className={`text-xs ${answerValue.trim().length < 50 ? "text-muted-foreground" : "text-green-600"}`}>
+                      <span className={`text-xs ${answerValue.trim().length < 50 ? "text-muted-foreground" : STATUS_COLORS.positive.text}`}>
                         {answerValue.trim().length}/50 min characters
                       </span>
                     </div>

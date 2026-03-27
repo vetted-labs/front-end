@@ -2,6 +2,7 @@
 
 import { Star, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { STATUS_COLORS } from "@/config/colors";
 import type { CandidateMember } from "@/types";
 
 interface GuildCandidatesListTabProps {
@@ -22,7 +23,7 @@ export function GuildCandidatesListTab({ candidates }: GuildCandidatesListTabPro
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground text-lg mb-1">{candidate.fullName}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{candidate.headline}</p>
-                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full capitalize">
+                <span className={`inline-block px-3 py-1 ${STATUS_COLORS.info.badge} text-xs font-medium rounded-full capitalize`}>
                   {candidate.experienceLevel}
                 </span>
               </div>

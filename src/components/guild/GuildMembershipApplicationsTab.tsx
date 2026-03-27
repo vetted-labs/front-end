@@ -10,6 +10,7 @@ import { guildApplicationsApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import type { GuildApplication, ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
+import { STATUS_COLORS } from "@/config/colors";
 
 const ITEMS_PER_SECTION = 10;
 
@@ -271,7 +272,7 @@ export function GuildMembershipApplicationsTab({
 
                       {application.expertHasReviewed ? (
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+                          <div className={`flex items-center px-3 py-1.5 ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text} rounded-lg ${STATUS_COLORS.positive.border}`}>
                             <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                             <span className="text-sm font-medium">Reviewed</span>
                           </div>
@@ -373,7 +374,7 @@ export function GuildMembershipApplicationsTab({
                           {new Date(application.submittedAt).toLocaleDateString()}
                         </span>
                         {application.jobTitle && (
-                          <span className="flex items-center text-amber-300/80">
+                          <span className={`flex items-center ${STATUS_COLORS.warning.text}`}>
                             <Briefcase className="w-3.5 h-3.5 mr-1" />
                             {application.jobTitle}
                           </span>
@@ -390,7 +391,7 @@ export function GuildMembershipApplicationsTab({
 
                       {application.expertHasReviewed ? (
                         <div className="flex items-center gap-2">
-                          <div className="flex items-center px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20">
+                          <div className={`flex items-center px-3 py-1.5 ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.text} rounded-lg ${STATUS_COLORS.positive.border}`}>
                             <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                             <span className="text-sm font-medium">Reviewed</span>
                           </div>

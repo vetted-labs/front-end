@@ -19,6 +19,7 @@ import { formatTimeAgo } from "@/lib/utils";
 import { guildAppealApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { APPEAL_STATUS_CONFIG } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildApplicationAppeal } from "@/types";
 
 interface AppealReviewPanelProps {
@@ -79,12 +80,12 @@ export function AppealReviewPanel({
   };
 
   return (
-    <Card className="border-amber-500/20">
+    <Card className={STATUS_COLORS.warning.border}>
       <CardContent className="p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Gavel className="w-5 h-5 text-amber-500" />
+            <Gavel className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
             <h4 className="text-sm font-semibold">Appeal Review</h4>
           </div>
           <div className="flex items-center gap-1.5">
@@ -140,11 +141,11 @@ export function AppealReviewPanel({
           </div>
           <div className="flex items-center gap-3 text-xs tabular-nums">
             <span>
-              <span className="font-medium text-red-500">{appeal.votesUphold}</span>{" "}
+              <span className={`font-medium ${STATUS_COLORS.negative.text}`}>{appeal.votesUphold}</span>{" "}
               <span className="text-muted-foreground/60">uphold</span>
             </span>
             <span>
-              <span className="font-medium text-emerald-500">{appeal.votesOverturn}</span>{" "}
+              <span className={`font-medium ${STATUS_COLORS.positive.text}`}>{appeal.votesOverturn}</span>{" "}
               <span className="text-muted-foreground/60">overturn</span>
             </span>
             <span className="text-muted-foreground/40">
@@ -173,8 +174,8 @@ export function AppealReviewPanel({
                         variant="outline"
                         className={`text-[10px] ${
                           vote.decision === "overturn"
-                            ? "border-emerald-500/30 text-emerald-500"
-                            : "border-red-500/30 text-red-500"
+                            ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
+                            : `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.text}`
                         }`}
                       >
                         {vote.decision}
@@ -193,15 +194,15 @@ export function AppealReviewPanel({
           <div
             className={`rounded-lg border p-3 mb-4 ${
               appeal.outcome.decision === "overturned"
-                ? "bg-emerald-500/5 border-emerald-500/20"
-                : "bg-red-500/5 border-red-500/20"
+                ? `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border}`
+                : `${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
               {appeal.outcome.decision === "overturned" ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <CheckCircle2 className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
               ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
+                <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
               )}
               <span className="text-sm font-semibold">
                 {appeal.outcome.decision === "overturned"
@@ -231,11 +232,11 @@ export function AppealReviewPanel({
                 onClick={() => setDecision("uphold")}
                 className={`rounded-lg border p-3 text-left transition-all ${
                   decision === "uphold"
-                    ? "border-red-500/40 bg-red-500/5 ring-1 ring-red-500/20"
-                    : "border-border hover:border-red-500/20"
+                    ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} ring-1 ring-negative/20`
+                    : "border-border hover:border-negative/20"
                 }`}
               >
-                <XCircle className={`w-4 h-4 mb-1 ${decision === "uphold" ? "text-red-500" : "text-muted-foreground"}`} />
+                <XCircle className={`w-4 h-4 mb-1 ${decision === "uphold" ? STATUS_COLORS.negative.icon : "text-muted-foreground"}`} />
                 <p className="text-xs font-semibold">Uphold Rejection</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   Original decision was correct
@@ -246,11 +247,11 @@ export function AppealReviewPanel({
                 onClick={() => setDecision("overturn")}
                 className={`rounded-lg border p-3 text-left transition-all ${
                   decision === "overturn"
-                    ? "border-emerald-500/40 bg-emerald-500/5 ring-1 ring-emerald-500/20"
-                    : "border-border hover:border-emerald-500/20"
+                    ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} ring-1 ring-positive/20`
+                    : "border-border hover:border-positive/20"
                 }`}
               >
-                <CheckCircle2 className={`w-4 h-4 mb-1 ${decision === "overturn" ? "text-emerald-500" : "text-muted-foreground"}`} />
+                <CheckCircle2 className={`w-4 h-4 mb-1 ${decision === "overturn" ? STATUS_COLORS.positive.icon : "text-muted-foreground"}`} />
                 <p className="text-xs font-semibold">Overturn — Admit Candidate</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   Candidate was incorrectly rejected

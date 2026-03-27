@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Upload, FileText, X, CheckCircle, AlertTriangle } from "lucide-react";
 import type { GuildApplicationTemplate, SocialLink } from "@/types";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface ProfileResume {
   resumeUrl?: string;
@@ -86,8 +87,8 @@ export default function ResumeAndGeneralStep({
                   key={platform}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border ${
                     hasLink
-                      ? "border-green-500/20 bg-green-500/5"
-                      : "border-amber-500/20 bg-amber-500/5"
+                      ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`
+                      : `${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle}`
                   }`}
                 >
                   <Icon className="w-4 h-4 text-muted-foreground" />
@@ -96,12 +97,12 @@ export default function ResumeAndGeneralStep({
                   </span>
                   <StatusIcon
                     className={`w-4 h-4 ${
-                      hasLink ? "text-green-500" : "text-amber-500"
+                      hasLink ? STATUS_COLORS.positive.icon : STATUS_COLORS.warning.icon
                     }`}
                   />
                   <span
                     className={`text-xs font-medium ${
-                      hasLink ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                      hasLink ? STATUS_COLORS.positive.text : STATUS_COLORS.warning.text
                     }`}
                   >
                     {hasLink ? "Added" : "Missing"}
@@ -112,7 +113,7 @@ export default function ResumeAndGeneralStep({
           </div>
           {candidateSocialLinks.filter((l) => l.url?.trim()).length <
             requiredSocialLinks.length && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-3">
+            <p className={`text-sm ${STATUS_COLORS.warning.text} mt-3`}>
               Please update your profile to add the missing social links before submitting.
             </p>
           )}

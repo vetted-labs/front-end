@@ -19,11 +19,13 @@ import {
   Trophy,
   User,
 } from "lucide-react";
+import { getRoleBadgeColor } from "@/lib/guildHelpers";
 import { toast } from "sonner";
 import { Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import type {
   GuildPersonalStats,
   GuildMyStatsAverages,
@@ -31,35 +33,20 @@ import type {
   GuildMyStatsData,
 } from "@/types";
 
-function getRoleBadgeColor(role: string) {
-  switch (role) {
-    case "master":
-      return "bg-gradient-to-r from-amber-400 to-orange-500 text-white";
-    case "craftsman":
-      return "bg-gradient-to-r from-primary to-accent text-gray-900 dark:text-gray-900";
-    case "recruit":
-      return "bg-gradient-to-r from-blue-400 to-cyan-500 text-white";
-    case "candidate":
-      return "bg-gradient-to-r from-green-400 to-emerald-500 text-white";
-    default:
-      return "bg-muted text-foreground";
-  }
-}
-
 function getComparisonColor(myValue: number, avgValue: number) {
-  if (myValue > avgValue) return "text-green-600";
-  if (myValue < avgValue) return "text-red-600";
+  if (myValue > avgValue) return STATUS_COLORS.positive.text;
+  if (myValue < avgValue) return STATUS_COLORS.negative.text;
   return "text-muted-foreground";
 }
 
 function getActivityOutcomeIcon(outcome?: string) {
   switch (outcome) {
     case "positive":
-      return <CheckCircle className="w-4 h-4 text-green-600" />;
+      return <CheckCircle className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />;
     case "negative":
-      return <ThumbsDown className="w-4 h-4 text-red-600" />;
+      return <ThumbsDown className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />;
     default:
-      return <Clock className="w-4 h-4 text-blue-600" />;
+      return <Clock className={`w-4 h-4 ${STATUS_COLORS.info.icon}`} />;
   }
 }
 
@@ -170,7 +157,7 @@ export default function GuildMyStatsPage() {
                     {stats.role.toUpperCase()}
                   </span>
                   <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-500 fill-current" />
+                    <Star className={`w-5 h-5 ${STATUS_COLORS.warning.icon} fill-current`} />
                     <span className="text-2xl font-bold text-foreground">
                       {stats.guildReputation || stats.reputation}
                     </span>
@@ -209,7 +196,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-blue-600" />
+                          <FileText className={`w-5 h-5 ${STAT_ICON.text}`} />
                           <span className="text-sm text-muted-foreground">
                             Reviews Given
                           </span>
@@ -238,7 +225,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                           <span className="text-sm text-muted-foreground">
                             Approval Rate
                           </span>
@@ -268,7 +255,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Zap className="w-5 h-5 text-amber-500" />
+                          <Zap className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
                           <span className="text-sm text-muted-foreground">
                             Response Time
                           </span>
@@ -321,7 +308,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Users className="w-5 h-5 text-blue-600" />
+                          <Users className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
                           <span className="text-sm text-muted-foreground">
                             Interviews
                           </span>
@@ -335,7 +322,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <CheckCircle className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
                           <span className="text-sm text-muted-foreground">
                             Offers Received
                           </span>
@@ -349,7 +336,7 @@ export default function GuildMyStatsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-amber-500" />
+                          <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
                           <span className="text-sm text-muted-foreground">
                             Reviews Received
                           </span>
@@ -367,35 +354,35 @@ export default function GuildMyStatsPage() {
             {/* Endorsements */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
               <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-500" />
+                <Award className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
                 Endorsements
               </h2>
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className={`p-4 ${STATUS_COLORS.positive.bgSubtle} rounded-lg ${STATUS_COLORS.positive.border}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <ThumbsUp className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-green-700 dark:text-green-300">
+                    <ThumbsUp className={`w-5 h-5 ${STATUS_COLORS.positive.icon}`} />
+                    <span className={`text-sm ${STATUS_COLORS.positive.text}`}>
                       Received
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">
+                  <p className={`text-3xl font-bold ${STATUS_COLORS.positive.text}`}>
                     {stats.endorsementsReceived || 0}
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  <p className={`text-xs ${STATUS_COLORS.positive.text} mt-1`}>
                     From guild members
                   </p>
                 </div>
-                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className={`p-4 ${STATUS_COLORS.info.bgSubtle} rounded-lg ${STATUS_COLORS.info.border}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <ThumbsUp className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm text-blue-700 dark:text-blue-300">
+                    <ThumbsUp className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
+                    <span className={`text-sm ${STATUS_COLORS.info.text}`}>
                       Given
                     </span>
                   </div>
-                  <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                  <p className={`text-3xl font-bold ${STATUS_COLORS.info.text}`}>
                     {stats.endorsementsGiven || 0}
                   </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  <p className={`text-xs ${STATUS_COLORS.info.text} mt-1`}>
                     To other members
                   </p>
                 </div>
@@ -492,7 +479,7 @@ export default function GuildMyStatsPage() {
             {/* Contribution Score */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-amber-500" />
+                <Trophy className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
                 Contribution Score
               </h3>
               <div className="text-center">
@@ -526,10 +513,10 @@ export default function GuildMyStatsPage() {
                   <div
                     className={`h-2 rounded-full transition-all ${
                       (stats.activityScore || 0) > 70
-                        ? "bg-green-500"
+                        ? STATUS_COLORS.positive.bg
                         : (stats.activityScore || 0) > 40
-                        ? "bg-amber-500"
-                        : "bg-red-500"
+                        ? STATUS_COLORS.warning.bg
+                        : STATUS_COLORS.negative.bg
                     }`}
                     style={{ width: `${stats.activityScore || 0}%` }}
                   />

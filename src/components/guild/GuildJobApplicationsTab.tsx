@@ -2,6 +2,7 @@
 
 import { Briefcase, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildJobApplication } from "@/types";
 
 interface GuildJobApplicationsTabProps {
@@ -56,7 +57,7 @@ export function GuildJobApplicationsTab({
                     Applied: {new Date(application.appliedAt).toLocaleDateString()}
                   </span>
                   {!application.reviewedByRecruiter && (
-                    <span className="px-2 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 rounded-md border border-yellow-500/20">
+                    <span className={`px-2 py-1 ${STATUS_COLORS.warning.badge} rounded-md`}>
                       Awaiting Recruiter Review
                     </span>
                   )}

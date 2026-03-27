@@ -10,6 +10,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import type { GuildApplicationAppeal } from "@/types";
 
 interface AppealStatusBannerProps {
@@ -25,10 +26,10 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
     <Card
       className={`border-l-4 ${
         isOverturned
-          ? "border-l-emerald-500 bg-emerald-500/5"
+          ? `border-l-positive ${STATUS_COLORS.positive.bgSubtle}`
           : isUpheld
-          ? "border-l-red-500 bg-red-500/5"
-          : "border-l-amber-500 bg-amber-500/5"
+          ? `border-l-negative ${STATUS_COLORS.negative.bgSubtle}`
+          : `border-l-warning ${STATUS_COLORS.warning.bgSubtle}`
       }`}
     >
       <CardContent className="p-4">
@@ -36,10 +37,10 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
           <Gavel
             className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
               isOverturned
-                ? "text-emerald-500"
+                ? STATUS_COLORS.positive.icon
                 : isUpheld
-                ? "text-red-500"
-                : "text-amber-500"
+                ? STATUS_COLORS.negative.icon
+                : STATUS_COLORS.warning.icon
             }`}
           />
           <div className="flex-1 min-w-0">
@@ -49,10 +50,10 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
                 variant="outline"
                 className={`text-[10px] ${
                   isOverturned
-                    ? "border-emerald-500/30 text-emerald-500"
+                    ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
                     : isUpheld
-                    ? "border-red-500/30 text-red-500"
-                    : "border-amber-500/30 text-amber-500"
+                    ? `${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.text}`
+                    : `${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text}`
                 }`}
               >
                 {appeal.status === "pending" && "Pending Review"}
@@ -86,8 +87,8 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <span className="text-red-500 tabular-nums">{appeal.votesUphold} uphold</span>
-                  <span className="text-emerald-500 tabular-nums">{appeal.votesOverturn} overturn</span>
+                  <span className={`${STATUS_COLORS.negative.text} tabular-nums`}>{appeal.votesUphold} uphold</span>
+                  <span className={`${STATUS_COLORS.positive.text} tabular-nums`}>{appeal.votesOverturn} overturn</span>
                 </div>
               </div>
             )}
@@ -96,9 +97,9 @@ export function AppealStatusBanner({ appeal }: AppealStatusBannerProps) {
             {appeal.outcome && (
               <div className="flex items-center gap-2 mt-2">
                 {isOverturned ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${STATUS_COLORS.positive.icon}`} />
                 ) : (
-                  <XCircle className="w-3.5 h-3.5 text-red-500" />
+                  <XCircle className={`w-3.5 h-3.5 ${STATUS_COLORS.negative.icon}`} />
                 )}
                 <span className="text-xs font-medium">
                   {isOverturned

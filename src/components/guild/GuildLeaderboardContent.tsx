@@ -9,6 +9,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
+import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import type { GuildLeaderboardEntry } from "@/types";
 
 interface GuildLeaderboardContentProps {
@@ -22,7 +23,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-foreground">Guild Leaderboard</h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Trophy className="w-4 h-4 text-amber-500" />
+          <Trophy className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
           <span>Top {leaderboard.length} Experts</span>
         </div>
       </div>
@@ -40,22 +41,22 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
               className={`w-full bg-card border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all text-left ${
                 entry.role !== 'candidate' && entry.walletAddress ? 'cursor-pointer' : 'cursor-default'
               } ${
-                index < 3 ? "border-2 border-amber-500/30 bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/20" : "border-border"
+                index < 3 ? `border-2 ${STATUS_COLORS.warning.border} bg-gradient-to-r from-warning/5 to-transparent` : "border-border"
               }`}
             >
               <div className="flex items-center gap-4">
                 {/* Rank Badge */}
                 <div className="flex-shrink-0">
                   {index === 0 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-master to-rank-officer flex items-center justify-center shadow-lg">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : index === 1 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-recruit to-neutral flex items-center justify-center shadow-lg">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : index === 2 ? (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-700 to-amber-800 flex items-center justify-center shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rank-craftsman to-rank-officer flex items-center justify-center shadow-lg">
                       <Trophy className="w-7 h-7 text-white" />
                     </div>
                   ) : (
@@ -79,9 +80,9 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                     {entry.trend && (
                       <div className="flex items-center gap-1">
                         {entry.trend === "up" ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
+                          <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
                         ) : entry.trend === "down" ? (
-                          <TrendingUp className="w-4 h-4 text-red-600 rotate-180" />
+                          <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.negative.icon} rotate-180`} />
                         ) : null}
                         {entry.previousRank && (
                           <span className="text-xs text-muted-foreground">
@@ -99,7 +100,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-amber-500 fill-current" />
+                      <Star className={`w-4 h-4 ${STATUS_COLORS.warning.icon} fill-current`} />
                       <div>
                         <p className="text-sm font-bold text-foreground">{entry.reputation}</p>
                         <p className="text-xs text-muted-foreground">Reputation</p>
@@ -114,7 +115,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                     </div>
                     {entry.totalReviews !== undefined && (
                       <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-600" />
+                        <FileText className={`w-4 h-4 ${STAT_ICON.text}`} />
                         <div>
                           <p className="text-sm font-bold text-foreground">{entry.totalReviews}</p>
                           <p className="text-xs text-muted-foreground">Reviews</p>
@@ -123,7 +124,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                     )}
                     {entry.successRate !== undefined && (
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <CheckCircle className={`w-4 h-4 ${STATUS_COLORS.positive.icon}`} />
                         <div>
                           <p className="text-sm font-bold text-foreground">{entry.successRate}%</p>
                           <p className="text-xs text-muted-foreground">Success Rate</p>
@@ -138,10 +139,10 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                       <span
                         className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
                           entry.reputationChange.startsWith("+")
-                            ? "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                            ? STATUS_COLORS.positive.badge
                             : entry.reputationChange.startsWith("-")
-                            ? "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                            ? STATUS_COLORS.negative.badge
+                            : STATUS_COLORS.neutral.badge
                         }`}
                       >
                         {entry.reputationChange} this month

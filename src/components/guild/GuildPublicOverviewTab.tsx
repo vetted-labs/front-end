@@ -15,6 +15,7 @@ import { Button } from "@/components/ui";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
 import { formatSalaryRange } from "@/lib/utils";
 import { GuildActivityFeed } from "@/components/guild/GuildActivityTab";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertMember, Job, GuildActivity } from "@/types";
 
 interface GuildPublicOverviewTabProps {
@@ -47,7 +48,7 @@ export function GuildPublicOverviewTab({
         {/* Top Experts */}
         <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_50px_rgba(0,0,0,0.35)]">
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-500" />
+            <Award className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
             Top Experts
           </h2>
           <div className="grid md:grid-cols-2 gap-4">

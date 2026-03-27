@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ArrowLeft, LayoutDashboard, Search } from "lucide-react";
 import { Button } from "@/components/ui";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface ApplicationSuccessProps {
   guildName: string;
@@ -18,8 +19,8 @@ export default function ApplicationSuccess({
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-12 h-12 text-green-500" />
+        <div className={`w-20 h-20 ${STATUS_COLORS.positive.bgSubtle} rounded-full flex items-center justify-center mx-auto mb-6`}>
+          <CheckCircle2 className={`w-12 h-12 ${STATUS_COLORS.positive.icon}`} />
         </div>
         <h2 className="text-3xl font-bold text-foreground mb-4">
           Application Submitted!

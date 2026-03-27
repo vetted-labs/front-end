@@ -4,6 +4,7 @@ import { useState } from "react";
 import { guildFeedApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
+import { STATUS_COLORS } from "@/config/colors";
 import type { PostPoll } from "@/types";
 
 interface PollDisplayProps {
@@ -88,7 +89,7 @@ export function PollDisplay({
           Poll &middot; {poll.choiceMode === "single" ? "Single choice" : "Multiple choice"}
         </span>
         {poll.expiresAt && (
-          <span className={`text-xs font-medium ${expired ? "text-red-500" : "text-muted-foreground"}`}>
+          <span className={`text-xs font-medium ${expired ? STATUS_COLORS.negative.text : "text-muted-foreground"}`}>
             {formatExpiry(poll.expiresAt)}
           </span>
         )}
