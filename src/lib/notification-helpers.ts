@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Notification } from "@/types";
 import { logger } from "@/lib/logger";
+import { getNotificationPriority, NOTIFICATION_COLORS } from "@/config/colors";
 
 export type { Notification };
 
@@ -35,22 +36,8 @@ export function isDeadlineNotification(type: string): boolean {
 }
 
 export function getNotificationColor(type: string): string {
-  switch (type) {
-    case "proposal_deadline":
-    case "application_deadline":
-      return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
-    case "proposal_new":
-    case "application_new":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400";
-    case "application_status":
-      return "bg-purple-500/10 text-purple-600 dark:text-purple-400";
-    case "guild_application":
-      return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400";
-    case "reward_earned":
-      return "bg-green-500/10 text-green-600 dark:text-green-400";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
+  const priority = getNotificationPriority(type);
+  return NOTIFICATION_COLORS[priority].icon;
 }
 
 export function getApplicantTypeTag(applicantType?: "expert" | "candidate"): { label: string; className: string } | null {
@@ -91,23 +78,12 @@ const COMPANY_ICON_MAP: Record<string, LucideIcon> = {
   weekly_summary: BarChart3,
 };
 
-const COMPANY_COLOR_MAP: Record<string, string> = {
-  application_received: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  application_status_change: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-  guild_report_ready: "bg-green-500/10 text-green-600 dark:text-green-400",
-  new_message: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-  meeting_scheduled: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  job_expired: "bg-red-500/10 text-red-600 dark:text-red-400",
-  job_low_applications: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  weekly_summary: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
-};
-
 export function getCompanyNotificationIcon(type: string): LucideIcon {
   return COMPANY_ICON_MAP[type] ?? Bell;
 }
 
 export function getCompanyNotificationColor(type: string): string {
-  return COMPANY_COLOR_MAP[type] ?? "bg-muted text-muted-foreground";
+  return getNotificationColor(type);
 }
 
 // --- Candidate notification helpers ---
@@ -121,21 +97,12 @@ const CANDIDATE_ICON_MAP: Record<string, LucideIcon> = {
   job_recommendation: Briefcase,
 };
 
-const CANDIDATE_COLOR_MAP: Record<string, string> = {
-  application_status_change: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-  application_accepted: "bg-green-500/10 text-green-600 dark:text-green-400",
-  application_rejected: "bg-red-500/10 text-red-600 dark:text-red-400",
-  interview_scheduled: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  new_message: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-  job_recommendation: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-};
-
 export function getCandidateNotificationIcon(type: string): LucideIcon {
   return CANDIDATE_ICON_MAP[type] ?? Bell;
 }
 
 export function getCandidateNotificationColor(type: string): string {
-  return CANDIDATE_COLOR_MAP[type] ?? "bg-muted text-muted-foreground";
+  return getNotificationColor(type);
 }
 
 // --- Generic URL builder (works for any notification variant) ---
