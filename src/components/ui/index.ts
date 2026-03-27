@@ -15,3 +15,6 @@ export { PageShell } from "./page-shell";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export { PillTabs } from "./pill-tabs";
 export { Pagination } from "./pagination";
+export { StatusBadge } from "./status-badge";
+export { PageHeader } from "./page-header";
+export { Divider } from "./divider";
