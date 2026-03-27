@@ -1,9 +1,9 @@
-import { ExpertApplicationForm } from "@/components/ExpertApplicationForm";
+import ExpertApplicationFlow from "@/components/expert/ExpertApplicationFlow";
 
 export default function ExpertApplyPage() {
   return (
-    <div className="min-h-screen min-h-full">
-      <ExpertApplicationForm />
-    </div>
+    <main>
+      <ExpertApplicationFlow />
+    </main>
   );
 }

@@ -149,8 +149,8 @@ export function ReviewGuildApplicationModal({
     loadTemplates();
   }, [application?.id, guildId, isOpen, level]);
 
-  const generalQuestions: GeneralReviewQuestion[] = generalTemplate?.questions?.length
-    ? generalTemplate.questions
+  const generalQuestions: GeneralReviewQuestion[] = generalTemplate?.generalQuestions?.length
+    ? generalTemplate.generalQuestions
     : FALLBACK_GENERAL_QUESTIONS;
   const generalRubric = generalTemplate?.rubric;
   const generalRubricQuestions: Record<string, RubricQuestionEntry> = generalRubric?.questions || {};
@@ -412,7 +412,7 @@ export function ReviewGuildApplicationModal({
             )}
 
             {currentStep === 1 && (
-              <ReviewProfileStep application={application} level={level} anonymized />
+              <ReviewProfileStep application={application} level={level} />
             )}
             {currentStep === 2 && (
               <GeneralReviewStep
