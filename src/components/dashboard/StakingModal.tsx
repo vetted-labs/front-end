@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { formatEther } from "viem";
 import { sepolia } from "wagmi/chains";
-import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Lock, Shield } from "lucide-react";
-import Image from "next/image";
+import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Shield, ArrowRight } from "lucide-react";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
+import { STATUS_COLORS } from "@/config/colors";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
 import { retryWithBackoff } from "@/lib/utils";
@@ -23,14 +23,15 @@ interface StakingModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   preselectedGuildId?: string;
+  defaultMode?: ActionMode;
 }
 
 type ActionMode = "stake" | "withdraw";
 
-export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }: StakingModalProps) {
+export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, defaultMode }: StakingModalProps) {
   const { address, chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const [actionMode, setActionMode] = useState<ActionMode>("stake");
+  const [actionMode, setActionMode] = useState<ActionMode>(defaultMode || "stake");
   const [stakeAmount, setStakeAmount] = useState("");
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [step, setStep] = useState<"input" | "transaction">("input");
@@ -95,7 +96,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
       setStakeAmount("");
       setStep("input");
       setTxHash(null);
-      setActionMode("stake");
+      setActionMode(defaultMode || "stake");
       setShowTxModal(false);
       setTxStatus("pending");
       setTxErrorMessage("");
@@ -284,141 +285,144 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
     : "VETD";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-in fade-in duration-200">
-      <div
-        className="relative max-w-[460px] w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card/80 backdrop-blur-2xl border border-white/[0.08] dark:bg-card/60"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ── Header ── */}
-        <div className="relative overflow-hidden px-6 pt-5 pb-6 flex-shrink-0">
-          {/* Decorative background glow */}
-          <div className="absolute -top-20 -left-20 w-60 h-60 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-orange-600/10 rounded-full blur-[60px] pointer-events-none" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg animate-modal-backdrop-in">
+      {/* Gradient border glow wrapper — matches endorsement modal */}
+      <div className="max-w-[480px] w-full mx-4 rounded-3xl bg-gradient-to-b from-white/[0.12] via-white/[0.04] to-transparent p-px animate-modal-scale-in">
+        <div
+          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-3xl shadow-2xl bg-card/70 backdrop-blur-3xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ── Header ── */}
+          <div className="relative flex-shrink-0">
+            {/* Decorative glow layer */}
+            <div className="absolute inset-0 overflow-hidden rounded-t-3xl pointer-events-none">
+              <div className="absolute -top-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-[100px]" />
+              <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/5 rounded-full blur-[100px]" />
+            </div>
 
-          {/* Top row: logo + title left, close button right */}
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute -inset-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full opacity-20 blur-lg" />
-                <div className="relative w-10 h-10 bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  <Image
-                    src="/Vetted-orange.png"
-                    alt="Vetted"
-                    width={24}
-                    height={24}
-                    className="w-6 h-6 object-contain"
-                  />
-                </div>
-              </div>
+            {/* Content */}
+            <div className="relative px-6 pt-8 pb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-foreground leading-tight">Manage Staking</h2>
-                <p className="text-xs text-muted-foreground">Stake VETD per guild to unlock reviewing</p>
+                <p className="text-xs text-muted-foreground mt-1">Stake VETD per guild to unlock reviewing</p>
               </div>
-            </div>
-            <button
-              onClick={handleClose}
-              disabled={step === "transaction"}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Content ── */}
-        <div className="px-6 pt-6 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
-          {/* Wrong Network Warning */}
-          {!isOnSepolia && (
-            <div className="p-3.5 bg-yellow-500/[0.08] border border-yellow-500/20 rounded-2xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-4.5 h-4.5 text-yellow-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-yellow-200">Wrong Network</p>
-                <p className="text-xs text-yellow-300/60 mt-0.5">Switch to Sepolia Testnet to continue.</p>
-              </div>
-              <Button
-                onClick={() => switchChain({ chainId: sepolia.id })}
-                size="sm"
-                className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs rounded-lg shadow-sm flex-shrink-0"
+              <button
+                onClick={handleClose}
+                disabled={step === "transaction"}
+                aria-label="Close staking modal"
+                className="group w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/[0.06] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
-                Switch
-              </Button>
+                <X className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </button>
             </div>
-          )}
 
-          {/* Contract Paused Warning */}
-          {isPaused && isOnSepolia && (
-            <div className="p-3.5 bg-red-500/[0.08] border border-red-500/20 rounded-2xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-red-200">Staking Paused</p>
-                <p className="text-xs text-red-300/60 mt-0.5">Contract is paused. Try again later.</p>
-              </div>
-            </div>
-          )}
+            {/* Gradient divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+          </div>
 
-          {(
-            <>
-              {/* ── Action Mode Toggle ── */}
-              <div className="flex p-1 bg-white/[0.04] dark:bg-white/[0.03] rounded-2xl border border-white/[0.06]">
-                <button
-                  onClick={() => setActionMode("stake")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    actionMode === "stake"
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/30"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+          {/* ── Content ── */}
+          <div className="px-6 pt-5 pb-6 space-y-3.5 flex-1 overflow-y-auto min-h-0">
+            {/* Wrong Network Warning */}
+            {!isOnSepolia && (
+              <div className={`p-3.5 ${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} rounded-2xl flex items-center gap-3`}>
+                <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center flex-shrink-0`}>
+                  <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.warning.text}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold ${STATUS_COLORS.warning.text}`}>Wrong Network</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Switch to Sepolia Testnet to continue.</p>
+                </div>
+                <Button
+                  onClick={() => switchChain({ chainId: sepolia.id })}
+                  size="sm"
+                  className={`${STATUS_COLORS.warning.bg} hover:opacity-90 text-white text-xs rounded-lg shadow-sm flex-shrink-0`}
                 >
-                  <TrendingUp className="w-4 h-4" />
-                  Stake
-                </button>
-                <button
-                  onClick={() => setActionMode("withdraw")}
-                  disabled={!currentStake || currentStake === 0}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                    actionMode === "withdraw"
-                      ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-lg shadow-orange-500/30"
-                      : "text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
-                  }`}
-                >
-                  <TrendingDown className="w-4 h-4" />
-                  Withdraw
-                </button>
+                  Switch
+                </Button>
               </div>
+            )}
 
-              {/* ── Guild Selector ── */}
-              <div className="relative">
-                {isGuildLocked ? (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-4 h-4 text-orange-400" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">{selectedGuild?.name || "Loading..."}</span>
-                  </div>
-                ) : (
+            {/* Contract Paused Warning */}
+            {isPaused && isOnSepolia && (
+              <div className={`p-3.5 ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} rounded-2xl flex items-center gap-3`}>
+                <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center flex-shrink-0`}>
+                  <AlertTriangle className={`w-4.5 h-4.5 ${STATUS_COLORS.negative.text}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold ${STATUS_COLORS.negative.text}`}>Staking Paused</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Contract is paused. Try again later.</p>
+                </div>
+              </div>
+            )}
+
+            {(
+              <>
+                {/* ── Action Mode Toggle ── */}
+                <div className="flex p-1 bg-white/[0.04] rounded-2xl border border-white/[0.06]">
                   <button
-                    onClick={() => setShowGuildDropdown(!showGuildDropdown)}
-                    disabled={isLoadingGuilds || step !== "input"}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.06] transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setActionMode("stake")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      actionMode === "stake"
+                        ? "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
-                      <ChevronDown className={`w-4 h-4 text-orange-400 transition-transform duration-200 ${showGuildDropdown ? "rotate-180" : ""}`} />
-                    </div>
-                    <span className={`text-sm flex-1 ${selectedGuild ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                      {isLoadingGuilds
-                        ? "Loading guilds..."
-                        : selectedGuild
-                        ? selectedGuild.name
-                        : "Choose a guild..."}
-                    </span>
+                    <TrendingUp className="w-4 h-4" />
+                    Stake
                   </button>
-                )}
+                  <button
+                    onClick={() => setActionMode("withdraw")}
+                    disabled={!currentStake || currentStake === 0}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      actionMode === "withdraw"
+                        ? "bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-lg shadow-primary/25"
+                        : "text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    <TrendingDown className="w-4 h-4" />
+                    Withdraw
+                  </button>
+                </div>
 
+                {/* ── Guild Card (with left accent bar like endorsement candidate card) ── */}
+                <div className="relative rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 flex overflow-hidden">
+                  {/* Left accent bar */}
+                  <div className="w-0.5 bg-gradient-to-b from-primary to-accent rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
+                  {isGuildLocked ? (
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold truncate">{selectedGuild?.name || "Loading..."}</h4>
+                        <p className="text-xs text-muted-foreground">Guild</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowGuildDropdown(!showGuildDropdown)}
+                      disabled={isLoadingGuilds || step !== "input"}
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold truncate">
+                          {isLoadingGuilds ? "Loading..." : selectedGuild ? selectedGuild.name : "Select guild"}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedGuild ? "Guild" : "Choose a guild to stake for"}
+                        </p>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${showGuildDropdown ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Guild dropdown */}
                 {!isGuildLocked && showGuildDropdown && guilds && guilds.length > 0 && (
-                  <div className="absolute z-10 w-full mt-2 rounded-2xl shadow-2xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto">
+                  <div className="rounded-2xl shadow-2xl border border-white/[0.08] bg-card/95 backdrop-blur-2xl max-h-48 overflow-y-auto -mt-2">
                     {guilds.map((guild) => (
                       <button
                         key={guild.id}
@@ -428,7 +432,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                         }}
                         className={`w-full text-left px-4 py-3 transition-all text-sm first:rounded-t-2xl last:rounded-b-2xl ${
                           selectedGuild?.id === guild.id
-                            ? "bg-orange-500/15 text-orange-400 font-medium"
+                            ? "bg-primary/15 text-primary font-medium"
                             : "text-foreground hover:bg-white/[0.06]"
                         }`}
                       >
@@ -438,23 +442,38 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                   </div>
                 )}
                 {!isGuildLocked && (!guilds || guilds.length === 0) && !isLoadingGuilds && (
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                  <p className="text-xs text-muted-foreground text-center">
                     No guilds available. Join a guild first.
                   </p>
                 )}
-              </div>
 
-              {/* ── Amount Input Panel ── */}
-              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-4">
-                {/* Amount input */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
+                {/* ── Balance & Staked (inline like endorsement modal) ── */}
+                <div className="flex items-center justify-between text-xs px-1">
+                  <div className="flex items-center gap-1.5">
+                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">Balance:</span>
+                    <span className="font-semibold tabular-nums">
+                      {formatTokenAmount(currentBalance)} {balanceLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-primary/70">Staked:</span>
+                    <span className="font-semibold text-primary tabular-nums">
+                      {selectedGuild ? `${formatTokenAmount(currentStake)} ${stakeLabel}` : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ── Amount Input Card ── */}
+                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                  <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {actionMode === "stake" ? "You stake" : "You withdraw"}
+                      {actionMode === "stake" ? "Your stake" : "You withdraw"}
                     </span>
                     <button
                       onClick={handleMaxClick}
-                      className="text-xs font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                      className="text-[10px] font-bold text-primary/70 hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded transition-all tracking-wider uppercase"
                     >
                       MAX
                     </button>
@@ -462,92 +481,105 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId }:
                   <div className="flex items-center gap-3">
                     <input
                       type="number"
-                      placeholder="0.00"
+                      placeholder={actionMode === "stake" ? `Min: ${formatTokenAmount(minStake, 0)}` : "0.00"}
                       value={stakeAmount}
                       onChange={(e) => setStakeAmount(e.target.value)}
                       disabled={step === "transaction"}
                       className="flex-1 bg-transparent text-3xl font-bold text-foreground placeholder:text-muted-foreground/30 outline-none tabular-nums min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08] flex-shrink-0">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-white">V</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                        <span className="text-[11px] font-bold text-[hsl(var(--gradient-button-text))]">V</span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">VETD</span>
+                      <span className="text-sm font-semibold">VETD</span>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground/60 mt-2">
+                  <p className="text-xs text-muted-foreground/60">
                     {actionMode === "stake"
                       ? `Min. ${formatTokenAmount(minStake)} VETD`
                       : `Available: ${formatTokenAmount(currentStake)} VETD`}
                   </p>
                 </div>
 
-                {/* Divider */}
-                <div className="h-px bg-white/[0.06]" />
-
-                {/* Balance row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                      <Wallet className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Wallet</p>
-                      <p className="text-sm font-semibold text-foreground tabular-nums">
-                        {formatTokenAmount(currentBalance)} <span className="text-muted-foreground font-normal">{balanceLabel}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div>
-                      <p className="text-xs text-orange-400/70 text-right">
-                        Staked
-                      </p>
-                      <p className="text-sm font-semibold text-orange-400 tabular-nums text-right">
-                        {selectedGuild ? formatTokenAmount(currentStake) : "—"} <span className="text-orange-400/50 font-normal">{selectedGuild ? stakeLabel : ""}</span>
-                      </p>
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                      <Lock className="w-4 h-4 text-orange-400" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Action Button ── */}
-              <Button
-                onClick={actionMode === "stake" ? handleStake : handleWithdraw}
-                disabled={
-                  !isOnSepolia ||
-                  isPaused ||
-                  step === "transaction" ||
-                  !stakeAmount ||
-                  parseFloat(stakeAmount) <= 0 ||
-                  !selectedGuild
-                }
-                className="w-full h-[3.25rem] rounded-2xl font-bold text-[15px]"
-              >
+                {/* ── Quick Amount Buttons ── */}
                 {actionMode === "stake" ? (
-                  <>
-                    <TrendingUp className="mr-2 h-5 w-5" />
-                    {selectedGuild ? `Stake for ${selectedGuild.name}` : "Select a Guild"}
-                  </>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { label: "Min +10%", getValue: () => (minStake * 1.1).toFixed(2) },
+                      { label: "Min +50%", getValue: () => (minStake * 1.5).toFixed(2) },
+                      { label: "25% Bal", getValue: () => currentBalance ? (currentBalance * 0.25).toFixed(2) : "0" },
+                      { label: "50% Bal", getValue: () => currentBalance ? (currentBalance * 0.5).toFixed(2) : "0" },
+                    ].map((btn) => (
+                      <button
+                        key={btn.label}
+                        onClick={() => setStakeAmount(btn.getValue())}
+                        disabled={step === "transaction"}
+                        className="h-10 text-xs font-semibold rounded-lg border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
                 ) : (
-                  <>
-                    <TrendingDown className="mr-2 h-5 w-5" />
-                    {selectedGuild ? `Withdraw from ${selectedGuild.name}` : "Select a Guild"}
-                  </>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { label: "25%", factor: 0.25 },
+                      { label: "50%", factor: 0.5 },
+                      { label: "75%", factor: 0.75 },
+                      { label: "100%", factor: 1 },
+                    ].map((btn) => (
+                      <button
+                        key={btn.label}
+                        onClick={() => setStakeAmount(currentStake ? (currentStake * btn.factor).toFixed(2) : "0")}
+                        disabled={step === "transaction"}
+                        className="h-10 text-xs font-semibold rounded-lg border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </Button>
 
-              {/* ── Footer hint ── */}
-              <p className="text-center text-xs text-muted-foreground/50">
-                {actionMode === "stake"
-                  ? "Stake per guild to join reviewer pools and earn rewards."
-                  : "Withdraw your staked tokens back to your wallet."}
-              </p>
-            </>
-          )}
+                {/* ── Action Buttons (matching endorsement modal layout) ── */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleClose}
+                    disabled={step === "transaction"}
+                    className="flex-[0.4] h-[3.25rem] rounded-2xl border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] font-semibold"
+                  >
+                    Cancel
+                  </Button>
+                  <button
+                    onClick={actionMode === "stake" ? handleStake : handleWithdraw}
+                    disabled={
+                      !isOnSepolia ||
+                      isPaused ||
+                      step === "transaction" ||
+                      !stakeAmount ||
+                      parseFloat(stakeAmount) <= 0 ||
+                      !selectedGuild
+                    }
+                    className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-2xl font-bold text-[15px] bg-gradient-to-r from-primary to-accent text-[hsl(var(--gradient-button-text))] shadow-xl shadow-primary/25 hover:shadow-primary/35 hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                  >
+                    {actionMode === "stake" ? (
+                      <>
+                        <TrendingUp className="w-4 h-4" />
+                        {selectedGuild ? `Stake for ${selectedGuild.name}` : "Select Guild"}
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDown className="w-4 h-4" />
+                        {selectedGuild ? `Withdraw` : "Select Guild"}
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
