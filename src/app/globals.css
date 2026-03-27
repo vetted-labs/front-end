@@ -880,3 +880,15 @@ body {
         animation: none !important;
     }
 }
+
+/* ── Endorsement animations ── */
+
+@keyframes endo-ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes endo-card-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
