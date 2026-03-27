@@ -1,7 +1,6 @@
 "use client";
 
-import { CheckCircle, Clock, Briefcase, Eye, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Clock, Briefcase, Users } from "lucide-react";
 import type { CandidateGuildApplication } from "@/types";
 
 interface CandidateReviewCardProps {
@@ -77,45 +76,37 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
                 {application.jobTitle}
               </span>
             )}
+            <span className={`inline-flex items-center gap-1.5 font-medium ${
+              isReviewed ? "text-green-500" : "text-primary"
+            }`}>
+              <span className={`w-[5px] h-[5px] rounded-full ${
+                isReviewed ? "bg-green-500" : "bg-primary"
+              }`} />
+              {isReviewed ? "Reviewed" : "Pending"}
+            </span>
           </div>
         </div>
 
         {/* Action */}
-        <div className="shrink-0 flex flex-col items-end gap-2">
-          {/* Status badge */}
-          {isReviewed ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5" />
-              Reviewed
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-              <Clock className="w-3.5 h-3.5" />
-              Pending
-            </span>
-          )}
-
-          {/* Action buttons */}
+        <div className="shrink-0 flex items-center">
           {isReviewed ? (
             onViewReview && (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => onViewReview(application)}
-                className="text-xs border border-border/60 hover:border-border"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Eye className="w-3.5 h-3.5 mr-1" />
                 View
-              </Button>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             )
           ) : (
-            <Button
+            <button
               onClick={() => onReview(application)}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               Review
-            </Button>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import { CheckCircle, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Briefcase } from "lucide-react";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
@@ -174,6 +173,22 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 On-chain <ExternalLink className="w-3 h-3" />
               </a>
             )}
+            <span className={`inline-flex items-center gap-1.5 font-medium ${
+              vettingState === "finalized" || vettingState === "revealed"
+                ? "text-green-500"
+                : vettingState === "committed"
+                ? "text-blue-400"
+                : "text-primary"
+            }`}>
+              <span className={`w-[5px] h-[5px] rounded-full ${
+                vettingState === "finalized" || vettingState === "revealed"
+                  ? "bg-green-500"
+                  : vettingState === "committed"
+                  ? "bg-blue-400"
+                  : "bg-primary"
+              }`} />
+              {stateConfig.label}
+            </span>
           </div>
 
           {/* Commit-reveal phase + timer */}
@@ -191,42 +206,27 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
         </div>
 
         {/* Action */}
-        <div className="shrink-0 flex flex-col items-end gap-2">
-          {/* Vetting state badge */}
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg ${stateConfig.className}`}>
-            {vettingState === "finalized" ? (
-              <CheckCircle className="w-3.5 h-3.5" />
-            ) : vettingState === "revealed" ? (
-              <Eye className="w-3.5 h-3.5" />
-            ) : vettingState === "committed" ? (
-              <ShieldCheck className="w-3.5 h-3.5" />
-            ) : (
-              <Clock className="w-3.5 h-3.5" />
-            )}
-            {stateConfig.label}
-          </span>
-
-          {/* Action buttons */}
+        <div className="shrink-0 flex items-center">
           {isReviewed ? (
-            onViewReview && (
-              <Button
-                variant="outline"
-                size="sm"
+            onViewReview ? (
+              <button
                 onClick={() => onViewReview(application)}
-                className="text-xs border border-border/60 hover:border-border"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Eye className="w-3.5 h-3.5 mr-1" />
                 View
-              </Button>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <span className="text-xs text-muted-foreground">{stateConfig.label}</span>
             )
           ) : (
-            <Button
+            <button
               onClick={() => onReview(application)}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               Review
-            </Button>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>
