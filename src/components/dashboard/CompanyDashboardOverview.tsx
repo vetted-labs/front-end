@@ -255,7 +255,7 @@ export function CompanyDashboardOverview() {
         </div>
 
         {/* ═══ METRICS ═══ */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={Briefcase}
             label="Active Jobs"
@@ -298,7 +298,7 @@ export function CompanyDashboardOverview() {
               </Link>
             </div>
             <div className="p-5">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {PIPELINE_STAGES.map((stage) => {
                   const apps = pipeline[stage] ?? [];
                   const config = APPLICATION_STATUS_CONFIG[stage];

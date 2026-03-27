@@ -137,7 +137,7 @@ export function ReputationLeaderboard({
       </div>
 
       {/* Stats Overview */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">

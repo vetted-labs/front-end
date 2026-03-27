@@ -223,7 +223,7 @@ export default function CandidateApplications() {
         </div>
 
         {/* ── Stats Row ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Applied */}
           <div className="rounded-xl border border-border bg-card px-5 py-4 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground mb-1">Total Applied</p>

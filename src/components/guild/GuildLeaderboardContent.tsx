@@ -98,7 +98,7 @@ export function GuildLeaderboardContent({ leaderboard, onNavigate }: GuildLeader
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="flex items-center gap-2">
                       <Star className={`w-4 h-4 ${STATUS_COLORS.warning.icon} fill-current`} />
                       <div>

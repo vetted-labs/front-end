@@ -278,7 +278,7 @@ export function NotificationsPage<T extends BaseNotification>({
                 Mark all read
               </button>
             )}
-            <button className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all">
+            <button className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all" aria-label="Notification settings">
               <Settings className="w-[18px] h-[18px]" />
             </button>
           </div>

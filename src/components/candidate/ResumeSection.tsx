@@ -75,6 +75,7 @@ export default function ResumeSection({
                   onClick={onClearResume}
                   className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                   title="Remove"
+                  aria-label="Remove resume"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -126,6 +127,7 @@ export default function ResumeSection({
               <button
                 onClick={onRemoveFile}
                 className="p-1 text-muted-foreground hover:text-foreground rounded"
+                aria-label="Remove file"
               >
                 <X className="w-4 h-4" />
               </button>

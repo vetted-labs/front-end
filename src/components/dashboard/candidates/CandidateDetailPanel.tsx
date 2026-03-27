@@ -167,7 +167,7 @@ export function CandidateDetailPanel({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             {showBackButton && (
-              <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors lg:hidden">
+              <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors lg:hidden" aria-label="Back to candidate list">
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}

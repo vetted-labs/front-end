@@ -40,6 +40,7 @@ export function TransactionModal({
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/50 transition-all"
+              aria-label="Close"
             >
               <X className="w-5 h-5 text-muted-foreground" />
             </button>

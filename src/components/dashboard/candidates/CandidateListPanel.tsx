@@ -177,6 +177,7 @@ export function CandidateListPanel({
               onClick={expandedJobIds.size === groupedJobs.length ? onCollapseAll : onExpandAll}
               className="flex items-center justify-center w-6 h-6 text-muted-foreground/40 hover:text-foreground rounded transition-colors"
               title={expandedJobIds.size === groupedJobs.length ? "Collapse all" : "Expand all"}
+              aria-label={expandedJobIds.size === groupedJobs.length ? "Collapse all groups" : "Expand all groups"}
             >
               <ChevronsUpDown className="w-3 h-3" />
             </button>

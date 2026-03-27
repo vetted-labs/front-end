@@ -32,6 +32,7 @@ export function WalletVerificationModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
