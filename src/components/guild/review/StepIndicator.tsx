@@ -1,12 +1,10 @@
 "use client";
 
-import { CheckCircle, Target, Sparkles, Award } from "lucide-react";
-
 const STEPS = [
-  { number: 1, label: "Review Profile", icon: Target },
-  { number: 2, label: "General Questions", icon: Sparkles },
-  { number: 3, label: "Domain Review", icon: Award },
-  { number: 4, label: "Submitted", icon: CheckCircle },
+  { number: 1, label: "Profile" },
+  { number: 2, label: "General" },
+  { number: 3, label: "Domain" },
+  { number: 4, label: "Submit" },
 ] as const;
 
 export function StepIndicator({ currentStep }: { currentStep: number }) {
@@ -15,14 +13,13 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.number;
         const isCompleted = currentStep > step.number;
-        const StepIcon = step.icon;
 
         return (
           <div key={step.number} className="flex items-center">
             {idx > 0 && (
               <div
-                className={`w-12 h-[2px] mx-1 transition-all duration-500 ${
-                  currentStep > step.number
+                className={`flex-1 h-[2px] mx-2 ${
+                  STEPS[idx - 1] && currentStep > STEPS[idx - 1].number
                     ? "bg-primary"
                     : "bg-border"
                 }`}
@@ -30,26 +27,46 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
             )}
             <div className="flex items-center gap-2.5">
               <div
-                className={`relative w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-green-500/15 border-2 border-green-500/40"
                     : isActive
-                    ? "bg-primary/15 text-primary border-2 border-primary/60 shadow-sm"
-                    : "bg-muted/50 text-muted-foreground border border-border"
+                    ? "bg-primary/15 border-2 border-primary/50"
+                    : "bg-muted/50 border border-border"
                 }`}
               >
                 {isCompleted ? (
-                  <CheckCircle className="w-4 h-4" />
+                  <svg
+                    className="w-4 h-4 text-green-500"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 8l3.5 3.5L13 5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 ) : (
-                  <StepIcon className="w-4 h-4" />
-                )}
-                {isActive && (
-                  <div className="absolute inset-0 rounded-full border-2 border-amber-400/30 animate-pulse" />
+                  <span
+                    className={`text-xs font-bold ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {step.number}
+                  </span>
                 )}
               </div>
               <span
                 className={`text-xs font-semibold hidden sm:inline tracking-wide ${
-                  isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+                  isActive
+                    ? "text-primary"
+                    : isCompleted
+                    ? "text-foreground"
+                    : "text-muted-foreground"
                 }`}
               >
                 {step.label}
