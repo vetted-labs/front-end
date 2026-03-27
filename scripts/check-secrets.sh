@@ -7,18 +7,19 @@ if [ -z "$STAGED_FILES" ]; then
   exit 0
 fi
 
-# Patterns that suggest hardcoded secrets
+# Patterns that suggest hardcoded secrets (grep -Ei compatible)
 PATTERNS=(
   'AKIA[0-9A-Z]{16}'
-  '(?i)(api[_-]?key|apikey)\s*[:=]\s*["\x27][a-zA-Z0-9]{16,}'
-  '(?i)(secret|password|passwd|token)\s*[:=]\s*["\x27][^\s"'\'']{8,}'
+  '(api[_-]?key|apikey)[[:space:]]*[:=][[:space:]]*["][a-zA-Z0-9]{16,}'
+  '(secret|password|passwd|token)[[:space:]]*[:=][[:space:]]*["][^"]{8,}'
   '-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----'
-  '(?i)sk-[a-zA-Z0-9]{20,}'
+  'sk-[a-zA-Z0-9]{20,}'
   '0x[a-fA-F0-9]{64}'
 )
 
 FOUND=0
 for file in $STAGED_FILES; do
+  # Skip binary files, lock files, and this script itself
   if [[ "$file" == *.lock ]] || [[ "$file" == *.png ]] || [[ "$file" == *.jpg ]] || \
      [[ "$file" == *.woff* ]] || [[ "$file" == "scripts/check-secrets.sh" ]] || \
      [[ "$file" == "package-lock.json" ]]; then
@@ -26,7 +27,7 @@ for file in $STAGED_FILES; do
   fi
 
   for pattern in "${PATTERNS[@]}"; do
-    if git diff --cached -- "$file" | grep -Pq "$pattern" 2>/dev/null; then
+    if git diff --cached -- "$file" | grep -Eiq "$pattern" 2>/dev/null; then
       echo "⚠️  Potential secret found in: $file"
       echo "   Pattern: $pattern"
       FOUND=1
