@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getUrgencyColors } from "@/config/colors";
 
 interface CountdownBadgeProps {
   deadline: Date | string;
@@ -27,13 +28,6 @@ function getTimeRemaining(deadline: Date) {
   return { expired: false, days, hours, minutes, text: parts.join(" ") };
 }
 
-function getUrgencyColor(hours: number, expired: boolean) {
-  if (expired) return "bg-destructive/10 text-destructive border-destructive/20";
-  if (hours < 6) return "bg-red-500/10 text-red-600 border-red-500/20";
-  if (hours < 24) return "bg-amber-500/10 text-amber-600 border-amber-500/20";
-  return "bg-muted text-muted-foreground border-border";
-}
-
 export function CountdownBadge({ deadline, label, className }: CountdownBadgeProps) {
   const [remaining, setRemaining] = useState(() =>
     getTimeRemaining(new Date(deadline))
@@ -48,8 +42,8 @@ export function CountdownBadge({ deadline, label, className }: CountdownBadgePro
     return () => clearInterval(interval);
   }, [deadline]);
 
-  const totalHours = remaining.days * 24 + remaining.hours;
-  const urgencyColor = getUrgencyColor(totalHours, remaining.expired);
+  const totalHours = remaining.expired ? 0 : remaining.days * 24 + remaining.hours;
+  const urgencyColor = getUrgencyColors(remaining.expired ? 0 : totalHours);
 
   return (
     <span
