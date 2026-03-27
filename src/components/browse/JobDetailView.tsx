@@ -315,16 +315,16 @@ export default function JobDetailView() {
               {/* Invalid Guild Warning */}
               {job.guild &&
                 (job.guild.match(/^[0-9]+Guild$/) || job.guild.length < 2) && (
-                  <div className="p-4 bg-red-500/10 border-2 border-red-500/20 rounded-lg">
+                  <div className={`p-4 ${STATUS_COLORS.negative.bgSubtle} border-2 ${STATUS_COLORS.negative.border} rounded-lg`}>
                     <div className="flex items-start gap-2 mb-2">
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.negative.icon} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="font-semibold text-red-900 dark:text-red-300">
+                        <p className={`font-semibold ${STATUS_COLORS.negative.text}`}>
                           Invalid Guild Data
                         </p>
-                        <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                        <p className={`text-sm ${STATUS_COLORS.negative.text} opacity-70 mt-1`}>
                           This job has invalid guild information:{" "}
-                          <code className="px-1 py-0.5 bg-red-100 dark:bg-red-900 rounded text-xs">
+                          <code className={`px-1 py-0.5 ${STATUS_COLORS.negative.bgSubtle} rounded text-xs`}>
                             {job.guild}
                           </code>
                           <br />
@@ -342,14 +342,14 @@ export default function JobDetailView() {
                 job.guild &&
                 !job.guild.match(/^[0-9]+Guild$/) &&
                 job.guild.length >= 2 && (
-                  <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/20 rounded-lg">
+                  <div className={`p-4 ${STATUS_COLORS.warning.bgSubtle} border-2 ${STATUS_COLORS.warning.border} rounded-lg`}>
                     <div className="flex items-start gap-2 mb-2">
-                      <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <Shield className={`w-5 h-5 ${STATUS_COLORS.warning.icon} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="font-semibold text-yellow-900 dark:text-yellow-300">
+                        <p className={`font-semibold ${STATUS_COLORS.warning.text}`}>
                           Guild Membership Required
                         </p>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                        <p className={`text-sm ${STATUS_COLORS.warning.text} opacity-70 mt-1`}>
                           You must join the <strong>{job.guild}</strong> guild to apply
                           for this position
                         </p>
@@ -359,14 +359,14 @@ export default function JobDetailView() {
                 )}
 
               {isAuthenticated && guildMembershipStatus === "pending" && (
-                <div className="p-4 bg-blue-500/10 border-2 border-blue-500/20 rounded-lg">
+                <div className={`p-4 ${STATUS_COLORS.info.bgSubtle} border-2 ${STATUS_COLORS.info.border} rounded-lg`}>
                   <div className="flex items-start gap-2 mb-2">
-                    <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <Clock className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
                     <div>
-                      <p className="font-semibold text-blue-900 dark:text-blue-300">
+                      <p className={`font-semibold ${STATUS_COLORS.info.text}`}>
                         Guild Application Pending
                       </p>
-                      <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                      <p className={`text-sm ${STATUS_COLORS.info.text} opacity-70 mt-1`}>
                         Your application to join <strong>{job.guild}</strong> is under
                         review by expert members
                       </p>

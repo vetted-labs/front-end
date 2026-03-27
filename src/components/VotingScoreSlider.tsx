@@ -12,6 +12,7 @@ import {
   Minus,
   CheckCircle2,
 } from "lucide-react";
+import { STATUS_COLORS } from "@/config/colors";
 
 interface VotingScoreSliderProps {
   applicationId: string;
@@ -34,11 +35,11 @@ export function VotingScoreSlider({
   const [comment, setComment] = useState("");
 
   const getScoreColor = (score: number) => {
-    if (score < 30) return "text-red-500";
-    if (score < 50) return "text-orange-500";
-    if (score < 70) return "text-yellow-500";
-    if (score < 85) return "text-green-500";
-    return "text-emerald-500";
+    if (score < 30) return STATUS_COLORS.negative.text;
+    if (score < 50) return "text-primary";
+    if (score < 70) return STATUS_COLORS.warning.text;
+    if (score < 85) return STATUS_COLORS.positive.text;
+    return STATUS_COLORS.positive.text;
   };
 
   const getScoreLabel = (score: number) => {
@@ -96,7 +97,7 @@ export function VotingScoreSlider({
             value={score}
             onChange={(e) => setScore(Number(e.target.value))}
             className="w-full h-3 rounded-lg appearance-none cursor-pointer
-              bg-gradient-to-r from-red-500 via-yellow-500 to-green-500
+              bg-gradient-to-r from-negative via-warning to-positive
               [&::-webkit-slider-thumb]:appearance-none
               [&::-webkit-slider-thumb]:w-6
               [&::-webkit-slider-thumb]:h-6

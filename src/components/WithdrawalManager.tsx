@@ -11,6 +11,7 @@ import { useFetch } from '@/lib/hooks/useFetch';
 import { logger } from "@/lib/logger";
 import { getTransactionErrorMessage } from '@/lib/blockchain';
 import { TransactionStatus, type TransactionPhase } from '@/components/ui/transaction-status';
+import { STATUS_COLORS } from "@/config/colors";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { CONTRACT_ADDRESSES, EXPERT_STAKING_ABI } from '@/contracts/abis';
@@ -211,7 +212,7 @@ export function WithdrawalManager({
                 <Label className="text-sm text-muted-foreground">Current Stake</Label>
                 <p className="text-2xl font-bold mt-1">{parseFloat(currentStake).toFixed(2)} VETD</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-500" />
+              <TrendingUp className={`w-8 h-8 ${STATUS_COLORS.positive.icon}`} />
             </div>
           </CardContent>
         </Card>
@@ -242,7 +243,7 @@ export function WithdrawalManager({
           ) : unstakeRequest?.hasRequest ? (
             <div className="border rounded-lg p-4 bg-muted/50">
               <div className="flex items-start gap-2 mb-3">
-                <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.warning.icon} mt-0.5`} />
                 <div className="flex-1">
                   <h4 className="font-semibold">Unstake Request Pending</h4>
                   <p className="text-sm text-muted-foreground">
@@ -271,8 +272,8 @@ export function WithdrawalManager({
                   </p>
                 </div>
               ) : (
-                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-600">
+                <div className={`mb-4 p-3 ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} rounded-lg`}>
+                  <div className={`flex items-center gap-2 ${STATUS_COLORS.positive.text}`}>
                     <CheckCircle2 className="w-5 h-5" />
                     <span className="font-medium">Ready to complete!</span>
                   </div>
@@ -345,7 +346,7 @@ export function WithdrawalManager({
                 errorMessage={requestError ? getTransactionErrorMessage(requestError, 'Unstake request failed') : undefined}
               />
 
-              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className={`p-3 ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-lg`}>
                 <p className="text-xs text-muted-foreground">
                   <strong>Note:</strong> After requesting an unstake, you&apos;ll need to wait 7 days before you can complete the unstake and receive your tokens back.
                 </p>
