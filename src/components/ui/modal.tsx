@@ -153,7 +153,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
           {/* Header */}
           {title && (
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
-              <h2 className="text-lg sm:text-xl font-semibold text-card-foreground">{title}</h2>
+              <h2 className="text-xl font-bold text-card-foreground">{title}</h2>
               <button
                 onClick={onClose}
                 className="text-muted-foreground hover:text-primary transition-colors"

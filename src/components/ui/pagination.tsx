@@ -24,8 +24,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
 
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          Page <span className="font-semibold text-foreground">{currentPage}</span> of{" "}
-          <span className="font-semibold text-foreground">{totalPages}</span>
+          Page <span className="font-medium text-foreground">{currentPage}</span> of{" "}
+          <span className="font-medium text-foreground">{totalPages}</span>
         </span>
       </div>
 

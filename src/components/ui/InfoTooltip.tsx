@@ -76,7 +76,7 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
 
               return (
                 <div key={index} className={index > 0 ? 'mt-2' : ''}>
-                  <div className="font-semibold">{boldText}</div>
+                  <div className="font-medium">{boldText}</div>
                   {remainingText && <div className="mt-1">{remainingText}</div>}
                 </div>
               );

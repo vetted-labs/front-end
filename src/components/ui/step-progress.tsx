@@ -58,7 +58,7 @@ export function StepProgress({
                   onClick={() => canClick && onStepClick!(index)}
                   disabled={!canClick}
                   className={`
-                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold
+                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
                     transition-all duration-200
                     ${
                       isCompleted
