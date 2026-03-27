@@ -11,7 +11,12 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit",
+    "lint:fix": "eslint --fix",
+    "security:audit": "npm audit --audit-level=high",
+    "check-secrets": "bash scripts/check-secrets.sh",
+    "ci": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
