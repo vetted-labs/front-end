@@ -167,6 +167,36 @@ Legitimate uses of raw `useEffect` (add `// eslint-disable-next-line no-restrict
 - Write click-outside effects — use `useClickOutside` from `@/lib/hooks/useClickOutside`
 - Suppress `react-hooks/exhaustive-deps` with eslint-disable — fix the dependencies
 
+### Color System
+
+All colors MUST come from the centralized token system. Never hardcode Tailwind color names (e.g., `text-green-500`, `bg-blue-100`) in components.
+
+**Imports:**
+- `import { STATUS_COLORS, RANK_COLORS, VOTE_COLORS, STAT_ICON } from "@/config/colors"`
+- Status configs: `APPLICATION_STATUS_CONFIG`, `JOB_STATUS_CONFIG`, etc. from `@/config/constants`
+
+**Semantic status:** Use `STATUS_COLORS.positive`, `.negative`, `.warning`, `.info`, `.neutral`, `.pending` — never raw Tailwind colors for status indicators.
+
+**Rank colors:** Use `getRankColors(rank)` from `@/config/colors` — never define rank colors inline.
+
+**Stat icons:** Use `STAT_ICON.bg` and `STAT_ICON.text` — all stat icons are brand orange, not per-metric rainbow.
+
+**Notifications:** Use `getNotificationPriority()` → `NOTIFICATION_COLORS[priority]` — 3 tiers (urgent/action/positive), not per-type rainbow.
+
+**Match scores:** Use `getMatchScoreColors(pct)` — returns positive/warning/negative.
+
+**Vote colors:** Use `VOTE_COLORS.for`, `.against`, `.abstain`.
+
+**Exceptions:** Brand logos (MetaMask, Coinbase, LinkedIn) may use hardcoded hex colors.
+
+### Don't (Color-Specific)
+
+- Hardcode Tailwind color names (`text-green-500`, `bg-blue-100`, etc.) — use `STATUS_COLORS` / `RANK_COLORS` from `@/config/colors`
+- Define local status color mappings — use shared configs from `@/config/constants`
+- Use different colors for the same rank on different pages — use `getRankColors()` everywhere
+- Assign different icon colors per metric — use `STAT_ICON` for all stat icons
+- Use `bg-white/[0.0X]` for dark mode surfaces — use `bg-surface-*` tokens or `bg-muted`
+
 ## Common Tasks
 
 ### Adding a New Page
