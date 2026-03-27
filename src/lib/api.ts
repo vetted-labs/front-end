@@ -680,6 +680,19 @@ export const expertApi = {
     return apiRequest<import("@/types").LeaderboardEntry[]>(`/api/experts/reputation/leaderboard${query ? `?${query}` : ""}`);
   },
 
+  getLeaderboardV2: (params?: { guildId?: string; period?: string; role?: string; limit?: number }, walletAddress?: string) => {
+    const queryParams = new URLSearchParams();
+    if (params?.guildId) queryParams.append("guildId", params.guildId);
+    if (params?.period) queryParams.append("period", params.period);
+    if (params?.role) queryParams.append("role", params.role);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    return apiRequest<import("@/types").LeaderboardResponse>(
+      `/api/experts/leaderboard${query ? `?${query}` : ""}`,
+      walletAddress ? { headers: { "x-wallet-address": walletAddress } } : undefined
+    );
+  },
+
   getReputationTimeline: (walletAddress: string, params?: { guildId?: string; reason?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number }) => {
     const q = new URLSearchParams({ wallet: walletAddress });
     if (params?.guildId) q.append("guildId", params.guildId);

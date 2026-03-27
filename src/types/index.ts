@@ -125,6 +125,8 @@ export type {
   ReputationTimelineResponse,
   RewardDetail,
   LeaderboardEntry,
+  LeaderboardEntryV2,
+  LeaderboardResponse,
   CommitRevealPhaseStatus,
   CommitRevealHash,
   ExpertCRPhaseStatus,

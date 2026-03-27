@@ -441,6 +441,33 @@ export interface LeaderboardEntry {
   rejections: number;
 }
 
+export interface LeaderboardEntryV2 {
+  expertId: string;
+  fullName: string;
+  walletAddress: string;
+  role: string;
+  guildCount: number;
+  reputation: number;
+  reputationDelta: number;
+  totalEarnings: number;
+  earningsDelta: number;
+  totalReviews: number;
+  approvals: number;
+  rejections: number;
+  consensusRate: number;
+  endorsementCount: number;
+  totalBidAmount: string;
+  endorsementSuccessRate: number | null;
+  activeEndorsementCount: number;
+  stakedAmount: string;
+  streak: number;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntryV2[];
+  currentUser: LeaderboardEntryV2 | null;
+}
+
 // --- Commit-Reveal ---
 export interface CommitRevealPhaseStatus {
   phase: "commit" | "finalized" | "none";
