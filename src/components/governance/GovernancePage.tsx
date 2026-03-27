@@ -22,6 +22,7 @@ import { GovernanceStats } from "@/components/governance/GovernanceStats";
 import type { GovernanceProposalDetail, GovernanceFilterStatus } from "@/types";
 import { computeVoteWeight } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
+import { Divider } from "@/components/ui/divider";
 
 const FILTERS: { value: GovernanceFilterStatus; label: string }[] = [
   { value: "active", label: "Active" },
@@ -126,7 +127,7 @@ export default function GovernancePage() {
                   </span>
                 </div>
 
-                <div className="w-px h-10 bg-border flex-shrink-0" />
+                <Divider orientation="vertical" className="h-10" />
 
                 <div className="flex flex-col gap-2">
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning/8 border border-warning/20 text-xs font-medium text-warning">

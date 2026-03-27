@@ -36,6 +36,7 @@ import {
   getActivityIconColor,
 } from "@/lib/activityHelpers";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { Divider } from "@/components/ui/divider";
 import type { ExpertProfile as ExpertProfileData } from "@/types";
 
 interface ExpertProfileProps {
@@ -560,7 +561,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           <div className="mt-12 mb-6 flex items-center gap-3">
             <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
-            <div className="flex-1 h-px bg-border" />
+            <Divider className="flex-1" />
             <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border bg-card">
               {profile.guilds.length} active
             </span>

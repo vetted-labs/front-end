@@ -15,6 +15,7 @@ import { FeedProvider } from "./feed/FeedContext";
 import { PostCard } from "./feed/PostCard";
 import { NewPostModal } from "./feed/NewPostModal";
 import { PostDetailModal } from "./feed/PostDetailModal";
+import { Divider } from "@/components/ui/divider";
 import type {
   GuildPost,
   PostSortMode,
@@ -170,7 +171,7 @@ export function GuildFeedTab({
           </div>
 
           {/* Divider */}
-          <div className="hidden sm:block w-px h-5 bg-border/60" />
+          <Divider orientation="vertical" className="hidden sm:block h-5" />
 
           {/* Tag Filters */}
           <div className="flex flex-wrap gap-2">

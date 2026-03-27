@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import type { Job } from "@/types";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { Divider } from "@/components/ui/divider";
 import { JobCard } from "./JobCard";
 import { JobsFilterModal } from "./JobsFilterModal";
 
@@ -291,7 +292,7 @@ export default function JobsListing() {
             </div>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-border/60 flex-shrink-0" />
+            <Divider orientation="vertical" className="h-6" />
 
             {/* Job Type Group */}
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
@@ -311,7 +312,7 @@ export default function JobsListing() {
             </div>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-border/60 flex-shrink-0" />
+            <Divider orientation="vertical" className="h-6" />
 
             {/* Location Group */}
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">

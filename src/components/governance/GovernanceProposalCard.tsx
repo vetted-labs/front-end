@@ -3,6 +3,7 @@
 import { Clock, Check, ChevronRight } from "lucide-react";
 import { formatDeadline } from "@/lib/utils";
 import { VOTE_COLORS, STATUS_COLORS } from "@/config/colors";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface GovernanceProposalCardProps {
   proposal: {
@@ -58,10 +59,7 @@ export function GovernanceProposalCard({
         </span>
 
         {isActive && (
-          <span className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.positive.badge}`}>
-            <span className="w-[5px] h-[5px] rounded-full bg-positive animate-pulse" />
-            Active
-          </span>
+          <StatusBadge status="positive" label="Active" pulse />
         )}
         {isPending && (
           <span className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${STATUS_COLORS.warning.badge}`}>

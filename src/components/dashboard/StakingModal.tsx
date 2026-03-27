@@ -15,6 +15,7 @@ import { logger } from "@/lib/logger";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Divider } from "@/components/ui/divider";
 import { TransactionModal } from "./TransactionModal";
 import type { StakingGuildOption } from "@/types";
 
@@ -317,7 +318,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
             </div>
 
             {/* Gradient divider */}
-            <div className="h-px bg-border" />
+            <Divider />
           </div>
 
           {/* ── Content ── */}

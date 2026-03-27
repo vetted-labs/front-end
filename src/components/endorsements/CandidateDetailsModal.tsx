@@ -26,6 +26,8 @@ import {
 import { useMemo, useState } from 'react';
 import { ensureHttps, formatSalaryRange, formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Divider } from "@/components/ui/divider";
 import type { EndorsementApplication } from "@/types";
 
 interface CandidateDetailsModalProps {
@@ -191,7 +193,7 @@ export function CandidateDetailsModal({
         </div>
 
         {/* Separator glow line */}
-        <div className="h-px bg-border" />
+        <Divider />
 
         {/* ── Tab Bar ── */}
         <div className="px-6 pt-3 flex-shrink-0">
@@ -253,10 +255,7 @@ export function CandidateDetailsModal({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Status</span>
-                    <span className={`inline-flex items-center gap-2 text-xs font-medium px-2 py-0.5 rounded-md border ${STATUS_COLORS.warning.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS.warning.dot}`} />
-                      {application.status || 'Pending'}
-                    </span>
+                    <StatusBadge status="warning" label={application.status || 'Pending'} />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Applied</span>

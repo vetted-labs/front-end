@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { FileText, Check, BarChart3 } from "lucide-react";
-import { STAT_ICON, VOTE_COLORS, STATUS_COLORS } from "@/config/colors";
+import { STATUS_COLORS } from "@/config/colors";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { StatCard } from "@/components/dashboard/StatCard";
 import type { GovernanceProposalDetail } from "@/types";
 
 interface GovernanceStatsProps {
@@ -83,26 +85,26 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
 
           {/* Total Proposals */}
           <StatCard
-            icon={<FileText className="w-5 h-5" />}
-            value={stats.total.toString()}
+            icon={FileText}
+            value={stats.total}
             label="Total Proposals"
-            sub={`${stats.passed} passed`}
+            subtext={`${stats.passed} passed`}
           />
 
           {/* Pass Rate */}
           <StatCard
-            icon={<Check className="w-5 h-5" />}
+            icon={Check}
             value={`${stats.passRate}%`}
             label="Protocol Pass Rate"
-            sub="Overall"
+            subtext="Overall"
           />
 
           {/* Total Voting Power */}
           <StatCard
-            icon={<BarChart3 className="w-5 h-5" />}
+            icon={BarChart3}
             value={`${voteWeight.toFixed(1)}x`}
             label="Your Voting Power"
-            sub="Merit-weighted"
+            subtext="Merit-weighted"
           />
         </div>
       </div>
@@ -138,17 +140,10 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
                   <p className="text-sm font-medium truncate">
                     #{p.id.slice(0, 6)} {p.title}
                   </p>
-                  <span
-                    className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${
-                      voteType === "for"
-                        ? STATUS_COLORS.positive.badge
-                        : voteType === "against"
-                          ? STATUS_COLORS.negative.badge
-                          : STATUS_COLORS.neutral.badge
-                    }`}
-                  >
-                    {voteType ? voteType.charAt(0).toUpperCase() + voteType.slice(1) : "Voted"}
-                  </span>
+                  <StatusBadge
+                    status={voteType === "for" ? "positive" : voteType === "against" ? "negative" : "neutral"}
+                    label={voteType ? voteType.charAt(0).toUpperCase() + voteType.slice(1) : "Voted"}
+                  />
                   <span
                     className={`text-xs font-medium ${
                       isActive
@@ -176,27 +171,3 @@ export function GovernanceStats({ proposals, voteWeight }: GovernanceStatsProps)
   );
 }
 
-/* ─── Stat Card helper ─── */
-function StatCard({
-  icon,
-  value,
-  label,
-  sub,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-  sub: string;
-}) {
-  return (
-    <div className="relative rounded-xl border border-border bg-card p-6 text-center overflow-hidden">
-      <div className="absolute inset-0 bg-transparent pointer-events-none" />
-      <div className={`w-11 h-11 rounded-xl ${STAT_ICON.bg} border border-primary/25 flex items-center justify-center mx-auto mb-3.5 ${STAT_ICON.text}`}>
-        {icon}
-      </div>
-      <p className="font-mono text-3xl font-bold text-foreground mb-1">{value}</p>
-      <p className="text-xs text-muted-foreground font-medium">{label}</p>
-      <p className="text-xs text-primary font-medium mt-1.5">{sub}</p>
-    </div>
-  );
-}

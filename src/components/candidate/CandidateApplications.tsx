@@ -18,6 +18,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
+import { StatusBadge } from "@/components/ui/status-badge";
 import type { CandidateApplication, ApplicationStatus } from "@/types";
 import { formatSalaryRange } from "@/lib/utils";
 
@@ -217,10 +218,7 @@ export default function CandidateApplications() {
             My Applications
           </h1>
           {activeCount > 0 && (
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              {activeCount} active
-            </span>
+            <StatusBadge status="pending" label={`${activeCount} active`} pulse />
           )}
         </div>
 

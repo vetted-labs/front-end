@@ -14,6 +14,7 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
 import { toast } from "sonner";
 import { STATUS_COLORS } from "@/config/colors";
+import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { CompanyNotificationPreferences } from "@/types";
@@ -204,9 +205,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground mb-3">
                         Add an extra layer of security to your account
                       </p>
-                      <button className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-all text-sm font-medium">
+                      <Button size="sm">
                         Enable 2FA
-                      </button>
+                      </Button>
                     </div>
 
                     <div className="p-4 rounded-xl border border-border/30">
@@ -214,9 +215,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground mb-3">
                         Manage devices where you&apos;re currently logged in
                       </p>
-                      <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
+                      <Button variant="outline" size="sm">
                         View Sessions
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -245,9 +246,9 @@ export default function SettingsPage() {
                     <p className="text-3xl font-bold text-foreground mb-4">
                       $99<span className="text-sm font-medium text-muted-foreground">/month</span>
                     </p>
-                    <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
+                    <Button variant="outline" size="sm">
                       Manage Subscription
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="space-y-4">
@@ -256,9 +257,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground mb-3">
                         •••• •••• •••• 4242
                       </p>
-                      <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
+                      <Button variant="outline" size="sm">
                         Update Payment Method
-                      </button>
+                      </Button>
                     </div>
 
                     <div className="p-4 rounded-xl border border-border/30">
@@ -266,9 +267,9 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground mb-3">
                         View and download your past invoices
                       </p>
-                      <button className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted transition-all text-sm font-medium">
+                      <Button variant="outline" size="sm">
                         View Invoices
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -323,20 +324,19 @@ export default function ApplicationPendingPage() {
             Browse available guilds and apply to join more communities
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
+            <Button
               onClick={() => router.push("/guilds")}
-              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+              icon={<Swords className="w-4 h-4" />}
             >
-              <Swords className="w-4 h-4 mr-2" />
               Browse Guilds
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => router.push("/expert/apply?apply=new")}
-              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all"
+              icon={<Plus className="w-4 h-4" />}
             >
-              <Plus className="w-4 h-4 mr-2" />
               Apply to Another Guild
-            </button>
+            </Button>
           </div>
         </div>
 

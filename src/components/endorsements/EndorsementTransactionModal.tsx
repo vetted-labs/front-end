@@ -17,6 +17,7 @@ import {
   Clock
 } from 'lucide-react';
 import { logger } from "@/lib/logger";
+import { Divider } from "@/components/ui/divider";
 import { getExplorerTxUrl } from "@/lib/blockchain";
 import { STATUS_COLORS } from "@/config/colors";
 import { useCountdown } from "@/lib/hooks/useCountdown";
@@ -148,7 +149,7 @@ export function EndorsementTransactionModal({
             </div>
 
             {/* Gradient divider */}
-            <div className="h-px bg-border" />
+            <Divider />
           </div>
 
           {/* ── Content ── */}
@@ -470,7 +471,7 @@ export function EndorsementTransactionModal({
 
                   {(approvalTxHash || bidTxHash) && (
                     <>
-                      <div className="h-px bg-border" />
+                      <Divider />
                       <div className="space-y-2">
                         {approvalTxHash && (
                           <div className="flex items-center justify-between text-xs">

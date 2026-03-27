@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { getGuildIcon, getGuildPreviewDescription } from "@/lib/guildHelpers";
@@ -113,7 +114,7 @@ export default function GlobalGuildsPage() {
         </header>
 
         {/* ── Divider ── */}
-        <div className="h-px bg-border/60 mb-10" />
+        <Divider className="mb-10" />
 
         {/* ── Guild cards ── */}
         <section className="pb-16">

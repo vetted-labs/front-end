@@ -3,6 +3,7 @@
 import { Users, Award, Target, Shield, User } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
 import { formatVetd } from "@/lib/utils";
+import { Divider } from "@/components/ui/divider";
 
 interface GuildHeaderProps {
   guild: {
@@ -99,7 +100,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
           <div className="font-mono text-xs text-muted-foreground mb-4">
             {guild.expertRole === "master" ? "Max rank achieved" : `Progressing to next rank`}
           </div>
-          <div className="w-full h-px bg-border/60 mb-3" />
+          <Divider className="mb-3" />
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-wider text-muted-foreground">Earnings</span>
             <span>

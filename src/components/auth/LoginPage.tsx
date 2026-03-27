@@ -18,6 +18,7 @@ import { candidateApi, companyApi, expertApi, ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useApi } from "@/lib/hooks/useFetch";
 
@@ -244,7 +245,7 @@ function LoginForm() {
       {/* ===== RIGHT: Auth Form ===== */}
       <div className="flex-1 lg:flex-[0_0_40%] flex items-center justify-center p-6 sm:p-8 relative z-10">
         {/* Vertical separator line (desktop only) */}
-        <div className="hidden lg:block absolute left-0 top-[10%] bottom-[10%] w-px bg-border/30" />
+        <Divider orientation="vertical" className="hidden lg:block absolute left-0 top-[10%] bottom-[10%] opacity-30" />
 
         <div className="w-full max-w-[420px]">
           {/* Auth card */}
@@ -410,9 +411,9 @@ function LoginForm() {
                   {userType === "candidate" && (
                     <>
                       <div className="flex items-center gap-4 my-6">
-                        <div className="flex-1 h-px bg-border/30" />
+                        <Divider className="flex-1 opacity-30" />
                         <span className="text-xs text-muted-foreground/40 uppercase tracking-wider font-medium">or continue with</span>
-                        <div className="flex-1 h-px bg-border/30" />
+                        <Divider className="flex-1 opacity-30" />
                       </div>
 
                       <button

@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import { Check, Users, ChevronRight } from "lucide-react";
 import { VOTE_COLORS, STATUS_COLORS } from "@/config/colors";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Divider } from "@/components/ui/divider";
 import type { GovernanceProposalDetail } from "@/types";
 
 interface LiveVoteBannerProps {
@@ -45,12 +47,11 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
         className="relative rounded-xl bg-card p-6 sm:p-8 overflow-hidden cursor-pointer"
       >
         {/* Top glow line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-border" />
+        <Divider className="absolute top-0 left-0 right-0" />
 
         {/* Live tag */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-negative/10 border border-negative/20 text-xs font-bold text-negative uppercase tracking-wider mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-negative animate-pulse" />
-          Live Vote
+        <div className="mb-4">
+          <StatusBadge status="negative" label="Live Vote" pulse className="font-bold uppercase tracking-wider" />
         </div>
 
         {/* Header: Title + Countdown */}

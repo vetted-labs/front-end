@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { Modal } from "@/components/ui/modal";
 import { Alert } from "@/components/ui/alert";
 import { STATUS_COLORS } from "@/config/colors";
+import { Divider } from "@/components/ui/divider";
 import type { ExpertCRPhaseStatus, CommitRevealPhaseStatus, ExpertApplicationFinalization } from "@/types";
 
 interface ViewReviewModalProps {
@@ -255,7 +256,7 @@ export function ViewReviewModal({
                     <p className="text-xl font-bold text-foreground">{finalization.consensusScore}%</p>
                   </div>
 
-                  <div className="w-px h-8 bg-border/40 self-center" />
+                  <Divider orientation="vertical" className="h-8 self-center" />
 
                   {/* Your score */}
                   <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
@@ -265,7 +266,7 @@ export function ViewReviewModal({
 
                   {expertVote && (
                     <>
-                      <div className="w-px h-8 bg-border/40 self-center" />
+                      <Divider orientation="vertical" className="h-8 self-center" />
 
                       {/* Reputation change */}
                       <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">
@@ -281,7 +282,7 @@ export function ViewReviewModal({
                         </p>
                       </div>
 
-                      <div className="w-px h-8 bg-border/40 self-center" />
+                      <Divider orientation="vertical" className="h-8 self-center" />
 
                       {/* VETD reward */}
                       <div className="flex-1 flex flex-col items-center justify-center px-3 py-1">

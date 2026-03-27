@@ -2,6 +2,7 @@
 
 import { ApplicationFinalizationDisplay } from "@/components/ApplicationFinalizationDisplay";
 import { StructuredApplicationDisplay } from "@/components/StructuredApplicationDisplay";
+import { Divider } from "@/components/ui/divider";
 import type { ComponentType } from "react";
 import type { GuildApplication, VoteHistoryItem, CandidateProfile } from "@/types";
 
@@ -102,11 +103,11 @@ export function FinalizedView({
       {/* Application content -- below results */}
       <div>
         <div className="flex items-center gap-4 mb-6">
-          <div className="h-px flex-1 bg-border" />
+          <Divider className="flex-1" />
           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Application
           </span>
-          <div className="h-px flex-1 bg-border" />
+          <Divider className="flex-1" />
         </div>
 
         {/* Candidate profile section in finalized view */}

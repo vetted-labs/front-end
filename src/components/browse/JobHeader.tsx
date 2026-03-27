@@ -11,6 +11,7 @@ import {
 import { getAssetUrl } from "@/lib/api";
 import { getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
+import { Divider } from "@/components/ui/divider";
 import type { Job } from "@/types";
 
 interface JobHeaderProps {
@@ -84,21 +85,21 @@ export default function JobHeader({ job }: JobHeaderProps) {
                 </span>
               )}
             </div>
-            <div className="w-px h-3.5 bg-border/60" />
+            <Divider orientation="vertical" className="h-3.5" />
           </>
         )}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-3.5 h-3.5 text-muted-foreground/60" />
           Posted {getTimeAgo(job.createdAt)}
         </div>
-        <div className="w-px h-3.5 bg-border/60" />
+        <Divider orientation="vertical" className="h-3.5" />
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-3.5 h-3.5 text-muted-foreground/60" />
           {job.applicants || 0} applicants
         </div>
         {job.location && (
           <>
-            <div className="w-px h-3.5 bg-border/60" />
+            <Divider orientation="vertical" className="h-3.5" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 text-muted-foreground/60" />
               {job.location}
