@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-    /* Background colors - Warm cream with dark gray text */
-    --background: 30 40% 98%;
+    /* Background colors - Cool slate with dark text */
+    --background: 213 27% 96%;                   /* CHANGED */
     --foreground: 0 0% 17%;
 
-    /* Card colors - Pure white cards on warm background */
+    /* Card colors - Pure white cards on cool background */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 17%;
 
@@ -17,25 +17,25 @@
     --primary: 24 100% 51%;  /* #ff6a00 - exact brand match */
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary colors - Light cream with dark text */
-    --secondary: 30 100% 97%;
+    /* Secondary colors - Cool tint */
+    --secondary: 213 27% 97%;                    /* CHANGED */
     --secondary-foreground: 0 0% 17%;
 
-    /* Muted colors - Warm gray with medium text */
-    --muted: 30 20% 95%;
-    --muted-foreground: 0 0% 40%;
+    /* Muted colors - Slate gray */
+    --muted: 213 27% 96%;                        /* CHANGED */
+    --muted-foreground: 215 16% 47%;             /* CHANGED */
 
-    /* Accent colors - Soft orange */
-    --accent: 22 83% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent colors - Cool neutral */
+    --accent: 213 27% 97%;                       /* CHANGED */
+    --accent-foreground: 215 25% 27%;            /* CHANGED */
 
     /* Destructive/Error colors */
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border colors - Warm neutral borders */
-    --border: 30 10% 90%;
-    --input: 30 10% 90%;
+    /* Border colors - Cool, slightly stronger */
+    --border: 214 20% 88%;                       /* CHANGED */
+    --input: 214 20% 88%;                        /* CHANGED */
     --ring: 24 100% 50%;
 
     /* Additional UI colors */
@@ -47,28 +47,28 @@
     --info-foreground: 0 0% 100%;
 
     /* Semantic status colors — desaturated for light mode */
-    --positive: 155 55% 38%;           /* #2a9d6e — muted teal-green */
+    --positive: 155 55% 38%;
     --positive-foreground: 0 0% 100%;
-    --negative: 0 45% 53%;             /* #c44b4b — muted red */
+    --negative: 0 45% 53%;
     --negative-foreground: 0 0% 100%;
-    --info-blue: 213 30% 50%;          /* #5a7fa8 — muted steel blue */
+    --info-blue: 213 30% 50%;
     --info-blue-foreground: 0 0% 100%;
-    --neutral: 240 4% 46%;             /* #71717a — zinc gray */
+    --neutral: 240 4% 46%;
     --neutral-foreground: 0 0% 100%;
 
     /* Rank progression — cool to warm */
-    --rank-recruit: 215 17% 63%;       /* #94a3b8 — slate */
-    --rank-apprentice: 160 59% 52%;    /* #34d399 — emerald */
-    --rank-craftsman: 24 100% 60%;     /* #ff8a33 — light orange */
-    --rank-officer: 24 100% 50%;       /* #ff6a00 — brand orange */
-    --rank-master: 40 100% 50%;        /* #ffaa00 — gold */
+    --rank-recruit: 215 17% 63%;
+    --rank-apprentice: 160 59% 52%;
+    --rank-craftsman: 24 100% 60%;
+    --rank-officer: 24 100% 50%;
+    --rank-master: 40 100% 50%;
 
-    /* Surface hierarchy — light mode maps to existing semantic vars */
-    --surface-0: 30 40% 98%;           /* same as --background */
-    --surface-1: 0 0% 100%;            /* same as --card */
-    --surface-2: 0 0% 100%;            /* same as --popover */
-    --surface-3: 30 20% 95%;           /* same as --muted */
-    --surface-border: 30 10% 90%;      /* same as --border */
+    /* Surface hierarchy - Cool slate */
+    --surface-0: 213 27% 96%;                    /* CHANGED */
+    --surface-1: 0 0% 100%;
+    --surface-2: 0 0% 100%;
+    --surface-3: 210 20% 98%;                    /* CHANGED */
+    --surface-border: 214 20% 88%;               /* CHANGED */
 
     /* Gradient button text - dark for contrast on orange */
     --gradient-button-text: 0 0% 4%;
@@ -83,19 +83,19 @@
     /* Radius - Slightly larger for modern feel */
     --radius: 0.75rem;
 
-    /* Brand gray scale - Medium to light grays */
-    --gray-medium: 0 0% 40%;          /* #666 */
-    --gray-light: 0 0% 55%;           /* #8c8c8c */
-    --gray-lighter: 0 0% 90%;         /* #e6e6e6 */
-    --gray-lightest: 0 0% 97%;        /* #f7f7f7 */
+    /* Brand gray scale - Slate tones */
+    --gray-medium: 215 16% 47%;                  /* CHANGED */
+    --gray-light: 215 16% 57%;                   /* CHANGED */
+    --gray-lighter: 214 20% 88%;                 /* CHANGED */
+    --gray-lightest: 210 20% 98%;                /* CHANGED */
 
-    /* Accent neutrals - Tan and beige */
-    --tan-accent: 30 8% 91%;          /* #e7e6e4 */
-    --beige-light: 30 14% 95%;        /* #f3f2f1 */
+    /* Accent neutrals - Cool versions */
+    --tan-accent: 214 15% 91%;                   /* CHANGED */
+    --beige-light: 213 20% 95%;                  /* CHANGED */
 
     /* Secondary oranges */
-    --orange-secondary: 24 85% 60%;   /* #ed8133 */
-    --orange-light: 24 100% 72%;      /* #ffac70 */
+    --orange-secondary: 24 85% 60%;
+    --orange-light: 24 100% 72%;
 }
 
 .dark {
@@ -674,5 +674,202 @@ body {
     }
     .animate-rep-gauge-draw {
         stroke-dashoffset: var(--gauge-target, 110) !important;
+    }
+}
+
+
+/* ── Guild listing card — per-guild accent colors ── */
+
+.guild-listing-card {
+    --gc: 24 100% 50%;          /* fallback: brand orange */
+    --gc-rgb: 255, 106, 0;
+}
+
+.guild-listing-card[data-guild="engineering"]  { --gc: 217 91% 60%;  --gc-rgb: 59, 130, 246; }
+.guild-listing-card[data-guild="design"]       { --gc: 271 91% 65%;  --gc-rgb: 168, 85, 247; }
+.guild-listing-card[data-guild="data"]         { --gc: 173 80% 40%;  --gc-rgb: 20, 184, 166; }
+.guild-listing-card[data-guild="security"]     { --gc: 0 84% 60%;   --gc-rgb: 239, 68, 68; }
+.guild-listing-card[data-guild="marketing"]    { --gc: 38 92% 50%;  --gc-rgb: 245, 158, 11; }
+.guild-listing-card[data-guild="devops"]       { --gc: 142 71% 45%; --gc-rgb: 34, 197, 94; }
+.guild-listing-card[data-guild="product"]      { --gc: 24 100% 50%; --gc-rgb: 255, 106, 0; }
+.guild-listing-card[data-guild="operations"]   { --gc: 215 17% 63%; --gc-rgb: 148, 163, 184; }
+.guild-listing-card[data-guild="finance"]      { --gc: 38 92% 50%;  --gc-rgb: 245, 158, 11; }
+.guild-listing-card[data-guild="people"]       { --gc: 271 91% 65%; --gc-rgb: 168, 85, 247; }
+.guild-listing-card[data-guild="sales"]        { --gc: 142 71% 45%; --gc-rgb: 34, 197, 94; }
+
+/* Top accent stripe */
+.guild-listing-card::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0; top: 0;
+    height: 2px;
+    background: hsl(var(--gc));
+    opacity: 0.45;
+    transition: opacity 0.3s ease;
+}
+.guild-listing-card:hover::before { opacity: 1; }
+
+/* Background radial tint on hover */
+.guild-listing-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 10% 50%, rgba(var(--gc-rgb), 0.04) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.guild-listing-card:hover::after { opacity: 1; }
+
+/* Emblem glow */
+@keyframes emblem-pulse-idle {
+    0%, 100% { transform: scale(0.95); opacity: 0; }
+    50%      { transform: scale(1);    opacity: 0; }
+}
+@keyframes emblem-pulse {
+    0%, 100% { transform: scale(0.95); opacity: 0.6; }
+    50%      { transform: scale(1.05); opacity: 1; }
+}
+
+.guild-emblem-glow-ring {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--gc-rgb), 0.25) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    animation: emblem-pulse-idle 4s ease-in-out infinite;
+}
+.guild-listing-card:hover .guild-emblem-glow-ring {
+    opacity: 1;
+    animation: emblem-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .guild-emblem-glow-ring {
+        animation: none !important;
+    }
+}
+
+
+/* ── Reputation page hero animations ── */
+
+@keyframes rep-burst-pulse {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes rep-ring-pulse-1 {
+    0%, 100% { r: 100; opacity: 0.6; }
+    50% { r: 108; opacity: 1; }
+}
+
+@keyframes rep-ring-pulse-2 {
+    0%, 100% { r: 140; opacity: 0.5; }
+    50% { r: 150; opacity: 0.9; }
+}
+
+@keyframes rep-ring-pulse-3 {
+    0%, 100% { r: 185; opacity: 0.5; }
+    50% { r: 198; opacity: 0.8; }
+}
+
+@keyframes rep-ring-pulse-4 {
+    0%, 100% { r: 230; opacity: 0.4; }
+    50% { r: 245; opacity: 0.7; }
+}
+
+@keyframes rep-ring-pulse-5 {
+    0%, 100% { r: 275; opacity: 0.3; }
+    50% { r: 292; opacity: 0.6; }
+}
+
+@keyframes rep-ring-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rep-score-glow {
+    0%, 100% { filter: drop-shadow(0 0 60px hsl(var(--primary) / 0.3)) drop-shadow(0 0 120px hsl(var(--primary) / 0.12)); }
+    50% { filter: drop-shadow(0 0 80px hsl(var(--primary) / 0.45)) drop-shadow(0 0 160px hsl(var(--primary) / 0.2)); }
+}
+
+@keyframes rep-shimmer {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+@keyframes rep-gold-node-pulse {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--warning) / 0.3); }
+    50% { box-shadow: 0 0 35px hsl(var(--warning) / 0.5); }
+}
+
+@keyframes rep-dot-float {
+    0%, 100% { transform: translateY(0); opacity: 0.3; }
+    50% { transform: translateY(-4px); opacity: 0.8; }
+}
+
+@keyframes rep-particle-rise {
+    0% { opacity: 0; transform: translateY(0) translateX(0); }
+    20% { opacity: 0.6; }
+    80% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-80px) translateX(10px); }
+}
+
+@keyframes rep-chart-draw-line {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes rep-chart-area-fade {
+    to { opacity: 1; }
+}
+
+@keyframes rep-chart-point-appear {
+    from { r: 0; }
+    to { r: 4; }
+}
+
+@keyframes rep-scroll-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+}
+
+@keyframes rep-sparkle-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.animate-rep-burst-pulse {
+    animation: rep-burst-pulse 6s ease-in-out infinite;
+}
+
+.animate-rep-score-glow {
+    animation: rep-score-glow 3s ease-in-out infinite;
+}
+
+.animate-rep-shimmer {
+    animation: rep-shimmer 3s ease-in-out infinite;
+}
+
+.animate-rep-scroll-bounce {
+    animation: rep-scroll-bounce 2s ease-in-out infinite;
+}
+
+.animate-rep-sparkle-pulse {
+    animation: rep-sparkle-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-rep-burst-pulse,
+    .animate-rep-score-glow,
+    .animate-rep-shimmer,
+    .animate-rep-scroll-bounce,
+    .animate-rep-sparkle-pulse {
+        animation: none !important;
+    }
+    /* SVG ring animations */
+    .rep-ring,
+    .rep-ring-sweep {
+        animation: none !important;
     }
 }
