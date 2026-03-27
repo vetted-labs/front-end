@@ -71,9 +71,9 @@ export function useFetch<T = unknown>(
     };
   }, [execute]);
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     execute();
-  };
+  }, [execute]);
 
   return { data, isLoading, error, refetch };
 }

@@ -59,14 +59,16 @@ export default function ReputationPage() {
     if (address) {
       refetch();
     }
-  }, [page, address, refetch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable, only re-run on page/address change
+  }, [page, address]);
 
   // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
   useEffect(() => {
     const handler = () => refetch();
     window.addEventListener("vetted:reputation-refresh", handler);
     return () => window.removeEventListener("vetted:reputation-refresh", handler);
-  }, [refetch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable
+  }, []);
 
   // Compute stats from timeline
   const totalGains = timeline.filter((e) => e.change_amount > 0).reduce((s, e) => s + e.change_amount, 0);
@@ -119,30 +121,25 @@ export default function ReputationPage() {
           </button>
           {showExplainer && (
             <div className="mt-3 pl-6 space-y-2 text-sm text-muted-foreground">
-              <p>Your reputation score changes based on your actions:</p>
+              <p>Your reputation score changes based on your review alignment:</p>
               <ul className="space-y-1.5">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-mono text-xs">+1</span>
-                  <span>Vote aligned with majority consensus</span>
+                  <span className="text-green-600 font-mono text-xs">+10</span>
+                  <span>Vote aligned with consensus</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-600 font-mono text-xs">+2</span>
-                  <span>Successful endorsement (candidate hired)</span>
+                  <span className="text-red-600 font-mono text-xs">-5</span>
+                  <span>Mild deviation from consensus</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-2</span>
-                  <span>Vote against majority consensus</span>
+                  <span className="text-red-600 font-mono text-xs">-10</span>
+                  <span>Moderate deviation from consensus</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-2</span>
-                  <span>Poor endorsement outcome</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-600 font-mono text-xs">-1</span>
-                  <span>Inactivity (missed review deadlines)</span>
+                  <span className="text-red-600 font-mono text-xs">-20</span>
+                  <span>Severe deviation from consensus</span>
                 </li>
               </ul>
-              <p className="text-xs mt-2">Note: Actual values may vary. Check with your guild for specific scoring rules.</p>
             </div>
           )}
         </div>

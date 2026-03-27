@@ -71,8 +71,17 @@ export function ApplicationQuestionsSection({
           ))}
         </div>
 
-        <div data-field-error={fieldErrors.noAiDeclaration ? "" : undefined}>
-          <label className="flex items-center gap-3 text-sm font-medium text-foreground">
+        <div
+          data-field-error={fieldErrors.noAiDeclaration ? "" : undefined}
+          className={`mt-4 rounded-lg border-2 p-4 transition-colors ${
+            noAiDeclaration
+              ? "border-green-500/50 bg-green-500/5"
+              : fieldErrors.noAiDeclaration
+                ? "border-destructive bg-destructive/5"
+                : "border-orange-500/30 bg-orange-500/5"
+          }`}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={noAiDeclaration}
@@ -80,13 +89,15 @@ export function ApplicationQuestionsSection({
                 onNoAiDeclarationChange(e.target.checked);
                 onBlur?.("noAiDeclaration");
               }}
-              className={`h-4 w-4 rounded border ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
+              className={`mt-0.5 h-5 w-5 rounded border-2 accent-green-500 ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
             />
-            {generalTemplate?.noAiDeclarationText ||
-              "I wrote this myself and did not use AI or automated tools."}
+            <span className="text-sm font-semibold text-foreground">
+              {generalTemplate?.noAiDeclarationText ||
+                "I wrote this myself and did not use AI or automated tools."}
+            </span>
           </label>
           {fieldErrors.noAiDeclaration && (
-            <p className="mt-1 ml-7 text-sm text-destructive">{fieldErrors.noAiDeclaration}</p>
+            <p className="mt-2 ml-8 text-sm text-destructive font-medium">{fieldErrors.noAiDeclaration}</p>
           )}
         </div>
       </div>
@@ -108,9 +119,11 @@ export function ApplicationQuestionsSection({
         {loadingTemplates && !generalTemplate ? (
           <p className="text-sm text-muted-foreground">Loading questions...</p>
         ) : !generalTemplate ? (
-          <p className="text-sm text-muted-foreground">Select a guild to load the questions.</p>
+          <p className="text-sm text-muted-foreground">Select a guild above to load the application questions.</p>
+        ) : !generalTemplate.generalQuestions?.length ? (
+          <p className="text-sm text-muted-foreground">No general questions configured for this guild.</p>
         ) : (
-          (generalTemplate.generalQuestions || []).map((question: GuildApplicationQuestion, index: number) => {
+          generalTemplate.generalQuestions.map((question: GuildApplicationQuestion, index: number) => {
             const answerKey =
               question.id === "learning_from_failure" ? "learningFromFailure"
               : question.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"

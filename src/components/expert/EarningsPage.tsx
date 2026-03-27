@@ -124,14 +124,16 @@ export default function EarningsPage() {
     if (address) {
       refetch();
     }
-  }, [timeRange, guildFilter, page, address, refetch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable, only re-run on filter/page/address change
+  }, [timeRange, guildFilter, page, address]);
 
   // eslint-disable-next-line no-restricted-syntax -- subscribing to custom DOM event for cross-component state refresh
   useEffect(() => {
     const handler = () => refetch();
     window.addEventListener("vetted:reputation-refresh", handler);
     return () => window.removeEventListener("vetted:reputation-refresh", handler);
-  }, [refetch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable
+  }, []);
 
   const handleTimeChange = (range: TimeRange) => {
     setTimeRange(range);

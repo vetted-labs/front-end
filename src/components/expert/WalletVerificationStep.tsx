@@ -67,7 +67,12 @@ export function WalletVerificationStep({
           {signingError && (
             <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
               <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive">{signingError}</p>
+              <div className="text-sm text-destructive">
+                <p>{signingError}</p>
+                {signingError.toLowerCase().includes("network") || signingError.toLowerCase().includes("fetch") ? (
+                  <p className="mt-1 text-muted-foreground">Check your internet connection and try again. If the issue persists, the backend server may be down.</p>
+                ) : null}
+              </div>
             </div>
           )}
         </div>

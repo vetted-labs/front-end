@@ -61,7 +61,7 @@ export interface QuestionPart {
  * The API returns this via `expertApi.getGuildApplicationTemplate(guildId, "general")`.
  */
 export interface GeneralReviewTemplate {
-  questions?: GeneralReviewQuestion[];
+  generalQuestions?: GeneralReviewQuestion[];
   guidance?: string[];
   noAiDeclarationText?: string;
   rubric?: GeneralTemplateRubric;
