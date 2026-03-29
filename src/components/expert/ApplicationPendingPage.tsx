@@ -109,7 +109,7 @@ export default function ApplicationPendingPage() {
   });
 
   // Wait for wallet connection (skip redirect — expert layout handles auth guards)
-  if (!isConnected || !address || isLoading) return <DetailSkeleton />;
+  if (!isConnected || !address || isLoading) return null;
 
   if (error || !expert) {
     const isInsufficientMembers = error?.includes("minimum") || error?.includes("enough members") || error?.includes("members to process");

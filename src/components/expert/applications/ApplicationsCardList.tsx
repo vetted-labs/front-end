@@ -82,7 +82,7 @@ export function ApplicationsCardList({
   isStakedInGuild,
 }: ApplicationsCardListProps) {
   if (isLoading) {
-    return <LoadingSkeleton />;
+    return null;
   }
 
   if (totalItemCount === 0) {

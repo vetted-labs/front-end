@@ -123,7 +123,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     }
   };
 
-  if (isLoading) return <DetailSkeleton />;
+  if (isLoading) return null;
 
   if (error || !application) {
     return (

@@ -92,7 +92,7 @@ export function EndorsementDisputeDetailPage() {
     );
   };
 
-  if (isLoading) return <DetailSkeleton />;
+  if (isLoading) return null;
 
   if (!dispute) {
     return (
