@@ -45,7 +45,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
 
   return (
     <section>
-      <p className="text-xs font-bold tracking-[4px] uppercase text-muted-foreground mb-8 pl-1">
+      <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Tier Progression
       </p>
       <div className="relative flex flex-col gap-0 max-w-[520px] mx-auto">

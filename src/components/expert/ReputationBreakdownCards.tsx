@@ -196,10 +196,10 @@ export function ReputationBreakdownCards({
 
   return (
     <section>
-      <p className="text-xs font-bold tracking-[4px] uppercase text-muted-foreground mb-8 pl-1">
+      <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Score Breakdown
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

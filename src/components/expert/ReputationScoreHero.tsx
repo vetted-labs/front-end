@@ -29,48 +29,49 @@ export function ReputationScoreHero({
       : 100;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
+    <div className="rounded-xl border border-border bg-card p-8 mt-6">
       {/* Score */}
-      <p className="text-5xl font-bold font-display text-foreground tabular-nums">
+      <p className="text-5xl sm:text-6xl font-extrabold tracking-tighter text-foreground tabular-nums">
         {reputation}
-        <span className="text-xl font-normal text-muted-foreground ml-1">/1000</span>
+        <span className="text-xl sm:text-2xl font-semibold text-muted-foreground ml-1.5">/1000</span>
       </p>
-      <p className="text-xs text-muted-foreground tracking-wider uppercase mt-1">
+      <p className="text-xs text-muted-foreground tracking-widest uppercase mt-1.5 font-medium">
         Reputation Score
       </p>
 
       {/* Progress bar */}
-      <div className="mt-4 h-2 rounded-full bg-muted overflow-hidden">
+      <div className="mt-5 h-1.5 rounded-full bg-muted overflow-hidden">
         <div
           className="h-full rounded-full bg-primary transition-all duration-300"
           style={{ width: `${progressPct}%` }}
         />
       </div>
 
-      {/* Tier badge */}
-      <div className={`inline-flex items-center gap-2 mt-4 px-3 py-1.5 rounded-lg border ${tierColors.bg} ${tierColors.border}`}>
-        <Star className={`w-4 h-4 ${tierColors.text}`} />
-        <span className={`text-xs font-bold tracking-wider ${tierColors.text}`}>
-          {tier.name.toUpperCase()} TIER
-        </span>
-      </div>
-
-      {/* Stats row */}
-      <div className="flex items-center gap-6 mt-5 flex-wrap">
-        {totalGains > 0 && (
-          <div className={`flex items-center gap-2 text-sm font-medium ${STATUS_COLORS.positive.text}`}>
-            <TrendingUp className="w-3.5 h-3.5" />
-            +{totalGains} pts earned
-          </div>
-        )}
-        <div className="text-sm font-medium text-primary">
-          {alignmentRate}% alignment
+      {/* Tier badge + stats row */}
+      <div className="flex items-center justify-between mt-5 flex-wrap gap-4">
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${tierColors.bg} ${tierColors.border}`}>
+          <Star className={`w-4 h-4 ${tierColors.text}`} />
+          <span className={`text-xs font-bold tracking-wider ${tierColors.text}`}>
+            {tier.name.toUpperCase()} TIER
+          </span>
         </div>
-        {reviewCount > 0 && (
-          <div className="text-sm text-muted-foreground">
-            {reviewCount} reviews completed
+
+        <div className="flex items-center gap-5 flex-wrap">
+          {totalGains > 0 && (
+            <div className={`flex items-center gap-1.5 text-sm font-medium ${STATUS_COLORS.positive.text}`}>
+              <TrendingUp className="w-3.5 h-3.5" />
+              +{totalGains} pts earned
+            </div>
+          )}
+          <div className="text-sm font-medium text-primary">
+            {alignmentRate}% alignment
           </div>
-        )}
+          {reviewCount > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {reviewCount} reviews
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

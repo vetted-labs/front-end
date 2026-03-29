@@ -277,15 +277,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           <h2 className="font-display font-bold text-xl tracking-tight">
             Available Applications
           </h2>
-          <div className="flex items-center gap-3">
-            {loading ? (
-              <Skeleton className="h-4 w-24" />
-            ) : (
+          {!loading && (
+            <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-muted-foreground">
                 <span className="text-muted-foreground font-medium">{applicationsTotalItems}</span> applications
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <ApplicationsGrid
           applications={applications ?? []}

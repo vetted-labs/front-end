@@ -279,16 +279,12 @@ export function EnhancedExpertDashboard() {
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Dashboard
           </h1>
-          <div className="text-sm text-muted-foreground mt-0.5">
-            {loading ? (
-              <Skeleton className="h-4 w-40" />
-            ) : (
-              <>
-                {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
-                {profile.guilds?.length ?? 0} guilds
-              </>
-            )}
-          </div>
+          {!loading && (
+            <div className="text-sm text-muted-foreground mt-0.5">
+              {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
+              {profile.guilds?.length ?? 0} guilds
+            </div>
+          )}
         </div>
         {!loading && (
           <ActionButtonPanel

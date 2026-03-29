@@ -343,14 +343,6 @@ export default function LeaderboardPage() {
         <Alert variant="error">{error}</Alert>
       )}
 
-      {/* Loading */}
-      {isLoading && (
-        <>
-          <PodiumSkeleton />
-          <TableSkeleton />
-        </>
-      )}
-
       {/* Content */}
       {!isLoading && !error && (
         <>

@@ -193,8 +193,8 @@ export function ReputationTimeline({
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-8">
-        <p className="text-xs font-bold tracking-[4px] uppercase text-muted-foreground pl-1">
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
           Recent Impact
         </p>
         {pagination && (

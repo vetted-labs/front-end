@@ -120,7 +120,7 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
 
   return (
     <section>
-      <p className="text-xs font-bold tracking-[4px] uppercase text-muted-foreground mb-8 pl-1">
+      <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Score History
       </p>
       <Card padding="none" className="relative overflow-hidden">

@@ -94,6 +94,7 @@ export default function ReputationPage() {
 
   return (
     <div className="min-h-full animate-page-enter">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       {/* Hero Score Section */}
       <DataSection
         isLoading={loading}
@@ -122,7 +123,7 @@ export default function ReputationPage() {
         />
       </DataSection>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-20">
+      <div className="space-y-14 mt-14">
         {/* Breakdown Cards */}
         <DataSection
           isLoading={loading}
@@ -202,6 +203,7 @@ export default function ReputationPage() {
             onPageChange={setPage}
           />
         </DataSection>
+      </div>
       </div>
     </div>
   );
