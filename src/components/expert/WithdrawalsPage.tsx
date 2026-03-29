@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
-import { ArrowLeft, Loader2, ChevronRight } from "lucide-react";
+import { Loader2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,9 @@ import { toast } from "sonner";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { buttonVariants } from "@/components/ui/button";
 import { useTokenBalance } from "@/lib/hooks/useVettedContracts";
-import { useAuthContext } from "@/hooks/useAuthContext";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { StakingDonutChart } from "@/components/expert/StakingDonutChart";
+import { getGuildHexColor } from "@/config/colors";
 import type { GuildStakeInfo } from "@/types";
 
 const StakingModal = dynamic(
@@ -71,19 +73,23 @@ function getCooldownProgress(unlockTime: string): {
   return { percent, label: `${days}d ${hours}h` };
 }
 
+function formatCompactNumber(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toFixed(2);
+}
+
 /* ─── Component ────────────────────────────────────────── */
 
 export default function WithdrawalsPage() {
-  const { address: wagmiAddress } = useAccount();
-  const auth = useAuthContext();
-  const address = wagmiAddress || auth.walletAddress;
+  const { address } = useExpertAccount();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedGuildId, setSelectedGuildId] = useState<string | undefined>();
 
   const { balance, refetchBalance } = useTokenBalance();
 
-  // Fetch guild stakes
   const {
     data: guildStakes,
     isLoading: loadingStakes,
@@ -105,7 +111,6 @@ export default function WithdrawalsPage() {
     [guildStakes]
   );
 
-  // Fetch unstake requests for all guilds in parallel
   const { data: unstakeMap } = useFetch<Record<string, UnstakeInfo>>(
     async () => {
       if (guildsWithStakes.length === 0) return {};
@@ -124,12 +129,9 @@ export default function WithdrawalsPage() {
       );
       return Object.fromEntries(results);
     },
-    {
-      skip: !address || guildsWithStakes.length === 0,
-    }
+    { skip: !address || guildsWithStakes.length === 0 }
   );
 
-  // Merge stakes + unstake info
   const positions: GuildPosition[] = useMemo(
     () =>
       guildsWithStakes.map((g) => ({
@@ -139,7 +141,6 @@ export default function WithdrawalsPage() {
     [guildsWithStakes, unstakeMap]
   );
 
-  // Derived stats
   const totalStaked = useMemo(
     () => positions.reduce((sum, g) => sum + parseFloat(g.stakedAmount), 0),
     [positions]
@@ -164,6 +165,35 @@ export default function WithdrawalsPage() {
 
   const availableBalance =
     balance !== undefined ? parseFloat(formatEther(balance)) : 0;
+
+  const stakingRatio =
+    availableBalance > 0
+      ? ((totalStaked / (totalStaked + availableBalance)) * 100).toFixed(5)
+      : "0";
+
+  /* Sorted positions: highest stake first */
+  const sortedPositions = useMemo(
+    () =>
+      [...positions].sort(
+        (a, b) => parseFloat(b.stakedAmount) - parseFloat(a.stakedAmount)
+      ),
+    [positions]
+  );
+
+  /* Donut segments */
+  const donutSegments = useMemo(
+    () =>
+      sortedPositions.map((g) => {
+        const value = parseFloat(g.stakedAmount);
+        return {
+          label: g.guildName || g.guildId,
+          value,
+          color: getGuildHexColor(g.guildName || g.guildId),
+          percentage: totalStaked > 0 ? (value / totalStaked) * 100 : 0,
+        };
+      }),
+    [sortedPositions, totalStaked]
+  );
 
   const handleGuildClick = (guildId: string) => {
     setSelectedGuildId(guildId);
@@ -206,90 +236,147 @@ export default function WithdrawalsPage() {
   }
 
   return (
-    <div className="min-h-screen max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-page-enter">
-      {/* ── Header ── */}
-      <div className="mb-8">
-        <Link
-          href="/expert/dashboard"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "mb-4"
-          )}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
+    <div className="min-h-screen max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-page-enter">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/expert/dashboard" },
+          { label: "Staking Portfolio" },
+        ]}
+      />
 
-        <h1 className="text-3xl font-bold mb-2">Staking Portfolio</h1>
-        <p className="text-muted-foreground">
-          Manage your staked VETD across guilds
+      {/* ── Hero: Big Number ── */}
+      <div className="mb-10 mt-2">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
+          Total Staked Value
         </p>
+        <div className="flex items-baseline gap-3 mb-3">
+          <span className="text-5xl sm:text-6xl font-extrabold tracking-tighter tabular-nums">
+            {formatCompactNumber(totalStaked)}
+          </span>
+          <span className="text-2xl font-semibold text-muted-foreground tracking-tight">
+            VETD
+          </span>
+        </div>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          {positions.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              {positions.length} active guild
+              {positions.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {pendingUnstake.totalAmount > 0 && pendingUnstake.earliestUnlock && (
+            <span className="text-xs">
+              {pendingUnstake.totalAmount.toFixed(2)} VETD pending &middot;{" "}
+              {getCooldownProgress(pendingUnstake.earliestUnlock).label} left
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Staked — purple accent */}
-        <div className="rounded-xl bg-primary/[0.08] border border-primary/20 p-6">
-          <div className="text-xs uppercase tracking-[1.2px] text-primary font-medium mb-1.5">
-            Total Staked
-          </div>
-          <div className="text-3xl font-bold leading-tight tabular-nums">
-            {totalStaked.toFixed(2)}
-          </div>
-          <div className="text-sm text-primary/70 mt-0.5">VETD</div>
-        </div>
-
-        {/* Available Balance */}
-        <div className="rounded-xl bg-card border border-border p-6">
-          <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
+      {/* ── Stats Strip ── */}
+      <div className="grid grid-cols-3 rounded-xl border border-border overflow-hidden mb-10">
+        <div className="bg-card p-5 border-r border-border">
+          <div className="text-xs text-muted-foreground mb-1.5 font-medium">
             Available Balance
           </div>
-          <div className="text-3xl font-bold leading-tight tabular-nums">
-            {availableBalance.toFixed(2)}
+          <div className="text-lg font-bold tabular-nums tracking-tight font-mono">
+            {formatCompactNumber(availableBalance)}
+            <span className="text-xs font-normal text-muted-foreground ml-1">
+              VETD
+            </span>
           </div>
-          <div className="text-sm text-muted-foreground mt-0.5">VETD</div>
         </div>
-
-        {/* Pending Unstake — muted gold */}
-        <div className="rounded-xl bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 p-6">
-          <div className="text-xs uppercase tracking-[1.2px] text-[#d9b45f] font-medium mb-1.5">
+        <div className="bg-card p-5 border-r border-border">
+          <div className="text-xs text-muted-foreground mb-1.5 font-medium">
             Pending Unstake
           </div>
-          <div className="text-3xl font-bold leading-tight tabular-nums">
+          <div
+            className={cn(
+              "text-lg font-bold tabular-nums tracking-tight font-mono",
+              pendingUnstake.totalAmount === 0 && "text-muted-foreground"
+            )}
+          >
             {pendingUnstake.totalAmount.toFixed(2)}
-          </div>
-          <div className="text-sm text-[#d9b45f] mt-0.5">
-            {pendingUnstake.earliestUnlock
-              ? `VETD · ${getCooldownProgress(pendingUnstake.earliestUnlock).label} left`
-              : "VETD"}
+            <span className="text-xs font-normal text-muted-foreground ml-1">
+              VETD
+            </span>
           </div>
         </div>
-
-        {/* Active Guilds */}
-        <div className="rounded-xl bg-card border border-border p-6">
-          <div className="text-xs uppercase tracking-[1.2px] text-muted-foreground font-medium mb-1.5">
-            Active Guilds
+        <div className="bg-card p-5">
+          <div className="text-xs text-muted-foreground mb-1.5 font-medium">
+            Staking Ratio
           </div>
-          <div className="text-3xl font-bold leading-tight tabular-nums">
-            {positions.length}
+          <div className="text-lg font-bold tabular-nums tracking-tight font-mono text-primary">
+            {stakingRatio}%
           </div>
-          <div className="text-sm text-muted-foreground mt-0.5">guilds staked</div>
         </div>
       </div>
 
-      {/* ── Positions List ── */}
-      <div className="flex justify-between items-center mb-3.5">
-        <h2 className="text-sm font-bold text-foreground">
-          Your Positions
-        </h2>
-        {positions.length > 0 && (
-          <span className="text-xs text-muted-foreground">
-            Click any guild to withdraw
-          </span>
-        )}
-      </div>
+      {/* ── Allocation Bar ── */}
+      {sortedPositions.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            Allocation
+          </h2>
+          {/* Stacked bar */}
+          <div className="flex h-9 rounded-lg overflow-hidden gap-0.5 mb-4">
+            {sortedPositions.map((g) => {
+              const pct =
+                totalStaked > 0
+                  ? (parseFloat(g.stakedAmount) / totalStaked) * 100
+                  : 0;
+              return (
+                <button
+                  key={g.guildId}
+                  onClick={() => handleGuildClick(g.guildId)}
+                  className="transition-all hover:brightness-110 hover:scale-y-105 origin-center cursor-pointer"
+                  style={{
+                    width: `${pct}%`,
+                    background: getGuildHexColor(g.guildName || g.guildId),
+                    minWidth: pct > 0 ? 3 : 0,
+                  }}
+                  title={`${g.guildName}: ${parseFloat(g.stakedAmount).toFixed(2)} VETD (${pct.toFixed(1)}%)`}
+                />
+              );
+            })}
+          </div>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+            {sortedPositions.map((g) => {
+              const pct =
+                totalStaked > 0
+                  ? (parseFloat(g.stakedAmount) / totalStaked) * 100
+                  : 0;
+              const shortName = (g.guildName || g.guildId)
+                .split(",")[0]
+                .split("&")[0]
+                .trim();
+              return (
+                <div
+                  key={g.guildId}
+                  className="flex items-center gap-2 text-sm text-muted-foreground"
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                    style={{
+                      background: getGuildHexColor(g.guildName || g.guildId),
+                    }}
+                  />
+                  <span>{shortName}</span>
+                  <span className="font-mono text-xs text-muted-foreground/60 tabular-nums">
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-      {positions.length === 0 ? (
+      {/* ── Donut + Positions Grid ── */}
+      {sortedPositions.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
           No active stakes found across any guilds.{" "}
           <Link
@@ -300,105 +387,152 @@ export default function WithdrawalsPage() {
           </Link>
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
-          {positions.map((guild) => {
-            const amount = parseFloat(guild.stakedAmount);
-            const pct =
-              totalStaked > 0
-                ? ((amount / totalStaked) * 100).toFixed(1)
-                : "0";
-            const hasCooldown = guild.unstakeInfo?.hasRequest;
-            const cooldown =
-              hasCooldown && guild.unstakeInfo?.unlockTime
-                ? getCooldownProgress(guild.unstakeInfo.unlockTime)
-                : null;
-
-            return (
-              <button
-                key={guild.guildId}
-                onClick={() => handleGuildClick(guild.guildId)}
-                className={cn(
-                  "flex items-center justify-between rounded-xl px-5 py-4 text-left transition-colors cursor-pointer",
-                  hasCooldown
-                    ? "bg-[#d9b45f]/[0.04] border border-[#d9b45f]/15 hover:bg-[#d9b45f]/[0.07]"
-                    : "bg-card border border-border hover:bg-muted/50"
-                )}
-              >
-                {/* Left: icon + name */}
-                <div className="flex items-center gap-4 min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+          {/* Left: Donut */}
+          <div className="rounded-xl border border-border bg-card p-6 lg:sticky lg:top-6 flex flex-col items-center">
+            <StakingDonutChart
+              segments={donutSegments}
+              totalValue={totalStaked.toFixed(0)}
+              totalLabel="Total VETD"
+            />
+            {/* Mini legend */}
+            <div className="w-full mt-4 flex flex-col divide-y divide-border">
+              {sortedPositions.map((g) => {
+                const pct =
+                  totalStaked > 0
+                    ? (parseFloat(g.stakedAmount) / totalStaked) * 100
+                    : 0;
+                const shortName = (g.guildName || g.guildId)
+                  .split(",")[0]
+                  .split("&")[0]
+                  .trim();
+                return (
                   <div
-                    className={cn(
-                      "w-[38px] h-[38px] rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0",
-                      hasCooldown
-                        ? "bg-[#d9b45f]/12 text-[#d9b45f]"
-                        : "bg-muted/50 text-muted-foreground"
-                    )}
+                    key={g.guildId}
+                    className="flex items-center justify-between py-2 text-sm"
                   >
-                    {getGuildAbbreviation(guild.guildName || guild.guildId)}
-                  </div>
-                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium truncate">
-                        {guild.guildName || guild.guildId}
-                      </span>
-                      {hasCooldown && (
-                        <span className="text-xs font-medium uppercase tracking-[0.5px] bg-[#d9b45f]/12 text-[#d9b45f] px-2 py-0.5 rounded flex-shrink-0">
-                          Cooldown
-                        </span>
-                      )}
-                    </div>
-                    {hasCooldown &&
-                      guild.unstakeInfo?.amount &&
-                      cooldown && (
-                        <div className="text-xs text-[#d9b45f] mt-0.5">
-                          Unstaking{" "}
-                          {parseFloat(guild.unstakeInfo.amount).toFixed(2)} VETD
-                          {" · "}
-                          {cooldown.label} remaining
-                        </div>
-                      )}
-                  </div>
-                </div>
-
-                {/* Right: amount + bar + chevron */}
-                <div className="flex items-center gap-6 flex-shrink-0">
-                  <div className="text-right">
-                    <div className="text-base font-bold tabular-nums">
-                      {amount.toFixed(2)} VETD
-                    </div>
-                    <div className="text-xs text-muted-foreground">{pct}%</div>
-                  </div>
-
-                  {/* Allocation / cooldown bar */}
-                  <div className="w-20 hidden sm:block">
-                    <div
-                      className={cn(
-                        "h-1 rounded-full",
-                        hasCooldown ? "bg-[#d9b45f]/15" : "bg-muted/50"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          hasCooldown ? "bg-[#d9b45f]/70" : "bg-primary/60"
-                        )}
+                      <span
+                        className="w-2 h-2 rounded-sm flex-shrink-0"
                         style={{
-                          width: `${hasCooldown && cooldown ? cooldown.percent : parseFloat(pct)}%`,
+                          background: getGuildHexColor(
+                            g.guildName || g.guildId
+                          ),
                         }}
                       />
+                      <span className="text-muted-foreground">
+                        {shortName}
+                      </span>
                     </div>
-                    {hasCooldown && cooldown && (
-                      <div className="text-xs text-[#d9b45f] mt-1 text-center">
-                        {Math.round(cooldown.percent)}%
-                      </div>
-                    )}
+                    <span className="font-mono text-xs text-muted-foreground/60 tabular-nums">
+                      {pct.toFixed(1)}%
+                    </span>
                   </div>
+                );
+              })}
+            </div>
+          </div>
 
-                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                </div>
-              </button>
-            );
-          })}
+          {/* Right: Positions list */}
+          <div>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-base font-bold">Guild Positions</h2>
+              <span className="text-xs text-muted-foreground">
+                Click to manage stake
+              </span>
+            </div>
+            <div className="flex flex-col">
+              {sortedPositions.map((guild, index) => {
+                const amount = parseFloat(guild.stakedAmount);
+                const pct =
+                  totalStaked > 0 ? (amount / totalStaked) * 100 : 0;
+                const hasCooldown = guild.unstakeInfo?.hasRequest;
+                const cooldown =
+                  hasCooldown && guild.unstakeInfo?.unlockTime
+                    ? getCooldownProgress(guild.unstakeInfo.unlockTime)
+                    : null;
+                const hexColor = getGuildHexColor(
+                  guild.guildName || guild.guildId
+                );
+
+                return (
+                  <button
+                    key={guild.guildId}
+                    onClick={() => handleGuildClick(guild.guildId)}
+                    className="flex items-center gap-3.5 px-3 py-3.5 rounded-xl text-left transition-all hover:bg-muted/40 cursor-pointer group"
+                  >
+                    {/* Rank */}
+                    <span className="w-5 text-center text-xs font-mono text-muted-foreground/50 tabular-nums">
+                      {index + 1}
+                    </span>
+
+                    {/* Guild icon */}
+                    <div
+                      className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                      style={{
+                        background: `${hexColor}1a`,
+                        color: hexColor,
+                      }}
+                    >
+                      {getGuildAbbreviation(
+                        guild.guildName || guild.guildId
+                      )}
+                    </div>
+
+                    {/* Name + bar */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold truncate">
+                          {guild.guildName || guild.guildId}
+                        </span>
+                        {hasCooldown && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide bg-[#d9b45f]/12 text-[#d9b45f] px-1.5 py-0.5 rounded flex-shrink-0">
+                            Cooldown
+                          </span>
+                        )}
+                      </div>
+                      <div className="h-[3px] bg-muted/40 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${pct}%`,
+                            background: hexColor,
+                            opacity: 0.6,
+                          }}
+                        />
+                      </div>
+                      {hasCooldown &&
+                        guild.unstakeInfo?.amount &&
+                        cooldown && (
+                          <div className="text-[11px] text-[#d9b45f] mt-1">
+                            Unstaking{" "}
+                            {parseFloat(guild.unstakeInfo.amount).toFixed(2)}{" "}
+                            VETD {" · "}
+                            {cooldown.label} remaining
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-sm font-bold tabular-nums font-mono">
+                        {amount.toFixed(2)}
+                        <span className="text-xs font-normal text-muted-foreground ml-1">
+                          VETD
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-mono text-muted-foreground/50 tabular-nums">
+                        {pct.toFixed(1)}%
+                      </div>
+                    </div>
+
+                    {/* Chevron */}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 

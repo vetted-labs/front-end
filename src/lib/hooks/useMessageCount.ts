@@ -35,7 +35,8 @@ export function useMessageCount(enabled: boolean) {
     }
 
     failedRef.current = false;
-    fetchCount();
+    // Defer initial fetch so page content renders first
+    const initialTimer = setTimeout(fetchCount, 500);
     const interval = setInterval(fetchCount, 15000);
 
     const handler = () => {
@@ -45,6 +46,7 @@ export function useMessageCount(enabled: boolean) {
     window.addEventListener(MESSAGE_READ_EVENT, handler);
 
     return () => {
+      clearTimeout(initialTimer);
       clearInterval(interval);
       window.removeEventListener(MESSAGE_READ_EVENT, handler);
     };

@@ -10,7 +10,8 @@ import { useRewardClaiming } from "@/lib/hooks/useVettedContracts";
 import { GuildSelector } from "@/components/ui/guild-selector";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { Loader2 } from "lucide-react";
+import { Skeleton, SkeletonStatCard, SkeletonListItem } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import type {
@@ -161,14 +162,6 @@ export default function EarningsPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20" role="status" aria-label="Loading earnings">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -185,10 +178,21 @@ export default function EarningsPage() {
         </div>
 
         {/* ── Summary stat cards ── */}
-        <EarningsSummaryCards
-          summary={summary}
-          reputation={profile?.reputation ?? 0}
-        />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonStatCard key={i} />
+              ))}
+            </div>
+          }
+        >
+          <EarningsSummaryCards
+            summary={summary}
+            reputation={profile?.reputation ?? 0}
+          />
+        </DataSection>
 
         {/* ── Claim Rewards ── */}
         <ClaimRewardsCard
@@ -229,15 +233,31 @@ export default function EarningsPage() {
         </div>
 
         {/* ── Earnings chart ── */}
-        <EarningsChart items={items} />
+        <DataSection
+          isLoading={loading}
+          skeleton={<Skeleton className="h-64 w-full rounded-xl" />}
+        >
+          <EarningsChart items={items} />
+        </DataSection>
 
         {/* ── Transaction timeline ── */}
-        <EarningsTimeline
-          items={items}
-          pagination={pagination}
-          page={page}
-          onPageChange={setPage}
-        />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <SkeletonListItem key={i} />
+              ))}
+            </div>
+          }
+        >
+          <EarningsTimeline
+            items={items}
+            pagination={pagination}
+            page={page}
+            onPageChange={setPage}
+          />
+        </DataSection>
 
         {/* ── How It Works (collapsible) ── */}
         <HowEarningsWork />

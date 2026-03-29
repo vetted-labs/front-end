@@ -82,13 +82,15 @@ function getInitialAuthState(): AuthState {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
 
-  // Re-sync auth state when tokens are refreshed by the API layer
-  // eslint-disable-next-line no-restricted-syntax -- subscribes to custom DOM event
+  // Re-sync auth state from localStorage after hydration.
+  // SSR renders with empty state (no localStorage); this ensures the first client
+  // render picks up the stored session without waiting for an external event.
+  // eslint-disable-next-line no-restricted-syntax -- hydration re-sync from localStorage
   useEffect(() => {
-    const handler = () => {
-      const newState = getInitialAuthState();
-      setAuthState(newState);
-    };
+    setAuthState(getInitialAuthState());
+
+    // Also re-sync when tokens are refreshed by the API layer
+    const handler = () => setAuthState(getInitialAuthState());
     window.addEventListener('auth-token-refreshed', handler);
     return () => window.removeEventListener('auth-token-refreshed', handler);
   }, []);
@@ -114,8 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // clear expert auth so there's no ghost session.
   // Debounce: MetaMask can briefly emit "disconnected" before reconnecting,
   // so wait before clearing auth — if wallet reconnects in time, cleanup cancels the timeout.
+  // In E2E mode, wagmi is always "disconnected" — skip to preserve localStorage auth.
   // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi wallet status changes
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_E2E_MODE === "true") return;
     if (walletStatus === 'reconnecting' || walletStatus === 'connecting') return;
     if (walletStatus !== 'disconnected' || authState.userType !== 'expert') return;
 

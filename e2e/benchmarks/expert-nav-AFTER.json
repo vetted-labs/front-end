@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-03-29T15:06:24.548Z",
+  "label": "AFTER all optimizations (skeleton layout + page skeletons + no opacity animation)",
+  "summary": {
+    "avgMs": 2231,
+    "minMs": 1554,
+    "maxMs": 2457,
+    "totalApiCalls": 19,
+    "avgDomNodes": 449,
+    "pagesWorking": "11/11",
+    "jsErrors": 0
+  },
+  "routes": [
+    { "route": "Applications", "totalMs": 2457, "commitToContentMs": 1448, "apiCalls": 3, "domNodes": 453, "contentFound": "Reviews" },
+    { "route": "Endorsements", "totalMs": 2413, "commitToContentMs": 1426, "apiCalls": 1, "domNodes": 377, "contentFound": "Endorsement Marketplace" },
+    { "route": "Notifications", "totalMs": 2318, "commitToContentMs": 1406, "apiCalls": 1, "domNodes": 381, "contentFound": "Notifications" },
+    { "route": "Proposals", "totalMs": 2282, "commitToContentMs": 1420, "apiCalls": 1, "domNodes": 408, "contentFound": "Shape the" },
+    { "route": "Earnings", "totalMs": 2270, "commitToContentMs": 1417, "apiCalls": 2, "domNodes": 452, "contentFound": "Earnings" },
+    { "route": "My Guilds", "totalMs": 2257, "commitToContentMs": 1415, "apiCalls": 1, "domNodes": 388, "contentFound": "My Guilds" },
+    { "route": "Withdrawals", "totalMs": 2255, "commitToContentMs": 1430, "apiCalls": 1, "domNodes": 395, "contentFound": "Staking Portfolio" },
+    { "route": "Leaderboard", "totalMs": 2247, "commitToContentMs": 1437, "apiCalls": 2, "domNodes": 458, "contentFound": "Leaderboard" },
+    { "route": "Guild Ranks", "totalMs": 2246, "commitToContentMs": 1413, "apiCalls": 1, "domNodes": 583, "contentFound": "Advance Your Guild Rank" },
+    { "route": "Reputation", "totalMs": 2243, "commitToContentMs": 1427, "apiCalls": 2, "domNodes": 575, "contentFound": "Reputation Score" },
+    { "route": "Dashboard", "totalMs": 1554, "commitToContentMs": 1413, "apiCalls": 4, "domNodes": 464, "contentFound": "Dashboard" }
+  ]
+}

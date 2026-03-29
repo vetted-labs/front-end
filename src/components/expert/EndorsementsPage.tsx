@@ -65,18 +65,16 @@ export default function EndorsementsPage() {
           </div>
         </div>
 
-        {selectedGuild && (
-          <EndorsementMarketplace
-            key={selectedGuild.id}
-            guildId={selectedGuild.id}
-            guildName={selectedGuild.name}
-            blockchainGuildId={selectedGuild.blockchainGuildId as `0x${string}` | undefined}
-            initialApplicationId={applicationIdParam || undefined}
-            guilds={guildRecords}
-            selectedGuildId={selectedGuild.id}
-            onGuildChange={setManualGuildId}
-          />
-        )}
+        <EndorsementMarketplace
+          key={selectedGuild?.id ?? "loading"}
+          guildId={selectedGuild?.id ?? ""}
+          guildName={selectedGuild?.name ?? ""}
+          blockchainGuildId={selectedGuild?.blockchainGuildId as `0x${string}` | undefined}
+          initialApplicationId={applicationIdParam || undefined}
+          guilds={guildRecords}
+          selectedGuildId={selectedGuild?.id}
+          onGuildChange={setManualGuildId}
+        />
       </div>
     </div>
   );

@@ -13,12 +13,18 @@ type ExpertStatus = string | null;
  *
  * Defers the initial read to useEffect to avoid SSR hydration mismatches.
  */
-export function useExpertStatus() {
-  const [status, setStatus] = useState<ExpertStatus>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+function readStorageKey(): ExpertStatus {
+  if (typeof window === "undefined") return null;
+  try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
+}
 
-  // Read from localStorage after mount (SSR-safe)
+export function useExpertStatus() {
+  const [status, setStatus] = useState<ExpertStatus>(readStorageKey);
+  const [isHydrated, setIsHydrated] = useState(() => typeof window !== "undefined");
+
+  // Subscribe to cross-tab and same-tab storage changes
   useEffect(() => {
+    // Re-read on mount in case SSR value was stale
     setStatus(localStorage.getItem(STORAGE_KEY));
     setIsHydrated(true);
 

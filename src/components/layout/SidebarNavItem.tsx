@@ -44,6 +44,7 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
   return (
     <Link
       href={href}
+      prefetch={true}
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         isActive

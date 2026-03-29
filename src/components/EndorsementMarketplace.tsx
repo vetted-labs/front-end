@@ -39,6 +39,8 @@ const EndorsementTransactionModal = dynamic(
 import { EndorsementHeader } from "./endorsements/EndorsementHeader";
 import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 import { STATUS_COLORS } from "@/config/colors";
+import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 
 interface EndorsementMarketplaceProps {
   guildId: string;
@@ -210,13 +212,6 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       })
     : null;
 
-  // Only show loading on initial load — never unmount mid-transaction.
-  // useFetch/usePaginatedFetch set isLoading=true on refetch too, which would
-  // destroy in-flight transaction state (txHash, txStep, etc.) if we returned null.
-  if ((loading || endorsementsLoading) && address && !transactionModalOpen && txStep === "idle") {
-    return null;
-  }
-
   const isOnSepolia = chain?.id === sepolia.id;
 
   return (
@@ -249,15 +244,32 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         </Card>
       )}
 
-      <MyActiveEndorsements
-        userEndorsements={userEndorsements}
-        allUserEndorsements={allUserEndorsements}
-        guildName={guildName}
-        onSelectEndorsement={(applicationForModal) => {
-          setSelectedApp(applicationForModal);
-          setDetailsModalOpen(true);
-        }}
-      />
+      <DataSection
+        isLoading={endorsementsLoading}
+        skeleton={
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3">
+                Your Active Endorsements
+              </h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              <SkeletonCard className="flex-none w-[340px]" />
+              <SkeletonCard className="flex-none w-[340px]" />
+            </div>
+          </div>
+        }
+      >
+        <MyActiveEndorsements
+          userEndorsements={userEndorsements}
+          allUserEndorsements={allUserEndorsements}
+          guildName={guildName}
+          onSelectEndorsement={(applicationForModal) => {
+            setSelectedApp(applicationForModal);
+            setDetailsModalOpen(true);
+          }}
+        />
+      </DataSection>
 
       {/* Available Applications */}
       <div className="mt-8">
@@ -266,9 +278,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
             Available Applications
           </h2>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-muted-foreground">
-              <span className="text-muted-foreground font-medium">{applicationsTotalItems}</span> applications
-            </span>
+            {loading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <span className="font-mono text-xs text-muted-foreground">
+                <span className="text-muted-foreground font-medium">{applicationsTotalItems}</span> applications
+              </span>
+            )}
           </div>
         </div>
         <ApplicationsGrid
@@ -277,12 +293,14 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           onSelectApplication={handleViewDetails}
           onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
         />
-        <PaginationNav
-          page={applicationsPage}
-          totalPages={applicationsTotalPages}
-          onPageChange={setApplicationsPage}
-          className="mt-6"
-        />
+        {!loading && (
+          <PaginationNav
+            page={applicationsPage}
+            totalPages={applicationsTotalPages}
+            onPageChange={setApplicationsPage}
+            className="mt-6"
+          />
+        )}
       </div>
 
       {/* Candidate Details Modal */}

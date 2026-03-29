@@ -84,8 +84,8 @@ export function useNotificationCountPolling(
       }
     };
 
-    // Initial fetch + start the recursive polling chain
-    fetchAndSchedule();
+    // Defer initial fetch so page content renders first
+    const initialTimer = setTimeout(fetchAndSchedule, 500);
 
     const handler = () => {
       backoffRef.current = 0;
@@ -95,6 +95,7 @@ export function useNotificationCountPolling(
     window.addEventListener(eventName, handler);
 
     return () => {
+      clearTimeout(initialTimer);
       clearTimer();
       window.removeEventListener(eventName, handler);
     };

@@ -1,5 +1,6 @@
 import { ApplicationCard } from './ApplicationCard';
 import { Users } from 'lucide-react';
+import { SkeletonCard } from "@/components/ui/skeleton";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationsGridProps {
@@ -12,9 +13,9 @@ interface ApplicationsGridProps {
 export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse }: ApplicationsGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-80 bg-card animate-pulse rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <SkeletonCard key={i} className="h-80" />
         ))}
       </div>
     );

@@ -37,4 +37,7 @@ export type { RevealProps } from "./primitives/Reveal";
 export { Counter } from "./primitives/Counter";
 export type { CounterProps } from "./primitives/Counter";
 
+export { DataSection } from "./primitives/DataSection";
+export type { DataSectionProps } from "./primitives/DataSection";
+
 export { PageTransition } from "./PageTransition";

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAccount } from "wagmi";
-import { useAuthContext } from "@/hooks/useAuthContext";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi, guildsApi, guildApplicationsApi, blockchainApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
@@ -25,10 +24,8 @@ export type HistoryItem =
   | { type: "expert"; data: ExpertMembershipApplication; sortDate: string };
 
 export function useApplicationsData() {
-  const { address: wagmiAddress } = useAccount();
+  const { address } = useExpertAccount();
   const searchParams = useSearchParams();
-  const auth = useAuthContext();
-  const address = wagmiAddress || auth.walletAddress;
   const { guilds: guildRecords } = useGuilds();
 
   const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string }>(ALL_GUILDS);

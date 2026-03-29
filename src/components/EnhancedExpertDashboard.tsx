@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
-import { Loader2 } from "lucide-react";
+
+import { Skeleton, SkeletonStatCard, SkeletonCard } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { expertApi, guildApplicationsApi, blockchainApi } from "@/lib/api";
@@ -17,7 +19,7 @@ import { SlimNotificationsFeed } from "@/components/dashboard/SlimNotificationsF
 import { WalletVerificationModal } from "@/components/WalletVerificationModal";
 import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { useMountEffect } from "@/lib/hooks/useMountEffect";
+
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
 import {
@@ -29,7 +31,6 @@ import type { ExpertProfile, ExpertGuild } from "@/types";
 export function EnhancedExpertDashboard() {
   const router = useRouter();
   const { address, isConnected, isReconnecting } = useExpertAccount();
-  const [mounted, setMounted] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const {
     isSigning,
@@ -38,19 +39,14 @@ export function EnhancedExpertDashboard() {
     requestVerification,
   } = useWalletVerification();
 
-  useMountEffect(() => {
-    setMounted(true);
-  });
-
   // Redirect when disconnected (with grace period for reconnection)
   // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi connection state
   useEffect(() => {
-    if (!mounted) return;
-    if (isConnected && address) return;
+    if (address) return;
     if (isReconnecting) return;
     const timer = setTimeout(() => router.push("/"), 3000);
     return () => clearTimeout(timer);
-  }, [mounted, isConnected, address, isReconnecting, router]);
+  }, [isConnected, address, isReconnecting, router]);
 
   // Phase 1: Fetch profile and earnings
   const { data: profile, isLoading, error, refetch } = useFetch(
@@ -95,7 +91,7 @@ export function EnhancedExpertDashboard() {
       } as ExpertProfile;
     },
     {
-      skip: !mounted || !isConnected || !address,
+      skip: !address,
       onSuccess: () => {
         if (!address) return;
         // Check wallet verification in background
@@ -177,7 +173,7 @@ export function EnhancedExpertDashboard() {
       return { stakesMap, totalStaked };
     },
     {
-      skip: !mounted || !isConnected || !address || !profile?.guilds?.length || !!error,
+      skip: !address || !profile?.guilds?.length || !!error,
     }
   );
 
@@ -256,27 +252,7 @@ export function EnhancedExpertDashboard() {
     }
   };
 
-  // Loading state
-  if (!mounted || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Alert variant="error">
-          Failed to load dashboard: {error}
-        </Alert>
-      </div>
-    );
-  }
-
-  if (!profile) return null;
+  const loading = isLoading || !profile;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -292,73 +268,120 @@ export function EnhancedExpertDashboard() {
         />
       )}
 
-      {/* Section 1: Header */}
+      {/* Error alert — inline, not full-page replacement */}
+      {error && (
+        <Alert variant="error">Failed to load dashboard: {error}</Alert>
+      )}
+
+      {/* Section 1: Header — always visible */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
-            {profile.guilds?.length ?? 0} guilds
-          </p>
+          <div className="text-sm text-muted-foreground mt-0.5">
+            {loading ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              <>
+                {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
+                {profile.guilds?.length ?? 0} guilds
+              </>
+            )}
+          </div>
         </div>
-        <ActionButtonPanel
-          stakingStatus={stakingStatus}
-          onRefresh={refetch}
-        />
+        {!loading && (
+          <ActionButtonPanel
+            stakingStatus={stakingStatus}
+            onRefresh={refetch}
+          />
+        )}
       </div>
 
       {/* Section 2: Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Reputation"
-          value={profile.reputation ?? 0}
-          warningDot={isDecayActive}
-          subtext={
-            isDecayActive ? "\u25BC -10/cycle \u00B7 decay active" : undefined
-          }
-          subtextVariant={isDecayActive ? "warning" : "default"}
-        />
-        <StatCard
-          label="Earnings"
-          value={`$${Math.round(profile.totalEarnings ?? 0).toLocaleString()}`}
-          subtext="total earned"
-          subtextVariant="default"
-        />
-        <StatCard
-          label="Staked VETD"
-          value={Math.round(totalStaked).toLocaleString()}
-          subtext={`across ${profile.guilds?.length ?? 0} guilds`}
-        />
-        <StatCard
-          label="Reviews"
-          value={profile.reviewCount ?? 0}
-          subtext={
-            consensusRate != null
-              ? `${consensusRate}% consensus rate`
-              : undefined
-          }
-        />
-      </div>
+      <DataSection
+        isLoading={loading}
+        skeleton={
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Reputation"
+            value={profile?.reputation ?? 0}
+            warningDot={isDecayActive}
+            subtext={
+              isDecayActive ? "\u25BC -10/cycle \u00B7 decay active" : undefined
+            }
+            subtextVariant={isDecayActive ? "warning" : "default"}
+          />
+          <StatCard
+            label="Earnings"
+            value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
+            subtext="total earned"
+            subtextVariant="default"
+          />
+          <StatCard
+            label="Staked VETD"
+            value={Math.round(totalStaked).toLocaleString()}
+            subtext={`across ${profile?.guilds?.length ?? 0} guilds`}
+          />
+          <StatCard
+            label="Reviews"
+            value={profile?.reviewCount ?? 0}
+            subtext={
+              consensusRate != null
+                ? `${consensusRate}% consensus rate`
+                : undefined
+            }
+          />
+        </div>
+      </DataSection>
 
       {/* Section 3: Review Queue + Rank Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-        <ReviewQueue applications={assignedApplications ?? []} />
-        <RankProgress guilds={profile.guilds ?? []} />
-      </div>
+      <DataSection
+        isLoading={loading}
+        skeleton={
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+            <SkeletonCard className="min-h-[240px]" />
+            <SkeletonCard className="min-h-[240px]" />
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+          <ReviewQueue applications={assignedApplications ?? []} />
+          <RankProgress guilds={profile?.guilds ?? []} />
+        </div>
+      </DataSection>
 
       {/* Section 4: Your Guilds */}
-      <GuildsSection
-        guilds={profile.guilds ?? []}
-        guildStakes={guildStakes}
-      />
+      <DataSection
+        isLoading={loading}
+        skeleton={<SkeletonCard className="min-h-[160px]" />}
+      >
+        <GuildsSection
+          guilds={profile?.guilds ?? []}
+          guildStakes={guildStakes}
+        />
+      </DataSection>
 
       {/* Section 5: Recent Activity + Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-        <RecentActivity activities={profile.recentActivity ?? []} />
-        <SlimNotificationsFeed walletAddress={address!} />
-      </div>
+      <DataSection
+        isLoading={loading}
+        skeleton={
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+            <SkeletonCard className="min-h-[180px]" />
+            <SkeletonCard className="min-h-[180px]" />
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+          <RecentActivity activities={profile?.recentActivity ?? []} />
+          <SlimNotificationsFeed walletAddress={address!} />
+        </div>
+      </DataSection>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { expertApi } from "@/lib/api";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
+
 /** Routes a pending expert is allowed to visit */
 const PENDING_ALLOWED_PREFIXES = [
   "/expert/application-pending",
@@ -39,21 +40,21 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   const isE2E = process.env.NEXT_PUBLIC_E2E_MODE === "true";
   const address = wagmiAddress || (isE2E ? auth.walletAddress : undefined);
   const { expertStatus, isHydrated, setExpertStatus, clearExpertStatus } = useExpertStatus();
-  const [checked, setChecked] = useState(false);
+  // Resolve checked synchronously when possible to avoid an extra render cycle.
+  // If hydrated + not pending → show children immediately. Auth redirects happen in effects.
+  const canShow = isHydrated && (isE2E || status !== "reconnecting" && status !== "connecting")
+    && (isE2E ? !!address : (isConnected || status === "disconnected"))
+    && expertStatus !== "pending";
+  const [checked, setChecked] = useState(canShow);
   const verifiedRef = useRef(false);
 
-  // Quick check to block immediately (prevents flash) — wait for hydration + wallet reconnection
+  // Auth guard — redirect disconnected wallets or pending experts
   // eslint-disable-next-line no-restricted-syntax -- guards route access based on wagmi + expert status
   useEffect(() => {
     if (!isHydrated) return;
-    // Wait for wagmi to finish reconnecting before deciding
     if (status === "reconnecting" || status === "connecting") return;
 
-    // Wallet not connected after reconnection settled — redirect to login.
-    // Debounce: MetaMask can briefly show "disconnected" before reconnecting,
-    // so delay the redirect. If the wallet reconnects in time, cleanup cancels it.
-    // In E2E test mode, skip the wallet check — tests use localStorage auth instead.
-    if (!isConnected && !address && process.env.NEXT_PUBLIC_E2E_MODE !== "true") {
+    if (!isConnected && !address && !isE2E) {
       const timer = setTimeout(() => {
         setChecked(false);
         router.replace("/auth/login?type=expert");
@@ -108,7 +109,11 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     };
   }, [address, expertId, pathname, router, setExpertStatus, clearExpertStatus]);
 
-  if (!checked || (!isE2E && (status === "reconnecting" || status === "connecting"))) return null;
+  // Show sidebar immediately while auth verifies — pages handle their own
+  // progressive rendering via DataSection, so just pass children through.
+  if (!checked || (!isE2E && (status === "reconnecting" || status === "connecting"))) {
+    return <AppShell config={expertSidebarConfig}>{children}</AppShell>;
+  }
 
   const isChromeless =
     expertStatus === "pending" ||

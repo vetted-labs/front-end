@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   Trophy,
   TrendingUp,
@@ -72,6 +72,7 @@ const TAB_SORT: Record<string, { primary: SortKey; secondary: SortKey }> = {
 };
 
 function sortEntries(entries: LeaderboardEntryV2[], tab: string): LeaderboardEntryV2[] {
+  if (!Array.isArray(entries)) return [];
   const sortConfig = TAB_SORT[tab];
   if (!sortConfig) return entries;
 
@@ -205,7 +206,7 @@ function TableSkeleton() {
 export default function LeaderboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { address } = useAccount();
+  const { address } = useExpertAccount();
 
   const [activeTab, setActiveTab] = useState<TabId>(
     () => (searchParams.get("tab") as TabId) || "overall"

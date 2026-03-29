@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   Check,
   ChevronDown,
@@ -26,6 +26,8 @@ import { Card } from "@/components/ui/card";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton, SkeletonStatCard } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { getRewardTierProgress } from "@/types/reputation";
 import type { ExpertProfile, ExpertRole } from "@/types";
 
@@ -403,9 +405,11 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
 function RankLadder({
   currentRankIndex,
   stats,
+  isLoading,
 }: {
   currentRankIndex: number;
   stats: ExpertStats;
+  isLoading?: boolean;
 }) {
   const [expandedRank, setExpandedRank] = useState<string | null>(null);
 
@@ -422,7 +426,7 @@ function RankLadder({
           aria-hidden="true"
         />
         {/* Achieved portion of the line */}
-        {currentRankIndex > 0 && (
+        {!isLoading && currentRankIndex > 0 && (
           <div
             className="absolute left-[23px] top-6 w-px bg-positive/40"
             style={{
@@ -434,9 +438,9 @@ function RankLadder({
 
         <div className="space-y-2">
           {GUILD_RANK_CONFIGS.map((rank, i) => {
-            const isAchieved = i < currentRankIndex;
-            const isCurrent = i === currentRankIndex;
-            const isLocked = i > currentRankIndex;
+            const isAchieved = isLoading ? false : i < currentRankIndex;
+            const isCurrent = isLoading ? false : i === currentRankIndex;
+            const isLocked = isLoading ? true : i > currentRankIndex;
             const isExpanded = expandedRank === rank.role;
             const colors = getRankColors(rank.role);
             const Icon = RANK_ICONS[rank.role];
@@ -497,9 +501,9 @@ function RankLadder({
                           <ul className="space-y-2">
                             {rank.requirements.map((req) => {
                               let met = false;
-                              if (i <= currentRankIndex) {
+                              if (!isLoading && i <= currentRankIndex) {
                                 met = true;
-                              } else if (req.metric && req.target !== null) {
+                              } else if (!isLoading && req.metric && req.target !== null) {
                                 const current = stats[req.metric];
                                 met = current !== null && current >= req.target;
                               }
@@ -579,7 +583,7 @@ function RankLadder({
 /* ─── Main Component ───────────────────────────────────────── */
 
 export function GuildRanksProgression() {
-  const { address } = useAccount();
+  const { address } = useExpertAccount();
 
   const { data: profile, isLoading, error } = useFetch<ExpertProfile>(
     () => expertApi.getProfile(address!),
@@ -598,16 +602,6 @@ export function GuildRanksProgression() {
     );
   }
 
-  if (isLoading) return null;
-
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Alert variant="error">Failed to load rank progression data.</Alert>
-      </div>
-    );
-  }
-
   const guild = profile?.guilds?.[0];
   const currentRole: ExpertRole = guild?.expertRole ?? "recruit";
   const currentRankIndex = getRankIndex(currentRole);
@@ -621,9 +615,11 @@ export function GuildRanksProgression() {
     ? computeExpertStats(profile, guild?.reputation)
     : { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
 
+  const defaultStats: ExpertStats = { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Page Header */}
+      {/* Page Header — always renders immediately */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Advance Your Guild Rank</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -631,17 +627,58 @@ export function GuildRanksProgression() {
         </p>
       </div>
 
-      {/* Stats Overview */}
-      <StatsGrid stats={stats} />
+      {/* Error alert — shown inside the page layout */}
+      {error && (
+        <Alert variant="error">Failed to load rank progression data.</Alert>
+      )}
 
-      {/* Current Rank Hero */}
-      <CurrentRankHero rank={currentRank} stats={stats} />
+      {/* Stats Overview — skeleton placeholders while loading */}
+      <DataSection
+        isLoading={isLoading}
+        skeleton={
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonStatCard key={i} />
+            ))}
+          </div>
+        }
+      >
+        <StatsGrid stats={stats} />
+      </DataSection>
 
-      {/* Next Rank Progress */}
-      {nextRank && <NextRankGoal nextRank={nextRank} stats={stats} />}
+      {/* Current Rank Hero — skeleton card while loading */}
+      <DataSection
+        isLoading={isLoading}
+        skeleton={
+          <Card className="rounded-xl border border-border" padding="none">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-16 w-16 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              </div>
+              <div className="pt-4 border-t border-border space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+            </div>
+          </Card>
+        }
+      >
+        <CurrentRankHero rank={currentRank} stats={stats} />
+      </DataSection>
 
-      {/* Rank Ladder */}
-      <RankLadder currentRankIndex={currentRankIndex} stats={stats} />
+      {/* Next Rank Progress — only when loaded */}
+      {!isLoading && nextRank && <NextRankGoal nextRank={nextRank} stats={stats} />}
+
+      {/* Rank Ladder — renders full static structure immediately */}
+      <RankLadder
+        currentRankIndex={isLoading ? -1 : currentRankIndex}
+        stats={isLoading ? defaultStats : stats}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

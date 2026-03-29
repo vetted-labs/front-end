@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { Shield, Search, ArrowRight, Zap, AlertCircle, Plus, Users, Loader2 } from "lucide-react";
 import { expertApi, guildsApi } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { SkeletonCard } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Alert } from "../ui/alert";
 import { Modal } from "../ui/modal";
@@ -17,7 +19,7 @@ type TabType = "guilds" | "leaderboard";
 
 export function GuildsOverview() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useExpertAccount();
   const [activeTab, setActiveTab] = useState<TabType>("guilds");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -88,24 +90,6 @@ export function GuildsOverview() {
     0
   );
 
-  if (isLoading) return null;
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Alert variant="error">{error}</Alert>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Alert variant="error">No profile data available</Alert>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen space-y-6 animate-page-enter">
       {/* Header */}
@@ -173,8 +157,14 @@ export function GuildsOverview() {
             />
           </div>
 
+          {/* Error / No Profile */}
+          {error && <Alert variant="error">{error}</Alert>}
+          {!isLoading && !error && !profile && (
+            <Alert variant="error">No profile data available</Alert>
+          )}
+
           {/* Action Required */}
-          {totalPendingApplications > 0 && (
+          {!isLoading && !error && totalPendingApplications > 0 && (
             <div className="rounded-xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-border opacity-80" />
               <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
@@ -227,42 +217,53 @@ export function GuildsOverview() {
           )}
 
           {/* Guild Cards Grid */}
-          {sortedGuilds.length === 0 ? (
-            <div className=" rounded-xl p-12 text-center border border-border">
-              {searchQuery ? (
-                <>
-                  <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                  <h3 className="text-xl font-bold font-display text-foreground mb-2">No guilds found</h3>
-                  <p className="text-muted-foreground">Try adjusting your search terms</p>
-                </>
-              ) : (
-                <>
-                  <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                  <h3 className="text-xl font-bold font-display text-foreground mb-2">No Guild Memberships Yet</h3>
-                  <p className="text-muted-foreground mb-4">Browse available guilds and apply to start reviewing candidates.</p>
-                  <button
-                    onClick={openGuildPicker}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-display font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Browse Guilds
-                  </button>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortedGuilds.map((guild) => (
-                <GuildCard
-                  key={guild.id}
-                  guild={guild}
-                  variant="browse"
-                  showDescription={true}
-                  onViewDetails={handleGuildClick}
-                />
-              ))}
-            </div>
-          )}
+          <DataSection
+            isLoading={isLoading}
+            skeleton={
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            }
+          >
+            {sortedGuilds.length === 0 ? (
+              <div className="rounded-xl p-12 text-center border border-border">
+                {searchQuery ? (
+                  <>
+                    <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
+                    <h3 className="text-xl font-bold font-display text-foreground mb-2">No guilds found</h3>
+                    <p className="text-muted-foreground">Try adjusting your search terms</p>
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
+                    <h3 className="text-xl font-bold font-display text-foreground mb-2">No Guild Memberships Yet</h3>
+                    <p className="text-muted-foreground mb-4">Browse available guilds and apply to start reviewing candidates.</p>
+                    <button
+                      onClick={openGuildPicker}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-display font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all text-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Browse Guilds
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sortedGuilds.map((guild) => (
+                  <GuildCard
+                    key={guild.id}
+                    guild={guild}
+                    variant="browse"
+                    showDescription={true}
+                    onViewDetails={handleGuildClick}
+                  />
+                ))}
+              </div>
+            )}
+          </DataSection>
         </div>
       )}
 

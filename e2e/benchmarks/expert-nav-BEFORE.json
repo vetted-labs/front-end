@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-03-29T14:36:02.494Z",
+  "label": "BEFORE optimizations",
+  "summary": {
+    "avgMs": 3382,
+    "minMs": 1481,
+    "maxMs": 8640,
+    "totalApiCalls": 7,
+    "avgDomNodes": 339
+  },
+  "routes": [
+    {
+      "route": "Dashboard",
+      "href": "/expert/dashboard",
+      "navToCommitMs": 137,
+      "commitToContentMs": 8503,
+      "totalMs": 8640,
+      "contentFound": "TIMEOUT",
+      "apiCalls": 2,
+      "apiEndpoints": ["/api/guilds", "/api/jobs"],
+      "domNodes": 367,
+      "errors": ["REDIRECTED→/"]
+    },
+    {
+      "route": "My Guilds",
+      "href": "/expert/guilds",
+      "navToCommitMs": 157,
+      "commitToContentMs": 8006,
+      "totalMs": 8164,
+      "contentFound": "My Guilds",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 357,
+      "errors": []
+    },
+    {
+      "route": "Guild Ranks",
+      "href": "/expert/guild-ranks",
+      "navToCommitMs": 142,
+      "commitToContentMs": 8010,
+      "totalMs": 8152,
+      "contentFound": "Wallet not connected",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 355,
+      "errors": []
+    },
+    {
+      "route": "Leaderboard",
+      "href": "/expert/leaderboard",
+      "navToCommitMs": 132,
+      "commitToContentMs": 1572,
+      "totalMs": 1704,
+      "contentFound": "Leaderboard",
+      "apiCalls": 2,
+      "apiEndpoints": ["/api/experts/leaderboard", "/api/guilds"],
+      "domNodes": 99,
+      "errors": ["TypeError: filtered is not iterable at sortEntries"]
+    },
+    {
+      "route": "Reputation",
+      "href": "/expert/reputation",
+      "navToCommitMs": 134,
+      "commitToContentMs": 1390,
+      "totalMs": 1524,
+      "contentFound": "Connect your wallet",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 354,
+      "errors": []
+    },
+    {
+      "route": "Earnings",
+      "href": "/expert/earnings",
+      "navToCommitMs": 143,
+      "commitToContentMs": 1374,
+      "totalMs": 1517,
+      "contentFound": "Connect your wallet",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 355,
+      "errors": []
+    },
+    {
+      "route": "Withdrawals",
+      "href": "/expert/withdrawals",
+      "navToCommitMs": 131,
+      "commitToContentMs": 1378,
+      "totalMs": 1509,
+      "contentFound": "Wallet Not Connected",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 354,
+      "errors": []
+    },
+    {
+      "route": "Proposals",
+      "href": "/expert/governance",
+      "navToCommitMs": 131,
+      "commitToContentMs": 1374,
+      "totalMs": 1505,
+      "contentFound": "Shape the",
+      "apiCalls": 1,
+      "apiEndpoints": ["/api/governance/proposals"],
+      "domNodes": 397,
+      "errors": []
+    },
+    {
+      "route": "Endorsements",
+      "href": "/expert/endorsements",
+      "navToCommitMs": 125,
+      "commitToContentMs": 1379,
+      "totalMs": 1504,
+      "contentFound": "Endorsement Marketplace",
+      "apiCalls": 1,
+      "apiEndpoints": ["/api/guilds"],
+      "domNodes": 366,
+      "errors": []
+    },
+    {
+      "route": "Applications",
+      "href": "/expert/voting",
+      "navToCommitMs": 135,
+      "commitToContentMs": 1367,
+      "totalMs": 1501,
+      "contentFound": "Connect your wallet",
+      "apiCalls": 1,
+      "apiEndpoints": ["/api/guilds"],
+      "domNodes": 356,
+      "errors": []
+    },
+    {
+      "route": "Notifications",
+      "href": "/expert/notifications",
+      "navToCommitMs": 111,
+      "commitToContentMs": 1370,
+      "totalMs": 1481,
+      "contentFound": "Notifications",
+      "apiCalls": 0,
+      "apiEndpoints": [],
+      "domNodes": 367,
+      "errors": []
+    }
+  ]
+}

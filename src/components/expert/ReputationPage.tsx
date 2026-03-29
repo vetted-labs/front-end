@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield } from "lucide-react";
+import { Skeleton, SkeletonStatCard } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
@@ -88,53 +90,118 @@ export default function ReputationPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20" role="status" aria-label="Loading reputation data">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   const reputation = profile?.reputation ?? 0;
 
   return (
     <div className="min-h-full animate-page-enter">
       {/* Hero Score Section */}
-      <ReputationScoreHero
-        reputation={reputation}
-        totalGains={totalGains}
-        alignedCount={alignedCount}
-        deviationCount={deviationCount}
-        reviewCount={profile?.reviewCount ?? 0}
-      />
+      <DataSection
+        isLoading={loading}
+        skeleton={
+          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+            <Skeleton className="h-12 w-24" />
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-2 w-full rounded-full" />
+            <div className="flex gap-4">
+              <Skeleton className="h-7 w-28 rounded-lg" />
+            </div>
+            <div className="flex items-center gap-6">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          </div>
+        }
+      >
+        <ReputationScoreHero
+          reputation={reputation}
+          totalGains={totalGains}
+          alignedCount={alignedCount}
+          deviationCount={deviationCount}
+          reviewCount={profile?.reviewCount ?? 0}
+        />
+      </DataSection>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-20">
         {/* Breakdown Cards */}
-        <ReputationBreakdownCards
-          reputation={reputation}
-          totalGains={totalGains}
-          totalLosses={totalLosses}
-          alignedCount={alignedCount}
-          deviationCount={deviationCount}
-        />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonStatCard key={i} />
+              ))}
+            </div>
+          }
+        >
+          <ReputationBreakdownCards
+            reputation={reputation}
+            totalGains={totalGains}
+            totalLosses={totalLosses}
+            alignedCount={alignedCount}
+            deviationCount={deviationCount}
+          />
+        </DataSection>
 
         {/* Tier Progression Tower */}
-        <RewardTierTower reputation={reputation} />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <Skeleton className="h-5 w-48 mb-2" />
+              <div className="flex gap-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+          }
+        >
+          <RewardTierTower reputation={reputation} />
+        </DataSection>
 
         {/* Score History Chart */}
-        <ReputationScoreChart timeline={timeline} reputation={reputation} />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="rounded-xl border border-border bg-card p-6">
+              <Skeleton className="h-5 w-40 mb-4" />
+              <Skeleton className="h-48 w-full rounded-lg" />
+            </div>
+          }
+        >
+          <ReputationScoreChart timeline={timeline} reputation={reputation} />
+        </DataSection>
 
-        {/* How It Works */}
+        {/* How It Works — fully static, always rendered */}
         <HowReputationWorks />
 
         {/* Recent Impact Timeline */}
-        <ReputationTimeline
-          timeline={timeline}
-          pagination={pagination}
-          page={page}
-          onPageChange={setPage}
-        />
+        <DataSection
+          isLoading={loading}
+          skeleton={
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-48 mb-2" />
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-xl border border-border/40">
+                  <Skeleton className="w-9 h-9 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-md" />
+                </div>
+              ))}
+            </div>
+          }
+        >
+          <ReputationTimeline
+            timeline={timeline}
+            pagination={pagination}
+            page={page}
+            onPageChange={setPage}
+          />
+        </DataSection>
       </div>
     </div>
   );

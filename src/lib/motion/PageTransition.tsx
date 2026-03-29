@@ -1,20 +1,15 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
-import { DURATIONS } from "./presets";
 
+/**
+ * Page transition wrapper.
+ *
+ * Previously used framer-motion fade-in (opacity 0→1, 150ms) which made every
+ * page appear blank/invisible for 150ms after navigation — killing perceived
+ * speed. Removed the animation entirely so loading.tsx skeletons and page
+ * content appear instantly on navigation.
+ */
 export function PageTransition({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: DURATIONS.normal, ease: "easeOut" }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <>{children}</>;
 }

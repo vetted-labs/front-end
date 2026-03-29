@@ -28,6 +28,7 @@ import { getExplorerAddressUrl } from "@/lib/blockchain";
 import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from "@/lib/utils";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
+import { getPersonAvatar } from "@/lib/avatars";
 import { GuildCard } from "./GuildCard";
 import {
   getActivityIconComponent,
@@ -36,6 +37,8 @@ import {
   getActivityIconColor,
 } from "@/lib/activityHelpers";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataSection } from "@/lib/motion";
 import { Divider } from "@/components/ui/divider";
 import type { ExpertProfile as ExpertProfileData } from "@/types";
 
@@ -209,8 +212,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   };
 
-  if (isLoading) return null;
-
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 text-foreground">
@@ -230,7 +231,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  if (!profile) {
+  if (!profile && !isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-foreground">
         <Alert variant="error">No profile data available</Alert>
@@ -238,7 +239,7 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  if (mode === "public" && profile.status === "pending") {
+  if (profile && mode === "public" && profile.status === "pending") {
     return (
       <div className="min-h-screen text-foreground">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -263,10 +264,10 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   }
 
   const displayEarnings = mode === "public"
-    ? profile.endorsementEarnings || 0
-    : profile.totalEarnings || 0;
+    ? profile?.endorsementEarnings || 0
+    : profile?.totalEarnings || 0;
 
-  const memberSince = profile.createdAt ? formatDate(profile.createdAt) : "N/A";
+  const memberSince = profile?.createdAt ? formatDate(profile.createdAt) : "N/A";
 
   return (
     <div className="min-h-screen text-foreground relative overflow-hidden">
@@ -286,310 +287,393 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
         )}
 
         {/* ═══ Bento Grid ═══ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* ── Identity Card (left, spans 3 rows) ── */}
-          <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
-            {/* Avatar */}
-            <div className="relative mb-7">
-              <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
-              <div className="w-[120px] h-[120px] rounded-full p-[3px] bg-[conic-gradient(from_0deg,hsl(var(--primary)),hsl(var(--warning)),hsl(var(--primary)),hsl(24_90%_48%),hsl(var(--primary)))] relative z-[1]">
-                <div className="w-full h-full rounded-full bg-muted flex items-center justify-center">
-                  {mode === "private" ? (
-                    <User className="w-12 h-12 text-primary" />
-                  ) : (
-                    <span className="text-5xl font-bold font-display text-primary tracking-wider">
-                      {getInitials(profile.fullName)}
-                    </span>
-                  )}
+        <DataSection
+          isLoading={isLoading}
+          skeleton={
+            <div className="space-y-4">
+              {/* Bento grid skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Identity card skeleton */}
+                <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center">
+                  <Skeleton className="w-[120px] h-[120px] rounded-full mb-7" />
+                  <Skeleton className="h-8 w-48 mb-4" />
+                  <Skeleton className="h-8 w-40 rounded-full mb-4" />
+                  <Skeleton className="h-4 w-36 mb-2" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                {/* Reputation card skeleton */}
+                <div className="rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px]">
+                  <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
+                    Reputation Score
+                  </div>
+                  <Skeleton className="w-40 h-40 rounded-full mb-4" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+                {/* Earnings card skeleton */}
+                <div className="rounded-xl border border-border p-6 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
+                    <DollarSign className="w-3.5 h-3.5 text-success" />
+                    Total Earnings
+                  </div>
+                  <Skeleton className="h-9 w-32 mb-1" />
+                  <Skeleton className="h-1 w-full rounded-full mt-3" />
+                  <Skeleton className="h-3 w-48 mt-2" />
+                </div>
+                {/* Active guilds card skeleton */}
+                <div className="rounded-xl border border-border p-6 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
+                    <Shield className="w-3.5 h-3.5 text-primary" />
+                    Active Guilds
+                  </div>
+                  <Skeleton className="h-12 w-12 mb-3" />
+                  <div className="flex gap-2">
+                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
+                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
+                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
+                  </div>
+                </div>
+              </div>
+              {/* Stats row skeleton */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                {Array.from({ length: mode === "public" ? 5 : 3 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border border-border p-6 text-center">
+                    <Skeleton className="w-8 h-8 rounded-lg mx-auto mb-3" />
+                    <Skeleton className="h-7 w-12 mx-auto mb-1" />
+                    <Skeleton className="h-3 w-16 mx-auto" />
+                  </div>
+                ))}
+              </div>
+              {/* Guild positions skeleton */}
+              <div className="mt-12">
+                <div className="mb-6 flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-primary" />
+                  <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
+                  <Divider className="flex-1" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border p-6 space-y-3">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* Name */}
-            <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
-              {profile.fullName || "Unknown Expert"}
-            </h1>
+            {/* ── Identity Card (left, spans 3 rows) ── */}
+            <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
+              {/* Avatar */}
+              <div className="relative mb-7">
+                <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
+                <div className="w-[120px] h-[120px] rounded-full p-[3px] bg-[conic-gradient(from_0deg,hsl(var(--primary)),hsl(var(--warning)),hsl(var(--primary)),hsl(24_90%_48%),hsl(var(--primary)))] relative z-[1]">
+                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                    <img
+                      src={getPersonAvatar(profile!.fullName || "Expert")}
+                      alt={profile!.fullName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                      }}
+                    />
+                    <span className="hidden text-5xl font-bold font-display text-primary tracking-wider">
+                      {getInitials(profile!.fullName)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-            {/* Wallet Chip */}
-            {mode === "private" ? (
-              <button
-                onClick={copyAddress}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30"
-              >
-                <Wallet className="w-3.5 h-3.5 opacity-70" />
-                {truncateAddress(profile.walletAddress)}
-                {copiedAddress ? (
-                  <Check className="w-3 h-3 text-success" />
-                ) : (
-                  <Copy className="w-3 h-3 opacity-50" />
-                )}
-              </button>
-            ) : (
-              profile.walletAddress && (
-                <div className="flex items-center gap-2 mb-4">
-                  <a
-                    href={getExplorerAddressUrl(profile.walletAddress)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30"
-                  >
-                    <Wallet className="w-3.5 h-3.5 opacity-70" />
-                    {truncateAddress(profile.walletAddress)}
-                    <ExternalLink className="w-3 h-3 opacity-50" />
-                  </a>
+              {/* Name */}
+              <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
+                {profile!.fullName || "Unknown Expert"}
+              </h1>
+
+              {/* Wallet Chip */}
+              {mode === "private" ? (
+                <button
+                  onClick={copyAddress}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30"
+                >
+                  <Wallet className="w-3.5 h-3.5 opacity-70" />
+                  {truncateAddress(profile!.walletAddress)}
+                  {copiedAddress ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-50" />
+                  )}
+                </button>
+              ) : (
+                profile!.walletAddress && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <a
+                      href={getExplorerAddressUrl(profile!.walletAddress)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30"
+                    >
+                      <Wallet className="w-3.5 h-3.5 opacity-70" />
+                      {truncateAddress(profile!.walletAddress)}
+                      <ExternalLink className="w-3 h-3 opacity-50" />
+                    </a>
+                    <button
+                      onClick={copyAddress}
+                      className="inline-flex items-center gap-2 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
+                    >
+                      {copiedAddress ? (
+                        <Check className="w-3 h-3 text-success" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                )
+              )}
+
+              {/* Email */}
+              {mode === "private" && profile!.email && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{profile!.email}</span>
                   <button
-                    onClick={copyAddress}
-                    className="inline-flex items-center gap-2 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
+                    onClick={toggleEmailVisibility}
+                    disabled={isTogglingEmail}
+                    className={`ml-1 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide rounded-full border transition-colors ${
+                      profile!.showEmail
+                        ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
+                        : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                    }`}
                   >
-                    {copiedAddress ? (
-                      <Check className="w-3 h-3 text-success" />
-                    ) : (
-                      <Copy className="w-3 h-3 text-muted-foreground" />
-                    )}
+                    {profile!.showEmail ? "Public" : "Hidden"}
                   </button>
                 </div>
-              )
-            )}
+              )}
+              {mode === "public" && profile!.showEmail && profile!.email && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                  {profile!.email}
+                </div>
+              )}
 
-            {/* Email */}
-            {mode === "private" && profile.email && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>{profile.email}</span>
-                <button
-                  onClick={toggleEmailVisibility}
-                  disabled={isTogglingEmail}
-                  className={`ml-1 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide rounded-full border transition-colors ${
-                    profile.showEmail
-                      ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
-                      : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                  }`}
-                >
-                  {profile.showEmail ? "Public" : "Hidden"}
-                </button>
+              {/* Member since */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="w-3.5 h-3.5" />
+                Member since {memberSince}
               </div>
-            )}
-            {mode === "public" && profile.showEmail && profile.email && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                {profile.email}
+
+              {/* Bio */}
+              {profile!.bio && (
+                <div className="w-full mt-6 pt-6 border-t border-border text-left">
+                  <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{profile!.bio}</p>
+                </div>
+              )}
+            </div>
+
+            {/* ── Reputation Ring Card (right, row 1) ── */}
+            <div className=" rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
+              <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
+                Reputation Score
               </div>
-            )}
-
-            {/* Member since */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-3.5 h-3.5" />
-              Member since {memberSince}
-            </div>
-
-            {/* Bio */}
-            {profile.bio && (
-              <div className="w-full mt-6 pt-6 border-t border-border text-left">
-                <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{profile.bio}</p>
+              <ReputationRing score={profile!.reputation} className="mb-4" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                Master
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* ── Reputation Ring Card (right, row 1) ── */}
-          <div className=" rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
-            <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
-              Reputation Score
-            </div>
-            <ReputationRing score={profile.reputation} className="mb-4" />
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Master
-            </div>
-          </div>
-
-          {/* ── Earnings Card (right, row 2) ── */}
-          <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-              <DollarSign className="w-3.5 h-3.5 text-success" />
-              Total Earnings
-            </div>
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-3xl font-bold font-display text-foreground">
-                {formatVetd(displayEarnings)}
-              </span>
-              <span className="text-base font-medium text-success/80">VETD</span>
-            </div>
-            <div className="w-full h-1 rounded-full bg-border/40 mt-3 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-positive"
-                style={{ width: displayEarnings > 0 ? `${Math.min((displayEarnings / 1000) * 100, 100)}%` : "0%" }}
-              />
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">
-              {displayEarnings > 0 ? (mode === "public" ? "From endorsements" : "Total earned across all guilds") : "No earnings yet — start reviewing proposals"}
-            </div>
-          </div>
-
-          {/* ── Active Guilds Card (right, row 3) ── */}
-          <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-300">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-              <Shield className="w-3.5 h-3.5 text-primary" />
-              Active Guilds
-            </div>
-            <div className="text-5xl font-bold font-display text-foreground mb-3">
-              {profile.guilds.length}
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {profile.guilds.map((guild) => (
+            {/* ── Earnings Card (right, row 2) ── */}
+            <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
+                <DollarSign className="w-3.5 h-3.5 text-success" />
+                Total Earnings
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-3xl font-bold font-display text-foreground">
+                  {formatVetd(displayEarnings)}
+                </span>
+                <span className="text-base font-medium text-success/80">VETD</span>
+              </div>
+              <div className="w-full h-1 rounded-full bg-border/40 mt-3 overflow-hidden">
                 <div
-                  key={guild.id}
-                  title={guild.name}
-                  className="w-2.5 h-2.5 rounded-full bg-primary/70 transition-all hover:scale-150 hover:bg-primary cursor-pointer"
+                  className="h-full rounded-full bg-positive"
+                  style={{ width: displayEarnings > 0 ? `${Math.min((displayEarnings / 1000) * 100, 100)}%` : "0%" }}
                 />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ Stats Row ═══ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 animate-fade-up animate-delay-400">
-          {mode === "public" && (
-            <>
-              <ProfileStatCell
-                icon={TrendingUp}
-                value={`${calculateConsensusPercentage()}%`}
-                label="Consensus"
-                iconColor="text-primary"
-                iconBg="bg-primary/10"
-              />
-              <ProfileStatCell
-                icon={FileText}
-                value={calculateTotalProposals()}
-                label="Proposals"
-                iconColor="text-primary"
-                iconBg="bg-primary/[0.08]"
-              />
-              <ProfileStatCell
-                icon={ThumbsUp}
-                value={profile.endorsementCount || 0}
-                label="Endorsements"
-                iconColor="text-success"
-                iconBg="bg-success/10"
-              />
-              <ProfileStatCell
-                icon={Eye}
-                value={profile.reviewCount || 0}
-                label="Reviews"
-                iconColor="text-primary"
-                iconBg="bg-primary/[0.08]"
-              />
-              <ProfileStatCell
-                icon={Zap}
-                value={`${profile.approvalCount || 0}`}
-                label="Approvals"
-                iconColor="text-primary"
-                iconBg="bg-primary/10"
-              />
-            </>
-          )}
-          {mode === "private" && (
-            <>
-              <ProfileStatCell
-                icon={Star}
-                value={profile.reputation}
-                label="Reputation"
-                iconColor="text-primary"
-                iconBg="bg-primary/10"
-              />
-              <ProfileStatCell
-                icon={DollarSign}
-                value={formatVetd(displayEarnings)}
-                label="Earnings"
-                iconColor="text-success"
-                iconBg="bg-success/10"
-              />
-              <ProfileStatCell
-                icon={Shield}
-                value={profile.guilds.length}
-                label="Guilds"
-              />
-            </>
-          )}
-        </div>
-
-        {/* ═══ Recent Activity (public mode only) ═══ */}
-        {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
-          <div className="mt-4 animate-fade-up animate-delay-500">
-            <div className=" rounded-xl border border-border p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary" />
-                  Recent Activity
-                </h2>
               </div>
-              <div className="space-y-3">
-                {profile.recentActivity.slice(0, 5).map((activity) => (
+              <div className="text-xs text-muted-foreground mt-2">
+                {displayEarnings > 0 ? (mode === "public" ? "From endorsements" : "Total earned across all guilds") : "No earnings yet — start reviewing proposals"}
+              </div>
+            </div>
+
+            {/* ── Active Guilds Card (right, row 3) ── */}
+            <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-300">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
+                <Shield className="w-3.5 h-3.5 text-primary" />
+                Active Guilds
+              </div>
+              <div className="text-5xl font-bold font-display text-foreground mb-3">
+                {profile!.guilds.length}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {profile!.guilds.map((guild) => (
                   <div
-                    key={activity.id}
-                    className={`p-4 rounded-xl border ${getActivityColorClasses(activity.type)}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getActivityIconBgColor(activity.type)}`}>
-                        {(() => {
-                          const IconComponent = getActivityIconComponent(activity.type);
-                          return <IconComponent className={`w-5 h-5 ${getActivityIconColor(activity.type)}`} />;
-                        })()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground mb-1">{activity.description}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="truncate">{activity.guildName}</span>
-                          <span>·</span>
-                          <span>{formatTimeAgo(activity.timestamp)}</span>
-                        </div>
-                      </div>
-                      {activity.amount && (
-                        <div className="text-sm font-medium text-primary flex-shrink-0">+{activity.amount}</div>
-                      )}
-                    </div>
-                  </div>
+                    key={guild.id}
+                    title={guild.name}
+                    className="w-2.5 h-2.5 rounded-full bg-primary/70 transition-all hover:scale-150 hover:bg-primary cursor-pointer"
+                  />
                 ))}
               </div>
             </div>
           </div>
-        )}
 
-        {/* ═══ Guild Positions ═══ */}
-        <div className="animate-fade-up animate-delay-500">
-          <div className="mt-12 mb-6 flex items-center gap-3">
-            <Shield className="w-5 h-5 text-primary" />
-            <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
-            <Divider className="flex-1" />
-            <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border bg-card">
-              {profile.guilds.length} active
-            </span>
+          {/* ═══ Stats Row ═══ */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 animate-fade-up animate-delay-400">
+            {mode === "public" && (
+              <>
+                <ProfileStatCell
+                  icon={TrendingUp}
+                  value={`${calculateConsensusPercentage()}%`}
+                  label="Consensus"
+                  iconColor="text-primary"
+                  iconBg="bg-primary/10"
+                />
+                <ProfileStatCell
+                  icon={FileText}
+                  value={calculateTotalProposals()}
+                  label="Proposals"
+                  iconColor="text-primary"
+                  iconBg="bg-primary/[0.08]"
+                />
+                <ProfileStatCell
+                  icon={ThumbsUp}
+                  value={profile!.endorsementCount || 0}
+                  label="Endorsements"
+                  iconColor="text-success"
+                  iconBg="bg-success/10"
+                />
+                <ProfileStatCell
+                  icon={Eye}
+                  value={profile!.reviewCount || 0}
+                  label="Reviews"
+                  iconColor="text-primary"
+                  iconBg="bg-primary/[0.08]"
+                />
+                <ProfileStatCell
+                  icon={Zap}
+                  value={`${profile!.approvalCount || 0}`}
+                  label="Approvals"
+                  iconColor="text-primary"
+                  iconBg="bg-primary/10"
+                />
+              </>
+            )}
+            {mode === "private" && (
+              <>
+                <ProfileStatCell
+                  icon={Star}
+                  value={profile!.reputation}
+                  label="Reputation"
+                  iconColor="text-primary"
+                  iconBg="bg-primary/10"
+                />
+                <ProfileStatCell
+                  icon={DollarSign}
+                  value={formatVetd(displayEarnings)}
+                  label="Earnings"
+                  iconColor="text-success"
+                  iconBg="bg-success/10"
+                />
+                <ProfileStatCell
+                  icon={Shield}
+                  value={profile!.guilds.length}
+                  label="Guilds"
+                />
+              </>
+            )}
           </div>
 
-          {profile.guilds.length === 0 ? (
-            <div className="text-center py-12 rounded-xl border border-border">
-              <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-              <p className="text-sm font-medium text-foreground mb-2">
-                {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Join guilds to start vetting candidates and earning reputation
-              </p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {profile.guilds.map((guild) => (
-                <GuildCard
-                  key={guild.id}
-                  guild={guild}
-                  variant="membership"
-                  onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
-                />
-              ))}
+          {/* ═══ Recent Activity (public mode only) ═══ */}
+          {mode === "public" && profile!.recentActivity && profile!.recentActivity.length > 0 && (
+            <div className="mt-4 animate-fade-up animate-delay-500">
+              <div className=" rounded-xl border border-border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-primary" />
+                    Recent Activity
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  {profile!.recentActivity!.slice(0, 5).map((activity) => (
+                    <div
+                      key={activity.id}
+                      className={`p-4 rounded-xl border ${getActivityColorClasses(activity.type)}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getActivityIconBgColor(activity.type)}`}>
+                          {(() => {
+                            const IconComponent = getActivityIconComponent(activity.type);
+                            return <IconComponent className={`w-5 h-5 ${getActivityIconColor(activity.type)}`} />;
+                          })()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground mb-1">{activity.description}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="truncate">{activity.guildName}</span>
+                            <span>·</span>
+                            <span>{formatTimeAgo(activity.timestamp)}</span>
+                          </div>
+                        </div>
+                        {activity.amount && (
+                          <div className="text-sm font-medium text-primary flex-shrink-0">+{activity.amount}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-        </div>
+
+          {/* ═══ Guild Positions ═══ */}
+          <div className="animate-fade-up animate-delay-500">
+            <div className="mt-12 mb-6 flex items-center gap-3">
+              <Shield className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
+              <Divider className="flex-1" />
+              <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border bg-card">
+                {profile!.guilds.length} active
+              </span>
+            </div>
+
+            {profile!.guilds.length === 0 ? (
+              <div className="text-center py-12 rounded-xl border border-border">
+                <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
+                <p className="text-sm font-medium text-foreground mb-2">
+                  {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Join guilds to start vetting candidates and earning reputation
+                </p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {profile!.guilds.map((guild) => (
+                  <GuildCard
+                    key={guild.id}
+                    guild={guild}
+                    variant="membership"
+                    onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </DataSection>
       </div>
     </div>
   );
