@@ -2,6 +2,7 @@
 
 import { ChevronRight, Clock, Briefcase, Users } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { CandidateGuildApplication } from "@/types";
 
 interface CandidateReviewCardProps {
@@ -32,12 +33,11 @@ export function CandidateReviewCard({ application, onReview, onViewReview, showG
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
-        <div
-          className={`shrink-0 w-[46px] h-[46px] rounded-xl ${avatarBg} flex items-center justify-center`}
-          aria-hidden="true"
-        >
-          <span className="text-sm font-bold text-white leading-none">{initials}</span>
-        </div>
+        <img
+          src={getPersonAvatar(application.candidateName)}
+          alt={application.candidateName}
+          className="shrink-0 w-[46px] h-[46px] rounded-xl object-cover bg-muted"
+        />
 
         {/* Info */}
         <div className="flex-1 min-w-0">

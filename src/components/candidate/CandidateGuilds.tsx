@@ -22,6 +22,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationSummary } from "@/types";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 
 const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
   pending:  Clock,
@@ -52,11 +53,7 @@ export default function CandidateGuilds() {
 
   const guildApplications: GuildApplicationSummary[] = Array.isArray(guildApplicationsData) ? guildApplicationsData : [];
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <ListSkeleton />;
 
   const filtered = filter === "all"
     ? guildApplications

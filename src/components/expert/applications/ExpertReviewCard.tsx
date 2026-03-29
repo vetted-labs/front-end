@@ -6,6 +6,7 @@ import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -87,12 +88,11 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
-        <div
-          className={`shrink-0 w-[46px] h-[46px] rounded-xl ${accentColors.avatar} flex items-center justify-center`}
-          aria-hidden="true"
-        >
-          <span className="text-sm font-bold text-white leading-none">{initials}</span>
-        </div>
+        <img
+          src={getPersonAvatar(application.fullName)}
+          alt={application.fullName}
+          className="shrink-0 w-[46px] h-[46px] rounded-xl object-cover bg-muted"
+        />
 
         {/* Info */}
         <div className="flex-1 min-w-0">

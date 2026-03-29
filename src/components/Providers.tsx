@@ -6,10 +6,8 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { MotionProvider } from "@/lib/motion";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { NavigationProgress } from "@/components/NavigationProgress";
 import { config } from "../../wagmi-config";
 import "@rainbow-me/rainbowkit/styles.css";
-import { Suspense } from "react";
 import { sepolia } from "wagmi/chains";
 
 const queryClient = new QueryClient({
@@ -31,9 +29,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ThemeProvider defaultTheme="dark" storageKey="vetted-ui-theme">
             <MotionProvider>
               <AuthProvider>
-                <Suspense>
-                  <NavigationProgress />
-                </Suspense>
                 {children}
               </AuthProvider>
             </MotionProvider>

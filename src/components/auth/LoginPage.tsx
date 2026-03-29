@@ -7,11 +7,9 @@ import {
   Building2,
   Shield,
   Wallet,
-  Users,
-  Briefcase,
-  Star,
   Info,
 } from "lucide-react";
+import Image from "next/image";
 import { useAccount, useConnect } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { candidateApi, companyApi, expertApi, ApiError } from "@/lib/api";
@@ -185,61 +183,30 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* ===== LEFT: Brand Showcase (hidden on mobile) ===== */}
-      <div className="hidden lg:flex flex-[0_0_60%] relative flex-col items-center justify-center p-16 overflow-hidden">
-        {/* Grid pattern background */}
-        <div
-          className="absolute inset-0 opacity-100"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
+      {/* ===== LEFT: Brand Banner (hidden on mobile) ===== */}
+      <div
+        className="hidden lg:flex flex-[0_0_60%] relative items-center justify-center overflow-hidden bg-[#E7E6E4] dark:bg-[#111113]"
+        style={{
+          backgroundImage: "var(--pattern-bg)",
+          backgroundSize: "100% auto",
+          backgroundRepeat: "repeat-y",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Light pattern (set via CSS custom property) */}
+        <style>{`
+          :root { --pattern-bg: url(/pattern-light.svg); }
+          .dark { --pattern-bg: url(/pattern-dark.svg); }
+        `}</style>
+        {/* Centered VETTED logo */}
+        <Image
+          src="/vetted-logo.svg"
+          alt="Vetted"
+          width={480}
+          height={83}
+          className="relative z-10"
+          priority
         />
-        {/* Dot overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
-
-        {/* Glow orbs */}
-        <div className="absolute top-[15%] left-[10%] w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none bg-primary/[0.12] animate-glow-pulse" />
-        <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none bg-info-blue/[0.08] animate-glow-pulse" style={{ animationDelay: "4s" }} />
-        <div className="absolute top-[60%] left-[50%] w-[300px] h-[300px] rounded-full blur-[120px] pointer-events-none bg-[rgba(139,92,246,0.06)] animate-glow-pulse" style={{ animationDelay: "8s" }} />
-
-        {/* Floating geometric shapes */}
-        <div className="absolute top-[12%] right-[15%] w-[120px] h-[120px] border border-border/20 rounded-xl rotate-[15deg] pointer-events-none animate-[spin_30s_linear_infinite]" />
-        <div className="absolute bottom-[18%] left-[12%] w-[80px] h-[80px] border border-border/20 rounded-full pointer-events-none animate-[spin_24s_linear_infinite_reverse]" />
-        <div className="absolute top-[55%] right-[8%] w-[60px] h-[60px] border border-border/20 rounded-xl rotate-45 pointer-events-none animate-[spin_36s_linear_infinite]" />
-
-        {/* Brand content */}
-        <div className="relative z-10 text-center max-w-[560px]">
-          <h1 className="text-7xl sm:text-8xl font-bold tracking-[0.12em] leading-none text-foreground mb-4">
-            VETTED
-          </h1>
-          <p className="text-sm sm:text-sm text-muted-foreground mb-14">
-            Decentralized Hiring, Verified Talent
-          </p>
-
-          {/* Stat pills */}
-          <div className="flex gap-4 justify-center flex-wrap">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float">
-              <Users className="w-4 h-4 opacity-60" />
-              <span><span className="text-primary font-bold">2,400+</span> Experts</span>
-            </div>
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "2s" }}>
-              <Briefcase className="w-4 h-4 opacity-60" />
-              <span><span className="text-primary font-bold">180+</span> Companies</span>
-            </div>
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-card border border-border/30 rounded-full text-sm font-medium text-muted-foreground animate-float" style={{ animationDelay: "4s" }}>
-              <Star className="w-4 h-4 opacity-60" />
-              <span><span className="text-primary font-bold">15</span> Guilds</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ===== RIGHT: Auth Form ===== */}

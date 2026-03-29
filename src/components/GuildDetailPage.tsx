@@ -22,6 +22,7 @@ import { GuildExpertsListTab } from "@/components/guild/GuildExpertsListTab";
 import { GuildCandidatesListTab } from "@/components/guild/GuildCandidatesListTab";
 import { GuildLeaderboardContent } from "@/components/guild/GuildLeaderboardContent";
 import { getGuildDetailAccent } from "@/config/colors";
+import { GuildDetailSkeleton } from "@/components/ui/page-skeleton";
 import type { GuildPageDetail, GuildLeaderboardEntry, GuildMembershipCheck, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity } from "@/types";
 
 
@@ -159,7 +160,7 @@ export default function GuildDetailPage() {
     router.push(`/guilds/${guildId}/apply`);
   };
 
-  if (isLoading) return null;
+  if (isLoading) return <GuildDetailSkeleton />;
 
   if (error || !guild) {
     return (

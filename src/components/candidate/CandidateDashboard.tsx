@@ -26,12 +26,16 @@ import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { formatTimeAgo } from "@/lib/utils";
+import { getProfileCompletion } from "@/lib/profileCompletion";
+import { ProfileRing } from "@/components/candidate/ProfileCompletionBanner";
 import { APPLICATION_STATUS_CONFIG, GUILD_APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary, CandidateRejectionFeedback } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
+import { getPersonAvatar } from "@/lib/avatars";
 import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
 import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
+import { DashboardSkeleton } from "@/components/ui/page-skeleton";
 
 
 const CELEBRATED_KEY = "vetted:celebrated-acceptances";
@@ -188,58 +192,7 @@ function MiniPipeline({ status }: { status: string }) {
 
 /* ── Profile completeness calculator ── */
 
-function getProfileCompletion(profile: CandidateProfile): { percentage: number; items: { label: string; done: boolean }[] } {
-  const items = [
-    { label: "Full name added", done: !!profile.fullName },
-    { label: "Headline set", done: !!profile.headline },
-    { label: "Bio written", done: !!profile.bio },
-    { label: "Resume uploaded", done: !!profile.resumeUrl },
-    { label: "LinkedIn connected", done: !!profile.linkedIn },
-    { label: "GitHub linked", done: !!profile.github },
-  ];
-  const done = items.filter((i) => i.done).length;
-  const percentage = Math.round((done / items.length) * 100);
-  return { percentage, items };
-}
-
-/* ── Profile Ring SVG ── */
-
-function ProfileRing({ percentage, size = 110 }: { percentage: number; size?: number }) {
-  const radius = (size - 12) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          className="stroke-border/20"
-          strokeWidth={5}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          className="stroke-primary"
-          strokeWidth={5}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold font-display text-primary tabular-nums">{percentage}%</span>
-        <span className="text-xs text-muted-foreground">Complete</span>
-      </div>
-    </div>
-  );
-}
+/* getProfileCompletion and ProfileRing are imported from shared modules */
 
 export default function CandidateDashboard() {
   const { ready } = useRequireAuth("candidate");
@@ -273,11 +226,7 @@ export default function CandidateDashboard() {
     }
   };
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <DashboardSkeleton />;
 
   if (!profile) {
     return (
@@ -316,9 +265,11 @@ export default function CandidateDashboard() {
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-white font-display font-bold text-xl flex-shrink-0">
-              {initials}
-            </div>
+            <img
+              src={getPersonAvatar(profile.fullName)}
+              alt={profile.fullName}
+              className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-muted"
+            />
             <div>
               <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
                 Welcome back, {firstName}

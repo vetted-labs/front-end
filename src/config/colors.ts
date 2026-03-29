@@ -458,3 +458,28 @@ export const REWARD_TIER_COLORS: Record<string, { bg: string; border: string; te
     bar: STATUS_COLORS.warning.bg,
   },
 };
+
+// ─── Guild Hex Colors (for SVG charts / inline styles) ──────────────
+// These match the --gc-rgb values in globals.css.
+
+export const GUILD_HEX_COLORS: Record<string, string> = {
+  engineering: "#3b82f6",
+  design: "#a855f7",
+  data: "#14b8a6",
+  security: "#ef4444",
+  marketing: "#f59e0b",
+  devops: "#22c55e",
+  product: "#ff6a00",
+  operations: "#94a3b8",
+  finance: "#f59e0b",
+  people: "#a855f7",
+  sales: "#22c55e",
+};
+
+const DEFAULT_GUILD_HEX = "#ff6a00";
+
+/** Resolve a guild name to a hex color string for SVG/inline styles. */
+export function getGuildHexColor(guildName: string): string {
+  const key = guildName.toLowerCase().replace(/ guild$/i, "").split(/[\s&,]+/)[0];
+  return GUILD_HEX_COLORS[key] ?? DEFAULT_GUILD_HEX;
+}

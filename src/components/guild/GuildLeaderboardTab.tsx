@@ -3,6 +3,7 @@
 import { Trophy, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from "lucide-react";
 import { formatVetd } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { LeaderboardExpert } from "@/types/guild";
 
 interface GuildLeaderboardTabProps {
@@ -137,14 +138,11 @@ export function GuildLeaderboardTab({
                       {/* Expert Info - Condensed */}
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-primary">
-                              {expert.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </span>
-                          </div>
+                          <img
+                            src={getPersonAvatar(expert.name)}
+                            alt={expert.name}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-muted"
+                          />
                           <div className="min-w-0">
                             <p className="font-medium text-foreground text-sm truncate">
                               {expert.name}
@@ -200,14 +198,11 @@ export function GuildLeaderboardTab({
                       </span>
                       {renderRankChange(leaderboardData.currentUser.rankChange)}
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-bold text-primary">
-                        {leaderboardData.currentUser.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
-                    </div>
+                    <img
+                      src={getPersonAvatar(leaderboardData.currentUser.name)}
+                      alt={leaderboardData.currentUser.name}
+                      className="w-10 h-10 rounded-full object-cover bg-muted"
+                    />
                     <div>
                       <span className="text-foreground font-medium">
                         {leaderboardData.currentUser.name}

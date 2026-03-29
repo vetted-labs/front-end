@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
@@ -58,7 +59,7 @@ export default function GlobalGuildsPage() {
     0,
   );
 
-  if (isLoading) return null;
+  if (isLoading) return <ListSkeleton />;
 
   return (
     <div className="relative min-h-screen bg-background text-foreground animate-page-enter">

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staking Portfolio — Vetted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #09090b;
+    --surface-1: #111113;
+    --surface-2: #18181b;
+    --surface-3: #1f1f23;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.1);
+    --text-1: #fafafa;
+    --text-2: #a1a1aa;
+    --text-3: #52525b;
+    --accent: #ff6a00;
+    --accent-dim: rgba(255,106,0,0.15);
+
+    /* Real guild colors from globals.css */
+    --g-engineering: hsl(217, 91%, 60%);   /* #3b82f6 */
+    --g-design: hsl(271, 91%, 65%);        /* #a855f7 */
+    --g-product: hsl(24, 100%, 50%);       /* #ff6a00 - brand orange */
+    --g-marketing: hsl(38, 92%, 50%);      /* #f59e0b */
+    --g-operations: hsl(215, 17%, 63%);    /* #94a3b8 - slate */
+    --g-finance: hsl(38, 92%, 50%);        /* #f59e0b - amber */
+    --g-people: hsl(271, 91%, 65%);        /* #a855f7 - purple */
+    --g-sales: hsl(142, 71%, 45%);         /* #22c55e - green */
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: 'Outfit', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .mono { font-family: 'Space Mono', monospace; }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 40px;
+    font-size: 13px;
+    color: var(--text-3);
+  }
+  .breadcrumb a {
+    color: var(--text-3);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover { color: var(--text-2); }
+  .breadcrumb .sep { font-size: 10px; }
+  .breadcrumb .current { color: var(--text-2); }
+
+  /* Hero value */
+  .hero-value { margin-bottom: 48px; }
+  .hero-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .hero-number {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--text-1) 0%, var(--text-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-number .currency {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    -webkit-text-fill-color: var(--text-3);
+  }
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 14px;
+    color: var(--text-3);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .pill-guilds {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .pill-guilds .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+  .stat-cell { background: var(--surface-1); padding: 24px; }
+  .stat-cell-label { font-size: 12px; color: var(--text-3); margin-bottom: 8px; font-weight: 500; }
+  .stat-cell-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-cell-unit { font-size: 12px; color: var(--text-3); font-weight: 400; margin-left: 4px; }
+
+  /* Allocation bar */
+  .allocation-section { margin-bottom: 48px; }
+  .section-label {
+    font-size: 12px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px;
+  }
+  .alloc-bar {
+    display: flex; height: 40px; border-radius: 12px;
+    overflow: hidden; gap: 2px; margin-bottom: 20px;
+  }
+  .alloc-segment {
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer; min-width: 3px;
+  }
+  .alloc-segment:hover { filter: brightness(1.2); transform: scaleY(1.08); z-index: 1; }
+  .alloc-segment:first-child { border-radius: 12px 0 0 12px; }
+  .alloc-segment:last-child { border-radius: 0 12px 12px 0; }
+  .alloc-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+  .legend-chip {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-2); cursor: default;
+    padding: 4px 0; transition: color 0.15s;
+  }
+  .legend-chip:hover { color: var(--text-1); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 4px; flex-shrink: 0; }
+  .legend-pct { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-3); }
+
+  /* Portfolio grid */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 32px; align-items: start;
+  }
+
+  /* Donut */
+  .donut-wrapper {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px;
+    display: flex; flex-direction: column; align-items: center;
+    position: sticky; top: 24px;
+  }
+  .donut-container {
+    position: relative; width: 220px; height: 220px; margin-bottom: 24px;
+  }
+  .donut-container svg { width: 100%; height: 100%; }
+  .donut-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); text-align: center;
+  }
+  .donut-center-value { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+  .donut-center-label {
+    font-size: 11px; color: var(--text-3); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px;
+  }
+
+  .d-tooltip {
+    position: absolute; pointer-events: none;
+    background: var(--surface-3); border: 1px solid var(--border-hover);
+    border-radius: 10px; padding: 10px 14px;
+    opacity: 0; transition: opacity 0.12s; z-index: 20;
+    white-space: nowrap; backdrop-filter: blur(12px);
+    transform: translate(-50%, calc(-100% - 12px));
+  }
+  .d-tooltip.show { opacity: 1; }
+  .d-tooltip-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .d-tooltip-detail { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-2); }
+
+  .donut-segment { transition: opacity 0.2s, filter 0.2s; cursor: pointer; }
+  .donut-container:hover .donut-segment { opacity: 0.35; }
+  .donut-container:hover .donut-segment:hover { opacity: 1; filter: drop-shadow(0 0 8px currentColor); }
+
+  .donut-legend { width: 100%; display: flex; flex-direction: column; }
+  .donut-legend-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .donut-legend-row:last-child { border-bottom: none; }
+  .donut-legend-left { display: flex; align-items: center; gap: 8px; }
+  .donut-legend-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+  .donut-legend-name { color: var(--text-2); }
+  .donut-legend-pct { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-3); }
+
+  /* Positions */
+  .positions-col { display: flex; flex-direction: column; }
+  .positions-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .positions-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .positions-hint { font-size: 12px; color: var(--text-3); }
+
+  .pos-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 14px; cursor: pointer;
+    transition: all 0.15s ease; position: relative; border: 1px solid transparent;
+  }
+  .pos-card:hover { background: var(--surface-1); border-color: var(--border); }
+
+  .pos-rank {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--text-3);
+    width: 18px; text-align: center; flex-shrink: 0;
+  }
+  .pos-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0; position: relative;
+  }
+  .pos-icon::after {
+    content: ''; position: absolute; inset: 0; border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); pointer-events: none;
+  }
+  .pos-details { flex: 1; min-width: 0; }
+  .pos-name {
+    font-size: 14px; font-weight: 600; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pos-bar-track {
+    height: 3px; background: var(--surface-3);
+    border-radius: 3px; overflow: hidden; width: 100%;
+  }
+  .pos-bar-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pos-values { text-align: right; flex-shrink: 0; min-width: 100px; }
+  .pos-amount {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px; font-weight: 700; letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .pos-pct { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+  .pos-chevron {
+    width: 16px; height: 16px; color: var(--text-3); flex-shrink: 0;
+    opacity: 0; transform: translateX(-3px); transition: all 0.15s;
+  }
+  .pos-card:hover .pos-chevron { opacity: 0.6; transform: translateX(0); }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+
+  .modal-panel {
+    width: 100%; max-width: 440px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-hover);
+    border-radius: 20px;
+    overflow: hidden;
+    transform: translateY(12px) scale(0.97);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-overlay.open .modal-panel {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 24px 0;
+  }
+  .modal-guild-info {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .modal-guild-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .modal-guild-name { font-size: 16px; font-weight: 700; }
+  .modal-guild-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: none; background: var(--surface-3); color: var(--text-2);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--surface-2); color: var(--text-1); }
+
+  /* Mode toggle */
+  .modal-tabs {
+    display: flex; gap: 4px; margin: 20px 24px 0;
+    background: var(--bg); border-radius: 10px; padding: 4px;
+  }
+  .modal-tab {
+    flex: 1; padding: 10px; text-align: center;
+    font-size: 13px; font-weight: 600; border-radius: 8px;
+    border: none; cursor: pointer;
+    background: transparent; color: var(--text-3);
+    transition: all 0.15s;
+  }
+  .modal-tab.active { background: var(--surface-2); color: var(--text-1); }
+  .modal-tab:not(.active):hover { color: var(--text-2); }
+
+  .modal-body { padding: 20px 24px 24px; }
+
+  /* Balance row */
+  .modal-balance-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+    background: var(--bg); font-size: 13px;
+  }
+  .modal-balance-label { color: var(--text-3); }
+  .modal-balance-val {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700; font-size: 14px;
+  }
+
+  /* Amount input */
+  .modal-input-group { margin-bottom: 16px; }
+  .modal-input-label {
+    font-size: 12px; color: var(--text-3); margin-bottom: 8px; font-weight: 500;
+  }
+  .modal-input-wrap {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px; border-radius: 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .modal-input-wrap:focus-within { border-color: var(--accent); }
+  .modal-amount-input {
+    flex: 1; padding: 14px 0;
+    background: none; border: none; outline: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 20px; font-weight: 700; color: var(--text-1);
+    letter-spacing: -0.02em;
+  }
+  .modal-amount-input::placeholder { color: var(--text-3); }
+  .modal-input-unit { font-size: 14px; color: var(--text-3); font-weight: 500; }
+  .modal-max-btn {
+    padding: 4px 10px; border-radius: 6px;
+    background: var(--accent-dim); color: var(--accent);
+    border: none; font-size: 11px; font-weight: 700;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .modal-max-btn:hover { background: rgba(255,106,0,0.25); }
+
+  /* Quick amounts */
+  .modal-quick-amounts {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin-bottom: 20px;
+  }
+  .quick-btn {
+    padding: 8px; text-align: center; border-radius: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-2); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .quick-btn:hover { background: var(--surface-3); color: var(--text-1); border-color: var(--border-hover); }
+  .quick-btn.selected { background: var(--accent-dim); color: var(--accent); border-color: rgba(255,106,0,0.3); }
+
+  /* Cooldown info */
+  .modal-cooldown-info {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; border-radius: 10px;
+    background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.12);
+    margin-bottom: 20px; font-size: 12px; color: rgba(251,191,36,0.9);
+    line-height: 1.5;
+  }
+  .modal-cooldown-info svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* Submit button */
+  .modal-submit {
+    width: 100%; padding: 14px; border-radius: 12px;
+    font-size: 15px; font-weight: 700; border: none;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .modal-submit.withdraw {
+    background: var(--accent); color: white;
+  }
+  .modal-submit.withdraw:hover { filter: brightness(1.1); }
+  .modal-submit.stake {
+    background: var(--accent); color: white;
+  }
+  .modal-submit.stake:hover { filter: brightness(1.1); }
+  .modal-submit:disabled {
+    opacity: 0.4; cursor: not-allowed; filter: none;
+  }
+
+  /* Entry animations */
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .d1 { animation-delay: 0s; }
+  .d2 { animation-delay: 0.06s; }
+  .d3 { animation-delay: 0.12s; }
+  .d4 { animation-delay: 0.18s; }
+  .d5 { animation-delay: 0.24s; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page { padding: 24px 16px 80px; }
+    .hero-number { font-size: 40px; }
+    .hero-number .currency { font-size: 24px; }
+    .portfolio-grid { grid-template-columns: 1fr; gap: 24px; }
+    .donut-wrapper { position: static; }
+    .stats-strip { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <nav class="breadcrumb anim d1">
+    <a href="#">Dashboard</a>
+    <span class="sep">/</span>
+    <span class="current">Staking Portfolio</span>
+  </nav>
+
+  <div class="hero-value anim d2">
+    <div class="hero-label">Total Staked Value</div>
+    <div class="hero-number">
+      <span id="heroCount">740.00</span>
+      <span class="currency">VETD</span>
+    </div>
+    <div class="hero-meta">
+      <span class="pill pill-guilds"><span class="dot"></span> 8 active guilds</span>
+      <span>All positions healthy</span>
+    </div>
+  </div>
+
+  <div class="stats-strip anim d3">
+    <div class="stat-cell">
+      <div class="stat-cell-label">Available Balance</div>
+      <div class="stat-cell-value mono">4,989,134,000<span class="stat-cell-unit">VETD</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-label">Pending Unstake</div>
+      <div class="stat-cell-value mono" style="color: var(--text-3);">0.00<span class="stat-cell-unit">VETD</span></div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-label">Staking Ratio</div>
+      <div class="stat-cell-value mono" style="color: var(--accent);">0.00001%</div>
+    </div>
+  </div>
+
+  <div class="allocation-section anim d4">
+    <div class="section-label">Allocation</div>
+    <div class="alloc-bar" id="allocBar"></div>
+    <div class="alloc-legend" id="allocLegend"></div>
+  </div>
+
+  <div class="portfolio-grid anim d5">
+    <div class="donut-wrapper">
+      <div class="donut-container" id="donutWrap">
+        <svg viewBox="0 0 200 200" id="donutSvg"></svg>
+        <div class="donut-center">
+          <div class="donut-center-value">740</div>
+          <div class="donut-center-label">Total VETD</div>
+        </div>
+        <div class="d-tooltip" id="dTooltip">
+          <div class="d-tooltip-name" id="dttName"></div>
+          <div class="d-tooltip-detail" id="dttDetail"></div>
+        </div>
+      </div>
+      <div class="donut-legend" id="donutLegend"></div>
+    </div>
+
+    <div class="positions-col">
+      <div class="positions-header">
+        <div class="positions-title">Guild Positions</div>
+        <div class="positions-hint">Click to manage stake</div>
+      </div>
+      <div id="positionsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Withdraw / Stake Modal ─── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-guild-info">
+        <div class="modal-guild-icon" id="modalGuildIcon">EN</div>
+        <div>
+          <div class="modal-guild-name" id="modalGuildName">Engineering</div>
+          <div class="modal-guild-sub" id="modalGuildSub">Currently staked: <span id="modalStaked">200.00</span> VETD</div>
+        </div>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab" data-mode="stake" id="tabStake">Stake</button>
+      <button class="modal-tab active" data-mode="withdraw" id="tabWithdraw">Withdraw</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-balance-row">
+        <span class="modal-balance-label" id="balanceLabel">Staked Balance</span>
+        <span class="modal-balance-val" id="balanceVal">200.00 VETD</span>
+      </div>
+
+      <div class="modal-input-group">
+        <div class="modal-input-label">Amount</div>
+        <div class="modal-input-wrap">
+          <input type="text" class="modal-amount-input" id="amountInput" placeholder="0.00" inputmode="decimal">
+          <span class="modal-input-unit">VETD</span>
+          <button class="modal-max-btn" id="maxBtn">MAX</button>
+        </div>
+      </div>
+
+      <div class="modal-quick-amounts" id="quickAmounts">
+        <button class="quick-btn" data-pct="25">25%</button>
+        <button class="quick-btn" data-pct="50">50%</button>
+        <button class="quick-btn" data-pct="75">75%</button>
+        <button class="quick-btn" data-pct="100">100%</button>
+      </div>
+
+      <div class="modal-cooldown-info">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Withdrawals have a <strong>7-day cooldown period</strong>. After requesting, your tokens will be available to claim once the cooldown expires.</span>
+      </div>
+
+      <button class="modal-submit withdraw" id="submitBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+        Request Withdrawal
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Guild data with REAL colors from globals.css
+const guilds = [
+  { name: 'Engineering',                 abbr: 'EN', amount: 200, pct: 27.0, color: '#3b82f6', key: 'engineering' },
+  { name: 'Design',                      abbr: 'DE', amount: 100, pct: 13.5, color: '#a855f7', key: 'design' },
+  { name: 'Product',                     abbr: 'PR', amount: 100, pct: 13.5, color: '#ff6a00', key: 'product' },
+  { name: 'Marketing & Growth',          abbr: 'MG', amount: 100, pct: 13.5, color: '#f59e0b', key: 'marketing' },
+  { name: 'Operations & Strategy',       abbr: 'OS', amount:  80, pct: 10.8, color: '#94a3b8', key: 'operations' },
+  { name: 'Finance, Legal & Compliance', abbr: 'FL', amount:  60, pct:  8.1, color: '#f59e0b', key: 'finance' },
+  { name: 'People, HR & Recruitment',    abbr: 'PH', amount:  50, pct:  6.8, color: '#a855f7', key: 'people' },
+  { name: 'Sales & Success',             abbr: 'SS', amount:  50, pct:  6.8, color: '#22c55e', key: 'sales' },
+];
+
+const hexToRgba = (hex, a) => {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+};
+
+/* ─── Allocation bar ─── */
+(function() {
+  const bar = document.getElementById('allocBar');
+  const legend = document.getElementById('allocLegend');
+  guilds.forEach((g, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'alloc-segment';
+    seg.style.width = '0%';
+    seg.style.background = g.color;
+    seg.title = `${g.name}: ${g.amount} VETD (${g.pct}%)`;
+    bar.appendChild(seg);
+    requestAnimationFrame(() => { setTimeout(() => { seg.style.width = g.pct + '%'; }, 300 + i * 60); });
+
+    const chip = document.createElement('div');
+    chip.className = 'legend-chip';
+    const shortName = g.name.length > 20 ? g.name.split(',')[0].split('&')[0].trim() : g.name;
+    chip.innerHTML = `<span class="legend-dot" style="background:${g.color}"></span><span>${shortName}</span><span class="legend-pct">${g.pct}%</span>`;
+    legend.appendChild(chip);
+  });
+})();
+
+/* ─── SVG Donut ─── */
+(function() {
+  const svg = document.getElementById('donutSvg');
+  const cx = 100, cy = 100, outerR = 88, innerR = 58;
+  const gapDeg = 1.5;
+  const totalGap = gapDeg * guilds.length;
+  const available = 360 - totalGap;
+  let startAngle = -90;
+
+  function polar(cx, cy, r, deg) {
+    const rad = (deg * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+  function arc(cx, cy, oR, iR, s, e) {
+    const os = polar(cx,cy,oR,s), oe = polar(cx,cy,oR,e);
+    const is_ = polar(cx,cy,iR,e), ie = polar(cx,cy,iR,s);
+    const lg = (e-s) > 180 ? 1 : 0;
+    return `M ${os.x} ${os.y} A ${oR} ${oR} 0 ${lg} 1 ${oe.x} ${oe.y} L ${is_.x} ${is_.y} A ${iR} ${iR} 0 ${lg} 0 ${ie.x} ${ie.y} Z`;
+  }
+
+  guilds.forEach((g, i) => {
+    const sweep = (g.pct / 100) * available;
+    const endAngle = startAngle + sweep;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', arc(cx, cy, outerR, innerR, startAngle, endAngle));
+    path.setAttribute('fill', g.color);
+    path.classList.add('donut-segment');
+    path.dataset.index = i;
+    path.style.color = g.color;
+    path.style.transformOrigin = `${cx}px ${cy}px`;
+    path.style.opacity = '0';
+    path.style.transform = 'scale(0.85)';
+    path.style.transition = `opacity 0.5s ease ${0.2+i*0.05}s, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${0.2+i*0.05}s`;
+    requestAnimationFrame(() => { requestAnimationFrame(() => { path.style.opacity='1'; path.style.transform='scale(1)'; }); });
+    svg.appendChild(path);
+    startAngle = endAngle + gapDeg;
+  });
+
+  // Tooltip
+  const wrap = document.getElementById('donutWrap');
+  const tt = document.getElementById('dTooltip');
+  const ttN = document.getElementById('dttName');
+  const ttD = document.getElementById('dttDetail');
+  svg.addEventListener('mousemove', e => {
+    const seg = e.target.closest('.donut-segment');
+    if (seg) {
+      const g = guilds[+seg.dataset.index];
+      ttN.textContent = g.name; ttN.style.color = g.color;
+      ttD.textContent = `${g.amount} VETD  ·  ${g.pct}%`;
+      const r = wrap.getBoundingClientRect();
+      tt.style.left = (e.clientX-r.left)+'px'; tt.style.top = (e.clientY-r.top)+'px';
+      tt.classList.add('show');
+    } else { tt.classList.remove('show'); }
+  });
+  svg.addEventListener('mouseleave', () => tt.classList.remove('show'));
+})();
+
+/* ─── Donut legend ─── */
+(function() {
+  const c = document.getElementById('donutLegend');
+  guilds.forEach(g => {
+    const row = document.createElement('div');
+    row.className = 'donut-legend-row';
+    const shortName = g.name.length > 18 ? g.name.split(',')[0].split('&')[0].trim() : g.name;
+    row.innerHTML = `<div class="donut-legend-left"><span class="donut-legend-dot" style="background:${g.color}"></span><span class="donut-legend-name">${shortName}</span></div><span class="donut-legend-pct">${g.pct}%</span>`;
+    c.appendChild(row);
+  });
+})();
+
+/* ─── Positions list ─── */
+(function() {
+  const c = document.getElementById('positionsList');
+  guilds.forEach((g, i) => {
+    const card = document.createElement('div');
+    card.className = 'pos-card';
+    card.style.animation = `enter 0.5s cubic-bezier(0.16,1,0.3,1) ${0.35+i*0.04}s both`;
+    card.dataset.guildIndex = i;
+    card.innerHTML = `
+      <div class="pos-rank">${i+1}</div>
+      <div class="pos-icon" style="background:${hexToRgba(g.color,0.12)}; color:${g.color};">${g.abbr}</div>
+      <div class="pos-details">
+        <div class="pos-name">${g.name}</div>
+        <div class="pos-bar-track"><div class="pos-bar-fill" style="width:0%; background:${g.color}; opacity:0.6;"></div></div>
+      </div>
+      <div class="pos-values">
+        <div class="pos-amount">${g.amount.toFixed(2)}<span style="color:var(--text-3);font-size:11px;font-weight:400;margin-left:3px;">VETD</span></div>
+        <div class="pos-pct">${g.pct}%</div>
+      </div>
+      <svg class="pos-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+    c.appendChild(card);
+
+    // Animate bar
+    const bar = card.querySelector('.pos-bar-fill');
+    setTimeout(() => { bar.style.width = g.pct + '%'; }, 500 + i * 60);
+
+    // Click → open modal
+    card.addEventListener('click', () => openModal(i));
+  });
+})();
+
+/* ─── Hero counter ─── */
+(function() {
+  const el = document.getElementById('heroCount');
+  const target = 740, duration = 1200, start = performance.now();
+  function tick(now) {
+    const p = Math.min((now-start)/duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = (eased * target).toFixed(2);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* ─── Modal logic ─── */
+const overlay = document.getElementById('modalOverlay');
+const modalGuildIcon = document.getElementById('modalGuildIcon');
+const modalGuildName = document.getElementById('modalGuildName');
+const modalGuildSub = document.getElementById('modalGuildSub');
+const modalStaked = document.getElementById('modalStaked');
+const balanceLabel = document.getElementById('balanceLabel');
+const balanceVal = document.getElementById('balanceVal');
+const amountInput = document.getElementById('amountInput');
+const submitBtn = document.getElementById('submitBtn');
+const quickBtns = document.querySelectorAll('.quick-btn');
+const tabStake = document.getElementById('tabStake');
+const tabWithdraw = document.getElementById('tabWithdraw');
+const maxBtn = document.getElementById('maxBtn');
+
+let currentGuild = null;
+let currentMode = 'withdraw';
+
+function openModal(guildIndex) {
+  currentGuild = guilds[guildIndex];
+  currentMode = 'withdraw';
+  amountInput.value = '';
+  quickBtns.forEach(b => b.classList.remove('selected'));
+  updateModalForGuild();
+  updateModalMode();
+  overlay.classList.add('open');
+  setTimeout(() => amountInput.focus(), 250);
+}
+
+function closeModal() {
+  overlay.classList.remove('open');
+  currentGuild = null;
+}
+
+function updateModalForGuild() {
+  if (!currentGuild) return;
+  const g = currentGuild;
+  modalGuildIcon.textContent = g.abbr;
+  modalGuildIcon.style.background = hexToRgba(g.color, 0.12);
+  modalGuildIcon.style.color = g.color;
+  modalGuildName.textContent = g.name;
+  modalStaked.textContent = g.amount.toFixed(2);
+}
+
+function updateModalMode() {
+  const isWithdraw = currentMode === 'withdraw';
+  tabWithdraw.classList.toggle('active', isWithdraw);
+  tabStake.classList.toggle('active', !isWithdraw);
+
+  if (isWithdraw) {
+    balanceLabel.textContent = 'Staked Balance';
+    balanceVal.textContent = (currentGuild ? currentGuild.amount.toFixed(2) : '0.00') + ' VETD';
+    submitBtn.className = 'modal-submit withdraw';
+    submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Request Withdrawal`;
+  } else {
+    balanceLabel.textContent = 'Wallet Balance';
+    balanceVal.textContent = '4,989,134,000 VETD';
+    submitBtn.className = 'modal-submit stake';
+    submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg> Stake VETD`;
+  }
+  amountInput.value = '';
+  quickBtns.forEach(b => b.classList.remove('selected'));
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+tabStake.addEventListener('click', () => { currentMode = 'stake'; updateModalMode(); });
+tabWithdraw.addEventListener('click', () => { currentMode = 'withdraw'; updateModalMode(); });
+
+maxBtn.addEventListener('click', () => {
+  if (!currentGuild) return;
+  const max = currentMode === 'withdraw' ? currentGuild.amount : 4989134000;
+  amountInput.value = max.toFixed(2);
+  quickBtns.forEach(b => b.classList.toggle('selected', b.dataset.pct === '100'));
+});
+
+quickBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!currentGuild) return;
+    const pct = parseInt(btn.dataset.pct);
+    const base = currentMode === 'withdraw' ? currentGuild.amount : 4989134000;
+    amountInput.value = (base * pct / 100).toFixed(2);
+    quickBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+submitBtn.addEventListener('click', () => {
+  const val = parseFloat(amountInput.value);
+  if (!val || val <= 0) return;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Confirming...`;
+  // Simulate tx — in real app this calls the contract
+  setTimeout(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Success!`;
+    submitBtn.style.background = '#22c55e';
+    setTimeout(closeModal, 1200);
+  }, 2000);
+});
+</script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>

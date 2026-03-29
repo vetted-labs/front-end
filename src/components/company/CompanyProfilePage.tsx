@@ -24,6 +24,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { TeamManagement } from "./TeamManagement";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { ProfileSkeleton } from "@/components/ui/page-skeleton";
 import type { CompanyProfile } from "@/types";
 
 interface CompanyProfileFormData {
@@ -148,9 +149,7 @@ export default function CompanyProfilePage() {
     setIsEditing(false);
   };
 
-  if (!ready || isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <ProfileSkeleton />;
 
   if (!profile) {
     return (

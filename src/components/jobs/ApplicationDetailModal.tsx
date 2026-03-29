@@ -1,6 +1,7 @@
 "use client";
 
 import { getAssetUrl } from "@/lib/api";
+import { getPersonAvatar } from "@/lib/avatars";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,11 +54,11 @@ export function ApplicationDetailModal({
         <div>
           {/* Candidate Info + Status */}
           <div className="flex items-start gap-4 px-6 py-5 border-b border-border">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-xl font-bold text-primary">
-                {application.candidate.fullName.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <img
+              src={getPersonAvatar(application.candidate.fullName)}
+              alt={application.candidate.fullName}
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0 bg-muted"
+            />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
                 <h3 className="font-bold text-xl">

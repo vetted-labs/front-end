@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { governanceApi, blockchainApi } from "@/lib/api";
+import { getPersonAvatar } from "@/lib/avatars";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -212,9 +213,11 @@ export function GovernanceProposalDetailPage() {
               </Badge>
             )}
             <span className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-muted-foreground flex items-center justify-center text-xs font-bold text-white">
-                {(proposal.proposer_name || "??").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-              </span>
+              <img
+                src={getPersonAvatar(proposal.proposer_name || "Unknown")}
+                alt={proposal.proposer_name || "Proposer"}
+                className="w-5 h-5 rounded-full object-cover bg-muted"
+              />
               {proposal.proposer_name || truncateWallet(proposal.proposer_wallet)}
             </span>
             <span className="tabular-nums">{formatVETD(proposal.stake_amount)} VETD staked</span>

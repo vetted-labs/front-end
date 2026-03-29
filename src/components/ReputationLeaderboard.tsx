@@ -21,6 +21,7 @@ import { EmptyState } from "./ui/empty-state";
 import { STATUS_COLORS, PODIUM_COLORS } from "@/config/colors";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 import { formatVetd, truncateAddress } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/types";
 
@@ -74,9 +75,7 @@ export function ReputationLeaderboard({
     return Math.round((Math.min(approvals, rejections) / total) * 100);
   };
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <ListSkeleton />;
 
   if (error) {
     return (

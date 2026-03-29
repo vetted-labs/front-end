@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import { getMatchScoreColors, getUrgencyColors } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationCardProps {
@@ -17,40 +18,29 @@ interface ApplicationCardProps {
 const MATCH_RING_CIRCUMFERENCE = 2 * Math.PI * 27;
 
 function MatchScoreAvatar({
-  score,
   initials,
   profilePicture,
   candidateName,
+  score,
 }: {
-  score: number | null;
   initials: string;
   profilePicture?: string | null;
   candidateName: string;
+  score: number | null;
 }) {
   const matchColors = getMatchScoreColors(score ?? 50);
   const offset = score !== null ? MATCH_RING_CIRCUMFERENCE - (score / 100) * MATCH_RING_CIRCUMFERENCE : MATCH_RING_CIRCUMFERENCE;
 
-  // Map match score to stroke color class
   const strokeColorClass = score !== null && score >= 70
     ? "stroke-positive"
     : score !== null && score >= 40
     ? "stroke-warning"
     : "stroke-negative";
 
-  // Badge color
-  const badgeClass = score !== null && score >= 70
-    ? "text-positive bg-positive/15 border-positive/30"
-    : score !== null && score >= 40
-    ? "text-warning bg-warning/15 border-warning/30"
-    : "text-negative bg-negative/15 border-negative/30";
-
   return (
     <div className="relative shrink-0">
-      {/* Inner avatar */}
       <Avatar className="w-[52px] h-[52px] rounded-full z-[2] relative">
-        {profilePicture && (
-          <AvatarImage src={profilePicture} alt={candidateName} className="rounded-full" />
-        )}
+        <AvatarImage src={profilePicture || getPersonAvatar(candidateName)} alt={candidateName} className="rounded-full" />
         <AvatarFallback className={`rounded-full text-base font-bold ${matchColors.bgSubtle} text-foreground`}>
           {initials}
         </AvatarFallback>
@@ -73,14 +63,23 @@ function MatchScoreAvatar({
           </svg>
         </div>
       )}
-
-      {/* Score badge */}
-      {score !== null && (
-        <span className={`absolute bottom-[-4px] right-[-4px] z-[3] font-mono text-xs font-bold px-1.5 py-px rounded border leading-tight ${badgeClass}`}>
-          {score}%
-        </span>
-      )}
     </div>
+  );
+}
+
+function MatchScoreBadge({ score }: { score: number | null }) {
+  if (score === null) return null;
+
+  const colorClass = score >= 70
+    ? "text-positive bg-positive/15 border-positive/30"
+    : score >= 40
+    ? "text-warning bg-warning/15 border-warning/30"
+    : "text-negative bg-negative/15 border-negative/30";
+
+  return (
+    <span className={`inline-flex items-center gap-1 font-mono text-xs font-bold px-2 py-0.5 rounded-full border ${colorClass}`}>
+      {score}% match
+    </span>
   );
 }
 
@@ -132,9 +131,12 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           candidateName={application.candidate_name}
         />
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-sm leading-snug text-foreground">
-            {application.candidate_name}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-medium text-sm leading-snug text-foreground">
+              {application.candidate_name}
+            </h3>
+            <MatchScoreBadge score={guildScore} />
+          </div>
           <p className="text-xs text-muted-foreground truncate mt-0.5">
             {application.candidate_headline}
           </p>

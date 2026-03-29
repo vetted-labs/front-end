@@ -19,6 +19,7 @@ import {
   Shield,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 
 export function MyEndorsementsHistory() {
@@ -45,9 +46,7 @@ export function MyEndorsementsHistory() {
     );
   }
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <ListSkeleton />;
 
   if (endorsements.length === 0) {
     return (

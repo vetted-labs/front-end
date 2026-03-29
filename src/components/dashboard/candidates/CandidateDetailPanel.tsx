@@ -18,6 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { applicationsApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import { getPersonAvatar } from "@/lib/avatars";
 import { STATUS_COLORS } from "@/config/colors";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { ensureHttps, formatSalaryRange } from "@/lib/utils";
@@ -185,11 +186,11 @@ export function CandidateDetailPanel({
 
         {/* Row 2 — Avatar + name + contacts + pipeline stepper */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 ring-1 ring-primary/10">
-            <span className="text-primary font-display font-bold text-xl">
-              {candidate.fullName.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <img
+            src={getPersonAvatar(candidate.fullName)}
+            alt={candidate.fullName}
+            className="w-14 h-14 rounded-xl object-cover flex-shrink-0 ring-1 ring-primary/10 bg-muted"
+          />
           <div className="min-w-0 flex-shrink-0">
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-bold text-foreground truncate tracking-tight">{candidate.fullName}</h3>

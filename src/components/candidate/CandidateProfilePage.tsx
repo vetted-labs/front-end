@@ -14,10 +14,13 @@ import { candidateApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
+import { getProfileCompletion } from "@/lib/profileCompletion";
 import type { CandidateProfile, SocialLink } from "@/types";
 import SocialLinksEditor from "./SocialLinksEditor";
 import ResumeSection from "./ResumeSection";
 import PersonalInfoSection from "./PersonalInfoSection";
+import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
+import { ProfileSkeleton } from "@/components/ui/page-skeleton";
 
 export default function CandidateProfilePage() {
   const router = useRouter();
@@ -49,6 +52,11 @@ export default function CandidateProfilePage() {
           if (p.linkedIn) legacy.push({ platform: "linkedin", label: "LinkedIn", url: p.linkedIn });
           if (p.github) legacy.push({ platform: "github", label: "GitHub", url: p.github });
           setSocialLinks(legacy);
+        }
+        // Auto-enter edit mode when profile is incomplete
+        const { percentage } = getProfileCompletion(p);
+        if (percentage < 100) {
+          setIsEditing(true);
         }
       },
     }
@@ -171,11 +179,7 @@ export default function CandidateProfilePage() {
     );
   };
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <ProfileSkeleton />;
 
   if (!profile) {
     return (
@@ -194,6 +198,13 @@ export default function CandidateProfilePage() {
   }
 
   const filledSocialLinks = socialLinks.filter((l) => l.url.trim());
+
+  // Build a synthetic profile with current social links for completion check
+  const profileForCompletion: CandidateProfile = {
+    ...profile,
+    socialLinks,
+  };
+  const profileCompletion = getProfileCompletion(profileForCompletion);
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -222,6 +233,10 @@ export default function CandidateProfilePage() {
         </div>
 
         <div className="space-y-6">
+          <ProfileCompletionBanner
+            percentage={profileCompletion.percentage}
+            items={profileCompletion.items}
+          />
           <ResumeSection
             resumeUrl={profile.resumeUrl}
             resumeFileName={profile.resumeFileName}

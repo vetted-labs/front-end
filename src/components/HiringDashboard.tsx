@@ -33,6 +33,7 @@ import { JOB_STATUSES, JOB_STATUS_CONFIG } from "@/config/constants";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { STATUS_COLORS } from "@/config/colors";
 
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 import type { Job, DashboardStats } from "@/types";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 
@@ -113,7 +114,7 @@ export function HiringDashboard() {
     resetPage();
   }, [filterGuild, debouncedSearch, filterStatus, resetPage]);
 
-  if (!ready || (isLoading && !data)) return null;
+  if (!ready || (isLoading && !data)) return <ListSkeleton />;
 
   return (
     <div className="min-h-full relative">

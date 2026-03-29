@@ -2,7 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getPersonAvatar } from '@/lib/avatars';
 import Link from 'next/link';
 import { FileText, Linkedin, Github, ExternalLink, MapPin, Briefcase, TrendingUp } from 'lucide-react';
 import { getAssetUrl } from '@/lib/api';
@@ -51,6 +52,7 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-6">
               <Avatar className="w-24 h-24 text-2xl">
+                <AvatarImage src={getPersonAvatar(profile.fullName)} alt={profile.fullName} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>

@@ -8,6 +8,7 @@ import {
   Search,
 } from "lucide-react";
 import { jobsApi, getAssetUrl } from "@/lib/api";
+import { getCompanyAvatar } from "@/lib/avatars";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo } from "@/lib/utils";
@@ -98,20 +99,14 @@ export default function BrowsePage() {
                     <div className="relative">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          {job.companyLogo ? (
-                            <img
-                              src={getAssetUrl(job.companyLogo)}
-                              alt={job.companyName || "Company"}
-                              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          ) : (
-                            <div className="p-2 bg-muted/50 border border-border rounded-lg">
-                              <Briefcase className="w-5 h-5 text-foreground" />
-                            </div>
-                          )}
+                          <img
+                            src={job.companyLogo ? getAssetUrl(job.companyLogo) : getCompanyAvatar(job.companyName)}
+                            alt={job.companyName || "Company"}
+                            className="w-10 h-10 rounded-lg object-contain border border-border flex-shrink-0 bg-white p-1"
+                            onError={(e) => {
+                              e.currentTarget.src = getCompanyAvatar(job.companyName);
+                            }}
+                          />
                           <span className="text-sm font-medium text-muted-foreground">
                             {job.companyName || "Company"}
                           </span>

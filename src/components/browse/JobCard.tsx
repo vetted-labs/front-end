@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
+import { getCompanyAvatar } from "@/lib/avatars";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { STATUS_COLORS, getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
@@ -50,24 +51,14 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
       <div className="flex items-start justify-between mb-3.5 relative">
         <div className="flex items-center gap-3">
           {/* Company Logo */}
-          {job.companyLogo ? (
-            <img
-              src={getAssetUrl(job.companyLogo)}
-              alt={job.companyName || "Company"}
-              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
-              onError={(e) => {
-                const target = e.currentTarget;
-                target.style.display = "none";
-                const fallback = target.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = "flex";
-              }}
-            />
-          ) : null}
-          <div
-            className={`w-10 h-10 rounded-lg bg-muted/50 border border-border flex items-center justify-center flex-shrink-0 ${job.companyLogo ? "hidden" : "flex"}`}
-          >
-            <Building2 className="w-5 h-5 text-muted-foreground" />
-          </div>
+          <img
+            src={job.companyLogo ? getAssetUrl(job.companyLogo) : getCompanyAvatar(job.companyName)}
+            alt={job.companyName || "Company"}
+            className="w-10 h-10 rounded-lg object-contain border border-border flex-shrink-0 bg-white p-1"
+            onError={(e) => {
+              e.currentTarget.src = getCompanyAvatar(job.companyName);
+            }}
+          />
           <span className="text-sm font-medium text-muted-foreground">
             {job.companyName || "Company"}
           </span>

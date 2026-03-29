@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -110,9 +111,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
     [updateStatus, refetchApps]
   );
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <DetailSkeleton />;
 
   if (error) {
     return (

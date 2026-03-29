@@ -13,6 +13,7 @@ import type { Conversation, Message } from "@/types";
 import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
 import { ConversationFilters } from "./ConversationFilters";
+import { getPersonAvatar } from "@/lib/avatars";
 import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
 import { CandidateInfoSidebar } from "./CandidateInfoSidebar";
@@ -20,6 +21,7 @@ import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { EmptyInbox } from "./EmptyInbox";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
 import { Calendar } from "lucide-react";
+import { MessagesSkeleton } from "@/components/ui/page-skeleton";
 
 export default function CompanyMessagesInbox() {
   const router = useRouter();
@@ -170,11 +172,7 @@ export default function CompanyMessagesInbox() {
     });
   }, [conversations, search, jobFilter, statusFilter, unreadOnly]);
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <MessagesSkeleton />;
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -249,11 +247,11 @@ export default function CompanyMessagesInbox() {
                 {/* Conversation header */}
                 <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between gap-3 bg-card">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary font-medium text-xs">
-                        {selectedConversation.candidateName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <img
+                      src={getPersonAvatar(selectedConversation.candidateName)}
+                      alt={selectedConversation.candidateName}
+                      className="w-9 h-9 rounded-full object-cover flex-shrink-0 bg-muted"
+                    />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-foreground truncate">

@@ -17,6 +17,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { ProfileSkeleton } from "@/components/ui/page-skeleton";
 import type { CompanyNotificationPreferences } from "@/types";
 
 export default function SettingsPage() {
@@ -63,7 +64,7 @@ export default function SettingsPage() {
     setPrefs((prev) => ({ ...prev, [key]: value }));
   };
 
-  if (!ready) return null;
+  if (!ready) return <ProfileSkeleton />;
 
   return (
     <div className="min-h-full relative animate-page-enter">

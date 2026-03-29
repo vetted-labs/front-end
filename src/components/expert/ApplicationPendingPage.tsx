@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, PendingGuildInfo } from "@/types";
 
@@ -108,9 +109,7 @@ export default function ApplicationPendingPage() {
   });
 
   // Wait for wallet connection (skip redirect — expert layout handles auth guards)
-  if (!isConnected || !address || isLoading) {
-    return null;
-  }
+  if (!isConnected || !address || isLoading) return <DetailSkeleton />;
 
   if (error || !expert) {
     const isInsufficientMembers = error?.includes("minimum") || error?.includes("enough members") || error?.includes("members to process");

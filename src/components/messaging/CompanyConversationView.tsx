@@ -16,6 +16,7 @@ import { MessageInput } from "./MessageInput";
 import { CandidateInfoSidebar } from "./CandidateInfoSidebar";
 import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
+import { MessagesSkeleton } from "@/components/ui/page-skeleton";
 
 export default function CompanyConversationView() {
   const router = useRouter();
@@ -91,11 +92,7 @@ export default function CompanyConversationView() {
     );
   };
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <MessagesSkeleton />;
 
   if (!conversation) {
     return (

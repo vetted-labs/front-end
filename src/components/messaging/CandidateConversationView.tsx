@@ -15,6 +15,7 @@ import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
 import { ProposeNewTimeModal } from "./ProposeNewTimeModal";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
+import { MessagesSkeleton } from "@/components/ui/page-skeleton";
 
 export default function CandidateConversationView() {
   const router = useRouter();
@@ -107,11 +108,7 @@ export default function CandidateConversationView() {
     );
   };
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <MessagesSkeleton />;
 
   if (!conversation) {
     return (

@@ -13,6 +13,7 @@ import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpda
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption, GroupedJob } from "@/types";
 
 export default function CandidatesPage() {
@@ -227,7 +228,7 @@ export default function CandidatesPage() {
     );
   };
 
-  if (!ready) return null;
+  if (!ready) return <ListSkeleton />;
 
   return (
     <div className="h-full flex flex-col animate-page-enter">

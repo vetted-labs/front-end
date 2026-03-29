@@ -25,6 +25,7 @@ import { formatDeadline } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Alert } from "@/components/ui/alert";
+import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -122,9 +123,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     }
   };
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <DetailSkeleton />;
 
   if (error || !application) {
     return (

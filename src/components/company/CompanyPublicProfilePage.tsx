@@ -19,6 +19,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { EmptyState } from "@/components/ui/empty-state";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { formatSalaryRange } from "@/lib/utils";
+import { ProfileSkeleton } from "@/components/ui/page-skeleton";
 import type { CompanyProfile, Job } from "@/types";
 
 interface Props {
@@ -40,9 +41,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
   const { data: profile, isLoading: profileLoading, error: profileError } = useFetch<CompanyProfile>(fetchProfile);
   const { data: jobs, isLoading: jobsLoading } = useFetch<Job[]>(fetchJobs);
 
-  if (profileLoading) {
-    return null;
-  }
+  if (profileLoading) return <ProfileSkeleton />;
 
   if (profileError || !profile) {
     return (

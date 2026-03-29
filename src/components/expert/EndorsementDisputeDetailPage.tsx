@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DisputeVoteForm } from "@/components/endorsements/DisputeVoteForm";
+import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS } from "@/config/colors";
 
 function getTimeRemaining(deadline: string) {
@@ -91,9 +92,7 @@ export function EndorsementDisputeDetailPage() {
     );
   };
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <DetailSkeleton />;
 
   if (!dispute) {
     return (

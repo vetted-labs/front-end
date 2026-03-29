@@ -25,6 +25,7 @@ import { Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { ExpertPageSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import type {
   GuildPersonalStats,
@@ -116,9 +117,7 @@ export default function GuildMyStatsPage() {
     return null;
   }
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <ExpertPageSkeleton />;
 
   if (error || !data) {
     return (

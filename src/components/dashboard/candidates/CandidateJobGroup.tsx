@@ -3,6 +3,7 @@
 import { Briefcase, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCandidateStatusDot } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { CompanyApplication } from "@/types";
 
 interface CandidateJobGroupProps {
@@ -90,11 +91,11 @@ export function CandidateJobGroup({
                 )}
               >
                 {/* Avatar */}
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", avatarColor)}>
-                  <span className="text-xs font-medium">
-                    {app.candidate.fullName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <img
+                  src={getPersonAvatar(app.candidate.fullName)}
+                  alt={app.candidate.fullName}
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-muted"
+                />
 
                 {/* Name + subtitle */}
                 <div className="flex-1 min-w-0">

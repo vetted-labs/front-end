@@ -15,6 +15,7 @@ import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
+import { NotificationsSkeleton } from "@/components/ui/page-skeleton";
 import { getNotificationPriority } from "@/config/colors";
 import type { BaseNotification } from "@/types";
 import type { LucideIcon } from "lucide-react";
@@ -207,19 +208,7 @@ export function NotificationsPage<T extends BaseNotification>({
     );
   };
 
-  if (!ready || isLoading) return null;
-
-  if (error) {
-    return (
-      <div className="min-h-full">
-        <div className="flex items-center justify-center py-20">
-          <Alert variant="error">{error}</Alert>
-        </div>
-      </div>
-    );
-  }
-
-  // Compute per-filter counts
+  // Compute per-filter counts (must be before early returns to keep hook order stable)
   const unreadCount = allNotifications.filter((n) => !n.isRead).length;
 
   const getFilteredNotifications = (filterKey: string): T[] => {
@@ -241,8 +230,19 @@ export function NotificationsPage<T extends BaseNotification>({
       : getFilteredNotifications(f.key).length,
   }));
 
-  // Group filtered notifications by date
   const dateGroups = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
+
+  if (!ready || isLoading) return <NotificationsSkeleton />;
+
+  if (error) {
+    return (
+      <div className="min-h-full">
+        <div className="flex items-center justify-center py-20">
+          <Alert variant="error">{error}</Alert>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full animate-page-enter">

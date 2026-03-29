@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
 import { getPlatformIcon } from "@/lib/social-links";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { SocialLink } from "@/types";
 
 interface ReviewProfileStepApplication {
@@ -54,11 +55,11 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           {/* Profile header */}
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-white tracking-tight">
-                {initials}
-              </span>
-            </div>
+            <img
+              src={getPersonAvatar(displayName)}
+              alt={displayName}
+              className="w-14 h-14 rounded-xl object-cover bg-muted shrink-0"
+            />
 
             {/* Name + badge + email */}
             <div className="min-w-0 flex-1">

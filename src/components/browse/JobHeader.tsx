@@ -9,6 +9,7 @@ import {
   Globe,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
+import { getCompanyAvatar } from "@/lib/avatars";
 import { getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
@@ -26,20 +27,14 @@ export default function JobHeader({ job }: JobHeaderProps) {
       {/* Company Row */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
-          {job.companyLogo ? (
-            <img
-              src={getAssetUrl(job.companyLogo)}
-              alt={job.companyName || "Company"}
-              className="w-12 h-12 rounded-xl object-cover border border-border flex-shrink-0 shadow-sm"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-6 h-6 text-muted-foreground" />
-            </div>
-          )}
+          <img
+            src={job.companyLogo ? getAssetUrl(job.companyLogo) : getCompanyAvatar(job.companyName)}
+            alt={job.companyName || "Company"}
+            className="w-12 h-12 rounded-xl object-contain border border-border flex-shrink-0 shadow-sm bg-white p-1.5"
+            onError={(e) => {
+              e.currentTarget.src = getCompanyAvatar(job.companyName);
+            }}
+          />
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-foreground flex items-center gap-2">
               {job.companyName || "Company"}

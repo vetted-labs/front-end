@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { Job, GuildJobApplication } from "@/types";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
@@ -233,11 +234,11 @@ export function GuildJobsTab({
                           {application.jobTitle}
                         </h4>
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 border border-border flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">
-                              {application.candidateName.charAt(0)}
-                            </span>
-                          </div>
+                          <img
+                            src={getPersonAvatar(application.candidateName)}
+                            alt={application.candidateName}
+                            className="w-7 h-7 rounded-full object-cover bg-muted"
+                          />
                           <span className="text-sm text-foreground font-medium">
                             {application.candidateName}
                           </span>

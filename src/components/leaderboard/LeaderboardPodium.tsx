@@ -3,6 +3,7 @@
 import type { LeaderboardEntryV2 } from "@/types";
 import { truncateAddress } from "@/lib/utils";
 import { PODIUM_COLORS, STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 
 interface LeaderboardPodiumProps {
   entries: LeaderboardEntryV2[];
@@ -101,13 +102,11 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
       <p className="text-3xl font-bold text-primary tabular-nums">#{rank}</p>
 
       {/* Avatar */}
-      <div
-        className={`mx-auto mt-3 w-12 h-12 rounded-full ${colors.solid} flex items-center justify-center`}
-      >
-        <span className="font-bold text-white text-sm">
-          {getInitials(entry.fullName)}
-        </span>
-      </div>
+      <img
+        src={getPersonAvatar(entry.fullName)}
+        alt={entry.fullName}
+        className={`mx-auto mt-3 w-12 h-12 rounded-full object-cover ring-2 ${colors.ring || "ring-border"} bg-muted`}
+      />
 
       {/* Name */}
       <p className="text-sm font-bold text-foreground mt-3 truncate">

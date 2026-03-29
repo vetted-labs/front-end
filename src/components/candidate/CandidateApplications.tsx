@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { applicationsApi } from "@/lib/api";
+import { getCompanyAvatar } from "@/lib/avatars";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { Pagination } from "@/components/ui/pagination";
@@ -21,6 +22,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { CandidateApplication, ApplicationStatus } from "@/types";
 import { formatSalaryRange } from "@/lib/utils";
+import { ListSkeleton } from "@/components/ui/page-skeleton";
 
 /* ── Vetting Pipeline Steps ── */
 
@@ -197,11 +199,7 @@ export default function CandidateApplications() {
 
   const activeCount = applications.filter(a => a.status !== "rejected").length;
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <ListSkeleton />;
 
   return (
     <div className="min-h-full relative">
@@ -303,9 +301,11 @@ export default function CandidateApplications() {
                       {/* Top row: company + status badge */}
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-sm font-bold text-muted-foreground">
-                            {companyInitial}
-                          </div>
+                          <img
+                            src={getCompanyAvatar(application.job.companyName)}
+                            alt={application.job.companyName || "Company"}
+                            className="flex-shrink-0 w-11 h-11 rounded-xl border border-border object-contain bg-white p-1.5"
+                          />
                           <div className="min-w-0">
                             <p className="text-xs text-muted-foreground font-medium mb-0.5">
                               {application.job.companyName || "Company"}

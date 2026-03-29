@@ -3,6 +3,7 @@
 import { FileText, Mail, Briefcase, Linkedin, Github } from "lucide-react";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { getAssetUrl } from "@/lib/api";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { Conversation } from "@/types";
 
 interface CandidateInfoSidebarProps {
@@ -17,11 +18,11 @@ export function CandidateInfoSidebar({ conversation }: CandidateInfoSidebarProps
       <div className="p-5 space-y-4">
         {/* Candidate identity */}
         <div className="text-center border-b border-border/20 dark:border-border pb-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 ring-2 ring-primary/20 shadow-sm flex items-center justify-center mx-auto mb-2">
-            <span className="text-primary font-bold text-xl">
-              {conversation.candidateName.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <img
+            src={getPersonAvatar(conversation.candidateName)}
+            alt={conversation.candidateName}
+            className="w-16 h-16 rounded-full ring-2 ring-primary/20 shadow-sm mx-auto mb-2 object-cover bg-muted"
+          />
           <p className="text-sm font-medium text-foreground">{conversation.candidateName}</p>
           {conversation.candidateHeadline && (
             <p className="text-xs text-muted-foreground mt-0.5">{conversation.candidateHeadline}</p>

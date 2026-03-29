@@ -2,6 +2,7 @@
 
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { getPersonAvatar, getCompanyAvatar } from "@/lib/avatars";
 import type { Conversation } from "@/types";
 
 interface ConversationListItemProps {
@@ -39,14 +40,15 @@ export function ConversationListItem({
       )}
     >
       <div className="flex items-start gap-3">
-        <div
+        <img
+          src={variant === "candidate" ? getCompanyAvatar(displayName) : getPersonAvatar(displayName)}
+          alt={displayName}
           className={cn(
-            "w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0",
+            "w-10 h-10 rounded-full object-cover flex-shrink-0 bg-muted",
+            variant === "candidate" && "object-contain bg-white p-1 border border-border",
             isSelected && "ring-2 ring-primary/30"
           )}
-        >
-          <span className="text-primary font-medium text-sm">{initial}</span>
-        </div>
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <span

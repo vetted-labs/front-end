@@ -11,6 +11,7 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation } from "@/types";
 import { ConversationList } from "./ConversationList";
 import { EmptyInbox } from "./EmptyInbox";
+import { MessagesSkeleton } from "@/components/ui/page-skeleton";
 
 export default function CandidateMessagesInbox() {
   const router = useRouter();
@@ -40,11 +41,7 @@ export default function CandidateMessagesInbox() {
     router.push(`/candidate/messages/${conv.id}`);
   };
 
-  if (!ready) return null;
-
-  if (isLoading) {
-    return null;
-  }
+  if (!ready || isLoading) return <MessagesSkeleton />;
 
   return (
     <div className="min-h-full relative animate-page-enter">

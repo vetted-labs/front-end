@@ -3,70 +3,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getPersonAvatar } from "@/lib/avatars";
 
-import { Award, ArrowRight, CheckCircle2, Clock, XCircle, TrendingUp, Coins } from "lucide-react";
+import { Award } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
-
-type LifecycleInfo = {
-  icon: React.ReactNode;
-  message: string;
-  className: string;
-  dotColor: string;
-  /** Color key for the spinning ring: positive, warning, neutral */
-  ringColor: "positive" | "warning" | "neutral" | "info" | "negative";
-};
-
-function getEndorsementLifecycleInfo(endorsement: ActiveEndorsement): LifecycleInfo | null {
-  const status = endorsement.application?.status;
-  const candidateName = endorsement.candidate?.name ?? "this candidate";
-
-  switch (status) {
-    case "hired":
-      return {
-        icon: <CheckCircle2 className="w-3 h-3 shrink-0" />,
-        message: "Reward pending",
-        className: STATUS_COLORS.positive.text,
-        dotColor: STATUS_COLORS.positive.dot,
-        ringColor: "positive",
-      };
-    case "offered":
-      return {
-        icon: <TrendingUp className="w-3 h-3 shrink-0" />,
-        message: `${candidateName} received an offer`,
-        className: STATUS_COLORS.info.text,
-        dotColor: STATUS_COLORS.info.dot,
-        ringColor: "info",
-      };
-    case "rejected":
-    case "withdrawn":
-      return {
-        icon: <XCircle className="w-3 h-3 shrink-0" />,
-        message: status === "rejected" ? "Not selected" : "Withdrawn",
-        className: STATUS_COLORS.negative.text,
-        dotColor: STATUS_COLORS.negative.dot,
-        ringColor: "negative",
-      };
-    case "interviewing":
-      return {
-        icon: <Clock className="w-3 h-3 shrink-0" />,
-        message: "Interviewing",
-        className: STATUS_COLORS.info.text,
-        dotColor: STATUS_COLORS.info.dot,
-        ringColor: "positive",
-      };
-    case "accepted":
-      return {
-        icon: <CheckCircle2 className="w-3 h-3 shrink-0" />,
-        message: "Accepted — awaiting confirmation",
-        className: STATUS_COLORS.positive.text,
-        dotColor: STATUS_COLORS.positive.dot,
-        ringColor: "positive",
-      };
-    default:
-      return null;
-  }
-}
 
 function getInitials(name: string): string {
   return name
@@ -76,14 +17,6 @@ function getInitials(name: string): string {
     .toUpperCase()
     .substring(0, 2);
 }
-
-const RING_COLOR_MAP: Record<string, string> = {
-  positive: "hsl(var(--positive))",
-  warning: "hsl(var(--warning))",
-  info: "hsl(var(--info-blue))",
-  negative: "hsl(var(--negative))",
-  neutral: "hsl(var(--primary))",
-};
 
 const STATUS_LABEL_MAP: Record<string, { label: string; statusClass: string }> = {
   interviewing: { label: "Interviewing", statusClass: `${STATUS_COLORS.positive.badge}` },
@@ -96,24 +29,19 @@ const STATUS_LABEL_MAP: Record<string, { label: string; statusClass: string }> =
   pending: { label: "Pending", statusClass: `${STATUS_COLORS.neutral.badge}` },
 };
 
-function EndorsementSpinCard({
+function EndorsementCard({
   endorsement,
-  lifecycle,
   initials,
   bidAmount,
   rank,
-  animationDelay,
   onClick,
 }: {
   endorsement: ActiveEndorsement;
-  lifecycle: LifecycleInfo | null;
   initials: string;
   bidAmount: number;
   rank: number | undefined;
-  animationDelay: string;
   onClick: () => void;
 }) {
-  const ringColor = lifecycle ? RING_COLOR_MAP[lifecycle.ringColor] : "hsl(var(--primary))";
   const status = endorsement.application?.status ?? "pending";
   const statusInfo = STATUS_LABEL_MAP[status] ?? STATUS_LABEL_MAP.pending;
 
@@ -122,40 +50,19 @@ function EndorsementSpinCard({
       className="flex-none w-[340px] scroll-snap-start cursor-pointer"
       onClick={onClick}
     >
-      {/* Outer spinning gradient border */}
-      <div
-        className="rounded-[22px] p-[2px] endo-spinning-border"
-        style={{
-          background: `conic-gradient(from var(--endo-spin-angle, 0deg), ${ringColor}, transparent 40%, transparent 60%, ${ringColor})`,
-          animationDelay,
-        }}
-      >
-        <div className="bg-background rounded-xl p-6 flex flex-col gap-4 h-full relative z-[1]">
-          {/* Top: Avatar with spinning ring + info */}
+      <div className="rounded-xl border border-border bg-background p-6 flex flex-col gap-4 h-full">
+          {/* Top: Avatar + info */}
           <div className="flex items-center gap-4">
-            {/* Avatar with ring */}
-            <div className="relative w-14 h-14 shrink-0">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `conic-gradient(from var(--endo-spin-angle, 0deg), ${ringColor}, transparent 50%, ${ringColor})`,
-                  animation: "endo-card-spin 3s linear infinite",
-                  animationDelay,
-                }}
+            <Avatar className="w-14 h-14 shrink-0">
+              <AvatarImage
+                src={endorsement.candidate?.profilePicture || getPersonAvatar(endorsement.candidate?.name ?? 'User')}
+                alt={endorsement.candidate?.name ?? ''}
+                className="rounded-full"
               />
-              <Avatar className="absolute inset-[3px] rounded-full border-0">
-                {endorsement.candidate?.profilePicture && (
-                  <AvatarImage
-                    src={endorsement.candidate.profilePicture}
-                    alt={endorsement.candidate?.name ?? ''}
-                    className="rounded-full"
-                  />
-                )}
-                <AvatarFallback className="rounded-full bg-muted/30 text-foreground text-sm font-bold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+              <AvatarFallback className="rounded-full bg-muted/30 text-foreground text-sm font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
 
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-foreground truncate">
@@ -201,9 +108,10 @@ function EndorsementSpinCard({
           </div>
         </div>
       </div>
-    </div>
   );
 }
+
+
 
 interface MyActiveEndorsementsProps {
   userEndorsements: ActiveEndorsement[];
@@ -319,21 +227,18 @@ export function MyActiveEndorsements({
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/[0.06]">
-          {userEndorsements.map((endorsement, idx) => {
-            const lifecycle = getEndorsementLifecycleInfo(endorsement);
+          {userEndorsements.map((endorsement) => {
             const initials = endorsement.candidate?.name ? getInitials(endorsement.candidate.name) : '??';
             const bidAmount = parseFloat(endorsement.stakeAmount || '0');
             const rank = endorsement.blockchainData?.rank;
 
             return (
-              <EndorsementSpinCard
+              <EndorsementCard
                 key={endorsement.application?.id || endorsement.endorsementId}
                 endorsement={endorsement}
-                lifecycle={lifecycle}
                 initials={initials}
                 bidAmount={bidAmount}
                 rank={rank}
-                animationDelay={`${-idx}s`}
                 onClick={() => handleEndorsementClick(endorsement)}
               />
             );

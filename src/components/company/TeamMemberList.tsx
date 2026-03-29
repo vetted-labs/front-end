@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { TEAM_MEMBER_STATUS_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { TeamMember, TeamMemberRole } from "@/types";
 
 const ROLE_CONFIG: Record<TeamMemberRole, { label: string; icon: typeof Shield; className: string }> = {
@@ -52,11 +53,11 @@ export function TeamMemberList({ members, isLoading, onUpdateRole, onRemove, isU
 
         return (
           <div key={member.id} className="flex items-center gap-4 px-4 py-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-medium text-sm">
-                {member.fullName.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <img
+              src={getPersonAvatar(member.fullName)}
+              alt={member.fullName}
+              className="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-muted"
+            />
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{member.fullName}</p>

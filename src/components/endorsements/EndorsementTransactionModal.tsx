@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getPersonAvatar } from '@/lib/avatars';
 import {
   CheckCircle2,
   AlertCircle,
@@ -194,9 +195,7 @@ export function EndorsementTransactionModal({
               <div className="w-0.5 bg-border rounded-full -my-4 -ml-4 mr-4 flex-shrink-0" />
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Avatar className="w-12 h-12 border-2 border-primary/15 shadow-md flex-shrink-0">
-                  {application.candidate_profile_picture_url && (
-                    <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} />
-                  )}
+                  <AvatarImage src={application.candidate_profile_picture_url || getPersonAvatar(application.candidate_name)} alt={application.candidate_name} />
                   <AvatarFallback className="bg-primary/15 text-primary font-bold">
                     {candidateInitials}
                   </AvatarFallback>

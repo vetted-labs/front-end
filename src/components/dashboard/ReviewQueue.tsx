@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import type { GuildApplication } from "@/types";
 
 interface ReviewQueueProps {
@@ -69,15 +70,11 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                 }`}
               >
                 {/* Avatar */}
-                <div
-                  className={`w-[34px] h-[34px] rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                    isFirst
-                      ? `${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text}`
-                      : `${STATUS_COLORS.neutral.bgSubtle} ${STATUS_COLORS.neutral.text}`
-                  }`}
-                >
-                  {getInitials(name)}
-                </div>
+                <img
+                  src={getPersonAvatar(name)}
+                  alt={name}
+                  className="w-[34px] h-[34px] rounded-lg object-cover shrink-0 bg-muted"
+                />
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">

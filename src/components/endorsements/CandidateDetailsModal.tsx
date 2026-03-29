@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getPersonAvatar } from '@/lib/avatars';
 import { Progress } from '@/components/ui/progress';
 import {
   Award,
@@ -97,9 +98,7 @@ export function CandidateDetailsModal({
             {/* Avatar */}
             <div className="relative flex-shrink-0">
               <Avatar className="w-14 h-14 rounded-xl border border-primary/20 shadow-lg">
-                {application.candidate_profile_picture_url && (
-                  <AvatarImage src={application.candidate_profile_picture_url} alt={application.candidate_name} className="rounded-xl" />
-                )}
+                <AvatarImage src={application.candidate_profile_picture_url || getPersonAvatar(application.candidate_name)} alt={application.candidate_name} className="rounded-xl" />
                 <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-bold">
                   {candidateInitials}
                 </AvatarFallback>

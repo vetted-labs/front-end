@@ -11,7 +11,6 @@ import { logger } from "@/lib/logger";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Breadcrumb } from "./ui/breadcrumb";
 import { GuildHeader } from "./guild/GuildHeader";
-import { GuildApplicationCTA } from "./guild/GuildApplicationCTA";
 import { GuildLeaderboardTab } from "./guild/GuildLeaderboardTab";
 import { GuildMembershipApplicationsTab } from "./guild/GuildMembershipApplicationsTab";
 import { GuildEarningsTab } from "./guild/GuildEarningsTab";
@@ -28,6 +27,7 @@ import type {
   LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication, ExpertRole, ExpertCRPhaseStatus,
 } from "@/types";
 import { GUILD_DETAIL_TABS } from "@/types";
+import { GuildDetailSkeleton } from "@/components/ui/page-skeleton";
 
 const ReviewGuildApplicationModal = dynamic(
   () => import("./guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
@@ -351,7 +351,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     refetch();
   };
 
-  if (isLoading && !guild) return null;
+  if (isLoading && !guild) return <GuildDetailSkeleton />;
   if (!guild) {
     return (
       <div className="flex items-center justify-center px-4">
@@ -381,7 +381,6 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           ]} />
         </div>
         <GuildHeader guild={guild} onStakeClick={() => setShowVetdStakingModal(true)} />
-        <GuildApplicationCTA guildId={guildId} onNavigateToPublicPage={() => router.push(`/guilds/${guildId}`)} />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           {/* Sticky tab bar */}

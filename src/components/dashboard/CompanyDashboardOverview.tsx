@@ -33,6 +33,7 @@ import { Alert } from "@/components/ui/alert";
 
 import { logger } from "@/lib/logger";
 import { formatTimeAgo } from "@/lib/notification-helpers";
+import { DashboardSkeleton } from "@/components/ui/page-skeleton";
 import type { Job, DashboardStats, CompanyApplication, MeetingDetails, ApplicationStatus } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
@@ -111,6 +112,8 @@ function getAvatarBg(name: string): string {
   }
   return colors[Math.abs(hash) % colors.length];
 }
+
+import { getPersonAvatar, getCompanyAvatar } from "@/lib/avatars";
 
 const PIPELINE_COL_ACCENT: Record<string, string> = {
   pending: "border-t-primary",
@@ -201,9 +204,7 @@ export function CompanyDashboardOverview() {
   const recentJobs = data?.recentJobs ?? [];
   const pipeline = buildPipeline(recentApplications);
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return <DashboardSkeleton />;
 
   if (error) {
     return (
@@ -222,11 +223,11 @@ export function CompanyDashboardOverview() {
         {/* ═══ HEADER ═══ */}
         <div className="flex items-center justify-between mb-8 pb-5 border-b border-border/30 dark:border-border">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-display font-bold text-xl">
-                {companyName ? companyName.charAt(0).toUpperCase() : "C"}
-              </span>
-            </div>
+            <img
+              src={getCompanyAvatar(companyName)}
+              alt={companyName || "Company"}
+              className="w-11 h-11 rounded-xl object-contain border border-border flex-shrink-0 bg-white p-1"
+            />
             <div>
               <h1 className="text-xl font-display font-bold text-foreground tracking-tight">
                 {companyName || "Dashboard"}
@@ -322,11 +323,11 @@ export function CompanyDashboardOverview() {
                             href="/dashboard/candidates"
                             className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/10 border border-border/15 dark:border-border hover:bg-muted/20 dark:hover:bg-muted/20 hover:border-border/30 transition-all group"
                           >
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${getAvatarBg(app.candidate.fullName)}`}>
-                              <span className="text-xs font-medium">
-                                {app.candidate.fullName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-                              </span>
-                            </div>
+                            <img
+                              src={getPersonAvatar(app.candidate.fullName)}
+                              alt={app.candidate.fullName}
+                              className="w-7 h-7 rounded-full object-cover flex-shrink-0 bg-muted"
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">{app.candidate.fullName}</p>
                               <p className="text-xs text-muted-foreground/50 truncate">{app.job.title}</p>
@@ -424,11 +425,11 @@ export function CompanyDashboardOverview() {
                       href="/dashboard/candidates"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getAvatarBg(app.candidate.fullName)}`}>
-                        <span className="text-xs font-medium">
-                          {app.candidate.fullName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                      <img
+                        src={getPersonAvatar(app.candidate.fullName)}
+                        alt={app.candidate.fullName}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-muted"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                           {app.candidate.fullName}

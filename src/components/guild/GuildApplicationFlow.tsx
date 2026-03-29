@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Send } from "lucide-react";
 import { Alert, Button } from "@/components/ui";
+import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { useGuildApplicationFlow } from "@/lib/hooks/useGuildApplicationFlow";
 
 import ApplicationNav from "./application-steps/ApplicationNav";
@@ -18,9 +19,7 @@ export default function GuildApplicationFlow() {
   const flow = useGuildApplicationFlow();
 
   // --- Loading state ---
-  if (flow.isLoading) {
-    return null;
-  }
+  if (flow.isLoading) return <DetailSkeleton />;
 
   // --- Fatal error (no template loaded) ---
   if (flow.error && !flow.template) {

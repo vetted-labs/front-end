@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Check, Users, ChevronRight } from "lucide-react";
 import { VOTE_COLORS, STATUS_COLORS } from "@/config/colors";
+import { getPersonAvatar } from "@/lib/avatars";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Divider } from "@/components/ui/divider";
 import type { GovernanceProposalDetail } from "@/types";
@@ -64,9 +65,11 @@ export function LiveVoteBanner({ proposal, voteWeight, onClick }: LiveVoteBanner
               {proposal.title}
             </h2>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">
-                {initials}
-              </span>
+              <img
+                src={getPersonAvatar(proposal.proposer_name || "Unknown")}
+                alt={proposal.proposer_name || "Proposer"}
+                className="w-6 h-6 rounded-full object-cover bg-muted"
+              />
               Proposed by{" "}
               <span className="font-medium text-foreground">
                 {proposal.proposer_name || "Unknown"}

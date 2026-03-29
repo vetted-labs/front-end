@@ -34,7 +34,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
       <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-3 mb-3">
 
         {/* ── Identity + Description (left, spans 2 rows) ── */}
-        <div className="md:row-span-2 rounded-xl border border-border p-8 animate-fade-up">
+        <div className="md:row-span-2 rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up">
           <div className="w-14 h-14 rounded-xl bg-primary/[0.08] border border-primary/20 flex items-center justify-center mb-4">
             <GuildIcon className="w-7 h-7 text-primary" />
           </div>
@@ -76,7 +76,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
         </div>
 
         {/* ── Your Position (right, row 1) ── */}
-        <div className=" rounded-xl border border-border p-6 flex flex-col animate-fade-up animate-delay-100">
+        <div className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col animate-fade-up animate-delay-100">
           <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-4 flex items-center gap-2">
             <User className="w-3 h-3 text-primary" />
             Your Position
@@ -115,7 +115,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
         {/* ── Health Stats (left, row 2) — handled by GuildStatsPanel ── */}
 
         {/* ── Staking (right, row 2) ── */}
-        <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
+        <div className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col justify-center animate-fade-up animate-delay-200">
           <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-2.5 flex items-center gap-2">
             <Shield className="w-3 h-3 text-primary" />
             Guild Staking
