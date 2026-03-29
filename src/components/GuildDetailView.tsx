@@ -351,7 +351,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     refetch();
   };
 
-  if (isLoading && !guild) return <GuildDetailSkeleton />;
+  if (isLoading && !guild) return null;
   if (!guild) {
     return (
       <div className="flex items-center justify-center px-4">

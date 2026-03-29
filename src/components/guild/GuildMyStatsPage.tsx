@@ -117,7 +117,7 @@ export default function GuildMyStatsPage() {
     return null;
   }
 
-  if (isLoading) return <ExpertPageSkeleton />;
+  if (isLoading) return null;
 
   if (error || !data) {
     return (

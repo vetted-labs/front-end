@@ -33,7 +33,7 @@ import { Alert } from "@/components/ui/alert";
 
 import { logger } from "@/lib/logger";
 import { formatTimeAgo } from "@/lib/notification-helpers";
-import { DashboardSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import type { Job, DashboardStats, CompanyApplication, MeetingDetails, ApplicationStatus } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
@@ -204,8 +204,6 @@ export function CompanyDashboardOverview() {
   const recentJobs = data?.recentJobs ?? [];
   const pipeline = buildPipeline(recentApplications);
 
-  if (isLoading) return <DashboardSkeleton />;
-
   if (error) {
     return (
       <div className="flex items-center justify-center px-4">
@@ -256,6 +254,7 @@ export function CompanyDashboardOverview() {
         </div>
 
         {/* ═══ METRICS ═══ */}
+        <DataSection isLoading={isLoading} skeleton={null}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             icon={Briefcase}
@@ -668,6 +667,7 @@ export function CompanyDashboardOverview() {
             Post New Job
           </Link>
         </div>
+        </DataSection>
 
       </div>
     </div>

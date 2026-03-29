@@ -33,7 +33,7 @@ import { JOB_STATUSES, JOB_STATUS_CONFIG } from "@/config/constants";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { STATUS_COLORS } from "@/config/colors";
 
-import { ListSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import type { Job, DashboardStats } from "@/types";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 
@@ -114,7 +114,7 @@ export function HiringDashboard() {
     resetPage();
   }, [filterGuild, debouncedSearch, filterStatus, resetPage]);
 
-  if (!ready || (isLoading && !data)) return <ListSkeleton />;
+  if (!ready) return null;
 
   return (
     <div className="min-h-full relative">
@@ -130,6 +130,7 @@ export function HiringDashboard() {
           </div>
         )}
 
+        <DataSection isLoading={isLoading && !data} skeleton={null}>
         {/* Compact Stat Chips */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-3">
@@ -319,6 +320,7 @@ export function HiringDashboard() {
             onPageChange={setCurrentPage}
           />
         </div>
+        </DataSection>
       </div>
 
       <ConfirmationModal

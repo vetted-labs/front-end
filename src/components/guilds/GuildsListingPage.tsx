@@ -59,7 +59,7 @@ export default function GlobalGuildsPage() {
     0,
   );
 
-  if (isLoading) return <ListSkeleton />;
+  if (isLoading) return null;
 
   return (
     <div className="relative min-h-screen bg-background text-foreground animate-page-enter">

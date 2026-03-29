@@ -15,7 +15,7 @@ import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
-import { NotificationsSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import { getNotificationPriority } from "@/config/colors";
 import type { BaseNotification } from "@/types";
 import type { LucideIcon } from "lucide-react";
@@ -232,7 +232,7 @@ export function NotificationsPage<T extends BaseNotification>({
 
   const dateGroups = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
 
-  if (!ready || isLoading) return <NotificationsSkeleton />;
+  if (!ready) return null;
 
   if (error) {
     return (
@@ -310,6 +310,7 @@ export function NotificationsPage<T extends BaseNotification>({
         </div>
 
         {/* Notifications grouped by date */}
+        <DataSection isLoading={isLoading} skeleton={null}>
         {filteredNotifications.length === 0 ? (
           <div className="bg-card rounded-xl p-12 text-center border border-border">
             <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -418,6 +419,7 @@ export function NotificationsPage<T extends BaseNotification>({
             )}
           </button>
         )}
+        </DataSection>
       </div>
     </div>
   );

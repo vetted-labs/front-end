@@ -41,7 +41,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
   const { data: profile, isLoading: profileLoading, error: profileError } = useFetch<CompanyProfile>(fetchProfile);
   const { data: jobs, isLoading: jobsLoading } = useFetch<Job[]>(fetchJobs);
 
-  if (profileLoading) return <ProfileSkeleton />;
+  if (profileLoading) return null;
 
   if (profileError || !profile) {
     return (

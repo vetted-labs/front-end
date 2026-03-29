@@ -20,7 +20,7 @@ import SocialLinksEditor from "./SocialLinksEditor";
 import ResumeSection from "./ResumeSection";
 import PersonalInfoSection from "./PersonalInfoSection";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
-import { ProfileSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 export default function CandidateProfilePage() {
   const router = useRouter();
@@ -179,9 +179,9 @@ export default function CandidateProfilePage() {
     );
   };
 
-  if (!ready || isLoading) return <ProfileSkeleton />;
+  if (!ready) return null;
 
-  if (!profile) {
+  if (!isLoading && !profile) {
     return (
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
@@ -200,16 +200,15 @@ export default function CandidateProfilePage() {
   const filledSocialLinks = socialLinks.filter((l) => l.url.trim());
 
   // Build a synthetic profile with current social links for completion check
-  const profileForCompletion: CandidateProfile = {
-    ...profile,
-    socialLinks,
-  };
-  const profileCompletion = getProfileCompletion(profileForCompletion);
+  const profileForCompletion: CandidateProfile | null = profile
+    ? { ...profile, socialLinks }
+    : null;
+  const profileCompletion = profileForCompletion ? getProfileCompletion(profileForCompletion) : null;
 
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header (static — always visible) */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-1 font-display">
@@ -221,7 +220,7 @@ export default function CandidateProfilePage() {
                 : "Your personal information and resume"}
             </p>
           </div>
-          {!isEditing && (
+          {!isEditing && profile && (
             <button
               onClick={startEditing}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors text-foreground"
@@ -232,6 +231,8 @@ export default function CandidateProfilePage() {
           )}
         </div>
 
+        <DataSection isLoading={isLoading} skeleton={null}>
+        {profile && profileCompletion && (
         <div className="space-y-6">
           <ProfileCompletionBanner
             percentage={profileCompletion.percentage}
@@ -342,6 +343,8 @@ export default function CandidateProfilePage() {
             <p className="text-destructive text-sm text-right">{errors.submit}</p>
           )}
         </div>
+        )}
+        </DataSection>
       </div>
     </div>
   );

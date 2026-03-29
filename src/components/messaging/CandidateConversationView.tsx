@@ -15,7 +15,7 @@ import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
 import { ProposeNewTimeModal } from "./ProposeNewTimeModal";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
-import { MessagesSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 export default function CandidateConversationView() {
   const router = useRouter();
@@ -108,9 +108,9 @@ export default function CandidateConversationView() {
     );
   };
 
-  if (!ready || isLoading) return <MessagesSkeleton />;
+  if (!ready) return null;
 
-  if (!conversation) {
+  if (!isLoading && !conversation) {
     return (
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
@@ -128,7 +128,7 @@ export default function CandidateConversationView() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col animate-page-enter">
-      {/* Header */}
+      {/* Header (static — always visible with back button) */}
       <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3 bg-card">
         <button
           onClick={() => router.push("/candidate/messages")}
@@ -136,22 +136,29 @@ export default function CandidateConversationView() {
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-primary font-medium text-xs">
-            {conversation.companyName.charAt(0).toUpperCase()}
-          </span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {conversation.companyName}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {conversation.jobTitle}
-          </p>
-        </div>
+        {conversation && (
+          <>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-primary font-medium text-xs">
+                {conversation.companyName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {conversation.companyName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {conversation.jobTitle}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Messages */}
+      <DataSection isLoading={isLoading} skeleton={null} className="flex-1 flex flex-col min-h-0">
+      {conversation && (
+      <>
       <ConversationThread
         messages={messages}
         currentUserType="candidate"
@@ -166,6 +173,9 @@ export default function CandidateConversationView() {
         onSubmit={handleSubmitProposedTime}
         isSubmitting={isProposing}
       />
+      </>
+      )}
+      </DataSection>
     </div>
   );
 }

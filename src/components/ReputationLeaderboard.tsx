@@ -75,7 +75,7 @@ export function ReputationLeaderboard({
     return Math.round((Math.min(approvals, rejections) / total) * 100);
   };
 
-  if (isLoading) return <ListSkeleton />;
+  if (isLoading) return null;
 
   if (error) {
     return (

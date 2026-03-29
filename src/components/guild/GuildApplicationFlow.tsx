@@ -19,7 +19,7 @@ export default function GuildApplicationFlow() {
   const flow = useGuildApplicationFlow();
 
   // --- Loading state ---
-  if (flow.isLoading) return <DetailSkeleton />;
+  if (flow.isLoading) return null;
 
   // --- Fatal error (no template loaded) ---
   if (flow.error && !flow.template) {

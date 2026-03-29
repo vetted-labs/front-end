@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { DetailSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,8 +111,6 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
     [updateStatus, refetchApps]
   );
 
-  if (isLoading) return <DetailSkeleton />;
-
   if (error) {
     return (
       <div className="min-h-screen min-h-full flex items-center justify-center">
@@ -129,7 +127,7 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
     );
   }
 
-  if (!job) {
+  if (!isLoading && !job) {
     return (
       <div className="min-h-screen min-h-full flex items-center justify-center">
         <div className="text-center">
@@ -157,6 +155,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
           {backLabel}
         </button>
 
+        <DataSection isLoading={isLoading} skeleton={null}>
+        {job && (<>
         {/* Header */}
         <div className="rounded-xl border border-border bg-card overflow-hidden mb-6">
           <div className="p-6">
@@ -517,6 +517,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
             onStatusChange={handleStatusChange}
           />
         )}
+        </>)}
+        </DataSection>
       </div>
     </div>
   );

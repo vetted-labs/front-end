@@ -13,7 +13,7 @@ import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpda
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
-import { ListSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption, GroupedJob } from "@/types";
 
 export default function CandidatesPage() {
@@ -228,7 +228,7 @@ export default function CandidatesPage() {
     );
   };
 
-  if (!ready) return <ListSkeleton />;
+  if (!ready) return null;
 
   return (
     <div className="h-full flex flex-col animate-page-enter">
@@ -280,61 +280,63 @@ export default function CandidatesPage() {
       </div>
 
       {/* Two-panel layout */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left panel */}
-        <div
-          className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-border ${
-            selectedApplication ? "hidden lg:flex" : "flex"
-          }`}
-        >
-          <CandidateListPanel
-            groupedJobs={filteredJobs}
-            selectedApplicationId={selectedApplication?.id ?? null}
-            onSelectApplication={setSelectedApplication}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            filterStatus={filterStatus}
-            onFilterChange={setFilterStatus}
-            isLoading={isLoading}
-            getEndorsementCount={getEndorsementCount}
-            uniqueGuilds={uniqueGuilds}
-            filterGuild={filterGuild}
-            onGuildFilterChange={setFilterGuild}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            expandedJobIds={expandedJobIds}
-            onToggleJob={handleToggleJob}
-            onExpandAll={handleExpandAll}
-            onCollapseAll={handleCollapseAll}
-          />
-        </div>
-
-        {/* Right panel */}
-        <div
-          className={`w-full flex-1 min-w-0 min-h-0 ${
-            selectedApplication ? "flex" : "hidden lg:flex"
-          }`}
-        >
-          {selectedApplication ? (
-            <CandidateDetailPanel
-              key={selectedApplication.id}
-              application={selectedApplication}
-              onStatusChange={handleStatusChange}
-              isUpdatingStatus={isUpdatingStatus}
-              onBack={() => setSelectedApplication(null)}
-              showBackButton
+      <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0">
+          {/* Left panel */}
+          <div
+            className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-border ${
+              selectedApplication ? "hidden lg:flex" : "flex"
+            }`}
+          >
+            <CandidateListPanel
+              groupedJobs={filteredJobs}
+              selectedApplicationId={selectedApplication?.id ?? null}
+              onSelectApplication={setSelectedApplication}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filterStatus={filterStatus}
+              onFilterChange={setFilterStatus}
+              isLoading={isLoading}
+              getEndorsementCount={getEndorsementCount}
+              uniqueGuilds={uniqueGuilds}
+              filterGuild={filterGuild}
+              onGuildFilterChange={setFilterGuild}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              expandedJobIds={expandedJobIds}
+              onToggleJob={handleToggleJob}
+              onExpandAll={handleExpandAll}
+              onCollapseAll={handleCollapseAll}
             />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <EmptyState
-                icon={Users}
-                title="Select a candidate"
-                description="Choose a candidate from the list to view their details"
+          </div>
+
+          {/* Right panel */}
+          <div
+            className={`w-full flex-1 min-w-0 min-h-0 ${
+              selectedApplication ? "flex" : "hidden lg:flex"
+            }`}
+          >
+            {selectedApplication ? (
+              <CandidateDetailPanel
+                key={selectedApplication.id}
+                application={selectedApplication}
+                onStatusChange={handleStatusChange}
+                isUpdatingStatus={isUpdatingStatus}
+                onBack={() => setSelectedApplication(null)}
+                showBackButton
               />
-            </div>
-          )}
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <EmptyState
+                  icon={Users}
+                  title="Select a candidate"
+                  description="Choose a candidate from the list to view their details"
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </DataSection>
     </div>
   );
 }

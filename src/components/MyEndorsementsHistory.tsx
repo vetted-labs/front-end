@@ -46,7 +46,7 @@ export function MyEndorsementsHistory() {
     );
   }
 
-  if (isLoading) return <ListSkeleton />;
+  if (isLoading) return null;
 
   if (endorsements.length === 0) {
     return (

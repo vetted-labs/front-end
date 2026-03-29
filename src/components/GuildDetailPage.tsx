@@ -160,7 +160,7 @@ export default function GuildDetailPage() {
     router.push(`/guilds/${guildId}/apply`);
   };
 
-  if (isLoading) return <GuildDetailSkeleton />;
+  if (isLoading) return null;
 
   if (error || !guild) {
     return (

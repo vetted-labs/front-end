@@ -35,7 +35,7 @@ import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
 import { getPersonAvatar } from "@/lib/avatars";
 import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
 import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
-import { DashboardSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 
 const CELEBRATED_KEY = "vetted:celebrated-acceptances";
@@ -226,9 +226,9 @@ export default function CandidateDashboard() {
     }
   };
 
-  if (!ready || isLoading) return <DashboardSkeleton />;
+  if (!ready) return null;
 
-  if (!profile) {
+  if (!isLoading && !profile) {
     return (
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
@@ -241,17 +241,14 @@ export default function CandidateDashboard() {
     );
   }
 
-  const profileCompletion = getProfileCompletion(profile);
+  const profileCompletion = profile ? getProfileCompletion(profile) : null;
   const recentApplications = applications.slice(0, 5);
   const recentGuildApps = guildApplications.slice(0, 3);
   const recentConversations = [...conversations]
     .sort((a, b) => (b.unreadCount > 0 ? 1 : 0) - (a.unreadCount > 0 ? 1 : 0) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 4);
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
-  const firstName = profile.fullName?.split(" ")[0] || "there";
-  const initials = profile.fullName
-    ? profile.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-    : "?";
+  const firstName = profile?.fullName?.split(" ")[0] || "there";
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -265,16 +262,20 @@ export default function CandidateDashboard() {
         {/* ── Welcome Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <img
-              src={getPersonAvatar(profile.fullName)}
-              alt={profile.fullName}
-              className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-muted"
-            />
+            {profile ? (
+              <img
+                src={getPersonAvatar(profile.fullName)}
+                alt={profile.fullName}
+                className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-muted"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-muted" />
+            )}
             <div>
               <h1 className="text-2xl font-display font-bold tracking-tight text-foreground">
-                Welcome back, {firstName}
+                {profile ? `Welcome back, ${firstName}` : "Dashboard"}
               </h1>
-              {profile.headline && (
+              {profile?.headline && (
                 <p className="text-sm text-muted-foreground mt-0.5">{profile.headline}</p>
               )}
             </div>
@@ -297,6 +298,9 @@ export default function CandidateDashboard() {
           </div>
         </div>
 
+        <DataSection isLoading={isLoading} skeleton={null}>
+        {profile && profileCompletion && (
+        <>
         {/* ── Quick Stats Strip ── */}
         <div className="flex items-stretch gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {/* Applications */}
@@ -669,6 +673,9 @@ export default function CandidateDashboard() {
             </div>
           </div>
         </div>
+        </>
+        )}
+        </DataSection>
       </div>
 
       {celebrationApp && (

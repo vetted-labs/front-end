@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -11,7 +9,7 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import type { Conversation } from "@/types";
 import { ConversationList } from "./ConversationList";
 import { EmptyInbox } from "./EmptyInbox";
-import { MessagesSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 export default function CandidateMessagesInbox() {
   const router = useRouter();
@@ -41,13 +39,14 @@ export default function CandidateMessagesInbox() {
     router.push(`/candidate/messages/${conv.id}`);
   };
 
-  if (!ready || isLoading) return <MessagesSkeleton />;
+  if (!ready) return null;
 
   return (
     <div className="min-h-full relative animate-page-enter">
       <div className="pointer-events-none absolute inset-0 content-gradient" />
 
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header (static — always visible) */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Messages</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -55,6 +54,7 @@ export default function CandidateMessagesInbox() {
           </p>
         </div>
 
+        <DataSection isLoading={isLoading} skeleton={null}>
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {conversations.length === 0 ? (
             <EmptyInbox variant="candidate" />
@@ -66,6 +66,7 @@ export default function CandidateMessagesInbox() {
             />
           )}
         </div>
+        </DataSection>
       </div>
     </div>
   );

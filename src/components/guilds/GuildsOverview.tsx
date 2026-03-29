@@ -159,7 +159,7 @@ export function GuildsOverview() {
 
           {/* Error / No Profile */}
           {error && <Alert variant="error">{error}</Alert>}
-          {!isLoading && !error && !profile && (
+          {!isLoading && !error && !profile && isConnected && address && (
             <Alert variant="error">No profile data available</Alert>
           )}
 
@@ -218,7 +218,7 @@ export function GuildsOverview() {
 
           {/* Guild Cards Grid */}
           <DataSection
-            isLoading={isLoading}
+            isLoading={isLoading || (!profile && !error)}
             skeleton={
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 3 }).map((_, i) => (

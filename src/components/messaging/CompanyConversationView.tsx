@@ -16,7 +16,7 @@ import { MessageInput } from "./MessageInput";
 import { CandidateInfoSidebar } from "./CandidateInfoSidebar";
 import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
-import { MessagesSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 export default function CompanyConversationView() {
   const router = useRouter();
@@ -92,9 +92,9 @@ export default function CompanyConversationView() {
     );
   };
 
-  if (!ready || isLoading) return <MessagesSkeleton />;
+  if (!ready) return null;
 
-  if (!conversation) {
+  if (!isLoading && !conversation) {
     return (
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
@@ -121,17 +121,21 @@ export default function CompanyConversationView() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-medium text-xs">
-              {conversation.candidateName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              {conversation.candidateName}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">{conversation.jobTitle}</p>
-          </div>
+          {conversation && (
+            <>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-primary font-medium text-xs">
+                  {conversation.candidateName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {conversation.candidateName}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{conversation.jobTitle}</p>
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={() => setShowScheduleModal(true)}
@@ -143,25 +147,31 @@ export default function CompanyConversationView() {
       </div>
 
       {/* Messages + sidebar */}
-      <div className="flex flex-1 min-h-0">
-        <div className="flex-1 flex flex-col min-w-0">
-          <ConversationThread
-            messages={messages}
-            currentUserType="company"
-            onRespondToMeeting={handleRespondToMeeting}
-          />
-          <MessageInput onSend={handleSendMessage} />
-        </div>
-        <CandidateInfoSidebar conversation={conversation} />
-      </div>
+      <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
+      {conversation && (
+        <>
+          <div className="flex flex-1 min-h-0">
+            <div className="flex-1 flex flex-col min-w-0">
+              <ConversationThread
+                messages={messages}
+                currentUserType="company"
+                onRespondToMeeting={handleRespondToMeeting}
+              />
+              <MessageInput onSend={handleSendMessage} />
+            </div>
+            <CandidateInfoSidebar conversation={conversation} />
+          </div>
 
-      <ScheduleMeetingModal
-        isOpen={showScheduleModal}
-        onClose={() => setShowScheduleModal(false)}
-        onSchedule={handleScheduleMeeting}
-        candidateName={conversation.candidateName}
-        isSubmitting={isScheduling}
-      />
+          <ScheduleMeetingModal
+            isOpen={showScheduleModal}
+            onClose={() => setShowScheduleModal(false)}
+            onSchedule={handleScheduleMeeting}
+            candidateName={conversation.candidateName}
+            isSubmitting={isScheduling}
+          />
+        </>
+      )}
+      </DataSection>
     </div>
   );
 }

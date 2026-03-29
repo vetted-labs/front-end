@@ -24,7 +24,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { TeamManagement } from "./TeamManagement";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { ProfileSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import type { CompanyProfile } from "@/types";
 
 interface CompanyProfileFormData {
@@ -149,9 +149,9 @@ export default function CompanyProfilePage() {
     setIsEditing(false);
   };
 
-  if (!ready || isLoading) return <ProfileSkeleton />;
+  if (!ready) return null;
 
-  if (!profile) {
+  if (!isLoading && !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Alert variant="error">Failed to load profile</Alert>
@@ -178,6 +178,8 @@ export default function CompanyProfilePage() {
         </div>
       </div>
 
+      <DataSection isLoading={isLoading} skeleton={null}>
+      {profile && (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Message */}
         {error && (
@@ -437,6 +439,8 @@ export default function CompanyProfilePage() {
           </div>
         </div>
       </div>
+      )}
+      </DataSection>
     </div>
   );
 }

@@ -21,7 +21,7 @@ import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { EmptyInbox } from "./EmptyInbox";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
 import { Calendar } from "lucide-react";
-import { MessagesSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 export default function CompanyMessagesInbox() {
   const router = useRouter();
@@ -172,7 +172,7 @@ export default function CompanyMessagesInbox() {
     });
   }, [conversations, search, jobFilter, statusFilter, unreadOnly]);
 
-  if (!ready || isLoading) return <MessagesSkeleton />;
+  if (!ready) return null;
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -194,6 +194,7 @@ export default function CompanyMessagesInbox() {
           )}
         </div>
 
+        <DataSection isLoading={isLoading} skeleton={null} className="flex h-full">
         <div className="flex h-full">
           {/* Conversation list panel */}
           <div
@@ -312,6 +313,7 @@ export default function CompanyMessagesInbox() {
             )}
           </div>
         </div>
+        </DataSection>
       </div>
     </div>
   );

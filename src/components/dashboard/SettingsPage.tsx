@@ -17,7 +17,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import { ProfileSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 import type { CompanyNotificationPreferences } from "@/types";
 
 export default function SettingsPage() {
@@ -64,7 +64,7 @@ export default function SettingsPage() {
     setPrefs((prev) => ({ ...prev, [key]: value }));
   };
 
-  if (!ready) return <ProfileSkeleton />;
+  if (!ready) return null;
 
   return (
     <div className="min-h-full relative animate-page-enter">
@@ -148,33 +148,27 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  {isLoadingPrefs ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  <DataSection isLoading={isLoadingPrefs} skeleton={null}>
+                    <div className="space-y-4">
+                      <ToggleSwitch label="Email Notifications" description="Receive notifications via email" checked={prefs.emailNotifications} onChange={(v) => updatePref("emailNotifications", v)} />
+                      <ToggleSwitch label="New Applications" description="Get notified when someone applies" checked={prefs.newApplications} onChange={(v) => updatePref("newApplications", v)} />
+                      <ToggleSwitch label="Application Updates" description="Status changes and guild vetting results" checked={prefs.applicationUpdates} onChange={(v) => updatePref("applicationUpdates", v)} />
+                      <ToggleSwitch label="Messages & Meetings" description="New messages and meeting invitations" checked={prefs.messagesMeetings} onChange={(v) => updatePref("messagesMeetings", v)} />
+                      <ToggleSwitch label="Job Updates" description="Expiring jobs and low application alerts" checked={prefs.jobUpdates} onChange={(v) => updatePref("jobUpdates", v)} />
+                      <ToggleSwitch label="Weekly Reports" description="Summary of your hiring activity" checked={prefs.weeklyReports} onChange={(v) => updatePref("weeklyReports", v)} />
                     </div>
-                  ) : (
-                    <>
-                      <div className="space-y-4">
-                        <ToggleSwitch label="Email Notifications" description="Receive notifications via email" checked={prefs.emailNotifications} onChange={(v) => updatePref("emailNotifications", v)} />
-                        <ToggleSwitch label="New Applications" description="Get notified when someone applies" checked={prefs.newApplications} onChange={(v) => updatePref("newApplications", v)} />
-                        <ToggleSwitch label="Application Updates" description="Status changes and guild vetting results" checked={prefs.applicationUpdates} onChange={(v) => updatePref("applicationUpdates", v)} />
-                        <ToggleSwitch label="Messages & Meetings" description="New messages and meeting invitations" checked={prefs.messagesMeetings} onChange={(v) => updatePref("messagesMeetings", v)} />
-                        <ToggleSwitch label="Job Updates" description="Expiring jobs and low application alerts" checked={prefs.jobUpdates} onChange={(v) => updatePref("jobUpdates", v)} />
-                        <ToggleSwitch label="Weekly Reports" description="Summary of your hiring activity" checked={prefs.weeklyReports} onChange={(v) => updatePref("weeklyReports", v)} />
-                      </div>
 
-                      <div className="flex justify-end pt-2">
-                        <button
-                          onClick={handleSavePreferences}
-                          disabled={isSavingPrefs}
-                          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                          {isSavingPrefs && <Loader2 className="w-4 h-4 animate-spin" />}
-                          Save Preferences
-                        </button>
-                      </div>
-                    </>
-                  )}
+                    <div className="flex justify-end pt-2">
+                      <button
+                        onClick={handleSavePreferences}
+                        disabled={isSavingPrefs}
+                        className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {isSavingPrefs && <Loader2 className="w-4 h-4 animate-spin" />}
+                        Save Preferences
+                      </button>
+                    </div>
+                  </DataSection>
                 </div>
               )}
 

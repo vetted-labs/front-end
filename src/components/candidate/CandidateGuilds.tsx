@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Loader2,
   Users,
   Briefcase,
   CheckCircle,
@@ -22,7 +21,7 @@ import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationSummary } from "@/types";
-import { ListSkeleton } from "@/components/ui/page-skeleton";
+import { DataSection } from "@/lib/motion";
 
 const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
   pending:  Clock,
@@ -53,7 +52,7 @@ export default function CandidateGuilds() {
 
   const guildApplications: GuildApplicationSummary[] = Array.isArray(guildApplicationsData) ? guildApplicationsData : [];
 
-  if (!ready || isLoading) return <ListSkeleton />;
+  if (!ready) return null;
 
   const filtered = filter === "all"
     ? guildApplications
@@ -74,7 +73,7 @@ export default function CandidateGuilds() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Header */}
+        {/* Header (static — always visible) */}
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground font-display">My Guilds</h1>
@@ -91,9 +90,10 @@ export default function CandidateGuilds() {
           </button>
         </div>
 
+        <DataSection isLoading={isLoading} skeleton={null}>
         {/* Filter pills */}
         {guildApplications.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide">
             {(["all", "pending", "approved", "rejected"] as const).map((key) => {
               const isActive = filter === key;
               return (
@@ -217,6 +217,7 @@ export default function CandidateGuilds() {
             })}
           </div>
         )}
+        </DataSection>
       </div>
     </div>
   );
