@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
 export interface DataSectionProps {
   /** Whether the section is still loading data */
   isLoading: boolean;
-  /** Skeleton placeholder shown while loading */
-  skeleton: ReactNode;
+  /** @deprecated No longer rendered — kept for API compat */
+  skeleton?: ReactNode;
   /** Real content rendered once data is available */
   children: ReactNode;
   /** Optional className on the outer wrapper */
@@ -16,18 +16,12 @@ export interface DataSectionProps {
 }
 
 /**
- * Shows a skeleton placeholder while loading, then smoothly fades + slides
- * in the real content when data arrives. The skeleton disappears instantly
- * so the transition feels snappy.
- *
- * Usage:
- *   <DataSection isLoading={isLoading} skeleton={<SkeletonStatCard />}>
- *     <StatCard label="Reputation" value={350} />
- *   </DataSection>
+ * Renders nothing while loading, then smoothly fades + slides in the real
+ * content when data arrives. The empty space is filled by the static page
+ * chrome (headers, tabs, buttons) that's already visible.
  */
 export function DataSection({
   isLoading,
-  skeleton,
   children,
   className,
 }: DataSectionProps) {
@@ -36,17 +30,8 @@ export function DataSection({
 
   return (
     <div className={className}>
-      <AnimatePresence mode="wait" initial={false}>
-        {isLoading ? (
-          <motion.div
-            key="skeleton"
-            initial={false}
-            exit={{ opacity: 0 }}
-            transition={{ duration: d * 0.4 }}
-          >
-            {skeleton}
-          </motion.div>
-        ) : (
+      <AnimatePresence initial={false}>
+        {!isLoading && (
           <motion.div
             key="content"
             initial={{ opacity: 0, y: 6 }}
