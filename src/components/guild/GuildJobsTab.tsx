@@ -264,7 +264,7 @@ export function GuildJobsTab({
                       <div className="flex-shrink-0">
                         <div className={`relative w-[72px] h-[72px] rounded-xl ${getMatchScoreColor(application.matchScore ?? 0)} p-[2px] shadow-sm`}>
                           <div className="w-full h-full rounded-xl bg-card flex flex-col items-center justify-center">
-                            <span className="text-2xl font-bold text-white leading-none">
+                            <span className="text-2xl font-bold text-foreground leading-none">
                               {application.matchScore}
                             </span>
                             <span className="text-xs text-muted-foreground font-medium mt-0.5">

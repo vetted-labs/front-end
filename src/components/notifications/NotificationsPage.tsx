@@ -250,7 +250,7 @@ export function NotificationsPage<T extends BaseNotification>({
         {/* Header */}
         <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
               Notifications
             </h1>
             {unreadCount > 0 && (
@@ -370,7 +370,7 @@ export function NotificationsPage<T extends BaseNotification>({
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <h3 className={`text-sm leading-snug mb-1 ${
-                            isUnread ? "font-semibold text-white" : "font-medium text-foreground"
+                            isUnread ? "font-semibold text-foreground" : "font-medium text-foreground"
                           }`}>
                             {notification.title}
                           </h3>

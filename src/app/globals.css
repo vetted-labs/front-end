@@ -301,9 +301,9 @@ body {
 /* Vetted brand pattern — used by PatternBackground component */
 /* Vetted brand pattern layer — apply to an absolutely positioned div */
 .vetted-pattern-layer {
-  background-image: url(/pattern-square-nologo.svg);
-  background-size: cover;
-  background-repeat: no-repeat;
+  background-image: url(/pattern-mirrored.svg);
+  background-size: 2160px 2160px;
+  background-repeat: repeat;
   background-position: center;
   filter: none;
   mix-blend-mode: multiply;
@@ -316,15 +316,13 @@ body {
 /* Main content area gradient background — light mode */
 .content-gradient {
     background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-        linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
 }
 
 /* Main content area gradient background — dark mode */
 .dark .content-gradient {
     background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.04) 0%, transparent 50%),
-        linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.04) 0%, transparent 50%);
 }
 
 /* === Ambient Animations (CSS) ===

@@ -206,7 +206,7 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
               Notifications
             </h1>
             {unreadCount > 0 && (
@@ -346,7 +346,7 @@ export default function NotificationsPage() {
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className={`text-sm leading-snug ${isUnread ? "font-bold text-white" : "font-medium text-foreground"} ${isDeadline ? STATUS_COLORS.warning.text : ""}`}>
+                              <h3 className={`text-sm leading-snug ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground"} ${isDeadline ? STATUS_COLORS.warning.text : ""}`}>
                                 {notification.title}
                               </h3>
                               {applicantTag && (

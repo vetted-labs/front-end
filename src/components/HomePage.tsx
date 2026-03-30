@@ -72,7 +72,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background animate-page-enter">
+    <div className="min-h-screen animate-page-enter">
       {/* Hero Section with Action Cards */}
       <HeroSection
         guilds={guilds ?? []}
