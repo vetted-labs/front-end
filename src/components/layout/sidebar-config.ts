@@ -120,6 +120,7 @@ export const candidateSidebarConfig: SidebarConfig = {
       items: [
         { label: "Dashboard", href: "/candidate/dashboard", icon: LayoutDashboard, exact: true },
         { label: "Notifications", href: "/candidate/notifications", icon: Bell, badge: "notifications" },
+        { label: "Analytics", href: "/candidate/analytics", icon: BarChart3 },
       ],
     },
     {
