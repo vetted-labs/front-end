@@ -78,11 +78,11 @@ export function AppSidebar({ config }: AppSidebarProps) {
             aria-label="Expand sidebar"
           >
             <Image
-              src="/Vetted-orange.png"
+              src="/vetted-logo-icon.png"
               alt="Vetted"
-              width={24}
-              height={24}
-              className="w-6 h-6 rounded"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-md shadow-[0_0_20px_rgba(255,106,0,0.3)]"
             />
           </button>
         ) : (
@@ -132,12 +132,16 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-border bg-card dark:bg-card dark:border-primary/10 md:block",
+          "fixed inset-y-0 left-0 z-40 hidden bg-transparent md:block overflow-hidden",
           hasMounted && "transition-[width] duration-300",
           isCollapsed ? "w-16" : "w-52"
         )}
       >
-        {sidebarContent}
+        <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/20 via-primary/[0.05] to-transparent dark:from-primary/40 dark:via-primary/[0.08]" />
+        <div className="pointer-events-none absolute -top-10 -right-10 w-[150px] h-[150px] rounded-full bg-primary/[0.06] dark:bg-primary/[0.10] blur-[60px]" />
+        <div className="relative z-10 h-full">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile overlay backdrop */}
@@ -152,19 +156,23 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-52 border-r border-border bg-card dark:bg-card dark:border-primary/10 transition-transform duration-300 md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-52 bg-card overflow-hidden transition-transform duration-300 md:hidden",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Close button for mobile */}
-        <button
-          onClick={closeMobile}
-          className="absolute right-2 top-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors md:hidden"
-          aria-label="Close navigation"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        {sidebarContent}
+        <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/20 via-primary/[0.05] to-transparent dark:from-primary/40 dark:via-primary/[0.08]" />
+        <div className="pointer-events-none absolute -top-10 -right-10 w-[150px] h-[150px] rounded-full bg-primary/[0.06] dark:bg-primary/[0.10] blur-[60px]" />
+        <div className="relative z-10 h-full">
+          {/* Close button for mobile */}
+          <button
+            onClick={closeMobile}
+            className="absolute right-2 top-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors md:hidden"
+            aria-label="Close navigation"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {sidebarContent}
+        </div>
       </aside>
     </>
   );

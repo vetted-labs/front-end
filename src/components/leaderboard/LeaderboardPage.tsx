@@ -28,6 +28,7 @@ import { LeaderboardYourStats } from "./LeaderboardYourStats";
 import { LeaderboardTable } from "./LeaderboardTable";
 import { LeaderboardTrending } from "./LeaderboardTrending";
 import { LeaderboardEndorsements } from "./LeaderboardEndorsements";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { LeaderboardEntryV2, LeaderboardResponse, Guild } from "@/types";
 
 /* ─── Tab & Filter Definitions ─────────────────────────────── */
@@ -276,15 +277,19 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-          <Trophy className="w-6 h-6 text-[#f59e0b]" />
-          Leaderboard
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Top performing experts ranked across multiple dimensions.
-        </p>
+      {/* Header with pattern */}
+      <div className="relative overflow-hidden rounded-xl -mx-1 px-1 pb-1">
+        <PatternBackground mask="fade-bottom" intensity="medium" />
+        <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[150px] rounded-full bg-primary/[0.05] blur-[80px]" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+            <Trophy className="w-6 h-6 text-[#f59e0b]" />
+            Leaderboard
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Top performing experts ranked across multiple dimensions.
+          </p>
+        </div>
       </div>
 
       {/* Tabs + Filters */}

@@ -281,7 +281,7 @@ export default function CandidatesPage() {
 
       {/* Two-panel layout */}
       <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
-        <div className="flex flex-1 min-h-0">
+        <div className="flex h-full min-h-0">
           {/* Left panel */}
           <div
             className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-border ${

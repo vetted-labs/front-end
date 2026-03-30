@@ -1,6 +1,7 @@
 "use client";
 
 import { Users, Star, Briefcase, ArrowRight } from "lucide-react";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild } from "@/types";
 
 interface HeroSectionProps {
@@ -47,7 +48,12 @@ export function HeroSection({
   };
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-10">
+    <section className="relative overflow-hidden">
+      {/* Brand pattern */}
+      <PatternBackground mask="fade-bottom" intensity="medium" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-primary/[0.04] blur-[100px]" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-10">
       {/* Badge */}
       <div className="mb-7">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/[0.08] border border-primary/15 rounded-full text-xs font-semibold text-primary tracking-wide">
@@ -115,6 +121,7 @@ export function HeroSection({
           })}
         </div>
       )}
+      </div>
     </section>
   );
 }

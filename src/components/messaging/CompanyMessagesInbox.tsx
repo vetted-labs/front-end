@@ -175,12 +175,9 @@ export default function CompanyMessagesInbox() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-full relative animate-page-enter">
-      <div className="pointer-events-none absolute inset-0 content-gradient" />
-
-      <div className="relative h-[calc(100vh-4rem)]">
+    <div className="h-full flex flex-col animate-page-enter">
         {/* Page header — visible on mobile when no conversation selected */}
-        <div className="px-6 py-4 border-b border-border dark:border-border md:hidden">
+        <div className="flex-shrink-0 px-6 py-4 border-b border-border dark:border-border md:hidden">
           {selectedConversation ? (
             <button
               onClick={() => setSelectedConversation(null)}
@@ -194,7 +191,7 @@ export default function CompanyMessagesInbox() {
           )}
         </div>
 
-        <DataSection isLoading={isLoading} skeleton={null} className="flex h-full">
+        <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
         <div className="flex h-full">
           {/* Conversation list panel */}
           <div
@@ -314,7 +311,6 @@ export default function CompanyMessagesInbox() {
           </div>
         </div>
         </DataSection>
-      </div>
     </div>
   );
 }

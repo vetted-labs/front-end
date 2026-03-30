@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-    /* Background colors - Cool slate with dark text */
-    --background: 213 27% 96%;                   /* CHANGED */
+    /* Background colors - Warm white with subtle orange undertone */
+    --background: 30 20% 98%;
     --foreground: 0 0% 17%;
 
     /* Card colors - Pure white cards on cool background */
@@ -21,9 +23,9 @@
     --secondary: 213 27% 97%;                    /* CHANGED */
     --secondary-foreground: 0 0% 17%;
 
-    /* Muted colors - Slate gray */
-    --muted: 213 27% 96%;                        /* CHANGED */
-    --muted-foreground: 215 16% 47%;             /* CHANGED */
+    /* Muted colors - Warm neutral */
+    --muted: 30 15% 96%;
+    --muted-foreground: 215 16% 47%;
 
     /* Accent colors - Cool neutral */
     --accent: 213 27% 97%;                       /* CHANGED */
@@ -63,12 +65,12 @@
     --rank-officer: 24 100% 50%;
     --rank-master: 40 100% 50%;
 
-    /* Surface hierarchy - Cool slate */
-    --surface-0: 213 27% 96%;                    /* CHANGED */
+    /* Surface hierarchy - Warm white */
+    --surface-0: 30 20% 98%;
     --surface-1: 0 0% 100%;
     --surface-2: 0 0% 100%;
-    --surface-3: 210 20% 98%;                    /* CHANGED */
-    --surface-border: 214 20% 88%;               /* CHANGED */
+    --surface-3: 30 15% 98%;
+    --surface-border: 30 10% 90%;
 
     /* Gradient button text - dark for contrast on orange */
     --gradient-button-text: 0 0% 4%;
@@ -296,11 +298,26 @@ body {
     border-color: hsl(var(--border));
 }
 
+/* Vetted brand pattern — used by PatternBackground component */
+/* Vetted brand pattern layer — apply to an absolutely positioned div */
+.vetted-pattern-layer {
+  background-image: url(/pattern-square-nologo.svg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: none;
+  mix-blend-mode: multiply;
+}
+.dark .vetted-pattern-layer {
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
 /* Main content area gradient background — light mode */
 .content-gradient {
     background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
-        linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.2) 100%);
+        radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+        linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
 }
 
 /* Main content area gradient background — dark mode */

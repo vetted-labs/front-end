@@ -127,7 +127,7 @@ export default function CandidateConversationView() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col animate-page-enter">
+    <div className="h-full flex flex-col animate-page-enter">
       {/* Header (static — always visible with back button) */}
       <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3 bg-card">
         <button
@@ -158,22 +158,22 @@ export default function CandidateConversationView() {
       {/* Messages */}
       <DataSection isLoading={isLoading} skeleton={null} className="flex-1 flex flex-col min-h-0">
       {conversation && (
-      <>
-      <ConversationThread
-        messages={messages}
-        currentUserType="candidate"
-        onRespondToMeeting={handleRespondToMeeting}
-        onProposeNewTime={handleProposeNewTime}
-      />
-      <MessageInput onSend={handleSendMessage} />
+      <div className="flex flex-col h-full min-h-0">
+        <ConversationThread
+          messages={messages}
+          currentUserType="candidate"
+          onRespondToMeeting={handleRespondToMeeting}
+          onProposeNewTime={handleProposeNewTime}
+        />
+        <MessageInput onSend={handleSendMessage} />
 
-      <ProposeNewTimeModal
-        isOpen={proposeModalMeetingId !== null}
-        onClose={() => setProposeModalMeetingId(null)}
-        onSubmit={handleSubmitProposedTime}
-        isSubmitting={isProposing}
-      />
-      </>
+        <ProposeNewTimeModal
+          isOpen={proposeModalMeetingId !== null}
+          onClose={() => setProposeModalMeetingId(null)}
+          onSubmit={handleSubmitProposedTime}
+          isSubmitting={isProposing}
+        />
+      </div>
       )}
       </DataSection>
     </div>

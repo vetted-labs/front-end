@@ -37,6 +37,7 @@ export function DataSection({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: d, ease: "easeOut" }}
+            className="flex-1 min-w-0 min-h-0"
           >
             {children}
           </motion.div>

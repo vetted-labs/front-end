@@ -10,18 +10,18 @@ interface LogoProps {
 export function Logo({ size = "md", showText = true, className = "", onClick }: LogoProps) {
   const sizeClasses = {
     sm: {
-      container: "w-6 h-6",
-      image: 16,
+      container: "w-7 h-7",
+      image: 28,
       text: "text-base",
     },
     md: {
       container: "w-8 h-8",
-      image: 24,
+      image: 32,
       text: "text-xl",
     },
     lg: {
       container: "w-10 h-10",
-      image: 28,
+      image: 40,
       text: "text-2xl",
     },
   };
@@ -33,13 +33,13 @@ export function Logo({ size = "md", showText = true, className = "", onClick }: 
       className={`flex items-center space-x-2 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
-      <div className={`${container} bg-primary rounded-lg flex items-center justify-center flex-shrink-0`}>
+      <div className={`${container} flex-shrink-0`}>
         <Image
-          src="/Vetted-orange.png"
+          src="/vetted-logo-icon.png"
           alt="Vetted Logo"
           width={image}
           height={image}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain rounded-lg"
         />
       </div>
       {showText && (

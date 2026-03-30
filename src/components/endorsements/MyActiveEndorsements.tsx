@@ -168,7 +168,7 @@ export function MyActiveEndorsements({
   const totalStaked = userEndorsements.reduce((sum, e) => sum + parseFloat(e.stakeAmount || '0'), 0);
 
   return (
-    <div>
+    <div className="min-w-0">
       {/* Section header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3">

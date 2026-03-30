@@ -5,6 +5,7 @@ import { formatDateMonthYear, formatVetd } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild, ExpertGuild } from "@/types";
 
 /** Union of public Guild and ExpertGuild fields, plus card-specific extras. */
@@ -44,12 +45,14 @@ export function GuildCard({
         onClick={() => onViewDetails?.(guild.id)}
         className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
       >
-        {/* Top accent line */}
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-border opacity-60" />
-        {/* Inner glow */}
-        <div className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 h-24 w-44 rounded-full bg-primary/[0.06] blur-2xl" />
+        {/* Pattern header strip */}
+        <div className="absolute inset-x-0 top-0 h-[52px] overflow-hidden">
+          <PatternBackground mask="none" intensity="strong" className="!opacity-[0.09]" />
+          <div className="absolute bottom-0 inset-x-0 h-5 bg-gradient-to-t from-card to-transparent" />
+          <div className="absolute top-5 left-7 w-16 h-10 rounded-full bg-primary/[0.12] blur-xl" />
+        </div>
 
-        <div className="relative p-6">
+        <div className="relative p-6 pt-12">
           {/* Header: Icon + Name + Rank */}
           <div className="flex items-start gap-4 mb-4">
             <div className="w-11 h-11 rounded-[13px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
@@ -119,8 +122,12 @@ export function GuildCard({
             : "border-border bg-card hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
         }`}
       >
-        {/* Top accent line */}
-        <div className="absolute inset-x-0 top-0 h-[1px] bg-border opacity-50" />
+        {/* Pattern header strip */}
+        <div className="absolute inset-x-0 top-0 h-[48px] overflow-hidden">
+          <PatternBackground mask="none" intensity="strong" className="!opacity-[0.09]" />
+          <div className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-card to-transparent" />
+          <div className="absolute top-4 left-6 w-14 h-8 rounded-full bg-primary/[0.10] blur-xl" />
+        </div>
 
         <div className="relative">
           {/* Urgent banner */}

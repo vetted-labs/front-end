@@ -111,7 +111,7 @@ export default function CompanyConversationView() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col animate-page-enter">
+    <div className="h-full flex flex-col animate-page-enter">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between gap-3 bg-card">
         <div className="flex items-center gap-3 min-w-0">
@@ -150,7 +150,7 @@ export default function CompanyConversationView() {
       <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
       {conversation && (
         <>
-          <div className="flex flex-1 min-h-0">
+          <div className="flex h-full min-h-0">
             <div className="flex-1 flex flex-col min-w-0">
               <ConversationThread
                 messages={messages}

@@ -106,7 +106,7 @@ export function LeaderboardTable({
             return (
               <tr
                 key={entry.expertId}
-                onClick={() => router.push(`/expert/profile/${entry.expertId}`)}
+                onClick={() => router.push(`/expert/profile/${entry.walletAddress}`)}
                 className={cn(
                   "border-b border-border/30 hover:bg-muted/30 cursor-pointer transition-colors",
                   isCurrentUser && "border border-primary/30 bg-primary/5 rounded-lg"

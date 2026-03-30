@@ -8,6 +8,7 @@ import {
   Search,
 } from "lucide-react";
 import { jobsApi, getAssetUrl } from "@/lib/api";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { getGuildBadgeColors } from "@/config/colors";
@@ -33,7 +34,11 @@ export default function BrowsePage() {
   return (
     <div className="min-h-full">
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+      <div className="relative overflow-hidden">
+        <PatternBackground mask="radial-center" intensity="medium" />
+        <div className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-primary/[0.04] blur-[100px]" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-primary/[0.08] border border-primary/15 rounded-full px-4 py-1.5 text-xs font-semibold text-primary uppercase tracking-wider mb-5">
             <Search className="w-3.5 h-3.5" />
@@ -57,6 +62,7 @@ export default function BrowsePage() {
             <ArrowRight className="ml-2 w-5 h-5" />
           </Link>
         </div>
+      </div>
       </div>
 
       {/* Featured Jobs Section */}

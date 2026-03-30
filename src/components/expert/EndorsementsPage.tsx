@@ -2,10 +2,9 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
-import { Sparkles, Award } from "lucide-react";
+import { Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGuilds } from "@/lib/hooks/useGuilds";
-import { STATUS_COLORS } from "@/config/colors";
 
 export default function EndorsementsPage() {
   const router = useRouter();
@@ -43,10 +42,6 @@ export default function EndorsementsPage() {
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
-              <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wider ${STATUS_COLORS.pending.badge}`}>
-                <Sparkles className="h-3.5 w-3.5" />
-                Live Market
-              </div>
               <h1 className="text-3xl font-bold md:text-3xl font-display">
                 Endorsement Marketplace
               </h1>

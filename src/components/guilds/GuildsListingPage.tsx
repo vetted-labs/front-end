@@ -18,6 +18,7 @@ import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { getGuildIcon, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild } from "@/types";
 
 export default function GlobalGuildsPage() {
@@ -63,11 +64,12 @@ export default function GlobalGuildsPage() {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground animate-page-enter">
-      {/* ── Ambient — single warm glow, not heavy ── */}
+      {/* ── Brand pattern + ambient glow ── */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 overflow-hidden"
       >
+        <PatternBackground mask="radial-top" intensity="strong" />
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.07] blur-[120px]" />
       </div>
 

@@ -4,6 +4,7 @@ import { Users, Award, Target, Shield, User } from "lucide-react";
 import { getGuildIcon } from "@/lib/guildHelpers";
 import { formatVetd } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
+import { PatternBackground } from "@/components/ui/pattern-background";
 
 interface GuildHeaderProps {
   guild: {
@@ -34,20 +35,23 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
       <div className="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-3 mb-3">
 
         {/* ── Identity + Description (left, spans 2 rows) ── */}
-        <div className="md:row-span-2 rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up">
-          <div className="w-14 h-14 rounded-xl bg-primary/[0.08] border border-primary/20 flex items-center justify-center mb-4">
+        <div className="md:row-span-2 relative overflow-hidden rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up">
+          <PatternBackground mask="fade-diagonal" intensity="medium" />
+          <div className="pointer-events-none absolute -top-5 -left-5 w-[200px] h-[200px] rounded-full bg-primary/[0.06] blur-[80px]" />
+
+          <div className="relative z-10 w-14 h-14 rounded-xl bg-primary/[0.08] border border-primary/20 flex items-center justify-center mb-4">
             <GuildIcon className="w-7 h-7 text-primary" />
           </div>
 
-          <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-2">
+          <h1 className="relative z-10 text-3xl font-bold font-display tracking-tight text-foreground mb-2">
             {guild.name}
           </h1>
 
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-xl">
+          <p className="relative z-10 text-sm text-muted-foreground leading-relaxed mb-4 max-w-xl">
             {guild.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="relative z-10 flex flex-wrap items-center gap-3 mb-4">
             <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
               {guild.memberCount || 0} members
@@ -67,7 +71,7 @@ export function GuildHeader({ guild, onStakeClick }: GuildHeaderProps) {
           {onStakeClick && (
             <button
               onClick={onStakeClick}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/[0.08] border border-primary/20 text-primary font-display text-sm font-bold transition-all hover:bg-primary/[0.15] hover:border-primary/30"
+              className="relative z-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/[0.08] border border-primary/20 text-primary font-display text-sm font-bold transition-all hover:bg-primary/[0.15] hover:border-primary/30"
             >
               <Shield className="w-4 h-4" />
               Stake VETD

@@ -12,7 +12,6 @@ import {
 import {
   AlertTriangle,
 } from "lucide-react";
-import { StatusBadge } from "@/components/ui/status-badge";
 import type { GuildRecord } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
 import { EndorsementStatsGrid } from "./EndorsementStatsGrid";
@@ -89,9 +88,8 @@ export function EndorsementHeader({
           <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
             {/* Left: Title + LIVE badge + Guild selector */}
             <div className="flex items-center gap-4 flex-wrap">
-              <h2 className="font-display font-bold text-xl tracking-tight flex items-center gap-3 whitespace-nowrap">
+              <h2 className="font-display font-bold text-xl tracking-tight whitespace-nowrap">
                 Endorsement Marketplace
-                <StatusBadge status="positive" label="LIVE" pulse className="font-mono uppercase tracking-[0.1em]" />
               </h2>
               <Select value={selectedGuildId ?? ""} onValueChange={onGuildChange}>
                 <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-muted/30 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">

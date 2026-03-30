@@ -215,7 +215,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const isOnSepolia = chain?.id === sepolia.id;
 
   return (
-    <div className="min-h-screen space-y-6">
+    <div className="min-h-screen space-y-6 min-w-0 overflow-x-hidden">
       <EndorsementHeader
         address={address!}
         shortAddress={shortAddress}
