@@ -68,7 +68,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-full relative animate-page-enter">
-      <div className="pointer-events-none absolute inset-0 content-gradient" />
       {/* Main Content */}
       <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

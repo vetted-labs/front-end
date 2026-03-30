@@ -24,8 +24,6 @@ export function CandidateAnalytics() {
 
   return (
     <div className="min-h-full relative animate-page-enter">
-      <div className="pointer-events-none absolute inset-0 content-gradient" />
-
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="flex items-start justify-between mb-6">

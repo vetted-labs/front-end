@@ -42,11 +42,9 @@ function ShellContent({ config, children }: AppShellProps) {
           </div>
         )}
         <main className="relative flex-1 overflow-auto content-gradient min-h-0">
-          {config.variant === "expert" && (
-            <div className="fixed inset-0 z-0 pointer-events-none">
-              <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />
-            </div>
-          )}
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />
+          </div>
           <div className="relative z-10">
             {children}
           </div>
