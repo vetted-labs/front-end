@@ -73,6 +73,7 @@ export const expertSidebarConfig: SidebarConfig = {
     {
       label: "Rewards",
       items: [
+        { label: "Analytics", href: "/expert/analytics", icon: BarChart3 },
         { label: "Earnings", href: "/expert/earnings", icon: Coins },
         { label: "Reputation", href: "/expert/reputation", icon: TrendingUp },
         { label: "Leaderboard", href: "/expert/leaderboard", icon: Trophy },
