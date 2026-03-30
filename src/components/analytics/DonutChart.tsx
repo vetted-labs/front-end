@@ -2,13 +2,12 @@
 
 import type { GuildDistribution } from "./mock-data";
 
-// Warm spectrum palette: bright orange → amber → gold → warm gray → cool slate
 const SEGMENT_COLORS = [
-  "rgba(255,106,0,0.65)",
-  "rgba(255,140,50,0.45)",
-  "rgba(200,140,80,0.3)",
-  "rgba(160,140,110,0.22)",
-  "rgba(124,136,152,0.12)",
+  "hsl(var(--primary) / 0.65)",
+  "hsl(var(--primary) / 0.42)",
+  "hsl(var(--primary) / 0.28)",
+  "hsl(var(--primary) / 0.18)",
+  "hsl(var(--muted-foreground) / 0.12)",
 ];
 
 const SVG_SIZE = 180;
@@ -49,22 +48,23 @@ export function DonutChart({ segments, total }: DonutChartProps) {
     <div className="flex items-center gap-12 py-2">
       {/* Donut SVG */}
       <div className="relative shrink-0" style={{ width: SVG_SIZE, height: SVG_SIZE }}>
-        <svg viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}>
+        <svg viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`} role="img">
+          <title>Guild distribution donut chart</title>
           {/* Track ring */}
           <circle
             cx={CX}
             cy={CY}
             r={RADIUS}
             fill="none"
-            stroke="rgba(255,255,255,0.02)"
+            stroke="hsl(var(--border))"
             strokeWidth={STROKE_W}
           />
 
           {/* Segments — drawn with stroke-dasharray, rotated -90deg so they start at top */}
           <g style={{ transform: "rotate(-90deg)", transformOrigin: `${CX}px ${CY}px` }}>
-            {segmentArcs.map((seg, i) => (
+            {segmentArcs.map((seg) => (
               <circle
-                key={i}
+                key={seg.name}
                 cx={CX}
                 cy={CY}
                 r={RADIUS}
@@ -92,8 +92,8 @@ export function DonutChart({ segments, total }: DonutChartProps) {
 
       {/* Legend */}
       <div className="flex flex-col gap-3.5 flex-1">
-        {segmentArcs.map((seg, i) => (
-          <div key={i} className="flex items-center gap-2.5">
+        {segmentArcs.map((seg) => (
+          <div key={seg.name} className="flex items-center gap-2.5">
             <div
               className="w-2.5 h-2.5 rounded-[3px] shrink-0"
               style={{ background: seg.color }}

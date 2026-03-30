@@ -23,13 +23,14 @@ export function TimeFilter({
         <button
           key={p}
           type="button"
+          aria-pressed={p === value}
           onClick={() => onChange?.(p)}
           className={cn(
             "px-3.5 py-[5px] rounded-full text-xs font-medium border transition-all duration-200",
             "font-sans",
             p === value
-              ? "bg-primary/10 border-primary/20 text-primary shadow-[0_0_12px_rgba(255,106,0,0.06)]"
-              : "border-border bg-transparent text-muted-foreground hover:border-white/10 hover:text-foreground/50"
+              ? "bg-primary/10 border-primary/20 text-primary"
+              : "border-border bg-transparent text-muted-foreground hover:border-border hover:text-foreground/50"
           )}
         >
           {p}

@@ -158,8 +158,8 @@ export function AreaChart({
             stroke="currentColor"
             className={
               i === gridCount - 1
-                ? "text-white/[0.06]"
-                : "text-white/[0.03]"
+                ? "text-foreground/[0.06]"
+                : "text-foreground/[0.03]"
             }
             strokeWidth="0.5"
           />

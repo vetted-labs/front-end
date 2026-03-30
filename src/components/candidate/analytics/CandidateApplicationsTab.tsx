@@ -9,7 +9,7 @@ const STATUS_BADGE: Record<
   string,
   string
 > = {
-  offer: "bg-positive/10 text-positive shadow-[0_0_8px_rgba(74,222,128,0.12)]",
+  offer: "bg-positive/10 text-positive",
   interview: "bg-muted text-muted-foreground",
   review: "bg-primary/10 text-primary",
 };

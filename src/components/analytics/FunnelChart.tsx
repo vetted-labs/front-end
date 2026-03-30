@@ -31,13 +31,15 @@ export function FunnelChart({ stages }: FunnelChartProps) {
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
       className="w-full block"
       style={{ overflow: "visible" }}
+      role="img"
     >
+      <title>Hiring funnel</title>
       <defs>
         {/* Funnel stage gradients — decreasing opacity */}
         {stageGeometry.map((s, i) => {
           const isHired = s.isHired;
-          const baseColor = isHired ? "74,222,128" : "255,106,0";
           const baseOpacity = isHired ? 0.3 : 0.3 - i * 0.05;
+          const cssVar = isHired ? "--positive" : "--primary";
           return (
             <linearGradient
               key={`fg-${i}`}
@@ -49,11 +51,11 @@ export function FunnelChart({ stages }: FunnelChartProps) {
             >
               <stop
                 offset="0%"
-                stopColor={`rgba(${baseColor},${baseOpacity})`}
+                stopColor={`hsl(var(${cssVar}) / ${baseOpacity})`}
               />
               <stop
                 offset="100%"
-                stopColor={`rgba(${baseColor},0.02)`}
+                stopColor={`hsl(var(${cssVar}) / 0.02)`}
               />
             </linearGradient>
           );
@@ -95,11 +97,11 @@ export function FunnelChart({ stages }: FunnelChartProps) {
 
         const isHired = s.isHired;
         const strokeColor = isHired
-          ? "rgba(74,222,128,0.15)"
-          : `rgba(255,106,0,${0.1 - i * 0.02})`;
+          ? "hsl(var(--positive) / 0.15)"
+          : `hsl(var(--primary) / ${0.1 - i * 0.02})`;
 
         return (
-          <g key={i}>
+          <g key={s.label}>
             {/* Trapezoid */}
             <polygon
               points={`${tl},${s.y} ${tr},${s.y} ${br},${s.y + STAGE_H} ${bl},${s.y + STAGE_H}`}

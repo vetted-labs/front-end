@@ -34,14 +34,14 @@ export function HorizontalBars({ data }: HorizontalBarsProps) {
             </div>
 
             {/* Bar */}
-            <div className="h-2.5 bg-white/[0.015] rounded-[5px] overflow-hidden">
+            <div className="h-2.5 bg-foreground/[0.02] rounded-[5px] overflow-hidden">
               <div
                 className="h-full rounded-[5px]"
                 style={{
                   width: `${Math.max(item.pct, 1)}%`,
                   background: isFirst
-                    ? "linear-gradient(90deg, rgba(255,106,0,0.45), rgba(255,106,0,0.1))"
-                    : `linear-gradient(90deg, rgba(124,136,152,${mutedOpacity}), rgba(124,136,152,${mutedEndOpacity}))`,
+                    ? "linear-gradient(90deg, hsl(var(--primary) / 0.45), hsl(var(--primary) / 0.1))"
+                    : `linear-gradient(90deg, hsl(var(--muted-foreground) / ${mutedOpacity}), hsl(var(--muted-foreground) / ${mutedEndOpacity}))`,
                   minWidth: item.pct < 2 ? "6px" : undefined,
                 }}
               />

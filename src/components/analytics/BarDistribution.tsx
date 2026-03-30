@@ -72,8 +72,8 @@ export function BarDistribution({ bars, medianLabel }: BarDistributionProps) {
       <defs>
         {/* Full-opacity gradient for the median bar */}
         <linearGradient id="bar-dist-median" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ff6a00" />
-          <stop offset="100%" stopColor="#ff6a00" stopOpacity="0.25" />
+          <stop offset="0%" stopColor="hsl(var(--primary))" />
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
         </linearGradient>
       </defs>
 
@@ -88,8 +88,8 @@ export function BarDistribution({ bars, medianLabel }: BarDistributionProps) {
             stroke="currentColor"
             className={
               i === gridCount - 1
-                ? "text-white/[0.06]"
-                : "text-white/[0.03]"
+                ? "text-foreground/[0.06]"
+                : "text-foreground/[0.03]"
             }
             strokeWidth="0.5"
           />
@@ -104,7 +104,7 @@ export function BarDistribution({ bars, medianLabel }: BarDistributionProps) {
         const isMedianBar = bar.isMedian;
 
         return (
-          <g key={i}>
+          <g key={bar.range}>
             <rect
               x={x}
               y={y}
@@ -114,7 +114,7 @@ export function BarDistribution({ bars, medianLabel }: BarDistributionProps) {
               fill={
                 isMedianBar
                   ? "url(#bar-dist-median)"
-                  : `rgba(255,106,0,${bar.opacity})`
+                  : `hsl(var(--primary) / ${bar.opacity})`
               }
             />
 

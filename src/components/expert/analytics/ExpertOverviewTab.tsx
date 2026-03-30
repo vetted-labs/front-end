@@ -82,7 +82,7 @@ export function ExpertOverviewTab() {
                 r={RING_R}
                 fill="none"
                 stroke="currentColor"
-                className="text-white/[0.03]"
+                className="text-foreground/[0.03]"
                 strokeWidth="9"
               />
               {/* Foreground ring */}
@@ -144,7 +144,7 @@ export function ExpertOverviewTab() {
 
             {/* Tier badge */}
             <div className="mt-4">
-              <span className="inline-flex items-center rounded-full bg-primary/8 text-primary px-3 py-1 text-xs font-semibold shadow-[0_0_12px_rgba(255,106,0,0.08)]">
+              <span className="inline-flex items-center rounded-full bg-primary/8 text-primary px-3 py-1 text-xs font-semibold">
                 {EXPERT_OVERVIEW.tier}
               </span>
               <div className="text-[10px] text-muted-foreground/50 mt-2">
@@ -155,7 +155,6 @@ export function ExpertOverviewTab() {
                   className="h-full rounded-full bg-primary"
                   style={{
                     width: `${EXPERT_OVERVIEW.tierProgress}%`,
-                    boxShadow: "0 0 6px rgba(255,106,0,0.2)",
                   }}
                 />
               </div>
@@ -255,8 +254,8 @@ export function ExpertOverviewTab() {
                     width: `${Math.max(item.pct, 1)}%`,
                     minWidth: item.pct <= 1 ? "4px" : undefined,
                     background: item.positive
-                      ? "linear-gradient(90deg, rgba(255,106,0,0.4), rgba(255,106,0,0.1))"
-                      : "linear-gradient(90deg, rgba(251,113,133,0.35), rgba(251,113,133,0.08))",
+                      ? "linear-gradient(90deg, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.1))"
+                      : "linear-gradient(90deg, hsl(var(--destructive) / 0.35), hsl(var(--destructive) / 0.08))",
                   }}
                 />
               </div>

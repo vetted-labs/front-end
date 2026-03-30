@@ -1,15 +1,15 @@
 "use client";
 
+import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 
-// Heat intensity classes matching the mockup exactly
 const HEAT_CLASSES: Record<number, string> = {
-  0: "bg-white/[0.015]",
-  1: "bg-[rgba(255,106,0,0.06)]",
-  2: "bg-[rgba(255,106,0,0.14)]",
-  3: "bg-[rgba(255,106,0,0.25)]",
-  4: "bg-[rgba(255,106,0,0.4)]",
-  5: "bg-[rgba(255,106,0,0.6)] shadow-[0_0_8px_rgba(255,106,0,0.12)]",
+  0: "bg-foreground/[0.02]",
+  1: "bg-primary/[0.06]",
+  2: "bg-primary/[0.14]",
+  3: "bg-primary/[0.25]",
+  4: "bg-primary/[0.40]",
+  5: "bg-primary/[0.60]",
 };
 
 interface HeatmapChartProps {
@@ -39,10 +39,9 @@ export function HeatmapChart({ data, rows, cols }: HeatmapChartProps) {
 
         {/* Data rows */}
         {data.map((row, rowIdx) => (
-          <>
+          <Fragment key={rows[rowIdx]}>
             {/* Row label */}
             <div
-              key={`label-${rowIdx}`}
               className="text-[9px] text-muted-foreground/60 flex items-center justify-end pr-1.5 font-mono"
             >
               {rows[rowIdx]}
@@ -55,12 +54,13 @@ export function HeatmapChart({ data, rows, cols }: HeatmapChartProps) {
                 className={cn(
                   "aspect-square rounded min-h-[32px]",
                   "transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  "cursor-pointer hover:scale-110 hover:z-10 hover:shadow-[0_0_12px_rgba(255,106,0,0.1)]",
+                  "cursor-pointer hover:scale-110 hover:z-10",
                   HEAT_CLASSES[val] ?? HEAT_CLASSES[0]
                 )}
+                aria-label={`${rows[rowIdx]} ${cols[colIdx]}: intensity ${val}`}
               />
             ))}
-          </>
+          </Fragment>
         ))}
       </div>
 

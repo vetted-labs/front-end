@@ -94,10 +94,10 @@ export function AnalyticsKPI({ kpi }: AnalyticsKPIProps) {
     <div
       className={cn(
         "relative overflow-hidden rounded-[14px] border border-border",
-        "bg-gradient-to-br from-white/[0.025] to-white/[0.01]",
+        "bg-gradient-to-br from-foreground/[0.02] to-foreground/[0.008]",
         "backdrop-blur-sm px-[22px] pt-5 pb-3.5",
         "transition-all duration-200",
-        "hover:border-white/10 hover:shadow-[0_0_30px_rgba(255,106,0,0.03)]"
+        "hover:border-border hover:shadow-sm"
       )}
     >
       {/* Top accent bar */}
@@ -160,6 +160,8 @@ export function AnalyticsKPI({ kpi }: AnalyticsKPIProps) {
             viewBox={`0 0 ${VB_W} ${VB_H}`}
             preserveAspectRatio="none"
             className="w-full h-full"
+            role="img"
+            aria-label={`${kpi.label} sparkline`}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

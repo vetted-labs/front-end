@@ -25,7 +25,7 @@ const STAGE_STYLES: Record<
     text: "text-primary/65",
   },
   muted: {
-    bg: "bg-white/[0.015]",
+    bg: "bg-foreground/[0.02]",
     border: "border-border",
     text: "text-muted-foreground",
   },
@@ -150,12 +150,12 @@ export function CandidateOverviewTab() {
                     </span>
                   </span>
                 </div>
-                <div className="h-2 bg-white/[0.015] rounded-full overflow-hidden">
+                <div className="h-2 bg-foreground/[0.02] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{
                       width: `${pct}%`,
-                      background: `linear-gradient(90deg, rgba(255,106,0,${startOpacity}), rgba(255,106,0,${endOpacity}))`,
+                      background: `linear-gradient(90deg, hsl(var(--primary) / ${startOpacity}), hsl(var(--primary) / ${endOpacity}))`,
                     }}
                   />
                 </div>
