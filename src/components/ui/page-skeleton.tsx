@@ -594,3 +594,31 @@ export function MessagesSkeleton() {
     </Shell6xl>
   );
 }
+
+/* ─── Analytics ─────────────────────────────────────────── */
+/* Header + time filter pills + tab bar + KPI cards + chart */
+
+export function AnalyticsSkeleton() {
+  return (
+    <Shell6xl>
+      <HeaderSkeleton titleW="w-36" descW="w-64" />
+      {/* Time filter pills */}
+      <div className="flex gap-2 mb-6">
+        <Skeleton className="h-7 w-12 rounded-full" />
+        <Skeleton className="h-7 w-12 rounded-full" />
+        <Skeleton className="h-7 w-12 rounded-full" />
+        <Skeleton className="h-7 w-12 rounded-full" />
+      </div>
+      {/* Tab bar */}
+      <div className="flex gap-4 mb-8 border-b border-border pb-2">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-16" />
+      </div>
+      {/* KPI cards */}
+      <StatRow count={4} />
+      {/* Chart placeholder */}
+      <Skeleton className="h-80 rounded-xl" />
+    </Shell6xl>
+  );
+}
