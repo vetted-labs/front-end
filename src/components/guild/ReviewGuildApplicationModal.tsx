@@ -165,9 +165,9 @@ export function ReviewGuildApplicationModal({
     : Object.keys(topicAnswers).map((topicId) => ({ id: topicId, title: topicId }));
 
   const getGeneralResponseValue = (questionId: string, partId?: string) => {
+    // Try mapped camelCase key first, then fall back to raw question ID
     const responseKey = GENERAL_RESPONSE_KEY_MAP[questionId];
-    if (!responseKey) return "";
-    const responseValue = generalResponses[responseKey];
+    const responseValue = generalResponses[responseKey] ?? generalResponses[questionId] ?? "";
     if (typeof responseValue === "string") return responseValue;
     if (partId && responseValue && typeof responseValue === "object") return responseValue[partId] || "";
     return "";
@@ -390,7 +390,7 @@ export function ReviewGuildApplicationModal({
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
             <div>
               <h2 className="text-xl font-bold text-foreground">
-                {proposalContext ? "Review Proposal" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
+                {proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
