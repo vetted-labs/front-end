@@ -3,6 +3,8 @@
 import { FileText, Shield } from "lucide-react";
 import { JobFormData } from "@/hooks/useJobForm";
 import type { Guild } from "@/types";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 
 interface JobRequirementsProps {
   formData: JobFormData;
@@ -39,26 +41,21 @@ export function JobRequirements({
 
         {/* Only show status dropdown when editing — new jobs use Draft/Publish buttons */}
         {isEditing && (
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Status
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                onFieldChange(
-                  "status",
-                  e.target.value as "draft" | "active" | "paused" | "closed"
-                )
-              }
-              className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-            >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
+          <NativeSelect
+            label="Status"
+            value={formData.status}
+            onChange={(e) =>
+              onFieldChange(
+                "status",
+                e.target.value as "draft" | "active" | "paused" | "closed"
+              )
+            }
+          >
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="closed">Closed</option>
+          </NativeSelect>
         )}
       </div>
 
@@ -78,71 +75,44 @@ export function JobRequirements({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Requirements (one per line)
-          </label>
-          <textarea
-            value={formData.requirements?.join("\n") || ""}
-            onChange={(e) =>
-              onFieldChange(
-                "requirements",
-                e.target.value.split("\n").filter(Boolean)
-              )
-            }
-            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.requirements ? "border-negative" : "border-border"
-            }`}
-            rows={4}
-            placeholder="e.g., 5+ years experience"
-          />
-          {fieldErrors.requirements && (
-            <p className="text-negative text-sm mt-1">{fieldErrors.requirements}</p>
-          )}
-        </div>
+        <Textarea
+          label="Requirements (one per line)"
+          value={formData.requirements?.join("\n") || ""}
+          onChange={(e) =>
+            onFieldChange(
+              "requirements",
+              e.target.value.split("\n").filter(Boolean)
+            )
+          }
+          rows={4}
+          placeholder="e.g., 5+ years experience"
+          error={fieldErrors.requirements}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Skills (one per line)
-          </label>
-          <textarea
-            value={formData.skills?.join("\n") || ""}
-            onChange={(e) =>
-              onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
-            }
-            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.skills ? "border-negative" : "border-border"
-            }`}
-            rows={4}
-            placeholder="e.g., Solidity, React"
-          />
-          {fieldErrors.skills && (
-            <p className="text-negative text-sm mt-1">{fieldErrors.skills}</p>
-          )}
-        </div>
+        <Textarea
+          label="Skills (one per line)"
+          value={formData.skills?.join("\n") || ""}
+          onChange={(e) =>
+            onFieldChange("skills", e.target.value.split("\n").filter(Boolean))
+          }
+          rows={4}
+          placeholder="e.g., Solidity, React"
+          error={fieldErrors.skills}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Screening Questions (one per line)
-          </label>
-          <textarea
-            value={formData.screeningQuestions?.join("\n") || ""}
-            onChange={(e) =>
-              onFieldChange(
-                "screeningQuestions",
-                e.target.value.split("\n").filter(Boolean)
-              )
-            }
-            className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.screeningQuestions ? "border-negative" : "border-border"
-            }`}
-            rows={4}
-            placeholder="e.g., Describe your experience with DeFi"
-          />
-          {fieldErrors.screeningQuestions && (
-            <p className="text-negative text-sm mt-1">{fieldErrors.screeningQuestions}</p>
-          )}
-        </div>
+        <Textarea
+          label="Screening Questions (one per line)"
+          value={formData.screeningQuestions?.join("\n") || ""}
+          onChange={(e) =>
+            onFieldChange(
+              "screeningQuestions",
+              e.target.value.split("\n").filter(Boolean)
+            )
+          }
+          rows={4}
+          placeholder="e.g., Describe your experience with DeFi"
+          error={fieldErrors.screeningQuestions}
+        />
       </div>
     </>
   );

@@ -3,6 +3,8 @@
 import { MapPin, DollarSign, Shield } from "lucide-react";
 import { JobFormData } from "@/hooks/useJobForm";
 import type { Guild } from "@/types";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 
 interface JobDetailsSectionProps {
   formData: JobFormData;
@@ -40,67 +42,53 @@ export function JobDetailsSection({
           Location *
         </label>
         <div className="relative">
-          <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          <input
+          <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10" />
+          <Input
             type="text"
             value={formData.location}
             onChange={(e) => onFieldChange("location", e.target.value)}
-            className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.location ? "border-negative" : "border-border"
-            }`}
+            className="pl-10"
             placeholder="e.g., Remote or San Francisco"
+            error={fieldErrors.location}
           />
         </div>
-        {fieldErrors.location && (
-          <p className="text-negative text-sm mt-1">{fieldErrors.location}</p>
-        )}
       </div>
 
       {/* Location Type & Job Type */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Location Type
-          </label>
-          <select
-            value={formData.locationType}
-            onChange={(e) =>
-              onFieldChange(
-                "locationType",
-                e.target.value as "remote" | "onsite" | "hybrid"
-              )
-            }
-            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-          >
-            <option value="remote">Remote</option>
-            <option value="onsite">Onsite</option>
-            <option value="hybrid">Hybrid</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Job Type
-          </label>
-          <select
-            value={formData.jobType}
-            onChange={(e) =>
-              onFieldChange(
-                "jobType",
-                e.target.value as
-                  | "Full-time"
-                  | "Part-time"
-                  | "Contract"
-                  | "Freelance"
-              )
-            }
-            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-          >
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
-            <option value="Freelance">Freelance</option>
-          </select>
-        </div>
+        <NativeSelect
+          label="Location Type"
+          value={formData.locationType}
+          onChange={(e) =>
+            onFieldChange(
+              "locationType",
+              e.target.value as "remote" | "onsite" | "hybrid"
+            )
+          }
+        >
+          <option value="remote">Remote</option>
+          <option value="onsite">Onsite</option>
+          <option value="hybrid">Hybrid</option>
+        </NativeSelect>
+        <NativeSelect
+          label="Job Type"
+          value={formData.jobType}
+          onChange={(e) =>
+            onFieldChange(
+              "jobType",
+              e.target.value as
+                | "Full-time"
+                | "Part-time"
+                | "Contract"
+                | "Freelance"
+            )
+          }
+        >
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+          <option value="Contract">Contract</option>
+          <option value="Freelance">Freelance</option>
+        </NativeSelect>
       </div>
 
       {/* Salary Range */}
@@ -110,8 +98,8 @@ export function JobDetailsSection({
             Salary Min
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <input
+            <DollarSign className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10" />
+            <Input
               type="number"
               value={formData.salaryMin || ""}
               onChange={(e) =>
@@ -120,25 +108,19 @@ export function JobDetailsSection({
                   parseInt(e.target.value) || undefined
                 )
               }
-              className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.salaryMin ? "border-negative" : "border-border"
-              }`}
+              className="pl-10"
               placeholder="e.g., 100000"
+              error={fieldErrors.salaryMin}
             />
           </div>
-          {fieldErrors.salaryMin && (
-            <p className="text-negative text-sm mt-1">
-              {fieldErrors.salaryMin}
-            </p>
-          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Salary Max
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <input
+            <DollarSign className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10" />
+            <Input
               type="number"
               value={formData.salaryMax || ""}
               onChange={(e) =>
@@ -147,7 +129,7 @@ export function JobDetailsSection({
                   parseInt(e.target.value) || undefined
                 )
               }
-              className="w-full pl-10 pr-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
+              className="pl-10"
               placeholder="e.g., 150000"
             />
           </div>
@@ -156,40 +138,34 @@ export function JobDetailsSection({
 
       {/* Experience Level & Guild */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Experience Level
-          </label>
-          <select
-            value={formData.experienceLevel || ""}
-            onChange={(e) =>
-              onFieldChange(
-                "experienceLevel",
-                e.target.value || undefined
-              )
-            }
-            className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-          >
-            <option value="">Select level</option>
-            <option value="junior">Junior</option>
-            <option value="mid">Mid-level</option>
-            <option value="senior">Senior</option>
-            <option value="lead">Lead</option>
-            <option value="executive">Executive</option>
-          </select>
-        </div>
+        <NativeSelect
+          label="Experience Level"
+          value={formData.experienceLevel || ""}
+          onChange={(e) =>
+            onFieldChange(
+              "experienceLevel",
+              e.target.value || undefined
+            )
+          }
+        >
+          <option value="">Select level</option>
+          <option value="junior">Junior</option>
+          <option value="mid">Mid-level</option>
+          <option value="senior">Senior</option>
+          <option value="lead">Lead</option>
+          <option value="executive">Executive</option>
+        </NativeSelect>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Guild *
           </label>
           <div className="relative">
-            <Shield className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <select
+            <Shield className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10" />
+            <NativeSelect
               value={formData.guild}
               onChange={(e) => onFieldChange("guild", e.target.value)}
-              className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-                fieldErrors.guild ? "border-negative" : "border-border"
-              }`}
+              className="pl-10"
+              error={fieldErrors.guild}
             >
               <option value="">Select a guild</option>
               {guilds.map((guild) => (
@@ -197,11 +173,8 @@ export function JobDetailsSection({
                   {guild.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
-          {fieldErrors.guild && (
-            <p className="text-negative text-sm mt-1">{fieldErrors.guild}</p>
-          )}
         </div>
       </div>
     </div>

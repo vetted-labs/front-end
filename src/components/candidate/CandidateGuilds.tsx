@@ -29,12 +29,6 @@ const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
   rejected: XCircle,
 };
 
-const GUILD_STATUS_GLOW: Record<string, string> = {
-  pending:  "",
-  approved: "",
-  rejected: "",
-};
-
 /** Map guild-specific statuses to APPLICATION_STATUS_CONFIG keys */
 const GUILD_STATUS_KEY: Record<string, string> = {
   approved: "accepted",
@@ -146,7 +140,6 @@ export default function CandidateGuilds() {
               const configKey = GUILD_STATUS_KEY[app.status] || app.status;
               const statusStyle = APPLICATION_STATUS_CONFIG[configKey] || APPLICATION_STATUS_CONFIG.pending;
               const StatusIcon = GUILD_STATUS_ICONS[app.status] || Clock;
-              const glow = GUILD_STATUS_GLOW[app.status] || "";
               const appliedDate = app.submittedAt || app.createdAt;
 
               return (
@@ -156,7 +149,7 @@ export default function CandidateGuilds() {
                     const guildId = app.guildId || app.guild?.id;
                     if (guildId) router.push(`/guilds/${guildId}`);
                   }}
-                  className={`group relative text-left rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all ${glow}`}
+                  className="group relative text-left rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
                 >
                   {/* Top gradient banner */}
                   <div className={`h-20 ${gradient} relative`}>

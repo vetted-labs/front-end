@@ -19,6 +19,7 @@ import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { truncateAddress } from "@/lib/utils";
+import { useAuthContext } from "@/hooks/useAuthContext";
 
 interface FormData {
   companyName: string;
@@ -36,6 +37,7 @@ export function CompanyForm() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
+  const auth = useAuthContext();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { execute, isLoading, error } = useApi();
@@ -100,11 +102,9 @@ export function CompanyForm() {
         }),
       {
         onSuccess: (data) => {
-          const response = data as Record<string, unknown>;
-          localStorage.setItem("companyAuthToken", String(response.token));
-          localStorage.setItem("companyId", String(response.id));
-          localStorage.setItem("companyEmail", String(response.email));
-          localStorage.setItem("companyWallet", String(response.walletAddress));
+          const companyId = data.company?.id ?? "";
+          const companyEmail = data.company?.email ?? "";
+          auth.login(data.token, "company", companyId, companyEmail, address, data.refreshToken);
           router.push("/dashboard");
         },
       }

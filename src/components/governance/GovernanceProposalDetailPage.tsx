@@ -177,9 +177,6 @@ export function GovernanceProposalDetailPage() {
 
       {/* ─── Hero header card ─── */}
       <div className="rounded-xl border border-border bg-card p-6 sm:p-8 mb-6 relative overflow-hidden">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-transparent pointer-events-none" />
-
         <div className="relative">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
@@ -498,11 +495,10 @@ export function GovernanceProposalDetailPage() {
 
 function DetailStatCard({ label, value, sub, colorClass }: { label: string; value: string; sub: string; colorClass: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-transparent pointer-events-none" />
-      <p className="text-xs text-muted-foreground mb-1 relative">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums font-mono ${colorClass} relative`}>{value}</p>
-      <p className="text-xs text-muted-foreground tabular-nums mt-0.5 relative">{sub}</p>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums font-mono ${colorClass}`}>{value}</p>
+      <p className="text-xs text-muted-foreground tabular-nums mt-0.5">{sub}</p>
     </div>
   );
 }

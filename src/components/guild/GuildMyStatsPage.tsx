@@ -20,12 +20,12 @@ import {
   User,
 } from "lucide-react";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
+import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { Alert } from "@/components/ui";
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { ExpertPageSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import type {
   GuildPersonalStats,
@@ -94,14 +94,14 @@ export default function GuildMyStatsPage() {
       try {
         const avg = await guildsApi.getAverages(guildId);
         guildAverages = avg as unknown as GuildMyStatsAverages;
-      } catch (err) {
-        console.warn("Guild averages endpoint unavailable:", err);
+      } catch {
+        logger.warn("Failed to load guild stats");
       }
       try {
         const activity = await guildsApi.getMemberActivity(guildId, candidateId!);
         recentActivity = (activity as unknown as GuildRecentActivity[]) || [];
-      } catch (err) {
-        console.warn("Guild member activity endpoint unavailable:", err);
+      } catch {
+        logger.warn("Failed to load guild stats");
       }
       return { stats, guildAverages, recentActivity };
     },
@@ -117,7 +117,15 @@ export default function GuildMyStatsPage() {
     return null;
   }
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+      </div>
+    );
+  }
 
   if (error || !data) {
     return (

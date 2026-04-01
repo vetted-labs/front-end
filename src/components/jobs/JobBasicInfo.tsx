@@ -2,6 +2,8 @@
 
 import { Briefcase } from "lucide-react";
 import { JobFormData } from "@/hooks/useJobForm";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface JobBasicInfoProps {
   formData: JobFormData;
@@ -44,34 +46,25 @@ export function JobBasicInfo({
         </div>
         <div className="relative">
           <Briefcase className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             value={formData.title}
             onChange={(e) => onFieldChange("title", e.target.value)}
-            className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-              fieldErrors.title ? "border-negative" : "border-border"
-            }`}
+            className={`pl-10 ${fieldErrors.title ? "border-destructive" : ""}`}
             placeholder="e.g., Senior Solidity Developer"
+            error={fieldErrors.title}
           />
         </div>
-        {fieldErrors.title && (
-          <p className="text-negative text-sm mt-1">{fieldErrors.title}</p>
-        )}
       </div>
 
       {/* Department */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-1">
-          Department
-        </label>
-        <input
-          type="text"
-          value={formData.department || ""}
-          onChange={(e) => onFieldChange("department", e.target.value)}
-          className="w-full px-3 py-2.5 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground"
-          placeholder="e.g., Engineering"
-        />
-      </div>
+      <Input
+        label="Department"
+        type="text"
+        value={formData.department || ""}
+        onChange={(e) => onFieldChange("department", e.target.value)}
+        placeholder="e.g., Engineering"
+      />
 
       {/* Description */}
       <div>
@@ -85,20 +78,13 @@ export function JobBasicInfo({
             {formData.description.length}/50 min
           </span>
         </div>
-        <textarea
+        <Textarea
           value={formData.description}
           onChange={(e) => onFieldChange("description", e.target.value)}
-          className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-card text-foreground ${
-            fieldErrors.description ? "border-negative" : "border-border"
-          }`}
           rows={6}
           placeholder="Describe the job responsibilities..."
+          error={fieldErrors.description}
         />
-        {fieldErrors.description && (
-          <p className="text-negative text-sm mt-1">
-            {fieldErrors.description}
-          </p>
-        )}
       </div>
     </div>
   );

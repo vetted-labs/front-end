@@ -25,7 +25,6 @@ import { formatDeadline } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Alert } from "@/components/ui/alert";
-import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
@@ -123,7 +122,15 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
     }
   };
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+      </div>
+    );
+  }
 
   if (error || !application) {
     return (

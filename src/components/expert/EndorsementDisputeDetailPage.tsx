@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { DisputeVoteForm } from "@/components/endorsements/DisputeVoteForm";
-import { DetailSkeleton } from "@/components/ui/page-skeleton";
 import { STATUS_COLORS } from "@/config/colors";
 
 function getTimeRemaining(deadline: string) {
@@ -92,7 +91,15 @@ export function EndorsementDisputeDetailPage() {
     );
   };
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+        <div className="h-32 bg-muted animate-pulse rounded-xl" />
+      </div>
+    );
+  }
 
   if (!dispute) {
     return (
