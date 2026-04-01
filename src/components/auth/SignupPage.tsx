@@ -7,6 +7,7 @@ import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
 import { CandidateSignupFields } from "@/components/auth/CandidateSignupFields";
 import { CompanySignupFields } from "@/components/auth/CompanySignupFields";
+import { NativeSelect } from "@/components/ui/native-select";
 import { candidateApi, companyApi } from "@/lib/api";
 import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -31,6 +32,7 @@ function SignupForm() {
 
   const { execute: executeSignup, isLoading } = useApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useMountEffect(() => {
     clearTokenAuthState();
@@ -59,6 +61,7 @@ function SignupForm() {
 
   // Candidate specific
   const [headline, setHeadline] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("mid");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
@@ -132,7 +135,7 @@ function SignupForm() {
             password,
             phone,
             headline,
-            experienceLevel: "mid",
+            experienceLevel,
             socialLinks,
           });
 
@@ -217,19 +220,31 @@ function SignupForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Candidate Fields */}
           {userType === "candidate" && (
-            <CandidateSignupFields
-              fullName={fullName}
-              onFullNameChange={setFullName}
-              headline={headline}
-              onHeadlineChange={setHeadline}
-              linkedinUrl={linkedinUrl}
-              onLinkedinUrlChange={setLinkedinUrl}
-              githubUrl={githubUrl}
-              onGithubUrlChange={setGithubUrl}
-              portfolioUrl={portfolioUrl}
-              onPortfolioUrlChange={setPortfolioUrl}
-              errors={errors}
-            />
+            <>
+              <CandidateSignupFields
+                fullName={fullName}
+                onFullNameChange={setFullName}
+                headline={headline}
+                onHeadlineChange={setHeadline}
+                linkedinUrl={linkedinUrl}
+                onLinkedinUrlChange={setLinkedinUrl}
+                githubUrl={githubUrl}
+                onGithubUrlChange={setGithubUrl}
+                portfolioUrl={portfolioUrl}
+                onPortfolioUrlChange={setPortfolioUrl}
+                errors={errors}
+              />
+              <NativeSelect
+                label="Experience Level"
+                value={experienceLevel}
+                onChange={(e) => setExperienceLevel(e.target.value)}
+              >
+                <option value="junior">Junior (0–2 years)</option>
+                <option value="mid">Mid-Level (2–5 years)</option>
+                <option value="senior">Senior (5–10 years)</option>
+                <option value="lead">Lead / Principal (10+ years)</option>
+              </NativeSelect>
+            </>
           )}
 
           {/* Company Fields */}
@@ -319,9 +334,28 @@ function SignupForm() {
             </div>
           </div>
 
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-1 rounded border-border"
+            />
+            <span className="text-muted-foreground">
+              I agree to the{" "}
+              <a href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </a>
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !agreedToTerms}
             className="w-full py-2.5 px-4 mt-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {isLoading ? (

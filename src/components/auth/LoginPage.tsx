@@ -357,6 +357,14 @@ function LoginForm() {
                         placeholder="Enter your password"
                         required
                       />
+                      <div className="flex justify-end mt-1">
+                        <a
+                          href="/auth/forgot-password"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </a>
+                      </div>
                     </div>
 
                     <button

@@ -18,11 +18,12 @@ import {
   Zap,
   Trophy,
   User,
+  BarChart3,
 } from "lucide-react";
 import { getRoleBadgeColor } from "@/lib/guildHelpers";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
-import { Alert } from "@/components/ui";
+import { EmptyState } from "@/components/ui/empty-state";
 import { guildsApi } from "@/lib/api";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -130,7 +131,12 @@ export default function GuildMyStatsPage() {
   if (error || !data) {
     return (
       <div className="min-h-full flex items-center justify-center">
-        <Alert variant="error">{error || "Could not load statistics"}</Alert>
+        <EmptyState
+          icon={BarChart3}
+          title="Stats unavailable"
+          description="Guild statistics will be available once more activity data is collected."
+          action={{ label: "Back to Guild", onClick: () => router.push(`/guilds/${guildId}`) }}
+        />
       </div>
     );
   }
