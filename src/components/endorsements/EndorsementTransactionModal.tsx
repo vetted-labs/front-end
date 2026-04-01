@@ -9,6 +9,7 @@ import { getPersonAvatar } from '@/lib/avatars';
 import {
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Wallet,
   TrendingUp,
   Award,
@@ -273,6 +274,22 @@ export function EndorsementTransactionModal({
                     </div>
                   </div>
                 ) : (<>
+                {/* Slash Risk Warning */}
+                <div className={`p-3 rounded-lg border ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}>
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${STATUS_COLORS.warning.icon}`} />
+                    <div>
+                      <p className={`text-sm font-medium ${STATUS_COLORS.warning.text}`}>
+                        Stake at Risk
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        If this candidate is not hired, 10% of your bid will be slashed.
+                        Non-selected endorsers receive a refund minus a 1.5% platform fee.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Balance/Staked inline row */}
                 <div className="flex items-center justify-between text-xs px-1">
                   <div className="flex items-center gap-2">

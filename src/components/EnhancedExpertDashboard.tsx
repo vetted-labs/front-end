@@ -25,6 +25,7 @@ import { logger } from "@/lib/logger";
 import {
   GUILD_RANK_ORDER,
   REPUTATION_DECAY_WARNING_DAYS,
+  computeVoteWeight,
 } from "@/config/constants";
 import type { ExpertProfile, ExpertGuild } from "@/types";
 
@@ -244,6 +245,17 @@ export function EnhancedExpertDashboard() {
       ? Math.round((profile.approvalCount / profile.reviewCount) * 100)
       : null;
 
+  // Vote weight and reward tier (whitepaper: 1 × (1 + min(Rep/1000, 2.0)), Guild Masters 1.5×)
+  const isGuildMaster = profile?.guilds?.some((g) => g.expertRole === "master") ?? false;
+  const voteWeight = computeVoteWeight(profile?.reputation ?? 0, isGuildMaster);
+
+  function getRewardTier(reputation: number) {
+    if (reputation >= 2000) return { name: "Authority", multiplier: "1.5×" };
+    if (reputation >= 1000) return { name: "Established", multiplier: "1.25×" };
+    return { name: "Foundation", multiplier: "1.0×" };
+  }
+  const rewardTier = getRewardTier(profile?.reputation ?? 0);
+
   const handleVerifyWallet = async () => {
     if (!address) return;
     const success = await requestVerification(address);
@@ -298,12 +310,12 @@ export function EnhancedExpertDashboard() {
       <DataSection
         isLoading={loading}
         skeleton={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
           </div>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             label="Reputation"
             value={profile?.reputation ?? 0}
@@ -332,6 +344,12 @@ export function EnhancedExpertDashboard() {
                 ? `${consensusRate}% consensus rate`
                 : undefined
             }
+          />
+          <StatCard
+            label="Vote Weight"
+            value={`${voteWeight.toFixed(2)}×`}
+            subtext={`${rewardTier.name} · ${rewardTier.multiplier}`}
+            subtextVariant="default"
           />
         </div>
       </DataSection>
