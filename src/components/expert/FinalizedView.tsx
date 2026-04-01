@@ -16,6 +16,7 @@ interface FinalizedViewProps {
   voteHistory: VoteHistoryItem[];
   candidateProfile: CandidateProfile | null;
   wallet: string | undefined;
+  expertId: string | undefined;
   CandidateProfileSection: ComponentType<CandidateProfileSectionProps>;
 }
 
@@ -24,6 +25,7 @@ export function FinalizedView({
   voteHistory,
   candidateProfile,
   wallet,
+  expertId,
   CandidateProfileSection,
 }: FinalizedViewProps) {
   return (
@@ -52,14 +54,17 @@ export function FinalizedView({
             Vote History
           </h3>
           <div className="space-y-3">
-            {voteHistory.map((vote) => (
+            {voteHistory.map((vote, index) => {
+              const isCurrentUser = expertId && vote.expert_id === expertId;
+              const displayName = isCurrentUser ? "You" : `Expert ${index + 1}`;
+              return (
               <div
                 key={vote.id}
                 className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-b-0"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">
-                    {vote.expert_name || `${vote.expert_id.slice(0, 8)}...`}
+                    {displayName}
                   </p>
                   {vote.comment && (
                     <p className="text-sm text-muted-foreground mt-1 italic">
@@ -95,7 +100,8 @@ export function FinalizedView({
                   {vote.score}/100
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

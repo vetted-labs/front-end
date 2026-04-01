@@ -469,6 +469,7 @@ export default function VotingApplicationPage({
             voteHistory={voteHistory}
             candidateProfile={candidateProfile}
             wallet={address}
+            expertId={expertData?.id}
             CandidateProfileSection={CandidateProfileSection}
           />
         )}

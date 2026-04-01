@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { expertApi, guildsApi, guildApplicationsApi, extractApiError } from "@/lib/api";
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { useApplicationsData } from "@/lib/hooks/useApplicationsData";
@@ -34,6 +35,7 @@ const ReviewGuildApplicationModal = dynamic(
 const ALL_GUILDS = { id: "all", name: "All Guilds" } as const;
 
 export default function ApplicationsPage() {
+  const router = useRouter();
   const data = useApplicationsData();
 
   // Review modal state
@@ -241,7 +243,7 @@ export default function ApplicationsPage() {
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                   To review applications and vote on proposals, you need to stake VETD tokens in at least one guild. Your stake will be returned after reviews, with bonus rewards if you vote with the majority.
                 </p>
-                <Button>
+                <Button onClick={() => router.push("/expert/withdrawals")}>
                   <Coins className="w-4 h-4 mr-2" />
                   Stake VETD Tokens
                   <ArrowRight className="w-4 h-4 ml-2" />
