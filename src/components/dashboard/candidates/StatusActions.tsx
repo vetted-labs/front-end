@@ -70,7 +70,7 @@ export function StatusActions({
               isLoading={isUpdating && !isReject}
               className={
                 isReject
-                  ? `${STATUS_COLORS.negative.text} border-negative/20 hover:${STATUS_COLORS.negative.bgSubtle} h-7 text-xs`
+                  ? `${STATUS_COLORS.negative.text} border-negative/20 hover:bg-negative/10 h-7 text-xs`
                   : "h-7 text-xs"
               }
               onClick={() => {

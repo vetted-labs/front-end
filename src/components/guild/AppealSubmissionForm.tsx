@@ -190,7 +190,7 @@ export function AppealSubmissionForm({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsModalOpen(true)}
-                className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text} hover:${STATUS_COLORS.warning.bgSubtle}`}
+                className={`${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.text} hover:bg-warning/10`}
               >
                 <Gavel className="w-3.5 h-3.5 mr-1.5" />
                 Appeal This Rejection

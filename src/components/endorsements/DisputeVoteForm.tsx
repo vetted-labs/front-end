@@ -35,7 +35,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant={decision === "uphold" ? "default" : "outline"}
-            className={decision === "uphold" ? `${STATUS_COLORS.negative.bg} hover:opacity-90` : `hover:${STATUS_COLORS.negative.border} hover:${STATUS_COLORS.negative.text}`}
+            className={decision === "uphold" ? `${STATUS_COLORS.negative.bg} hover:opacity-90` : "hover:border-negative/20 hover:text-negative"}
             onClick={() => setDecision("uphold")}
             disabled={disabled || isSubmitting}
             size="lg"
@@ -44,7 +44,7 @@ export function DisputeVoteForm({ onSubmit, disabled = false }: DisputeVoteFormP
           </Button>
           <Button
             variant={decision === "dismiss" ? "default" : "outline"}
-            className={decision === "dismiss" ? `${STATUS_COLORS.positive.bg} hover:opacity-90` : `hover:${STATUS_COLORS.positive.border} hover:${STATUS_COLORS.positive.text}`}
+            className={decision === "dismiss" ? `${STATUS_COLORS.positive.bg} hover:opacity-90` : "hover:border-positive/20 hover:text-positive"}
             onClick={() => setDecision("dismiss")}
             disabled={disabled || isSubmitting}
             size="lg"

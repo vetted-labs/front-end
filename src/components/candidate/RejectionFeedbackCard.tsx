@@ -32,7 +32,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-between px-5 py-4 text-left hover:${STATUS_COLORS.negative.bgSubtle} transition-colors`}
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-negative/10 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
           <div className={`w-9 h-9 rounded-lg ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} flex items-center justify-center shrink-0`}>

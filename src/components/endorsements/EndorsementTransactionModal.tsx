@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Modal } from '@/components/ui/modal';
 import { getPersonAvatar } from '@/lib/avatars';
 import {
   CheckCircle2,
@@ -102,7 +103,7 @@ export function EndorsementTransactionModal({
     }
   };
 
-  if (!isOpen || !application) return null;
+  if (!application) return null;
 
   const candidateInitials = application.candidate_name
     .split(' ')
@@ -116,17 +117,11 @@ export function EndorsementTransactionModal({
   const currentStepIndex = txStep === 'idle' ? 0 : txStep === 'signing' ? 0 : txStep === 'approving' ? 0 : txStep === 'bidding' ? 1 : 2;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-modal-backdrop-in">
-      {/* Gradient border glow wrapper */}
-      <div className="max-w-[480px] w-full mx-4 rounded-xl border border-border p-px animate-modal-scale-in">
-        <div
-          className="relative w-full max-h-[90vh] flex flex-col overflow-hidden rounded-xl shadow-2xl bg-card"
-          onClick={(e) => e.stopPropagation()}
-        >
+    <Modal isOpen={isOpen} onClose={onClose} size="md">
           {/* ── Header ── */}
-          <div className="relative flex-shrink-0">
+          <div className="relative flex-shrink-0 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-5">
             {/* Decorative glow layer */}
-            <div className="absolute inset-0 overflow-hidden rounded-t-3xl pointer-events-none">
+            <div className="absolute inset-0 overflow-hidden rounded-t-xl pointer-events-none">
               <div className="absolute -top-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-[100px]" />
               <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/5 rounded-full blur-[100px]" />
             </div>
@@ -156,7 +151,7 @@ export function EndorsementTransactionModal({
           </div>
 
           {/* ── Content ── */}
-          <div className="px-6 pt-5 pb-6 space-y-4 flex-1 overflow-y-auto min-h-0">
+          <div className="space-y-4">
 
             {/* Progress Steps — fixed-width circles with separate flex lines */}
             {(txStep === 'signing' || txStep === 'approving' || txStep === 'bidding' || txStep === 'success') && (
@@ -584,8 +579,6 @@ export function EndorsementTransactionModal({
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

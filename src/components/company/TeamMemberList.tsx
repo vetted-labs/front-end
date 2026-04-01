@@ -149,7 +149,7 @@ function MemberActions({
           )}
           <button
             onClick={() => handleAction(() => onRemove(member.id))}
-            className={`w-full text-left px-3 py-1.5 text-sm ${STATUS_COLORS.negative.text} hover:${STATUS_COLORS.negative.bgSubtle} transition-colors`}
+            className={`w-full text-left px-3 py-1.5 text-sm ${STATUS_COLORS.negative.text} hover:bg-negative/10 transition-colors`}
           >
             Remove
           </button>
