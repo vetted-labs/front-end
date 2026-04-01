@@ -23,6 +23,7 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
+import { STAT_ICON } from "@/config/colors";
 import { LeaderboardPodium } from "./LeaderboardPodium";
 import { LeaderboardYourStats } from "./LeaderboardYourStats";
 import { LeaderboardTable } from "./LeaderboardTable";
@@ -283,7 +284,7 @@ export default function LeaderboardPage() {
         <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[150px] rounded-full bg-primary/[0.05] blur-[80px]" />
         <div className="relative z-10">
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-            <Trophy className="w-6 h-6 text-[#f59e0b]" />
+            <Trophy className={`w-6 h-6 ${STAT_ICON.text}`} />
             Leaderboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -337,15 +338,25 @@ export default function LeaderboardPage() {
             onChange={setRole}
           />
           <div className="flex-1" />
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {sortedEntries.length} expert{sortedEntries.length !== 1 ? "s" : ""}
-          </span>
+          {!isLoading && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {sortedEntries.length} expert{sortedEntries.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
       </Card>
 
       {/* Error */}
       {error && (
         <Alert variant="error">{error}</Alert>
+      )}
+
+      {/* Loading skeleton */}
+      {isLoading && (
+        <>
+          <PodiumSkeleton />
+          <TableSkeleton />
+        </>
       )}
 
       {/* Content */}

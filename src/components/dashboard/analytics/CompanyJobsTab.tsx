@@ -157,7 +157,7 @@ export function CompanyJobsTab() {
 
         {/* Stats Row */}
         <div className="flex gap-3 mt-4 pt-4 border-t border-border">
-          <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 p-3">
+          <div className="flex-1 rounded-lg bg-muted border border-border/50 p-3">
             <div className="text-[10px] text-muted-foreground/60 mb-1">
               Fastest
             </div>
@@ -168,7 +168,7 @@ export function CompanyJobsTab() {
               Solidity Developer
             </div>
           </div>
-          <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 p-3">
+          <div className="flex-1 rounded-lg bg-muted border border-border/50 p-3">
             <div className="text-[10px] text-muted-foreground/60 mb-1">
               Slowest
             </div>
@@ -179,7 +179,7 @@ export function CompanyJobsTab() {
               Product Designer
             </div>
           </div>
-          <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 p-3">
+          <div className="flex-1 rounded-lg bg-muted border border-border/50 p-3">
             <div className="text-[10px] text-muted-foreground/60 mb-1">
               Industry Avg
             </div>

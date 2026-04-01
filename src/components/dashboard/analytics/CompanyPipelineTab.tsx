@@ -52,7 +52,7 @@ export function CompanyPipelineTab() {
               Hire Rate by Source
             </div>
             <div className="flex gap-2.5">
-              <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 py-2.5 text-center">
+              <div className="flex-1 rounded-lg bg-muted border border-border/50 py-2.5 text-center">
                 <div className="font-mono text-lg font-semibold text-positive">
                   6.1%
                 </div>
@@ -60,7 +60,7 @@ export function CompanyPipelineTab() {
                   Endorsed
                 </div>
               </div>
-              <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 py-2.5 text-center">
+              <div className="flex-1 rounded-lg bg-muted border border-border/50 py-2.5 text-center">
                 <div className="font-mono text-lg font-semibold text-primary">
                   4.2%
                 </div>
@@ -68,7 +68,7 @@ export function CompanyPipelineTab() {
                   Guild
                 </div>
               </div>
-              <div className="flex-1 rounded-lg bg-white/[0.02] border border-border/50 py-2.5 text-center">
+              <div className="flex-1 rounded-lg bg-muted border border-border/50 py-2.5 text-center">
                 <div className="font-mono text-lg font-semibold">1.8%</div>
                 <div className="text-[10px] text-muted-foreground/60 mt-0.5">
                   Direct

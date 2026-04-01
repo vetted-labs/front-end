@@ -15,7 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { useTokenBalance } from "@/lib/hooks/useVettedContracts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { StakingDonutChart } from "@/components/expert/StakingDonutChart";
-import { getGuildHexColor } from "@/config/colors";
+import { getGuildHexColor, STATUS_COLORS } from "@/config/colors";
 import type { GuildStakeInfo } from "@/types";
 
 const StakingModal = dynamic(
@@ -486,7 +486,7 @@ export default function WithdrawalsPage() {
                           {guild.guildName || guild.guildId}
                         </span>
                         {hasCooldown && (
-                          <span className="text-[10px] font-semibold uppercase tracking-wide bg-[#d9b45f]/12 text-[#d9b45f] px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.text} px-1.5 py-0.5 rounded flex-shrink-0`}>
                             Cooldown
                           </span>
                         )}
@@ -504,7 +504,7 @@ export default function WithdrawalsPage() {
                       {hasCooldown &&
                         guild.unstakeInfo?.amount &&
                         cooldown && (
-                          <div className="text-[11px] text-[#d9b45f] mt-1">
+                          <div className={`text-[11px] ${STATUS_COLORS.warning.text} mt-1`}>
                             Unstaking{" "}
                             {parseFloat(guild.unstakeInfo.amount).toFixed(2)}{" "}
                             VETD {" · "}
