@@ -31,7 +31,7 @@ import { StatusActions } from "./StatusActions";
 import { PipelineStepper } from "./PipelineStepper";
 import { StatusTimeline } from "./StatusTimeline";
 import { truncateAddress } from "@/lib/utils";
-import type { CompanyApplication, CandidateGuildReport, ApplicationStatus, StatusTransition, EndorsementInfo, EndorsementStats } from "@/types";
+import type { CompanyApplication, CandidateGuildReport, ApplicationStatus, StatusTransition } from "@/types";
 import { getPlatformIcon } from "@/lib/social-links";
 
 type TabValue = "profile" | "application" | "guild-report" | "history" | "notes";
@@ -80,13 +80,20 @@ export function CandidateDetailPanel({
     { skip: activeTab !== "history" },
   );
 
-  const { data: endorsementStats } = useFetch<EndorsementStats>(
-    () => blockchainApi.getEndorsementStats(application.jobId, application.candidateId),
+  // Endorsement stats shape from blockchain API
+  interface BidStats { totalBids: number; topBidsCount: number; totalStaked: string }
+  interface BidInfo { expert: string; amount: string; rank: number; isActive: boolean }
+
+  const { data: endorsementStats } = useFetch<BidStats>(
+    () => blockchainApi.getEndorsementStats(application.jobId, application.candidateId) as Promise<BidStats>,
   );
 
-  const { data: endorsements } = useFetch<EndorsementInfo[]>(
-    () => blockchainApi.getTopEndorsements(application.jobId, application.candidateId),
+  const { data: rawEndorsements } = useFetch<BidInfo[]>(
+    () => blockchainApi.getTopEndorsements(application.jobId, application.candidateId) as Promise<BidInfo[]>,
   );
+
+  const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+  const endorsements = rawEndorsements?.filter((e) => e.isActive && e.expert !== ZERO_ADDRESS) ?? [];
 
   const handleStatusAdvance = async (newStatus: ApplicationStatus, note?: string) => {
     await onStatusChange(application.id, newStatus, note);
@@ -346,7 +353,7 @@ export function CandidateDetailPanel({
             </div>
 
             {/* Endorsements section */}
-            {endorsementStats && endorsementStats.totalEndorsements > 0 && (
+            {endorsements.length > 0 && (
               <div className="rounded-xl border border-border overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -354,27 +361,27 @@ export function CandidateDetailPanel({
                     <p className="text-sm font-semibold text-foreground">Expert Endorsements</p>
                   </div>
                   <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                    {endorsementStats.totalEndorsements}
+                    {endorsementStats?.totalBids ?? endorsements.length}
                   </span>
                 </div>
                 <div className="p-4 space-y-2">
-                  {endorsements?.map((endorsement) => (
+                  {endorsements.map((endorsement) => (
                     <button
-                      key={endorsement.expertAddress}
-                      onClick={() => router.push(`/experts/${endorsement.expertAddress}`)}
+                      key={endorsement.expert}
+                      onClick={() => router.push(`/experts/${endorsement.expert}`)}
                       className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all text-left group"
                     >
                       <img
-                        src={getPersonAvatar(endorsement.expertName)}
+                        src={getPersonAvatar(endorsement.expert)}
                         alt=""
                         className="w-8 h-8 rounded-full flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                          {endorsement.expertName || truncateAddress(endorsement.expertAddress)}
+                          {truncateAddress(endorsement.expert)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Staked {endorsement.amount} ETH
+                          Staked {endorsement.amount} VETD
                         </p>
                       </div>
                       <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0" />
