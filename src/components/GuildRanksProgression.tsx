@@ -127,7 +127,7 @@ const GUILD_RANK_CONFIGS: RankConfig[] = [
     unlocks: [
       "Full delete/moderation",
       "Full guild control",
-      "3-month term (1 quarter), re-electable once",
+      "6-month term, re-electable via governance vote",
       "Must step down after 2 consecutive terms",
     ],
   },
@@ -145,10 +145,16 @@ const RANK_ICONS: Record<ExpertRole, React.ElementType> = {
 /* ─── Utilities ────────────────────────────────────────────── */
 
 function computeExpertStats(profile: ExpertProfile, guildReputation?: number): ExpertStats {
+  const approvals = profile.approvalCount ?? 0;
+  const rejections = profile.rejectionCount ?? 0;
+  const total = approvals + rejections;
+  const consensusRate =
+    total > 0 ? Math.round((Math.max(approvals, rejections) / total) * 100) : null;
+
   return {
     reputation: guildReputation ?? profile.reputation ?? 0,
-    reviewCount: (profile.approvalCount ?? 0) + (profile.rejectionCount ?? 0),
-    consensusRate: null,
+    reviewCount: total,
+    consensusRate,
     endorsementCount: profile.endorsementCount ?? 0,
   };
 }
@@ -235,7 +241,7 @@ function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats
             </p>
             <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
               {[
-                "3-month term (1 quarter)",
+                "6-month term, re-electable via governance vote",
                 "Can be re-elected for a second consecutive term",
                 "Must step down after 2 consecutive terms",
                 "Eligible to run again after sitting out one term",

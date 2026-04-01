@@ -30,6 +30,7 @@ import { Alert } from "./ui/alert";
 import { getPersonAvatar } from "@/lib/avatars";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { GuildCard } from "./GuildCard";
+import { getRankColors } from "@/config/colors";
 import {
   getActivityIconComponent,
   getActivityColorClasses,
@@ -501,10 +502,16 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                 Reputation Score
               </div>
               <ReputationRing score={profile!.reputation} className="mb-4" />
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-bold uppercase tracking-[1.5px] text-primary animate-rank-badge-glow">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                Master
-              </div>
+              {(() => {
+                const rank = profile?.guilds?.[0]?.expertRole || "recruit";
+                const rankColors = getRankColors(rank);
+                return (
+                  <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-[1.5px] animate-rank-badge-glow ${rankColors.badge}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${rankColors.dot}`} />
+                    <span className="capitalize">{rank}</span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* ── Earnings Card (right, row 2) ── */}
