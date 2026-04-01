@@ -17,7 +17,8 @@ import {
   Star,
   ArrowLeft,
 } from "lucide-react";
-import { applicationsApi, blockchainApi, companyApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import { applicationsApi, blockchainApi, companyApi, expertApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import type { EndorsementStats, EndorsementInfo } from "@/types";
 import { getPersonAvatar } from "@/lib/avatars";
 import { STATUS_COLORS } from "@/config/colors";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
@@ -80,20 +81,25 @@ export function CandidateDetailPanel({
     { skip: activeTab !== "history" },
   );
 
-  // Endorsement stats shape from blockchain API
-  interface BidStats { totalBids: number; topBidsCount: number; totalStaked: string }
-  interface BidInfo { expert: string; amount: string; rank: number; isActive: boolean }
-
-  const { data: endorsementStats } = useFetch<BidStats>(
-    () => blockchainApi.getEndorsementStats(application.jobId, application.candidateId) as Promise<BidStats>,
+  const { data: endorsementStats } = useFetch<EndorsementStats>(
+    () => blockchainApi.getEndorsementStats(application.jobId, application.candidateId),
   );
 
-  const { data: rawEndorsements } = useFetch<BidInfo[]>(
-    () => blockchainApi.getTopEndorsements(application.jobId, application.candidateId) as Promise<BidInfo[]>,
+  const { data: rawEndorsements } = useFetch<EndorsementInfo[]>(
+    () => blockchainApi.getTopEndorsements(application.jobId, application.candidateId),
   );
 
-  const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-  const endorsements = rawEndorsements?.filter((e) => e.isActive && e.expert !== ZERO_ADDRESS) ?? [];
+  const endorsements = rawEndorsements ?? [];
+
+  // Resolve expert names for endorser wallet addresses (capped at 10)
+  const endorserWallets = endorsements.slice(0, 10).map((e) => e.expertAddress);
+  const { data: endorserProfiles } = useFetch(
+    () =>
+      Promise.all(
+        endorserWallets.map((w) => expertApi.getProfile(w).catch(() => null)),
+      ),
+    { skip: endorserWallets.length === 0 },
+  );
 
   const handleStatusAdvance = async (newStatus: ApplicationStatus, note?: string) => {
     await onStatusChange(application.id, newStatus, note);
@@ -361,32 +367,36 @@ export function CandidateDetailPanel({
                     <p className="text-sm font-semibold text-foreground">Expert Endorsements</p>
                   </div>
                   <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                    {endorsementStats?.totalBids ?? endorsements.length}
+                    {endorsementStats?.totalEndorsements ?? endorsements.length}
                   </span>
                 </div>
                 <div className="p-4 space-y-2">
-                  {endorsements.map((endorsement) => (
-                    <button
-                      key={endorsement.expert}
-                      onClick={() => router.push(`/experts/${endorsement.expert}`)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all text-left group"
-                    >
-                      <img
-                        src={getPersonAvatar(endorsement.expert)}
-                        alt=""
-                        className="w-8 h-8 rounded-full flex-shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                          {truncateAddress(endorsement.expert)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Staked {endorsement.amount} VETD
-                        </p>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0" />
-                    </button>
-                  ))}
+                  {endorsements.map((endorsement, index) => {
+                    const resolvedProfile = endorserProfiles?.[index];
+                    const displayName = resolvedProfile?.fullName || endorsement.expertName || truncateAddress(endorsement.expertAddress);
+                    return (
+                      <button
+                        key={endorsement.expertAddress}
+                        onClick={() => router.push(`/experts/${endorsement.expertAddress}`)}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all text-left group"
+                      >
+                        <img
+                          src={getPersonAvatar(resolvedProfile?.fullName ?? endorsement.expertName ?? endorsement.expertAddress)}
+                          alt=""
+                          className="w-8 h-8 rounded-full flex-shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                            {displayName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Staked {endorsement.amount} VETD
+                          </p>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary transition-colors flex-shrink-0" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

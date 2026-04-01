@@ -8,6 +8,8 @@ import {
   Link2,
   Pencil,
   ExternalLink,
+  X,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { candidateApi } from "@/lib/api";
@@ -164,6 +166,7 @@ export default function CandidateProfilePage() {
         experienceLevel: profile.experienceLevel,
         headline: profile.headline,
         bio: profile.bio || "",
+        skills: profile.skills || [],
         socialLinks: filledLinks,
       }),
       {
@@ -257,6 +260,59 @@ export default function CandidateProfilePage() {
             isEditing={isEditing}
             onProfileChange={setProfile}
           />
+
+          {/* Skills */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Tag className="w-4 h-4 text-muted-foreground" />
+                Skills
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-wrap gap-2">
+                {(profile.skills || []).map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted text-sm text-foreground border border-border"
+                  >
+                    {skill}
+                    {isEditing && (
+                      <button
+                        onClick={() =>
+                          setProfile({ ...profile, skills: (profile.skills || []).filter((s) => s !== skill) })
+                        }
+                        className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label={`Remove ${skill}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+                {!isEditing && (profile.skills || []).length === 0 && (
+                  <p className="text-sm text-muted-foreground">No skills added yet</p>
+                )}
+              </div>
+              {isEditing && (
+                <input
+                  type="text"
+                  placeholder="Add skill and press Enter..."
+                  className="mt-3 px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground w-56"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                      e.preventDefault();
+                      const newSkill = e.currentTarget.value.trim();
+                      if (!(profile.skills || []).includes(newSkill)) {
+                        setProfile({ ...profile, skills: [...(profile.skills || []), newSkill] });
+                      }
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              )}
+            </div>
+          </div>
 
           {/* Social Links */}
           <div className="bg-card rounded-xl border border-border overflow-hidden">

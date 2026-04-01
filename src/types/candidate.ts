@@ -15,6 +15,7 @@ export interface CandidateProfile {
   linkedIn?: string;
   github?: string;
   socialLinks?: SocialLink[];
+  skills?: string[];
   experienceLevel?: string;
   headline?: string;
   bio?: string;

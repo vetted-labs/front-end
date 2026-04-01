@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getPersonAvatar } from '@/lib/avatars';
 import Link from 'next/link';
-import { FileText, Linkedin, Github, ExternalLink, MapPin, Briefcase, TrendingUp } from 'lucide-react';
+import { FileText, Linkedin, Github, ExternalLink, Briefcase, TrendingUp } from 'lucide-react';
 import { getAssetUrl } from '@/lib/api';
 
 interface CandidateProfileViewProps {
@@ -17,6 +17,7 @@ interface CandidateProfileViewProps {
     experienceLevel?: string;
     linkedIn?: string;
     github?: string;
+    socialLinks?: { platform: string; url: string; label?: string }[];
     resumeUrl?: string;
     applicationCount?: number;
     endorsementCount?: number;
@@ -134,19 +135,39 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            {profile.linkedIn && (
-              <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                <Linkedin className="w-4 h-4 mr-2" />
-                LinkedIn
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
-            )}
-            {profile.github && (
-              <a href={profile.github} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                <Github className="w-4 h-4 mr-2" />
-                GitHub
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
+            {/* Render socialLinks array when available */}
+            {profile.socialLinks?.length ? (
+              profile.socialLinks.map((link) => (
+                <a
+                  key={link.platform}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                >
+                  <ExternalLink className="w-3 h-3 mr-2" />
+                  {link.label || link.platform}
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              ))
+            ) : (
+              // Legacy fallback when socialLinks is absent
+              <>
+                {profile.linkedIn && (
+                  <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                    <Linkedin className="w-4 h-4 mr-2" />
+                    LinkedIn
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                )}
+                {profile.github && (
+                  <a href={profile.github} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                )}
+              </>
             )}
             {profile.resumeUrl && (
               <a href={getAssetUrl(profile.resumeUrl)} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
@@ -157,7 +178,7 @@ export function CandidateProfileView({ profile, isOwner }: CandidateProfileViewP
             )}
           </div>
 
-          {!profile.linkedIn && !profile.github && !profile.resumeUrl && (
+          {!profile.socialLinks?.length && !profile.linkedIn && !profile.github && !profile.resumeUrl && (
             <p className="text-sm text-muted-foreground">
               No links or resume available yet.
             </p>

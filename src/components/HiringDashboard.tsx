@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -47,7 +48,10 @@ export function HiringDashboard() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterGuild, setFilterGuild] = useState<string>("all");
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("newest");
   const [confirmAction, setConfirmAction] = useState<{ action: () => void; message: string } | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+  useClickOutside(actionMenuRef, () => setShowActionMenu(null));
   const { execute } = useApi();
 
   const { isLoading, error, data, refetch } = useFetch(
@@ -97,9 +101,13 @@ export function HiringDashboard() {
   }, [jobPostings]);
 
   const filteredJobs = useMemo(() => {
-    if (filterGuild === "all") return jobPostings;
-    return jobPostings.filter(j => j.guild === filterGuild);
-  }, [jobPostings, filterGuild]);
+    const base = filterGuild === "all" ? jobPostings : jobPostings.filter(j => j.guild === filterGuild);
+    const sorted = [...base];
+    if (sortBy === "newest") sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (sortBy === "applicants") sorted.sort((a, b) => (b.applicants || 0) - (a.applicants || 0));
+    if (sortBy === "views") sorted.sort((a, b) => (b.views || 0) - (a.views || 0));
+    return sorted;
+  }, [jobPostings, filterGuild, sortBy]);
 
   const {
     paginatedItems: paginatedJobs,
@@ -191,6 +199,15 @@ export function HiringDashboard() {
                   onChange={setFilterGuild}
                   size="sm"
                 />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-card border border-border focus:ring-2 focus:ring-primary focus:border-primary text-foreground text-sm"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="applicants">Most Applicants</option>
+                  <option value="views">Most Views</option>
+                </select>
                 <Button
                   onClick={() => router.push("/jobs/new")}
                   icon={<Plus className="w-5 h-5" />}
@@ -201,7 +218,7 @@ export function HiringDashboard() {
             </div>
           </div>
 
-          <div className="divide-y divide-border/30">
+          <div ref={actionMenuRef} className="divide-y divide-border/30">
             {filteredJobs.length > 0 ? (
               paginatedJobs.map((job) => (
                 <div

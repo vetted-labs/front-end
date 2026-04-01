@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Filter,
@@ -37,6 +37,8 @@ export default function JobsListing() {
   const isCandidate = auth.isAuthenticated && auth.userType === "candidate";
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
+  const [sortBy, setSortBy] = useState("newest");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [locationQuery, setLocationQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const debouncedLocation = useDebounce(locationQuery, 300);
@@ -143,13 +145,20 @@ export default function JobsListing() {
       );
     }
 
-    return filtered;
+    const sorted = [...filtered];
+    if (sortBy === "newest") {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortBy === "salary_desc") {
+      sorted.sort((a, b) => (b.salary?.max || b.salary?.min || 0) - (a.salary?.max || a.salary?.min || 0));
+    }
+    return sorted;
   }, [
     debouncedSearch,
     debouncedLocation,
     selectedGuilds,
     selectedJobTypes,
     selectedLocationTypes,
+    sortBy,
     jobs,
   ]);
 
@@ -173,6 +182,24 @@ export default function JobsListing() {
     selectedLocationTypes,
     resetPage,
   ]);
+
+  // Wire "/" keyboard shortcut to focus the search input
+  // eslint-disable-next-line no-restricted-syntax -- DOM event subscription for keyboard shortcut that depends on a static ref
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (
+        e.key === "/" &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(
+          (document.activeElement as HTMLElement)?.tagName || "",
+        )
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const toggleGuild = (guild: string) => {
     setSelectedGuilds((prev) =>
@@ -245,6 +272,7 @@ export default function JobsListing() {
           <div className="relative">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50 pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search by title, skill, or company..."
               value={searchQuery}
@@ -366,6 +394,14 @@ export default function JobsListing() {
             </span>{" "}
             jobs
           </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="px-3 py-1.5 rounded-lg bg-card border border-border text-sm text-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary/40 outline-none"
+          >
+            <option value="newest">Newest</option>
+            <option value="salary_desc">Salary: High to Low</option>
+          </select>
         </div>
 
         {/* Jobs Grid */}
