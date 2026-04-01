@@ -102,6 +102,7 @@ export function ProfessionalBackgroundSection({
           onChange={(e) => onChange("yearsOfExperience", e.target.value)}
           placeholder="10"
           min="1"
+          max="50"
           description="Total years of professional experience in your field"
           required
         />

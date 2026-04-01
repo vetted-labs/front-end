@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { LeaderboardEntryV2 } from "@/types";
 import { truncateAddress } from "@/lib/utils";
 import { PODIUM_COLORS, STATUS_COLORS } from "@/config/colors";
@@ -74,9 +75,10 @@ interface PodiumCardProps {
   rank: 1 | 2 | 3;
   activeTab: string;
   isCurrentUser: boolean;
+  onClick: () => void;
 }
 
-function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) {
+function PodiumCard({ entry, rank, activeTab, isCurrentUser, onClick }: PodiumCardProps) {
   const colors = PODIUM_COLORS[rank];
   const metricKey = activeTab === "overall" ? "reputation" : activeTab;
   const metric = METRIC_CONFIG[metricKey] ?? METRIC_CONFIG.reputation;
@@ -87,7 +89,8 @@ function PodiumCard({ entry, rank, activeTab, isCurrentUser }: PodiumCardProps) 
 
   return (
     <div
-      className={`relative bg-card rounded-xl border p-6 text-center ${
+      onClick={onClick}
+      className={`relative bg-card rounded-xl border p-6 text-center cursor-pointer transition-colors hover:bg-muted/30 ${
         rank === 1 ? "border-primary" : "border-border"
       }`}
     >
@@ -150,6 +153,7 @@ export function LeaderboardPodium({
   activeTab,
   currentWalletAddress,
 }: LeaderboardPodiumProps) {
+  const router = useRouter();
   const top3 = entries.slice(0, 3);
 
   if (top3.length === 0) return null;
@@ -167,6 +171,7 @@ export function LeaderboardPodium({
             !!currentWalletAddress &&
             second.walletAddress.toLowerCase() === currentWalletAddress.toLowerCase()
           }
+          onClick={() => router.push(`/experts/${second.walletAddress}`)}
         />
       )}
       {first && (
@@ -178,6 +183,7 @@ export function LeaderboardPodium({
             !!currentWalletAddress &&
             first.walletAddress.toLowerCase() === currentWalletAddress.toLowerCase()
           }
+          onClick={() => router.push(`/experts/${first.walletAddress}`)}
         />
       )}
       {third && (
@@ -189,6 +195,7 @@ export function LeaderboardPodium({
             !!currentWalletAddress &&
             third.walletAddress.toLowerCase() === currentWalletAddress.toLowerCase()
           }
+          onClick={() => router.push(`/experts/${third.walletAddress}`)}
         />
       )}
     </div>

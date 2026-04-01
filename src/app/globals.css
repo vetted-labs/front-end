@@ -313,6 +313,11 @@ body {
   mix-blend-mode: screen;
 }
 
+/* Sidebar: solid background when a modal/dialog is open so it doesn't look washed out */
+body:has([role="dialog"]) .sidebar-desktop {
+    background-color: hsl(var(--background)) !important;
+}
+
 /* Main content area gradient background — light mode */
 .content-gradient {
     background:

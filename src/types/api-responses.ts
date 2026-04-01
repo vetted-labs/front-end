@@ -264,6 +264,7 @@ export interface EndorsementApplication {
   linkedin?: string;
   github?: string;
   resume_url?: string;
+  endorsement_count?: number;
 }
 
 /** Enriched endorsement as returned by getExpertEndorsements — includes nested job/candidate/guild data. */
@@ -318,6 +319,7 @@ export interface ActiveEndorsement {
     coverLetter?: string;
     screeningAnswers?: Record<string, string>;
   };
+  endorsementCount?: number;
   blockchainData?: {
     rank?: number;
     bidAmount?: string;

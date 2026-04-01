@@ -20,7 +20,7 @@ function ShellContent({ config, children }: AppShellProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Full-page pattern background — behind everything */}
+      {/* Full-page pattern background — behind sidebar only, content has its own bg */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />
       </div>
@@ -45,7 +45,7 @@ function ShellContent({ config, children }: AppShellProps) {
             )}
           </div>
         )}
-        <main className="relative flex-1 overflow-auto content-gradient min-h-0">
+        <main className="relative flex-1 overflow-auto min-h-0 content-gradient">
           <div className="relative z-10">
             {children}
           </div>

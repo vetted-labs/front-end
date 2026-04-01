@@ -889,6 +889,8 @@ export function useExpertApplicationFlow(
           let msg = entry.message || "";
           msg = msg.replace(/Too small: expected string to have >=(\d+) characters?/i, (_m: string, n: string) => `Must be at least ${n} characters`);
           msg = msg.replace(/Too big: expected string to have <=(\d+) characters?/i, (_m: string, n: string) => `Must not exceed ${n} characters`);
+          msg = msg.replace(/Too small: expected number to be >=(\d+)/i, (_m: string, n: string) => `Must be at least ${n}`);
+          msg = msg.replace(/Too big: expected number to be <=(\d+)/i, (_m: string, n: string) => `Must not exceed ${n}`);
           msg = msg.replace(/Required/i, "This field is required");
           return fieldLabel ? `${fieldLabel}: ${msg}` : msg;
         });

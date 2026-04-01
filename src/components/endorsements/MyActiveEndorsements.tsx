@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPersonAvatar } from "@/lib/avatars";
 
-import { Award } from "lucide-react";
+import { Award, Users } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
 
@@ -33,13 +33,11 @@ function EndorsementCard({
   endorsement,
   initials,
   bidAmount,
-  rank,
   onClick,
 }: {
   endorsement: ActiveEndorsement;
   initials: string;
   bidAmount: number;
-  rank: number | undefined;
   onClick: () => void;
 }) {
   const status = endorsement.application?.status ?? "pending";
@@ -88,22 +86,14 @@ function EndorsementCard({
           {/* Divider */}
           <div className="h-px bg-muted/30" />
 
-          {/* Bid + Rank */}
+          {/* Bid + Endorsement count */}
           <div className="flex items-center justify-between">
             <span className="font-mono font-bold text-base text-primary">
               {bidAmount.toFixed(0)} VETD
             </span>
-            <span className="font-mono text-xs text-muted-foreground flex items-center gap-2">
-              {rank !== undefined && rank > 0 ? (
-                <>
-                  Rank
-                  <span className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-[7px] bg-primary/10 text-primary text-xs font-bold">
-                    #{rank}
-                  </span>
-                </>
-              ) : (
-                <span className="italic text-muted-foreground/50">Blind period</span>
-              )}
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              {endorsement.endorsementCount ?? 0} endorsed
             </span>
           </div>
         </div>
@@ -230,7 +220,6 @@ export function MyActiveEndorsements({
           {userEndorsements.map((endorsement) => {
             const initials = endorsement.candidate?.name ? getInitials(endorsement.candidate.name) : '??';
             const bidAmount = parseFloat(endorsement.stakeAmount || '0');
-            const rank = endorsement.blockchainData?.rank;
 
             return (
               <EndorsementCard
@@ -238,7 +227,6 @@ export function MyActiveEndorsements({
                 endorsement={endorsement}
                 initials={initials}
                 bidAmount={bidAmount}
-                rank={rank}
                 onClick={() => handleEndorsementClick(endorsement)}
               />
             );

@@ -132,7 +132,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden bg-transparent md:block overflow-hidden",
+          "fixed inset-y-0 left-0 z-40 hidden bg-transparent md:block overflow-hidden sidebar-desktop",
           hasMounted && "transition-[width] duration-300",
           isCollapsed ? "w-16" : "w-52"
         )}

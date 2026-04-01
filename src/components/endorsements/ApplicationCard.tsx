@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, Eye } from 'lucide-react';
+import { Clock, Eye, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
@@ -197,7 +197,13 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
             </>
           )}
         </span>
-        <span className="text-xs text-muted-foreground/40">
+        <span className="inline-flex items-center gap-3 text-xs text-muted-foreground/40">
+          {(application.endorsement_count ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              <Users className="w-3 h-3" />
+              {application.endorsement_count}
+            </span>
+          )}
           Applied {formatDistanceToNow(new Date(application.applied_at), { addSuffix: true })}
         </span>
       </div>
