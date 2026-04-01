@@ -25,9 +25,17 @@ import { logger } from "@/lib/logger";
 import {
   GUILD_RANK_ORDER,
   REPUTATION_DECAY_WARNING_DAYS,
+  REPUTATION_DECAY_CYCLE_DAYS,
   computeVoteWeight,
 } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, ExpertGuild } from "@/types";
+
+function getDaysUntilDecay(lastActivityTimestamp: number | null): number {
+  if (lastActivityTimestamp === null) return 0;
+  const decayDate = lastActivityTimestamp + REPUTATION_DECAY_CYCLE_DAYS * 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.ceil((decayDate - Date.now()) / (24 * 60 * 60 * 1000)));
+}
 
 export function EnhancedExpertDashboard() {
   const router = useRouter();
@@ -226,18 +234,21 @@ export function EnhancedExpertDashboard() {
   };
 
   // Decay detection (same logic as InactivityWarningBanner)
-  const isDecayActive = (() => {
-    if (!profile?.recentActivity?.length) return true;
+  const mostRecentActivityMs = (() => {
+    if (!profile?.recentActivity?.length) return null;
     const timestamps = profile.recentActivity
       .map((a) => new Date(a.timestamp).getTime())
       .filter((t) => !isNaN(t));
-    if (timestamps.length === 0) return true;
-    const mostRecent = Math.max(...timestamps);
-    const daysSince = Math.floor(
-      (Date.now() - mostRecent) / (1000 * 60 * 60 * 24)
-    );
+    return timestamps.length > 0 ? Math.max(...timestamps) : null;
+  })();
+
+  const isDecayActive = (() => {
+    if (mostRecentActivityMs === null) return true;
+    const daysSince = Math.floor((Date.now() - mostRecentActivityMs) / (1000 * 60 * 60 * 24));
     return daysSince >= REPUTATION_DECAY_WARNING_DAYS;
   })();
+
+  const daysUntilDecay = profile ? getDaysUntilDecay(mostRecentActivityMs) : null;
 
   // Consensus rate for Reviews stat
   const consensusRate =
@@ -316,15 +327,22 @@ export function EnhancedExpertDashboard() {
         }
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard
-            label="Reputation"
-            value={profile?.reputation ?? 0}
-            warningDot={isDecayActive}
-            subtext={
-              isDecayActive ? "\u25BC -10/cycle \u00B7 decay active" : undefined
-            }
-            subtextVariant={isDecayActive ? "warning" : "default"}
-          />
+          <div className="flex flex-col gap-1">
+            <StatCard
+              label="Reputation"
+              value={profile?.reputation ?? 0}
+              warningDot={isDecayActive}
+              subtext={
+                isDecayActive ? "\u25BC -10/cycle \u00B7 decay active" : undefined
+              }
+              subtextVariant={isDecayActive ? "warning" : "default"}
+            />
+            {daysUntilDecay !== null && daysUntilDecay < 7 && (
+              <span className={`text-xs px-1 ${STATUS_COLORS.warning.text}`}>
+                Decay in {daysUntilDecay}d
+              </span>
+            )}
+          </div>
           <StatCard
             label="Earnings"
             value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}

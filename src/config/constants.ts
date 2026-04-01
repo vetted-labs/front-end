@@ -182,7 +182,8 @@ export const GOVERNANCE_THRESHOLDS: Record<string, { threshold: number; label: s
   parameter_change:      { threshold: 51, label: "Standard (51%)",  quorumPercent: 10 },
   protocol_upgrade:      { threshold: 67, label: "Major (67%)",     quorumPercent: 15 },
   treasury_spend:        { threshold: 67, label: "Major (67%)",     quorumPercent: 15 },
-  emergency:             { threshold: 75, label: "Emergency (75%)", quorumPercent: 5 },
+  emergency:             { threshold: 75,  label: "Emergency (75%)",                   quorumPercent: 5 },
+  emergency_unilateral:  { threshold: 100, label: "Emergency Unilateral (Multisig)",   quorumPercent: 0 },
 };
 
 export const DEFAULT_GOVERNANCE_THRESHOLD = { threshold: 51, label: "Standard (51%)", quorumPercent: 10 };

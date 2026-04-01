@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { governanceApi, blockchainApi } from "@/lib/api";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Loader2,
@@ -70,6 +73,9 @@ export function GovernanceProposalDetailPage() {
   const { address } = useAccount();
   const proposalId = params.proposalId as string;
 
+  const [showVoteConfirm, setShowVoteConfirm] = useState(false);
+  const [pendingVote, setPendingVote] = useState<{ type: "for" | "against" | "abstain"; reason: string } | null>(null);
+
   const {
     data: proposal,
     isLoading,
@@ -97,7 +103,7 @@ export function GovernanceProposalDetailPage() {
   const voteWeight = computeVoteWeight(reputation, isGuildMaster);
   const thresholdConfig = GOVERNANCE_THRESHOLDS[proposal?.proposal_type ?? ""] ?? DEFAULT_GOVERNANCE_THRESHOLD;
 
-  const handleVote = async (vote: "for" | "against" | "abstain", reason: string) => {
+  const submitVoteConfirmed = async (vote: "for" | "against" | "abstain", reason: string) => {
     if (!address) {
       toast.error("Please connect your wallet");
       return;
@@ -112,6 +118,11 @@ export function GovernanceProposalDetailPage() {
         onError: (msg) => toast.error(msg || "Failed to submit vote"),
       },
     );
+  };
+
+  const handleVote = async (vote: "for" | "against" | "abstain", reason: string) => {
+    setPendingVote({ type: vote, reason });
+    setShowVoteConfirm(true);
   };
 
   /* ─── Loading ─── */
@@ -487,6 +498,39 @@ export function GovernanceProposalDetailPage() {
           </div>
         </div>
       )}
+      {/* ─── Vote Confirmation Modal ─── */}
+      <Modal
+        isOpen={showVoteConfirm}
+        onClose={() => setShowVoteConfirm(false)}
+        title="Confirm Vote"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            You are voting{" "}
+            <strong className="text-foreground capitalize">{pendingVote?.type}</strong>{" "}
+            on this proposal. This action cannot be undone.
+          </p>
+          {pendingVote?.reason && (
+            <div className="rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-muted-foreground italic">
+              &ldquo;{pendingVote.reason}&rdquo;
+            </div>
+          )}
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setShowVoteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (pendingVote) submitVoteConfirmed(pendingVote.type, pendingVote.reason);
+                setShowVoteConfirm(false);
+              }}
+            >
+              Confirm Vote
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

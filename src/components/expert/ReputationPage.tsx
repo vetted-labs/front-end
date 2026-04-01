@@ -10,6 +10,8 @@ import { DataSection } from "@/lib/motion";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
+import { REPUTATION_DECAY_CYCLE_DAYS } from "@/config/constants";
+import { STATUS_COLORS } from "@/config/colors";
 import type {
   ReputationTimelineEntry,
   ReputationTimelineResponse,
@@ -23,6 +25,17 @@ import { RewardTierTower } from "./RewardTierTower";
 import { ReputationScoreChart } from "./ReputationScoreChart";
 import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
+
+function getDaysUntilDecay(recentActivity: Array<{ timestamp: string }> | undefined): number | null {
+  if (!recentActivity?.length) return 0;
+  const timestamps = recentActivity
+    .map((a) => new Date(a.timestamp).getTime())
+    .filter((t) => !isNaN(t));
+  if (timestamps.length === 0) return 0;
+  const mostRecent = Math.max(...timestamps);
+  const decayDate = mostRecent + REPUTATION_DECAY_CYCLE_DAYS * 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.ceil((decayDate - Date.now()) / (24 * 60 * 60 * 1000)));
+}
 
 export default function ReputationPage() {
   const { address: wagmiAddress } = useExpertAccount();
@@ -91,6 +104,7 @@ export default function ReputationPage() {
   }
 
   const reputation = profile?.reputation ?? 0;
+  const daysUntilDecay = getDaysUntilDecay(profile?.recentActivity);
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -114,13 +128,20 @@ export default function ReputationPage() {
           </div>
         }
       >
-        <ReputationScoreHero
-          reputation={reputation}
-          totalGains={totalGains}
-          alignedCount={alignedCount}
-          deviationCount={deviationCount}
-          reviewCount={profile?.reviewCount ?? 0}
-        />
+        <>
+          <ReputationScoreHero
+            reputation={reputation}
+            totalGains={totalGains}
+            alignedCount={alignedCount}
+            deviationCount={deviationCount}
+            reviewCount={profile?.reviewCount ?? 0}
+          />
+          <div className={`mt-2 text-sm ${daysUntilDecay !== null && daysUntilDecay === 0 ? STATUS_COLORS.warning.text : "text-muted-foreground"}`}>
+            {daysUntilDecay !== null && daysUntilDecay > 0
+              ? `Next decay check in ${daysUntilDecay} days`
+              : "Inactivity decay may apply — review or vote to reset the timer"}
+          </div>
+        </>
       </DataSection>
 
       <div className="space-y-14 mt-14">
