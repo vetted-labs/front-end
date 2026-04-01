@@ -8,9 +8,11 @@ interface ApplicationsGridProps {
   loading: boolean;
   onSelectApplication: (app: EndorsementApplication) => void;
   onQuickEndorse?: (app: EndorsementApplication) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
-export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse }: ApplicationsGridProps) {
+export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription }: ApplicationsGridProps) {
   if (loading) {
     return null;
   }
@@ -21,9 +23,9 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
           <Users className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-xl font-bold mb-2">No Applications Available</h3>
+        <h3 className="text-xl font-bold mb-2">{emptyTitle ?? "No Applications Available"}</h3>
         <p className="text-muted-foreground">
-          There are currently no applications in this guild that need endorsements.
+          {emptyDescription ?? "There are currently no applications in this guild that need endorsements."}
         </p>
       </div>
     );

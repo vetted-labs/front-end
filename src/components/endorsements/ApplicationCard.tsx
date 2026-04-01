@@ -121,7 +121,21 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     : null;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)] h-full">
+    <div className={`group relative flex flex-col overflow-hidden rounded-xl border h-full ${
+      isExpired
+        ? 'border-border/50 bg-card dark:bg-muted/5'
+        : 'border-border bg-card dark:bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)]'
+    }`}>
+      {/* Closed badge */}
+      {isExpired && (
+        <div className="absolute top-3 right-3 z-10">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted border border-border text-muted-foreground">
+            <Clock className="w-2.5 h-2.5" />
+            Closed
+          </span>
+        </div>
+      )}
+
       {/* Top section: Avatar with match ring + candidate info */}
       <div className="flex items-start gap-4 px-5 pt-5">
         <MatchScoreAvatar
@@ -220,16 +234,23 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
         >
           View Details
         </Button>
-        <Button
-          className="flex-1 h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
-          disabled={isExpired || !onQuickEndorse}
-          onClick={(e) => {
-            e.stopPropagation();
-            onQuickEndorse?.(application);
-          }}
-        >
-          Endorse
-        </Button>
+        {isExpired ? (
+          <div className="flex-1 h-10 rounded-lg bg-muted/20 border border-border/50 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 font-medium">
+            <Clock className="w-3 h-3" />
+            Bidding Closed
+          </div>
+        ) : (
+          <Button
+            className="flex-1 h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
+            disabled={!onQuickEndorse}
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickEndorse?.(application);
+            }}
+          >
+            Endorse
+          </Button>
+        )}
       </div>
     </div>
   );

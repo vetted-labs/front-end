@@ -84,7 +84,7 @@ export function EndorsementHeader({
 
       {/* Sticky header bar */}
       {address && (
-        <div className="sticky top-0 z-30 bg-background/88 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+        <div className="sticky top-0 z-20 bg-background/88 backdrop-blur-sm border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
           <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
             {/* Left: Title + LIVE badge + Guild selector */}
             <div className="flex items-center gap-4 flex-wrap">

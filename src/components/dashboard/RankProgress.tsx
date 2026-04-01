@@ -1,134 +1,123 @@
 "use client";
 
-import { GUILD_RANK_CRITERIA, GUILD_RANK_ORDER } from "@/config/constants";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import type { ExpertGuild } from "@/types";
 
-interface RankProgressProps {
+interface StakeDistributionProps {
   guilds: ExpertGuild[];
+  guildStakes: Record<string, string>;
+  totalStaked: number;
 }
 
-const RANK_LABELS: Record<string, string> = {
-  recruit: "Recruit",
-  apprentice: "Apprentice",
-  craftsman: "Craftsman",
-  officer: "Officer",
-  master: "Guild Master",
-};
-
-function computeProgress(guild: ExpertGuild): number {
-  const currentIndex = GUILD_RANK_ORDER.indexOf(guild.expertRole);
-  if (currentIndex === -1) return 0;
-  // Max rank = 100%
-  if (currentIndex >= GUILD_RANK_ORDER.length - 1) return 1;
-
-  const nextRank = GUILD_RANK_ORDER[currentIndex + 1];
-  const criteria = GUILD_RANK_CRITERIA[nextRank];
-  if (!criteria) return 1;
-
-  const checks: boolean[] = [];
-
-  // Reviews
-  if (criteria.minReviews > 0) {
-    const reviewCount =
-      (guild.pendingProposals ?? 0) +
-      (guild.ongoingProposals ?? 0) +
-      (guild.closedProposals ?? 0);
-    checks.push(reviewCount >= criteria.minReviews);
-  }
-
-  // Consensus — not available per-guild on ExpertGuild type
-  if (criteria.minConsensus > 0) {
-    checks.push(false);
-  }
-
-  // Endorsements — not available on ExpertGuild type
-  if (criteria.minEndorsements > 0) {
-    checks.push(false);
-  }
-
-  // Election
-  if (criteria.requiresElection) {
-    checks.push(false);
-  }
-
-  if (checks.length === 0) return 1;
-  return checks.filter(Boolean).length / checks.length;
+/**
+ * Generates an orange gradient palette from full saturation to light tint.
+ * Each segment gets a progressively lighter shade of the brand orange.
+ */
+function getBarColor(index: number, total: number): string {
+  if (total <= 1) return "hsl(24 100% 51%)";
+  // Lerp lightness from 51% (vivid) to 85% (pale)
+  const lightness = 51 + (index / (total - 1)) * 34;
+  return `hsl(24 100% ${Math.round(lightness)}%)`;
 }
 
-function selectTopGuilds(guilds: ExpertGuild[]): ExpertGuild[] {
-  const maxRankIndex = GUILD_RANK_ORDER.length - 1;
+export function RankProgress({
+  guilds,
+  guildStakes,
+  totalStaked,
+}: StakeDistributionProps) {
+  const router = useRouter();
 
-  return [...guilds]
-    .sort((a, b) => {
-      const aIsMax =
-        GUILD_RANK_ORDER.indexOf(a.expertRole) >= maxRankIndex ? 1 : 0;
-      const bIsMax =
-        GUILD_RANK_ORDER.indexOf(b.expertRole) >= maxRankIndex ? 1 : 0;
+  const sortedGuilds = useMemo(() => {
+    return [...guilds]
+      .map((g) => ({
+        ...g,
+        stake: parseFloat(guildStakes[g.id] || "0"),
+      }))
+      .sort((a, b) => b.stake - a.stake);
+  }, [guilds, guildStakes]);
 
-      // Non-max-rank guilds first
-      if (aIsMax !== bIsMax) return aIsMax - bIsMax;
-
-      // Then by progress descending
-      const aProgress = computeProgress(a);
-      const bProgress = computeProgress(b);
-      if (aProgress !== bProgress) return bProgress - aProgress;
-
-      // Then by earnings descending
-      return (b.totalEarnings ?? 0) - (a.totalEarnings ?? 0);
-    })
-    .slice(0, 3);
-}
-
-export function RankProgress({ guilds }: RankProgressProps) {
-  const topGuilds = selectTopGuilds(guilds);
+  const maxStake = sortedGuilds[0]?.stake ?? 1;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 h-full">
-      <span className="text-sm font-bold text-foreground">
-        Rank Progress
-      </span>
+    <div className="bg-card border border-border rounded-xl p-5 h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-bold text-foreground">
+          Stake Distribution
+        </span>
+        <button
+          onClick={() => router.push("/expert/withdrawals")}
+          className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          Manage &rarr;
+        </button>
+      </div>
 
-      <div className="flex flex-col gap-4 mt-4">
-        {topGuilds.map((guild, index) => {
-          const progress = computeProgress(guild);
-          const isHighlighted = index === 0;
-          const isMaxRank =
-            GUILD_RANK_ORDER.indexOf(guild.expertRole) >=
-            GUILD_RANK_ORDER.length - 1;
+      {/* Hero total */}
+      <div className="text-center pb-4 mb-4 border-b border-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-1.5">
+          Total Staked
+        </p>
+        <p className="text-3xl font-display font-extrabold text-primary leading-none tabular-nums">
+          {Math.round(totalStaked).toLocaleString()}
+          <span className="text-sm font-semibold text-muted-foreground ml-1.5 font-sans">
+            VETD
+          </span>
+        </p>
+      </div>
+
+      {/* Stacked bar */}
+      {totalStaked > 0 && (
+        <div className="flex h-2 rounded-full overflow-hidden mb-4 bg-muted/30">
+          {sortedGuilds.map((g, i) => {
+            const pct = (g.stake / totalStaked) * 100;
+            if (pct < 0.5) return null;
+            return (
+              <div
+                key={g.id}
+                className="h-full transition-all duration-500"
+                style={{
+                  width: `${pct}%`,
+                  backgroundColor: getBarColor(i, sortedGuilds.length),
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {/* Per-guild list */}
+      <div className="flex flex-col gap-1.5 flex-1 overflow-y-auto max-h-[260px]">
+        {sortedGuilds.map((g, i) => {
+          const pct =
+            totalStaked > 0 ? Math.round((g.stake / totalStaked) * 100) : 0;
 
           return (
             <div
-              key={guild.id}
-              className={`p-3 rounded-lg ${
-                isHighlighted
-                  ? "bg-primary/[0.06] border border-primary/[0.12]"
-                  : "bg-muted/30 border border-border"
-              }`}
+              key={g.id}
+              className="flex items-center gap-2.5 py-1.5 group"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span
-                  className={`text-xs font-medium ${
-                    isHighlighted ? "text-primary" : "text-foreground"
-                  }`}
-                >
-                  {guild.name}
-                </span>
-                <span
-                  className={`text-xs uppercase tracking-wider font-medium ${
-                    isHighlighted ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {RANK_LABELS[guild.expertRole] ?? guild.expertRole}
-                </span>
-              </div>
-              <div className="w-full h-[3px] bg-muted/50 rounded-full">
-                <div
-                  className="h-[3px] rounded-full bg-primary transition-all duration-500"
-                  style={{
-                    width: `${Math.round((isMaxRank ? 1 : progress) * 100)}%`,
-                  }}
-                />
-              </div>
+              {/* Color dot */}
+              <div
+                className="w-2 h-2 rounded-[3px] shrink-0"
+                style={{ backgroundColor: getBarColor(i, sortedGuilds.length) }}
+              />
+
+              {/* Guild name */}
+              <span className="flex-1 text-xs font-medium text-foreground truncate">
+                {g.name}
+              </span>
+
+              {/* Amount */}
+              <span className="text-xs font-mono font-semibold text-primary tabular-nums">
+                {g.stake > 0 ? Math.round(g.stake).toLocaleString() : "0"}
+              </span>
+
+              {/* Percentage */}
+              <span className="text-[10px] text-muted-foreground tabular-nums min-w-[28px] text-right">
+                {pct}%
+              </span>
             </div>
           );
         })}

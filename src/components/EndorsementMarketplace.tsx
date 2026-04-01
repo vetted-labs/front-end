@@ -42,6 +42,13 @@ import { STATUS_COLORS } from "@/config/colors";
 import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 
+function isBiddingExpired(app: EndorsementApplication): boolean {
+  const deadline = app.bidding_deadline
+    ? new Date(app.bidding_deadline).getTime()
+    : new Date(app.applied_at).getTime() + 24 * 60 * 60 * 1000;
+  return Date.now() >= deadline;
+}
+
 interface EndorsementMarketplaceProps {
   guildId: string;
   guildName: string;
@@ -58,6 +65,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [applicationFilter, setApplicationFilter] = useState<'active' | 'closed'>('active');
 
   // Track whether we've already auto-opened the modal for initialApplicationId
   const hasAutoOpened = useRef(false);
@@ -116,6 +124,11 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
 
   // Filter endorsements for current guild
   const userEndorsements = allUserEndorsements.filter((e) => e.guild?.id === guildId);
+
+  // Split applications by bidding status for filter tabs
+  const activeApps = (applications ?? []).filter(app => !isBiddingExpired(app));
+  const closedApps = (applications ?? []).filter(app => isBiddingExpired(app));
+  const filteredApplications = applicationFilter === 'active' ? activeApps : closedApps;
 
   // eslint-disable-next-line no-restricted-syntax -- runtime deps: auto-open modal once applications finish loading with a matching applicationId
   useEffect(() => {
@@ -253,9 +266,11 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
                 Your Active Endorsements
               </h2>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              <SkeletonCard className="flex-none w-[340px]" />
-              <SkeletonCard className="flex-none w-[340px]" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard className="hidden lg:block" />
+              <SkeletonCard className="hidden xl:block" />
             </div>
           </div>
         }
@@ -271,25 +286,53 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         />
       </DataSection>
 
-      {/* Available Applications */}
+      {/* Applications */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <h2 className="font-display font-bold text-xl tracking-tight">
-            Available Applications
+            Applications
           </h2>
           {!loading && (
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-0.5 rounded-lg bg-muted/30 border border-border p-0.5">
+                <button
+                  onClick={() => setApplicationFilter('active')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    applicationFilter === 'active'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Active
+                  <span className="ml-1.5 font-mono text-[10px] opacity-60">{activeApps.length}</span>
+                </button>
+                <button
+                  onClick={() => setApplicationFilter('closed')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    applicationFilter === 'closed'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Closed
+                  <span className="ml-1.5 font-mono text-[10px] opacity-60">{closedApps.length}</span>
+                </button>
+              </div>
               <span className="font-mono text-xs text-muted-foreground">
-                <span className="text-muted-foreground font-medium">{applicationsTotalItems}</span> applications
+                {applicationsTotalItems} total
               </span>
             </div>
           )}
         </div>
         <ApplicationsGrid
-          applications={applications ?? []}
+          applications={filteredApplications}
           loading={loading}
           onSelectApplication={handleViewDetails}
           onQuickEndorse={meetsMinimumStake ? handleQuickEndorse : undefined}
+          emptyTitle={applicationFilter === 'active' ? 'No Active Applications' : 'No Closed Applications'}
+          emptyDescription={applicationFilter === 'active'
+            ? 'All applications on this page have closed bidding, or there are no applications yet.'
+            : 'There are no applications with closed bidding on this page.'}
         />
         {!loading && (
           <PaginationNav

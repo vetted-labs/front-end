@@ -45,10 +45,10 @@ function EndorsementCard({
 
   return (
     <div
-      className="flex-none w-[340px] scroll-snap-start cursor-pointer"
+      className="cursor-pointer"
       onClick={onClick}
     >
-      <div className="rounded-xl border border-border bg-background p-6 flex flex-col gap-4 h-full">
+      <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-3.5 h-full transition-all hover:border-primary/20 hover:shadow-sm">
           {/* Top: Avatar + info */}
           <div className="flex items-center gap-4">
             <Avatar className="w-14 h-14 shrink-0">
@@ -216,7 +216,7 @@ export function MyActiveEndorsements({
           )}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/[0.06]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {userEndorsements.map((endorsement) => {
             const initials = endorsement.candidate?.name ? getInitials(endorsement.candidate.name) : '??';
             const bidAmount = parseFloat(endorsement.stakeAmount || '0');

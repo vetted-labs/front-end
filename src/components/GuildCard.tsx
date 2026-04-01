@@ -36,8 +36,6 @@ export function GuildCard({
 
   // ── Membership variant (profile "Guild Positions" section) ──
   if (variant === "membership") {
-    const totalProposals =
-      (guild.pendingProposals || 0) + (guild.ongoingProposals || 0) + (guild.closedProposals || 0);
     const formatDate = (dateString: string) => formatDateMonthYear(dateString);
 
     return (
@@ -84,8 +82,8 @@ export function GuildCard({
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Earned</div>
             </div>
             <div className="text-center py-2.5 px-1.5 rounded-[11px] bg-muted/30 border border-border transition-colors group-hover:border-border">
-              <div className="font-mono text-base font-medium text-foreground mb-0.5">{totalProposals}</div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Proposals</div>
+              <div className="font-mono text-base font-medium text-foreground mb-0.5">{(guild.ongoingProposals || 0) + (guild.closedProposals || 0)}</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Reviews</div>
             </div>
           </div>
 

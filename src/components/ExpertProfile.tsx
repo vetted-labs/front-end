@@ -13,7 +13,6 @@ import {
   Copy,
   Check,
   ExternalLink,
-  FileText,
   TrendingUp,
   ThumbsUp,
   ArrowLeft,
@@ -29,6 +28,7 @@ import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from 
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { getPersonAvatar } from "@/lib/avatars";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import { GuildCard } from "./GuildCard";
 import {
   getActivityIconComponent,
@@ -204,13 +204,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     return Math.round((majority / total) * 100);
   };
 
-  const calculateTotalProposals = () => {
-    if (!profile || !profile.guilds) return 0;
-    return profile.guilds.reduce(
-      (sum, guild) => sum + guild.pendingProposals + guild.ongoingProposals + guild.closedProposals,
-      0
-    );
-  };
 
   if (error) {
     return (
@@ -239,7 +232,38 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  if (profile && mode === "public" && profile.status === "pending") {
+  // Guard against null profile during loading — JSX below uses profile! assertions
+  // which would crash if evaluated while profile is still null
+  if (!profile) {
+    return (
+      <div className="min-h-screen text-foreground">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center">
+              <Skeleton className="w-[120px] h-[120px] rounded-full mb-7" />
+              <Skeleton className="h-8 w-48 mb-4" />
+              <Skeleton className="h-8 w-40 rounded-full mb-4" />
+              <Skeleton className="h-4 w-36 mb-2" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px]">
+              <Skeleton className="w-40 h-40 rounded-full mb-4" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+            </div>
+            <div className="rounded-xl border border-border p-6">
+              <Skeleton className="h-9 w-32 mb-1" />
+              <Skeleton className="h-3 w-48 mt-2" />
+            </div>
+            <div className="rounded-xl border border-border p-6">
+              <Skeleton className="h-12 w-12 mb-3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "public" && profile.status === "pending") {
     return (
       <div className="min-h-screen text-foreground">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -263,20 +287,16 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
+  const guildEarningsSum = profile?.guilds?.reduce((sum, g) => sum + (g.totalEarnings || 0), 0) || 0;
   const displayEarnings = mode === "public"
-    ? profile?.endorsementEarnings || 0
-    : profile?.totalEarnings || 0;
+    ? profile?.endorsementEarnings || guildEarningsSum
+    : profile?.totalEarnings || guildEarningsSum;
 
   const memberSince = profile?.createdAt ? formatDate(profile.createdAt) : "N/A";
 
   return (
     <div className="min-h-screen text-foreground relative overflow-hidden">
-      {/* Ambient background effects */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="profile-ambient-orb profile-ambient-orb-1" />
-        <div className="profile-ambient-orb profile-ambient-orb-2" />
-        <div className="profile-dot-grid" />
-      </div>
+      <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Back button */}
@@ -543,11 +563,11 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                   iconBg="bg-primary/10"
                 />
                 <ProfileStatCell
-                  icon={FileText}
-                  value={calculateTotalProposals()}
-                  label="Proposals"
-                  iconColor="text-primary"
-                  iconBg="bg-primary/[0.08]"
+                  icon={DollarSign}
+                  value={formatVetd(displayEarnings)}
+                  label="Earnings"
+                  iconColor="text-success"
+                  iconBg="bg-success/10"
                 />
                 <ProfileStatCell
                   icon={ThumbsUp}

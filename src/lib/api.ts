@@ -1394,9 +1394,9 @@ export const getAssetUrl = (path: string) => {
 // Governance API
 export const governanceApi = {
   createProposal: (data: Record<string, unknown>, wallet: string) =>
-    apiRequest<{ id: string }>(`/api/governance/proposals?wallet=${encodeURIComponent(wallet)}`, {
+    apiRequest<{ id: string }>("/api/governance/proposals", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, wallet }),
     }),
 
   getProposals: (params?: {
@@ -1423,9 +1423,9 @@ export const governanceApi = {
     apiRequest<import("@/types").GovernanceProposalDetail>(`/api/governance/proposals/${id}`),
 
   vote: (id: string, data: { vote: "for" | "against" | "abstain"; votingPower?: number; reason?: string }, wallet: string) =>
-    apiRequest<{ success: boolean }>(`/api/governance/proposals/${id}/vote?wallet=${encodeURIComponent(wallet)}`, {
+    apiRequest<{ success: boolean }>(`/api/governance/proposals/${id}/vote`, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, wallet }),
     }),
 
   finalize: (id: string) =>

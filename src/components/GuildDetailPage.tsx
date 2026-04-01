@@ -3,29 +3,24 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { toast } from "sonner";
-import {
-  Users,
-  Briefcase,
-  CheckCircle2,
-  Clock,
-  LayoutDashboard,
-} from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 import { Alert } from "@/components/ui";
 import { guildsApi, guildApplicationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { getGuildIcon } from "@/lib/guildHelpers";
-import { formatSalaryRange } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { PillTabs } from "@/components/ui/pill-tabs";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { GuildHeader } from "@/components/guild/GuildHeader";
+import { GuildFeedTab } from "@/components/guild/GuildFeedTab";
 import { GuildActivityFeed } from "@/components/guild/GuildActivityTab";
-import { GuildPublicOverviewTab } from "@/components/guild/GuildPublicOverviewTab";
-import { GuildExpertsListTab } from "@/components/guild/GuildExpertsListTab";
-import { GuildCandidatesListTab } from "@/components/guild/GuildCandidatesListTab";
-import { GuildLeaderboardContent } from "@/components/guild/GuildLeaderboardContent";
-import { getGuildDetailAccent } from "@/config/colors";
+import { GuildMembersTab } from "@/components/guild/GuildMembersTab";
+import { GuildJobsTab } from "@/components/guild/GuildJobsTab";
+import { GuildLeaderboardTab } from "@/components/guild/GuildLeaderboardTab";
 import { GuildDetailSkeleton } from "@/components/ui/page-skeleton";
-import type { GuildPageDetail, GuildLeaderboardEntry, GuildMembershipCheck, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity } from "@/types";
+import { transformLeaderboardData } from "@/lib/guildDetailHelpers";
+import type { GuildPageDetail, GuildLeaderboardEntry, GuildMembershipCheck, GuildApplication, Job, ExpertMember, CandidateMember, ExpertRole, CandidateGuildApplication, GuildActivity, LeaderboardExpert, LeaderboardEntry } from "@/types";
 
-
+type PublicTab = "feed" | "jobs" | "activity" | "members" | "leaderboard";
 
 export default function GuildDetailPage() {
   const params = useParams();
@@ -34,8 +29,12 @@ export default function GuildDetailPage() {
   const auth = useAuthContext();
   const guildId = decodeURIComponent(params.guildId as string);
 
-  const [activeTab, setActiveTab] = useState<"feed" | "overview" | "experts" | "candidates" | "jobs" | "activity" | "leaderboard">("feed");
-  const [leaderboard, setLeaderboard] = useState<GuildLeaderboardEntry[]>([]);
+  const [activeTab, setActiveTab] = useState<PublicTab>("feed");
+  const [leaderboardData, setLeaderboardData] = useState<{
+    topExperts: LeaderboardExpert[]; currentUser: LeaderboardExpert | null;
+  }>({ topExperts: [], currentUser: null });
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
+  const [leaderboardLoaded, setLeaderboardLoaded] = useState(false);
 
   const isAuthenticated = auth.isAuthenticated || isConnected;
 
@@ -133,20 +132,27 @@ export default function GuildDetailPage() {
   const guild = guildData?.guild ?? null;
   const membership = guildData?.membership ?? null;
 
-  // eslint-disable-next-line no-restricted-syntax -- fetch leaderboard on tab switch
+  // eslint-disable-next-line no-restricted-syntax -- lazy-load leaderboard when tab becomes active
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
         const entries = await guildsApi.getLeaderboard(guildId, { limit: 100 });
-        setLeaderboard((entries || []).filter((e) => e.role !== "candidate"));
+        const filtered = (entries || []).filter((e: GuildLeaderboardEntry) => e.role !== "candidate");
+        const transformed = transformLeaderboardData(
+          filtered as unknown as LeaderboardEntry[],
+          address || "",
+          { expertRole: "recruit", reputation: 0, totalEndorsementEarnings: 0 }
+        );
+        setLeaderboardData(transformed);
+        setLeaderboardLoaded(true);
       } catch {
-        setLeaderboard([]);
+        setLeaderboardData({ topExperts: [], currentUser: null });
       }
     };
-    if (activeTab === "leaderboard" && leaderboard.length === 0) {
+    if (activeTab === "leaderboard" && !leaderboardLoaded) {
       fetchLeaderboard();
     }
-  }, [activeTab, guildId, leaderboard.length]);
+  }, [activeTab, guildId, leaderboardLoaded, address]);
 
   const handleApplyToGuild = () => {
     if (!isAuthenticated) {
@@ -160,7 +166,7 @@ export default function GuildDetailPage() {
     router.push(`/guilds/${guildId}/apply`);
   };
 
-  if (isLoading) return null;
+  if (isLoading) return <GuildDetailSkeleton />;
 
   if (error || !guild) {
     return (
@@ -170,248 +176,131 @@ export default function GuildDetailPage() {
     );
   }
 
-  const showApplyButton = !membership?.isMember && membership?.status !== "pending";
-  const showPendingStatus = membership?.status === "pending";
-  const showMemberBadge = membership?.isMember;
-  const GuildIcon = getGuildIcon(guild.name);
-
-  const guildAccent = getGuildDetailAccent(guild.name);
-  const totalMembers = guild.totalMembers || (guild.expertCount + guild.candidateCount);
+  const isMember = membership?.isMember ?? false;
+  const isPending = membership?.status === "pending";
 
   return (
-    <div
-      className="guild-detail-page relative min-h-screen overflow-x-hidden"
-      data-guild={guildAccent}
-    >
-      {/* Page content */}
-      <div className="relative">
+    <div className="relative min-h-screen text-foreground overflow-x-hidden">
+      {/* Ambient background — same as expert view */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="profile-ambient-orb profile-ambient-orb-1" />
+        <div className="profile-ambient-orb profile-ambient-orb-2" />
+        <div className="profile-dot-grid" />
+      </div>
 
-        {/* ═══ HERO ═══ */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground/50 mb-8">
-            <button onClick={() => router.push("/guilds")} className="hover:text-muted-foreground transition-colors">
-              Guilds
-            </button>
-            <span>/</span>
-            <span className="text-[hsl(var(--gd))] font-medium">{guild.name.replace(/ Guild$/i, "")}</span>
-          </div>
+      <div className="relative z-10">
+        {/* Breadcrumb */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <Breadcrumb items={[
+            { label: "Guilds", href: "/guilds" },
+            { label: guild.name },
+          ]} />
+        </div>
 
-          <div className="flex items-start gap-6 mb-6">
-            {/* Guild icon */}
-            <div className="w-16 h-16 rounded-xl bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.2)] flex items-center justify-center flex-shrink-0">
-              <GuildIcon className="w-8 h-8 text-[hsl(var(--gd))]" />
-            </div>
+        {/* Guild Header — same bento grid, but without position/staking cards */}
+        <GuildHeader
+          guild={{
+            name: guild.name,
+            memberCount: guild.totalMembers || (guild.expertCount + guild.candidateCount),
+            expertRole: membership?.role || "recruit",
+            reputation: 0,
+            description: guild.description,
+            totalProposalsReviewed: guild.totalProposalsReviewed,
+            averageApprovalTime: guild.averageApprovalTime,
+            candidateCount: guild.candidateCount,
+            openPositions: guild.openPositions,
+            totalVetdStaked: (guild as unknown as { totalVetdStaked?: number }).totalVetdStaked,
+          }}
+          isMember={false}
+        />
 
-            <div>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground mb-1.5">
-                {guild.name}
-              </h1>
-              <p className="text-sm text-muted-foreground max-w-lg">
-                {guild.description}
-              </p>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-6 mb-6 flex-wrap">
-            <div>
-              <p className="text-xl font-bold text-foreground tabular-nums">{totalMembers}</p>
-              <p className="text-xs text-muted-foreground">Members</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-foreground tabular-nums">{guild.openPositions}</p>
-              <p className="text-xs text-muted-foreground">Open Jobs</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-foreground tabular-nums">{guild.totalProposalsReviewed || 0}</p>
-              <p className="text-xs text-muted-foreground">Reviews</p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-foreground tabular-nums">{guild.expertCount}</p>
-              <p className="text-xs text-muted-foreground">Experts</p>
-            </div>
-          </div>
-
-          {/* Member badge / Apply / Pending */}
+        {/* Join / Member status bar */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
           <div className="flex items-center gap-3">
-            {showMemberBadge && (
+            {isMember && (
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-positive/10 border border-positive/20 text-sm font-medium text-positive">
                 <CheckCircle2 className="w-4 h-4" />
                 Member
-                {membership.role && (
+                {membership?.role && (
                   <>
                     <span className="opacity-40 mx-1">·</span>
-                    <span className={membership.role === "master" ? "text-warning" : "text-[hsl(var(--gd))]"}>
-                      {membership.role}
-                    </span>
+                    <span className="text-primary capitalize">{membership.role}</span>
                   </>
                 )}
               </div>
             )}
-            {showPendingStatus && (
+            {isPending && (
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-warning/[0.08] border border-warning/20 text-sm font-medium text-warning">
                 <Clock className="w-4 h-4" />
                 Pending Review
               </div>
             )}
-            {showApplyButton && (
+            {!isMember && !isPending && (
               <button
                 onClick={handleApplyToGuild}
-                className="inline-flex items-center gap-3 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-colors bg-[hsl(var(--gd))] hover:bg-[hsl(var(--gd)/0.9)]"
+                className="inline-flex items-center gap-3 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-colors bg-primary hover:bg-primary/90"
               >
                 Join Guild
               </button>
             )}
-            {membership?.isMember && auth.userType === "expert" && (
+            {isMember && auth.userType === "expert" && (
               <button
                 onClick={() => router.push(`/expert/guild/${guildId}`)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-[hsl(var(--gd)/0.3)] hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-muted/20 border border-border text-sm font-medium text-muted-foreground hover:border-primary/30 hover:text-foreground transition-colors"
               >
-                <LayoutDashboard className="w-4 h-4" />
                 Expert Dashboard
               </button>
             )}
           </div>
         </div>
 
-        {/* ═══ TAB BAR — Glassmorphic ═══ */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 p-1.5 bg-card border border-border rounded-xl mb-10 overflow-x-auto scrollbar-none">
-            {(
-              [
-                { value: "feed" as const, label: "Overview" },
-                { value: "leaderboard" as const, label: "Leaderboard" },
-                { value: "experts" as const, label: "Members" },
+        {/* Tabs + content — same structure as expert view */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+            <PillTabs
+              tabs={[
+                { value: "feed" as const, label: "Feed" },
                 { value: "jobs" as const, label: "Jobs" },
                 { value: "activity" as const, label: "Activity" },
-              ] as const
-            ).map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setActiveTab(value)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all border ${
-                  activeTab === value
-                    ? "text-[hsl(var(--gd))] bg-[hsl(var(--gd)/0.08)] border-[hsl(var(--gd)/0.15)] font-semibold"
-                    : "text-muted-foreground/50 border-transparent hover:text-muted-foreground hover:bg-muted/20"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+                { value: "members" as const, label: "Members" },
+                { value: "leaderboard" as const, label: "Leaderboard" },
+              ]}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
 
-          {/* ═══ TAB CONTENT ═══ */}
-          <div className="pb-16" role="tabpanel">
+          <div role="tabpanel">
             {activeTab === "feed" && (
-              <>
-                {/* Overview tab replaces the old feed + overview combo */}
-                <GuildPublicOverviewTab
-                  guild={guild}
-                  isMember={!!showMemberBadge}
-                  isPending={!!showPendingStatus}
-                  onNavigate={(path) => router.push(path)}
-                  onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
-                  onApply={handleApplyToGuild}
-                />
-              </>
-            )}
-
-            {activeTab === "overview" && (
-              <GuildPublicOverviewTab
-                guild={guild}
-                isMember={!!showMemberBadge}
-                isPending={!!showPendingStatus}
-                onNavigate={(path) => router.push(path)}
-                onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
-                onApply={handleApplyToGuild}
+              <GuildFeedTab
+                guildId={guildId}
+                isMember={isMember}
+                membershipRole={membership?.role as ExpertRole | undefined}
+                userType={auth.userType}
               />
             )}
-
-            {activeTab === "experts" && (
-              <>
-                {/* Show experts + candidates in a combined members view */}
-                <GuildExpertsListTab
-                  experts={guild.experts || []}
-                  onNavigate={(path) => router.push(path)}
-                />
-                {(guild.candidates?.length ?? 0) > 0 && (
-                  <div className="mt-8">
-                    <GuildCandidatesListTab candidates={guild.candidates || []} />
-                  </div>
-                )}
-              </>
+            {activeTab === "activity" && <GuildActivityFeed activities={guild.recentActivity || []} />}
+            {activeTab === "members" && (
+              <GuildMembersTab
+                experts={guild.experts || []}
+                candidates={guild.candidates || []}
+                expertsCount={guild.expertCount}
+                candidatesCount={guild.candidateCount}
+              />
             )}
-
-            {activeTab === "candidates" && (
-              <GuildCandidatesListTab candidates={guild.candidates || []} />
-            )}
-
             {activeTab === "jobs" && (
-              <div>
-                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground mb-5 flex items-center gap-3">
-                  <Briefcase className="w-5 h-5 text-[hsl(var(--gd))]" />
-                  Open Positions
-                </h2>
-                {guild.recentJobs && guild.recentJobs.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {guild.recentJobs.map((job) => (
-                      <button
-                        key={job.id}
-                        onClick={() => router.push(`/browse/jobs/${job.id}`)}
-                        className="bg-muted/20 border border-border rounded-xl p-6 text-left transition-all hover:border-[hsl(var(--gd)/0.2)] hover:translate-y-[-2px]"
-                      >
-                        <h3 className="font-display text-base font-bold text-foreground mb-2 tracking-tight">
-                          {job.title}
-                        </h3>
-                        {(job.salary.min || job.salary.max) && (
-                          <p className="font-mono text-sm font-medium text-positive mb-3.5">
-                            {formatSalaryRange(job.salary)}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {job.location && (
-                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
-                              {job.location}
-                            </span>
-                          )}
-                          {job.type && (
-                            <span className="px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
-                              {job.type}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          {(job.applicants ?? 0) > 0 && (
-                            <span className="flex items-center gap-2 text-xs text-muted-foreground/50">
-                              <Users className="w-3.5 h-3.5" />
-                              {job.applicants} applicants
-                            </span>
-                          )}
-                          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[hsl(var(--gd)/0.08)] border border-[hsl(var(--gd)/0.15)] text-[hsl(var(--gd))] text-xs font-medium">
-                            View
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 bg-muted/20 rounded-xl border border-border">
-                    <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                    <p className="text-muted-foreground">No open positions at the moment</p>
-                  </div>
-                )}
-              </div>
+              <GuildJobsTab
+                jobs={guild.recentJobs || []}
+                jobsCount={guild.openPositions || guild.recentJobs?.length || 0}
+                guildId={guildId}
+                guildName={guild.name}
+              />
             )}
-
-            {activeTab === "activity" && (
-              <GuildActivityFeed activities={guild.recentActivity || []} />
-            )}
-
             {activeTab === "leaderboard" && (
-              <GuildLeaderboardContent
-                leaderboard={leaderboard}
-                onNavigate={(path) => router.push(path)}
+              <GuildLeaderboardTab
+                leaderboardData={leaderboardData}
+                leaderboardPeriod={leaderboardPeriod}
+                onPeriodChange={setLeaderboardPeriod}
               />
             )}
           </div>

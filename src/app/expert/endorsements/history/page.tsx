@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function EndorsementHistoryPage() {
   return (
-    <div className="min-h-screen bg-background animate-page-enter">
+    <div className="min-h-screen animate-page-enter">
       <div className="container mx-auto px-6 sm:px-10 lg:px-16 py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

@@ -336,7 +336,7 @@ export function EnhancedExpertDashboard() {
         </div>
       </DataSection>
 
-      {/* Section 3: Review Queue + Rank Progress */}
+      {/* Section 3: Review Queue + Stake Distribution */}
       <DataSection
         isLoading={loading}
         skeleton={
@@ -348,7 +348,11 @@ export function EnhancedExpertDashboard() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
           <ReviewQueue applications={assignedApplications ?? []} />
-          <RankProgress guilds={profile?.guilds ?? []} />
+          <RankProgress
+            guilds={profile?.guilds ?? []}
+            guildStakes={guildStakes}
+            totalStaked={totalStaked}
+          />
         </div>
       </DataSection>
 

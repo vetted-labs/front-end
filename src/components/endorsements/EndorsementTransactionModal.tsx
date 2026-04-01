@@ -135,9 +135,11 @@ export function EndorsementTransactionModal({
             <div className="relative px-6 pt-8 pb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-foreground leading-tight">
-                  {txStep === 'success' ? 'Endorsement Confirmed' : application?.current_bid ? 'Your Endorsement' : 'Place Endorsement'}
+                  {txStep === 'success' ? 'Endorsement Confirmed' : biddingExpired ? 'Bidding Closed' : application?.current_bid ? 'Your Endorsement' : 'Place Endorsement'}
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">Stake VETD to back this candidate</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {biddingExpired ? 'The bidding period has ended' : 'Stake VETD to back this candidate'}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -256,6 +258,26 @@ export function EndorsementTransactionModal({
             {/* ── Input Step ── */}
             {txStep === 'idle' && (
               <>
+                {biddingExpired ? (
+                  <div className="text-center py-4">
+                    <div className={`w-14 h-14 rounded-full ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center mx-auto mb-4`}>
+                      <Clock className={`w-6 h-6 ${STATUS_COLORS.negative.icon}`} />
+                    </div>
+                    <h3 className="text-base font-bold text-foreground mb-1">Bidding Has Closed</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                      The endorsement bidding period for this application has ended. New endorsements can no longer be placed.
+                    </p>
+                    <div className="pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={onClose}
+                        className="w-full h-[3.25rem] rounded-xl border-border bg-muted/30 hover:bg-muted/40 font-medium"
+                      >
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                ) : (<>
                 {/* Balance/Staked inline row */}
                 <div className="flex items-center justify-between text-xs px-1">
                   <div className="flex items-center gap-2">
@@ -358,14 +380,15 @@ export function EndorsementTransactionModal({
                   </Button>
                   <button
                     onClick={handleSubmit}
-                    disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid || biddingExpired}
+                    disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid}
                     className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     <Zap className="w-4 h-4" />
-                    {biddingExpired ? 'Bidding Closed' : application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
+                    {application?.current_bid ? 'Already Placed' : 'Place Endorsement'}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
+              </>)}
               </>
             )}
 

@@ -27,6 +27,7 @@ import {
 import { useMemo, useState } from 'react';
 import { ensureHttps, formatSalaryRange, formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { useCountdown } from "@/lib/hooks/useCountdown";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Divider } from "@/components/ui/divider";
 import type { EndorsementApplication } from "@/types";
@@ -45,6 +46,10 @@ export function CandidateDetailsModal({
   onEndorseCandidate
 }: CandidateDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'application' | 'job' | 'skills'>('overview');
+  const { isExpired: biddingExpired } = useCountdown(
+    application?.bidding_deadline,
+    { fallbackStart: application?.applied_at },
+  );
 
   const skillMatchData = useMemo(() => {
     if (!application?.job_skills || !application?.candidate_bio) {
@@ -525,18 +530,25 @@ export function CandidateDetailsModal({
             >
               Close
             </Button>
-            <button
-              disabled={!onEndorseCandidate}
-              onClick={() => {
-                onClose();
-                onEndorseCandidate?.(application);
-              }}
-              className="flex-[1.4] h-11 flex items-center justify-center gap-2 text-sm font-bold rounded-xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-            >
-              <Zap className="w-4 h-4" />
-              Endorse Candidate
-              <ExternalLink className="w-3.5 h-3.5 opacity-60" />
-            </button>
+            {biddingExpired ? (
+              <div className="flex-[1.4] h-11 flex items-center justify-center gap-2 text-sm font-medium rounded-xl bg-muted/30 border border-border text-muted-foreground/60">
+                <Clock className="w-4 h-4" />
+                Bidding Closed
+              </div>
+            ) : (
+              <button
+                disabled={!onEndorseCandidate}
+                onClick={() => {
+                  onClose();
+                  onEndorseCandidate?.(application);
+                }}
+                className="flex-[1.4] h-11 flex items-center justify-center gap-2 text-sm font-bold rounded-xl bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                <Zap className="w-4 h-4" />
+                Endorse Candidate
+                <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+              </button>
+            )}
           </div>
         </div>
       </div>
