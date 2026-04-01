@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { toast } from "sonner";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useFetch } from "@/lib/hooks/useFetch";
 import type { Conversation } from "@/types";
 import { ConversationList } from "./ConversationList";
 import { EmptyInbox } from "./EmptyInbox";
@@ -15,25 +14,13 @@ export default function CandidateMessagesInbox() {
   const router = useRouter();
   const { ready } = useRequireAuth("candidate");
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!ready) return;
-    fetchConversations();
-  }, [ready]);
-
-  const fetchConversations = useCallback(async () => {
-    try {
-      const data = await messagingApi.getCandidateConversations();
-      setConversations(data);
-    } catch (error) {
-      logger.error("Error fetching conversations", error, { silent: true });
-      toast.error("Failed to load conversations");
-    } finally {
-      setIsLoading(false);
+  const { data: conversations, isLoading } = useFetch<Conversation[]>(
+    () => messagingApi.getCandidateConversations(),
+    {
+      skip: !ready,
+      onError: () => { toast.error("Failed to load conversations"); },
     }
-  }, []);
+  );
 
   const handleSelect = (conv: Conversation) => {
     router.push(`/candidate/messages/${conv.id}`);
@@ -54,11 +41,11 @@ export default function CandidateMessagesInbox() {
 
         <DataSection isLoading={isLoading} skeleton={null}>
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          {conversations.length === 0 ? (
+          {(conversations ?? []).length === 0 ? (
             <EmptyInbox variant="candidate" />
           ) : (
             <ConversationList
-              conversations={conversations}
+              conversations={conversations ?? []}
               onSelect={handleSelect}
               variant="candidate"
             />

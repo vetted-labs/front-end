@@ -158,7 +158,7 @@ export default function CompanyPublicProfilePage({ params }: Props) {
               {jobs.map((job) => (
                 <Link
                   key={job.id}
-                  href={`/jobs/${job.id}`}
+                  href={`/browse/jobs/${job.id}`}
                   className="flex items-center justify-between gap-4 p-4 rounded-xl border border-border hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors group"
                 >
                   <div className="min-w-0">

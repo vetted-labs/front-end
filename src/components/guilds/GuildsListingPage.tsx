@@ -244,7 +244,7 @@ export default function GlobalGuildsPage() {
               </p>
             </div>
             <button
-              onClick={() => router.push("/expert/register")}
+              onClick={() => router.push("/expert/apply")}
               className="shrink-0 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium transition-all duration-200 hover:bg-primary/90 hover:shadow-lg"
             >
               Apply as Expert

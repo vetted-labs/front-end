@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useCallback } from "react";
 import { ArrowLeft, Loader2, MessageSquare } from "lucide-react";
 
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
-import { useApi } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { Conversation, Message } from "@/types";
 import { toast } from "sonner";
 import { ConversationList } from "./ConversationList";
@@ -24,11 +23,9 @@ import { Calendar } from "lucide-react";
 import { DataSection } from "@/lib/motion";
 
 export default function CompanyMessagesInbox() {
-  const router = useRouter();
   const { ready } = useRequireAuth("company");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -43,23 +40,14 @@ export default function CompanyMessagesInbox() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const { execute: executeSchedule, isLoading: isScheduling } = useApi<Message>();
 
-  // eslint-disable-next-line no-restricted-syntax -- fetches on auth readiness
-  useEffect(() => {
-    if (!ready) return;
-    fetchConversations();
-  }, [ready]);
-
-  const fetchConversations = async () => {
-    try {
-      const data = await messagingApi.getCompanyConversations();
-      setConversations(data);
-    } catch (error) {
-      logger.error("Error fetching conversations", error, { silent: true });
-      toast.error("Failed to load conversations");
-    } finally {
-      setIsLoading(false);
+  const { isLoading } = useFetch<Conversation[]>(
+    () => messagingApi.getCompanyConversations(),
+    {
+      skip: !ready,
+      onSuccess: (data) => { setConversations(data); },
+      onError: () => { toast.error("Failed to load conversations"); },
     }
-  };
+  );
 
   const fetchMessages = useCallback(async (conversationId: string) => {
     setMessagesLoading(true);

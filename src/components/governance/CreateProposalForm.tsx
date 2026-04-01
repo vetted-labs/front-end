@@ -274,7 +274,7 @@ export function CreateProposalForm() {
             submitStep={submitStep}
             buttonLabel={buttonLabel}
             hasGuild={!!guildId}
-            onCancel={() => router.back()}
+            onCancel={() => router.push("/expert/governance")}
           />
         </form>
       </div>
