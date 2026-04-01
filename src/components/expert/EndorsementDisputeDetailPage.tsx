@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { endorsementAccountabilityApi } from "@/lib/api";
@@ -23,6 +23,7 @@ import {
   Clock,
   Users,
   User,
+  Scale,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DisputeVoteForm } from "@/components/endorsements/DisputeVoteForm";
@@ -62,6 +63,8 @@ export function EndorsementDisputeDetailPage() {
   });
 
   const { execute: submitVote } = useApi();
+  const { execute: submitAppeal, isLoading: isSubmittingAppeal } = useApi();
+  const [appealReasoning, setAppealReasoning] = useState("");
 
   const handleArbitrationVote = async (
     decision: "uphold" | "dismiss",
@@ -121,6 +124,39 @@ export function EndorsementDisputeDetailPage() {
 
   const canVote =
     dispute.isOnPanel && !dispute.hasVoted && dispute.status === "open";
+
+  // Appeal window: 7 days after resolution
+  const resolutionDate = dispute.resolvedAt ? new Date(dispute.resolvedAt) : null;
+  const appealDeadline = resolutionDate
+    ? new Date(resolutionDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+    : null;
+  const canAppeal = !!(appealDeadline && new Date() < appealDeadline && dispute.status === "resolved");
+  const daysLeft = canAppeal && appealDeadline
+    ? Math.ceil((appealDeadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+    : 0;
+
+  // 10% of slashed amount — DisputeDetail has no slashedAmount field, so we surface a placeholder
+  const appealFeeDisplay = "10% of slashed amount";
+
+  const handleFileAppeal = async () => {
+    if (!appealReasoning.trim()) {
+      toast.error("Please provide reasoning for your appeal");
+      return;
+    }
+    await submitAppeal(
+      // Appeal endpoint is not yet implemented on the backend
+      () => Promise.reject(new Error("not_available")),
+      {
+        onSuccess: () => {
+          toast.success("Appeal submitted successfully");
+          refetch();
+        },
+        onError: () => {
+          toast.error("Appeal submission is not yet available");
+        },
+      }
+    );
+  };
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -340,6 +376,41 @@ export function EndorsementDisputeDetailPage() {
                   <p className="text-sm text-muted-foreground">
                     Your arbitration vote has been recorded.
                   </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Appeal Section */}
+            {canAppeal && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Scale className="w-4 h-4" />
+                    File an Appeal
+                  </CardTitle>
+                  <CardDescription>
+                    {daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining in the 7-day appeal window
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Appeal fee</span>
+                    <span className="font-medium">{appealFeeDisplay}</span>
+                  </div>
+                  <textarea
+                    value={appealReasoning}
+                    onChange={(e) => setAppealReasoning(e.target.value)}
+                    placeholder="Explain your grounds for appeal..."
+                    rows={4}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                  <Button
+                    className="w-full"
+                    onClick={handleFileAppeal}
+                    disabled={isSubmittingAppeal || !appealReasoning.trim()}
+                  >
+                    {isSubmittingAppeal ? "Submitting…" : "File Appeal"}
+                  </Button>
                 </CardContent>
               </Card>
             )}

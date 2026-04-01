@@ -8,7 +8,7 @@ import { Skeleton, SkeletonStatCard, SkeletonCard } from "@/components/ui/skelet
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
-import { expertApi, guildApplicationsApi, blockchainApi } from "@/lib/api";
+import { expertApi, guildApplicationsApi, blockchainApi, governanceApi } from "@/lib/api";
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
@@ -30,6 +30,48 @@ import {
 } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, ExpertGuild } from "@/types";
+
+function GovernanceSummaryCard() {
+  const router = useRouter();
+  const { data: proposals } = useFetch(
+    () => governanceApi.getActiveProposals(),
+    {
+      onError: () => {
+        // Non-critical — governance summary failing shouldn't surface an error
+      },
+    }
+  );
+
+  const count = proposals?.length ?? 0;
+
+  return (
+    <div
+      className={`flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 cursor-pointer hover:border-primary/30 transition-colors`}
+      onClick={() => router.push("/expert/governance")}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && router.push("/expert/governance")}
+    >
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+          Governance
+        </p>
+        <p className="text-sm font-medium text-foreground">
+          {count > 0 ? (
+            <>
+              <span className={`font-bold text-primary`}>{count}</span> active proposal{count !== 1 ? "s" : ""} pending your vote
+            </>
+          ) : (
+            "No active proposals right now"
+          )}
+        </p>
+      </div>
+      <span className="text-xs font-medium text-primary hover:underline">
+        View Governance →
+      </span>
+    </div>
+  );
+}
 
 function getDaysUntilDecay(lastActivityTimestamp: number | null): number {
   if (lastActivityTimestamp === null) return 0;
@@ -418,6 +460,9 @@ export function EnhancedExpertDashboard() {
           <SlimNotificationsFeed walletAddress={address!} />
         </div>
       </DataSection>
+
+      {/* Section 6: Governance Summary */}
+      {!loading && <GovernanceSummaryCard />}
     </div>
   );
 }

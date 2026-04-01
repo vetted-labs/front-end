@@ -20,8 +20,12 @@ import {
   Activity,
   Eye,
   Zap,
+  Pencil,
   LucideIcon,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { expertApi } from "@/lib/api";
 import { getExplorerAddressUrl } from "@/lib/blockchain";
 import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from "@/lib/utils";
@@ -127,7 +131,10 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
   const effectiveAddress = mode === "public" ? walletAddress : connectedAddress;
 
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({ name: "", bio: "" });
   const { execute: executeToggleEmail, isLoading: isTogglingEmail } = useApi();
+  const { execute: saveProfile, isLoading: saving } = useApi();
 
   const isInvalidPublicAddress =
     mode === "public" && effectiveAddress && !/^0x[a-fA-F0-9]{40}$/.test(effectiveAddress);
@@ -178,6 +185,28 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
           toast.success(newValue ? "Email is now visible on your public profile" : "Email is now hidden from your public profile");
         },
         onError: () => { toast.error("Failed to update email visibility"); },
+      }
+    );
+  };
+
+  const handleStartEditing = () => {
+    setEditData({ name: profile?.fullName ?? "", bio: profile?.bio ?? "" });
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!effectiveAddress) return;
+    await saveProfile(
+      () => expertApi.updateProfile(effectiveAddress, { fullName: editData.name, bio: editData.bio }),
+      {
+        onSuccess: () => {
+          refetch();
+          setIsEditing(false);
+          toast.success("Profile updated");
+        },
+        onError: () => {
+          toast.error("Failed to update profile");
+        },
       }
     );
   };
@@ -411,9 +440,20 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               </div>
 
               {/* Name */}
-              <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
-                {profile!.fullName || "Unknown Expert"}
-              </h1>
+              {mode === "private" && isEditing ? (
+                <div className="w-full mb-4">
+                  <Input
+                    value={editData.name}
+                    onChange={(e) => setEditData((d) => ({ ...d, name: e.target.value }))}
+                    placeholder="Full name"
+                    className="text-center text-lg font-bold"
+                  />
+                </div>
+              ) : (
+                <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
+                  {profile!.fullName || "Unknown Expert"}
+                </h1>
+              )}
 
               {/* Wallet Chip */}
               {mode === "private" ? (
@@ -488,11 +528,43 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
               </div>
 
               {/* Bio */}
-              {profile!.bio && (
+              {mode === "private" && isEditing ? (
                 <div className="w-full mt-6 pt-6 border-t border-border text-left">
                   <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">{profile!.bio}</p>
+                  <Textarea
+                    value={editData.bio}
+                    onChange={(e) => setEditData((d) => ({ ...d, bio: e.target.value }))}
+                    placeholder="Tell the community about yourself..."
+                    rows={4}
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <Button size="sm" onClick={handleSaveProfile} disabled={saving}>
+                      {saving ? "Saving…" : "Save"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {profile!.bio && (
+                    <div className="w-full mt-6 pt-6 border-t border-border text-left">
+                      <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
+                      <p className="text-sm leading-relaxed text-muted-foreground">{profile!.bio}</p>
+                    </div>
+                  )}
+                  {mode === "private" && (
+                    <button
+                      onClick={handleStartEditing}
+                      className="mt-5 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Edit Profile
+                    </button>
+                  )}
+                </>
               )}
             </div>
 

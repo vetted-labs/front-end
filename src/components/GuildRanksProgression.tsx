@@ -596,6 +596,8 @@ export function GuildRanksProgression() {
     { skip: !address }
   );
 
+  const [selectedGuildIndex, setSelectedGuildIndex] = useState(0);
+
   if (!address) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -608,8 +610,10 @@ export function GuildRanksProgression() {
     );
   }
 
-  const guild = profile?.guilds?.[0];
-  const currentRole: ExpertRole = guild?.expertRole ?? "recruit";
+  const guilds = profile?.guilds || [];
+  const clampedIndex = Math.min(selectedGuildIndex, Math.max(0, guilds.length - 1));
+  const selectedGuild = guilds[clampedIndex];
+  const currentRole: ExpertRole = selectedGuild?.expertRole ?? "recruit";
   const currentRankIndex = getRankIndex(currentRole);
   const currentRank = GUILD_RANK_CONFIGS[currentRankIndex];
   const nextRank =
@@ -618,7 +622,7 @@ export function GuildRanksProgression() {
       : null;
 
   const stats = profile
-    ? computeExpertStats(profile, guild?.reputation)
+    ? computeExpertStats(profile, selectedGuild?.reputation)
     : { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
 
   const defaultStats: ExpertStats = { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
@@ -636,6 +640,25 @@ export function GuildRanksProgression() {
       {/* Error alert — shown inside the page layout */}
       {error && (
         <Alert variant="error">Failed to load rank progression data.</Alert>
+      )}
+
+      {/* Guild Selector — only shown when expert belongs to multiple guilds */}
+      {guilds.length > 1 && (
+        <div className="flex gap-2 flex-wrap">
+          {guilds.map((g, i) => (
+            <button
+              key={g.id || i}
+              onClick={() => setSelectedGuildIndex(i)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                i === clampedIndex
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {g.name || `Guild ${i + 1}`}
+            </button>
+          ))}
+        </div>
       )}
 
       {/* Stats Overview — skeleton placeholders while loading */}
