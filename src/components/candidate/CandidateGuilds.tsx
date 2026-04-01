@@ -12,16 +12,21 @@ import {
   ArrowRight,
   Eye,
   Star,
+  Gavel,
 } from "lucide-react";
-import { candidateApi } from "@/lib/api";
+import { candidateApi, extractApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { getGuildIcon, getGuildColor } from "@/lib/guildHelpers";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
-import type { GuildApplicationSummary } from "@/types";
+import type { GuildApplicationSummary, CandidateRejectionFeedback } from "@/types";
 import { DataSection } from "@/lib/motion";
+import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 const GUILD_STATUS_ICONS: Record<string, typeof Clock> = {
   pending:  Clock,
@@ -39,12 +44,39 @@ export default function CandidateGuilds() {
   const { ready } = useRequireAuth("candidate");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
-  const { data: guildApplicationsData, isLoading } = useFetch(
+  const { data: guildApplicationsData, isLoading, refetch } = useFetch(
     () => candidateApi.getGuildApplications(),
     { skip: !ready }
   );
 
   const guildApplications: GuildApplicationSummary[] = Array.isArray(guildApplicationsData) ? guildApplicationsData : [];
+
+  const rejectedApps = guildApplications.filter(
+    (a) => a.status === "rejected" || a.status === "finalized"
+  );
+
+  const { data: rejectionFeedbackData } = useFetch(
+    async () => {
+      if (rejectedApps.length === 0) return {};
+      const feedback: Record<string, CandidateRejectionFeedback> = {};
+      await Promise.all(
+        rejectedApps.map(async (app) => {
+          try {
+            const fb = await candidateApi.getGuildApplicationFeedback(app.id);
+            if (fb) feedback[app.id] = fb;
+          } catch (err) {
+            logger.debug("Non-critical: could not load guild feedback", extractApiError(err));
+          }
+        })
+      );
+      return feedback;
+    },
+    { skip: !ready || rejectedApps.length === 0 }
+  );
+
+  const rejectionFeedback: Record<string, CandidateRejectionFeedback> = rejectionFeedbackData ?? {};
+
+  const { execute: resubmit } = useApi<{ id: string }>();
 
   if (!ready) return null;
 
@@ -142,70 +174,110 @@ export default function CandidateGuilds() {
               const StatusIcon = GUILD_STATUS_ICONS[app.status] || Clock;
               const appliedDate = app.submittedAt || app.createdAt;
 
+              const isRejected = app.status === "rejected" || app.status === "finalized";
+              const rejectedAt = new Date(app.createdAt || app.submittedAt || Date.now());
+              const appealDeadline = new Date(rejectedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const canAppeal = isRejected && new Date() < appealDeadline;
+              const daysLeft = Math.ceil((appealDeadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+              const guildId = app.guildId || app.guild?.id;
+              const feedback = rejectionFeedback[app.id];
+
               return (
-                <button
-                  key={app.id}
-                  onClick={() => {
-                    const guildId = app.guildId || app.guild?.id;
-                    if (guildId) router.push(`/guilds/${guildId}`);
-                  }}
-                  className="group relative text-left rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
-                >
-                  {/* Top gradient banner */}
-                  <div className={`h-20 ${gradient} relative`}>
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-3 left-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center border border-muted-foreground/20">
-                        <GuildIcon className="w-5 h-5 text-white" />
+                <div key={app.id} className="space-y-2">
+                  <button
+                    onClick={() => {
+                      if (guildId) router.push(`/guilds/${guildId}`);
+                    }}
+                    className="group relative w-full text-left rounded-xl border border-border bg-card overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all"
+                  >
+                    {/* Top gradient banner */}
+                    <div className={`h-20 ${gradient} relative`}>
+                      <div className="absolute inset-0 bg-black/20" />
+                      <div className="absolute bottom-3 left-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center border border-muted-foreground/20">
+                          <GuildIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-white leading-tight">{guildName}</h3>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white leading-tight">{guildName}</h3>
+                      {/* Status badge top-right */}
+                      <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.className}`}>
+                        <StatusIcon className="w-3 h-3" />
+                        {statusStyle.label}
                       </div>
                     </div>
-                    {/* Status badge top-right */}
-                    <div className={`absolute top-3 right-3 inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyle.className}`}>
-                      <StatusIcon className="w-3 h-3" />
-                      {statusStyle.label}
-                    </div>
-                  </div>
 
-                  {/* Card body */}
-                  <div className="px-4 py-4 space-y-3">
-                    {/* Job info */}
-                    {app.jobTitle && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="truncate">{app.jobTitle}</span>
-                      </div>
-                    )}
+                    {/* Card body */}
+                    <div className="px-4 py-4 space-y-3">
+                      {/* Job info */}
+                      {app.jobTitle && (
+                        <div className="flex items-center gap-2 text-sm text-foreground">
+                          <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="truncate">{app.jobTitle}</span>
+                        </div>
+                      )}
 
-                    {/* Review progress (if available) */}
-                    {((app.reviewCount ?? 0) > 0 || (app.approvalCount ?? 0) > 0) && (
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-2">
-                          <Eye className="w-3 h-3" />
-                          {app.reviewCount || 0} review{(app.reviewCount || 0) !== 1 ? "s" : ""}
-                        </span>
-                        {(app.approvalCount ?? 0) > 0 && (
-                          <span className={`flex items-center gap-2 ${STATUS_COLORS.positive.text}`}>
-                            <Star className="w-3 h-3" />
-                            {app.approvalCount} approval{app.approvalCount !== 1 ? "s" : ""}
+                      {/* Review progress (if available) */}
+                      {((app.reviewCount ?? 0) > 0 || (app.approvalCount ?? 0) > 0) && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-2">
+                            <Eye className="w-3 h-3" />
+                            {app.reviewCount || 0} review{(app.reviewCount || 0) !== 1 ? "s" : ""}
                           </span>
-                        )}
-                      </div>
-                    )}
+                          {(app.approvalCount ?? 0) > 0 && (
+                            <span className={`flex items-center gap-2 ${STATUS_COLORS.positive.text}`}>
+                              <Star className="w-3 h-3" />
+                              {app.approvalCount} approval{app.approvalCount !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                      <span className="text-xs text-muted-foreground/60">
-                        Applied {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
-                      </span>
-                      <span className="text-xs text-primary flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        View Guild <ChevronRight className="w-3 h-3" />
-                      </span>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                        <span className="text-xs text-muted-foreground/60">
+                          Applied {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
+                        </span>
+                        <span className="text-xs text-primary flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          View Guild <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+
+                  {/* Appeal button — shown outside card to avoid button nesting */}
+                  {canAppeal && guildId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/guilds/${guildId}/appeal`)}
+                      className="w-full gap-2"
+                    >
+                      <Gavel className="w-4 h-4" />
+                      Appeal Decision ({daysLeft}d left)
+                    </Button>
+                  )}
+
+                  {/* Rejection feedback */}
+                  {feedback && (
+                    <RejectionFeedbackCard
+                      feedback={feedback}
+                      onResubmit={() => {
+                        resubmit(
+                          () => candidateApi.resubmitGuildApplication(app.id, {}),
+                          {
+                            onSuccess: () => {
+                              toast.success("Application resubmitted successfully");
+                              refetch();
+                            },
+                            onError: (err) => toast.error(err),
+                          }
+                        );
+                      }}
+                    />
+                  )}
+                </div>
               );
             })}
           </div>

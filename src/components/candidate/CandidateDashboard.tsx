@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   XCircle,
@@ -19,12 +20,15 @@ import {
   Check,
   Circle,
   ArrowRight,
+  Gavel,
 } from "lucide-react";
 import { candidateApi, applicationsApi, messagingApi, extractApiError } from "@/lib/api";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { formatTimeAgo } from "@/lib/utils";
 import { getProfileCompletion } from "@/lib/profileCompletion";
 import { ProfileRing } from "@/components/candidate/ProfileCompletionBanner";
@@ -196,11 +200,14 @@ function MiniPipeline({ status }: { status: string }) {
 
 export default function CandidateDashboard() {
   const { ready } = useRequireAuth("candidate");
+  const router = useRouter();
 
-  const { data, isLoading } = useFetch(
+  const { data, isLoading, refetch } = useFetch(
     () => fetchDashboardData(),
     { skip: !ready }
   );
+
+  const { execute: resubmit } = useApi<{ id: string }>();
 
   const profile = data?.profile ?? null;
   const applications = useMemo(() => data?.applications ?? [], [data?.applications]);
@@ -542,6 +549,12 @@ export default function CandidateDashboard() {
                   {recentGuildApps.map((app) => {
                     const guildStatusConfig = GUILD_APPLICATION_STATUS_CONFIG[app.status] || GUILD_APPLICATION_STATUS_CONFIG.pending;
                     const feedback = rejectionFeedback[app.id];
+                    const isRejected = app.status === "rejected" || app.status === "finalized";
+                    const rejectedAt = new Date(app.createdAt || app.submittedAt || Date.now());
+                    const appealDeadline = new Date(rejectedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    const canAppeal = isRejected && new Date() < appealDeadline;
+                    const daysLeft = Math.ceil((appealDeadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+                    const guildId = app.guildId || app.guild?.id;
                     return (
                       <div key={app.id}>
                         <div className="px-5 py-3.5">
@@ -549,9 +562,22 @@ export default function CandidateDashboard() {
                             <p className="text-sm font-medium text-foreground truncate">
                               {app.guildName || app.guild?.name || "Guild"}
                             </p>
-                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${guildStatusConfig.className}`}>
-                              {guildStatusConfig.label}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              {canAppeal && guildId && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => router.push(`/guilds/${guildId}/appeal`)}
+                                  className="h-6 px-2 text-xs gap-1"
+                                >
+                                  <Gavel className="w-3 h-3" />
+                                  Appeal ({daysLeft}d)
+                                </Button>
+                              )}
+                              <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${guildStatusConfig.className}`}>
+                                {guildStatusConfig.label}
+                              </span>
+                            </div>
                           </div>
                           {app.jobTitle && (
                             <p className="text-xs text-muted-foreground flex items-center gap-2">
@@ -562,7 +588,21 @@ export default function CandidateDashboard() {
                         </div>
                         {feedback && (
                           <div className="px-3 pb-3">
-                            <RejectionFeedbackCard feedback={feedback} />
+                            <RejectionFeedbackCard
+                              feedback={feedback}
+                              onResubmit={() => {
+                                resubmit(
+                                  () => candidateApi.resubmitGuildApplication(app.id, {}),
+                                  {
+                                    onSuccess: () => {
+                                      toast.success("Application resubmitted successfully");
+                                      refetch();
+                                    },
+                                    onError: (err) => toast.error(err),
+                                  }
+                                );
+                              }}
+                            />
                           </div>
                         )}
                       </div>
