@@ -86,7 +86,7 @@ export function GuildsOverview() {
   });
 
   const totalPendingApplications = profileGuilds.reduce(
-    (sum, g) => sum + (g.pendingProposals || 0),
+    (sum, g) => sum + (g.pendingProposals || 0) + (g.pendingApplications || 0),
     0
   );
 

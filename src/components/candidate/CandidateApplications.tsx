@@ -46,18 +46,35 @@ function getStepIndex(status: ApplicationStatus): number {
 }
 
 /** Where in the pipeline the rejection occurred */
-function getRejectedAtIndex(status: ApplicationStatus): number {
-  // Without more granular rejection info, assume it happened at the
-  // reviewing step (most common). The pipeline shows completed steps
-  // before the rejection point.
-  if (status === "rejected") return 2; // failed at Company Review
-  return -1;
+function getRejectedAtIndex(application: CandidateApplication): number {
+  if (application.status !== "rejected") return -1;
+
+  // Derive rejection step from status history if available
+  const history = (application as CandidateApplication & {
+    statusHistory?: { status: string; previousStatus?: string }[];
+  }).statusHistory;
+  if (history?.length) {
+    const rejectionEntry = history.find((h) => h.status === "rejected");
+    if (rejectionEntry?.previousStatus) {
+      const stepMap: Record<string, number> = {
+        pending:     0, // Applied
+        reviewing:   1, // Expert Review
+        reviewed:    2, // Company Review
+        interviewed: 3, // Interview
+      };
+      return stepMap[rejectionEntry.previousStatus] ?? 2;
+    }
+  }
+
+  // Fallback: no history available
+  return 2;
 }
 
-function VettingPipeline({ status }: { status: ApplicationStatus }) {
+function VettingPipeline({ application }: { application: CandidateApplication }) {
+  const { status } = application;
   const isRejected = status === "rejected";
   const currentStep = getStepIndex(status);
-  const rejectedAt = getRejectedAtIndex(status);
+  const rejectedAt = getRejectedAtIndex(application);
 
   return (
     <div className="py-3">
@@ -350,7 +367,7 @@ export default function CandidateApplications() {
                       </div>
 
                       {/* Vetting Pipeline */}
-                      <VettingPipeline status={application.status} />
+                      <VettingPipeline application={application} />
 
                       {/* Bottom: skills + actions */}
                       <div className="flex items-center justify-between gap-4 flex-wrap pt-4 border-t border-border/30 mt-2">

@@ -5,6 +5,14 @@ import { getGuildIcon } from "@/lib/guildHelpers";
 import { formatVetd } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
 import { PatternBackground } from "@/components/ui/pattern-background";
+import { GUILD_RANK_ORDER } from "@/config/constants";
+
+function getRankProgress(rank: string): number {
+  const index = GUILD_RANK_ORDER.indexOf(rank.toLowerCase());
+  if (index < 0) return 0;
+  // 5 ranks: recruit=0%, apprentice=25%, craftsman=50%, officer=75%, master=100%
+  return (index / (GUILD_RANK_ORDER.length - 1)) * 100;
+}
 
 interface GuildHeaderProps {
   guild: {
@@ -100,7 +108,7 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
           <div className="w-full h-[3px] rounded-full bg-border/40 overflow-hidden mb-1">
             <div
               className="h-full rounded-full bg-primary"
-              style={{ width: guild.expertRole === "master" ? "100%" : guild.expertRole === "craftsman" ? "66%" : "33%" }}
+              style={{ width: `${getRankProgress(guild.expertRole)}%` }}
             />
           </div>
           <div className="font-mono text-xs text-muted-foreground mb-4">
