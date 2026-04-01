@@ -20,6 +20,8 @@ interface VotingParametersSectionProps {
   onStakeAmountChange: (value: string) => void;
   votingDuration: string;
   onVotingDurationChange: (value: string) => void;
+  onBlur?: (field: string, value: string) => void;
+  fieldErrors?: Record<string, string>;
 }
 
 export function VotingParametersSection({
@@ -27,6 +29,8 @@ export function VotingParametersSection({
   onStakeAmountChange,
   votingDuration,
   onVotingDurationChange,
+  onBlur,
+  fieldErrors = {},
 }: VotingParametersSectionProps) {
   return (
     <div className="p-6 sm:p-8 space-y-6">
@@ -55,11 +59,15 @@ export function VotingParametersSection({
             min="100"
             value={stakeAmount}
             onChange={(e) => onStakeAmountChange(e.target.value)}
+            onBlur={(e) => onBlur?.("stakeAmount", e.target.value)}
+            error={fieldErrors.stakeAmount}
           />
-          <p className="text-xs text-muted-foreground">
-            Minimum 100 VETD — staked tokens are returned after voting
-            concludes
-          </p>
+          {!fieldErrors.stakeAmount && (
+            <p className="text-xs text-muted-foreground">
+              Minimum 100 VETD — staked tokens are returned after voting
+              concludes
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">

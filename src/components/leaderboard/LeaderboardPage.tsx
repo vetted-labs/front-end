@@ -23,6 +23,7 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { STAT_ICON } from "@/config/colors";
 import { LeaderboardPodium } from "./LeaderboardPodium";
 import { LeaderboardYourStats } from "./LeaderboardYourStats";
@@ -216,6 +217,7 @@ export default function LeaderboardPage() {
   const [guildId, setGuildId] = useState(() => searchParams.get("guild") || "");
   const [period, setPeriod] = useState(() => searchParams.get("period") || "all");
   const [role, setRole] = useState(() => searchParams.get("role") || "");
+  const [limit, setLimit] = useState(50);
 
   const fetchFn = useCallback(
     () =>
@@ -224,20 +226,20 @@ export default function LeaderboardPage() {
           guildId: guildId || undefined,
           period: period || undefined,
           role: role || undefined,
-          limit: 50,
+          limit,
         },
         address || undefined
       ),
-    [guildId, period, role, address]
+    [guildId, period, role, address, limit]
   );
 
   const { data, isLoading, error, refetch } = useFetch<LeaderboardResponse>(fetchFn);
 
-  // eslint-disable-next-line no-restricted-syntax -- refetch when filters change (useFetch doesn't support custom deps)
+  // eslint-disable-next-line no-restricted-syntax -- refetch when filters or limit change (useFetch doesn't support custom deps)
   useEffect(() => {
     refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only refetch when filter values change, not when refetch identity changes
-  }, [guildId, period, role]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only refetch when filter values/limit change, not when refetch identity changes
+  }, [guildId, period, role, limit]);
 
   const { data: guilds } = useFetch<Guild[]>(() => guildsApi.getAll());
 
@@ -392,6 +394,15 @@ export default function LeaderboardPage() {
               activeTab={activeTab}
               currentWalletAddress={address}
             />
+          )}
+
+          {/* Load More */}
+          {(data?.entries?.length ?? 0) >= limit && (
+            <div className="flex justify-center mt-4">
+              <Button variant="outline" onClick={() => setLimit((l) => l + 50)}>
+                Load More
+              </Button>
+            </div>
           )}
         </>
       )}

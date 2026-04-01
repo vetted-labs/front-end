@@ -20,6 +20,7 @@ import {
   CheckCircle,
   Activity,
   Clock,
+  Shield,
 } from "lucide-react";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from "@/lib/api";
@@ -620,6 +621,27 @@ export function CompanyDashboardOverview() {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+            {/* Endorsement Accountability */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
+                <Shield className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-display font-bold text-foreground">
+                  Endorsement Accountability
+                </h2>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Track expert endorsement outcomes for candidates you&apos;ve reviewed.
+                </p>
+                <Link
+                  href="/dashboard/candidates"
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/30 hover:text-foreground transition-all"
+                >
+                  View Candidates
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
           </div>

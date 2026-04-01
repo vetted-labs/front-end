@@ -39,6 +39,15 @@ export function CreateProposalForm() {
   const [proposedValue, setProposedValue] = useState("");
   const [nomineeWallet, setNomineeWallet] = useState("");
   const [submitStep, setSubmitStep] = useState<ProposalSubmitStep>("idle");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateField = (field: string, value: string) => {
+    let error = "";
+    if (field === "title" && value.length < 10) error = "Title must be at least 10 characters";
+    if (field === "description" && value.length < 50) error = "Description must be at least 50 characters";
+    if (field === "stakeAmount" && Number(value) < 100) error = "Minimum stake is 100 VETD";
+    setFieldErrors((prev) => ({ ...prev, [field]: error }));
+  };
 
   // On-chain transaction tracking
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
@@ -240,6 +249,8 @@ export function CreateProposalForm() {
             description={description}
             onTitleChange={setTitle}
             onDescriptionChange={setDescription}
+            onBlur={validateField}
+            fieldErrors={fieldErrors}
           />
 
           <div className="border-t border-border" />
@@ -267,6 +278,8 @@ export function CreateProposalForm() {
             onStakeAmountChange={setStakeAmount}
             votingDuration={votingDuration}
             onVotingDurationChange={setVotingDuration}
+            onBlur={validateField}
+            fieldErrors={fieldErrors}
           />
 
           <ProposalSubmitSection

@@ -7,6 +7,8 @@ interface ProposalDetailsSectionProps {
   description: string;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
+  onBlur?: (field: string, value: string) => void;
+  fieldErrors?: Record<string, string>;
 }
 
 export function ProposalDetailsSection({
@@ -14,6 +16,8 @@ export function ProposalDetailsSection({
   description,
   onTitleChange,
   onDescriptionChange,
+  onBlur,
+  fieldErrors = {},
 }: ProposalDetailsSectionProps) {
   return (
     <div className="p-6 sm:p-8 space-y-6">
@@ -36,7 +40,9 @@ export function ProposalDetailsSection({
         required
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
+        onBlur={(e) => onBlur?.("title", e.target.value)}
         placeholder="A concise title for your proposal"
+        error={fieldErrors.title}
       />
 
       <Textarea
@@ -44,11 +50,13 @@ export function ProposalDetailsSection({
         required
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
+        onBlur={(e) => onBlur?.("description", e.target.value)}
         placeholder="Describe your proposal in detail. What change do you propose and why?"
         rows={5}
         showCounter
         minLength={20}
         maxLength={2000}
+        error={fieldErrors.description}
       />
     </div>
   );

@@ -278,7 +278,11 @@ export function NotificationsPage<T extends BaseNotification>({
                 Mark all read
               </button>
             )}
-            <button className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all" aria-label="Notification settings">
+            <button
+              className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all"
+              aria-label="Notification settings"
+              onClick={() => toast.info("Notification settings coming soon")}
+            >
               <Settings className="w-[18px] h-[18px]" />
             </button>
           </div>
@@ -342,7 +346,7 @@ export function NotificationsPage<T extends BaseNotification>({
                         key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
                         disabled={isClicked}
-                        className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
+                        className={`group w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                           isClicked ? "opacity-60 cursor-wait" : ""
                         } ${
                           isUnread ? "" : "opacity-60"
@@ -390,7 +394,28 @@ export function NotificationsPage<T extends BaseNotification>({
                         </div>
 
                         {/* Dismiss button (shows on hover) */}
-                        <div className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-muted/30 hover:text-muted-foreground transition-all mt-1">
+                        <div
+                          role="button"
+                          aria-label="Mark as read"
+                          className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:bg-muted/30 hover:text-muted-foreground transition-all mt-1"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (notification.isRead) return;
+                            try {
+                              await markAsRead(notification.id);
+                              setAllNotifications((prev) =>
+                                prev.map((n) =>
+                                  n.id === notification.id
+                                    ? { ...n, isRead: true, readAt: new Date().toISOString() }
+                                    : n
+                                )
+                              );
+                              window.dispatchEvent(new Event(readEventName));
+                            } catch {
+                              toast.error("Failed to mark notification as read");
+                            }
+                          }}
+                        >
                           <X className="w-4 h-4" />
                         </div>
                       </button>

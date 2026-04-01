@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   AlertCircle,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
@@ -93,7 +94,8 @@ export default function SettingsPage() {
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-foreground hover:bg-muted/50"
               >
                 <Building2 className="w-5 h-5" />
-                <span className="font-medium">Company Profile</span>
+                <span className="font-medium flex-1 text-left">Company Profile</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50" />
               </button>
 
               <button
@@ -173,45 +175,49 @@ export default function SettingsPage() {
 
               {/* Security Settings */}
               {activeTab === "security" && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-4">Security Settings</h2>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Manage your account security and authentication
-                    </p>
-                  </div>
+                <div className="relative">
+                  <div className="opacity-50 pointer-events-none space-y-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground mb-4">Security Settings</h2>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Manage your account security and authentication
+                      </p>
+                    </div>
 
-                  <div className={`${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-lg p-4`}>
-                    <div className="flex gap-3">
-                      <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className="font-medium text-foreground mb-1">Password Management</p>
-                        <p className="text-sm text-muted-foreground">
-                          To change your password, please contact support or use the password reset feature on the login page.
+                    <div className={`${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-lg p-4`}>
+                      <div className="flex gap-3">
+                        <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
+                        <div>
+                          <p className="font-medium text-foreground mb-1">Password Management</p>
+                          <p className="text-sm text-muted-foreground">
+                            To change your password, please contact support or use the password reset feature on the login page.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl border border-border/30">
+                        <p className="font-medium text-foreground mb-2">Two-Factor Authentication</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Add an extra layer of security to your account
                         </p>
+                        <Button size="sm">Enable 2FA</Button>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-border/30">
+                        <p className="font-medium text-foreground mb-2">Active Sessions</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Manage devices where you&apos;re currently logged in
+                        </p>
+                        <Button variant="outline" size="sm">View Sessions</Button>
                       </div>
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-xl border border-border/30">
-                      <p className="font-medium text-foreground mb-2">Two-Factor Authentication</p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Add an extra layer of security to your account
-                      </p>
-                      <Button size="sm">
-                        Enable 2FA
-                      </Button>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-border/30">
-                      <p className="font-medium text-foreground mb-2">Active Sessions</p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Manage devices where you&apos;re currently logged in
-                      </p>
-                      <Button variant="outline" size="sm">
-                        View Sessions
-                      </Button>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center bg-card border border-border rounded-xl p-4 shadow-lg">
+                      <p className="text-sm font-semibold">Coming Soon</p>
+                      <p className="text-xs text-muted-foreground mt-1">This feature is under development</p>
                     </div>
                   </div>
                 </div>
@@ -219,51 +225,53 @@ export default function SettingsPage() {
 
               {/* Billing Settings */}
               {activeTab === "billing" && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-4">Billing & Subscription</h2>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Manage your subscription and payment methods
-                    </p>
-                  </div>
+                <div className="relative">
+                  <div className="opacity-50 pointer-events-none space-y-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-foreground mb-4">Billing & Subscription</h2>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Manage your subscription and payment methods
+                      </p>
+                    </div>
 
-                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-foreground mb-1">Pro Plan</h3>
-                        <p className="text-sm text-muted-foreground">Unlimited job postings and candidates</p>
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground mb-1">Pro Plan</h3>
+                          <p className="text-sm text-muted-foreground">Unlimited job postings and candidates</p>
+                        </div>
+                        <span className="px-3 py-1 bg-primary text-white rounded-full text-sm font-medium">
+                          Active
+                        </span>
                       </div>
-                      <span className="px-3 py-1 bg-primary text-white rounded-full text-sm font-medium">
-                        Active
-                      </span>
+                      <p className="text-3xl font-bold text-foreground mb-4">
+                        $99<span className="text-sm font-medium text-muted-foreground">/month</span>
+                      </p>
+                      <Button variant="outline" size="sm">Manage Subscription</Button>
                     </div>
-                    <p className="text-3xl font-bold text-foreground mb-4">
-                      $99<span className="text-sm font-medium text-muted-foreground">/month</span>
-                    </p>
-                    <Button variant="outline" size="sm">
-                      Manage Subscription
-                    </Button>
+
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl border border-border/30">
+                        <p className="font-medium text-foreground mb-2">Payment Method</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          •••• •••• •••• 4242
+                        </p>
+                        <Button variant="outline" size="sm">Update Payment Method</Button>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-border/30">
+                        <p className="font-medium text-foreground mb-2">Billing History</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          View and download your past invoices
+                        </p>
+                        <Button variant="outline" size="sm">View Invoices</Button>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-xl border border-border/30">
-                      <p className="font-medium text-foreground mb-2">Payment Method</p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        •••• •••• •••• 4242
-                      </p>
-                      <Button variant="outline" size="sm">
-                        Update Payment Method
-                      </Button>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-border/30">
-                      <p className="font-medium text-foreground mb-2">Billing History</p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        View and download your past invoices
-                      </p>
-                      <Button variant="outline" size="sm">
-                        View Invoices
-                      </Button>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center bg-card border border-border rounded-xl p-4 shadow-lg">
+                      <p className="text-sm font-semibold">Coming Soon</p>
+                      <p className="text-xs text-muted-foreground mt-1">This feature is under development</p>
                     </div>
                   </div>
                 </div>
