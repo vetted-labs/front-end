@@ -17,6 +17,7 @@ import {
 import { Input, Textarea, NativeSelect, Button, Alert, Modal } from "./ui";
 import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
+import type { AuthResponse } from "@/types";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { truncateAddress } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -40,7 +41,7 @@ export function CompanyForm() {
   const auth = useAuthContext();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { execute, isLoading, error } = useApi();
+  const { execute, isLoading, error } = useApi<AuthResponse>();
 
   const [formData, setFormData] = useState<FormData>({
     companyName: "",
