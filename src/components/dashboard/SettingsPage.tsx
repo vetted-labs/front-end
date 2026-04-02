@@ -7,19 +7,82 @@ import {
   Lock,
   CreditCard,
   ArrowLeft,
-  AlertCircle,
   Loader2,
   ExternalLink,
 } from "lucide-react";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
 import { toast } from "sonner";
-import { STATUS_COLORS } from "@/config/colors";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { DataSection } from "@/lib/motion";
 import type { CompanyNotificationPreferences } from "@/types";
+
+function SecurityContent() {
+  const { execute, isLoading } = useApi<void>();
+  const [form, setForm] = useState({ current: "", newPass: "", confirm: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.current) e.current = "Required";
+    if (form.newPass.length < 8) e.newPass = "Min 8 characters";
+    if (form.newPass !== form.confirm) e.confirm = "Passwords don't match";
+    setErrors(e);
+    return !Object.keys(e).length;
+  };
+
+  return (
+    <div className="max-w-md space-y-4">
+      <h3 className="font-semibold">Change Password</h3>
+      <Input
+        type="password"
+        placeholder="Current password"
+        value={form.current}
+        onChange={(e) => setForm((f) => ({ ...f, current: e.target.value }))}
+        error={errors.current}
+      />
+      <Input
+        type="password"
+        placeholder="New password"
+        value={form.newPass}
+        onChange={(e) => setForm((f) => ({ ...f, newPass: e.target.value }))}
+        error={errors.newPass}
+      />
+      <Input
+        type="password"
+        placeholder="Confirm new password"
+        value={form.confirm}
+        onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
+        error={errors.confirm}
+      />
+      <Button
+        onClick={() => {
+          if (!validate()) return;
+          execute(
+            () => Promise.reject(new Error("Password change endpoint not available yet")),
+            {
+              onSuccess: () => toast.success("Password updated"),
+              onError: (err) => toast.error(err),
+            }
+          );
+        }}
+        disabled={isLoading}
+        isLoading={isLoading}
+      >
+        Update Password
+      </Button>
+
+      <div className="mt-8 pt-6 border-t">
+        <h3 className="font-semibold text-muted-foreground">Two-Factor Authentication</h3>
+        <p className="text-sm text-muted-foreground mt-1">Coming in a future update.</p>
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -174,107 +237,15 @@ export default function SettingsPage() {
               )}
 
               {/* Security Settings */}
-              {activeTab === "security" && (
-                <div className="relative">
-                  <div className="opacity-50 pointer-events-none space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-foreground mb-4">Security Settings</h2>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Manage your account security and authentication
-                      </p>
-                    </div>
-
-                    <div className={`${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} rounded-lg p-4`}>
-                      <div className="flex gap-3">
-                        <AlertCircle className={`w-5 h-5 ${STATUS_COLORS.info.icon} flex-shrink-0 mt-0.5`} />
-                        <div>
-                          <p className="font-medium text-foreground mb-1">Password Management</p>
-                          <p className="text-sm text-muted-foreground">
-                            To change your password, please contact support or use the password reset feature on the login page.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-xl border border-border/30">
-                        <p className="font-medium text-foreground mb-2">Two-Factor Authentication</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Add an extra layer of security to your account
-                        </p>
-                        <Button size="sm">Enable 2FA</Button>
-                      </div>
-
-                      <div className="p-4 rounded-xl border border-border/30">
-                        <p className="font-medium text-foreground mb-2">Active Sessions</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Manage devices where you&apos;re currently logged in
-                        </p>
-                        <Button variant="outline" size="sm">View Sessions</Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center bg-card border border-border rounded-xl p-4 shadow-lg">
-                      <p className="text-sm font-semibold">Coming Soon</p>
-                      <p className="text-xs text-muted-foreground mt-1">This feature is under development</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {activeTab === "security" && <SecurityContent />}
 
               {/* Billing Settings */}
               {activeTab === "billing" && (
-                <div className="relative">
-                  <div className="opacity-50 pointer-events-none space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-foreground mb-4">Billing & Subscription</h2>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Manage your subscription and payment methods
-                      </p>
-                    </div>
-
-                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-foreground mb-1">Pro Plan</h3>
-                          <p className="text-sm text-muted-foreground">Unlimited job postings and candidates</p>
-                        </div>
-                        <span className="px-3 py-1 bg-primary text-white rounded-full text-sm font-medium">
-                          Active
-                        </span>
-                      </div>
-                      <p className="text-3xl font-bold text-foreground mb-4">
-                        $99<span className="text-sm font-medium text-muted-foreground">/month</span>
-                      </p>
-                      <Button variant="outline" size="sm">Manage Subscription</Button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-xl border border-border/30">
-                        <p className="font-medium text-foreground mb-2">Payment Method</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          •••• •••• •••• 4242
-                        </p>
-                        <Button variant="outline" size="sm">Update Payment Method</Button>
-                      </div>
-
-                      <div className="p-4 rounded-xl border border-border/30">
-                        <p className="font-medium text-foreground mb-2">Billing History</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          View and download your past invoices
-                        </p>
-                        <Button variant="outline" size="sm">View Invoices</Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center bg-card border border-border rounded-xl p-4 shadow-lg">
-                      <p className="text-sm font-semibold">Coming Soon</p>
-                      <p className="text-xs text-muted-foreground mt-1">This feature is under development</p>
-                    </div>
-                  </div>
-                </div>
+                <EmptyState
+                  icon={CreditCard}
+                  title="Billing coming soon"
+                  description="Subscription management and payment processing will be available in a future release."
+                />
               )}
             </div>
           </div>

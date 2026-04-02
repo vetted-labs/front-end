@@ -26,6 +26,7 @@ interface FormData {
   companyName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   website: string;
   location: string;
   size: string;
@@ -47,6 +48,7 @@ export function CompanyForm() {
     companyName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     website: "",
     location: "",
     size: "",
@@ -55,11 +57,25 @@ export function CompanyForm() {
     walletAddress: "",
   });
 
+  const validateField = (field: keyof FormData, value: string) => {
+    let message = "";
+    if (field === "companyName" && value.trim().length < 2) {
+      message = "Company name must be at least 2 characters";
+    } else if (field === "email" && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+      message = "Invalid email format";
+    } else if (field === "password" && value.length < 8) {
+      message = "Min 8 characters";
+    } else if (field === "confirmPassword" && value !== formData.password) {
+      message = "Passwords don't match";
+    }
+    setErrors((prev) => ({ ...prev, [field]: message }));
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.companyName.trim()) {
-      newErrors.companyName = "Company name is required";
+    if (!formData.companyName.trim() || formData.companyName.trim().length < 2) {
+      newErrors.companyName = "Company name must be at least 2 characters";
     }
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -74,6 +90,9 @@ export function CompanyForm() {
       newErrors.password = "Password must contain at least one number";
     } else if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(formData.password)) {
       newErrors.password = "Password must contain at least one special character";
+    }
+    if (formData.confirmPassword !== formData.password) {
+      newErrors.confirmPassword = "Passwords don't match";
     }
     if (!address) {
       newErrors.wallet = "Please connect your wallet";
@@ -180,6 +199,7 @@ export function CompanyForm() {
                 label="Company Name *"
                 value={formData.companyName}
                 onChange={(e) => handleInputChange("companyName", e.target.value)}
+                onBlur={(e) => validateField("companyName", e.target.value)}
                 placeholder="Acme Inc."
                 error={errors.companyName}
                 maxLength={255}
@@ -248,6 +268,7 @@ export function CompanyForm() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
+                onBlur={(e) => validateField("email", e.target.value)}
                 placeholder="john@acme.com"
                 error={errors.email}
               />
@@ -257,9 +278,20 @@ export function CompanyForm() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
+                onBlur={(e) => validateField("password", e.target.value)}
                 placeholder="••••••••"
                 error={errors.password}
                 description="Min 8 characters with uppercase, number, and special character"
+              />
+
+              <Input
+                label="Confirm Password *"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                onBlur={(e) => validateField("confirmPassword", e.target.value)}
+                placeholder="••••••••"
+                error={errors.confirmPassword}
               />
             </div>
 

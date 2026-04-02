@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -94,6 +95,20 @@ export default function CompanyConversationView() {
 
   if (!ready) return null;
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="h-16 border-b bg-card animate-pulse" />
+        <div className="flex-1 p-4 space-y-4">
+          <div className="w-48 h-10 bg-muted animate-pulse rounded-xl ml-auto" />
+          <div className="w-64 h-10 bg-muted animate-pulse rounded-xl" />
+          <div className="w-36 h-10 bg-muted animate-pulse rounded-xl ml-auto" />
+        </div>
+        <div className="h-16 border-t bg-card animate-pulse" />
+      </div>
+    );
+  }
+
   if (!isLoading && !conversation) {
     return (
       <div className="min-h-full flex items-center justify-center">
@@ -137,13 +152,25 @@ export default function CompanyConversationView() {
             </>
           )}
         </div>
-        <button
-          onClick={() => setShowScheduleModal(true)}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          Schedule Meeting
-        </button>
+        <div className="flex items-center gap-2">
+          {conversation && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/dashboard/candidates?candidateId=${conversation.candidateId}`)}
+            >
+              <User className="w-4 h-4 mr-1" />
+              View Profile
+            </Button>
+          )}
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Schedule Meeting
+          </button>
+        </div>
       </div>
 
       {/* Messages + sidebar */}
