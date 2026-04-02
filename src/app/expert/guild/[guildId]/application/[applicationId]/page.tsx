@@ -1,31 +1,12 @@
 "use client";
+import { use } from "react";
+import { redirect } from "next/navigation";
 
-import { useState, useEffect } from "react";
-import ApplicationDetailPage from "@/components/expert/ApplicationDetailPage";
-
-interface PageProps {
-  params: Promise<{
-    guildId: string;
-    applicationId: string;
-  }>;
-}
-
-export default function Page({ params }: PageProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    guildId: string;
-    applicationId: string;
-  } | null>(null);
-
-  useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
-
-  if (!resolvedParams) return null;
-
-  return (
-    <ApplicationDetailPage
-      guildId={resolvedParams.guildId}
-      applicationId={resolvedParams.applicationId}
-    />
-  );
+export default function LegacyApplicationReviewPage({
+  params,
+}: {
+  params: Promise<{ guildId: string; applicationId: string }>;
+}) {
+  const { guildId, applicationId } = use(params);
+  redirect(`/expert/guild/${guildId}?tab=membershipApplications&applicationId=${applicationId}`);
 }
