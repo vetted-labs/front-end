@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSwitchChain } from "wagmi";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
@@ -19,6 +19,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Coins,
   AlertCircle,
@@ -66,6 +67,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [applicationFilter, setApplicationFilter] = useState<'active' | 'closed'>('active');
+  const [search, setSearch] = useState("");
 
   // Track whether we've already auto-opened the modal for initialApplicationId
   const hasAutoOpened = useRef(false);
@@ -128,7 +130,17 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   // Split applications by bidding status for filter tabs
   const activeApps = (applications ?? []).filter(app => !isBiddingExpired(app));
   const closedApps = (applications ?? []).filter(app => isBiddingExpired(app));
-  const filteredApplications = applicationFilter === 'active' ? activeApps : closedApps;
+  const tabFilteredApplications = applicationFilter === 'active' ? activeApps : closedApps;
+
+  const filteredApplications = useMemo(() => {
+    if (!search.trim()) return tabFilteredApplications;
+    const q = search.toLowerCase();
+    return tabFilteredApplications.filter(app =>
+      app.candidate_name?.toLowerCase().includes(q) ||
+      app.job_title?.toLowerCase().includes(q) ||
+      app.company_name?.toLowerCase().includes(q)
+    );
+  }, [tabFilteredApplications, search]);
 
   // eslint-disable-next-line no-restricted-syntax -- runtime deps: auto-open modal once applications finish loading with a matching applicationId
   useEffect(() => {
@@ -294,6 +306,12 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           </h2>
           {!loading && (
             <div className="flex items-center gap-3">
+              <Input
+                placeholder="Search applications..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="max-w-xs h-8 text-xs"
+              />
               <div className="flex items-center gap-0.5 rounded-lg bg-muted/30 border border-border p-0.5">
                 <button
                   onClick={() => setApplicationFilter('active')}

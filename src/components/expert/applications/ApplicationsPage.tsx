@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { expertApi, guildsApi, guildApplicationsApi, extractApiError } from "@/lib/api";
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
@@ -11,6 +11,7 @@ import { ArrowRight, Coins, Shield } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
+import { Input } from "@/components/ui/input";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { FirstTimeReviewerGuide } from "@/components/expert/FirstTimeReviewerGuide";
 import { ViewReviewModal } from "./ViewReviewModal";
@@ -53,6 +54,9 @@ export default function ApplicationsPage() {
 
   // Commit-reveal state
   const [crPhaseStatus, setCrPhaseStatus] = useState<ExpertCRPhaseStatus | null>(null);
+
+  // Search
+  const [search, setSearch] = useState("");
 
   // Handlers
   const handleReviewExpert = async (application: ExpertMembershipApplication) => {
@@ -188,6 +192,37 @@ export default function ApplicationsPage() {
     history: data.historyCount,
   };
 
+  const filteredPaginatedItems = useMemo(() => {
+    if (!search.trim()) return data.paginatedItems;
+    const q = search.toLowerCase();
+    return data.paginatedItems.filter((item) => {
+      if (data.activeTab === "expert") {
+        const a = item as ExpertMembershipApplication;
+        return a.fullName?.toLowerCase().includes(q);
+      }
+      if (data.activeTab === "candidate") {
+        const a = item as CandidateGuildApplication;
+        return a.candidateName?.toLowerCase().includes(q);
+      }
+      if (data.activeTab === "proposals") {
+        const a = item as GuildApplication;
+        return a.candidate_name?.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [data.paginatedItems, data.activeTab, search]);
+
+  const filteredHistoryList = useMemo(() => {
+    if (!search.trim()) return data.historyList;
+    const q = search.toLowerCase();
+    return data.historyList.filter((item) => {
+      if (item.type === "expert") return (item.data as ExpertMembershipApplication).fullName?.toLowerCase().includes(q);
+      if (item.type === "candidate") return (item.data as CandidateGuildApplication).candidateName?.toLowerCase().includes(q);
+      if (item.type === "proposal") return (item.data as GuildApplication).candidate_name?.toLowerCase().includes(q);
+      return true;
+    });
+  }, [data.historyList, search]);
+
   const handleTabChange = (tab: ApplicationsTabType) => {
     data.setActiveTab(tab);
     data.resetPage();
@@ -265,6 +300,15 @@ export default function ApplicationsPage() {
           pendingCounts={pendingCounts}
         />
 
+        <div>
+          <Input
+            placeholder="Search by applicant name..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+
         {/* Content */}
         <ApplicationsCardList
           activeTab={data.activeTab}
@@ -272,8 +316,8 @@ export default function ApplicationsPage() {
           isLoading={data.isLoading}
           isAllGuilds={data.isAllGuilds}
           selectedGuildName={data.selectedGuild.name}
-          paginatedItems={data.paginatedItems}
-          historyList={data.historyList}
+          paginatedItems={filteredPaginatedItems}
+          historyList={filteredHistoryList}
           totalItemCount={data.activeItems.length}
           currentPage={data.currentPage}
           totalPages={data.totalPages}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { useChartTooltip } from "@/components/analytics/ChartTooltip";
 import type { ReputationTimelineEntry } from "@/types";
 
 interface ReputationScoreChartProps {
@@ -72,6 +73,7 @@ function catmullRomPath(
 
 export function ReputationScoreChart({ timeline, reputation }: ReputationScoreChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const { show, hide, Tooltip } = useChartTooltip();
 
   const monthlyScores = useMemo(
     () => buildMonthlyScores(timeline, reputation),
@@ -234,30 +236,13 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
                       ? { animation: `rep-chart-point-appear 0.3s ease-out ${1.5 + i * 0.15}s forwards` }
                       : undefined
                   }
-                  onMouseEnter={() => setHoveredIdx(i)}
-                  onMouseLeave={() => setHoveredIdx(null)}
+                  onMouseEnter={(e) => { setHoveredIdx(i); show(e, monthlyScores[i].month, String(scores[i])); }}
+                  onMouseLeave={() => { setHoveredIdx(null); hide(); }}
                 />
               ))}
+              <Tooltip />
             </svg>
 
-            {/* Tooltip */}
-            {hoveredIdx !== null && (
-              <div
-                className="absolute bg-card dark:bg-surface-2/95 border border-primary/20 rounded-xl px-3.5 py-2.5 pointer-events-none z-10 shadow-lg"
-                style={{
-                  left: `${(points[hoveredIdx].x / viewW) * 100}%`,
-                  top: `${(points[hoveredIdx].y / viewH) * 100 - 18}%`,
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <p className="font-display text-xl font-bold text-primary tabular-nums">
-                  {scores[hoveredIdx]}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {monthlyScores[hoveredIdx].month}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Month labels */}

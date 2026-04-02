@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
+import { useChartTooltip } from "@/components/analytics/ChartTooltip";
 import type { EarningsEntry } from "@/types";
 
 interface EarningsChartProps {
@@ -28,6 +29,7 @@ function buildChartData(items: EarningsEntry[]): { label: string; value: number 
 
 export function EarningsChart({ items }: EarningsChartProps) {
   const data = useMemo(() => buildChartData(items), [items]);
+  const { show, hide, Tooltip } = useChartTooltip();
 
   if (data.length < 2) return null;
 
@@ -141,10 +143,13 @@ export function EarningsChart({ items }: EarningsChartProps) {
               key={i}
               cx={p.x}
               cy={p.y}
-              r="3"
+              r="6"
               fill="hsl(var(--background))"
               stroke="hsl(var(--primary))"
               strokeWidth="1.5"
+              style={{ cursor: "crosshair" }}
+              onMouseEnter={e => show(e, data[i].label, `${data[i].value.toFixed(2)} VETD`)}
+              onMouseLeave={hide}
             />
           ))}
 
@@ -168,6 +173,8 @@ export function EarningsChart({ items }: EarningsChartProps) {
               />
             </>
           )}
+
+          <Tooltip />
         </svg>
       </div>
 

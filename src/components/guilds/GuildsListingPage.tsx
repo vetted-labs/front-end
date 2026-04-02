@@ -1,4 +1,5 @@
 "use client";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -9,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Alert } from "@/components/ui";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { guildsApi } from "@/lib/api";
@@ -23,17 +25,27 @@ import type { Guild } from "@/types";
 
 export default function GlobalGuildsPage() {
   const router = useRouter();
+  const [search, setSearch] = useState("");
 
   const { data: guilds, isLoading, error } = useFetch<Guild[]>(
     () => guildsApi.getAll(),
   );
+
+  const filteredGuilds = useMemo(() => {
+    if (!search.trim()) return guilds ?? [];
+    const q = search.toLowerCase();
+    return (guilds ?? []).filter(guild =>
+      guild.name?.toLowerCase().includes(q) ||
+      guild.description?.toLowerCase().includes(q)
+    );
+  }, [guilds, search]);
 
   const {
     paginatedItems: currentGuilds,
     currentPage,
     totalPages,
     setCurrentPage,
-  } = useClientPagination(guilds ?? [], 12);
+  } = useClientPagination(filteredGuilds, 12);
 
   useMountEffect(() => {
     const saved = sessionStorage.getItem("guildsScrollPosition");
@@ -127,9 +139,26 @@ export default function GlobalGuildsPage() {
             </Alert>
           )}
 
+          <div className="mb-6">
+            <Input
+              placeholder="Search guilds..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+
           {allGuilds.length > 0 ? (
             <>
-              <div className="grid gap-4">
+              {filteredGuilds.length === 0 ? (
+                <EmptyState
+                  icon={Shield}
+                  title="No guilds match your search"
+                  description="Try a different keyword"
+                  className="py-16 rounded-xl border border-border bg-card"
+                />
+              ) : (
+                <div className="grid gap-4">
                 {currentGuilds.map((guild) => {
                   const GuildIcon = getGuildIcon(guild.name);
                   const description =
@@ -213,7 +242,8 @@ export default function GlobalGuildsPage() {
                     </article>
                   );
                 })}
-              </div>
+                </div>
+              )}
 
               <PaginationNav
                 page={currentPage}

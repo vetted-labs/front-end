@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -88,6 +88,12 @@ export default function CompanyProfilePage() {
   } = useApi<CompanyProfile>();
 
   const error = fetchError || saveError;
+
+  const completeness = useMemo(() => {
+    if (!profile) return 0;
+    const fields = [profile.name, profile.description, profile.website, profile.location, profile.size, profile.industry, profile.logoUrl];
+    return Math.round(fields.filter(Boolean).length / fields.length * 100);
+  }, [profile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -324,6 +330,13 @@ export default function CompanyProfilePage() {
           ) : (
             /* View Mode */
             <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${completeness}%` }} />
+                </div>
+                <span className="text-xs text-muted-foreground">{completeness}% complete</span>
+              </div>
+
               <div>
                 <label className="text-sm font-medium text-card-foreground block mb-1">
                   Company Name

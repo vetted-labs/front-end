@@ -16,6 +16,7 @@ import {
   ArrowUpDown,
   History,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ActiveEndorsement } from "@/types";
@@ -318,6 +319,7 @@ export function MyEndorsementsHistory() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [sort, setSort] = useState<SortKey>("date_desc");
+  const [search, setSearch] = useState("");
 
   // Derived counts
   const totalStaked = useMemo(
@@ -365,7 +367,17 @@ export function MyEndorsementsHistory() {
               (e.application?.status || "pending").toLowerCase() === filter
           );
 
-    return [...base].sort((a, b) => {
+    const searched = !search.trim()
+      ? base
+      : base.filter((e) => {
+          const q = search.toLowerCase();
+          return (
+            e.job?.title?.toLowerCase().includes(q) ||
+            e.candidate?.name?.toLowerCase().includes(q)
+          );
+        });
+
+    return [...searched].sort((a, b) => {
       switch (sort) {
         case "date_asc":
           return (
@@ -383,7 +395,7 @@ export function MyEndorsementsHistory() {
           );
       }
     });
-  }, [endorsements, filter, sort]);
+  }, [endorsements, filter, sort, search]);
 
   const maxStake = useMemo(
     () =>
@@ -528,6 +540,16 @@ export function MyEndorsementsHistory() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Search ── */}
+      <div>
+        <Input
+          placeholder="Search by job title or candidate..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
       </div>
 
       {/* ── Filter Tabs + Sort ── */}

@@ -23,6 +23,7 @@ import type { GovernanceProposalDetail, GovernanceFilterStatus } from "@/types";
 import { computeVoteWeight } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import { Divider } from "@/components/ui/divider";
+import { Input } from "@/components/ui/input";
 
 const FILTERS: { value: GovernanceFilterStatus; label: string }[] = [
   { value: "active", label: "Active" },
@@ -36,6 +37,7 @@ export default function GovernancePage() {
   const { address } = useAccount();
   const [filter, setFilter] = useState<GovernanceFilterStatus>("active");
   const [showPast, setShowPast] = useState(true);
+  const [search, setSearch] = useState("");
   const filterRef = useRef(filter);
   filterRef.current = filter;
 
@@ -71,11 +73,16 @@ export default function GovernancePage() {
   const { activeProposals, pastProposals, liveProposal } = useMemo(() => {
     if (!proposals) return { activeProposals: [], pastProposals: [], liveProposal: null };
 
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? proposals.filter(p => p.title?.toLowerCase().includes(q))
+      : proposals;
+
     const active: GovernanceProposalDetail[] = [];
     const past: GovernanceProposalDetail[] = [];
     let live: GovernanceProposalDetail | null = null;
 
-    for (const p of proposals) {
+    for (const p of filtered) {
       if (p.status === "active" && !p.finalized) {
         // The first active proposal with votes is the "live" featured one
         if (!live && (p.votes_for > 0 || p.votes_against > 0)) {
@@ -91,7 +98,7 @@ export default function GovernancePage() {
     }
 
     return { activeProposals: active, pastProposals: past, liveProposal: live };
-  }, [proposals]);
+  }, [proposals, search]);
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -164,8 +171,9 @@ export default function GovernancePage() {
           />
         )}
 
-        {/* ─── Filter Tabs ─── */}
-        <div className="flex items-center gap-2 mb-5 mt-2">
+        {/* ─── Filter Tabs + Search ─── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-5 mt-2">
+          <div className="flex items-center gap-2">
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -179,6 +187,13 @@ export default function GovernancePage() {
               {f.label}
             </button>
           ))}
+          </div>
+          <Input
+            placeholder="Search proposals..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="max-w-xs"
+          />
         </div>
 
         {/* ─── Active & Pending Proposals ─── */}

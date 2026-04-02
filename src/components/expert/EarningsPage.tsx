@@ -23,11 +23,29 @@ import type {
   ExpertProfile,
 } from "@/types";
 
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { EarningsSummaryCards } from "@/components/expert/EarningsSummaryCards";
 import { ClaimRewardsCard } from "@/components/expert/ClaimRewardsCard";
 import { HowEarningsWork } from "@/components/expert/HowEarningsWork";
 import { EarningsTimeline } from "@/components/expert/EarningsTimeline";
 import { EarningsChart } from "@/components/expert/EarningsChart";
+
+function exportEarningsCSV(data: EarningsEntry[]) {
+  const headers = "Date,Type,Amount (VETD),Guild,Candidate\n";
+  const rows = data.map(d =>
+    [d.created_at, d.type, d.amount, d.guild_name || "", d.candidate_name || ""].join(",")
+  ).join("\n");
+  const blob = new Blob([headers + rows], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vetted-earnings-${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 function getDateFrom(range: TimeRange): string | undefined {
   if (range === "all") return undefined;
@@ -222,14 +240,21 @@ export default function EarningsPage() {
             ))}
           </div>
 
-          {summary?.byGuild && summary.byGuild.length > 1 && (
-            <GuildSelector
-              guilds={summary.byGuild.map((g) => ({ id: g.guildId, name: g.guildName }))}
-              value={guildFilter}
-              onChange={handleGuildChange}
-              size="sm"
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {summary?.byGuild && summary.byGuild.length > 1 && (
+              <GuildSelector
+                guilds={summary.byGuild.map((g) => ({ id: g.guildId, name: g.guildName }))}
+                value={guildFilter}
+                onChange={handleGuildChange}
+                size="sm"
+              />
+            )}
+            {items.length > 0 && (
+              <Button variant="outline" size="sm" onClick={() => exportEarningsCSV(items)}>
+                <Download className="w-4 h-4 mr-1" /> Export CSV
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ── Earnings chart ── */}
