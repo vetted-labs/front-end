@@ -1,20 +1,68 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CANDIDATE_APPLICATIONS } from "@/components/analytics/mock-data";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { analyticsApi } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BarChart3 } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────
+
+interface CandidateApplication {
+  role: string;
+  company: string;
+  score: number | null;
+  guild: string;
+  endorsements: string;
+  status: "offer" | "interview" | "review";
+}
 
 // ── Status badge styles ─────────────────────────────────────────
 
-const STATUS_BADGE: Record<
-  string,
-  string
-> = {
+const STATUS_BADGE: Record<string, string> = {
   offer: "bg-positive/10 text-positive",
   interview: "bg-muted text-muted-foreground",
   review: "bg-primary/10 text-primary",
 };
 
+// ── Component ─────────────────────────────────────────────────
+
 export function CandidateApplicationsTab() {
+  const { data: rawData, isLoading, error } = useFetch(
+    () => analyticsApi.getCandidateApplicationStats(),
+    {}
+  );
+
+  const applications: CandidateApplication[] = Array.isArray(rawData)
+    ? (rawData as CandidateApplication[])
+    : [];
+
+  if (isLoading) {
+    return (
+      <div className="rounded-[14px] border border-border bg-card/60 h-48 animate-pulse" />
+    );
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Analytics coming soon"
+        description="Real-time analytics will be available once the backend API is deployed."
+      />
+    );
+  }
+
+  if (applications.length === 0) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="No applications yet"
+        description="Apply to jobs to track your application progress here."
+      />
+    );
+  }
+
   return (
     <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
       <div className="mb-6">
@@ -46,7 +94,7 @@ export function CandidateApplicationsTab() {
       </div>
 
       {/* Table Rows */}
-      {CANDIDATE_APPLICATIONS.map((app) => (
+      {applications.map((app) => (
         <div
           key={`${app.role}-${app.company}`}
           className="grid items-center gap-4 py-3 border-b border-border/50 last:border-b-0"
@@ -88,9 +136,7 @@ export function CandidateApplicationsTab() {
           </div>
 
           {/* Endorsements */}
-          <div className="text-xs text-muted-foreground">
-            {app.endorsements}
-          </div>
+          <div className="text-xs text-muted-foreground">{app.endorsements}</div>
 
           {/* Status */}
           <div className="text-center">
@@ -100,7 +146,11 @@ export function CandidateApplicationsTab() {
                 STATUS_BADGE[app.status]
               )}
             >
-              {app.status === "review" ? "Review" : app.status === "interview" ? "Interview" : "Offer"}
+              {app.status === "review"
+                ? "Review"
+                : app.status === "interview"
+                  ? "Interview"
+                  : "Offer"}
             </span>
           </div>
         </div>

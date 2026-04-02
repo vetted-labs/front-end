@@ -1,6 +1,10 @@
 "use client";
 
-import type { GuildDistribution } from "./mock-data";
+export interface GuildDistribution {
+  name: string;
+  count: number;
+  pct: string;
+}
 
 const SEGMENT_COLORS = [
   "hsl(var(--primary) / 0.65)",

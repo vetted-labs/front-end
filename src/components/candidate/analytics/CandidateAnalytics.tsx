@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { analyticsApi } from "@/lib/api";
 import {
   TimeFilter,
   type TimePeriod,
@@ -19,6 +21,22 @@ import { CandidateVisibilityTab } from "./CandidateVisibilityTab";
 export function CandidateAnalytics() {
   const { ready } = useRequireAuth("candidate");
   const [period, setPeriod] = useState<TimePeriod>("30D");
+
+  const { data: appsData } = useFetch(
+    () => analyticsApi.getCandidateApplicationStats(),
+    { skip: !ready }
+  );
+
+  const appCount = Array.isArray(appsData) ? (appsData as unknown[]).length : null;
+
+  const dateRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    const days =
+      period === "30D" ? 30 : period === "90D" ? 90 : period === "YTD" ? 180 : 365;
+    start.setDate(end.getDate() - days);
+    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} — ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+  }, [period]);
 
   if (!ready) return null;
 
@@ -42,7 +60,7 @@ export function CandidateAnalytics() {
           <TimeFilter
             value={period}
             onChange={setPeriod}
-            dateRange="Mar 1 — Mar 30, 2026"
+            dateRange={dateRange}
           />
         </div>
 
@@ -52,15 +70,17 @@ export function CandidateAnalytics() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="applications" className="gap-1.5">
               Applications
-              <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                6
-              </span>
+              {appCount !== null && (
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  {appCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="visibility">Visibility</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <CandidateOverviewTab />
+            <CandidateOverviewTab period={period} />
           </TabsContent>
 
           <TabsContent value="applications">
@@ -68,7 +88,7 @@ export function CandidateAnalytics() {
           </TabsContent>
 
           <TabsContent value="visibility">
-            <CandidateVisibilityTab />
+            <CandidateVisibilityTab period={period} />
           </TabsContent>
         </Tabs>
       </div>

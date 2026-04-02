@@ -1,6 +1,14 @@
 "use client";
 
-import type { FunnelStage } from "./mock-data";
+// ── Types ─────────────────────────────────────────────────────
+
+export interface FunnelStage {
+  label: string;
+  count: number;
+  pct: string;
+  conversionLabel?: string;
+  isHired?: boolean;
+}
 
 // ── Constants ──────────────────────────────────────────────────
 

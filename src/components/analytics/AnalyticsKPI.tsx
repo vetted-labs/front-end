@@ -1,7 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { CompanyKPI } from "./mock-data";
+
+export interface KPIData {
+  label: string;
+  value: string;
+  change: string;
+  changeDirection: "up" | "down" | "neutral";
+  unit?: string;
+  sparklineData: number[];
+  accentColor: "primary" | "positive" | "muted";
+}
 
 // ── Sparkline builder ──────────────────────────────────────────
 
@@ -63,7 +72,7 @@ const ACCENT_MAP = {
 // ── Component ──────────────────────────────────────────────────
 
 interface AnalyticsKPIProps {
-  kpi: CompanyKPI;
+  kpi: KPIData;
 }
 
 export function AnalyticsKPI({ kpi }: AnalyticsKPIProps) {

@@ -1760,7 +1760,7 @@ export const analyticsApi = {
     ),
 
   getCompanyJobPerformance: (period?: string) =>
-    apiRequest<Record<string, unknown>[]>(
+    apiRequest<unknown>(
       `/api/companies/me/analytics/jobs${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),
@@ -1779,7 +1779,7 @@ export const analyticsApi = {
     ),
 
   getCandidateApplicationStats: () =>
-    apiRequest<Record<string, unknown>[]>(
+    apiRequest<unknown>(
       `/api/candidates/me/analytics/applications`,
       { requiresAuth: true }
     ),

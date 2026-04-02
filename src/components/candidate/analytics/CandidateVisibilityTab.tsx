@@ -1,125 +1,221 @@
 "use client";
 
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { AreaChart } from "@/components/analytics/AreaChart";
-import {
-  PROFILE_VIEWS_DATA,
-  CANDIDATE_DISCOVERY,
-  GUILD_MEMBERSHIPS,
-} from "@/components/analytics/mock-data";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { analyticsApi } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BarChart3 } from "lucide-react";
+import type { TimePeriod } from "@/components/analytics/TimeFilter";
 
-export function CandidateVisibilityTab() {
-  const chartData = PROFILE_VIEWS_DATA.map((d) => ({
-    label: d.week,
-    value: d.views,
-  }));
+// ── Types ─────────────────────────────────────────────────────
+
+interface ProfileViewPoint {
+  label?: string;
+  week?: string;
+  views?: number;
+  value?: number;
+}
+
+interface DiscoveryMetric {
+  label: string;
+  value: string;
+  color?: "primary" | "muted";
+}
+
+interface GuildMembership {
+  guild: string;
+  score: number;
+  vettedDate: string;
+  status: "active" | "improve";
+}
+
+interface VisibilityData {
+  profileViews?: ProfileViewPoint[];
+  totalViews?: number;
+  viewsChange?: string;
+  discovery?: DiscoveryMetric[];
+  guildMemberships?: GuildMembership[];
+}
+
+// ── Component ─────────────────────────────────────────────────
+
+interface Props {
+  period: TimePeriod;
+}
+
+export function CandidateVisibilityTab({ period }: Props) {
+  const { data: rawData, isLoading, error } = useFetch(
+    () => analyticsApi.getCandidateVisibility(period),
+    {}
+  );
+
+  const data = rawData as VisibilityData | null;
+
+  const chartData = useMemo(() => {
+    if (!data?.profileViews) return [];
+    return data.profileViews.map((d) => ({
+      label: d.label ?? d.week ?? "",
+      value: d.value ?? d.views ?? 0,
+    }));
+  }, [data]);
+
+  const discovery = data?.discovery ?? [];
+  const guildMemberships = data?.guildMemberships ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-[14px] border border-border bg-card/60 h-48 animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Analytics coming soon"
+        description="Real-time analytics will be available once the backend API is deployed."
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
       {/* Profile Views Chart */}
-      <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
-        <div className="mb-6">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Profile Views
-          </h3>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-            Companies viewing your vetted profile
-          </p>
+      {chartData.length > 0 && (
+        <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
+          <div className="mb-6">
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Profile Views
+            </h3>
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+              Companies viewing your vetted profile
+            </p>
+          </div>
+
+          <AreaChart data={chartData} />
+
+          {(data?.totalViews != null || data?.viewsChange != null) && (
+            <p className="text-[11px] text-muted-foreground mt-2">
+              {data?.totalViews != null && `${data.totalViews} views`}
+              {data?.totalViews != null && data?.viewsChange && (
+                <>
+                  {" "}
+                  <span className="text-muted-foreground/50">&middot;</span>{" "}
+                  <span className="text-positive">{data.viewsChange}</span> vs
+                  prior period
+                </>
+              )}
+            </p>
+          )}
         </div>
-
-        <AreaChart data={chartData} />
-
-        <p className="text-[11px] text-muted-foreground mt-2">
-          89 views{" "}
-          <span className="text-muted-foreground/50">&middot;</span>{" "}
-          <span className="text-positive">+34%</span> vs prior period
-        </p>
-      </div>
+      )}
 
       {/* 2-column grid */}
-      <div className="grid lg:grid-cols-2 gap-5">
-        {/* Discovery Metrics */}
-        <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
-          <div className="mb-6">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Discovery
-            </h3>
-          </div>
-
-          <div className="flex flex-col">
-            {CANDIDATE_DISCOVERY.map((metric, i) => (
-              <div
-                key={metric.label}
-                className={cn(
-                  "flex justify-between items-center py-3",
-                  i < CANDIDATE_DISCOVERY.length - 1 &&
-                    "border-b border-border/50"
-                )}
-              >
-                <span className="text-[13px] text-muted-foreground">
-                  {metric.label}
-                </span>
-                <span
-                  className={cn(
-                    "font-mono text-sm font-semibold",
-                    metric.color === "primary"
-                      ? "text-primary"
-                      : "text-foreground"
-                  )}
-                >
-                  {metric.value}
-                </span>
+      {(discovery.length > 0 || guildMemberships.length > 0) && (
+        <div className="grid lg:grid-cols-2 gap-5">
+          {/* Discovery Metrics */}
+          {discovery.length > 0 && (
+            <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
+              <div className="mb-6">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Discovery
+                </h3>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Guild Memberships */}
-        <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
-          <div className="mb-6">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Guild Memberships
-            </h3>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            {GUILD_MEMBERSHIPS.map((g) => {
-              const isActive = g.status === "active";
-              return (
-                <div
-                  key={g.guild}
-                  className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-[10px] border",
-                    isActive
-                      ? "bg-primary/[0.02] border-primary/[0.06]"
-                      : "bg-white/[0.015] border-border"
-                  )}
-                >
-                  <span className="inline-flex items-center rounded-full bg-primary/8 border border-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                    {g.guild}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium">Score: {g.score}</div>
-                    <div className="text-[10px] text-muted-foreground/60">
-                      Vetted {g.vettedDate}
-                    </div>
-                  </div>
-                  <span
+              <div className="flex flex-col">
+                {discovery.map((metric, i) => (
+                  <div
+                    key={metric.label}
                     className={cn(
-                      "text-[10px] font-semibold",
-                      isActive
-                        ? "text-positive"
-                        : "text-muted-foreground"
+                      "flex justify-between items-center py-3",
+                      i < discovery.length - 1 && "border-b border-border/50"
                     )}
                   >
-                    {isActive ? "Active" : "Improve"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                    <span className="text-[13px] text-muted-foreground">
+                      {metric.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono text-sm font-semibold",
+                        metric.color === "primary"
+                          ? "text-primary"
+                          : "text-foreground"
+                      )}
+                    >
+                      {metric.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Guild Memberships */}
+          {guildMemberships.length > 0 && (
+            <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
+              <div className="mb-6">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Guild Memberships
+                </h3>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {guildMemberships.map((g) => {
+                  const isActive = g.status === "active";
+                  return (
+                    <div
+                      key={g.guild}
+                      className={cn(
+                        "flex items-center gap-3 p-3.5 rounded-[10px] border",
+                        isActive
+                          ? "bg-primary/[0.02] border-primary/[0.06]"
+                          : "bg-foreground/[0.015] border-border"
+                      )}
+                    >
+                      <span className="inline-flex items-center rounded-full bg-primary/8 border border-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                        {g.guild}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium">
+                          Score: {g.score}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground/60">
+                          Vetted {g.vettedDate}
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          "text-[10px] font-semibold",
+                          isActive ? "text-positive" : "text-muted-foreground"
+                        )}
+                      >
+                        {isActive ? "Active" : "Improve"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {chartData.length === 0 && discovery.length === 0 && guildMemberships.length === 0 && (
+        <EmptyState
+          icon={BarChart3}
+          title="No visibility data yet"
+          description="Complete your profile and get vetted to improve your discoverability."
+        />
+      )}
     </div>
   );
 }

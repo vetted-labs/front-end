@@ -1,22 +1,52 @@
 "use client";
 
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { AreaChart } from "@/components/analytics/AreaChart";
-import {
-  EXPERT_OVERVIEW,
-  EXPERT_REPUTATION_TIMELINE,
-  EXPERT_EARNINGS,
-} from "@/components/analytics/mock-data";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { analyticsApi } from "@/lib/api";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BarChart3 } from "lucide-react";
+import type { TimePeriod } from "@/components/analytics/TimeFilter";
 
-// ── Reputation Ring ───────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────
+
+interface ExpertOverviewData {
+  reputation?: number;
+  tier?: string;
+  tierProgress?: number;
+  ptsToNext?: number;
+  vetdBalance?: number;
+  vetdStaked?: number;
+  vetdAvailable?: number;
+  totalEarned?: number;
+  periodEarned?: number;
+  reviewsCompleted?: number;
+  reviewsThisPeriod?: number;
+  consensusAlignment?: number;
+}
+
+interface ReputationPoint {
+  label?: string;
+  month?: string;
+  score?: number;
+  value?: number;
+}
+
+interface EarningsItem {
+  label: string;
+  amount: number;
+  pct: number;
+  positive: boolean;
+}
+
+// ── Ring constants ────────────────────────────────────────────
 
 const RING_SIZE = 150;
 const RING_CX = 75;
 const RING_CY = 75;
 const RING_R = 62;
 const CIRCUMFERENCE = 2 * Math.PI * RING_R;
-const SCORE_RATIO = EXPERT_OVERVIEW.reputation / 2500;
-const DASH_LENGTH = SCORE_RATIO * CIRCUMFERENCE;
 
 // ── Stat box helper ───────────────────────────────────────────
 
@@ -36,29 +66,94 @@ function StatBox({
   return (
     <div className="bg-muted/10 border border-border rounded-md p-4">
       <div className="text-[11px] text-muted-foreground mb-1.5">{label}</div>
-      <div
-        className={cn("font-display text-2xl font-bold", valueColor)}
-      >
+      <div className={cn("font-display text-2xl font-bold", valueColor)}>
         {value}
       </div>
-      <div className={cn("text-xs mt-1", noteColor ?? "text-muted-foreground/60")}>
+      <div
+        className={cn("text-xs mt-1", noteColor ?? "text-muted-foreground/60")}
+      >
         {note}
       </div>
     </div>
   );
 }
 
-// ── Net earnings total ────────────────────────────────────────
-
-const NET_TOTAL = EXPERT_EARNINGS.reduce((sum, e) => sum + e.amount, 0);
-
 // ── Component ─────────────────────────────────────────────────
 
-export function ExpertOverviewTab() {
-  const reputationData = EXPERT_REPUTATION_TIMELINE.map((d) => ({
-    label: d.month,
-    value: d.score,
-  }));
+interface Props {
+  period: TimePeriod;
+  walletAddress?: string;
+}
+
+export function ExpertOverviewTab({ period, walletAddress }: Props) {
+  const { data: rawOverview, isLoading: overviewLoading, error: overviewError } = useFetch(
+    () => analyticsApi.getExpertOverview(walletAddress!, period),
+    { skip: !walletAddress }
+  );
+
+  const { data: rawTimeline, isLoading: timelineLoading, error: timelineError } = useFetch(
+    () => analyticsApi.getExpertReputationTimeline(walletAddress!, period),
+    { skip: !walletAddress }
+  );
+
+  const overview = rawOverview as ExpertOverviewData | null;
+  const timeline = rawTimeline as ReputationPoint[] | null;
+
+  const reputationData = useMemo(() => {
+    if (!timeline) return [];
+    return timeline.map((d) => ({
+      label: d.label ?? d.month ?? "",
+      value: d.value ?? d.score ?? 0,
+    }));
+  }, [timeline]);
+
+  // Earnings from overview if backend provides it
+  const earnings = useMemo((): EarningsItem[] => {
+    const ov = overview as (ExpertOverviewData & { earnings?: EarningsItem[] }) | null;
+    return ov?.earnings ?? [];
+  }, [overview]);
+
+  const netTotal = useMemo(
+    () => earnings.reduce((sum, e) => sum + e.amount, 0),
+    [earnings]
+  );
+
+  const reputation = overview?.reputation ?? 0;
+  const scoreRatio = reputation / 2500;
+  const dashLength = scoreRatio * CIRCUMFERENCE;
+
+  if ((overviewError && timelineError) || (!walletAddress && !overviewLoading)) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Analytics coming soon"
+        description="Real-time analytics will be available once the backend API is deployed."
+      />
+    );
+  }
+
+  if (overviewLoading || timelineLoading) {
+    return (
+      <div className="space-y-5 pt-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="rounded-[14px] border border-border bg-card/60 h-48 animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (overviewError) {
+    return (
+      <EmptyState
+        icon={BarChart3}
+        title="Analytics coming soon"
+        description="Real-time analytics will be available once the backend API is deployed."
+      />
+    );
+  }
 
   return (
     <div className="space-y-5 pt-4">
@@ -93,7 +188,7 @@ export function ExpertOverviewTab() {
                 fill="none"
                 stroke="hsl(var(--primary))"
                 strokeWidth="9"
-                strokeDasharray={`${DASH_LENGTH} ${CIRCUMFERENCE}`}
+                strokeDasharray={`${dashLength} ${CIRCUMFERENCE}`}
                 strokeLinecap="round"
                 style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
                 opacity="0.75"
@@ -106,7 +201,7 @@ export function ExpertOverviewTab() {
                 fill="none"
                 stroke="hsl(var(--primary))"
                 strokeWidth="9"
-                strokeDasharray={`${DASH_LENGTH} ${CIRCUMFERENCE}`}
+                strokeDasharray={`${dashLength} ${CIRCUMFERENCE}`}
                 strokeLinecap="round"
                 style={{
                   transform: "rotate(-90deg)",
@@ -128,7 +223,7 @@ export function ExpertOverviewTab() {
                   fontWeight: 700,
                 }}
               >
-                {EXPERT_OVERVIEW.reputation.toLocaleString()}
+                {reputation.toLocaleString()}
               </text>
               <text
                 x={RING_CX}
@@ -145,19 +240,21 @@ export function ExpertOverviewTab() {
             {/* Tier badge */}
             <div className="mt-4">
               <span className="inline-flex items-center rounded-full bg-primary/8 text-primary px-3 py-1 text-xs font-semibold">
-                {EXPERT_OVERVIEW.tier}
+                {overview?.tier ?? "—"}
               </span>
-              <div className="text-[10px] text-muted-foreground/50 mt-2">
-                {EXPERT_OVERVIEW.ptsToNext} pts to Authority
-              </div>
-              <div className="mx-auto mt-1.5 w-[120px] h-1.5 rounded-full bg-muted/20 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{
-                    width: `${EXPERT_OVERVIEW.tierProgress}%`,
-                  }}
-                />
-              </div>
+              {overview?.ptsToNext != null && (
+                <div className="text-[10px] text-muted-foreground/50 mt-2">
+                  {overview.ptsToNext} pts to Authority
+                </div>
+              )}
+              {overview?.tierProgress != null && (
+                <div className="mx-auto mt-1.5 w-[120px] h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${overview.tierProgress}%` }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -165,25 +262,25 @@ export function ExpertOverviewTab() {
           <div className="flex-1 grid grid-cols-2 gap-3.5">
             <StatBox
               label="$VETD Balance"
-              value={EXPERT_OVERVIEW.vetdBalance.toLocaleString()}
+              value={(overview?.vetdBalance ?? 0).toLocaleString()}
               valueColor="text-primary"
-              note={`${EXPERT_OVERVIEW.vetdStaked.toLocaleString()} staked \u00b7 ${EXPERT_OVERVIEW.vetdAvailable.toLocaleString()} available`}
+              note={`${(overview?.vetdStaked ?? 0).toLocaleString()} staked · ${(overview?.vetdAvailable ?? 0).toLocaleString()} available`}
             />
             <StatBox
               label="Total Earned"
-              value={`${EXPERT_OVERVIEW.totalEarned.toLocaleString()} $VETD`}
+              value={`${(overview?.totalEarned ?? 0).toLocaleString()} $VETD`}
               valueColor="text-positive"
-              note={`+${EXPERT_OVERVIEW.periodEarned.toLocaleString()} this period`}
+              note={`+${(overview?.periodEarned ?? 0).toLocaleString()} this period`}
               noteColor="text-positive"
             />
             <StatBox
               label="Reviews Completed"
-              value={EXPERT_OVERVIEW.reviewsCompleted.toLocaleString()}
-              note={`${EXPERT_OVERVIEW.reviewsThisPeriod} this period`}
+              value={(overview?.reviewsCompleted ?? 0).toLocaleString()}
+              note={`${overview?.reviewsThisPeriod ?? 0} this period`}
             />
             <StatBox
               label="Consensus Alignment"
-              value={`${EXPERT_OVERVIEW.consensusAlignment}%`}
+              value={`${overview?.consensusAlignment ?? 0}%`}
               valueColor="text-positive"
               note="Within IQR band"
             />
@@ -192,77 +289,82 @@ export function ExpertOverviewTab() {
       </div>
 
       {/* ── Reputation Over Time ── */}
-      <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
-        <div className="mb-1">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Reputation Over Time
-          </h3>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-            Score progression with tier thresholds
-          </p>
-        </div>
-
-        <div className="mt-4">
-          <AreaChart data={reputationData} primaryColor="hsl(var(--primary))" />
-        </div>
-      </div>
-
-      {/* ── Earnings Breakdown ── */}
-      <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
-        <div className="flex items-start justify-between mb-5">
-          <div>
+      {reputationData.length > 0 && (
+        <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
+          <div className="mb-1">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Earnings Breakdown
+              Reputation Over Time
             </h3>
             <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-              $VETD earned and lost by source
+              Score progression with tier thresholds
             </p>
           </div>
-          <span className="text-sm font-semibold font-mono text-positive">
-            Net: +{NET_TOTAL.toLocaleString()}
-          </span>
-        </div>
 
-        <div className="flex flex-col gap-4">
-          {EXPERT_EARNINGS.map((item) => (
-            <div key={item.label}>
-              <div className="flex justify-between mb-1.5">
-                <span
-                  className={cn(
-                    "text-[13px]",
-                    item.positive
-                      ? "text-muted-foreground"
-                      : "text-negative"
-                  )}
-                >
-                  {item.label}
-                </span>
-                <span
-                  className={cn(
-                    "text-sm font-mono font-semibold",
-                    item.positive ? "text-positive" : "text-negative"
-                  )}
-                >
-                  {item.positive ? "+" : ""}
-                  {Math.abs(item.amount).toLocaleString()}
-                </span>
-              </div>
-              <div className="h-2.5 rounded-full bg-muted/10 overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${Math.max(item.pct, 1)}%`,
-                    minWidth: item.pct <= 1 ? "4px" : undefined,
-                    background: item.positive
-                      ? "linear-gradient(90deg, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.1))"
-                      : "linear-gradient(90deg, hsl(var(--destructive) / 0.35), hsl(var(--destructive) / 0.08))",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+          <div className="mt-4">
+            <AreaChart
+              data={reputationData}
+              primaryColor="hsl(var(--primary))"
+            />
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Earnings Breakdown ── */}
+      {earnings.length > 0 && (
+        <div className="rounded-[14px] border border-border bg-card/60 backdrop-blur-sm p-7">
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Earnings Breakdown
+              </h3>
+              <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                $VETD earned and lost by source
+              </p>
+            </div>
+            <span className="text-sm font-semibold font-mono text-positive">
+              Net: +{netTotal.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {earnings.map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between mb-1.5">
+                  <span
+                    className={cn(
+                      "text-[13px]",
+                      item.positive ? "text-muted-foreground" : "text-negative"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-sm font-mono font-semibold",
+                      item.positive ? "text-positive" : "text-negative"
+                    )}
+                  >
+                    {item.positive ? "+" : ""}
+                    {Math.abs(item.amount).toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-2.5 rounded-full bg-muted/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.max(item.pct, 1)}%`,
+                      minWidth: item.pct <= 1 ? "4px" : undefined,
+                      background: item.positive
+                        ? "linear-gradient(90deg, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.1))"
+                        : "linear-gradient(90deg, hsl(var(--destructive) / 0.35), hsl(var(--destructive) / 0.08))",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

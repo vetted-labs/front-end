@@ -1,7 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { SourceData } from "./mock-data";
+
+export interface SourceData {
+  label: string;
+  pct: number;
+  hireRate?: string;
+}
 
 interface HorizontalBarsProps {
   data: SourceData[];

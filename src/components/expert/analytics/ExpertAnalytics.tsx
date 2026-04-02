@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { analyticsApi } from "@/lib/api";
 import { TimeFilter, type TimePeriod } from "@/components/analytics/TimeFilter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ExpertOverviewTab } from "./ExpertOverviewTab";
@@ -9,8 +11,25 @@ import { ExpertReviewsTab } from "./ExpertReviewsTab";
 import { ExpertEndorsementsTab } from "./ExpertEndorsementsTab";
 
 export function ExpertAnalytics() {
-  const { isConnected } = useExpertAccount();
+  const { address, isConnected } = useExpertAccount();
   const [period, setPeriod] = useState<TimePeriod>("30D");
+
+  const { data: endorsementStats } = useFetch(
+    () => analyticsApi.getExpertEndorsementStats(address!),
+    { skip: !address }
+  );
+
+  const endorsementCount =
+    (endorsementStats as { active?: number } | null)?.active ?? null;
+
+  const dateRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    const days =
+      period === "30D" ? 30 : period === "90D" ? 90 : period === "YTD" ? 180 : 365;
+    start.setDate(end.getDate() - days);
+    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} — ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+  }, [period]);
 
   if (!isConnected) return null;
 
@@ -43,7 +62,7 @@ export function ExpertAnalytics() {
           <TimeFilter
             value={period}
             onChange={setPeriod}
-            dateRange="Mar 1 — Mar 30, 2026"
+            dateRange={dateRange}
           />
         </div>
 
@@ -54,22 +73,24 @@ export function ExpertAnalytics() {
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="endorsements" className="gap-1.5">
               Endorsements
-              <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                3
-              </span>
+              {endorsementCount !== null && (
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  {endorsementCount}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <ExpertOverviewTab />
+            <ExpertOverviewTab period={period} walletAddress={address} />
           </TabsContent>
 
           <TabsContent value="reviews">
-            <ExpertReviewsTab />
+            <ExpertReviewsTab period={period} walletAddress={address} />
           </TabsContent>
 
           <TabsContent value="endorsements">
-            <ExpertEndorsementsTab />
+            <ExpertEndorsementsTab walletAddress={address} />
           </TabsContent>
         </Tabs>
       </div>
