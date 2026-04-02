@@ -1,4 +1,4 @@
-import { Target, Activity, Clock, Users } from "lucide-react";
+import { Target, Activity, BookOpen, Award } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 
 interface ReputationBreakdownCardsProps {
@@ -7,9 +7,11 @@ interface ReputationBreakdownCardsProps {
   totalLosses: number;
   alignedCount: number;
   deviationCount: number;
+  reviewCount: number;
+  endorsementCount: number;
 }
 
-/** Arc progress SVG for accuracy/timeliness cards */
+/** Arc progress SVG for accuracy cards */
 function ProgressArc({
   value,
   colorClass,
@@ -67,40 +69,20 @@ function MiniBarChart({ values }: { values: number[] }) {
   );
 }
 
-/** Social graph mini visualization for trust card */
-function SocialGraph() {
-  const orbits = [
-    { top: "4px", left: "22px" },
-    { top: "14px", right: "2px" },
-    { bottom: "8px", left: "6px" },
-    { bottom: "2px", right: "10px" },
-    { top: "38px", left: "0px" },
-  ];
-
+/** Simple count display for activity/record cards */
+function CountDisplay({
+  count,
+  label,
+  colorClass,
+}: {
+  count: number;
+  label: string;
+  colorClass: string;
+}) {
   return (
-    <div className="relative w-14 h-14">
-      {/* Connection lines */}
-      {[-30, 40, 150, 200, 310].map((angle, i) => (
-        <div
-          key={i}
-          className="absolute top-1/2 left-1/2 h-px bg-positive/15"
-          style={{
-            width: `${15 + i * 2}px`,
-            transformOrigin: "left center",
-            transform: `rotate(${angle}deg) translateY(-50%)`,
-          }}
-        />
-      ))}
-      {/* Center node */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-positive" />
-      {/* Orbit nodes */}
-      {orbits.map((pos, i) => (
-        <div
-          key={i}
-          className="absolute w-1.5 h-1.5 rounded-full bg-positive opacity-50"
-          style={pos as React.CSSProperties}
-        />
-      ))}
+    <div className="flex flex-col items-end justify-center h-14">
+      <span className={`text-2xl font-bold leading-none ${colorClass}`}>{count}</span>
+      <span className="text-[10px] text-muted-foreground mt-0.5">{label}</span>
     </div>
   );
 }
@@ -110,6 +92,8 @@ export function ReputationBreakdownCards({
   totalLosses,
   alignedCount,
   deviationCount,
+  reviewCount,
+  endorsementCount,
 }: ReputationBreakdownCardsProps) {
   const total = alignedCount + deviationCount;
 
@@ -120,17 +104,13 @@ export function ReputationBreakdownCards({
   const consistencyPct = totalActivity > 0
     ? Math.min(100, Math.round((Math.abs(totalGains) / totalActivity) * 100))
     : 100;
-  // Timeliness: derived from aligned rate (no late-submission penalty data yet)
-  const timelinessPct = Math.min(100, accuracyPct + 3);
-  // Community trust: blend of accuracy and consistency
-  const trustPct = Math.round((accuracyPct * 0.6 + consistencyPct * 0.4));
 
   const miniChartValues = [70, 85, 78, 92, 88, 95, 82, 90, consistencyPct];
 
   const cards = [
     {
       name: "Review Accuracy",
-      value: accuracyPct,
+      value: `${accuracyPct}%`,
       icon: Target,
       viz: (
         <ProgressArc
@@ -145,11 +125,12 @@ export function ReputationBreakdownCards({
       iconBg: "bg-positive/10 border border-positive/15",
       iconColor: "text-positive",
       valueColor: STATUS_COLORS.positive.text,
+      barValue: accuracyPct,
       barColor: "bg-positive",
     },
     {
       name: "Consistency",
-      value: consistencyPct,
+      value: `${consistencyPct}%`,
       icon: Activity,
       viz: <MiniBarChart values={miniChartValues} />,
       cardBg: "bg-info-blue/[0.04]",
@@ -158,17 +139,18 @@ export function ReputationBreakdownCards({
       iconBg: "bg-info-blue/10 border border-info-blue/15",
       iconColor: "text-info-blue",
       valueColor: STATUS_COLORS.info.text,
+      barValue: consistencyPct,
       barColor: "bg-info-blue",
     },
     {
-      name: "Timeliness",
-      value: timelinessPct,
-      icon: Clock,
+      name: "Review Activity",
+      value: String(reviewCount),
+      icon: BookOpen,
       viz: (
-        <ProgressArc
-          value={timelinessPct}
-          colorClass="stroke-primary"
-          bgColorClass="stroke-primary/10"
+        <CountDisplay
+          count={reviewCount}
+          label="reviews"
+          colorClass="text-primary"
         />
       ),
       cardBg: "bg-primary/[0.04]",
@@ -177,19 +159,27 @@ export function ReputationBreakdownCards({
       iconBg: "bg-primary/10 border border-primary/15",
       iconColor: "text-primary",
       valueColor: "text-primary",
+      barValue: Math.min(100, reviewCount),
       barColor: "bg-primary",
     },
     {
-      name: "Community Trust",
-      value: trustPct,
-      icon: Users,
-      viz: <SocialGraph />,
+      name: "Endorsement Record",
+      value: String(endorsementCount),
+      icon: Award,
+      viz: (
+        <CountDisplay
+          count={endorsementCount}
+          label="endorsed"
+          colorClass={STATUS_COLORS.positive.text}
+        />
+      ),
       cardBg: "bg-positive/[0.04]",
       borderColor: "border-positive/[0.12]",
       hoverBorder: "hover:border-positive/25",
       iconBg: "bg-positive/10 border border-positive/15",
       iconColor: "text-positive",
       valueColor: STATUS_COLORS.positive.text,
+      barValue: Math.min(100, endorsementCount * 5),
       barColor: "bg-positive",
     },
   ];
@@ -229,14 +219,14 @@ export function ReputationBreakdownCards({
 
               {/* Value */}
               <p className={`font-display text-3xl font-bold leading-none mb-3 ${card.valueColor}`}>
-                {card.value}%
+                {card.value}
               </p>
 
               {/* Progress bar */}
               <div className="h-1 rounded-full bg-muted/50 dark:bg-muted/30 overflow-hidden">
                 <div
                   className={`h-full rounded-full ${card.barColor} transition-all duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]`}
-                  style={{ width: `${card.value}%` }}
+                  style={{ width: `${card.barValue}%` }}
                 />
               </div>
             </div>

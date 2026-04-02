@@ -162,6 +162,8 @@ export default function ReputationPage() {
             totalLosses={totalLosses}
             alignedCount={alignedCount}
             deviationCount={deviationCount}
+            reviewCount={profile?.reviewCount ?? 0}
+            endorsementCount={profile?.endorsementCount ?? 0}
           />
         </DataSection>
 
