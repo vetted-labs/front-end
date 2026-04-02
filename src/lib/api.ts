@@ -1718,3 +1718,75 @@ export const guildAppealApi = {
       { headers: { "X-Wallet-Address": wallet } }
     ),
 };
+
+// Analytics API
+export const analyticsApi = {
+  // Expert analytics
+  getExpertOverview: (wallet: string, period?: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/experts/${wallet}/analytics/overview${period ? `?period=${period}` : ""}`,
+      { requiresAuth: false }
+    ),
+
+  getExpertReputationTimeline: (wallet: string, period?: string) =>
+    apiRequest<Record<string, unknown>[]>(
+      `/api/experts/${wallet}/analytics/reputation${period ? `?period=${period}` : ""}`,
+      { requiresAuth: false }
+    ),
+
+  getExpertConsensus: (wallet: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/experts/${wallet}/analytics/consensus`,
+      { requiresAuth: false }
+    ),
+
+  getExpertEndorsementStats: (wallet: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/experts/${wallet}/analytics/endorsements`,
+      { requiresAuth: false }
+    ),
+
+  // Company analytics
+  getCompanyOverview: (period?: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/companies/me/analytics/overview${period ? `?period=${period}` : ""}`,
+      { requiresAuth: true }
+    ),
+
+  getCompanyPipeline: (period?: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/companies/me/analytics/pipeline${period ? `?period=${period}` : ""}`,
+      { requiresAuth: true }
+    ),
+
+  getCompanyJobPerformance: (period?: string) =>
+    apiRequest<Record<string, unknown>[]>(
+      `/api/companies/me/analytics/jobs${period ? `?period=${period}` : ""}`,
+      { requiresAuth: true }
+    ),
+
+  getJobAnalytics: (jobId: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/companies/me/analytics/jobs/${jobId}`,
+      { requiresAuth: true }
+    ),
+
+  // Candidate analytics
+  getCandidateOverview: (period?: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/candidates/me/analytics/overview${period ? `?period=${period}` : ""}`,
+      { requiresAuth: true }
+    ),
+
+  getCandidateApplicationStats: () =>
+    apiRequest<Record<string, unknown>[]>(
+      `/api/candidates/me/analytics/applications`,
+      { requiresAuth: true }
+    ),
+
+  getCandidateVisibility: (period?: string) =>
+    apiRequest<Record<string, unknown>>(
+      `/api/candidates/me/analytics/visibility${period ? `?period=${period}` : ""}`,
+      { requiresAuth: true }
+    ),
+};
