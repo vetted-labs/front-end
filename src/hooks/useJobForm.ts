@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
 import type { Guild } from "@/types";
@@ -32,6 +33,7 @@ export interface JobFormData {
 export function useJobForm(jobId?: string) {
   const router = useRouter();
   const isEditing = !!jobId;
+  const DRAFT_KEY = `job-draft-${jobId || "new"}`;
 
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
@@ -48,6 +50,33 @@ export function useJobForm(jobId?: string) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Restore draft on mount (new jobs only — edits load from API)
+  useMountEffect(() => {
+    if (!jobId) {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved) as JobFormData;
+          setFormData(draft);
+          toast.info("Draft restored from previous session");
+        } catch {
+          // Corrupted draft — ignore
+        }
+      }
+    }
+  });
+
+  // Auto-save to localStorage on changes (new jobs only, debounced 1s)
+  // eslint-disable-next-line no-restricted-syntax -- auto-save requires reactive sync to localStorage
+  useEffect(() => {
+    if (!jobId) {
+      const timer = setTimeout(() => {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, DRAFT_KEY, jobId]);
 
   // Fetch guilds on mount
   const { data: guildsData } = useFetch<Guild[]>(
@@ -208,6 +237,7 @@ export function useJobForm(jobId?: string) {
         await jobsApi.create(jobData);
       }
 
+      localStorage.removeItem(DRAFT_KEY);
       toast.success(isEditing ? "Job updated successfully" : "Job published successfully");
       router.push("/dashboard/jobs");
     } catch (error: unknown) {
@@ -230,6 +260,7 @@ export function useJobForm(jobId?: string) {
     try {
       const jobData = buildJobPayload("draft");
       await jobsApi.create(jobData);
+      localStorage.removeItem(DRAFT_KEY);
       toast.success("Draft saved successfully");
       router.push("/dashboard/jobs");
     } catch (error: unknown) {

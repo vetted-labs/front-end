@@ -13,6 +13,7 @@ import {
   Edit,
   Calendar,
   Eye,
+  Share2,
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -47,8 +48,8 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
     useState<CompanyApplication | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
-  const backHref = dashboardContext ? "/dashboard/jobs" : "/dashboard";
-  const backLabel = dashboardContext ? "Back to Jobs" : "Back to Dashboard";
+  const backHref = dashboardContext ? "/dashboard/jobs" : "/browse/jobs";
+  const backLabel = dashboardContext ? "Back to Jobs" : "Back to Jobs";
   const editHref = dashboardContext
     ? `/dashboard/jobs/${jobId}/edit`
     : `/jobs/${jobId}/edit`;
@@ -146,13 +147,28 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
   return (
     <div className="min-h-screen min-h-full relative animate-page-enter">
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <button
-          onClick={() => router.push(backHref)}
-          className="mb-6 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          {backLabel}
-        </button>
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            onClick={() => router.push(backHref)}
+            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            {backLabel}
+          </button>
+          {!dashboardContext && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success("Link copied to clipboard");
+              }}
+            >
+              <Share2 className="w-4 h-4 mr-1" />
+              Share
+            </Button>
+          )}
+        </div>
 
         <DataSection isLoading={isLoading} skeleton={null}>
         {job && (<>

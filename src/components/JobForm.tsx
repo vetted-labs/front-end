@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Eye } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useJobForm } from "@/hooks/useJobForm";
+import { Modal } from "@/components/ui/modal";
 import { JobBasicInfo } from "./jobs/JobBasicInfo";
 import { JobDetailsSection } from "./jobs/JobDetailsSection";
 import { JobRequirements } from "./jobs/JobRequirements";
@@ -13,6 +15,8 @@ export function JobForm() {
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string | undefined;
+
+  const [showPreview, setShowPreview] = useState(false);
 
   const {
     formData,
@@ -107,6 +111,14 @@ export function JobForm() {
                 </div>
               )}
               <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(true)}
+                  className="py-3.5 px-6 border border-border text-foreground font-bold rounded-xl hover:bg-muted/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview
+                </button>
                 {!isEditing && (
                   <button
                     type="button"
@@ -139,6 +151,85 @@ export function JobForm() {
           </form>
         </div>
       </div>
+
+      {/* Job Preview Modal */}
+      <Modal isOpen={showPreview} onClose={() => setShowPreview(false)} title="Job Preview" size="xl">
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold">{formData.title || "Untitled Job"}</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              {formData.department && `${formData.department} · `}
+              {formData.locationType && `${formData.locationType} · `}
+              {formData.jobType}
+            </p>
+          </div>
+
+          {(formData.salaryMin || formData.salaryMax) && (
+            <div className="text-lg font-semibold">
+              {formData.salaryCurrency === "USD" ? "$" : formData.salaryCurrency}
+              {Number(formData.salaryMin || 0).toLocaleString()}
+              {formData.salaryMax && (
+                <>
+                  {" – "}
+                  {formData.salaryCurrency === "USD" ? "$" : formData.salaryCurrency}
+                  {Number(formData.salaryMax).toLocaleString()}
+                </>
+              )}
+            </div>
+          )}
+
+          {formData.location && (
+            <p className="text-sm text-muted-foreground">{formData.location}</p>
+          )}
+
+          {formData.description && (
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Description</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{formData.description}</p>
+            </div>
+          )}
+
+          {(formData.requirements ?? []).filter(Boolean).length > 0 && (
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Requirements</h3>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {(formData.requirements ?? []).filter(Boolean).map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {(formData.skills ?? []).filter(Boolean).length > 0 && (
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Skills</h3>
+              <div className="flex flex-wrap gap-2">
+                {(formData.skills ?? []).filter(Boolean).map((s, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-muted text-sm">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {formData.guild && (
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Guild</h3>
+              <p className="text-sm text-muted-foreground">{formData.guild}</p>
+            </div>
+          )}
+
+          {(formData.screeningQuestions ?? []).filter(Boolean).length > 0 && (
+            <div>
+              <h3 className="font-semibold text-sm mb-2">Screening Questions</h3>
+              <ol className="list-decimal pl-5 text-sm text-muted-foreground space-y-1">
+                {(formData.screeningQuestions ?? []).filter(Boolean).map((q, i) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

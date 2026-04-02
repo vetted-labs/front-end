@@ -2,12 +2,11 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Briefcase,
   MapPin,
   DollarSign,
   Search,
 } from "lucide-react";
-import { jobsApi, getAssetUrl } from "@/lib/api";
+import { jobsApi, guildsApi, getAssetUrl } from "@/lib/api";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -30,6 +29,12 @@ export default function BrowsePage() {
       },
     }
   );
+
+  const { data: guilds } = useFetch(() => guildsApi.getAll(), {
+    onError: (err) => {
+      logger.error("Failed to load guilds", err, { silent: true });
+    },
+  });
 
   return (
     <div className="min-h-full">
@@ -93,6 +98,7 @@ export default function BrowsePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.map((job) => {
                 const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
+                const isNew = Date.now() - new Date(job.createdAt).getTime() < 48 * 60 * 60 * 1000;
                 return (
                   <Link
                     key={job.id}
@@ -117,9 +123,14 @@ export default function BrowsePage() {
                             {job.companyName || "Company"}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground/50">
-                          {getTimeAgo(job.createdAt)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {isNew && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">New</span>
+                          )}
+                          <span className="text-xs text-muted-foreground/50">
+                            {getTimeAgo(job.createdAt)}
+                          </span>
+                        </div>
                       </div>
 
                       <h3 className="font-display text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors tracking-tight">
@@ -174,6 +185,45 @@ export default function BrowsePage() {
           )}
         </div>
       </div>
+
+      {/* Browse by Guild Section */}
+      {guilds && guilds.length > 0 && (
+        <div className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
+                  Guilds
+                </span>
+                <h2 className="font-display text-2xl font-bold text-foreground mt-1 tracking-tight">
+                  Browse by Guild
+                </h2>
+              </div>
+              <Link
+                href="/guilds"
+                className="text-primary hover:text-primary font-medium flex items-center gap-2 text-sm"
+              >
+                View All Guilds
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {guilds.slice(0, 8).map((guild) => (
+                <Link
+                  key={guild.id}
+                  href={`/guilds/${guild.id}`}
+                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-colors group"
+                >
+                  <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{guild.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {guild.memberCount ?? 0} experts · {guild.jobCount ?? 0} jobs
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
