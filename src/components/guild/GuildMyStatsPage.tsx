@@ -34,6 +34,55 @@ import type {
   GuildRecentActivity,
   GuildMyStatsData,
 } from "@/types";
+import type { GuildAverages } from "@/types/api-responses";
+
+/** Backend returns camelCase keys that don't match our GuildMyStatsAverages type. */
+interface BackendAverages {
+  memberCount?: number;
+  avgReputation?: number;
+  avgReviews?: number;
+  // GuildAverages type shape (in case backend is updated)
+  averageReputation?: number;
+  averageReviews?: number;
+  averageSuccessRate?: number;
+}
+
+/** Backend activity entry shape from GET /:guildId/members/:memberId/activity */
+interface BackendActivityEntry {
+  type: string;
+  amount?: number;
+  description?: string;
+  created_at?: string;
+  // may also include normalised fields if backend is updated
+  id?: string;
+  title?: string;
+  details?: string;
+  timestamp?: string;
+  outcome?: string;
+}
+
+function mapBackendAverages(raw: BackendAverages | GuildAverages): GuildMyStatsAverages {
+  const backend = raw as BackendAverages;
+  return {
+    averageReputation: backend.avgReputation ?? backend.averageReputation ?? 0,
+    averageReviews: backend.avgReviews ?? backend.averageReviews ?? 0,
+    // backend doesn't return averageApprovalRate or averageResponseTime yet
+    averageApprovalRate: 0,
+    averageResponseTime: "N/A",
+  };
+}
+
+function mapBackendActivity(entries: BackendActivityEntry[]): GuildRecentActivity[] {
+  return entries.map((entry, idx) => ({
+    id: entry.id ?? String(idx),
+    // normalise type to known enum values where possible
+    type: (entry.type as GuildRecentActivity["type"]) || "review_submitted",
+    title: entry.title ?? entry.description ?? entry.type ?? "Activity",
+    details: entry.details ?? (entry.amount != null ? `Amount: ${entry.amount}` : ""),
+    timestamp: entry.timestamp ?? entry.created_at ?? new Date().toISOString(),
+    outcome: (entry.outcome as GuildRecentActivity["outcome"]) ?? "neutral",
+  }));
+}
 
 function getComparisonColor(myValue: number, avgValue: number) {
   if (myValue > avgValue) return STATUS_COLORS.positive.text;
@@ -63,7 +112,6 @@ export default function GuildMyStatsPage() {
     async () => {
       const membership = await guildsApi.checkMembership(candidateId!, guildId);
       // checkMembership returns basic data; map to GuildPersonalStats shape
-      // Advanced stats (averages, activity) require backend endpoints not yet implemented
       const stats: GuildPersonalStats = {
         memberId: candidateId!,
         fullName: "",
@@ -89,21 +137,30 @@ export default function GuildMyStatsPage() {
         activityScore: 0,
         contributionScore: 0,
       };
-      // Try fetching averages and activity, but don't fail if endpoints are unavailable
-      let guildAverages: GuildMyStatsAverages = { averageReputation: 0, averageReviews: 0, averageApprovalRate: 0, averageResponseTime: "N/A" };
+
+      // averages endpoint: backend returns { memberCount, avgReputation, avgReviews }
+      let guildAverages: GuildMyStatsAverages = {
+        averageReputation: 0,
+        averageReviews: 0,
+        averageApprovalRate: 0,
+        averageResponseTime: "N/A",
+      };
+      try {
+        const raw = await guildsApi.getAverages(guildId);
+        guildAverages = mapBackendAverages(raw);
+      } catch {
+        logger.warn("Failed to load guild averages");
+      }
+
+      // activity endpoint: backend returns [{type, amount, description, created_at}]
       let recentActivity: GuildRecentActivity[] = [];
       try {
-        const avg = await guildsApi.getAverages(guildId);
-        guildAverages = avg as unknown as GuildMyStatsAverages;
+        const raw = await guildsApi.getMemberActivity(guildId, candidateId!);
+        recentActivity = mapBackendActivity(raw as unknown as BackendActivityEntry[]);
       } catch {
-        logger.warn("Failed to load guild stats");
+        logger.warn("Failed to load guild member activity");
       }
-      try {
-        const activity = await guildsApi.getMemberActivity(guildId, candidateId!);
-        recentActivity = (activity as unknown as GuildRecentActivity[]) || [];
-      } catch {
-        logger.warn("Failed to load guild stats");
-      }
+
       return { stats, guildAverages, recentActivity };
     },
     {
@@ -143,6 +200,9 @@ export default function GuildMyStatsPage() {
 
   const { stats, guildAverages, recentActivity } = data;
   const isExpert = ["recruit", "craftsman", "master"].includes(stats.role);
+
+  // Whether real averages exist (non-zero member count implied by non-zero avgReputation)
+  const hasAverages = guildAverages.averageReputation > 0 || guildAverages.averageReviews > 0;
 
   return (
     <div className="min-h-full animate-page-enter">
@@ -218,7 +278,7 @@ export default function GuildMyStatsPage() {
                           {stats.reviewsGiven || 0}
                         </span>
                       </div>
-                      {guildAverages && (
+                      {hasAverages && (
                         <div className="text-xs text-muted-foreground">
                           Guild avg: {guildAverages.averageReviews}{" "}
                           <span
@@ -228,8 +288,10 @@ export default function GuildMyStatsPage() {
                             )}
                           >
                             {stats.reviewsGiven > guildAverages.averageReviews
-                              ? "^ Above"
-                              : "v Below"}
+                              ? "↑ Above average"
+                              : stats.reviewsGiven < guildAverages.averageReviews
+                              ? "↓ Below average"
+                              : "At average"}
                           </span>
                         </div>
                       )}
@@ -247,7 +309,7 @@ export default function GuildMyStatsPage() {
                           {stats.approvalRate || 0}%
                         </span>
                       </div>
-                      {guildAverages && (
+                      {hasAverages && guildAverages.averageApprovalRate > 0 && (
                         <div className="text-xs text-muted-foreground">
                           Guild avg: {guildAverages.averageApprovalRate}%{" "}
                           <span
@@ -256,10 +318,11 @@ export default function GuildMyStatsPage() {
                               guildAverages.averageApprovalRate
                             )}
                           >
-                            {stats.approvalRate >
-                            guildAverages.averageApprovalRate
-                              ? "^ Above"
-                              : "v Below"}
+                            {stats.approvalRate > guildAverages.averageApprovalRate
+                              ? "↑ Above average"
+                              : stats.approvalRate < guildAverages.averageApprovalRate
+                              ? "↓ Below average"
+                              : "At average"}
                           </span>
                         </div>
                       )}
@@ -277,7 +340,7 @@ export default function GuildMyStatsPage() {
                           {stats.responseTime || "N/A"}
                         </span>
                       </div>
-                      {guildAverages && (
+                      {hasAverages && guildAverages.averageResponseTime !== "N/A" && (
                         <div className="text-xs text-muted-foreground">
                           Guild avg: {guildAverages.averageResponseTime}
                         </div>
@@ -364,6 +427,72 @@ export default function GuildMyStatsPage() {
               </div>
             </div>
 
+            {/* Guild Reputation Comparison */}
+            {hasAverages && (
+              <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Guild Comparison
+                </h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Your Reputation</span>
+                      <span className="text-xl font-bold text-foreground">
+                        {stats.guildReputation || stats.reputation}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Guild Average</span>
+                      <span className="text-xl font-bold text-muted-foreground">
+                        {guildAverages.averageReputation}
+                      </span>
+                    </div>
+                    <div
+                      className={`text-sm font-medium ${getComparisonColor(
+                        stats.guildReputation || stats.reputation,
+                        guildAverages.averageReputation
+                      )}`}
+                    >
+                      {(stats.guildReputation || stats.reputation) > guildAverages.averageReputation
+                        ? "↑ Above average"
+                        : (stats.guildReputation || stats.reputation) < guildAverages.averageReputation
+                        ? "↓ Below average"
+                        : "At average"}
+                    </div>
+                  </div>
+                  {isExpert && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Your Reviews</span>
+                        <span className="text-xl font-bold text-foreground">
+                          {stats.reviewsGiven || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Guild Average</span>
+                        <span className="text-xl font-bold text-muted-foreground">
+                          {guildAverages.averageReviews}
+                        </span>
+                      </div>
+                      <div
+                        className={`text-sm font-medium ${getComparisonColor(
+                          stats.reviewsGiven || 0,
+                          guildAverages.averageReviews
+                        )}`}
+                      >
+                        {(stats.reviewsGiven || 0) > guildAverages.averageReviews
+                          ? "↑ Above average"
+                          : (stats.reviewsGiven || 0) < guildAverages.averageReviews
+                          ? "↓ Below average"
+                          : "At average"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Endorsements */}
             <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
               <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
@@ -420,9 +549,11 @@ export default function GuildMyStatsPage() {
                         <p className="font-medium text-foreground">
                           {activity.title}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {activity.details}
-                        </p>
+                        {activity.details && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {activity.details}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(activity.timestamp).toLocaleString()}
                         </p>
