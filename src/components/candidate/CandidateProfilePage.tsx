@@ -10,6 +10,8 @@ import {
   ExternalLink,
   X,
   Tag,
+  Briefcase,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { candidateApi } from "@/lib/api";
@@ -17,7 +19,7 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { getProfileCompletion } from "@/lib/profileCompletion";
-import type { CandidateProfile, SocialLink } from "@/types";
+import type { CandidateProfile, SocialLink, WorkHistoryEntry } from "@/types";
 import SocialLinksEditor from "./SocialLinksEditor";
 import ResumeSection from "./ResumeSection";
 import PersonalInfoSection from "./PersonalInfoSection";
@@ -145,6 +147,28 @@ export default function CandidateProfilePage() {
     );
   };
 
+  const updateWorkEntry = (index: number, field: keyof WorkHistoryEntry, value: string) => {
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        workHistory: (prev.workHistory || []).map((e, i) =>
+          i === index ? { ...e, [field]: value } : e
+        ),
+      };
+    });
+  };
+
+  const removeWorkEntry = (index: number) => {
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        workHistory: (prev.workHistory || []).filter((_, i) => i !== index),
+      };
+    });
+  };
+
   const handleSaveProfile = async () => {
     if (!profile) return;
     if (!auth.token) return;
@@ -168,6 +192,7 @@ export default function CandidateProfilePage() {
         bio: profile.bio || "",
         skills: profile.skills || [],
         socialLinks: filledLinks,
+        workHistory: profile.workHistory || [],
       }),
       {
         onSuccess: () => {
@@ -311,6 +336,99 @@ export default function CandidateProfilePage() {
                   }}
                 />
               )}
+            </div>
+          </div>
+
+          {/* Work History */}
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-muted-foreground" />
+                Work History
+              </h2>
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProfile((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            workHistory: [
+                              ...(prev.workHistory || []),
+                              { company: "", role: "", startDate: "", endDate: "", description: "" },
+                            ],
+                          }
+                        : prev
+                    )
+                  }
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <Plus className="w-3 h-3" /> Add
+                </button>
+              )}
+            </div>
+            <div className="p-6 space-y-3">
+              {(profile.workHistory || []).length === 0 && !isEditing && (
+                <p className="text-sm text-muted-foreground">No work history added yet.</p>
+              )}
+              {(profile.workHistory || []).map((entry, i) => (
+                <div key={i} className="rounded-lg border bg-card/50 p-3">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          placeholder="Company"
+                          value={entry.company}
+                          onChange={(e) => updateWorkEntry(i, "company", e.target.value)}
+                          className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        />
+                        <input
+                          placeholder="Role / Title"
+                          value={entry.role}
+                          onChange={(e) => updateWorkEntry(i, "role", e.target.value)}
+                          className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="month"
+                          placeholder="Start"
+                          value={entry.startDate}
+                          onChange={(e) => updateWorkEntry(i, "startDate", e.target.value)}
+                          className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        />
+                        <input
+                          type="month"
+                          placeholder="End (empty = current)"
+                          value={entry.endDate || ""}
+                          onChange={(e) => updateWorkEntry(i, "endDate", e.target.value)}
+                          className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeWorkEntry(i)}
+                          className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
+                        >
+                          <X className="w-3 h-3" /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="font-medium text-sm">{entry.role}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {entry.company} · {entry.startDate} – {entry.endDate || "Present"}
+                      </div>
+                      {entry.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{entry.description}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 

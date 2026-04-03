@@ -107,18 +107,6 @@ export default function CompanyPublicProfilePage({ params }: Props) {
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </span>
                 )}
-                {profile.website && (
-                  <a
-                    href={profile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary hover:underline"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    Website
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
               </div>
 
               {profile.createdAt && (
@@ -129,6 +117,39 @@ export default function CompanyPublicProfilePage({ params }: Props) {
               )}
             </div>
           </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <div className="rounded-[14px] border bg-card p-4 text-center">
+              <div className="text-lg font-bold">{jobs?.length || 0}</div>
+              <div className="text-xs text-muted-foreground">Open Positions</div>
+            </div>
+            <div className="rounded-[14px] border bg-card p-4 text-center">
+              <div className="text-lg font-bold capitalize">
+                {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size || "—"}
+              </div>
+              <div className="text-xs text-muted-foreground">Company Size</div>
+            </div>
+            <div className="rounded-[14px] border bg-card p-4 text-center">
+              <div className="text-lg font-bold">
+                {INDUSTRIES.find((i) => i.value === profile.industry)?.label || profile.industry || "—"}
+              </div>
+              <div className="text-xs text-muted-foreground">Industry</div>
+            </div>
+          </div>
+
+          {/* Website link */}
+          {profile.website && (
+            <a
+              href={profile.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-3"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {(() => { try { return new URL(profile.website).hostname; } catch { return profile.website; } })()}
+            </a>
+          )}
         </div>
 
         {/* About */}

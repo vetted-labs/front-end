@@ -7,6 +7,14 @@ export interface SocialLink {
 /** Subset of CandidateProfile used for job application flows (resume + social info). */
 export type CandidateUserProfile = Pick<CandidateProfile, "resumeUrl" | "resumeFileName" | "bio" | "socialLinks" | "linkedIn" | "github">;
 
+export interface WorkHistoryEntry {
+  company: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+}
+
 export interface CandidateProfile {
   id: string;
   fullName: string;
@@ -22,6 +30,7 @@ export interface CandidateProfile {
   walletAddress?: string;
   resumeUrl?: string;
   resumeFileName?: string;
+  workHistory?: WorkHistoryEntry[];
 }
 
 /** Candidate as listed in guild member lists. */

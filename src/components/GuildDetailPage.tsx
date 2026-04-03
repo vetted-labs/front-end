@@ -254,6 +254,24 @@ export default function GuildDetailPage() {
           </div>
         </div>
 
+        {/* Stats row */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border bg-card p-4 text-center">
+              <div className="text-lg font-bold">{guild.totalMembers || (guild.expertCount + guild.candidateCount) || 0}</div>
+              <div className="text-xs text-muted-foreground">Expert Members</div>
+            </div>
+            <div className="rounded-xl border bg-card p-4 text-center">
+              <div className="text-lg font-bold">{guild.totalProposalsReviewed || 0}</div>
+              <div className="text-xs text-muted-foreground">Reviews Completed</div>
+            </div>
+            <div className="rounded-xl border bg-card p-4 text-center">
+              <div className="text-lg font-bold">{guild.openPositions || guild.recentJobs?.length || 0}</div>
+              <div className="text-xs text-muted-foreground">Active Jobs</div>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs + content — same structure as expert view */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           <div className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
