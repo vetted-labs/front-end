@@ -177,21 +177,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  if (!data.address) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <WalletRequiredState message="Connect your wallet to access reviews" />
-      </div>
-    );
-  }
-
-  const pendingCounts = {
-    expert: data.expertApps.filter((a) => !a.expertHasReviewed).length,
-    candidate: data.candidateApps.filter((a) => !a.expertHasReviewed).length,
-    proposals: data.proposals.filter((p) => p.is_assigned_reviewer && !p.has_voted).length,
-    history: data.historyCount,
-  };
-
   const filteredPaginatedItems = useMemo(() => {
     if (!search.trim()) return data.paginatedItems;
     const q = search.toLowerCase();
@@ -222,6 +207,21 @@ export default function ApplicationsPage() {
       return true;
     });
   }, [data.historyList, search]);
+
+  if (!data.address) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <WalletRequiredState message="Connect your wallet to access reviews" />
+      </div>
+    );
+  }
+
+  const pendingCounts = {
+    expert: data.expertApps.filter((a) => !a.expertHasReviewed).length,
+    candidate: data.candidateApps.filter((a) => !a.expertHasReviewed).length,
+    proposals: data.proposals.filter((p) => p.is_assigned_reviewer && !p.has_voted).length,
+    history: data.historyCount,
+  };
 
   const handleTabChange = (tab: ApplicationsTabType) => {
     data.setActiveTab(tab);
