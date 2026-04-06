@@ -173,3 +173,4 @@ export type {
 } from "./rubric";
 export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";
 export type { ExpertMembershipApplication, CandidateGuildApplication, MyReviewData, ExpertApplicationFinalization, ReviewModalApplication, ReviewGuildApplicationModalProps } from "./review";
+export type { MatchDimension, MatchScoreBreakdown, MatchScoreResult, RecommendedJob } from "./matching";

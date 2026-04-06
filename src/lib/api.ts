@@ -1801,3 +1801,23 @@ export const analyticsApi = {
       { requiresAuth: true }
     ),
 };
+
+export const matchingApi = {
+  calculate: (candidateId: string, jobId: string) =>
+    apiRequest<import("@/types").MatchScoreResult>(
+      `/api/matching/calculate?candidateId=${candidateId}&jobId=${jobId}`,
+      { requiresAuth: false }
+    ),
+
+  getTopMatches: (jobId: string, limit: number = 10) =>
+    apiRequest<Array<{ candidateId: string; score: number; breakdown: import("@/types").MatchScoreBreakdown }>>(
+      `/api/jobs/${jobId}/top-matches?limit=${limit}`,
+      { requiresAuth: false }
+    ),
+
+  getRecommendedJobs: (candidateId: string, guildId?: string, limit: number = 20) =>
+    apiRequest<import("@/types").RecommendedJob[]>(
+      `/api/candidates/${candidateId}/recommended-jobs?${guildId ? `guildId=${guildId}&` : ""}limit=${limit}`,
+      { requiresAuth: true }
+    ),
+};
