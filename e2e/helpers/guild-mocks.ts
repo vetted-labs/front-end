@@ -828,3 +828,428 @@ export async function setupGuildApplicationMocks(
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// Slashing mock data
+// ---------------------------------------------------------------------------
+
+export const MOCK_APPLICATION_SLASHED = {
+  ...MOCK_APPLICATION_FINALIZED,
+  id: "e2e-application-slashed-003",
+  candidate_name: "Slashed Expert Test",
+  outcome: "rejected",
+  status: "rejected",
+  consensus_score: 35.2,
+  my_vote_score: 90,
+  alignment_distance: 54.8,
+  my_reputation_change: -20,
+  my_reward_amount: 0,
+  my_slashing_tier: "severe",
+  my_slash_percent: 25,
+  iqr: { median: 35, q1: 28, q3: 42, iqr: 14, includedCount: 4, excludedCount: 1 },
+};
+
+export const MOCK_APPLICATION_MILD_SLASH = {
+  ...MOCK_APPLICATION_FINALIZED,
+  id: "e2e-application-mild-004",
+  candidate_name: "Mild Slash Test",
+  consensus_score: 72.0,
+  my_vote_score: 85,
+  alignment_distance: 13.0,
+  my_reputation_change: -5,
+  my_reward_amount: 3.0,
+  my_slashing_tier: "mild",
+  my_slash_percent: 5,
+};
+
+export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING = {
+  timeline: [
+    {
+      id: "rep-slash-001",
+      change_amount: -20,
+      reason: "severe_slash",
+      description: "Severe slashing on Engineering guild application",
+      guild_name: "Engineering",
+      candidate_name: "Slashed Expert Test",
+      outcome: "rejected",
+      your_vote: 90,
+      consensus: 35.2,
+      distance: 54.8,
+      reward: 0,
+      slash_percent: 25,
+      vote_score: 90,
+      alignment_distance: 54.8,
+      consensus_score: 35.2,
+      reward_amount: 0,
+      created_at: "2026-03-10T10:00:00Z",
+    },
+    {
+      id: "rep-slash-002",
+      change_amount: -5,
+      reason: "mild_slash",
+      description: "Mild slashing on Engineering guild application",
+      guild_name: "Engineering",
+      candidate_name: "Mild Slash Test",
+      outcome: "approved",
+      your_vote: 85,
+      consensus: 72.0,
+      distance: 13.0,
+      reward: 3.0,
+      slash_percent: 5,
+      vote_score: 85,
+      alignment_distance: 13.0,
+      consensus_score: 72.0,
+      reward_amount: 3.0,
+      created_at: "2026-03-08T14:00:00Z",
+    },
+    {
+      id: "rep-slash-003",
+      change_amount: 8,
+      reason: "aligned",
+      description: "Aligned vote on Engineering guild application",
+      guild_name: "Engineering",
+      candidate_name: "Carol Davis",
+      outcome: "approved",
+      your_vote: 90,
+      consensus: 88.0,
+      distance: 2.0,
+      reward: 18.0,
+      slash_percent: 0,
+      vote_score: 90,
+      alignment_distance: 2.0,
+      consensus_score: 88.0,
+      reward_amount: 18.0,
+      created_at: "2026-03-05T09:00:00Z",
+    },
+  ],
+  items: [],
+  total: 3,
+  page: 1,
+  limit: 15,
+};
+
+// ---------------------------------------------------------------------------
+// Endorsement history mock data
+// ---------------------------------------------------------------------------
+
+export const MOCK_ENDORSEMENT_HISTORY = [
+  {
+    id: "endorse-001",
+    applicationId: FINALIZED_APPLICATION_ID,
+    candidateName: "Alex Smith",
+    companyName: "Vetted Inc.",
+    guildName: "Engineering",
+    stakeAmount: 50,
+    status: "finalized",
+    outcome: "hired",
+    createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+  },
+  {
+    id: "endorse-002",
+    applicationId: "e2e-application-mild-004",
+    candidateName: "Mild Slash Test",
+    companyName: "Tech Corp",
+    guildName: "Engineering",
+    stakeAmount: 30,
+    status: "finalized",
+    outcome: "not_hired",
+    createdAt: new Date(Date.now() - 20 * 86400000).toISOString(),
+  },
+  {
+    id: "endorse-003",
+    applicationId: "e2e-application-slashed-003",
+    candidateName: "Slashed Expert Test",
+    companyName: "Design Studio",
+    guildName: "Design",
+    stakeAmount: 25,
+    status: "refunded",
+    outcome: "refunded",
+    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Dispute mock data
+// ---------------------------------------------------------------------------
+
+export const MOCK_DISPUTE_DETAIL = {
+  id: "dispute-001",
+  status: "open",
+  reason: "Incorrect scoring — my application was scored unfairly by reviewers.",
+  evidence: "I have 8 years of experience in the relevant domain and my references can confirm.",
+  filed_by: CANDIDATE_ID,
+  filed_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  deadline: new Date(Date.now() + 5 * 86400000).toISOString(),
+  candidateName: "Jane Doe",
+  jobTitle: "Senior Frontend Engineer",
+  guildName: "Engineering",
+  panelMembers: [
+    {
+      id: "panelist-001",
+      expertName: "Panel Expert One",
+      walletAddress: "0xaaa1000000000000000000000000000000000001",
+      vote: "uphold",
+      votedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    },
+    {
+      id: "panelist-002",
+      expertName: "Panel Expert Two",
+      walletAddress: "0xaaa2000000000000000000000000000000000002",
+      vote: null,
+      votedAt: null,
+    },
+    {
+      id: "panelist-003",
+      expertName: "Panel Expert Three",
+      walletAddress: "0xaaa3000000000000000000000000000000000003",
+      vote: null,
+      votedAt: null,
+    },
+  ],
+  totalPanelSize: 3,
+  votesSubmitted: 1,
+  upholdCount: 1,
+  dismissCount: 0,
+  isOnPanel: true,
+  hasVoted: false,
+};
+
+export const MOCK_DISPUTE_RESOLVED = {
+  ...MOCK_DISPUTE_DETAIL,
+  id: "dispute-002",
+  status: "resolved",
+  resolution: "upheld",
+  resolvedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  panelMembers: [
+    {
+      id: "panelist-001",
+      expertName: "Panel Expert One",
+      walletAddress: "0xaaa1000000000000000000000000000000000001",
+      vote: "uphold",
+      votedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    },
+    {
+      id: "panelist-002",
+      expertName: "Panel Expert Two",
+      walletAddress: "0xaaa2000000000000000000000000000000000002",
+      vote: "uphold",
+      votedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    },
+    {
+      id: "panelist-003",
+      expertName: "Panel Expert Three",
+      walletAddress: "0xaaa3000000000000000000000000000000000003",
+      vote: "dismiss",
+      votedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    },
+  ],
+  votesSubmitted: 3,
+  upholdCount: 2,
+  dismissCount: 1,
+  hasVoted: true,
+};
+
+// ---------------------------------------------------------------------------
+// Governance proposal mock data
+// ---------------------------------------------------------------------------
+
+export const MOCK_GOVERNANCE_PROPOSAL = {
+  id: "gov-proposal-001",
+  title: "Increase minimum stake requirement for Engineering guild",
+  description:
+    "This proposal aims to increase the minimum stake from 50 VETD to 75 VETD to improve reviewer quality and reduce low-effort votes.",
+  proposal_type: "standard",
+  status: "active",
+  guild_id: ENGINEERING_GUILD_ID,
+  guild_name: "Engineering",
+  voting_deadline: new Date(Date.now() + 5 * 86400000).toISOString(),
+  stake_amount: 100,
+  votes_for: 8,
+  votes_against: 3,
+  votes_abstain: 1,
+  total_voting_power: 350,
+  quorum_required: 0.3,
+  created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+};
+
+// ===========================================================================
+// Additional setup functions
+// ===========================================================================
+
+/**
+ * Slashing reputation page mocks — reputation timeline with slashing entries
+ */
+export async function setupSlashingReputationMocks(page: Page): Promise<void> {
+  await setupCommonExpertMocks(page);
+
+  await page.route("**/api/experts/reputation/timeline**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING }),
+    });
+  });
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GOVERNANCE_PROPOSAL] }),
+    });
+  });
+}
+
+/**
+ * Endorsement history page mocks
+ */
+export async function setupEndorsementHistoryMocks(page: Page): Promise<void> {
+  await setupCommonExpertMocks(page);
+
+  // Guilds list
+  await page.route("**/api/guilds", (route) => {
+    if (route.request().url().includes("/guilds/")) return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GUILD, MOCK_DESIGN_GUILD] }),
+    });
+  });
+
+  // Endorsement history
+  await page.route("**/api/experts/endorsements**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_ENDORSEMENT_HISTORY }),
+    });
+  });
+
+  // Blockchain endorsement data
+  await page.route("**/api/blockchain/endorsements/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: { endorsed: true, stakeAmount: "50" } }),
+    });
+  });
+
+  // Governance proposals (sidebar)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GOVERNANCE_PROPOSAL] }),
+    });
+  });
+}
+
+/**
+ * Dispute detail page mocks
+ */
+export async function setupDisputeDetailMocks(
+  page: Page,
+  dispute?: Record<string, unknown>,
+): Promise<void> {
+  await setupCommonExpertMocks(page);
+
+  const disputeData = dispute ?? MOCK_DISPUTE_DETAIL;
+  const disputeId = disputeData.id as string;
+
+  // Hire outcome endpoint
+  await page.route("**/api/experts/hire-outcome/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: null }),
+    });
+  });
+
+  // Dispute detail
+  await page.route(`**/api/guilds/disputes/${disputeId}**`, (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: disputeData }),
+    });
+  });
+
+  // Disputes list
+  await page.route("**/api/guilds/disputes**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [disputeData] }),
+    });
+  });
+}
+
+/**
+ * Dashboard page mocks with elevated vote weight (high reputation profile)
+ */
+export async function setupDashboardWithVoteWeight(page: Page): Promise<void> {
+  const highRepProfile = {
+    ...MOCK_EXPERT_PROFILE,
+    reputation: 1500,
+  };
+
+  await setupCommonExpertMocks(page, { expertProfile: highRepProfile });
+
+  // Assigned applications
+  await page.route("**/api/proposals/assigned/**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        data: [MOCK_APPLICATION_ACTIVE, MOCK_APPLICATION_FINALIZED, MOCK_APPLICATION_SLASHED],
+      }),
+    });
+  });
+
+  // Governance proposals (sidebar + dashboard widget)
+  await page.route("**/api/governance/proposals**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GOVERNANCE_PROPOSAL] }),
+    });
+  });
+
+  // Earnings breakdown
+  await page.route("**/api/experts/earnings/breakdown**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_EARNINGS_BREAKDOWN }),
+    });
+  });
+
+  // Reputation timeline
+  await page.route("**/api/experts/reputation/timeline**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_REPUTATION_TIMELINE_WITH_SLASHING }),
+    });
+  });
+
+  // Guilds list
+  await page.route("**/api/guilds", (route) => {
+    if (route.request().url().includes("/guilds/")) return route.fallback();
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: [MOCK_GUILD, MOCK_DESIGN_GUILD] }),
+    });
+  });
+
+  // Endorsements
+  await page.route("**/api/experts/endorsements**", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, data: MOCK_ENDORSEMENT_HISTORY }),
+    });
+  });
+}
