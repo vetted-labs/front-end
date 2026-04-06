@@ -85,6 +85,9 @@ export function JobBasicInfo({
           placeholder="Describe the job responsibilities..."
           error={fieldErrors.description}
         />
+        <p className="text-xs text-muted-foreground mt-1">
+          Supports formatting: **bold**, *italic*, and bullet lists (- item).
+        </p>
       </div>
     </div>
   );

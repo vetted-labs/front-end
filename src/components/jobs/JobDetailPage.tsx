@@ -16,6 +16,7 @@ import {
   Share2,
 } from "lucide-react";
 import { jobsApi, applicationsApi } from "@/lib/api";
+import { renderMarkdown } from "@/lib/renderMarkdown";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { DataSection } from "@/lib/motion";
 import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
@@ -343,9 +344,9 @@ export default function JobDetailPage({ dashboardContext }: JobDetailPageProps) 
                     <p className="text-sm font-medium text-card-foreground mb-1">
                       Description
                     </p>
-                    <p className="text-foreground whitespace-pre-wrap">
-                      {job.description}
-                    </p>
+                    <div className="text-foreground">
+                      {renderMarkdown(job.description ?? "")}
+                    </div>
                   </div>
                 </div>
               </div>

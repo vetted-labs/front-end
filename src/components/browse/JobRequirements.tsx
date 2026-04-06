@@ -4,6 +4,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import type { Job } from "@/types";
+import { renderMarkdown } from "@/lib/renderMarkdown";
 
 interface JobRequirementsProps {
   job: Job;
@@ -24,8 +25,8 @@ export default function JobRequirements({ job }: JobRequirementsProps) {
               <Info className="w-4 h-4 text-primary" />
               About the Role
             </div>
-            <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {job.description}
+            <div className="leading-relaxed">
+              {renderMarkdown(job.description)}
             </div>
           </div>
         </div>
