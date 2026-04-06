@@ -1,5 +1,6 @@
 import { Target, Activity, BookOpen, Award } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
+import { computeAccuracy, computeConsistency } from "@/lib/reputation-helpers";
 
 interface ReputationBreakdownCardsProps {
   reputation: number;
@@ -95,15 +96,9 @@ export function ReputationBreakdownCards({
   reviewCount,
   endorsementCount,
 }: ReputationBreakdownCardsProps) {
-  const total = alignedCount + deviationCount;
-
   // Derive percentage metrics from real data
-  const accuracyPct = total > 0 ? Math.round((alignedCount / total) * 100) : 100;
-  // Consistency: ratio of gains to total activity
-  const totalActivity = Math.abs(totalGains) + Math.abs(totalLosses);
-  const consistencyPct = totalActivity > 0
-    ? Math.min(100, Math.round((Math.abs(totalGains) / totalActivity) * 100))
-    : 100;
+  const accuracyPct = computeAccuracy(alignedCount, deviationCount);
+  const consistencyPct = computeConsistency(totalGains, totalLosses);
 
   const miniChartValues = [70, 85, 78, 92, 88, 95, 82, 90, consistencyPct];
 

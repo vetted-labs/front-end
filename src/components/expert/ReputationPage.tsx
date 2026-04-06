@@ -10,8 +10,8 @@ import { DataSection } from "@/lib/motion";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { toast } from "sonner";
-import { REPUTATION_DECAY_CYCLE_DAYS } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
+import { getDaysUntilDecay } from "@/lib/reputation-helpers";
 import type {
   ReputationTimelineEntry,
   ReputationTimelineResponse,
@@ -26,16 +26,6 @@ import { ReputationScoreChart } from "./ReputationScoreChart";
 import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
 
-function getDaysUntilDecay(recentActivity: Array<{ timestamp: string }> | undefined): number | null {
-  if (!recentActivity?.length) return 0;
-  const timestamps = recentActivity
-    .map((a) => new Date(a.timestamp).getTime())
-    .filter((t) => !isNaN(t));
-  if (timestamps.length === 0) return 0;
-  const mostRecent = Math.max(...timestamps);
-  const decayDate = mostRecent + REPUTATION_DECAY_CYCLE_DAYS * 24 * 60 * 60 * 1000;
-  return Math.max(0, Math.ceil((decayDate - Date.now()) / (24 * 60 * 60 * 1000)));
-}
 
 export default function ReputationPage() {
   const { address: wagmiAddress } = useExpertAccount();

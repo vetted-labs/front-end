@@ -4,48 +4,13 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useChartTooltip } from "@/components/analytics/ChartTooltip";
 import type { ReputationTimelineEntry } from "@/types";
+import { buildMonthlyScores } from "@/lib/reputation-helpers";
 
 interface ReputationScoreChartProps {
   timeline: ReputationTimelineEntry[];
   reputation: number;
 }
 
-/** Build monthly score data by replaying timeline backwards from current reputation */
-function buildMonthlyScores(
-  timeline: ReputationTimelineEntry[],
-  currentReputation: number,
-): { month: string; score: number }[] {
-  // Sort timeline newest first
-  const sorted = [...timeline].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
-  // Group changes by month, walking back from current score
-  const now = new Date();
-  const months: { month: string; score: number }[] = [];
-  let runningScore = currentReputation;
-
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString("en-US", { month: "short" });
-
-    months.unshift({ month: label, score: runningScore });
-
-    // Subtract changes from this month to get previous month's score
-    const monthChanges = sorted.filter((e) => {
-      const eDate = new Date(e.created_at);
-      return (
-        eDate.getFullYear() === d.getFullYear() &&
-        eDate.getMonth() === d.getMonth()
-      );
-    });
-
-    const totalChange = monthChanges.reduce((sum, e) => sum + e.change_amount, 0);
-    runningScore -= totalChange;
-  }
-
-  return months;
-}
 
 /** Generate smooth SVG path using Catmull-Rom spline */
 function catmullRomPath(
