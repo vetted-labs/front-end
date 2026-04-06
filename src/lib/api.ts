@@ -514,6 +514,12 @@ export const applicationsApi = {
       requiresAuth: true,
     }),
 
+  withdraw: (applicationId: string) =>
+    apiRequest<{ success: boolean }>(`/api/applications/${applicationId}`, {
+      method: "DELETE",
+      requiresAuth: true,
+    }),
+
   getJobApplications: (jobId: string, params?: {
     status?: string;
     page?: number;
@@ -742,6 +748,11 @@ export const expertApi = {
         { method: "POST", body: JSON.stringify(data) }
       ),
   },
+
+  withdrawGuildApplication: (applicationId: string) =>
+    apiRequest<{ success: boolean }>(`/api/experts/guild-applications/${applicationId}`, {
+      method: "DELETE",
+    }),
 };
 
 // Notifications API

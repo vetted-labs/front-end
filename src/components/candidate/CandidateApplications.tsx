@@ -11,7 +11,11 @@ import {
   Circle,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { applicationsApi } from "@/lib/api";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { useApi } from "@/lib/hooks/useFetch";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -186,8 +190,10 @@ export default function CandidateApplications() {
   const router = useRouter();
   const { ready } = useRequireAuth("candidate");
   const [filter, setFilter] = useState<FilterStatus>("all");
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const { execute: withdrawApp, isLoading: withdrawing } = useApi();
 
-  const { data: applicationsData, isLoading } = useFetch(
+  const { data: applicationsData, isLoading, refetch } = useFetch(
     () => applicationsApi.getAll(),
     { skip: !ready }
   );
@@ -407,6 +413,14 @@ export default function CandidateApplications() {
                               View Job
                             </button>
                           )}
+                          {(application.status === "pending" || application.status === "reviewing") && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setWithdrawingId(application.id); }}
+                              className={`px-4 py-2 rounded-md text-xs font-semibold border bg-card border-border hover:bg-muted/40 transition-all ${STATUS_COLORS.negative.text}`}
+                            >
+                              Withdraw
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -427,6 +441,45 @@ export default function CandidateApplications() {
         )}
         </DataSection>
       </div>
+
+      {/* ── Withdraw Confirmation Modal ── */}
+      <Modal
+        isOpen={!!withdrawingId}
+        onClose={() => setWithdrawingId(null)}
+        title="Withdraw Application"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to withdraw this application? This cannot be undone, but you can reapply later.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setWithdrawingId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={withdrawing}
+              onClick={() => {
+                if (!withdrawingId) return;
+                withdrawApp(
+                  () => applicationsApi.withdraw(withdrawingId),
+                  {
+                    onSuccess: () => {
+                      toast.success("Application withdrawn");
+                      setWithdrawingId(null);
+                      refetch();
+                    },
+                    onError: (err) => toast.error(err),
+                  }
+                );
+              }}
+            >
+              {withdrawing ? "Withdrawing..." : "Withdraw"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

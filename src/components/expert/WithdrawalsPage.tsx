@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
-import { Loader2, ChevronRight } from "lucide-react";
+import { Loader2, ChevronRight, Lock } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
@@ -244,6 +244,14 @@ export default function WithdrawalsPage() {
           { label: "Staking Portfolio" },
         ]}
       />
+
+      {/* ── Lockup Info Banner ── */}
+      <div className={`flex items-center gap-2 p-3 rounded-xl border mb-6 ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
+        <Lock className={`w-4 h-4 flex-shrink-0 ${STATUS_COLORS.info.text}`} />
+        <span className="text-sm text-muted-foreground">
+          25% of your guild stake is locked during active reviews and cannot be unstaked until reviews are finalized.
+        </span>
+      </div>
 
       {/* ── Hero: Big Number ── */}
       <div className="mb-10 mt-2">

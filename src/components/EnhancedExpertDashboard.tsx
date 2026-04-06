@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 
@@ -292,6 +293,9 @@ export function EnhancedExpertDashboard() {
 
   const daysUntilDecay = profile ? getDaysUntilDecay(mostRecentActivityMs) : null;
 
+  // Active review count — drives the 25% lockup indicator
+  const activeReviewCount = assignedApplications?.length ?? 0;
+
   // Consensus rate for Reviews stat
   const consensusRate =
     profile?.reviewCount && profile.reviewCount > 0 && profile.approvalCount != null
@@ -391,11 +395,21 @@ export function EnhancedExpertDashboard() {
             subtext="total earned"
             subtextVariant="default"
           />
-          <StatCard
-            label="Staked VETD"
-            value={Math.round(totalStaked).toLocaleString()}
-            subtext={`across ${profile?.guilds?.length ?? 0} guilds`}
-          />
+          <div className="flex flex-col gap-1">
+            <StatCard
+              label="Staked VETD"
+              value={Math.round(totalStaked).toLocaleString()}
+              subtext={`across ${profile?.guilds?.length ?? 0} guilds`}
+            />
+            {activeReviewCount > 0 && (
+              <div className={`flex items-center gap-1.5 px-1 ${STATUS_COLORS.warning.text}`}>
+                <Lock className="w-3 h-3 flex-shrink-0" />
+                <span className="text-xs">
+                  25% locked &middot; {activeReviewCount} active review{activeReviewCount !== 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
+          </div>
           <StatCard
             label="Reviews"
             value={profile?.reviewCount ?? 0}

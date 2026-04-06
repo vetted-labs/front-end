@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import {
@@ -21,11 +21,12 @@ import { toast } from "sonner";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Divider } from "@/components/ui/divider";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { expertApi, ApiError } from "@/lib/api";
-import { useFetch } from "@/lib/hooks/useFetch";
+import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertProfile, PendingGuildInfo } from "@/types";
 
@@ -135,6 +136,8 @@ function TimelineStep({
 export default function ApplicationPendingPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const { execute: withdrawApp, isLoading: withdrawing } = useApi();
 
   const fetchProfile = useCallback(async () => {
     if (!address) throw new Error("No wallet address");
@@ -158,7 +161,7 @@ export default function ApplicationPendingPage() {
     }
   }, [address, router]);
 
-  const { data: expert, isLoading, error } = useFetch(fetchProfile, {
+  const { data: expert, isLoading, error, refetch } = useFetch(fetchProfile, {
     skip: !isConnected || !address,
     onError: (errorMessage) => {
       toast.error(errorMessage);
@@ -281,6 +284,14 @@ export default function ApplicationPendingPage() {
                               <Clock className="w-3 h-3" />
                               Pending
                             </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`text-xs ${STATUS_COLORS.negative.text} hover:opacity-80`}
+                              onClick={(e) => { e.stopPropagation(); setWithdrawingId(guild.id); }}
+                            >
+                              Withdraw
+                            </Button>
                           </>
                         ) : (
                           <span
@@ -431,6 +442,45 @@ export default function ApplicationPendingPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Withdraw Confirmation Modal ── */}
+        <Modal
+          isOpen={!!withdrawingId}
+          onClose={() => setWithdrawingId(null)}
+          title="Withdraw Application"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure? This will cancel your guild application. You can reapply later.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setWithdrawingId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={withdrawing}
+                onClick={() => {
+                  if (!withdrawingId) return;
+                  withdrawApp(
+                    () => expertApi.withdrawGuildApplication(withdrawingId),
+                    {
+                      onSuccess: () => {
+                        toast.success("Application withdrawn");
+                        setWithdrawingId(null);
+                        refetch();
+                      },
+                      onError: (err) => toast.error(err),
+                    }
+                  );
+                }}
+              >
+                {withdrawing ? "Withdrawing..." : "Withdraw"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
 
         {/* ── Bottom CTA ── */}
         <div className="rounded-xl border border-border bg-card p-6 mb-8 overflow-hidden relative">
