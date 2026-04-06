@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { STATUS_COLORS } from "@/config/colors";
 
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -147,7 +148,19 @@ export default function CompanyConversationView() {
                 <p className="text-sm font-medium text-foreground truncate">
                   {conversation.candidateName}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{conversation.jobTitle}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-muted-foreground truncate">{conversation.jobTitle}</p>
+                  {conversation.applicationStatus && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize flex-shrink-0 ${
+                      conversation.applicationStatus === "accepted" ? STATUS_COLORS.positive.badge :
+                      conversation.applicationStatus === "rejected" ? STATUS_COLORS.negative.badge :
+                      conversation.applicationStatus === "interviewing" ? STATUS_COLORS.info.badge :
+                      STATUS_COLORS.pending.badge
+                    }`}>
+                      {conversation.applicationStatus.replace(/_/g, " ")}
+                    </span>
+                  )}
+                </div>
               </div>
             </>
           )}

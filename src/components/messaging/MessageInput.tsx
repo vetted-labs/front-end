@@ -32,7 +32,7 @@ export function MessageInput({
     if ((!trimmed && !attachment) || disabled) return;
 
     if (attachment) {
-      toast.info("File attachments will be available in a future update");
+      toast.info("File attachments require a backend update. Your message was sent without the attachment.");
       setAttachment(null);
     }
 

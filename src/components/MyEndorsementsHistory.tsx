@@ -2,11 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useAccount } from "wagmi";
-import { useMyActiveEndorsements } from "@/lib/hooks/useVettedContracts";
+import { useMyActiveEndorsements, useEndorsementBidding } from "@/lib/hooks/useVettedContracts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 import {
   Award,
@@ -15,6 +18,7 @@ import {
   Shield,
   ArrowUpDown,
   History,
+  Coins,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -98,11 +102,15 @@ function EndorsementRow({
   maxStake,
   expandedId,
   setExpandedId,
+  claimingId,
+  onClaimRefund,
 }: {
   endorsement: ActiveEndorsement;
   maxStake: number;
   expandedId: string | null;
   setExpandedId: (id: string | null) => void;
+  claimingId: string | null;
+  onClaimRefund: (endorsement: ActiveEndorsement) => void;
 }) {
   const endorsementId =
     endorsement.endorsementId ||
@@ -119,6 +127,15 @@ function EndorsementRow({
     APPLICATION_STATUS_CONFIG[statusKey] || APPLICATION_STATUS_CONFIG.pending;
   const accent = STATUS_ACCENT[statusKey] || DEFAULT_ACCENT;
   const isCompleted = COMPLETED_STATUSES.has(statusKey);
+
+  // A refund is claimable when the bidding pool is closed (completed outcome),
+  // the expert was not selected (rank absent or > 3), and the status is not
+  // already "refunded" (which means it was already claimed).
+  const rank = endorsement.blockchainData?.rank;
+  const isRefundable =
+    isCompleted &&
+    statusKey !== "refunded" &&
+    (rank === undefined || rank === null || rank > 3);
 
   const stakeNum = parseFloat(endorsement.stakeAmount || "0");
   const stakePct = (stakeNum / maxStake) * 100;
@@ -219,6 +236,23 @@ function EndorsementRow({
             </Badge>
           )}
 
+          {/* Claim Refund button for non-selected endorsers */}
+          {isRefundable && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClaimRefund(endorsement);
+              }}
+              disabled={claimingId === endorsementId}
+              className="h-8 text-xs"
+            >
+              <Coins className="w-3.5 h-3.5 mr-1" />
+              {claimingId === endorsementId ? "Claiming..." : "Claim Refund"}
+            </Button>
+          )}
+
           {/* Chevron */}
           <div
             className={cn(
@@ -316,10 +350,30 @@ function EndorsementRow({
 export function MyEndorsementsHistory() {
   const { address, isConnected } = useAccount();
   const { endorsements, isLoading, error } = useMyActiveEndorsements();
+  const { withdrawRefund } = useEndorsementBidding();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [sort, setSort] = useState<SortKey>("date_desc");
   const [search, setSearch] = useState("");
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const handleClaimRefund = async (endorsement: ActiveEndorsement) => {
+    const id =
+      endorsement.endorsementId ||
+      endorsement.applicationId ||
+      endorsement.job?.id ||
+      `${endorsement.candidate?.name || "candidate"}-${endorsement.createdAt || endorsement.endorsedAt}`;
+    setClaimingId(id);
+    try {
+      const txHash = await withdrawRefund();
+      toast.success(`Refund claimed! Transaction: ${txHash.slice(0, 10)}…`);
+    } catch (err) {
+      logger.error("Refund claim failed", err);
+      toast.error("Failed to claim refund. Please try again or use the contract directly.");
+    } finally {
+      setClaimingId(null);
+    }
+  };
 
   // Derived counts
   const totalStaked = useMemo(
@@ -625,6 +679,8 @@ export function MyEndorsementsHistory() {
                   maxStake={maxStake}
                   expandedId={expandedId}
                   setExpandedId={setExpandedId}
+                  claimingId={claimingId}
+                  onClaimRefund={handleClaimRefund}
                 />
               ))}
             </div>
@@ -650,6 +706,8 @@ export function MyEndorsementsHistory() {
                   maxStake={maxStake}
                   expandedId={expandedId}
                   setExpandedId={setExpandedId}
+                  claimingId={claimingId}
+                  onClaimRefund={handleClaimRefund}
                 />
               ))}
             </div>
