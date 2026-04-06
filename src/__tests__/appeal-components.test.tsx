@@ -25,13 +25,38 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+// Mock wagmi hooks (AppealSubmissionForm uses usePublicClient)
+vi.mock("wagmi", () => ({
+  usePublicClient: () => ({}),
+}));
+
 // Mock useAppealStaking (uses wagmi hooks internally)
 vi.mock("@/lib/hooks/useVettedContracts", () => ({
   useAppealStaking: () => ({
     approveTokens: vi.fn(),
     stakeForAppeal: vi.fn(),
+    stakeForAppealWithPermit: vi.fn(),
     needsApproval: () => false,
   }),
+}));
+
+// Mock usePermitOrApprove
+vi.mock("@/lib/hooks/usePermitOrApprove", () => ({
+  usePermitOrApprove: () => ({
+    executeWithPermit: vi.fn(),
+  }),
+}));
+
+// Mock blockchain utils
+vi.mock("@/lib/blockchain", () => ({
+  getTransactionErrorMessage: () => "Transaction failed",
+  isUserRejection: () => false,
+  getExplorerTxUrl: (hash: string) => `https://etherscan.io/tx/${hash}`,
+}));
+
+// Mock contract addresses
+vi.mock("@/contracts/abis", () => ({
+  CONTRACT_ADDRESSES: { VETTED_TOKEN: "0x0000000000000000000000000000000000000001" },
 }));
 
 // Mock formatTimeAgo
