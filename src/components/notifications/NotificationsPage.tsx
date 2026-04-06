@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
+import { NotificationSettingsModal } from "./NotificationSettingsModal";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/notification-helpers";
 import { Alert } from "@/components/ui/alert";
@@ -131,6 +132,7 @@ export function NotificationsPage<T extends BaseNotification>({
   const [allNotifications, setAllNotifications] = useState<T[]>([]);
   const { execute: executeMarkAll, isLoading: isMarkingAllRead } = useApi();
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -281,7 +283,7 @@ export function NotificationsPage<T extends BaseNotification>({
             <button
               className="w-10 h-10 grid place-items-center bg-card border border-border text-muted-foreground rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all"
               aria-label="Notification settings"
-              onClick={() => toast.info("Notification settings coming soon")}
+              onClick={() => setShowSettings(true)}
             >
               <Settings className="w-[18px] h-[18px]" />
             </button>
@@ -446,6 +448,8 @@ export function NotificationsPage<T extends BaseNotification>({
         )}
         </DataSection>
       </div>
+
+      <NotificationSettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 }
