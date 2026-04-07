@@ -30,6 +30,9 @@ import { STATUS_COLORS } from "@/config/colors";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Divider } from "@/components/ui/divider";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { matchingApi } from "@/lib/api";
+import { MatchScoreBreakdown } from "@/components/ui/match-score-breakdown";
 import type { EndorsementApplication } from "@/types";
 
 interface CandidateDetailsModalProps {
@@ -49,6 +52,11 @@ export function CandidateDetailsModal({
   const { isExpired: biddingExpired } = useCountdown(
     application?.bidding_deadline,
     { fallbackStart: application?.applied_at },
+  );
+
+  const { data: matchScore } = useFetch(
+    () => matchingApi.calculate(application!.candidate_id, application!.job_id),
+    { skip: !application?.candidate_id || !application?.job_id }
   );
 
   const skillMatchData = useMemo(() => {
@@ -428,75 +436,87 @@ export function CandidateDetailsModal({
           {/* Skills Match */}
           {activeTab === 'skills' && (
             <>
-              {/* Overall match */}
-              <div className="rounded-xl bg-muted/20 border border-border p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                      <CheckCircle className="w-3 h-3 text-primary" />
-                    </div>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Overall Match</h3>
-                  </div>
-                  <span className="text-2xl font-bold tabular-nums text-primary">{skillMatchData.percentage}%</span>
-                </div>
-                <Progress
-                  value={skillMatchData.percentage}
-                  className={`h-2 ${
-                    skillMatchData.percentage >= 70
-                      ? '[&>div]:bg-primary'
-                      : skillMatchData.percentage >= 40
-                      ? '[&>div]:bg-warning'
-                      : '[&>div]:bg-negative'
-                  }`}
+              {/* API-driven match score breakdown (replaces inline when available) */}
+              {matchScore ? (
+                <MatchScoreBreakdown
+                  totalScore={matchScore.totalScore}
+                  breakdown={matchScore.breakdown}
+                  matchedSkills={matchScore.matchedSkills}
+                  missingSkills={matchScore.missingSkills}
                 />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Based on matching job requirements with candidate bio and experience
-                </p>
-              </div>
-
-              {/* Matched skills */}
-              {skillMatchData.matched.length > 0 && (
-                <div className="rounded-xl bg-muted/20 border border-border p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
-                      <CheckCircle className={`w-3 h-3 ${STATUS_COLORS.positive.text}`} />
+              ) : (
+                <>
+                  {/* Fallback: inline skill match */}
+                  <div className="rounded-xl bg-muted/20 border border-border p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                          <CheckCircle className="w-3 h-3 text-primary" />
+                        </div>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Overall Match</h3>
+                      </div>
+                      <span className="text-2xl font-bold tabular-nums text-primary">{skillMatchData.percentage}%</span>
                     </div>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Matched <span className={STATUS_COLORS.positive.text}>({skillMatchData.matched.length})</span>
-                    </h3>
+                    <Progress
+                      value={skillMatchData.percentage}
+                      className={`h-2 ${
+                        skillMatchData.percentage >= 70
+                          ? '[&>div]:bg-primary'
+                          : skillMatchData.percentage >= 40
+                          ? '[&>div]:bg-warning'
+                          : '[&>div]:bg-negative'
+                      }`}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Based on matching job requirements with candidate bio and experience
+                    </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skillMatchData.matched.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
-                        <CheckCircle className="w-3 h-3" /> {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+
+                  {/* Matched skills */}
+                  {skillMatchData.matched.length > 0 && (
+                    <div className="rounded-xl bg-muted/20 border border-border p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.positive.bgSubtle} flex items-center justify-center`}>
+                          <CheckCircle className={`w-3 h-3 ${STATUS_COLORS.positive.text}`} />
+                        </div>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Matched <span className={STATUS_COLORS.positive.text}>({skillMatchData.matched.length})</span>
+                        </h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {skillMatchData.matched.map((skill: string, i: number) => (
+                          <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.positive.badge}`}>
+                            <CheckCircle className="w-3 h-3" /> {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Missing skills */}
+                  {skillMatchData.missing.length > 0 && (
+                    <div className="rounded-xl bg-muted/20 border border-border p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center`}>
+                          <XCircle className={`w-3 h-3 ${STATUS_COLORS.negative.text}`} />
+                        </div>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Missing <span className={STATUS_COLORS.negative.text}>({skillMatchData.missing.length})</span>
+                        </h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {skillMatchData.missing.map((skill: string, i: number) => (
+                          <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
+                            <XCircle className="w-3 h-3" /> {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Missing skills */}
-              {skillMatchData.missing.length > 0 && (
-                <div className="rounded-xl bg-muted/20 border border-border p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-5 h-5 rounded-md ${STATUS_COLORS.negative.bgSubtle} flex items-center justify-center`}>
-                      <XCircle className={`w-3 h-3 ${STATUS_COLORS.negative.text}`} />
-                    </div>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Missing <span className={STATUS_COLORS.negative.text}>({skillMatchData.missing.length})</span>
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skillMatchData.missing.map((skill: string, i: number) => (
-                      <span key={i} className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1 rounded-lg border ${STATUS_COLORS.negative.badge}`}>
-                        <XCircle className="w-3 h-3" /> {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Guild review score */}
+              {/* Guild review score (always shown) */}
               {guildScore && (
                 <div className="rounded-xl bg-muted/20 border border-border p-4">
                   <div className="flex items-center justify-between">

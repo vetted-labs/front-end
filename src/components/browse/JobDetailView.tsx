@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { candidateApi, jobsApi, applicationsApi, guildsApi } from "@/lib/api";
+import { candidateApi, jobsApi, applicationsApi, guildsApi, matchingApi } from "@/lib/api";
 import {
   MapPin,
   Send,
@@ -33,6 +33,7 @@ import { logger } from "@/lib/logger";
 import JobHeader from "./JobHeader";
 import JobRequirements from "./JobRequirements";
 import JobApplicationModal from "./JobApplicationModal";
+import { MatchScoreBreakdown } from "@/components/ui/match-score-breakdown";
 import type { Job, CandidateApplication, CandidateUserProfile, SocialLink } from "@/types";
 
 export default function JobDetailView() {
@@ -166,6 +167,14 @@ export default function JobDetailView() {
         logger.error("Error checking guild membership", err, { silent: true });
       },
     }
+  );
+
+  // Fetch match score for authenticated candidates
+  const isCandidate = auth.isAuthenticated && auth.userType === "candidate";
+  const candidateId = isCandidate ? auth.userId : null;
+  const { data: matchScore } = useFetch(
+    () => matchingApi.calculate(candidateId!, jobId!),
+    { skip: !candidateId || !jobId }
   );
 
   // Resolve social links from profile (prefer socialLinks array, fall back to legacy fields)
@@ -454,6 +463,16 @@ export default function JobDetailView() {
                   )}
               </div>
             </div>
+
+            {/* Match Score Breakdown (candidates only) */}
+            {matchScore && (
+              <MatchScoreBreakdown
+                totalScore={matchScore.totalScore}
+                breakdown={matchScore.breakdown}
+                matchedSkills={matchScore.matchedSkills}
+                missingSkills={matchScore.missingSkills}
+              />
+            )}
 
             {/* Company Info Mini Card */}
             <div className="bg-card rounded-xl border border-border p-6 transition-colors hover:border-border">

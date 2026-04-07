@@ -21,8 +21,9 @@ import {
   Circle,
   ArrowRight,
   Gavel,
+  Sparkles,
 } from "lucide-react";
-import { candidateApi, applicationsApi, messagingApi, extractApiError } from "@/lib/api";
+import { candidateApi, applicationsApi, messagingApi, matchingApi, extractApiError } from "@/lib/api";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
@@ -36,6 +37,7 @@ import { APPLICATION_STATUS_CONFIG, GUILD_APPLICATION_STATUS_CONFIG } from "@/co
 import type { CandidateProfile, CandidateApplication, ApplicationStats, GuildApplicationSummary, CandidateRejectionFeedback } from "@/types";
 import type { Conversation } from "@/types/messaging";
 import { UpcomingMeetings } from "@/components/dashboard/UpcomingMeetings";
+import { MatchScoreBadge } from "@/components/ui/match-score-badge";
 import { getPersonAvatar } from "@/lib/avatars";
 import { CelebrationDialog } from "@/components/candidate/CelebrationDialog";
 import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
@@ -210,6 +212,13 @@ export default function CandidateDashboard() {
   const { execute: resubmit } = useApi<{ id: string }>();
 
   const profile = data?.profile ?? null;
+  const candidateId = profile?.id ?? null;
+
+  const { data: recommendedJobs } = useFetch(
+    () => matchingApi.getRecommendedJobs(candidateId!, undefined, 6),
+    { skip: !candidateId }
+  );
+
   const applications = useMemo(() => data?.applications ?? [], [data?.applications]);
   const stats = data?.stats ?? { total: 0, pending: 0, reviewing: 0, interviewed: 0, accepted: 0, rejected: 0 };
   const guildApplications = data?.guildApplications ?? [];
@@ -467,6 +476,54 @@ export default function CandidateDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Recommended Jobs */}
+            {recommendedJobs && recommendedJobs.length > 0 && (
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
+                      Recommended for You
+                    </h2>
+                  </div>
+                  <Link
+                    href="/browse/jobs"
+                    className="text-xs text-primary hover:underline flex items-center gap-2 font-semibold"
+                  >
+                    Browse All <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                <div className="divide-y divide-border/30">
+                  {recommendedJobs.map((rec) => (
+                    <Link
+                      key={rec.jobId}
+                      href={`/browse/jobs/${rec.jobId}`}
+                      className="flex items-center gap-3 w-full px-5 py-3.5 hover:bg-muted/30 transition-colors group"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                          {rec.title}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            {rec.company}
+                          </span>
+                          {rec.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {rec.location}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <MatchScoreBadge score={rec.matchScore} compact />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Upcoming Meetings */}
             <UpcomingMeetings userType="candidate" />

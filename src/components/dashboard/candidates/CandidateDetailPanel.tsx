@@ -17,7 +17,7 @@ import {
   Star,
   ArrowLeft,
 } from "lucide-react";
-import { applicationsApi, blockchainApi, companyApi, expertApi, getAssetUrl, messagingApi, ApiError } from "@/lib/api";
+import { applicationsApi, blockchainApi, companyApi, expertApi, getAssetUrl, messagingApi, matchingApi, ApiError } from "@/lib/api";
 import type { EndorsementStats, EndorsementInfo } from "@/types";
 import { getPersonAvatar } from "@/lib/avatars";
 import { STATUS_COLORS } from "@/config/colors";
@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { MatchScoreBreakdown } from "@/components/ui/match-score-breakdown";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { StatusActions } from "./StatusActions";
 import { PipelineStepper } from "./PipelineStepper";
@@ -83,6 +84,10 @@ export function CandidateDetailPanel({
 
   const { data: endorsementStats } = useFetch<EndorsementStats>(
     () => blockchainApi.getEndorsementStats(application.jobId, application.candidateId),
+  );
+
+  const { data: matchScore } = useFetch(
+    () => matchingApi.calculate(application.candidateId, application.jobId),
   );
 
   const { data: rawEndorsements } = useFetch<EndorsementInfo[]>(
@@ -275,6 +280,16 @@ export function CandidateDetailPanel({
                 )}
               </div>
             </div>
+
+            {/* Match Score Breakdown */}
+            {matchScore && (
+              <MatchScoreBreakdown
+                totalScore={matchScore.totalScore}
+                breakdown={matchScore.breakdown}
+                matchedSkills={matchScore.matchedSkills}
+                missingSkills={matchScore.missingSkills}
+              />
+            )}
 
             {/* Info grid */}
             <div className="grid grid-cols-2 gap-3">

@@ -7,6 +7,7 @@ import { formatSalaryRange } from "@/lib/utils";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import { getMatchScoreColors, getUrgencyColors } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { MatchScoreBadge as MatchScoreBadgeUI } from "@/components/ui/match-score-badge";
 import type { EndorsementApplication } from "@/types";
 
 interface ApplicationCardProps {
@@ -150,6 +151,9 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
               {application.candidate_name}
             </h3>
             <MatchScoreBadge score={guildScore} />
+            {application.matchScore !== undefined && (
+              <MatchScoreBadgeUI score={application.matchScore} compact />
+            )}
           </div>
           <p className="text-xs text-muted-foreground truncate mt-0.5">
             {application.candidate_headline}

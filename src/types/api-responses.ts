@@ -265,6 +265,7 @@ export interface EndorsementApplication {
   github?: string;
   resume_url?: string;
   endorsement_count?: number;
+  matchScore?: number;
 }
 
 /** Enriched endorsement as returned by getExpertEndorsements — includes nested job/candidate/guild data. */

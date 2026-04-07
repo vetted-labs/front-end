@@ -4,6 +4,10 @@ import { Briefcase, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCandidateStatusDot } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useFetch } from "@/lib/hooks/useFetch";
+import { matchingApi } from "@/lib/api";
+import { MatchScoreBadge } from "@/components/ui/match-score-badge";
+import { useMemo } from "react";
 import type { CompanyApplication } from "@/types";
 
 interface CandidateJobGroupProps {
@@ -47,6 +51,17 @@ export function CandidateJobGroup({
   onShowMore,
 }: CandidateJobGroupProps) {
   const remaining = applications.length - visibleCount;
+
+  // Fetch top match scores for this job's candidates
+  const { data: topMatches } = useFetch(
+    () => matchingApi.getTopMatches(job.id, 50),
+    { skip: !job.id }
+  );
+
+  const matchScoreMap = useMemo(() => {
+    if (!topMatches) return new Map<string, number>();
+    return new Map(topMatches.map((m) => [m.candidateId, m.score]));
+  }, [topMatches]);
 
   return (
     <div>
@@ -110,6 +125,9 @@ export function CandidateJobGroup({
                       <span className="text-xs font-medium text-muted-foreground/60 flex-shrink-0">
                         {endorsements}
                       </span>
+                    )}
+                    {matchScoreMap.has(app.candidateId) && (
+                      <MatchScoreBadge score={matchScoreMap.get(app.candidateId)!} compact />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground/50 truncate leading-tight">

@@ -7,7 +7,7 @@ import {
   X,
   Briefcase,
 } from "lucide-react";
-import { jobsApi, applicationsApi } from "@/lib/api";
+import { jobsApi, applicationsApi, matchingApi } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
 import { useAuthContext } from "@/hooks/useAuthContext";
@@ -35,6 +35,7 @@ export default function JobsListing() {
   );
   const auth = useAuthContext();
   const isCandidate = auth.isAuthenticated && auth.userType === "candidate";
+  const candidateId = isCandidate ? (auth.userId ?? null) : null;
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const [sortBy, setSortBy] = useState("newest");
@@ -58,6 +59,17 @@ export default function JobsListing() {
       logger.error("Failed to fetch applications", err, { silent: true });
     },
   });
+
+  // Fetch match scores for recommended jobs (candidates only)
+  const { data: recommendedJobs } = useFetch(
+    () => matchingApi.getRecommendedJobs(candidateId!, undefined, 50),
+    { skip: !candidateId }
+  );
+
+  const matchScoreMap = useMemo(() => {
+    if (!recommendedJobs) return new Map<string, number>();
+    return new Map(recommendedJobs.map((r) => [r.jobId, r.matchScore]));
+  }, [recommendedJobs]);
 
   // Fetch jobs listing
   const { data: jobs, isLoading } = useFetch<Job[]>(
@@ -415,6 +427,7 @@ export default function JobsListing() {
                     job={job}
                     hasApplied={appliedJobIds.has(job.id)}
                     showAppliedBadge={isCandidate}
+                    matchScore={matchScoreMap.get(job.id)}
                   />
                 ))}
               </div>

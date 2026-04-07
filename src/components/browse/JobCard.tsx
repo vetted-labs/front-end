@@ -16,15 +16,17 @@ import { getCompanyAvatar } from "@/lib/avatars";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { STATUS_COLORS, getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
+import { MatchScoreBadge } from "@/components/ui/match-score-badge";
 import type { Job } from "@/types";
 
 interface JobCardProps {
   job: Job;
   hasApplied: boolean;
   showAppliedBadge: boolean;
+  matchScore?: number;
 }
 
-export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
+export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCardProps) {
   const router = useRouter();
   const { resolveGuildId } = useGuilds();
   const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
@@ -79,6 +81,12 @@ export function JobCard({ job, hasApplied, showAppliedBadge }: JobCardProps) {
           <CheckCircle2 className="w-3 h-3" />
           Applied
         </span>
+      )}
+      {/* Match Score Badge */}
+      {matchScore !== undefined && (
+        <div className="mb-3">
+          <MatchScoreBadge score={matchScore} compact />
+        </div>
       )}
 
       {/* Meta Tags: Guild badge, location, job type */}
