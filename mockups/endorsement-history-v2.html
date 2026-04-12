@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endorsement History - V2: DeFi Trading Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface-0: #0c0f14;
+    --surface-1: #141820;
+    --surface-2: #1a1f2a;
+    --surface-3: #222938;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --primary: #ff6a00;
+    --primary-rgb: 255, 106, 0;
+    --text: #f0f0f5;
+    --text-muted: #6b7084;
+    --positive: #22c55e;
+    --positive-rgb: 34, 197, 94;
+    --warning: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --info: #3b82f6;
+    --purple: #8b5cf6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    margin-bottom: 40px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 12px;
+  }
+  .page-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .page-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chain-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .chain-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--positive);
+    box-shadow: 0 0 8px rgba(var(--positive-rgb), 0.4);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(var(--positive-rgb), 0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 16px rgba(var(--positive-rgb), 0.2); }
+  }
+
+  /* ── Stats Row - Compact DeFi style ── */
+  .stats-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 40px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+  .stats-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.3), transparent);
+  }
+
+  .stat-cell {
+    flex: 1;
+    padding: 24px 28px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-cell + .stat-cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .stat-cell-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .stat-cell-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .stat-cell-value.primary { color: var(--primary); }
+  .stat-cell-value.warning { color: var(--warning); }
+  .stat-cell-value.positive { color: var(--positive); }
+  .stat-cell-change {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--positive);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  /* ── Table-style list ── */
+  .table-wrapper {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 1fr 180px 120px 120px 100px 40px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .table-header span {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .table-header .align-right {
+    text-align: right;
+  }
+  .table-header .align-center {
+    text-align: center;
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 1fr 180px 120px 120px 100px 40px;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .table-row:last-child {
+    border-bottom: none;
+  }
+  .table-row:hover {
+    background: rgba(var(--primary-rgb), 0.02);
+  }
+
+  .row-job {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .row-job-marker {
+    width: 3px;
+    height: 36px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .marker-pending { background: var(--primary); }
+  .marker-reviewing { background: var(--info); }
+  .marker-interviewed { background: var(--purple); }
+
+  .row-job-info {
+    min-width: 0;
+  }
+  .row-job-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-job-company {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .row-candidate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .row-candidate-initial {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .row-candidate-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-stake {
+    text-align: right;
+  }
+  .row-stake-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .row-stake-pct {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .row-rank {
+    text-align: center;
+  }
+  .rank-pip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(var(--warning-rgb), 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(var(--warning-rgb), 0.2);
+  }
+  .rank-none {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .row-status {
+    text-align: center;
+  }
+  .status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .pill-pending {
+    background: rgba(var(--primary-rgb), 0.08);
+    color: var(--primary);
+    border: 1px solid rgba(var(--primary-rgb), 0.15);
+  }
+  .pill-reviewing {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--info);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+  }
+  .pill-interviewed {
+    background: rgba(139, 92, 246, 0.08);
+    color: var(--purple);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  .row-expand {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ── Staking Bar (visual weight) ── */
+  .stake-bar-wrap {
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 3px;
+    margin-top: 6px;
+    overflow: hidden;
+    max-width: 100px;
+    margin-left: auto;
+  }
+  .stake-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), rgba(var(--primary-rgb), 0.4));
+  }
+
+  /* ── Bottom Banner ── */
+  .bottom-banner {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-radius: 14px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+  }
+  .bottom-banner-text {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .bottom-banner-text strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .bottom-banner-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(var(--primary-rgb), 0.3);
+    transition: all 0.2s;
+  }
+  .bottom-banner-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.4);
+  }
+
+  .design-label {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width: 1200px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <a href="#" class="back-link">&larr; Back to Endorsements</a>
+      <h1 class="page-title">Endorsement History</h1>
+      <p class="page-subtitle">Your active endorsement portfolio synced from chain</p>
+    </div>
+    <div class="header-right">
+      <div class="chain-badge">
+        <span class="chain-dot"></span>
+        On-chain synced
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <span class="stat-cell-label">Active Endorsements</span>
+      <span class="stat-cell-value primary">8</span>
+      <span class="stat-cell-change">&#9650; 2 this week</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-cell-label">Top 3 Rankings</span>
+      <span class="stat-cell-value warning">2</span>
+      <span class="stat-cell-change">&#9650; 1 rank gained</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-cell-label">Total Staked</span>
+      <span class="stat-cell-value positive">205.00</span>
+      <span class="stat-cell-change">VETD &middot; ~$410 USD</span>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span>Position</span>
+      <span>Candidate</span>
+      <span class="align-right">Stake</span>
+      <span class="align-center">Rank</span>
+      <span class="align-center">Status</span>
+      <span></span>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-pending"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Regional Accountability Producer</div>
+          <div class="row-job-company">Vetted Inc &middot; South Kassandra, MT</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">JJ</div>
+        <span class="row-candidate-name">Jennie Jacobs</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">100.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 100%"></div></div>
+        <div class="row-stake-pct">48.8% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-pip">&#127942; #1</span></div>
+      <div class="row-status"><span class="status-pill pill-pending">Pending</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-pending"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Lead Web Agent</div>
+          <div class="row-job-company">Vetted Inc &middot; Hybrid</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">SV</div>
+        <span class="row-candidate-name">sven</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">10.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 10%"></div></div>
+        <div class="row-stake-pct">4.9% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-pip">&#127942; #1</span></div>
+      <div class="row-status"><span class="status-pill pill-pending">Pending</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-reviewing"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Investor Solutions Executive</div>
+          <div class="row-job-company">Vetted Inc &middot; Margretstead, MO</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">MJ</div>
+        <span class="row-candidate-name">Mable Jacobi</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">12.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 12%"></div></div>
+        <div class="row-stake-pct">5.9% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-reviewing">Reviewing</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-reviewing"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Internal Operations Administrator</div>
+          <div class="row-job-company">Vetted Inc &middot; Willowberg, MN</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">DR</div>
+        <span class="row-candidate-name">Darin Rippin</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">25.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 25%"></div></div>
+        <div class="row-stake-pct">12.2% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-reviewing">Reviewing</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-pending"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Dynamic Division Planner</div>
+          <div class="row-job-company">Vetted Inc &middot; York, OK</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">DD</div>
+        <span class="row-candidate-name">Derrick Doyle</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">12.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 12%"></div></div>
+        <div class="row-stake-pct">5.9% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-pending">Pending</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-pending"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Regional Accountability Producer</div>
+          <div class="row-job-company">Vetted Inc &middot; South Kassandra, MT</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">RD</div>
+        <span class="row-candidate-name">Ryan Daugherty</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">9.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 9%"></div></div>
+        <div class="row-stake-pct">4.4% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-pending">Pending</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-reviewing"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Regional Accounts Developer</div>
+          <div class="row-job-company">Vetted Inc &middot; Hybrid</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">JP</div>
+        <span class="row-candidate-name">Jenna Parker</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">18.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 18%"></div></div>
+        <div class="row-stake-pct">8.8% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-reviewing">Reviewing</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+
+    <div class="table-row">
+      <div class="row-job">
+        <div class="row-job-marker marker-interviewed"></div>
+        <div class="row-job-info">
+          <div class="row-job-title">Principal Identity Representative</div>
+          <div class="row-job-company">Vetted Inc &middot; Kayleechester, OR</div>
+        </div>
+      </div>
+      <div class="row-candidate">
+        <div class="row-candidate-initial">AL</div>
+        <span class="row-candidate-name">Archie Legros</span>
+      </div>
+      <div class="row-stake">
+        <div class="row-stake-amount">19.00</div>
+        <div class="stake-bar-wrap"><div class="stake-bar-fill" style="width: 19%"></div></div>
+        <div class="row-stake-pct">9.3% of portfolio</div>
+      </div>
+      <div class="row-rank"><span class="rank-none">&mdash;</span></div>
+      <div class="row-status"><span class="status-pill pill-interviewed">Interviewed</span></div>
+      <div class="row-expand">&rsaquo;</div>
+    </div>
+  </div>
+
+  <!-- Bottom Banner -->
+  <div class="bottom-banner">
+    <p class="bottom-banner-text"><strong>&#128161; Top 3 endorsers</strong> earn rewards when a candidate gets hired. Stake more to climb the ranks.</p>
+    <button class="bottom-banner-btn">Browse Applications &rarr;</button>
+  </div>
+
+</div>
+
+<div class="design-label">V2: DeFi Trading Dashboard</div>
+
+</body>
+</html>

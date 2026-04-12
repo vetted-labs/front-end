@@ -100,7 +100,8 @@ export function ReputationBreakdownCards({
   const accuracyPct = computeAccuracy(alignedCount, deviationCount);
   const consistencyPct = computeConsistency(totalGains, totalLosses);
 
-  const miniChartValues = [70, 85, 78, 92, 88, 95, 82, 90, consistencyPct];
+  // Fill with the current value — no historical consistency data available yet
+  const miniChartValues = Array(9).fill(consistencyPct);
 
   const cards = [
     {

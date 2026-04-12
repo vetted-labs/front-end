@@ -7,35 +7,7 @@ import { BarDistribution } from "@/components/analytics/BarDistribution";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface ConsensusPoint {
-  label?: string;
-  month?: string;
-  value?: number;
-  pct?: number;
-}
-
-interface ScoreDistributionItem {
-  range: string;
-  count: number;
-  opacity?: number;
-  isMedian?: boolean;
-}
-
-interface StakingItem {
-  label: string;
-  value: string;
-  color?: "primary" | "positive";
-}
-
-interface ReviewsData {
-  consensusTimeline?: ConsensusPoint[];
-  scoreDistribution?: ScoreDistributionItem[];
-  staking?: StakingItem[];
-}
+import { AlertTriangle, BarChart3 } from "lucide-react";
 
 // ── Color helper ─────────────────────────────────────────────
 
@@ -51,19 +23,19 @@ interface Props {
   walletAddress?: string;
 }
 
-export function ExpertReviewsTab({ walletAddress }: Props) {
+export function ExpertReviewsTab({ period, walletAddress }: Props) {
   const { data: rawData, isLoading, error } = useFetch(
-    () => analyticsApi.getExpertConsensus(walletAddress!),
+    () => analyticsApi.getExpertConsensus(walletAddress!, period),
     { skip: !walletAddress }
   );
 
-  const data = rawData as ReviewsData | null;
+  const data = rawData;
 
   const consensusData = useMemo(() => {
     if (!data?.consensusTimeline) return [];
     return data.consensusTimeline.map((d) => ({
-      label: d.label ?? d.month ?? "",
-      value: d.value ?? d.pct ?? 0,
+      label: d.label,
+      value: d.value,
     }));
   }, [data]);
 
@@ -97,9 +69,9 @@ export function ExpertReviewsTab({ walletAddress }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load reviews"
+        description="Something went wrong loading your review data. Please try again."
       />
     );
   }

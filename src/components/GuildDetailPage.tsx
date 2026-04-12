@@ -99,12 +99,20 @@ export default function GuildDetailPage() {
         recentActivity = derived.slice(0, 50);
       }
 
+      // Prefer the actual array lengths over raw counts — backend sometimes returns 0 even
+      // when the members array is populated (VET-63).
+      const resolvedExpertCount = experts.length || raw.expertCount || 0;
+      const resolvedCandidateCount = candidates.length || raw.candidateCount || 0;
+
       const guild: GuildPageDetail = {
         ...raw,
         experts, candidates, recentJobs, recentActivity,
-        expertCount: raw.expertCount ?? experts.length,
-        candidateCount: raw.candidateCount ?? candidates.length,
-        totalMembers: raw.totalMembers ?? raw.memberCount ?? 0,
+        expertCount: resolvedExpertCount,
+        candidateCount: resolvedCandidateCount,
+        totalMembers:
+          raw.totalMembers ||
+          raw.memberCount ||
+          resolvedExpertCount + resolvedCandidateCount,
         openPositions: raw.openPositions ?? recentJobs.length,
         totalProposalsReviewed: raw.totalProposalsReviewed ?? raw.statistics?.vettedProposals ?? 0,
         averageApprovalTime: raw.averageApprovalTime ?? "—",

@@ -1,34 +1,14 @@
 "use client";
 
-import { FunnelChart, type FunnelStage } from "@/components/analytics/FunnelChart";
-import { HorizontalBars, type SourceData } from "@/components/analytics/HorizontalBars";
+import { FunnelChart } from "@/components/analytics/FunnelChart";
+import { HorizontalBars } from "@/components/analytics/HorizontalBars";
 import { HeatmapChart } from "@/components/analytics/HeatmapChart";
-import { DonutChart, type GuildDistribution } from "@/components/analytics/DonutChart";
+import { DonutChart } from "@/components/analytics/DonutChart";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface HireRateBySource {
-  endorsed?: string;
-  guild?: string;
-  direct?: string;
-}
-
-interface PipelineData {
-  funnelStages?: FunnelStage[];
-  sources?: SourceData[];
-  hireRateBySource?: HireRateBySource;
-  heatmap?: number[][];
-  heatmapRows?: string[];
-  heatmapCols?: string[];
-  heatmapPeak?: string;
-  guildDistribution?: GuildDistribution[];
-  guildTotal?: number;
-}
 
 // ── Component ─────────────────────────────────────────────────
 
@@ -42,7 +22,7 @@ export function CompanyPipelineTab({ period }: Props) {
     {}
   );
 
-  const data = rawData as PipelineData | null;
+  const data = rawData;
 
   const funnelStages = data?.funnelStages ?? [];
   const sources = data?.sources ?? [];
@@ -74,9 +54,9 @@ export function CompanyPipelineTab({ period }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load pipeline"
+        description="Something went wrong loading your pipeline data. Please try again."
       />
     );
   }

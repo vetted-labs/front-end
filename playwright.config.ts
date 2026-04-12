@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `NEXT_PUBLIC_E2E_MODE=true dotenv -e .env.local -- next dev --turbopack --port 3030`,
+    command: `NEXT_PUBLIC_E2E_MODE=true npx dotenv -e .env.local -- npx next dev --turbopack --port 3030`,
     url: baseURL,
     reuseExistingServer: true,
     timeout: 120000,

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAccount, useDisconnect } from "wagmi";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -94,12 +95,13 @@ export function HomePage() {
           <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-8">
             {/* Brand */}
             <div>
-              <div className="font-display font-bold text-xl mb-2.5">
-                vetted<span className="text-primary">.</span>
-              </div>
-              <p className="text-sm text-muted-foreground/50 leading-relaxed max-w-[260px]">
-                The credibility layer for hiring. Expert signals you can trust.
-              </p>
+              <Image
+                src="/vetted-logo.svg"
+                alt="Vetted"
+                width={140}
+                height={24}
+                className="h-6 w-auto"
+              />
             </div>
 
             {/* Platform */}
@@ -138,9 +140,14 @@ export function HomePage() {
               </h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a
+                    href="https://vettedprotocol.com/manifesto"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     About
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

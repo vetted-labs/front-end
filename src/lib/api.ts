@@ -1,3 +1,16 @@
+import type {
+  ExpertOverviewData,
+  ReputationPoint,
+  ReviewsData,
+  EndorsementStatsData,
+  CompanyOverviewData,
+  CompanyPipelineData,
+  CompanyJobsData,
+  CandidateOverviewData,
+  CandidateApplicationItem,
+  CandidateVisibilityData,
+} from "@/types/analytics";
+
 // Ensure the API URL is absolute (has protocol)
 const getApiBaseUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -1371,7 +1384,7 @@ export const guildApplicationsApi = {
         ? Number(v.reputationChange ?? v.reputation_change) : undefined,
       reward_amount: v.rewardAmount != null || v.reward_amount != null
         ? Number(v.rewardAmount ?? v.reward_amount) : undefined,
-      slashing_tier: (v.slashingTier ?? v.slashing_tier) as string | undefined,
+      slashing_tier: (v.slashingTier ?? v.slashing_tier) as import("@/types").SlashingTier | undefined,
       comment: (v.comment) as string | undefined,
       created_at: (v.createdAt ?? v.created_at ?? "") as string,
     }));
@@ -1734,44 +1747,44 @@ export const guildAppealApi = {
 export const analyticsApi = {
   // Expert analytics
   getExpertOverview: (wallet: string, period?: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<ExpertOverviewData>(
       `/api/experts/${wallet}/analytics/overview${period ? `?period=${period}` : ""}`,
       { requiresAuth: false }
     ),
 
   getExpertReputationTimeline: (wallet: string, period?: string) =>
-    apiRequest<Record<string, unknown>[]>(
+    apiRequest<ReputationPoint[]>(
       `/api/experts/${wallet}/analytics/reputation${period ? `?period=${period}` : ""}`,
       { requiresAuth: false }
     ),
 
-  getExpertConsensus: (wallet: string) =>
-    apiRequest<Record<string, unknown>>(
-      `/api/experts/${wallet}/analytics/consensus`,
+  getExpertConsensus: (wallet: string, period?: string) =>
+    apiRequest<ReviewsData>(
+      `/api/experts/${wallet}/analytics/consensus${period ? `?period=${period}` : ""}`,
       { requiresAuth: false }
     ),
 
   getExpertEndorsementStats: (wallet: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<EndorsementStatsData>(
       `/api/experts/${wallet}/analytics/endorsements`,
       { requiresAuth: false }
     ),
 
   // Company analytics
   getCompanyOverview: (period?: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<CompanyOverviewData>(
       `/api/companies/me/analytics/overview${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),
 
   getCompanyPipeline: (period?: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<CompanyPipelineData>(
       `/api/companies/me/analytics/pipeline${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),
 
   getCompanyJobPerformance: (period?: string) =>
-    apiRequest<unknown>(
+    apiRequest<CompanyJobsData>(
       `/api/companies/me/analytics/jobs${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),
@@ -1784,19 +1797,19 @@ export const analyticsApi = {
 
   // Candidate analytics
   getCandidateOverview: (period?: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<CandidateOverviewData>(
       `/api/candidates/me/analytics/overview${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),
 
   getCandidateApplicationStats: () =>
-    apiRequest<unknown>(
+    apiRequest<CandidateApplicationItem[]>(
       `/api/candidates/me/analytics/applications`,
       { requiresAuth: true }
     ),
 
   getCandidateVisibility: (period?: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<CandidateVisibilityData>(
       `/api/candidates/me/analytics/visibility${period ? `?period=${period}` : ""}`,
       { requiresAuth: true }
     ),

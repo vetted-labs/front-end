@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Loader2, Users, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { CandidateJobGroup } from "./CandidateJobGroup";
+import { PrioritySections } from "./PrioritySections";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { CompanyApplication, CandidateSortOption, GroupedJob } from "@/types";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
+import type { CompanyApplication, CandidateSortOption, GroupedJob, ApplicationStatus } from "@/types";
 
 const GROUPS_PER_PAGE = 5;
-const INITIAL_CANDIDATES_PER_GROUP = 5;
+const INITIAL_CANDIDATES_PER_GROUP = 15;
 const SHOW_MORE_INCREMENT = 10;
 
 interface CandidateListPanelProps {
@@ -20,6 +24,7 @@ interface CandidateListPanelProps {
   onFilterChange: (status: string) => void;
   isLoading: boolean;
   getEndorsementCount: (app: CompanyApplication) => number;
+  getTopEndorserName: (app: CompanyApplication) => string | undefined;
   uniqueGuilds: string[];
   filterGuild: string;
   onGuildFilterChange: (guild: string) => void;
@@ -29,6 +34,13 @@ interface CandidateListPanelProps {
   onToggleJob: (jobId: string) => void;
   onExpandAll: () => void;
   onCollapseAll: () => void;
+  viewMode: "priority" | "byjob";
+  onViewModeChange: (mode: "priority" | "byjob") => void;
+  priorityInProgress: CompanyApplication[];
+  priorityTopPicks: CompanyApplication[];
+  priorityNew: CompanyApplication[];
+  getMatchScore: (app: CompanyApplication) => number | undefined;
+  onStatusChange: (applicationId: string, newStatus: ApplicationStatus) => Promise<void>;
 }
 
 export function CandidateListPanel({
@@ -41,6 +53,7 @@ export function CandidateListPanel({
   onFilterChange,
   isLoading,
   getEndorsementCount,
+  getTopEndorserName,
   uniqueGuilds,
   filterGuild,
   onGuildFilterChange,
@@ -50,6 +63,13 @@ export function CandidateListPanel({
   onToggleJob,
   onExpandAll,
   onCollapseAll,
+  viewMode,
+  onViewModeChange,
+  priorityInProgress,
+  priorityTopPicks,
+  priorityNew,
+  getMatchScore,
+  onStatusChange,
 }: CandidateListPanelProps) {
   const totalApplications = groupedJobs.reduce((sum, g) => sum + g.applications.length, 0);
 
@@ -110,6 +130,38 @@ export function CandidateListPanel({
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header controls */}
       <div className="flex-shrink-0 px-4 pt-3 pb-2">
+        <div className="mb-2 flex items-center justify-end">
+          <HelpLink href={DOC_LINKS.guildVetting} variant="subtle" size="sm">
+            How candidate scoring works
+          </HelpLink>
+        </div>
+        {/* View toggle */}
+        <div className="flex items-center gap-1 mb-3 p-0.5 rounded-lg bg-muted/40 border border-border/50">
+          <button
+            type="button"
+            onClick={() => onViewModeChange("priority")}
+            className={cn(
+              "flex-1 text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+              viewMode === "priority"
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground border border-transparent"
+            )}
+          >
+            Priority
+          </button>
+          <button
+            type="button"
+            onClick={() => onViewModeChange("byjob")}
+            className={cn(
+              "flex-1 text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+              viewMode === "byjob"
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground border border-transparent"
+            )}
+          >
+            By Job
+          </button>
+        </div>
         {/* Search */}
         <div className="relative mb-2.5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
@@ -151,38 +203,46 @@ export function CandidateListPanel({
           </select>
         </div>
 
-        {/* Sort + expand/collapse */}
-        <div className="flex items-center gap-2 pb-2.5 border-b border-border/20 dark:border-border">
-          <span className="text-xs font-medium text-muted-foreground/40">Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as CandidateSortOption)}
-            className="bg-transparent border-none text-xs font-medium text-muted-foreground focus:outline-none cursor-pointer appearance-none pr-3"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='7' height='4' viewBox='0 0 7 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l2.5 2.5L6 1' stroke='%236b7280' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 0 center",
-            }}
-          >
-            <option value="endorsements">Endorsements</option>
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="name">Name A-Z</option>
-          </select>
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications}</span>
-            <button
-              type="button"
-              onClick={expandedJobIds.size === groupedJobs.length ? onCollapseAll : onExpandAll}
-              className="flex items-center justify-center w-6 h-6 text-muted-foreground/40 hover:text-foreground rounded transition-colors"
-              title={expandedJobIds.size === groupedJobs.length ? "Collapse all" : "Expand all"}
-              aria-label={expandedJobIds.size === groupedJobs.length ? "Collapse all groups" : "Expand all groups"}
+        {/* Sort + expand/collapse (By Job only) */}
+        {viewMode === "byjob" && (
+          <div className="flex items-center gap-2 pb-2.5 border-b border-border/20 dark:border-border">
+            <span className="text-xs font-medium text-muted-foreground/40">Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value as CandidateSortOption)}
+              className="bg-transparent border-none text-xs font-medium text-muted-foreground focus:outline-none cursor-pointer appearance-none pr-3"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='7' height='4' viewBox='0 0 7 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l2.5 2.5L6 1' stroke='%236b7280' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 0 center",
+              }}
             >
-              <ChevronsUpDown className="w-3 h-3" />
-            </button>
+              <option value="endorsements">Endorsements</option>
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name A-Z</option>
+            </select>
+
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications} candidates</span>
+              <button
+                type="button"
+                onClick={expandedJobIds.size === groupedJobs.length ? onCollapseAll : onExpandAll}
+                className="flex items-center justify-center w-6 h-6 text-muted-foreground/40 hover:text-foreground rounded transition-colors"
+                title={expandedJobIds.size === groupedJobs.length ? "Collapse all" : "Expand all"}
+                aria-label={expandedJobIds.size === groupedJobs.length ? "Collapse all groups" : "Expand all groups"}
+              >
+                <ChevronsUpDown className="w-3 h-3" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+        {/* Candidate count (Priority only) */}
+        {viewMode === "priority" && (
+          <div className="flex items-center pb-2.5 border-b border-border/20 dark:border-border">
+            <span className="text-xs text-muted-foreground/40 tabular-nums">{totalApplications} candidates</span>
+          </div>
+        )}
       </div>
 
       {/* Scrollable list */}
@@ -191,6 +251,18 @@ export function CandidateListPanel({
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/40" />
           </div>
+        ) : viewMode === "priority" ? (
+          <PrioritySections
+            inProgress={priorityInProgress}
+            topPicks={priorityTopPicks}
+            newCandidates={priorityNew}
+            selectedApplicationId={selectedApplicationId}
+            onSelectApplication={onSelectApplication}
+            getEndorsementCount={getEndorsementCount}
+            getTopEndorserName={getTopEndorserName}
+            getMatchScore={getMatchScore}
+            onStatusChange={onStatusChange}
+          />
         ) : groupedJobs.length === 0 ? (
           <EmptyState
             icon={Users}
@@ -207,6 +279,7 @@ export function CandidateListPanel({
                 selectedApplicationId={selectedApplicationId}
                 onSelectApplication={onSelectApplication}
                 getEndorsementCount={getEndorsementCount}
+                getMatchScore={getMatchScore}
                 isExpanded={expandedJobIds.has(group.job.id)}
                 onToggle={() => onToggleJob(group.job.id)}
                 visibleCount={getVisibleCount(group.job.id)}

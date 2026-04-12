@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Full Platform Audit</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-2: #1a1a25;
+    --surface-3: #22222f;
+    --border: #2a2a3a;
+    --border-light: #33334a;
+    --text: #e8e8f0;
+    --text-muted: #8888a0;
+    --text-dim: #5a5a70;
+    --accent: #f97316;
+    --accent-dim: rgba(249,115,22,0.15);
+    --accent-glow: rgba(249,115,22,0.08);
+    --positive: #22c55e;
+    --positive-dim: rgba(34,197,94,0.12);
+    --negative: #ef4444;
+    --negative-dim: rgba(239,68,68,0.12);
+    --warning: #eab308;
+    --warning-dim: rgba(234,179,8,0.12);
+    --info: #3b82f6;
+    --info-dim: rgba(59,130,246,0.12);
+    --purple: #a855f7;
+    --purple-dim: rgba(168,85,247,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+  .sidebar-header p {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .nav-section {
+    padding: 8px 12px 4px;
+  }
+  .nav-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    padding: 0 4px;
+    margin-bottom: 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-item .score {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    min-width: 28px;
+    text-align: center;
+  }
+  .score-high { background: var(--positive-dim); color: var(--positive); }
+  .score-mid { background: var(--warning-dim); color: var(--warning); }
+  .score-low { background: var(--negative-dim); color: var(--negative); }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .overall-score {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .overall-score .number {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .overall-score .label {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Main ── */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 40px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 40%);
+  }
+  .hero h2 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .hero .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* ── Summary Bar ── */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-cell {
+    background: var(--surface);
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .summary-cell .val {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .summary-cell .lbl {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 48px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-pill:hover { border-color: var(--text-dim); color: var(--text); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-pill .cnt {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    padding: 0 5px;
+    border-radius: 8px;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .filter-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .severity-filter {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .sev-pill {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .sev-critical { background: var(--negative-dim); color: var(--negative); }
+  .sev-critical.active, .sev-critical:hover { background: var(--negative); color: #fff; }
+  .sev-warning { background: var(--warning-dim); color: var(--warning); }
+  .sev-warning.active, .sev-warning:hover { background: var(--warning); color: #000; }
+  .sev-info { background: var(--info-dim); color: var(--info); }
+  .sev-info.active, .sev-info:hover { background: var(--info); color: #fff; }
+
+  /* ── Content ── */
+  .content {
+    padding: 24px 48px 60px;
+  }
+
+  /* ── View Card ── */
+  .view-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .view-card:hover { border-color: var(--border-light); }
+  .view-card.severity-critical { border-left: 3px solid var(--negative); }
+  .view-card.severity-warning { border-left: 3px solid var(--warning); }
+  .view-card.severity-ok { border-left: 3px solid var(--positive); }
+
+  .view-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    gap: 12px;
+    user-select: none;
+  }
+  .view-header:hover { background: var(--surface-2); }
+  .view-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    min-width: 24px;
+  }
+  .view-title {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .view-route {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-left: 4px;
+    font-weight: 400;
+  }
+  .view-scores {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .view-score-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .view-score-chip .dim { font-weight: 400; color: inherit; opacity: 0.6; font-size: 10px; }
+  .view-avg {
+    font-size: 14px;
+    font-weight: 800;
+    min-width: 32px;
+    text-align: right;
+  }
+  .chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .view-card.open .chevron { transform: rotate(90deg); }
+
+  .view-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 0;
+  }
+  .view-card.open .view-detail { display: block; }
+
+  /* ── Detail Interior ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    min-height: 0;
+  }
+  .detail-left {
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+  }
+  .detail-right {
+    padding: 20px 24px;
+    background: var(--surface-2);
+  }
+
+  .issue-list { list-style: none; }
+  .issue-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+    line-height: 1.5;
+    align-items: flex-start;
+  }
+  .issue-item:last-child { border-bottom: none; }
+  .issue-tag {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .tag-critical { background: var(--negative-dim); color: var(--negative); }
+  .tag-missing { background: var(--warning-dim); color: var(--warning); }
+  .tag-improve { background: var(--info-dim); color: var(--info); }
+  .tag-bug { background: var(--purple-dim); color: var(--purple); }
+
+  .fix-section h4 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .fix-item {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .fix-item .fix-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .fix-item .fix-desc {
+    color: var(--text-muted);
+  }
+  .fix-item .fix-file {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  .wp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  /* ── Whitepaper Section ── */
+  .wp-section {
+    margin-top: 32px;
+  }
+  .wp-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .wp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .wp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .wp-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wp-score-ring {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .wp-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .wp-card-views {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Score Bar ── */
+  .score-bar-container {
+    margin: 12px 0;
+  }
+  .score-bar-bg {
+    height: 6px;
+    background: var(--surface-3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .score-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .detail-right { border-top: 1px solid var(--border); border-right: none; }
+  }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .hero, .content, .filter-bar { padding-left: 20px; padding-right: 20px; }
+    .summary-bar { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ── Backend Section Tables ── */
+  .be-section {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .be-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .be-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .be-section-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .be-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+  .be-table thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+  .be-table tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: top;
+  }
+  .be-table tbody tr:hover td {
+    background: var(--surface-2);
+  }
+  .be-method {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .method-get { background: var(--positive-dim); color: var(--positive); }
+  .method-post { background: var(--info-dim); color: var(--info); }
+  .method-put, .method-patch { background: var(--warning-dim); color: var(--warning); }
+  .method-delete { background: var(--negative-dim); color: var(--negative); }
+  .be-path {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .be-category-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--surface-3);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* ── Cron Cards ── */
+  .cron-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 10px;
+  }
+  .cron-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cron-card.cron-active { border-left: 3px solid var(--positive); }
+  .cron-card.cron-missing { border-left: 3px solid var(--negative); }
+  .cron-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cron-name {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .cron-interval {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .cron-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .cron-issue {
+    font-size: 11px;
+    color: var(--negative);
+    margin-top: 2px;
+    padding: 4px 8px;
+    background: var(--negative-dim);
+    border-radius: 4px;
+  }
+
+  /* ── Security Cards ── */
+  .security-group {
+    margin-bottom: 16px;
+  }
+  .security-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .security-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    align-items: flex-start;
+  }
+  .security-path {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 200px;
+  }
+  .security-desc {
+    color: var(--text-muted);
+    flex: 1;
+  }
+
+  /* ── Ghost Endpoints ── */
+  .ghost-card {
+    background: var(--surface);
+    border: 1px solid var(--negative);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .ghost-method {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .ghost-path {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .ghost-status {
+    font-size: 12px;
+    color: var(--negative);
+    margin-top: 4px;
+  }
+
+  /* ── Backend Gap Cards ── */
+  .gap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .gap-card.gap-critical { border-left: 3px solid var(--negative); }
+  .gap-card.gap-warning { border-left: 3px solid var(--warning); }
+  .gap-card.gap-info { border-left: 3px solid var(--info); }
+  .gap-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .gap-name {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .gap-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .gap-fix {
+    font-size: 12px;
+    padding: 8px 12px;
+    background: var(--surface-3);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .gap-fix::before {
+    content: "Fix → ";
+    color: var(--positive);
+    font-weight: 600;
+  }
+
+  /* ── Tab system for backend ── */
+  .be-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 20px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 3px;
+    overflow-x: auto;
+  }
+  .be-tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    position: relative;
+  }
+  .be-tab:hover { color: var(--text); background: var(--surface-3); }
+  .be-tab.active { color: var(--text); background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .be-tab .be-tab-count {
+    display: inline-block;
+    font-size: 10px;
+    padding: 0 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    background: rgba(255,255,255,0.08);
+  }
+  .be-tab-panel { display: none; }
+  .be-tab-panel.active { display: block; }
+
+  /* animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .view-detail { animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar"></nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="hero">
+    <h2>Platform Audit Overview</h2>
+    <p class="subtitle">Every view scored against the whitepaper — UI, UX, and functionality gaps mapped with implementation guidance</p>
+  </div>
+  <div class="summary-bar" id="summaryBar"></div>
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+
+const views = [
+  // ── EXPERT ──
+  { id: 1, group: "expert", name: "Expert Dashboard", route: "/expert/dashboard", file: "src/components/EnhancedExpertDashboard.tsx", ui: 8, ux: 7, func: 7,
+    issues: [
+      { severity: "missing", text: "Vote weight (merit-weighted formula) never displayed anywhere on the dashboard — experts don't know their governance power", wp: true },
+      { severity: "missing", text: "No reward tier badge showing Foundation/Established/Authority status", wp: true },
+      { severity: "missing", text: "No rank progression panel — experts can't see 'N more reviews needed for Craftsman'", wp: true },
+      { severity: "missing", text: "No governance summary (pending proposals, active votes) on the dashboard", wp: true },
+      { severity: "missing", text: "No 25% stake lockup indicator during active reviews", wp: true },
+      { severity: "improve", text: "Inactivity decay shows warning dot only — needs countdown timer (days until -10 rep)" },
+    ],
+    fixes: [
+      { title: "Add VoteWeight widget", desc: "Show computed vote weight using computeVoteWeight() from constants.ts — display as '2.45× voting power' in header stats", file: "EnhancedExpertDashboard.tsx" },
+      { title: "Add RewardTierBadge", desc: "Derive tier from reputation score: <1000 = Foundation (1.0×), 1000-1999 = Established (1.25×), 2000+ = Authority (1.5×)", file: "EnhancedExpertDashboard.tsx" },
+      { title: "Add RankProgressionCard", desc: "Query GUILD_RANK_CRITERIA, show progress bars for reviews/consensus/endorsements with targets for next rank", file: "components/dashboard/RankProgressionCard.tsx (new)" },
+      { title: "Add GovernanceSummary", desc: "Fetch active proposals + pending votes, show count badges with CTA to /expert/governance", file: "EnhancedExpertDashboard.tsx" },
+    ]
+  },
+  { id: 2, group: "expert", name: "Expert Profile", route: "/expert/profile", file: "src/components/ExpertProfile.tsx", ui: 9, ux: 7, func: 6,
+    issues: [
+      { severity: "bug", text: "Reputation ring hardcodes 'Master' rank label — shows wrong rank for ALL experts regardless of actual rank" },
+      { severity: "missing", text: "No profile editing capability in private mode (name, bio)" },
+      { severity: "missing", text: "No reward tier badge (Foundation/Established/Authority)", wp: true },
+      { severity: "missing", text: "No vote weight display", wp: true },
+      { severity: "missing", text: "No per-guild rank shown in guild cards" },
+      { severity: "missing", text: "No endorsement history section" },
+    ],
+    fixes: [
+      { title: "Fix hardcoded rank", desc: "Replace 'Master' with actual rank derived from profile.guilds[0].role or a computed rank from reputation score", file: "ExpertProfile.tsx:~line 180" },
+      { title: "Add edit mode", desc: "Add an edit button in private mode that opens inline editing for name, bio, and email visibility", file: "ExpertProfile.tsx" },
+    ]
+  },
+  { id: 3, group: "expert", name: "Expert Apply", route: "/expert/apply", file: "src/components/expert/ExpertApplicationFlow.tsx", ui: 8, ux: 8, func: 8,
+    issues: [
+      { severity: "improve", text: "No explicit 'Save Draft' button — auto-save happens silently without confirmation" },
+      { severity: "improve", text: "No preview of how the application appears to reviewers before submission" },
+      { severity: "improve", text: "No estimated review timeline shown" },
+    ],
+    fixes: [
+      { title: "Add Save Draft button", desc: "Add 'Save Draft' alongside Continue button, show toast confirmation on save", file: "ExpertApplicationFlow.tsx" },
+    ]
+  },
+  { id: 4, group: "expert", name: "Application Pending", route: "/expert/application-pending", file: "src/components/expert/ApplicationPendingPage.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No application withdrawal capability" },
+      { severity: "missing", text: "No indication of commit-reveal voting being used for the expert review", wp: true },
+      { severity: "improve", text: "No notification preferences section" },
+    ],
+    fixes: [
+      { title: "Add withdraw button", desc: "Add 'Withdraw Application' with confirmation dialog, call expertApi.withdrawApplication()", file: "ApplicationPendingPage.tsx" },
+    ]
+  },
+  { id: 5, group: "expert", name: "Reputation", route: "/expert/reputation", file: "src/components/expert/ReputationPage.tsx", ui: 9, ux: 8, func: 8,
+    issues: [
+      { severity: "bug", text: "Timeliness metric is faked — derived as accuracyPct + 3, not from real data" },
+      { severity: "bug", text: "Community trust metric is a derived blend, not backed by actual endorsement data" },
+      { severity: "missing", text: "No vote weight display (separate concept from reward tier multiplier)", wp: true },
+      { severity: "missing", text: "No inactivity decay countdown timer (days until next -10)", wp: true },
+      { severity: "missing", text: "No 25% stake lockup status indicator", wp: true },
+    ],
+    fixes: [
+      { title: "Replace fake metrics", desc: "Either fetch real timeliness/trust data from API or remove these cards entirely — showing fabricated data erodes user trust", file: "ReputationPage.tsx" },
+      { title: "Add decay countdown", desc: "Fetch last activity date, calculate days remaining until REPUTATION_DECAY_CYCLE_DAYS (30), show countdown badge", file: "ReputationPage.tsx" },
+    ]
+  },
+  { id: 6, group: "expert", name: "Voting / Applications", route: "/expert/voting", file: "src/components/expert/VotingPage.tsx", ui: 8, ux: 8, func: 8,
+    issues: [
+      { severity: "bug", text: "Staking warning CTA button has no functional onClick handler — doesn't navigate to staking" },
+      { severity: "missing", text: "No vote weight shown when casting votes", wp: true },
+      { severity: "missing", text: "No search functionality for finding specific applications" },
+      { severity: "missing", text: "No reviewer anonymity indicator/reminder", wp: true },
+      { severity: "missing", text: "No stake lockup status shown during active reviews", wp: true },
+    ],
+    fixes: [
+      { title: "Fix staking CTA", desc: "Wire the 'Stake VETD Tokens' button to navigate to /expert/withdrawals or open StakingModal", file: "VotingPage.tsx / ApplicationsPage.tsx" },
+      { title: "Add vote weight display", desc: "Before opening review modal, show the expert's merit-weighted vote weight (1 × (1 + Rep/1000), capped at 3.0)", file: "ApplicationsPage.tsx" },
+    ]
+  },
+  { id: 7, group: "expert", name: "Voting App Detail", route: "/expert/voting/applications/[id]", file: "src/components/expert/VotingApplicationPage.tsx", ui: 8, ux: 7, func: 7,
+    issues: [
+      { severity: "critical", text: "Reviewer names visible in finalized vote history — violates whitepaper anonymity requirement", wp: true },
+      { severity: "missing", text: "No reputation impact preview before submitting vote", wp: true },
+      { severity: "missing", text: "No confirmation dialog before casting vote (consequential action)" },
+      { severity: "missing", text: "No vote weight displayed when casting", wp: true },
+      { severity: "improve", text: "Uses simple VotingScoreSlider instead of the full structured rubric (inconsistent with ReviewGuildApplicationModal)" },
+    ],
+    fixes: [
+      { title: "Anonymize vote history", desc: "Show 'Expert 1', 'Expert 2' etc. instead of real names/wallet addresses in finalized vote history", file: "VotingApplicationPage.tsx" },
+      { title: "Add rep impact preview", desc: "Show +10 rep for aligned / -5 to -20 for deviation based on IQR distance, before vote submission", file: "VotingApplicationPage.tsx" },
+      { title: "Add confirmation dialog", desc: "Show modal with vote summary + potential rep impact before final submission", file: "VotingApplicationPage.tsx" },
+    ]
+  },
+  { id: 8, group: "expert", name: "Endorsement Marketplace", route: "/expert/endorsements", file: "src/components/EndorsementMarketplace.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No bid refund claiming UI — non-selected endorsers can't reclaim VETD (whitepaper requires 1-2% fee)", wp: true },
+      { severity: "missing", text: "10% slash risk not displayed prominently before placing endorsement", wp: true },
+      { severity: "missing", text: "No bid increase support (important for competitive auctions)" },
+      { severity: "missing", text: "No final auction rankings shown after blind bidding ends" },
+      { severity: "bug", text: "Uses custom modal overlay (fixed inset-0 z-50) instead of shared Modal component — violates CLAUDE.md" },
+      { severity: "improve", text: "Application grid only uses md:grid-cols-2 — too wide on large screens" },
+    ],
+    fixes: [
+      { title: "Add refund claiming UI", desc: "Show claimable refund amount with 1.5% fee deduction, 'Claim Refund' button calling contract.withdrawRefund()", file: "EndorsementMarketplace.tsx" },
+      { title: "Show slash risk banner", desc: "Before endorsement, show warning: '10% of your bid will be slashed if this candidate is not hired'", file: "EndorsementTransactionModal.tsx" },
+      { title: "Use shared Modal", desc: "Replace custom fixed overlay with <Modal> from @/components/ui/modal", file: "EndorsementTransactionModal.tsx" },
+    ]
+  },
+  { id: 9, group: "expert", name: "Endorsements History", route: "/expert/endorsements/history", file: "src/components/MyEndorsementsHistory.tsx", ui: 8, ux: 7, func: 5,
+    issues: [
+      { severity: "critical", text: "Page is titled 'History' but only shows ACTIVE endorsements — no completed, slashed, or refunded data at all" },
+      { severity: "critical", text: "No endorsement outcome tracking (hired/not hired/slashed/refunded)", wp: true },
+      { severity: "missing", text: "No ROI calculation (return on endorsement)" },
+      { severity: "missing", text: "No pagination for large lists" },
+      { severity: "missing", text: "No sorting capability (by date, amount, status)" },
+      { severity: "bug", text: "Loading state returns null — no skeleton or loading indicator" },
+    ],
+    fixes: [
+      { title: "Implement actual history", desc: "Fetch completed endorsements from API with outcomes: hired (stake returned + reward), not_hired (10% slashed), refunded (non-top-3). Show outcome badges + amounts.", file: "MyEndorsementsHistory.tsx" },
+      { title: "Add outcome tracking", desc: "For each historical endorsement show: bid amount, outcome, refund/reward/slash amount, net gain/loss, date resolved", file: "MyEndorsementsHistory.tsx" },
+      { title: "Add loading skeleton", desc: "Replace return null with SkeletonCard array matching the expandable row layout", file: "MyEndorsementsHistory.tsx" },
+    ]
+  },
+  { id: 10, group: "expert", name: "Endorsement Disputes", route: "/expert/endorsements/disputes/[id]", file: "src/components/expert/EndorsementDisputeDetailPage.tsx", ui: 6, ux: 6, func: 5,
+    issues: [
+      { severity: "critical", text: "No appeal mechanism — whitepaper requires 7-day appeal window with 10% appeal fee staking", wp: true },
+      { severity: "missing", text: "No appeal deadline countdown or filing UI", wp: true },
+      { severity: "missing", text: "No stake-at-risk display for this dispute" },
+      { severity: "missing", text: "No dispute timeline/activity log" },
+      { severity: "bug", text: "Dynamic Tailwind classes (hover:${STATUS_COLORS...}) won't work — Tailwind purges dynamic classes at build time" },
+      { severity: "bug", text: "Loading state returns null — no skeleton" },
+      { severity: "improve", text: "No confirmation before submitting arbitration vote" },
+    ],
+    fixes: [
+      { title: "Implement appeal flow", desc: "Add 'File Appeal' button visible during 7-day window. Flow: show appeal fee (10% of slashed), require reasoning, stake VETD on-chain, track appeal status.", file: "EndorsementDisputeDetailPage.tsx" },
+      { title: "Fix Tailwind classes", desc: "Replace dynamic template literal classes with pre-defined class maps using STATUS_COLORS keys", file: "DisputeVoteForm.tsx" },
+      { title: "Add dispute timeline", desc: "Show chronological events: filed → panel assigned → votes cast → resolution, with timestamps", file: "EndorsementDisputeDetailPage.tsx" },
+    ]
+  },
+  { id: 11, group: "expert", name: "Earnings", route: "/expert/earnings", file: "src/components/expert/EarningsPage.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "improve", text: "SVG chart has no hover tooltips — can't see exact values for data points" },
+      { severity: "missing", text: "No tier progress indicator (how much reputation until next tier)" },
+      { severity: "missing", text: "No slashing events shown in transaction timeline" },
+      { severity: "improve", text: "No export/download capability for earnings data" },
+    ],
+    fixes: [
+      { title: "Add chart tooltips", desc: "On hover over data points, show tooltip with date + exact VETD amount", file: "EarningsPage.tsx" },
+      { title: "Add tier progress", desc: "Below reward tier display, show progress bar: 'X rep → next tier (Established, 1.25×)'", file: "EarningsPage.tsx" },
+    ]
+  },
+  { id: 12, group: "expert", name: "Withdrawals (Staking)", route: "/expert/withdrawals", file: "src/components/expert/WithdrawalsPage.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "bug", text: "Cooldown badge uses hardcoded hex #d9b45f — should use semantic color tokens" },
+      { severity: "missing", text: "No staking APY or projected returns" },
+      { severity: "missing", text: "No slashing risk indicators per guild" },
+      { severity: "improve", text: "Staking ratio shows 5 decimal places (toFixed(5)) — unnecessary precision" },
+      { severity: "missing", text: "No 'Stake in new guild' action button" },
+    ],
+    fixes: [
+      { title: "Fix hardcoded color", desc: "Replace #d9b45f with STATUS_COLORS.warning or similar semantic token", file: "WithdrawalsPage.tsx" },
+      { title: "Add new guild staking", desc: "Add 'Stake in New Guild' button that opens guild picker → stake flow", file: "WithdrawalsPage.tsx" },
+    ]
+  },
+  { id: 13, group: "expert", name: "Governance", route: "/expert/governance", file: "src/components/governance/GovernancePage.tsx", ui: 9, ux: 8, func: 8,
+    issues: [
+      { severity: "missing", text: "Emergency Unilateral threshold type not implemented (only Standard/Major/Emergency exist)", wp: true },
+      { severity: "missing", text: "No proposal search functionality" },
+      { severity: "missing", text: "No proposal execution tracking (what happens after a proposal passes)" },
+      { severity: "improve", text: "Past proposals lack visual click affordance (no arrow/chevron)" },
+    ],
+    fixes: [
+      { title: "Add Emergency Unilateral", desc: "Add 4th threshold type to GOVERNANCE_THRESHOLDS in constants.ts: Emergency Unilateral (multisig, 100%)", file: "config/constants.ts + GovernancePage.tsx" },
+      { title: "Add search", desc: "Add search input filtering proposals by title/description", file: "GovernancePage.tsx" },
+    ]
+  },
+  { id: 14, group: "expert", name: "Governance Create", route: "/expert/governance/create", file: "src/components/governance/CreateProposalForm.tsx", ui: 8, ux: 7, func: 7,
+    issues: [
+      { severity: "missing", text: "No inline validation — errors only appear on submit" },
+      { severity: "missing", text: "No proposal preview before submission" },
+      { severity: "missing", text: "No draft saving — losing work on accidental navigation" },
+      { severity: "missing", text: "No user's VETD balance shown alongside stake input" },
+      { severity: "missing", text: "Emergency Unilateral type not available", wp: true },
+      { severity: "improve", text: "Cancel button uses router.back() — unpredictable destination" },
+    ],
+    fixes: [
+      { title: "Add inline validation", desc: "Validate on blur: title (min 10 chars), description (min 50 chars), stake (min 100 VETD). Show red borders + messages.", file: "CreateProposalForm.tsx" },
+      { title: "Add preview step", desc: "Before 'Create Proposal', show read-only preview matching GovernanceProposalDetailPage layout", file: "CreateProposalForm.tsx" },
+      { title: "Fix cancel navigation", desc: "Replace router.back() with router.push('/expert/governance')", file: "CreateProposalForm.tsx" },
+    ]
+  },
+  { id: 15, group: "expert", name: "Governance Proposal Detail", route: "/expert/governance/[proposalId]", file: "src/components/governance/GovernanceProposalDetailPage.tsx", ui: 9, ux: 9, func: 8,
+    issues: [
+      { severity: "missing", text: "No vote confirmation dialog before casting (consequential action)" },
+      { severity: "missing", text: "No Emergency Unilateral handling", wp: true },
+      { severity: "improve", text: "Redundant navigation — both breadcrumb AND 'Back to Governance' link exist" },
+      { severity: "bug", text: "Dead CSS — pointer-events-none divs with bg-transparent (leftover from removed gradients)" },
+    ],
+    fixes: [
+      { title: "Add vote confirmation", desc: "Before submitting: show modal with vote type (For/Against/Abstain), weight, and 'This action cannot be undone' warning", file: "GovernanceProposalDetailPage.tsx" },
+      { title: "Clean up dead CSS", desc: "Remove unused pointer-events-none transparent overlay divs", file: "GovernanceProposalDetailPage.tsx" },
+    ]
+  },
+  { id: 16, group: "expert", name: "Guilds Overview", route: "/expert/guilds", file: "src/components/guilds/GuildsOverview.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No way to leave/withdraw from a guild" },
+      { severity: "missing", text: "No auto-promotion notifications ('You're eligible for Apprentice rank!')", wp: true },
+      { severity: "bug", text: "totalPendingApplications sums pendingProposals but not pendingApplications — undercounting" },
+      { severity: "improve", text: "Leaderboard tab embeds full LeaderboardPage with its own header — visual redundancy" },
+    ],
+    fixes: [
+      { title: "Fix pending count", desc: "Sum both pendingProposals AND pendingApplications in totalPendingApplications calculation", file: "GuildsOverview.tsx:~line 89" },
+      { title: "Add leave guild", desc: "Add 'Leave Guild' option in guild card dropdown menu with confirmation dialog", file: "GuildsOverview.tsx" },
+    ]
+  },
+  { id: 17, group: "expert", name: "Guild Detail", route: "/expert/guild/[guildId]", file: "src/components/GuildDetailView.tsx", ui: 8, ux: 8, func: 8,
+    issues: [
+      { severity: "bug", text: "Rank progress bar uses 3-position calculation (33/66/100%) — doesn't reflect 5-rank hierarchy accurately" },
+      { severity: "missing", text: "No governance/elections section within guild context", wp: true },
+      { severity: "missing", text: "No mentoring features (required for Officer rank per whitepaper)", wp: true },
+      { severity: "improve", text: "No search within Feed tab" },
+    ],
+    fixes: [
+      { title: "Fix rank progress", desc: "Map 5 ranks to 20/40/60/80/100% positions instead of 3-position calculation", file: "GuildDetailView.tsx" },
+      { title: "Add governance link", desc: "Add 'Guild Governance' tab or card linking to governance page filtered by this guild", file: "GuildDetailView.tsx" },
+    ]
+  },
+  { id: 18, group: "expert", name: "Guild App Review (Legacy)", route: "/expert/guild/[guildId]/application/[id]", file: "src/components/expert/ApplicationDetailPage.tsx", ui: 7, ux: 6, func: 6,
+    issues: [
+      { severity: "critical", text: "Legacy duplicate — Guild Detail's ReviewGuildApplicationModal provides a superior multi-step review with rubric, commit-reveal, and guild-specific templates. This standalone page is a simpler voting-only view." },
+      { severity: "missing", text: "No Abstain option (defined in type but not rendered)" },
+      { severity: "missing", text: "No commit-reveal support (unlike Guild Detail's review flow)", wp: true },
+      { severity: "missing", text: "No review criteria/rubric — just a simple score slider" },
+      { severity: "bug", text: "Returns null while loading — no skeleton or loading indicator" },
+    ],
+    fixes: [
+      { title: "Consider removing/redirecting", desc: "Redirect this route to /expert/guild/[guildId]?tab=membershipApplications&applicationId=[id] to use the superior review modal instead of maintaining a duplicate view", file: "src/app/expert/guild/[guildId]/application/[applicationId]/page.tsx" },
+    ]
+  },
+  { id: 19, group: "expert", name: "Guild Ranks", route: "/expert/guild-ranks", file: "src/components/GuildRanksProgression.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "critical", text: "Consensus rate always returns null from computeExpertStats() — rank progress bars for consensus requirement never show real data" },
+      { severity: "missing", text: "Only shows first guild — multi-guild experts can't see rank progress per guild" },
+      { severity: "missing", text: "No auto-promotion triggers or notifications", wp: true },
+      { severity: "missing", text: "No mentoring metric for Officer rank (listed as requirement but not tracked)", wp: true },
+      { severity: "bug", text: "UI says '3-month term' for Guild Master but backend implements 6-month terms — mismatch", wp: true },
+    ],
+    fixes: [
+      { title: "Fix consensus calculation", desc: "In computeExpertStats(), compute consensusRate from actual voting data — count aligned votes / total votes from reputation history", file: "GuildRanksProgression.tsx" },
+      { title: "Add guild selector", desc: "Add guild dropdown at top allowing multi-guild experts to switch between guilds and see per-guild rank progress", file: "GuildRanksProgression.tsx" },
+      { title: "Fix term mismatch", desc: "Update '3-month term' text to '6-month term' to match backend guild_master_terms configuration", file: "GuildRanksProgression.tsx" },
+    ]
+  },
+  { id: 20, group: "expert", name: "Leaderboard", route: "/expert/leaderboard", file: "src/components/leaderboard/LeaderboardPage.tsx", ui: 9, ux: 8, func: 8,
+    issues: [
+      { severity: "bug", text: "Hardcoded text-[#f59e0b] for Trophy icon — should use color system token" },
+      { severity: "bug", text: "Shows '0 experts' text while loading — skeleton doesn't render until !isLoading && !error" },
+      { severity: "missing", text: "No pagination — limited to 50 entries from API" },
+      { severity: "improve", text: "No historical rank tracking over time" },
+    ],
+    fixes: [
+      { title: "Fix loading state", desc: "Show skeleton when isLoading is true, not after. Swap the conditional rendering order.", file: "LeaderboardPage.tsx" },
+      { title: "Fix trophy color", desc: "Replace text-[#f59e0b] with STAT_ICON.text or STATUS_COLORS.warning.text", file: "LeaderboardPage.tsx" },
+      { title: "Add pagination", desc: "Add 'Load More' button or infinite scroll with offset parameter to API call", file: "LeaderboardPage.tsx" },
+    ]
+  },
+  { id: 21, group: "expert", name: "Expert Analytics", route: "/expert/analytics", file: "src/components/expert/analytics/ExpertAnalytics.tsx", ui: 8, ux: 6, func: 3,
+    issues: [
+      { severity: "critical", text: "100% MOCK DATA — all three tabs import from mock-data.ts with zero API integration" },
+      { severity: "critical", text: "Time period filter is decorative only — changing it does nothing" },
+      { severity: "critical", text: "Date range 'Mar 1 – Mar 30, 2026' is hardcoded" },
+      { severity: "bug", text: "Endorsements tab badge shows hardcoded '3' count" },
+      { severity: "improve", text: "No chart interactivity (no tooltips, hover states, drill-down)" },
+    ],
+    fixes: [
+      { title: "Replace ALL mock data with API calls", desc: "Create expertApi.getAnalytics(period) endpoint. Use useFetch() for each tab: reputation timeline, earnings breakdown, consensus alignment, score distribution, staking portfolio, endorsement performance.", file: "ExpertAnalytics.tsx + all tab components" },
+      { title: "Wire time filter", desc: "Pass selected period to all useFetch calls as a dependency, transform to date range for API query", file: "ExpertAnalytics.tsx" },
+      { title: "Add chart tooltips", desc: "Add onMouseMove handlers to SVG charts showing tooltip with exact values on hover", file: "AreaChart.tsx, BarDistribution.tsx" },
+    ]
+  },
+
+  // ── COMPANY / HIRING ──
+  { id: 22, group: "company", name: "Company Registration", route: "/company", file: "src/components/CompanyForm.tsx", ui: 7, ux: 6, func: 6,
+    issues: [
+      { severity: "missing", text: "No password confirmation field" },
+      { severity: "bug", text: "localStorage direct writes (lines 104-107) bypass the AuthContext pattern" },
+      { severity: "improve", text: "Wallet icons use emojis instead of proper SVG brand logos" },
+      { severity: "missing", text: "No inline validation — errors only on submit" },
+      { severity: "missing", text: "No Terms of Service acceptance checkbox" },
+      { severity: "missing", text: "No onboarding wizard after account creation" },
+    ],
+    fixes: [
+      { title: "Use AuthContext", desc: "Replace raw localStorage.setItem calls with AuthContext login method", file: "CompanyForm.tsx:104-107" },
+      { title: "Add password confirmation", desc: "Add confirmPassword field with matching validation", file: "CompanyForm.tsx" },
+      { title: "Add inline validation", desc: "Validate fields on blur: email format, password strength, required fields", file: "CompanyForm.tsx" },
+    ]
+  },
+  { id: 23, group: "company", name: "Company Profile", route: "/company/profile", file: "src/components/company/CompanyProfilePage.tsx", ui: 7, ux: 7, func: 7,
+    issues: [
+      { severity: "missing", text: "No profile completeness indicator/progress bar" },
+      { severity: "bug", text: "Back button always goes to /dashboard — wrong when accessed from /company/profile" },
+      { severity: "missing", text: "No unsaved changes warning on navigation" },
+      { severity: "missing", text: "No social media links section" },
+      { severity: "bug", text: "DataSection loading skeleton is null — no loading UI" },
+    ],
+    fixes: [
+      { title: "Fix back button", desc: "Make back navigation context-aware — detect which route the user came from", file: "CompanyProfilePage.tsx" },
+      { title: "Add loading skeleton", desc: "Replace null skeleton with proper card skeleton matching profile layout", file: "CompanyProfilePage.tsx" },
+    ]
+  },
+  { id: 24, group: "company", name: "Dashboard Overview", route: "/dashboard", file: "src/components/dashboard/CompanyDashboardOverview.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No endorsement accountability summary — can't see endorsed-vs-hired outcomes", wp: true },
+      { severity: "improve", text: "Meetings extraction scans up to 10 full conversations (N+1 pattern) — needs dedicated API" },
+      { severity: "missing", text: "Pipeline candidate clicks go to /dashboard/candidates — no deep link to specific candidate" },
+      { severity: "missing", text: "No guild vetting status in pipeline cards" },
+    ],
+    fixes: [
+      { title: "Add endorsement summary", desc: "Show card: 'X candidates endorsed → Y hired (Z% hit rate)' — core whitepaper accountability metric", file: "CompanyDashboardOverview.tsx" },
+      { title: "Deep link candidates", desc: "Make pipeline candidate names link to /dashboard/candidates?candidateId=X to auto-select in ATS view", file: "CompanyDashboardOverview.tsx" },
+    ]
+  },
+  { id: 25, group: "company", name: "Candidates (ATS)", route: "/dashboard/candidates", file: "src/components/dashboard/CandidatesPage.tsx", ui: 9, ux: 9, func: 8,
+    issues: [
+      { severity: "improve", text: "Endorsement display only shows wallet addresses — no expert names/ranks" },
+      { severity: "missing", text: "No bulk status update for multiple candidates" },
+      { severity: "missing", text: "No candidate comparison feature" },
+      { severity: "missing", text: "No AI match score indicator (whitepaper, deferred but should be placeholder)", wp: true },
+      { severity: "improve", text: "No CSV export for candidates" },
+    ],
+    fixes: [
+      { title: "Resolve endorser identities", desc: "For endorsement wallet addresses, fetch expert profiles to show name + rank alongside address", file: "CandidateDetailPanel.tsx" },
+      { title: "Add bulk actions", desc: "Add checkbox selection on candidate list + bulk status change dropdown", file: "CandidateListPanel.tsx" },
+    ]
+  },
+  { id: 26, group: "company", name: "Jobs List", route: "/dashboard/jobs", file: "src/components/HiringDashboard.tsx", ui: 7, ux: 7, func: 7,
+    issues: [
+      { severity: "missing", text: "No sort options (by date, applicants, views)" },
+      { severity: "bug", text: "Action menu (three-dot) doesn't use useClickOutside — stays open on outside click" },
+      { severity: "improve", text: "'Upcoming Meetings' widget feels out of place on jobs listing page" },
+      { severity: "missing", text: "No quick status toggle (pause/activate without full edit)" },
+      { severity: "improve", text: "Stat chips don't use StatCard component (inconsistent with main dashboard)" },
+    ],
+    fixes: [
+      { title: "Add sort controls", desc: "Add sort dropdown: Newest, Most Applicants, Most Views, alphabetical", file: "HiringDashboard.tsx" },
+      { title: "Fix action menu", desc: "Add useClickOutside hook to action menu dropdown", file: "HiringDashboard.tsx" },
+    ]
+  },
+  { id: 27, group: "company", name: "Job Detail", route: "/dashboard/jobs/[jobId]", file: "src/components/jobs/JobDetailPage.tsx", ui: 7, ux: 7, func: 7,
+    issues: [
+      { severity: "missing", text: "No endorsement data per-job shown — which candidates have expert endorsements" },
+      { severity: "missing", text: "No quick inline status change from job header" },
+      { severity: "missing", text: "No link to candidates filtered by this job in dashboard context" },
+      { severity: "improve", text: "Error/not-found states are plain text — no icons or illustrations" },
+      { severity: "bug", text: "Redundant CSS: min-h-screen min-h-full" },
+    ],
+    fixes: [
+      { title: "Add endorsement section", desc: "Show which candidates have endorsements with endorser count and total staked amount per candidate", file: "JobDetailPage.tsx" },
+      { title: "Add candidates link", desc: "When dashboardContext=true, add 'View Candidates' button linking to /dashboard/candidates?jobId=X", file: "JobDetailPage.tsx" },
+    ]
+  },
+  { id: 28, group: "company", name: "Job Edit", route: "/dashboard/jobs/[jobId]/edit", file: "src/components/JobForm.tsx", ui: 7, ux: 7, func: 7,
+    issues: [
+      { severity: "bug", text: "Uses raw HTML <input>, <textarea>, <select> instead of shared UI primitives (Input, Textarea, NativeSelect)" },
+      { severity: "bug", text: "Submit button uses hardcoded text-gray-900 dark:text-gray-900 — violates color system" },
+      { severity: "missing", text: "No job preview before publishing" },
+      { severity: "missing", text: "No auto-save / draft recovery" },
+      { severity: "improve", text: "Has its own nav bar — inconsistent with sidebar layout of other dashboard pages" },
+      { severity: "missing", text: "No rich text editor for job description" },
+      { severity: "missing", text: "No application deadline field" },
+    ],
+    fixes: [
+      { title: "Use shared UI components", desc: "Replace raw <input> with Input, <textarea> with Textarea, <select> with NativeSelect from @/components/ui/", file: "JobForm.tsx" },
+      { title: "Fix hardcoded color", desc: "Replace text-gray-900 with text-foreground or appropriate semantic token", file: "JobForm.tsx" },
+      { title: "Embed in sidebar layout", desc: "Render within the dashboard sidebar layout instead of standalone nav", file: "JobForm.tsx" },
+    ]
+  },
+  { id: 29, group: "company", name: "Messages Inbox", route: "/dashboard/messages", file: "src/components/messaging/CompanyMessagesInbox.tsx", ui: 8, ux: 7, func: 7,
+    issues: [
+      { severity: "bug", text: "Uses manual useState + useEffect + try/catch for data fetching — violates CLAUDE.md useFetch rule" },
+      { severity: "missing", text: "No file/attachment support" },
+      { severity: "missing", text: "No message templates for common hiring responses" },
+      { severity: "missing", text: "No typing indicators" },
+      { severity: "missing", text: "No search within conversations" },
+    ],
+    fixes: [
+      { title: "Refactor to useFetch", desc: "Replace manual loading state pattern with useFetch() for conversation list loading", file: "CompanyMessagesInbox.tsx:52-61" },
+    ]
+  },
+  { id: 30, group: "company", name: "Conversation", route: "/dashboard/messages/[conversationId]", file: "src/components/messaging/CompanyConversationView.tsx", ui: 7, ux: 7, func: 6,
+    issues: [
+      { severity: "missing", text: "No link to candidate's full profile from conversation view" },
+      { severity: "missing", text: "No way to change candidate application status from conversation" },
+      { severity: "bug", text: "Avatar inconsistency — uses initial letter square vs person avatar in inbox" },
+      { severity: "bug", text: "DataSection loading has skeleton={null}" },
+    ],
+    fixes: [
+      { title: "Add candidate link", desc: "Add 'View Profile' button in header linking to /dashboard/candidates?candidateId=X", file: "CompanyConversationView.tsx" },
+      { title: "Add loading skeleton", desc: "Replace null skeleton with message thread skeleton (gray bubbles)", file: "CompanyConversationView.tsx" },
+    ]
+  },
+  { id: 31, group: "company", name: "Notifications", route: "/dashboard/notifications", file: "src/components/dashboard/CompanyNotificationsPage.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "bug", text: "Dismiss button has no onClick handler — purely decorative" },
+      { severity: "bug", text: "Settings gear button has no action — non-functional" },
+      { severity: "bug", text: "group-hover CSS needs 'group' class on parent — may not be present" },
+      { severity: "missing", text: "No notification deletion/archival" },
+    ],
+    fixes: [
+      { title: "Wire dismiss button", desc: "Add onClick handler to delete/archive individual notifications via API", file: "NotificationsPage.tsx:~393" },
+      { title: "Wire settings button", desc: "Navigate to /dashboard/settings?tab=notifications", file: "CompanyNotificationsPage.tsx" },
+    ]
+  },
+  { id: 32, group: "company", name: "Company Analytics", route: "/dashboard/analytics", file: "src/components/dashboard/analytics/CompanyAnalytics.tsx", ui: 9, ux: 7, func: 4,
+    issues: [
+      { severity: "critical", text: "100% MOCK DATA — all three tabs (Overview, Pipeline, Jobs) import from mock-data.ts with zero API integration" },
+      { severity: "critical", text: "Time period filter doesn't filter anything — decorative only" },
+      { severity: "critical", text: "Date range 'Mar 1 – Mar 30, 2026' is hardcoded" },
+      { severity: "bug", text: "Export button has no implementation" },
+      { severity: "bug", text: "Jobs table 'Filter' button is non-functional" },
+      { severity: "bug", text: "Uses bg-white/[0.02] — violates color system rule (should use bg-surface-* or bg-muted)" },
+      { severity: "missing", text: "No endorsement analytics — endorsed candidates' hire rates (core whitepaper feature)", wp: true },
+    ],
+    fixes: [
+      { title: "Replace ALL mock data", desc: "Create companyApi.getAnalytics(period) endpoint. Fetch real data for: KPIs, applications over time, hiring funnel, candidate sources, guild distribution, job performance.", file: "CompanyAnalytics.tsx + all tab components" },
+      { title: "Add endorsement analytics", desc: "Track and display: total endorsements received, endorsement-to-hire conversion rate, top endorsing experts and their success rates", file: "New: AnalyticsEndorsements.tsx" },
+      { title: "Fix color violations", desc: "Replace bg-white/[0.02] with bg-muted or bg-surface-secondary", file: "AnalyticsOverview.tsx, AnalyticsPipeline.tsx, AnalyticsJobs.tsx" },
+    ]
+  },
+  { id: 33, group: "company", name: "Analytics Job Detail", route: "/dashboard/analytics/[jobId]", file: "src/components/dashboard/JobAnalyticsPage.tsx", ui: 6, ux: 4, func: 1,
+    issues: [
+      { severity: "critical", text: "Entire page is a 'Coming Soon' placeholder — zero functionality, blurred mock content behind an overlay" },
+      { severity: "critical", text: "Users can navigate here from analytics section but find nothing usable" },
+      { severity: "missing", text: "No ETA or subscribe/notify option" },
+    ],
+    fixes: [
+      { title: "Implement per-job analytics", desc: "Show: application funnel for this job, views-to-applications rate, endorsement data per candidate, time-in-stage breakdown, source of applicants. Use real API data.", file: "JobAnalyticsPage.tsx — full rewrite" },
+    ]
+  },
+  { id: 34, group: "company", name: "Settings", route: "/dashboard/settings", file: "src/components/dashboard/SettingsPage.tsx", ui: 7, ux: 7, func: 5,
+    issues: [
+      { severity: "critical", text: "Security tab is non-functional — 2FA button, session viewer, password change all do nothing" },
+      { severity: "critical", text: "Billing tab is entirely fake — mock 'Pro Plan' with non-functional payment/invoice links" },
+      { severity: "missing", text: "Only Notification preferences actually save to API" },
+      { severity: "improve", text: "Company Profile nav item navigates away unexpectedly (mixed in-page tabs + navigation link)" },
+    ],
+    fixes: [
+      { title: "Implement or remove", desc: "Either implement 2FA/password change/sessions management, or clearly mark them as 'Coming Soon' with a date. Don't show non-functional UI that looks functional.", file: "SettingsPage.tsx" },
+      { title: "Fix Company Profile nav", desc: "Either embed company profile editing in settings, or make it visually distinct as an external link (not a tab)", file: "SettingsPage.tsx" },
+    ]
+  },
+  { id: 35, group: "company", name: "Create New Job", route: "/jobs/new", file: "src/components/JobForm.tsx", ui: 7, ux: 6, func: 7,
+    issues: [
+      { severity: "improve", text: "Renders outside sidebar layout — standalone nav bar breaks navigation consistency" },
+      { severity: "bug", text: "Same issues as Job Edit (#28): raw HTML elements, hardcoded colors, no preview, no auto-save" },
+    ],
+    fixes: [
+      { title: "Same fixes as Job Edit", desc: "See view #28 fixes — shared component", file: "JobForm.tsx" },
+    ]
+  },
+  { id: 36, group: "company", name: "Job Detail (Public)", route: "/jobs/[jobId]", file: "src/components/jobs/JobDetailPage.tsx", ui: 7, ux: 6, func: 7,
+    issues: [
+      { severity: "critical", text: "No true public job detail page — unauthenticated users can't view job postings from the web" },
+      { severity: "bug", text: "Back button goes to /dashboard — wrong if accessed from public context" },
+      { severity: "improve", text: "No 'Apply' CTA for candidates viewing from public URL" },
+    ],
+    fixes: [
+      { title: "Create public job view", desc: "Build a public-facing job detail at /browse/jobs/[jobId] (which exists) and ensure /jobs/[jobId] is the company-authenticated version only", file: "JobDetailPage.tsx + routing" },
+    ]
+  },
+
+  // ── CANDIDATE ──
+  { id: 37, group: "candidate", name: "Candidate Dashboard", route: "/candidate/dashboard", file: "src/components/candidate/CandidateDashboard.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No appeal mechanism link for rejected guild applications", wp: true },
+      { severity: "bug", text: "Resubmit (onResubmit) callback in RejectionFeedbackCard is never wired — button does nothing" },
+      { severity: "improve", text: "Fetches rejection feedback with N+1 API calls (one per rejected guild application)" },
+      { severity: "missing", text: "No AI match score indicators", wp: true },
+    ],
+    fixes: [
+      { title: "Wire resubmit callback", desc: "Connect RejectionFeedbackCard's onResubmit to candidateApi.resubmitGuildApplication() with loading state and success redirect", file: "CandidateDashboard.tsx" },
+      { title: "Add appeal link", desc: "For rejected applications, add 'Appeal Decision' button linking to appeal submission flow", file: "CandidateDashboard.tsx" },
+    ]
+  },
+  { id: 38, group: "candidate", name: "Candidate Profile", route: "/candidate/profile", file: "src/components/candidate/CandidateProfilePage.tsx", ui: 7, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No skills/tags management section" },
+      { severity: "missing", text: "No work history or education sections" },
+      { severity: "missing", text: "No avatar upload capability" },
+      { severity: "missing", text: "No 'Preview Public Profile' option" },
+    ],
+    fixes: [
+      { title: "Add skills section", desc: "Add tag-style skill input with autocomplete from SKILLS constant in constants.ts", file: "CandidateProfilePage.tsx" },
+      { title: "Add work history", desc: "Add work experience entries (company, role, dates, description) with add/edit/remove", file: "CandidateProfilePage.tsx" },
+    ]
+  },
+  { id: 39, group: "candidate", name: "Applications", route: "/candidate/applications", file: "src/components/candidate/CandidateApplications.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "bug", text: "getRejectedAtIndex() always assumes rejection at step 2 (Company Review) — hardcoded, inaccurate" },
+      { severity: "missing", text: "No rejection feedback shown inline (exists as RejectionFeedbackCard but not used here)" },
+      { severity: "missing", text: "No application withdrawal capability" },
+      { severity: "bug", text: "Two 'View' buttons both link to the same URL — redundant" },
+      { severity: "missing", text: "No sort options" },
+    ],
+    fixes: [
+      { title: "Fix rejection step", desc: "Use actual rejection point data from API response instead of hardcoded step 2", file: "CandidateApplications.tsx" },
+      { title: "Add withdrawal", desc: "Add 'Withdraw' button for pending applications with confirmation dialog", file: "CandidateApplications.tsx" },
+    ]
+  },
+  { id: 40, group: "candidate", name: "Candidate Guilds", route: "/candidate/guilds", file: "src/components/candidate/CandidateGuilds.tsx", ui: 8, ux: 7, func: 6,
+    issues: [
+      { severity: "critical", text: "No resubmission flow — whitepaper requires one free resubmission per guild", wp: true },
+      { severity: "critical", text: "No appeal mechanism for rejected applications", wp: true },
+      { severity: "missing", text: "No rejection feedback display (available as component but not used)" },
+      { severity: "bug", text: "GUILD_STATUS_GLOW map is defined but all values are empty strings — dead code" },
+    ],
+    fixes: [
+      { title: "Add resubmission flow", desc: "For rejected applications with resubmission eligibility, show 'Resubmit Application' button that pre-fills previous data", file: "CandidateGuilds.tsx" },
+      { title: "Add appeal button", desc: "For rejected applications within appeal window, show 'Appeal Decision' with stake requirement (50 VETD × 2^n)", file: "CandidateGuilds.tsx" },
+      { title: "Add rejection feedback", desc: "Import and render RejectionFeedbackCard for rejected guild applications showing score breakdown", file: "CandidateGuilds.tsx" },
+    ]
+  },
+  { id: 41, group: "candidate", name: "Candidate Notifications", route: "/candidate/notifications", file: "src/components/candidate/CandidateNotificationsPage.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No notification preference settings" },
+      { severity: "missing", text: "No push notification support" },
+      { severity: "missing", text: "No guild application status change notifications in filter" },
+    ],
+    fixes: [
+      { title: "Add preferences", desc: "Add settings link/gear icon navigating to notification preferences page", file: "CandidateNotificationsPage.tsx" },
+    ]
+  },
+  { id: 42, group: "candidate", name: "Messages Inbox", route: "/candidate/messages", file: "src/components/messaging/CandidateMessagesInbox.tsx", ui: 7, ux: 7, func: 6,
+    issues: [
+      { severity: "bug", text: "Uses manual useState + useEffect + try/catch — violates CLAUDE.md useFetch rule" },
+      { severity: "missing", text: "No search/filter for conversations" },
+      { severity: "missing", text: "No mark-as-read without opening" },
+      { severity: "missing", text: "No unread count in header" },
+    ],
+    fixes: [
+      { title: "Refactor to useFetch", desc: "Replace manual loading state with useFetch() hook for conversation list", file: "CandidateMessagesInbox.tsx" },
+      { title: "Add search", desc: "Add search input filtering conversations by company name or job title", file: "CandidateMessagesInbox.tsx" },
+    ]
+  },
+  { id: 43, group: "candidate", name: "Messages Conversation", route: "/candidate/messages/[id]", file: "src/components/messaging/CandidateConversationView.tsx", ui: 7, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No file/attachment support" },
+      { severity: "missing", text: "No typing indicators" },
+      { severity: "missing", text: "No message editing/deletion" },
+    ],
+    fixes: [
+      { title: "Add attachments", desc: "Add file upload button in message input area with drag-drop support", file: "CandidateConversationView.tsx" },
+    ]
+  },
+  { id: 44, group: "candidate", name: "Candidate Analytics", route: "/candidate/analytics", file: "src/components/candidate/analytics/CandidateAnalytics.tsx", ui: 8, ux: 6, func: 4,
+    issues: [
+      { severity: "critical", text: "100% MOCK DATA — all three tabs import from mock-data.ts with zero API integration" },
+      { severity: "critical", text: "Time filter is decorative — changing period does nothing" },
+      { severity: "bug", text: "Date range 'Mar 1 – Mar 30, 2026' is hardcoded" },
+      { severity: "bug", text: "Applications tab badge shows hardcoded '6' count" },
+    ],
+    fixes: [
+      { title: "Replace mock data", desc: "Create candidateApi.getAnalytics(period) endpoint. Fetch: application funnel, vetting scores, profile visibility, guild membership impact.", file: "CandidateAnalytics.tsx + tab components" },
+    ]
+  },
+
+  // ── PUBLIC / AUTH ──
+  { id: 45, group: "public", name: "Homepage", route: "/", file: "src/components/HomePage.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "improve", text: "Footer links (/about, /docs, /privacy, /terms) likely 404 — unverified" },
+      { severity: "missing", text: "No 'how it works' explainer section for each user type" },
+      { severity: "missing", text: "No testimonials or social proof section" },
+      { severity: "improve", text: "No SEO metadata — this is a client component, not server-rendered" },
+    ],
+    fixes: [
+      { title: "Verify footer links", desc: "Check each footer URL resolves; create placeholder pages or remove dead links", file: "HomePage.tsx / Footer component" },
+      { title: "Add how-it-works", desc: "Three-column section showing flow for each user type: Candidate (apply → review → get hired), Company (post → review → hire), Expert (join → review → earn)", file: "HomePage.tsx" },
+    ]
+  },
+  { id: 46, group: "public", name: "Login", route: "/auth/login", file: "src/components/auth/LoginPage.tsx", ui: 9, ux: 9, func: 8,
+    issues: [
+      { severity: "missing", text: "No 'forgot password' functionality" },
+      { severity: "missing", text: "No 'remember me' option" },
+      { severity: "improve", text: "No password visibility toggle" },
+    ],
+    fixes: [
+      { title: "Add forgot password", desc: "Add 'Forgot password?' link below password field linking to /auth/forgot-password flow", file: "LoginPage.tsx" },
+    ]
+  },
+  { id: 47, group: "public", name: "Signup", route: "/auth/signup", file: "src/components/auth/SignupPage.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No password strength indicator" },
+      { severity: "bug", text: "Experience level hardcoded to 'mid' without user choice" },
+      { severity: "missing", text: "No Terms of Service / Privacy Policy checkbox" },
+      { severity: "missing", text: "No email verification step after signup" },
+    ],
+    fixes: [
+      { title: "Add experience selector", desc: "Add experience level dropdown (Junior/Mid/Senior/Lead) during candidate signup", file: "SignupPage.tsx" },
+      { title: "Add ToS checkbox", desc: "Add required checkbox: 'I agree to the Terms of Service and Privacy Policy'", file: "SignupPage.tsx" },
+    ]
+  },
+  { id: 48, group: "public", name: "Browse Landing", route: "/browse", file: "src/components/browse/BrowsePage.tsx", ui: 8, ux: 7, func: 6,
+    issues: [
+      { severity: "improve", text: "Feels redundant — mostly a marketing wrapper for 6 featured jobs, all functionality is on /browse/jobs" },
+      { severity: "missing", text: "No search on this page (only on /browse/jobs)" },
+      { severity: "missing", text: "No guild browsing section" },
+      { severity: "bug", text: "Loading shows null instead of skeleton" },
+    ],
+    fixes: [
+      { title: "Consider merging", desc: "Either add substantial differentiating content (guild browse, featured companies) or redirect /browse → /browse/jobs", file: "BrowsePage.tsx" },
+    ]
+  },
+  { id: 49, group: "public", name: "Browse Jobs", route: "/browse/jobs", file: "src/components/browse/JobsListing.tsx", ui: 9, ux: 9, func: 8,
+    issues: [
+      { severity: "missing", text: "No sort options (salary, date, relevance)" },
+      { severity: "bug", text: "Keyboard shortcut '/' hint is visual only — not wired to focus search" },
+      { severity: "missing", text: "No save/bookmark job functionality" },
+      { severity: "missing", text: "No salary range filter" },
+    ],
+    fixes: [
+      { title: "Add sort dropdown", desc: "Add sort selector: Newest, Salary High→Low, Most Applied, Relevance", file: "JobsListing.tsx" },
+      { title: "Wire keyboard shortcut", desc: "Add useEffect that listens for '/' keypress and focuses the search input", file: "JobsListing.tsx" },
+    ]
+  },
+  { id: 50, group: "public", name: "Browse Job Detail", route: "/browse/jobs/[jobId]", file: "src/components/browse/JobDetailView.tsx", ui: 8, ux: 9, func: 8,
+    issues: [
+      { severity: "missing", text: "No social sharing buttons" },
+      { severity: "missing", text: "No save/bookmark functionality" },
+      { severity: "missing", text: "No 'similar jobs' recommendation section" },
+      { severity: "missing", text: "No application deadline display if one exists" },
+    ],
+    fixes: [
+      { title: "Add sharing", desc: "Add share buttons (copy link, Twitter, LinkedIn) in job header area", file: "JobDetailView.tsx" },
+    ]
+  },
+  { id: 51, group: "public", name: "Guilds Directory", route: "/guilds", file: "src/components/guilds/GuildsListingPage.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "bug", text: "CTA links to /expert/register which may not exist — other pages use /expert/apply" },
+      { severity: "missing", text: "No search input for guild name filtering" },
+      { severity: "missing", text: "No membership status badges for authenticated users" },
+      { severity: "bug", text: "Loading shows null instead of skeleton" },
+    ],
+    fixes: [
+      { title: "Fix CTA link", desc: "Change /expert/register to /expert/apply to match actual route", file: "GuildsListingPage.tsx" },
+      { title: "Add search", desc: "Add search input at top of list filtering guilds by name or description", file: "GuildsListingPage.tsx" },
+    ]
+  },
+  { id: 52, group: "public", name: "Guild Detail", route: "/guilds/[guildId]", file: "src/components/GuildDetailPage.tsx", ui: 8, ux: 8, func: 7,
+    issues: [
+      { severity: "bug", text: "Overview and Feed tabs render the same component — duplicate" },
+      { severity: "bug", text: "Leaderboard tab uses manual useEffect instead of useFetch" },
+      { severity: "missing", text: "No governance info for the guild" },
+      { severity: "missing", text: "No acceptance rate or typical review timeline transparency" },
+    ],
+    fixes: [
+      { title: "Remove duplicate tab", desc: "Either remove Feed tab or differentiate content between Overview and Feed", file: "GuildDetailPage.tsx" },
+      { title: "Fix leaderboard fetch", desc: "Refactor leaderboard data loading to use useFetch() hook", file: "GuildDetailPage.tsx" },
+    ]
+  },
+  { id: 53, group: "public", name: "Guild Apply", route: "/guilds/[guildId]/apply", file: "src/components/guild/GuildApplicationFlow.tsx", ui: 8, ux: 8, func: 8,
+    issues: [
+      { severity: "missing", text: "No draft saving / auto-save progress" },
+      { severity: "missing", text: "No application preview step before final submit" },
+      { severity: "missing", text: "No estimated review timeline on success page" },
+    ],
+    fixes: [
+      { title: "Add draft saving", desc: "Auto-save form state to localStorage on each step change; restore on return", file: "GuildApplicationFlow.tsx" },
+    ]
+  },
+  { id: 54, group: "public", name: "Guild My Stats", route: "/guilds/[guildId]/my-stats", file: "src/components/guild/GuildMyStatsPage.tsx", ui: 7, ux: 6, func: 4,
+    issues: [
+      { severity: "critical", text: "Backend endpoints unavailable — most API calls fail silently, all stats show 0 or N/A" },
+      { severity: "bug", text: "Uses console.warn instead of logger (violates CLAUDE.md)" },
+      { severity: "bug", text: "Manual auth check instead of useRequireAuth hook (violates CLAUDE.md)" },
+      { severity: "improve", text: "Visual design feels less polished than other pages (uses shadow-sm, less refined cards)" },
+    ],
+    fixes: [
+      { title: "Implement backend endpoints", desc: "Create API endpoints for: guild averages, member activity, contribution scores, role-specific stats", file: "Backend: guild stats endpoints" },
+      { title: "Fix code quality", desc: "Replace console.warn with logger, use useRequireAuth instead of manual redirect", file: "GuildMyStatsPage.tsx" },
+    ]
+  },
+  { id: 55, group: "public", name: "Company Public Profile", route: "/companies/[companyId]", file: "src/components/company/CompanyPublicProfilePage.tsx", ui: 7, ux: 7, func: 6,
+    issues: [
+      { severity: "bug", text: "Job links route to /jobs/${id} instead of /browse/jobs/${id} — wrong URL" },
+      { severity: "missing", text: "No company reviews/ratings section" },
+      { severity: "missing", text: "No benefits and culture information" },
+      { severity: "missing", text: "No social media links" },
+      { severity: "missing", text: "No hiring statistics (time to hire, response rate)" },
+    ],
+    fixes: [
+      { title: "Fix job links", desc: "Change /jobs/${id} to /browse/jobs/${id} in job listing links", file: "CompanyPublicProfilePage.tsx" },
+    ]
+  },
+  { id: 56, group: "public", name: "Candidate Public Profile", route: "/candidates/[candidateId]", file: "src/components/CandidateProfileView.tsx", ui: 5, ux: 6, func: 5,
+    issues: [
+      { severity: "critical", text: "Uses shadcn Card components (Card, CardHeader, CardTitle, CardContent) — design inconsistency with entire rest of the app" },
+      { severity: "missing", text: "No guild membership display" },
+      { severity: "missing", text: "No skills/expertise list" },
+      { severity: "bug", text: "Only uses legacy linkedIn/github fields — ignores socialLinks array" },
+      { severity: "bug", text: "No loading state — returns null during load" },
+      { severity: "improve", text: "Page.tsx has data fetching logic — violates thin-shell pattern" },
+    ],
+    fixes: [
+      { title: "Redesign to match app", desc: "Rewrite using the app's custom card styling (rounded-[14px] border bg-card) instead of shadcn Card imports", file: "CandidateProfileView.tsx" },
+      { title: "Use socialLinks", desc: "Replace legacy linkedIn/github field display with the socialLinks array from profile data", file: "CandidateProfileView.tsx" },
+      { title: "Add guild section", desc: "Show guild memberships with status badges (approved, pending, rejected)", file: "CandidateProfileView.tsx" },
+      { title: "Fix page.tsx", desc: "Move data fetching into CandidateProfileView component, make page.tsx a thin shell", file: "src/app/candidates/[candidateId]/page.tsx" },
+    ]
+  },
+  { id: 57, group: "public", name: "Expert Public Profile", route: "/experts/[walletAddress]", file: "src/components/ExpertProfile.tsx", ui: 9, ux: 8, func: 7,
+    issues: [
+      { severity: "missing", text: "No reputation history chart/trend" },
+      { severity: "missing", text: "No detailed review history section" },
+      { severity: "missing", text: "No endorsement breakdown per guild" },
+      { severity: "improve", text: "File is ~500+ lines — could benefit from sub-component extraction" },
+    ],
+    fixes: [
+      { title: "Add rep chart", desc: "Add mini reputation history sparkline below the reputation ring showing trend over last 6 months", file: "ExpertProfile.tsx" },
+    ]
+  },
+];
+
+// ────────────────────────────────────────────────
+// Whitepaper features
+const wpFeatures = [
+  { name: "Guild Hierarchy (5 Ranks)", score: 6, desc: "UI built, auto-promotion missing, consensus rate always null. Backend doesn't enforce or auto-promote.", views: "#1, #17, #19" },
+  { name: "Merit-Weighted Voting", score: 5, desc: "Backend formula works. computeVoteWeight() exists in constants.ts but is NEVER displayed to experts on dashboard, profile, or voting pages.", views: "#1, #6, #7, #13, #15" },
+  { name: "Endorsement Auction", score: 6, desc: "Core blind bidding works. No refund claiming UI, no 1-2% fee display, no slash risk warning, no outcome history.", views: "#8, #9" },
+  { name: "Governance (4 Thresholds)", score: 8, desc: "3 of 4 types implemented (Standard 51%, Major 67%, Emergency 75%). Emergency Unilateral (multisig) missing.", views: "#13, #14, #15" },
+  { name: "Reputation System (3 Tiers)", score: 8, desc: "Well-implemented: Foundation/Established/Authority with multipliers, history chart, 'How It Works' section. Some fake metrics.", views: "#5, #11" },
+  { name: "Appeals (Staked, Panel)", score: 4, desc: "Backend exists for expert/candidate/proposal appeals. Frontend: dispute detail page exists but NO appeal filing UI, no 7-day window, no fee staking.", views: "#10, #37, #40" },
+  { name: "Candidate Rejection Feedback", score: 7, desc: "RejectionFeedbackCard component exists and renders on dashboard. But onResubmit callback never wired, not shown on guilds page.", views: "#37, #40" },
+  { name: "Commit-Reveal Voting", score: 7, desc: "Works in ReviewGuildApplicationModal. Not on standalone voting page. Phase indicator shown on Application Pending.", views: "#4, #6, #7" },
+  { name: "25% Stake Lockup", score: 3, desc: "Smart contract handles correctly. UI NEVER shows lockup status — experts don't know how much stake is locked during active reviews.", views: "#1, #5, #6, #12" },
+  { name: "Reputation Decay (-10/cycle)", score: 4, desc: "Warning dot on dashboard, mentioned in 'How Rep Works'. No countdown timer, cron job not wired in backend, applies -1 instead of -10.", views: "#1, #5" },
+  { name: "Reviewer Anonymity", score: 5, desc: "Backend doesn't expose reviewer IDs to candidates. BUT finalized vote history on voting detail page shows expert names/IDs.", views: "#7" },
+  { name: "AI Matching", score: 2, desc: "Explicitly deferred. Minimal client-side substring matching only. No placeholder UI anywhere.", views: "#25, #37" },
+  { name: "DID / Sybil Resistance", score: 0, desc: "Not implemented at all. Wallet-only auth. One person can create unlimited wallets.", views: "All" },
+  { name: "Endorsement Accountability", score: 5, desc: "Backend tracks hire outcomes. Frontend: no company dashboard summary, no endorsed-vs-hired metrics visible.", views: "#24, #32" },
+];
+
+// ════════════════════════════════════════════════════════
+// BACKEND DATA
+// ════════════════════════════════════════════════════════
+
+const backendUnused = [
+  { method: "GET", path: "/auth/sessions", desc: "List all active sessions for current user", category: "auth", severity: "feature" },
+  { method: "DELETE", path: "/auth/sessions/:sessionId", desc: "Revoke a specific session", category: "auth", severity: "feature" },
+  { method: "DELETE", path: "/auth/sessions/all", desc: "Logout from all devices", category: "auth", severity: "feature" },
+  { method: "GET", path: "/candidates/check-email", desc: "Check if email is already registered", category: "candidate", severity: "feature" },
+  { method: "GET", path: "/candidates/:id/resume", desc: "Download candidate resume file", category: "candidate", severity: "feature" },
+  { method: "GET", path: "/jobs/featured", desc: "Get featured/highlighted jobs", category: "jobs", severity: "feature" },
+  { method: "GET", path: "/experts/dashboard", desc: "Aggregated expert dashboard data (single call vs frontend's many calls)", category: "expert", severity: "perf" },
+  { method: "PATCH", path: "/experts/me/email-preferences", desc: "Update email notification preferences for experts", category: "expert", severity: "feature" },
+  { method: "PUT", path: "/experts/applications/:id/endorse", desc: "Update/increase an existing endorsement bid", category: "expert", severity: "feature" },
+  { method: "GET", path: "/experts/reputation/history", desc: "Full reputation change event log", category: "expert", severity: "feature" },
+  { method: "GET", path: "/experts/reputation/breakdown", desc: "Reputation breakdown by category", category: "expert", severity: "feature" },
+  { method: "POST", path: "/experts/guild-apps/:id/commit-reveal/enable", desc: "Enable commit-reveal for expert application", category: "expert", severity: "feature" },
+  { method: "POST", path: "/experts/guild-apps/:id/reveal", desc: "Reveal expert's commit-reveal vote", category: "expert", severity: "feature" },
+  { method: "GET", path: "/proposals/:id/statistics", desc: "Detailed vote statistics for a proposal", category: "governance", severity: "feature" },
+  { method: "GET", path: "/proposals/:id/finalization", desc: "Finalization results with IQR details", category: "governance", severity: "feature" },
+  { method: "POST", path: "/proposals/:id/finalize", desc: "Manually trigger proposal finalization", category: "governance", severity: "feature" },
+  { method: "POST", path: "/proposals/:id/commit-reveal/transition", desc: "Manual commit-reveal phase transition", category: "governance", severity: "feature" },
+  { method: "POST", path: "/proposals/:id/reveal", desc: "Reveal commit-reveal vote for proposals", category: "governance", severity: "feature" },
+  { method: "GET", path: "/blockchain/staking/guild-total/:guildId", desc: "Total VETD staked in a guild", category: "blockchain", severity: "feature" },
+  { method: "GET", path: "/blockchain/endorsements/refund-status/:jobId/:cId/:wallet", desc: "Check endorsement refund status on-chain", category: "blockchain", severity: "feature" },
+  { method: "POST", path: "/blockchain/jobs/create", desc: "Create job on blockchain", category: "blockchain", severity: "feature" },
+  { method: "GET", path: "/blockchain/jobs/check/:jobId", desc: "Check if job exists on blockchain", category: "blockchain", severity: "feature" },
+  { method: "GET", path: "/blockchain/rewards/pool", desc: "Get reward pool balance from contract", category: "blockchain", severity: "feature" },
+  { method: "POST", path: "/candidate-proposals/apply", desc: "Submit candidate proposal (entire module unused)", category: "candidate-proposals", severity: "dead-code" },
+  { method: "GET", path: "/candidate-proposals/template", desc: "Get guild application template", category: "candidate-proposals", severity: "dead-code" },
+  { method: "GET", path: "/candidate-proposals/candidate/me", desc: "Get own candidate proposals", category: "candidate-proposals", severity: "dead-code" },
+  { method: "GET", path: "/candidate-proposals/guild/:guildId", desc: "Get candidate apps for guild", category: "candidate-proposals", severity: "dead-code" },
+  { method: "GET", path: "/candidate-proposals/:id", desc: "Get candidate proposal details", category: "candidate-proposals", severity: "dead-code" },
+  { method: "POST", path: "/candidate-proposals/:id/review", desc: "Review candidate proposal (no auth!)", category: "candidate-proposals", severity: "dead-code" },
+];
+
+const backendGhostEndpoints = [
+  { frontend: "guildsApi.getMembers(guildId)", path: "GET /api/guilds/:guildId/members", status: "Backend route DOES NOT EXIST — will match /:guildId catch-all and 404" },
+  { frontend: "guildsApi.getLeaderboard(guildId)", path: "GET /api/guilds/:guildId/leaderboard", status: "Backend route DOES NOT EXIST" },
+  { frontend: "guildsApi.getAverages(guildId)", path: "GET /api/guilds/:guildId/averages", status: "Backend route DOES NOT EXIST — Guild My Stats page shows all zeros because of this" },
+  { frontend: "guildsApi.getMemberActivity(guildId, memberId)", path: "GET /api/guilds/:guildId/members/:memberId/activity", status: "Backend route DOES NOT EXIST" },
+];
+
+const backendSecurity = [
+  { severity: "high", category: "Unauthenticated Routes", items: [
+    { path: "GET /candidates/:id/resume", desc: "Resume download requires no auth — anyone can download any resume by UUID" },
+    { path: "POST /experts/:id/resume", desc: "Expert resume upload only gated by rate limiter, no wallet auth" },
+    { path: "GET /proposals/assigned/:expertId", desc: "Returns proposals assigned to expert with no auth — leaks assignment data" },
+    { path: "GET /proposals/:id/votes", desc: "Full vote history including per-expert votes is fully public" },
+    { path: "GET /proposals/:id/eligibility/:expertId", desc: "Eligibility check leaks expert status with no auth" },
+    { path: "POST /candidate-proposals/:id/review", desc: "Review submission has validation but NO auth middleware — anyone can submit reviews" },
+  ]},
+  { severity: "medium", category: "Unauthenticated Routes (Medium)", items: [
+    { path: "GET /blockchain/staking/*", desc: "All staking/endorsement/reputation/reward routes are public" },
+    { path: "GET /guilds/membership/:userId/:guildId", desc: "Membership check leaks guild membership status" },
+    { path: "GET /guilds/candidate-apps/:id/my-review", desc: "Returns a review with no auth" },
+    { path: "GET /guilds/appeals/by-application/:id/*", desc: "Appeal data and eligibility checks are public" },
+    { path: "GET /guilds/:guildId/candidate-applications", desc: "All candidate applications for a guild are fully public" },
+  ]},
+  { severity: "high", category: "Missing Rate Limiting", items: [
+    { path: "POST /companies/ and /companies/login", desc: "Company auth has NO rate limiter — brute force risk (candidates have authRateLimiter but companies don't)" },
+    { path: "POST /blockchain/wallet/challenge + /verify", desc: "Wallet SIWE challenge has no rate limiting — challenge spam / brute force" },
+    { path: "POST /experts/apply", desc: "Expert application has no rate limiting — application spam" },
+    { path: "POST /governance/proposals", desc: "Proposal creation has no rate limiter (relies solely on 100 VETD stake)" },
+  ]},
+  { severity: "medium", category: "Missing Validation", items: [
+    { path: "GET /candidates/check-email", desc: "Query params not validated" },
+    { path: "POST /blockchain/staking/sync", desc: "Request body not validated" },
+    { path: "POST /blockchain/endorsements/sync", desc: "Request body not validated" },
+    { path: "POST /experts/guilds/:guildId/templates", desc: "Template creation body not validated" },
+    { path: "GET /experts/profile", desc: "Wallet address from query params not validated" },
+  ]},
+];
+
+const backendCrons = [
+  { name: "FinalizeProposalsCron", interval: "60s", status: "active", desc: "Finalizes expired proposals, expert apps, governance, endorsement retention, disputes, commit-reveal transitions, reminders, candidate reviews, guild master terms, bidding notifications", issues: "Monolithic — 11 tasks in sequence, one failure can delay all others" },
+  { name: "BlockchainOpsCron", interval: "30s", status: "active", desc: "Processes pending blockchain ops (rewards, vetting sessions, guild membership) + reconciles pending TXs", issues: "" },
+  { name: "NotificationOutbox", interval: "5s", status: "active", desc: "Delivers queued notifications from outbox table", issues: "" },
+  { name: "ReconciliationCron", interval: "1 hour", status: "active", desc: "Checks 5 random experts for reputation drift between chain and DB", issues: "Detect-only — logs warnings but NEVER corrects drift" },
+  { name: "SessionCleanup", interval: "Daily 2am", status: "active", desc: "Removes expired refresh tokens", issues: "" },
+  { name: "AuditCleanup", interval: "Monthly 1st 3am", status: "active", desc: "Removes audit logs > 2 years, old blockchain TXs, old outbox entries", issues: "" },
+  { name: "SuspiciousActivity", interval: "Daily 9am", status: "active", desc: "Detects brute-force login attempts, logs warnings", issues: "" },
+  { name: "Reputation Decay", interval: "—", status: "missing", desc: "Whitepaper: -10 rep per inactive cycle. applyInactivityDecay() method exists but is NEVER scheduled in any cron job", issues: "Dead code — experts never lose reputation for inactivity" },
+  { name: "Auto-Promotion", interval: "—", status: "missing", desc: "Whitepaper: auto-promote experts when rank criteria met (reviews, consensus, endorsements). No logic exists.", issues: "Guild ranks are permanent unless manually changed in DB" },
+  { name: "Endorsement Timeout", interval: "—", status: "missing", desc: "No cron to close bidding, finalize top-3 selection, or trigger on-chain refunds for non-winners", issues: "Notifications sent but actual refund processing never happens" },
+  { name: "Reputation Full Sync", interval: "—", status: "missing", desc: "syncAllReputations() and syncAllRewards() exist but are only in a manual script — no cron", issues: "If chain and DB diverge, there's no automatic correction" },
+  { name: "Wallet Challenge Cleanup", interval: "—", status: "missing", desc: "wallet_challenges table has expires_at but no cleanup job removes expired challenges", issues: "Expired challenges accumulate indefinitely" },
+];
+
+const backendGaps = [
+  { name: "Candidate Rejection Feedback Endpoint", severity: "critical", desc: "No GET endpoint exists for candidates to retrieve review feedback after guild rejection. The feedback field exists in DB but is only accessible to experts/companies. Candidates can't see why they were rejected.", fix: "Create GET /api/candidates/me/guild-applications/:id/feedback — aggregate anonymized reviewer scores and return criteria averages + feedback text", wp: true },
+  { name: "Application Anonymization Layer", severity: "critical", desc: "No anonymization layer exists. Reviewer endpoints expose candidate names, emails, and personal data directly to experts during vetting. Whitepaper requires blind reviews to prevent bias.", fix: "Create anonymized view layer — strip PII from reviewer-facing endpoints. Assign pseudonyms server-side (deterministic per application). De-anonymize only after finalization.", wp: true },
+  { name: "Resubmission Tracking", severity: "warning", desc: "No resubmission_count field in any table. No tracking of how many times a candidate has reapplied. Whitepaper allows one free resubmission per guild.", fix: "Add resubmission_count column to candidate_guild_applications. Create POST /api/candidates/me/guild-applications/:id/resubmit endpoint.", wp: true },
+  { name: "Quorum Snapshotting", severity: "warning", desc: "total_eligible_vote_weight column exists on governance_proposals but is NEVER populated at creation time. Quorum is computed at finalization against current population, not the population that existed when voting opened.", fix: "At proposal creation, compute and store total_eligible_vote_weight by summing merit-weighted votes of all eligible experts. Use this snapshot for quorum checks at finalization.", wp: true },
+  { name: "Emergency Governance Type", severity: "warning", desc: "proposal_type CHECK constraint allows 6 types but NO emergency type. No expedited voting, shorter timeframes, or emergency powers exist in the backend.", fix: "Add 'emergency' to proposal_type enum. Implement: shorter voting period (24h), higher threshold (75%), lower quorum (5%), require multisig co-sign.", wp: true },
+  { name: "Auto-Promotion Logic", severity: "critical", desc: "Guild roles (recruit → master) exist in DB but NO logic evaluates whether an expert meets promotion criteria. Ranks only change via governance election or manual DB edits.", fix: "Add weekly cron job: query each expert's reviews, consensus %, reputation score, endorsements against GUILD_RANK_CRITERIA. Auto-promote when all criteria met. Notify expert.", wp: true },
+  { name: "Endorsement Bid Refund Fee", severity: "warning", desc: "Notification text mentions 'minus a small platform fee' but NO actual fee calculation or deduction logic exists. No fee percentage config, no tracking, no revenue accounting.", fix: "Add platformFeeBps config (default 150 = 1.5%). On refund processing: deduct fee, send to treasury address, record in endorsement_rewards table.", wp: true },
+  { name: "Reputation Decay Value", severity: "warning", desc: "applyInactivityDecay() applies -1 rep per cycle but whitepaper and smart contract specify -10. Backend uses 1/10th of correct value.", fix: "Scale INACTIVITY_PENALTY constant from -1 to -10 to match whitepaper and contract.", wp: true },
+  { name: "Notification Duplication", severity: "info", desc: "UnifiedNotificationsService exists but expert.notifications.service.ts and company-notifications.service.ts still have direct INSERT INTO bypassing the unified service (lines 50, 107, 64, 116).", fix: "Migrate remaining direct inserts to use UnifiedNotificationsService or notification outbox pattern.", wp: false },
+  { name: "N+1 Query Patterns", severity: "info", desc: "Found in: expert-application-finalization (3 queries per non-reviewer in loop), reputation sync (O(experts × guilds) queries), deadline reminders (nested loops with individual INSERTs), bidding close notifications.", fix: "Batch operations: use bulk UPDATE/INSERT, cache guild info lookups, batch notification inserts.", wp: false },
+  { name: "Reconciliation Never Corrects", severity: "warning", desc: "ReconciliationCron checks 5 random experts for rep drift between chain and DB every hour — but only LOGS warnings. Never auto-corrects. If chain diverges from DB, it stays wrong.", fix: "Add auto-correction mode: when drift detected, sync DB to match chain values (chain is source of truth).", wp: false },
+];
+
+// ────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────
+
+const groups = [
+  { id: "all", label: "All Views", count: views.length },
+  { id: "expert", label: "Expert", count: views.filter(v => v.group === "expert").length },
+  { id: "company", label: "Company", count: views.filter(v => v.group === "company").length },
+  { id: "candidate", label: "Candidate", count: views.filter(v => v.group === "candidate").length },
+  { id: "public", label: "Public / Auth", count: views.filter(v => v.group === "public").length },
+];
+
+let activeGroup = "all";
+let activeSeverity = null; // null = all
+
+function avg(v) { return ((v.ui + v.ux + v.func) / 3).toFixed(1); }
+function scoreClass(s) { return s >= 8 ? "score-high" : s >= 6 ? "score-mid" : "score-low"; }
+function scoreColor(s) { return s >= 8 ? "var(--positive)" : s >= 6 ? "var(--warning)" : "var(--negative)"; }
+function sevClass(v) {
+  const a = parseFloat(avg(v));
+  if (v.issues.some(i => i.severity === "critical")) return "severity-critical";
+  if (a < 7) return "severity-critical";
+  if (a < 8) return "severity-warning";
+  return "severity-ok";
+}
+
+function renderSidebar() {
+  const el = document.getElementById("sidebar");
+  const groupMap = { expert: "Expert Views", company: "Company / Hiring", candidate: "Candidate", public: "Public / Auth" };
+  let html = `
+    <div class="sidebar-header">
+      <h1>Vetted Audit</h1>
+      <p>${views.length} views · ${views.reduce((s,v) => s + v.issues.length, 0) + backendGaps.length + backendSecurity.reduce((s,g) => s + g.items.length, 0)} issues</p>
+    </div>
+    <div class="sidebar-nav">
+  `;
+  let currentGroup = "";
+  views.forEach(v => {
+    if (v.group !== currentGroup) {
+      currentGroup = v.group;
+      html += `<div class="nav-section"><div class="nav-section-title">${groupMap[v.group]}</div></div>`;
+    }
+    const a = parseFloat(avg(v));
+    html += `
+      <div class="nav-item" data-id="${v.id}" onclick="scrollToView(${v.id})">
+        <span style="font-size:12px;opacity:0.4">${v.id}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.name}</span>
+        <span class="score ${scoreClass(a)}">${a}</span>
+      </div>
+    `;
+  });
+  html += `
+    <div class="nav-section"><div class="nav-section-title">Backend</div></div>
+    <div class="nav-item" onclick="scrollToBackend('unused')">
+      <span style="font-size:12px;opacity:0.4">BE</span>
+      <span style="flex:1">Unused Endpoints</span>
+      <span class="score score-mid">${backendUnused.length}</span>
+    </div>
+    <div class="nav-item" onclick="scrollToBackend('ghost')">
+      <span style="font-size:12px;opacity:0.4">BE</span>
+      <span style="flex:1">Ghost Endpoints</span>
+      <span class="score score-low">${backendGhostEndpoints.length}</span>
+    </div>
+    <div class="nav-item" onclick="scrollToBackend('security')">
+      <span style="font-size:12px;opacity:0.4">BE</span>
+      <span style="flex:1">Security Issues</span>
+      <span class="score score-low">${backendSecurity.reduce((s,g) => s+g.items.length, 0)}</span>
+    </div>
+    <div class="nav-item" onclick="scrollToBackend('crons')">
+      <span style="font-size:12px;opacity:0.4">BE</span>
+      <span style="flex:1">Cron Jobs</span>
+      <span class="score score-low">${backendCrons.filter(c=>c.status==='missing').length} missing</span>
+    </div>
+    <div class="nav-item" onclick="scrollToBackend('gaps')">
+      <span style="font-size:12px;opacity:0.4">BE</span>
+      <span style="flex:1">Backend Gaps</span>
+      <span class="score score-low">${backendGaps.filter(g=>g.severity==='critical').length} crit</span>
+    </div>
+  </div>
+    <div class="sidebar-footer">
+      <div class="overall-score">
+        <span class="number">7.2</span>
+        <span class="label">/ 10 overall</span>
+      </div>
+    </div>
+  `;
+  el.innerHTML = html;
+}
+
+function renderSummary() {
+  const filtered = activeGroup === "all" ? views : views.filter(v => v.group === activeGroup);
+  const uiAvg = (filtered.reduce((s,v) => s + v.ui, 0) / filtered.length).toFixed(1);
+  const uxAvg = (filtered.reduce((s,v) => s + v.ux, 0) / filtered.length).toFixed(1);
+  const funcAvg = (filtered.reduce((s,v) => s + v.func, 0) / filtered.length).toFixed(1);
+  const totalAvg = (filtered.reduce((s,v) => s + parseFloat(avg(v)), 0) / filtered.length).toFixed(1);
+  const critCount = filtered.reduce((s,v) => s + v.issues.filter(i => i.severity === "critical").length, 0);
+  const wpCount = filtered.reduce((s,v) => s + v.issues.filter(i => i.wp).length, 0);
+
+  const beGapCount = backendGaps.filter(g => g.severity === 'critical').length;
+  const beSecCount = backendSecurity.reduce((s,g) => s + g.items.length, 0);
+  const beMissingCrons = backendCrons.filter(c => c.status === 'missing').length;
+
+  document.getElementById("summaryBar").innerHTML = `
+    <div class="summary-cell"><div class="val" style="color:var(--accent)">${totalAvg}</div><div class="lbl">Frontend Avg</div></div>
+    <div class="summary-cell"><div class="val">${uiAvg}</div><div class="lbl">UI Average</div></div>
+    <div class="summary-cell"><div class="val">${uxAvg}</div><div class="lbl">UX Average</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--negative)">${critCount + beGapCount}</div><div class="lbl">Critical (FE + BE)</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--warning)">${backendUnused.length + backendGhostEndpoints.length}</div><div class="lbl">BE Endpoint Issues</div></div>
+  `;
+}
+
+function renderFilters() {
+  let html = "";
+  groups.forEach(g => {
+    html += `<button class="filter-pill ${activeGroup === g.id ? 'active' : ''}" onclick="setGroup('${g.id}')">${g.label}<span class="cnt">${g.count}</span></button>`;
+  });
+  html += `<div class="filter-sep"></div>`;
+  html += `<div class="severity-filter">`;
+  html += `<button class="sev-pill sev-critical ${activeSeverity === 'critical' ? 'active' : ''}" onclick="toggleSeverity('critical')">Critical</button>`;
+  html += `<button class="sev-pill sev-warning ${activeSeverity === 'warning' ? 'active' : ''}" onclick="toggleSeverity('warning')">Missing</button>`;
+  html += `<button class="sev-pill sev-info ${activeSeverity === 'info' ? 'active' : ''}" onclick="toggleSeverity('info')">Bugs</button>`;
+  html += `</div>`;
+  document.getElementById("filterBar").innerHTML = html;
+}
+
+function renderContent() {
+  let filtered = activeGroup === "all" ? [...views] : views.filter(v => v.group === activeGroup);
+  if (activeSeverity) {
+    const sevMap = { critical: "critical", warning: "missing", info: "bug" };
+    filtered = filtered.filter(v => v.issues.some(i => i.severity === sevMap[activeSeverity]));
+  }
+
+  let html = "";
+  filtered.forEach(v => {
+    const a = avg(v);
+    const sev = sevClass(v);
+    html += `
+    <div class="view-card ${sev}" id="view-${v.id}">
+      <div class="view-header" onclick="toggleCard(${v.id})">
+        <span class="view-num">#${v.id}</span>
+        <span class="view-title">${v.name}<span class="view-route">${v.route}</span></span>
+        <div class="view-scores">
+          <span class="view-score-chip" style="background:${v.ui >= 8 ? 'var(--positive-dim)' : v.ui >= 6 ? 'var(--warning-dim)' : 'var(--negative-dim)'}; color:${scoreColor(v.ui)}"><span class="dim">UI</span>${v.ui}</span>
+          <span class="view-score-chip" style="background:${v.ux >= 8 ? 'var(--positive-dim)' : v.ux >= 6 ? 'var(--warning-dim)' : 'var(--negative-dim)'}; color:${scoreColor(v.ux)}"><span class="dim">UX</span>${v.ux}</span>
+          <span class="view-score-chip" style="background:${v.func >= 8 ? 'var(--positive-dim)' : v.func >= 6 ? 'var(--warning-dim)' : 'var(--negative-dim)'}; color:${scoreColor(v.func)}"><span class="dim">FN</span>${v.func}</span>
+        </div>
+        <span class="view-avg" style="color:${scoreColor(parseFloat(a))}">${a}</span>
+        <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+      </div>
+      <div class="view-detail">
+        <div class="detail-grid">
+          <div class="detail-left">
+            ${v.issues.some(i => i.wp) ? '<div class="wp-badge">📋 Whitepaper gaps found</div>' : ''}
+            <ul class="issue-list">
+              ${v.issues.map(i => `
+                <li class="issue-item" data-severity="${i.severity}">
+                  <span class="issue-tag tag-${i.severity === 'critical' ? 'critical' : i.severity === 'missing' ? 'missing' : i.severity === 'bug' ? 'bug' : 'improve'}">${i.severity}</span>
+                  <span>${i.text}${i.wp ? ' <span style="color:var(--accent);font-size:10px;font-weight:600">WHITEPAPER</span>' : ''}</span>
+                </li>
+              `).join("")}
+            </ul>
+            <div class="score-bar-container" style="margin-top:16px">
+              <div style="display:flex;gap:12px;margin-bottom:6px">
+                <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${v.ui*10}%;background:${scoreColor(v.ui)}"></div></div><div class="score-bar-labels"><span>UI</span><span>${v.ui}/10</span></div></div>
+                <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${v.ux*10}%;background:${scoreColor(v.ux)}"></div></div><div class="score-bar-labels"><span>UX</span><span>${v.ux}/10</span></div></div>
+                <div style="flex:1"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${v.func*10}%;background:${scoreColor(v.func)}"></div></div><div class="score-bar-labels"><span>Func</span><span>${v.func}/10</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-right">
+            <div class="fix-section">
+              <h4>How to Fix</h4>
+              ${v.fixes.map(f => `
+                <div class="fix-item">
+                  <div class="fix-title">${f.title}</div>
+                  <div class="fix-desc">${f.desc}</div>
+                  <div class="fix-file">${f.file}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+  });
+
+  // Whitepaper compliance section
+  html += `
+  <div class="wp-section" style="margin-top:48px">
+    <div class="wp-section-title">Whitepaper Feature Compliance</div>
+    <div class="wp-grid">
+      ${wpFeatures.map(f => {
+        const col = f.score >= 7 ? "var(--positive)" : f.score >= 4 ? "var(--warning)" : "var(--negative)";
+        const bgCol = f.score >= 7 ? "var(--positive-dim)" : f.score >= 4 ? "var(--warning-dim)" : "var(--negative-dim)";
+        return `
+        <div class="wp-card">
+          <div class="wp-card-title">
+            <div class="wp-score-ring" style="background:${bgCol};color:${col};border:2px solid ${col}">${f.score}</div>
+            ${f.name}
+          </div>
+          <div class="wp-card-desc">${f.desc}</div>
+          <div class="wp-card-views">Affected views: ${f.views}</div>
+        </div>
+        `;
+      }).join("")}
+    </div>
+  </div>
+  `;
+
+  // ════════════════════════════════════════════════
+  // BACKEND SECTIONS
+  // ════════════════════════════════════════════════
+
+  html += `
+  <div class="be-section" id="backend-section">
+    <div class="be-section-header">
+      <div class="be-section-title">Backend Audit</div>
+      <span class="be-section-badge" style="background:var(--negative-dim);color:var(--negative)">${backendGaps.filter(g=>g.severity==='critical').length} Critical Gaps</span>
+      <span class="be-section-badge" style="background:var(--warning-dim);color:var(--warning)">${backendUnused.length} Unused Endpoints</span>
+      <span class="be-section-badge" style="background:var(--negative-dim);color:var(--negative)">${backendGhostEndpoints.length} Ghost Calls</span>
+    </div>
+
+    <div class="be-tabs">
+      <button class="be-tab active" onclick="switchBeTab('gaps')">Whitepaper Gaps<span class="be-tab-count">${backendGaps.length}</span></button>
+      <button class="be-tab" onclick="switchBeTab('ghost')">Ghost Endpoints<span class="be-tab-count">${backendGhostEndpoints.length}</span></button>
+      <button class="be-tab" onclick="switchBeTab('security')">Security<span class="be-tab-count">${backendSecurity.reduce((s,g)=>s+g.items.length,0)}</span></button>
+      <button class="be-tab" onclick="switchBeTab('crons')">Cron Jobs<span class="be-tab-count">${backendCrons.length}</span></button>
+      <button class="be-tab" onclick="switchBeTab('unused')">Unused Endpoints<span class="be-tab-count">${backendUnused.length}</span></button>
+    </div>
+
+    <!-- Gaps Tab -->
+    <div class="be-tab-panel active" id="be-panel-gaps">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Backend features the whitepaper requires but are missing or incomplete. Each includes the specific fix needed.</p>
+      ${backendGaps.map(g => `
+        <div class="gap-card gap-${g.severity}">
+          <div class="gap-header">
+            <span class="issue-tag tag-${g.severity === 'critical' ? 'critical' : g.severity === 'warning' ? 'missing' : 'improve'}">${g.severity}</span>
+            <span class="gap-name">${g.name}</span>
+            ${g.wp ? '<span style="font-size:10px;font-weight:600;color:var(--accent);padding:2px 8px;background:var(--accent-dim);border-radius:4px">WHITEPAPER</span>' : ''}
+          </div>
+          <div class="gap-desc">${g.desc}</div>
+          <div class="gap-fix">${g.fix}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <!-- Ghost Endpoints Tab -->
+    <div class="be-tab-panel" id="be-panel-ghost">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Frontend API methods that call backend routes which <strong style="color:var(--negative)">don't exist</strong>. These calls silently fail or 404, causing pages to show empty data.</p>
+      ${backendGhostEndpoints.map(g => `
+        <div class="ghost-card">
+          <div class="ghost-method">${g.frontend}</div>
+          <div class="ghost-path">${g.path}</div>
+          <div class="ghost-status">${g.status}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <!-- Security Tab -->
+    <div class="be-tab-panel" id="be-panel-security">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Routes missing authentication, rate limiting, or input validation.</p>
+      ${backendSecurity.map(group => `
+        <div class="security-group">
+          <div class="security-group-title">
+            <span class="issue-tag tag-${group.severity === 'high' ? 'critical' : 'missing'}">${group.severity}</span>
+            ${group.category}
+            <span style="font-size:11px;color:var(--text-dim)">(${group.items.length})</span>
+          </div>
+          ${group.items.map(item => `
+            <div class="security-item">
+              <span class="security-path">${item.path}</span>
+              <span class="security-desc">${item.desc}</span>
+            </div>
+          `).join("")}
+        </div>
+      `).join("")}
+    </div>
+
+    <!-- Crons Tab -->
+    <div class="be-tab-panel" id="be-panel-crons">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Scheduled jobs: what's running, what's missing, and what has issues.</p>
+      <div class="cron-grid">
+        ${backendCrons.map(c => `
+          <div class="cron-card cron-${c.status}">
+            <div class="cron-header">
+              <span class="cron-name">${c.name}</span>
+              <span class="cron-interval" style="background:${c.status === 'active' ? 'var(--positive-dim)' : 'var(--negative-dim)'};color:${c.status === 'active' ? 'var(--positive)' : 'var(--negative)'}">${c.status === 'active' ? c.interval : 'NOT SCHEDULED'}</span>
+            </div>
+            <div class="cron-desc">${c.desc}</div>
+            ${c.issues ? `<div class="cron-issue">${c.issues}</div>` : ''}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Unused Endpoints Tab -->
+    <div class="be-tab-panel" id="be-panel-unused">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${backendUnused.length} backend endpoints that exist but the frontend never calls. These represent built features that aren't surfaced to users.</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <table class="be-table">
+          <thead>
+            <tr>
+              <th style="width:70px">Method</th>
+              <th style="width:300px">Path</th>
+              <th>Description</th>
+              <th style="width:100px">Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${backendUnused.map(ep => `
+              <tr>
+                <td><span class="be-method method-${ep.method.toLowerCase()}">${ep.method}</span></td>
+                <td><span class="be-path">${ep.path}</span></td>
+                <td>${ep.desc}</td>
+                <td><span class="be-category-tag">${ep.category}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  `;
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`view-${id}`);
+  card.classList.toggle("open");
+}
+
+function scrollToView(id) {
+  // If filtered out, reset
+  activeGroup = "all";
+  activeSeverity = null;
+  renderFilters();
+  renderSummary();
+  renderContent();
+  setTimeout(() => {
+    const el = document.getElementById(`view-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("open");
+    }
+    // highlight in sidebar
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    document.querySelector(`.nav-item[data-id="${id}"]`)?.classList.add("active");
+  }, 50);
+}
+
+function setGroup(g) {
+  activeGroup = g;
+  renderFilters();
+  renderSummary();
+  renderContent();
+}
+
+function toggleSeverity(s) {
+  activeSeverity = activeSeverity === s ? null : s;
+  renderFilters();
+  renderContent();
+}
+
+function switchBeTab(tab) {
+  document.querySelectorAll('.be-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.be-tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`be-panel-${tab}`)?.classList.add('active');
+  // Find the tab button by matching the onclick
+  document.querySelectorAll('.be-tab').forEach(t => {
+    if (t.getAttribute('onclick')?.includes(`'${tab}'`)) t.classList.add('active');
+  });
+}
+
+function scrollToBackend(tab) {
+  // Make sure we're on "all" view so backend section is visible
+  activeGroup = "all";
+  activeSeverity = null;
+  renderFilters();
+  renderSummary();
+  renderContent();
+  setTimeout(() => {
+    switchBeTab(tab);
+    const el = document.getElementById('backend-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+// Init
+renderSidebar();
+renderFilters();
+renderSummary();
+renderContent();
+</script>
+</body>
+</html>

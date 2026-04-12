@@ -4,13 +4,13 @@ import { setupEndorsementHistoryMocks } from "./helpers/guild-mocks";
 
 test.describe("Slashing endorsements page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await setExpertSession(page);
     await setupEndorsementHistoryMocks(page);
   });
 
   test("shows Endorsement Marketplace heading", async ({ page }) => {
-    await page.goto("/expert/endorsements", { waitUntil: "networkidle" });
+    await page.goto("/expert/endorsements", { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByText("Endorsement Marketplace").first(),
@@ -18,7 +18,7 @@ test.describe("Slashing endorsements page", () => {
   });
 
   test("no error toasts on load", async ({ page }) => {
-    await page.goto("/expert/endorsements", { waitUntil: "networkidle" });
+    await page.goto("/expert/endorsements", { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByText("Endorsement Marketplace").first(),

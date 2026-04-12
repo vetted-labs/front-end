@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endorsement History - V1: Glassmorphic Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface-0: #0c0f14;
+    --surface-1: #141820;
+    --surface-2: #1a1f2a;
+    --surface-3: #222938;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.14);
+    --primary: #ff6a00;
+    --primary-rgb: 255, 106, 0;
+    --text: #f0f0f5;
+    --text-muted: #8b8fa3;
+    --positive: #22c55e;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --pending-bg: rgba(255, 106, 0, 0.08);
+    --pending-border: rgba(255, 106, 0, 0.2);
+    --reviewing-bg: rgba(59, 130, 246, 0.08);
+    --reviewing-border: rgba(59, 130, 246, 0.2);
+    --interviewed-bg: rgba(139, 92, 246, 0.08);
+    --interviewed-border: rgba(139, 92, 246, 0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    margin-bottom: 40px;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .page-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ── Hero Stats ── */
+  .stats-hero {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .stats-hero::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(var(--primary-rgb), 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+  }
+
+  .stat-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .stat-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+  }
+  .stat-card.primary::before { background: linear-gradient(90deg, var(--primary), transparent); }
+  .stat-card.warning::before { background: linear-gradient(90deg, var(--warning), transparent); }
+  .stat-card.positive::before { background: linear-gradient(90deg, var(--positive), transparent); }
+
+  .stat-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 20px;
+  }
+  .stat-card.primary .stat-icon-wrap {
+    background: rgba(var(--primary-rgb), 0.1);
+    box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.08);
+  }
+  .stat-card.warning .stat-icon-wrap {
+    background: rgba(245, 158, 11, 0.1);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
+  }
+  .stat-card.positive .stat-icon-wrap {
+    background: rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.08);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-value .suffix {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 6px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── Section ── */
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .sync-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .sync-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--positive);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Endorsement Cards ── */
+  .endorsement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .endorsement-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .endorsement-card:hover {
+    border-color: rgba(var(--primary-rgb), 0.3);
+    background: linear-gradient(135deg, var(--surface-1) 0%, rgba(var(--primary-rgb), 0.02) 100%);
+  }
+
+  .endorsement-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+  }
+
+  /* Left accent stripe */
+  .endorsement-card::before {
+    content: '';
+    display: block;
+    height: 0;
+  }
+
+  .job-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.15), rgba(var(--primary-rgb), 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .job-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .job-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .job-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .job-meta .dot { opacity: 0.3; }
+
+  .candidate-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 6px;
+    background: var(--surface-2);
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    min-width: 0;
+  }
+  .candidate-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.2), rgba(var(--primary-rgb), 0.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .candidate-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  .stake-display {
+    text-align: right;
+    min-width: 100px;
+  }
+  .stake-amount {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .stake-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .rank-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+  }
+  .status-pending {
+    background: var(--pending-bg);
+    color: var(--primary);
+    border: 1px solid var(--pending-border);
+  }
+  .status-reviewing {
+    background: var(--reviewing-bg);
+    color: var(--info);
+    border: 1px solid var(--reviewing-border);
+  }
+  .status-interviewed {
+    background: var(--interviewed-bg);
+    color: #8b5cf6;
+    border: 1px solid var(--interviewed-border);
+  }
+
+  .expand-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .endorsement-card:hover .expand-btn {
+    background: var(--surface-3);
+    border-color: var(--border-hover);
+  }
+
+  /* ── Tip Banner ── */
+  .tip-banner {
+    margin-top: 32px;
+    padding: 20px 24px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.06) 0%, rgba(var(--primary-rgb), 0.02) 100%);
+    border: 1px solid rgba(var(--primary-rgb), 0.15);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .tip-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+  .tip-label {
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .design-label {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div class="page-header">
+    <a href="#" class="back-link">&larr; Back to Endorsements</a>
+    <h1 class="page-title">Endorsement History</h1>
+    <p class="page-subtitle">Your active endorsement bids synced from the blockchain</p>
+  </div>
+
+  <!-- Stats Hero -->
+  <div class="stats-hero">
+    <div class="stat-card primary">
+      <div class="stat-icon-wrap">&#9733;</div>
+      <p class="stat-label">Active Endorsements</p>
+      <p class="stat-value">8</p>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-icon-wrap">&#127942;</div>
+      <p class="stat-label">Top 3 Rankings</p>
+      <p class="stat-value">2</p>
+    </div>
+    <div class="stat-card positive">
+      <div class="stat-icon-wrap">&#9650;</div>
+      <p class="stat-label">Total Staked</p>
+      <p class="stat-value">205.00 <span class="suffix">VETD</span></p>
+    </div>
+  </div>
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <div>
+      <p class="section-label">Portfolio</p>
+      <h2 class="section-title">My Active Endorsements</h2>
+    </div>
+    <div class="sync-badge">
+      <span class="sync-dot"></span>
+      Live sync
+    </div>
+  </div>
+
+  <!-- Endorsement Cards -->
+  <div class="endorsement-list">
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#127970;</div>
+        <div class="job-info">
+          <div class="job-title">Regional Accountability Producer</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>South Kassandra, MT</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">J</div>
+          <span class="candidate-name">Jennie Jacobs</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">100.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="rank-badge">&#127942; #1</div>
+        <div class="status-badge status-pending">Pending</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128187;</div>
+        <div class="job-info">
+          <div class="job-title">Lead Web Agent</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>Hybrid</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">S</div>
+          <span class="candidate-name">sven</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">10.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="rank-badge">&#127942; #1</div>
+        <div class="status-badge status-pending">Pending</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128176;</div>
+        <div class="job-info">
+          <div class="job-title">Investor Solutions Executive</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>Margretstead, MO</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">M</div>
+          <span class="candidate-name">Mable Jacobi</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">12.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-reviewing">Reviewing</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128736;</div>
+        <div class="job-info">
+          <div class="job-title">Internal Operations Administrator</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>Willowberg, MN</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">D</div>
+          <span class="candidate-name">Darin Rippin</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">25.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-reviewing">Reviewing</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128202;</div>
+        <div class="job-info">
+          <div class="job-title">Dynamic Division Planner</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>York, OK</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">D</div>
+          <span class="candidate-name">Derrick Doyle</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">12.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-pending">Pending</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#127970;</div>
+        <div class="job-info">
+          <div class="job-title">Regional Accountability Producer</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>South Kassandra, MT</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">R</div>
+          <span class="candidate-name">Ryan Daugherty</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">9.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-pending">Pending</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128179;</div>
+        <div class="job-info">
+          <div class="job-title">Regional Accounts Developer</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>Hybrid</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">J</div>
+          <span class="candidate-name">Jenna Parker</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">18.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-reviewing">Reviewing</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+    <div class="endorsement-card">
+      <div class="endorsement-row">
+        <div class="job-icon">&#128100;</div>
+        <div class="job-info">
+          <div class="job-title">Principal Identity Representative</div>
+          <div class="job-meta">
+            <span>Vetted Inc</span>
+            <span class="dot">&middot;</span>
+            <span>Kayleechester, OR</span>
+          </div>
+        </div>
+        <div class="candidate-chip">
+          <div class="candidate-avatar">A</div>
+          <span class="candidate-name">Archie Legros</span>
+        </div>
+        <div class="stake-display">
+          <div class="stake-amount">19.00 VETD</div>
+          <div class="stake-label">Staked</div>
+        </div>
+        <div class="status-badge status-interviewed">Interviewed</div>
+        <div class="expand-btn">&darr;</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tip Banner -->
+  <div class="tip-banner">
+    <div class="tip-icon">&#128274;</div>
+    <p><span class="tip-label">Pro tip:</span> Top 3 endorsers earn rewards when a candidate is hired. Increase your stake to improve your ranking.</p>
+  </div>
+
+</div>
+
+<div class="design-label">V1: Glassmorphic Dashboard</div>
+
+</body>
+</html>

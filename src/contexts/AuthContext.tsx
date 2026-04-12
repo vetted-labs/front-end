@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useAccount } from 'wagmi';
 import { clearAllAuthState } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -20,6 +21,17 @@ interface AuthContextValue extends AuthState {
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+/**
+ * Module-level flag marking that the user just explicitly logged out
+ * (button click, not a MetaMask flicker). Lets route guards skip their
+ * wallet-disconnect debounce and trust the navigation initiated by the
+ * logout handler. Auto-clears after 1.5s.
+ */
+let recentExplicitLogout = false;
+export function isRecentExplicitLogout() {
+  return recentExplicitLogout;
+}
 
 /**
  * 🔐 SECURITY: Synchronous auth state initialization from localStorage
@@ -164,6 +176,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Mark this as an explicit logout so route guards skip their
+    // wallet-disconnect debounce. Auto-clear after navigation settles.
+    recentExplicitLogout = true;
+    setTimeout(() => { recentExplicitLogout = false; }, 1500);
+
     // Grab refresh token before clearing localStorage
     const refreshToken = localStorage.getItem('refreshToken');
 
@@ -180,7 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       walletAddress: undefined,
     });
 
-    // Best-effort: revoke refresh token on backend (fire-and-forget)
+    // Best-effort: revoke refresh token on backend (fire-and-forget).
+    // We can't use authApi.logout() here because clearAllAuthState() has
+    // already wiped localStorage — authApi.logout reads the token from there.
     if (refreshToken) {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
       fetch(`${apiUrl}/api/auth/logout`, {
@@ -188,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
       }).catch((err) => {
-        console.warn('Failed to revoke refresh token on logout:', err);
+        logger.warn('Failed to revoke refresh token on logout:', err);
       });
     }
   };

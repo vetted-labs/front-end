@@ -39,7 +39,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
   const displayed = activities.slice(0, 6);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 h-full">
+    <div className="bg-card border border-border rounded-xl p-6 h-full min-w-0 overflow-hidden">
       <span className="text-sm font-bold text-foreground">
         Recent Activity
       </span>

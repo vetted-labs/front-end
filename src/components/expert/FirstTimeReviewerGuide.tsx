@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 
 export function FirstTimeReviewerGuide() {
   const [dismissed, setDismissed] = useState(() =>
@@ -36,9 +38,14 @@ export function FirstTimeReviewerGuide() {
             <li><strong>Commit your vote (blind)</strong> — your score is encrypted so other experts can&apos;t see it</li>
             <li><strong>Reveal your vote</strong> — after all experts commit, reveal your score for consensus</li>
           </ol>
-          <Button variant="outline" size="sm" className="mt-4" onClick={handleDismiss}>
-            Got it, let&apos;s review!
-          </Button>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleDismiss}>
+              Got it, let&apos;s review!
+            </Button>
+            <HelpLink href={DOC_LINKS.commitReveal}>
+              Read the full guide
+            </HelpLink>
+          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pattern Tiling Test</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: system-ui, sans-serif;
+    min-height: 200vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* Light mode */
+  body {
+    background: #faf9f7;
+    color: #2b2b2b;
+  }
+  body.dark {
+    background: #1a1612;
+    color: #e5e5e5;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 210px;
+    background: #faf9f7;
+    border-right: 1px solid rgba(0,0,0,0.08);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 12px;
+  }
+  body.dark .sidebar {
+    background: #1a1612;
+    border-right: 1px solid rgba(255,120,0,0.15);
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #ff6a00;
+    margin: 16px 0 6px 8px;
+  }
+  .sidebar-item {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: inherit;
+    opacity: 0.7;
+  }
+  .sidebar-item.active {
+    background: #ff6a00;
+    color: white;
+    opacity: 1;
+  }
+
+  /* Main content */
+  .main {
+    margin-left: 210px;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Pattern layer */
+  .pattern-layer {
+    position: fixed;
+    inset: 0;
+    left: 210px; /* Don't cover sidebar */
+    pointer-events: none;
+    z-index: 1;
+    background-image: url(../public/pattern-tile.svg);
+    background-size: 1080px 1080px;
+    background-repeat: repeat;
+    background-position: center;
+    filter: none;
+    mix-blend-mode: multiply;
+    opacity: 0.25;
+  }
+  body.dark .pattern-layer {
+    filter: invert(1);
+    mix-blend-mode: screen;
+    opacity: 0.28;
+  }
+
+  /* Content */
+  .content {
+    position: relative;
+    z-index: 2;
+    padding: 40px;
+  }
+  .card {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    max-width: 900px;
+  }
+  body.dark .card {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .card p {
+    opacity: 0.6;
+    font-size: 14px;
+  }
+
+  /* Controls */
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    font-size: 13px;
+    min-width: 240px;
+  }
+  body.dark .controls {
+    background: #2a2420;
+    border-color: rgba(255,255,255,0.1);
+    color: #e5e5e5;
+  }
+  .controls label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .controls input[type="range"] {
+    width: 100%;
+    accent-color: #ff6a00;
+  }
+  .control-row {
+    margin-bottom: 12px;
+  }
+  .control-row:last-child { margin-bottom: 0; }
+  .controls button {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  body.dark .controls button {
+    background: #3a3430;
+    border-color: rgba(255,255,255,0.1);
+    color: #e5e5e5;
+  }
+  .controls button.active {
+    background: #ff6a00;
+    color: white;
+    border-color: #ff6a00;
+  }
+
+  /* Grid lines to help spot seams */
+  .seam-guides {
+    position: fixed;
+    inset: 0;
+    left: 210px;
+    pointer-events: none;
+    z-index: 50;
+    display: none;
+  }
+  .seam-guides.visible {
+    display: block;
+  }
+  .seam-guide-v, .seam-guide-h {
+    position: absolute;
+    background: red;
+    opacity: 0.4;
+  }
+  .seam-guide-v {
+    width: 1px;
+    top: 0; bottom: 0;
+  }
+  .seam-guide-h {
+    height: 1px;
+    left: 0; right: 0;
+  }
+</style>
+</head>
+<body class="dark">
+
+<div class="sidebar">
+  <div style="font-weight:700;font-size:16px;margin-bottom:20px;padding:0 8px;">Vetted <span style="color:#ff6a00;font-size:11px">EXPERT</span></div>
+  <div class="sidebar-label">HOME</div>
+  <div class="sidebar-item">Dashboard</div>
+  <div class="sidebar-item">Notifications</div>
+  <div class="sidebar-label">VETTING</div>
+  <div class="sidebar-item active">Applications</div>
+  <div class="sidebar-item">Endorsements</div>
+  <div class="sidebar-label">GUILDS</div>
+  <div class="sidebar-item">My Guilds</div>
+  <div class="sidebar-item">Guild Ranks</div>
+  <div class="sidebar-label">GOVERNANCE</div>
+  <div class="sidebar-item">Proposals</div>
+  <div class="sidebar-label">REWARDS</div>
+  <div class="sidebar-item">Analytics</div>
+  <div class="sidebar-item">Earnings</div>
+  <div class="sidebar-item">Reputation</div>
+  <div class="sidebar-item">Leaderboard</div>
+  <div class="sidebar-item">Withdrawals</div>
+</div>
+
+<div class="main">
+  <div class="pattern-layer" id="pattern"></div>
+  <div class="content">
+    <div style="font-size:12px;opacity:0.5;margin-bottom:20px">Dashboard &gt; Applications</div>
+    <div class="card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(128,128,128,0.15);border-radius:8px;overflow:hidden;margin-top:16px">
+        <div style="padding:16px;background:inherit"><div style="font-size:10px;opacity:0.5;letter-spacing:0.05em;text-transform:uppercase">PENDING</div><div style="font-size:24px;font-weight:700">1</div></div>
+        <div style="padding:16px;background:inherit"><div style="font-size:10px;opacity:0.5;letter-spacing:0.05em;text-transform:uppercase">TO VOTE</div><div style="font-size:24px;font-weight:700">0</div></div>
+        <div style="padding:16px;background:inherit"><div style="font-size:10px;opacity:0.5;letter-spacing:0.05em;text-transform:uppercase">COMPLETED</div><div style="font-size:24px;font-weight:700">0</div></div>
+        <div style="padding:16px;background:inherit"><div style="font-size:10px;opacity:0.5;letter-spacing:0.05em;text-transform:uppercase">GUILDS</div><div style="font-size:24px;font-weight:700">8</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:20px;border-bottom:1px solid rgba(128,128,128,0.15);padding-bottom:12px;margin-bottom:20px">
+        <span style="color:#ff6a00;border-bottom:2px solid #ff6a00;padding-bottom:12px">Expert Reviews</span>
+        <span style="opacity:0.5">Candidate Reviews</span>
+        <span style="opacity:0.5">Proposals</span>
+        <span style="opacity:0.5">History</span>
+      </div>
+      <div style="text-align:center;padding:60px 0;opacity:0.4">
+        <div style="font-size:40px;margin-bottom:8px">📭</div>
+        <div style="font-weight:600">No expert applications</div>
+        <div style="font-size:13px;margin-top:4px">No items assigned to you right now.</div>
+      </div>
+    </div>
+    <!-- Extra cards to test scrolling and pattern continuity -->
+    <div class="card"><h2>Extra Content</h2><p>Scroll down to verify pattern tiles seamlessly across the full page height.</p></div>
+    <div class="card"><h2>More Content</h2><p>Check left and right edges — no visible seam lines.</p></div>
+    <div class="card"><h2>Even More</h2><p>The pattern should flow naturally everywhere.</p></div>
+  </div>
+</div>
+
+<!-- Red guide lines at tile boundaries to debug seams -->
+<div class="seam-guides" id="seamGuides"></div>
+
+<div class="controls" id="controls">
+  <div class="control-row">
+    <label>Opacity <span id="opacityVal">25%</span></label>
+    <input type="range" id="opacity" min="0" max="90" value="25">
+  </div>
+  <div class="control-row">
+    <label>Tile Size <span id="sizeVal">1080px</span></label>
+    <input type="range" id="tileSize" min="200" max="2000" step="10" value="1080">
+  </div>
+  <div class="control-row" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="darkBtn" class="active" onclick="setMode('dark')">Dark</button>
+    <button id="lightBtn" onclick="setMode('light')">Light</button>
+    <button id="seamBtn" onclick="toggleSeams()">Show Seams</button>
+  </div>
+</div>
+
+<script>
+const pattern = document.getElementById('pattern');
+const seamGuides = document.getElementById('seamGuides');
+let currentSize = 1080;
+
+document.getElementById('opacity').addEventListener('input', (e) => {
+  const val = e.target.value;
+  document.getElementById('opacityVal').textContent = val + '%';
+  pattern.style.opacity = val / 100;
+});
+
+document.getElementById('tileSize').addEventListener('input', (e) => {
+  currentSize = Number(e.target.value);
+  document.getElementById('sizeVal').textContent = currentSize + 'px';
+  pattern.style.backgroundSize = currentSize + 'px ' + currentSize + 'px';
+  updateSeamGuides();
+});
+
+function setMode(mode) {
+  document.body.className = mode === 'dark' ? 'dark' : '';
+  document.getElementById('darkBtn').className = mode === 'dark' ? 'active' : '';
+  document.getElementById('lightBtn').className = mode === 'light' ? 'active' : '';
+}
+
+let seamsVisible = false;
+function toggleSeams() {
+  seamsVisible = !seamsVisible;
+  document.getElementById('seamBtn').className = seamsVisible ? 'active' : '';
+  seamGuides.className = seamsVisible ? 'seam-guides visible' : 'seam-guides';
+  if (seamsVisible) updateSeamGuides();
+}
+
+function updateSeamGuides() {
+  if (!seamsVisible) return;
+  seamGuides.innerHTML = '';
+  const w = window.innerWidth - 210;
+  const h = document.body.scrollHeight;
+  // Vertical seam lines
+  for (let x = currentSize; x < w; x += currentSize) {
+    const div = document.createElement('div');
+    div.className = 'seam-guide-v';
+    div.style.left = x + 'px';
+    seamGuides.appendChild(div);
+  }
+  // Horizontal seam lines
+  for (let y = currentSize; y < h; y += currentSize) {
+    const div = document.createElement('div');
+    div.className = 'seam-guide-h';
+    div.style.top = y + 'px';
+    seamGuides.appendChild(div);
+  }
+}
+</script>
+</body>
+</html>

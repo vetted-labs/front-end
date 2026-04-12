@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Light Mode Pattern Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+  }
+  h1 { text-align: center; margin-bottom: 8px; font-size: 24px; }
+  .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .option {
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    transition: border-color 0.2s;
+  }
+  .option:hover { border-color: #E8642C; }
+  .option-header {
+    padding: 12px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .option-header h3 { font-size: 15px; font-weight: 600; }
+  .option-header code {
+    font-size: 11px;
+    background: #eee;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #555;
+  }
+  .preview {
+    height: 350px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* The actual page background */
+  .page-bg {
+    position: absolute;
+    inset: 0;
+    background: hsl(30 20% 98%);
+  }
+  /* Pattern layer */
+  .pattern {
+    position: absolute;
+    inset: 0;
+    background-image: url(/pattern-square-nologo.svg);
+    background-size: 1080px 1080px;
+    background-repeat: repeat;
+    background-position: center;
+    pointer-events: none;
+  }
+  /* Content overlay to show how cards look on top */
+  .cards {
+    position: relative;
+    z-index: 1;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid hsl(30 10% 90%);
+    width: calc(50% - 8px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card h4 { font-size: 13px; color: #888; margin-bottom: 4px; }
+  .card .value { font-size: 28px; font-weight: 700; }
+  .sidebar-preview {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 180px;
+    background: white;
+    border-right: 1px solid hsl(30 10% 90%);
+    z-index: 2;
+    overflow: hidden;
+  }
+  .sidebar-preview .pattern {
+    position: absolute;
+    inset: 0;
+  }
+  .sidebar-content {
+    position: relative;
+    z-index: 1;
+    padding: 16px 12px;
+  }
+  .sidebar-content .logo {
+    font-weight: 700;
+    font-size: 14px;
+    color: #E8642C;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sidebar-content .logo span {
+    background: #E8642C;
+    color: white;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .sidebar-content .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #999;
+    margin: 12px 0 4px;
+  }
+  .sidebar-content .nav-item {
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-content .nav-item.active {
+    background: #E8642C;
+    color: white;
+  }
+  .cards-with-sidebar {
+    margin-left: 180px;
+  }
+
+  /* ==================== OPTION STYLES ==================== */
+
+  /* Option A: No filter, very subtle (the SVG is naturally white/beige) */
+  .opt-a .pattern {
+    filter: none;
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+  }
+
+  /* Option B: Slight darken only, multiply blend */
+  .opt-b .pattern {
+    filter: brightness(0.92);
+    mix-blend-mode: multiply;
+    opacity: 0.3;
+  }
+
+  /* Option C: Warm orange tint via hue-rotate, moderate */
+  .opt-c .pattern {
+    filter: brightness(0.85) sepia(0.2) hue-rotate(-10deg);
+    mix-blend-mode: multiply;
+    opacity: 0.18;
+  }
+
+  /* Option D: Strong contrast, very visible pattern */
+  .opt-d .pattern {
+    filter: brightness(0.7) contrast(1.2);
+    mix-blend-mode: multiply;
+    opacity: 0.08;
+  }
+
+  /* Option E: Invert + overlay blend (shows cutout shapes) */
+  .opt-e .pattern {
+    filter: invert(1);
+    mix-blend-mode: overlay;
+    opacity: 0.06;
+  }
+
+  /* Option F: Color burn for sharper pattern edges */
+  .opt-f .pattern {
+    filter: brightness(0.9);
+    mix-blend-mode: color-burn;
+    opacity: 0.06;
+  }
+
+  .recommend {
+    background: #FFF7ED;
+    color: #E8642C;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #FDDCB5;
+  }
+</style>
+</head>
+<body>
+  <h1>Light Mode Background Pattern Options</h1>
+  <p class="subtitle">Each option uses the same SVG pattern with different CSS filter + blend mode combos. Hover to highlight.</p>
+
+  <div class="grid">
+
+    <!-- Option A -->
+    <div class="option opt-a">
+      <div class="option-header">
+        <h3>A: Natural (no filter)</h3>
+        <code>filter: none | multiply | 50%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option B -->
+    <div class="option opt-b">
+      <div class="option-header">
+        <h3>B: Soft darken</h3>
+        <code>brightness(0.92) | multiply | 30%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option C -->
+    <div class="option opt-c">
+      <div class="option-header">
+        <h3>C: Warm tint</h3>
+        <code>brightness(0.85) sepia(0.2) | multiply | 18%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option D -->
+    <div class="option opt-d">
+      <div class="option-header">
+        <h3>D: High contrast, low opacity</h3>
+        <code>brightness(0.7) contrast(1.2) | multiply | 8%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option E -->
+    <div class="option opt-e">
+      <div class="option-header">
+        <h3>E: Invert + overlay</h3>
+        <code>invert(1) | overlay | 6%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option F -->
+    <div class="option opt-f">
+      <div class="option-header">
+        <h3>F: Color burn</h3>
+        <code>brightness(0.9) | color-burn | 6%</code>
+      </div>
+      <div class="preview">
+        <div class="page-bg"></div>
+        <div class="pattern"></div>
+        <div class="sidebar-preview">
+          <div class="sidebar-content">
+            <div class="logo">Vetted <span>EXPERT</span></div>
+            <div class="section-label">Home</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">Notifications</div>
+            <div class="section-label">Guilds</div>
+            <div class="nav-item">My Guilds</div>
+          </div>
+        </div>
+        <div class="cards cards-with-sidebar">
+          <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+          <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+          <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+          <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width: 1400px; margin: 30px auto 0; padding: 20px; background: white; border-radius: 12px; border: 1px solid #eee;">
+    <h3 style="margin-bottom: 12px;">Live tweaker</h3>
+    <p style="font-size: 13px; color: #666; margin-bottom: 16px;">Adjust values in real-time to find the perfect combo:</p>
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: end;">
+      <label style="font-size: 13px;">
+        Brightness<br>
+        <input type="range" id="brightness" min="0" max="100" value="90" style="width: 160px;">
+        <span id="bVal">0.90</span>
+      </label>
+      <label style="font-size: 13px;">
+        Sepia<br>
+        <input type="range" id="sepia" min="0" max="100" value="0" style="width: 160px;">
+        <span id="sVal">0</span>
+      </label>
+      <label style="font-size: 13px;">
+        Contrast<br>
+        <input type="range" id="contrast" min="50" max="200" value="100" style="width: 160px;">
+        <span id="cVal">1.0</span>
+      </label>
+      <label style="font-size: 13px;">
+        Opacity<br>
+        <input type="range" id="opacity" min="0" max="50" value="15" style="width: 160px;">
+        <span id="oVal">0.15</span>
+      </label>
+      <label style="font-size: 13px;">
+        Blend Mode<br>
+        <select id="blend" style="padding: 4px 8px; font-size: 13px;">
+          <option value="multiply" selected>multiply</option>
+          <option value="overlay">overlay</option>
+          <option value="color-burn">color-burn</option>
+          <option value="darken">darken</option>
+          <option value="soft-light">soft-light</option>
+          <option value="normal">normal</option>
+        </select>
+      </label>
+      <label style="font-size: 13px;">
+        <input type="checkbox" id="invert"> Invert
+      </label>
+    </div>
+    <div id="tweaker-preview" style="margin-top: 16px; height: 250px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #eee;">
+      <div class="page-bg"></div>
+      <div class="pattern" id="tweaker-pattern"></div>
+      <div class="cards" style="position: relative; z-index: 1;">
+        <div class="card"><h4>Reputation</h4><div class="value">1,132</div></div>
+        <div class="card"><h4>Earnings</h4><div class="value">$560</div></div>
+        <div class="card"><h4>Staked VETD</h4><div class="value">740</div></div>
+        <div class="card"><h4>Reviews</h4><div class="value">0</div></div>
+      </div>
+    </div>
+    <div id="css-output" style="margin-top: 12px; padding: 12px; background: #1a1a1a; color: #4ade80; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre;"></div>
+  </div>
+
+  <script>
+    const tweakerPattern = document.getElementById('tweaker-pattern');
+    const cssOutput = document.getElementById('css-output');
+    const inputs = ['brightness', 'sepia', 'contrast', 'opacity', 'blend', 'invert'];
+
+    function update() {
+      const b = document.getElementById('brightness').value / 100;
+      const s = document.getElementById('sepia').value / 100;
+      const c = document.getElementById('contrast').value / 100;
+      const o = document.getElementById('opacity').value / 100;
+      const blend = document.getElementById('blend').value;
+      const inv = document.getElementById('invert').checked;
+
+      document.getElementById('bVal').textContent = b.toFixed(2);
+      document.getElementById('sVal').textContent = s.toFixed(2);
+      document.getElementById('cVal').textContent = c.toFixed(2);
+      document.getElementById('oVal').textContent = o.toFixed(2);
+
+      let filterParts = [];
+      if (inv) filterParts.push('invert(1)');
+      if (b !== 1) filterParts.push(`brightness(${b.toFixed(2)})`);
+      if (s > 0) filterParts.push(`sepia(${s.toFixed(2)})`);
+      if (c !== 1) filterParts.push(`contrast(${c.toFixed(2)})`);
+      const filterStr = filterParts.length ? filterParts.join(' ') : 'none';
+
+      tweakerPattern.style.filter = filterStr;
+      tweakerPattern.style.mixBlendMode = blend;
+      tweakerPattern.style.opacity = o;
+
+      cssOutput.textContent = `.vetted-pattern-layer {\n  filter: ${filterStr};\n  mix-blend-mode: ${blend};\n}\n/* Component opacity: !opacity-[${o.toFixed(2)}] */`;
+    }
+
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', update);
+    });
+    update();
+  </script>
+</body>
+</html>

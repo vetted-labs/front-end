@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — V3 Roadmap: Every View to 9+</title>
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface-2:#1a1a25;--surface-3:#22222f;--border:#2a2a3a;--border-light:#33334a;--text:#e8e8f0;--text-muted:#8888a0;--text-dim:#5a5a70;--accent:#f97316;--accent-dim:rgba(249,115,22,0.15);--accent-glow:rgba(249,115,22,0.08);--positive:#22c55e;--positive-dim:rgba(34,197,94,0.12);--negative:#ef4444;--negative-dim:rgba(239,68,68,0.12);--warning:#eab308;--warning-dim:rgba(234,179,8,0.12);--info:#3b82f6;--info-dim:rgba(59,130,246,0.12);--purple:#a855f7;--purple-dim:rgba(168,85,247,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+
+.sidebar{position:fixed;top:0;left:0;width:270px;height:100vh;background:var(--surface);border-right:1px solid var(--border);z-index:100;display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-header h1{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:-0.02em}
+.sidebar-header p{font-size:11px;color:var(--text-dim);margin-top:2px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav::-webkit-scrollbar{width:4px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.nav-section{padding:8px 12px 4px}
+.nav-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);padding:0 4px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-muted);transition:all 0.15s;user-select:none}
+.nav-item:hover{background:var(--surface-2);color:var(--text)}
+.nav-scores{margin-left:auto;display:flex;gap:3px;align-items:center}
+.nav-cur{font-size:10px;font-weight:600;opacity:0.5}
+.nav-arrow{font-size:9px;color:var(--positive)}
+.nav-target{font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+
+.main{margin-left:270px;min-height:100vh}
+.hero{padding:40px 48px 28px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--accent-glow) 0%,transparent 40%)}
+.hero h2{font-size:28px;font-weight:800;letter-spacing:-0.03em}
+.hero .sub{font-size:14px;color:var(--text-muted);margin-top:4px}
+
+.summary-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.summary-cell{background:var(--surface);padding:16px 20px;text-align:center}
+.summary-cell .val{font-size:24px;font-weight:800;line-height:1}
+.summary-cell .lbl{font-size:10px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+
+.filter-bar{display:flex;align-items:center;gap:8px;padding:12px 48px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.filter-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.filter-pill:hover{border-color:var(--text-dim);color:var(--text)}
+.filter-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.filter-pill .cnt{display:inline-block;background:rgba(255,255,255,0.15);padding:0 5px;border-radius:8px;font-size:10px;margin-left:4px}
+
+.content{padding:24px 48px 60px}
+
+.tier-header{margin:28px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.tier-title{font-size:18px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:10px}
+.tier-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px}
+.tier-desc{font-size:13px;color:var(--text-dim);margin-top:4px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.card:hover{border-color:var(--border-light)}
+.card-header{display:flex;align-items:center;padding:12px 18px;cursor:pointer;gap:10px;user-select:none}
+.card-header:hover{background:var(--surface-2)}
+.card-num{font-size:11px;font-weight:600;color:var(--text-dim);min-width:24px}
+.card-name{font-size:14px;font-weight:600;flex:1}
+.card-route{font-size:11px;color:var(--text-dim);font-family:'SF Mono','Fira Code',monospace;margin-left:6px;font-weight:400}
+.card-ws{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.card-effort{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:4px}
+.effort-sm{background:var(--positive-dim);color:var(--positive)}
+.effort-md{background:var(--warning-dim);color:var(--warning)}
+.effort-lg{background:var(--negative-dim);color:var(--negative)}
+.card-scores{display:flex;align-items:center;gap:4px;margin-left:auto}
+.sc{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;min-width:28px;text-align:center}
+.sc-g{background:var(--positive-dim);color:var(--positive)}
+.sc-y{background:var(--warning-dim);color:var(--warning)}
+.sc-r{background:var(--negative-dim);color:var(--negative)}
+.sc-old{opacity:0.35;text-decoration:line-through}
+.sc-arrow{color:var(--positive);font-weight:700;font-size:12px;margin:0 2px}
+.sc-target{box-shadow:0 0 8px var(--positive)}
+.chevron{width:16px;height:16px;color:var(--text-dim);transition:transform 0.2s;flex-shrink:0}
+.card.open .chevron{transform:rotate(90deg)}
+
+.card-detail{display:none;border-top:1px solid var(--border)}
+.card.open .card-detail{display:block;animation:fadeIn 0.2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.detail-grid{display:grid;grid-template-columns:1fr 340px}
+.detail-left{padding:18px 22px}
+.detail-right{padding:18px 22px;background:var(--surface-2);border-left:1px solid var(--border)}
+
+.detail-section{margin-bottom:16px}
+.detail-section h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin-bottom:8px}
+
+.current-state{font-size:12px;color:var(--text-muted);line-height:1.6}
+.current-state strong{color:var(--text);font-weight:600}
+
+.issue-list{list-style:none}
+.issue-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;align-items:flex-start}
+.issue-item:last-child{border-bottom:none}
+.issue-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:2px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.tag-gap{background:var(--negative-dim);color:var(--negative)}
+.tag-add{background:var(--positive-dim);color:var(--positive)}
+.tag-fix{background:var(--warning-dim);color:var(--warning)}
+.tag-polish{background:var(--info-dim);color:var(--info)}
+
+.change-item{background:var(--surface-3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;line-height:1.5}
+.change-title{font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.change-desc{color:var(--text-muted)}
+.change-file{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--accent);margin-top:4px;opacity:0.8}
+
+.score-bars{display:flex;gap:10px;margin-top:12px}
+.score-bar{flex:1}
+.score-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:3px}
+.score-bar-track{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;position:relative}
+.score-bar-old{position:absolute;height:100%;border-radius:3px;opacity:0.25}
+.score-bar-new{position:absolute;height:100%;border-radius:3px;transition:width 0.5s}
+
+.done-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--positive-dim);color:var(--positive)}
+
+@media(max-width:1100px){.detail-grid{grid-template-columns:1fr}.detail-right{border-left:none;border-top:1px solid var(--border)}}
+@media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.hero,.content,.filter-bar{padding-left:20px;padding-right:20px}.summary-bar{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<nav class="sidebar" id="sidebar"></nav>
+<div class="main">
+  <div class="hero">
+    <h2>V3 Roadmap — Every View to 9+</h2>
+    <p class="sub">23 tasks across 6 workstreams. Expand any view to see exactly what changes, which files, and the target score.</p>
+  </div>
+  <div class="summary-bar" id="summaryBar"></div>
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+const views = [
+  // [id, group, name, route, curUI, curUX, curFunc, tgtUI, tgtUX, tgtFunc, ws, effort, currentState, issues[], changes[], files[]]
+
+  // ── TIER 1: Critical (<7.0) ──
+  {id:56,group:"public",name:"Candidate Public Profile",route:"/candidates/[id]",
+   cur:[5,6,6],tgt:[9,9,9],ws:"WS1",effort:"lg",
+   state:"Uses shadcn Card components — the only page not matching the app's design system. Props-based display with no data fetching. Shows basic stats, bio, legacy LinkedIn/GitHub fields. No guild memberships, no skills, no loading skeleton.",
+   issues:[
+     ["gap","Uses shadcn Card/CardHeader/CardTitle — completely different design language from rest of app"],
+     ["gap","No guild membership display — candidates' vetting status invisible"],
+     ["gap","No skills/expertise section"],
+     ["gap","No loading skeleton — returns null during load"],
+     ["gap","Uses legacy linkedIn/github fields, ignores socialLinks array"],
+     ["fix","page.tsx has data fetching logic — violates thin-shell pattern"],
+   ],
+   changes:[
+     {t:"Full redesign with app design system",d:"Replace all shadcn Card imports with app's rounded-[14px] border bg-card pattern. Add bento-grid layout matching ExpertProfile.tsx style — hero card with gradient header, avatar, stats row, two-column content.",f:"CandidateProfileView.tsx"},
+     {t:"Add guild memberships section",d:"Fetch guild memberships via guildsApi.getMemberships(). Display as status-badged list showing approved/pending/rejected guilds.",f:"CandidateProfileView.tsx"},
+     {t:"Add skills display + proper socialLinks",d:"Render skills as tag pills. Use socialLinks array with platform icons, legacy fields as fallback.",f:"CandidateProfileView.tsx"},
+     {t:"Move data fetching into component",d:"Make page.tsx a thin shell that only extracts params. Component does its own useFetch calls.",f:"src/app/candidates/[candidateId]/page.tsx"},
+     {t:"Add ProfileSkeleton",d:"Proper skeleton matching the bento layout shape instead of returning null.",f:"CandidateProfileView.tsx"},
+   ],
+   files:["src/components/CandidateProfileView.tsx","src/app/candidates/[candidateId]/page.tsx"]},
+
+  {id:10,group:"expert",name:"Endorsement Disputes",route:"/expert/endorsements/disputes/[id]",
+   cur:[6,7,6],tgt:[9,9,9],ws:"WS1",effort:"lg",
+   state:"Functional dispute voting with panel tracking. Appeal UI was stubbed in v2 (Promise.reject placeholder). Plain card design compared to polished governance views. No dispute timeline. Panel members shown as basic name+badge list.",
+   issues:[
+     ["gap","No dispute timeline — can't see progression from filed → panel assigned → votes → resolution"],
+     ["gap","Plain card design — no accent lines, gradient effects, or visual hierarchy"],
+     ["gap","Panel member display is basic — no role badges, vote power, or progress indicators"],
+     ["fix","Appeal submission calls Promise.reject — needs real backend wiring or better placeholder"],
+   ],
+   changes:[
+     {t:"Add DisputeTimeline visualization",d:"Horizontal timeline with connected dots: Filed → Panel Assigned → Votes Cast → Resolved. Color-coded states (completed/active/upcoming). Dates shown below each node.",f:"EndorsementDisputeDetailPage.tsx"},
+     {t:"Add accent lines and visual hierarchy",d:"Top gradient accent bars on each card section. Consistent with governance proposal detail styling.",f:"EndorsementDisputeDetailPage.tsx"},
+     {t:"Improve panel member display",d:"Show role badges via getRankColors(), vote status icons, voting power indicators per panelist.",f:"EndorsementDisputeDetailPage.tsx"},
+     {t:"Add breadcrumb navigation",d:"Breadcrumb: Dashboard → Endorsements → Dispute #X",f:"EndorsementDisputeDetailPage.tsx"},
+   ],
+   files:["src/components/expert/EndorsementDisputeDetailPage.tsx"]},
+
+  {id:18,group:"expert",name:"Guild App Review (Legacy)",route:"/expert/guild/[guildId]/application/[id]",
+   cur:[7,6,6],tgt:[9,9,9],ws:"WS1",effort:"sm",
+   state:"Legacy full-page voting view for guild applications. Uses simple score slider instead of the multi-step ReviewGuildApplicationModal with rubric, commit-reveal, and guild-specific templates. Duplicates functionality already available in Guild Detail.",
+   issues:[
+     ["gap","Duplicates Guild Detail's review modal with a worse experience"],
+     ["gap","No commit-reveal support (unlike the Guild Detail review flow)"],
+     ["gap","No structured rubric — just a simple voting slider"],
+     ["gap","No Abstain option (defined in type but not rendered)"],
+   ],
+   changes:[
+     {t:"Redirect to Guild Detail review modal",d:"Replace entire page.tsx with a redirect to /expert/guild/[guildId]?tab=membershipApplications&applicationId=[id]. Users land on the superior review flow automatically. Eliminates a 428-line duplicate page.",f:"src/app/expert/guild/[guildId]/application/[applicationId]/page.tsx"},
+   ],
+   files:["src/app/expert/guild/[guildId]/application/[applicationId]/page.tsx"]},
+
+  {id:54,group:"public",name:"Guild My Stats",route:"/guilds/[guildId]/my-stats",
+   cur:[7,7,5],tgt:[8,8,9],ws:"WS1",effort:"md",
+   state:"579-line personal guild stats dashboard. Fetches from 3 endpoints: checkMembership (works), getAverages (was 404 before backend fix), getMemberActivity (was 404 before backend fix). Most stats show 0 because responses weren't parsed correctly. logger.warn fixed in v2.",
+   issues:[
+     ["gap","Backend endpoints now exist (Phase 8) but response shape may not match component expectations"],
+     ["gap","All stat cards show 0 — fallback values used when API parsing fails"],
+     ["gap","No comparison with guild averages despite the UI showing 'above/below average' labels"],
+     ["fix","Response format from new backend endpoints needs to be mapped to component state"],
+   ],
+   changes:[
+     {t:"Wire real data from backend endpoints",d:"Map the actual response shapes from GET /:guildId/averages and GET /:guildId/members/:id/activity to the component state. Fix the property name mismatches between API response and display code.",f:"GuildMyStatsPage.tsx"},
+     {t:"Fix comparison with guild averages",d:"Use averages.avgReputation and averages.avgReviews to show 'Above Average' / 'Below Average' badges with real data.",f:"GuildMyStatsPage.tsx"},
+     {t:"Fix activity feed mapping",d:"Map activity entries from API ({type, amount, description, created_at}) to the activity list component.",f:"GuildMyStatsPage.tsx"},
+   ],
+   files:["src/components/guild/GuildMyStatsPage.tsx"]},
+
+  {id:33,group:"company",name:"Analytics Job Detail",route:"/dashboard/analytics/[jobId]",
+   cur:[7,6,6],tgt:[9,9,9],ws:"WS1",effort:"md",
+   state:"Was 'Coming Soon' blur overlay in v1. Replaced with EmptyState fallback in v2. Has KPI card structure but analyticsApi.getJobAnalytics() returns error since backend endpoint doesn't exist. Need to derive analytics from existing job + applications data instead.",
+   issues:[
+     ["gap","Shows EmptyState because backend analytics endpoint doesn't exist"],
+     ["gap","Job + application data already available via existing endpoints — can derive analytics"],
+     ["gap","No application pipeline visualization"],
+     ["gap","No time-in-stage breakdown"],
+   ],
+   changes:[
+     {t:"Derive analytics from existing data",d:"Fetch job via jobsApi.getById() and applications via applicationsApi.getJobApplications(). Compute KPIs: total applicants, conversion rate, accepted count, status breakdown. No new backend endpoint needed.",f:"JobAnalyticsPage.tsx"},
+     {t:"Add application pipeline chart",d:"Status breakdown with progress bars showing percentage in each stage (pending, reviewing, interviewed, accepted, rejected).",f:"JobAnalyticsPage.tsx"},
+     {t:"Add recent applicants list",d:"Show 5 most recent applicants with status badges and applied date.",f:"JobAnalyticsPage.tsx"},
+   ],
+   files:["src/components/dashboard/JobAnalyticsPage.tsx"]},
+
+  {id:30,group:"company",name:"Company Conversation",route:"/dashboard/messages/[id]",
+   cur:[7,7,6],tgt:[8,9,9],ws:"WS2",effort:"md",
+   state:"Fully functional real-time messaging with 5s polling, meeting scheduling, and meeting responses. Missing: link to candidate's profile, loading skeleton (returns empty during load), no way to see or change candidate application status from conversation.",
+   issues:[
+     ["gap","No link to candidate's full profile from the conversation header"],
+     ["gap","No candidate application status visible — can't see if candidate is 'interviewing' or 'rejected'"],
+     ["gap","Loading state is bare — no skeleton matching thread layout"],
+     ["fix","Avatar style inconsistency — uses initial letter square vs person avatar in inbox"],
+   ],
+   changes:[
+     {t:"Add 'View Profile' button in header",d:"Button navigates to /dashboard/candidates?candidateId=X to auto-select in ATS view.",f:"CompanyConversationView.tsx"},
+     {t:"Add loading skeleton",d:"Message thread skeleton with gray bubble shapes matching the actual layout.",f:"CompanyConversationView.tsx"},
+   ],
+   files:["src/components/messaging/CompanyConversationView.tsx"]},
+
+  {id:55,group:"public",name:"Company Public Profile",route:"/companies/[id]",
+   cur:[7,7,6],tgt:[9,8,8],ws:"WS6",effort:"md",
+   state:"Clean 189-line read-only profile. Shows company header with logo, metadata, about section, and open positions list. Missing: company stats cards, culture/benefits, social links, hiring statistics.",
+   issues:[
+     ["gap","No company stats section (positions, size, industry as cards)"],
+     ["gap","No culture or benefits information"],
+     ["gap","No social links (website shown but no Twitter/LinkedIn)"],
+     ["gap","No hiring statistics (response time, time-to-hire)"],
+   ],
+   changes:[
+     {t:"Add company stats grid",d:"3-column grid: Open Positions count, Company Size, Industry — as rounded cards matching app style.",f:"CompanyPublicProfilePage.tsx"},
+     {t:"Add culture section",d:"Display company description as a 'Culture & Mission' section with better formatting.",f:"CompanyPublicProfilePage.tsx"},
+     {t:"Add website link with icon",d:"Globe icon + hostname display for the website URL.",f:"CompanyPublicProfilePage.tsx"},
+   ],
+   files:["src/components/company/CompanyPublicProfilePage.tsx"]},
+
+  {id:22,group:"company",name:"Company Registration",route:"/company",
+   cur:[7,6,7],tgt:[8,9,9],ws:"WS2",effort:"md",
+   state:"329-line registration form. Has strict password validation, wallet connection modal, proper auth flow. Fixed in v2: localStorage → AuthContext. Still missing: password confirmation, inline validation on blur, wallet icons are text-only.",
+   issues:[
+     ["gap","No password confirmation field — users can mistype password"],
+     ["gap","No inline validation — errors only appear on submit"],
+     ["gap","Wallet connector buttons have no brand logos"],
+   ],
+   changes:[
+     {t:"Add password confirmation field",d:"Add confirmPassword Input with matching validation. Show error when passwords don't match.",f:"CompanyForm.tsx"},
+     {t:"Add inline validation on blur",d:"Validate each field when it loses focus: email format, password strength, company name length. Show red border + error text immediately.",f:"CompanyForm.tsx"},
+   ],
+   files:["src/components/CompanyForm.tsx"]},
+
+  {id:36,group:"company",name:"Job Detail (Public)",route:"/jobs/[jobId]",
+   cur:[7,6,7],tgt:[8,9,8],ws:"WS2",effort:"sm",
+   state:"525-line dual-context component (public + dashboard). Public view has company-specific back button (→ /dashboard) and no share functionality. No way for unauthenticated visitors to know this is a public page.",
+   issues:[
+     ["fix","Back button goes to /dashboard — wrong for public context"],
+     ["gap","No share/copy-link button for public view"],
+   ],
+   changes:[
+     {t:"Context-aware back navigation",d:"Back button goes to /browse/jobs in public context, /dashboard/jobs in dashboard context.",f:"JobDetailPage.tsx"},
+     {t:"Add share button",d:"Copy-link button with toast confirmation in public context.",f:"JobDetailPage.tsx"},
+   ],
+   files:["src/components/jobs/JobDetailPage.tsx"]},
+
+  {id:34,group:"company",name:"Settings",route:"/dashboard/settings",
+   cur:[7,8,5],tgt:[8,8,8],ws:"WS2",effort:"md",
+   state:"285-line settings page. Notifications tab works (connected to API). Security tab has Coming Soon overlay (v2 fix). Billing tab shows fake Pro Plan with Coming Soon overlay. Password change redirects to login page instead of handling inline.",
+   issues:[
+     ["gap","Password change redirects away instead of inline form"],
+     ["gap","Billing tab shows fake $99/month Pro Plan behind overlay — misleading even with 'Coming Soon'"],
+     ["gap","2FA enrollment not implemented"],
+   ],
+   changes:[
+     {t:"Implement inline password change",d:"Replace redirect with inline form: current password, new password, confirm password. Call API on submit (graceful error if endpoint doesn't exist yet).",f:"SettingsPage.tsx"},
+     {t:"Replace fake billing with EmptyState",d:"Remove fake Pro Plan display. Show honest EmptyState: 'Billing coming soon — subscription management will be available in a future release.'",f:"SettingsPage.tsx"},
+   ],
+   files:["src/components/dashboard/SettingsPage.tsx"]},
+
+  // ── TIER 2: Significant gaps (7.0-7.9) ──
+  {id:35,group:"company",name:"Create New Job",route:"/jobs/new",
+   cur:[8,6,7],tgt:[9,9,9],ws:"WS5",effort:"md",
+   state:"Job creation form (shared JobForm component). v2 fixed: shared UI primitives. Still renders outside sidebar layout (standalone nav). No preview before publishing. No auto-save — browser close loses everything.",
+   issues:[
+     ["gap","No preview — can't see how job posting will appear to candidates"],
+     ["gap","No auto-save — navigating away or closing browser loses all form data"],
+     ["gap","No draft restoration on return"],
+   ],
+   changes:[
+     {t:"Add auto-save to localStorage",d:"Debounced save (1s) on every form change. Restore draft on mount with toast notification. Clear on successful publish.",f:"JobForm.tsx"},
+     {t:"Add preview modal",d:"Preview button opens Modal showing formatted job posting as candidates would see it: title, salary, description, requirements, skills.",f:"JobForm.tsx"},
+   ],
+   files:["src/components/JobForm.tsx"]},
+
+  {id:42,group:"candidate",name:"Messages Inbox",route:"/candidate/messages",
+   cur:[7,8,6],tgt:[8,9,8],ws:"WS3",effort:"sm",
+   state:"Refactored to useFetch in v2. Shows conversation list via ConversationList component. No search, no unread indicators, no sorting. Bare minimum inbox.",
+   issues:[
+     ["gap","No search — can't find conversations by company or job"],
+     ["gap","No unread count badge in header"],
+   ],
+   changes:[
+     {t:"Add search input",d:"Filter conversations by company name or job title. Debounced client-side filter.",f:"CandidateMessagesInbox.tsx"},
+     {t:"Add unread count",d:"Compute unread count from conversations data, show badge in header.",f:"CandidateMessagesInbox.tsx"},
+   ],
+   files:["src/components/messaging/CandidateMessagesInbox.tsx"]},
+
+  {id:48,group:"public",name:"Browse Landing",route:"/browse",
+   cur:[8,7,6],tgt:[9,8,9],ws:"WS2",effort:"md",
+   state:"Landing page shell showing 6 featured jobs with hero + CTA. Highly redundant with /browse/jobs which has full search, filters, pagination. This page exists mainly as a marketing layer with no unique value.",
+   issues:[
+     ["gap","Redundant with /browse/jobs — no unique value proposition"],
+     ["gap","No guild browsing section"],
+     ["gap","No trending/new indicators on featured jobs"],
+   ],
+   changes:[
+     {t:"Add guild browse section",d:"Grid of top guilds with member count, job count, and links to guild detail pages. Differentiates this page from pure job listing.",f:"BrowsePage.tsx"},
+     {t:"Add trending badges",d:"Show 'New' badge on jobs posted within 48 hours.",f:"BrowsePage.tsx"},
+   ],
+   files:["src/components/browse/BrowsePage.tsx"]},
+
+  {id:23,group:"company",name:"Company Profile",route:"/company/profile",
+   cur:[7,7,7],tgt:[8,8,8],ws:"WS3",effort:"sm",
+   state:"447-line profile page with view/edit toggle, logo upload, team management. v2 fix: loading skeleton added. Still missing: profile completeness indicator, unsaved changes warning.",
+   issues:[
+     ["gap","No profile completeness indicator — companies don't know what's missing"],
+     ["gap","No unsaved changes warning when navigating away"],
+   ],
+   changes:[
+     {t:"Add profile completeness bar",d:"Compute % from filled fields (name, description, website, location, size, industry, logo). Show progress bar at top of view mode.",f:"CompanyProfilePage.tsx"},
+   ],
+   files:["src/components/company/CompanyProfilePage.tsx"]},
+
+  {id:9,group:"expert",name:"Endorsements History",route:"/expert/endorsements/history",
+   cur:[8,7,7],tgt:[9,8,9],ws:"WS3",effort:"sm",
+   state:"v2 added outcome display (hired/slashed/refunded), sorting dropdown, loading skeleton, Active + Completed sections. Still missing: search capability.",
+   issues:[["gap","No search — can't find specific endorsements by job or candidate"]],
+   changes:[
+     {t:"Add search input",d:"Filter endorsements by job title or candidate name. Client-side filter with debounce.",f:"MyEndorsementsHistory.tsx"},
+   ],
+   files:["src/components/MyEndorsementsHistory.tsx"]},
+
+  {id:51,group:"public",name:"Guilds Directory",route:"/guilds",
+   cur:[9,8,7],tgt:[9,9,9],ws:"WS3",effort:"sm",
+   state:"Beautiful guild cards with hover effects, pagination, CTA. v2 fixed: CTA link. Missing: no way to search guilds by name, no sorting.",
+   issues:[
+     ["gap","No search — can't find guilds by name or specialty"],
+     ["gap","No sorting (by members, jobs, activity)"],
+   ],
+   changes:[
+     {t:"Add search input + sort",d:"Search input filtering by guild name/description. Sort dropdown: Most Members, Most Jobs, Newest.",f:"GuildsListingPage.tsx"},
+   ],
+   files:["src/components/guilds/GuildsListingPage.tsx"]},
+
+  {id:38,group:"candidate",name:"Candidate Profile",route:"/candidate/profile",
+   cur:[7,8,8],tgt:[9,9,9],ws:"WS6",effort:"md",
+   state:"Profile edit page with personal info, resume upload, social links, skills (added in v2). Missing: work history, education — key professional sections.",
+   issues:[
+     ["gap","No work history section — can't show past jobs"],
+     ["gap","No education section"],
+   ],
+   changes:[
+     {t:"Add work history section",d:"Editable list of work entries: company, role, start/end date, description. Add/remove in edit mode. Display as timeline in view mode.",f:"CandidateProfilePage.tsx"},
+     {t:"Add work history type",d:"Add workHistory?: Array<{company, role, startDate, endDate?, description?}> to CandidateProfile type.",f:"src/types/candidate.ts"},
+   ],
+   files:["src/components/candidate/CandidateProfilePage.tsx","src/types/candidate.ts"]},
+
+  {id:52,group:"public",name:"Guild Detail",route:"/guilds/[guildId]",
+   cur:[8,8,7],tgt:[9,9,9],ws:"WS6",effort:"sm",
+   state:"Public guild page with 5 tabs: Feed, Jobs, Activity, Members, Leaderboard. Good tab structure, lazy loading. Missing: guild stats transparency (acceptance rate, review count).",
+   issues:[
+     ["gap","No guild stats (member count, reviews, acceptance rate as cards)"],
+     ["gap","No governance information visible"],
+   ],
+   changes:[
+     {t:"Add guild stats cards",d:"3-column grid above tabs: Expert Members, Reviews Completed, Active Jobs. Derived from existing guild data.",f:"GuildDetailPage.tsx"},
+   ],
+   files:["src/components/GuildDetailPage.tsx"]},
+
+  // ── TIER 2 continued: Analytics + Charts ──
+  {id:21,group:"expert",name:"Expert Analytics",route:"/expert/analytics",
+   cur:[8,7,7],tgt:[9,9,9],ws:"WS4",effort:"sm",
+   state:"v2 replaced all mock data with useFetch + analyticsApi. Functional time filter, dynamic dates. Missing: chart tooltips for exact values, no export.",
+   issues:[
+     ["gap","SVG charts have no hover tooltips — can't see exact values"],
+     ["gap","No export/download capability"],
+   ],
+   changes:[
+     {t:"Add chart tooltips",d:"Create reusable useChartTooltip() hook with foreignObject-based tooltip. Wire to all SVG data points in charts.",f:"src/components/analytics/ChartTooltip.tsx + analytics tabs"},
+   ],
+   files:["src/components/analytics/ChartTooltip.tsx","src/components/expert/analytics/"]},
+
+  {id:11,group:"expert",name:"Earnings",route:"/expert/earnings",
+   cur:[9,8,7],tgt:[9,9,9],ws:"WS4",effort:"sm",
+   state:"Comprehensive earnings dashboard with SVG chart, time filters, guild filters, transaction timeline, claim rewards. Missing: chart tooltips, CSV export.",
+   issues:[
+     ["gap","Chart has no hover tooltips"],
+     ["gap","No export/download for earnings data"],
+   ],
+   changes:[
+     {t:"Wire chart tooltips",d:"Use shared useChartTooltip() hook on earnings chart data points.",f:"EarningsPage.tsx"},
+     {t:"Add CSV export",d:"Export button generates CSV with Date, Type, Amount, Guild, Description columns. Triggers browser download.",f:"EarningsPage.tsx"},
+   ],
+   files:["src/components/expert/EarningsPage.tsx"]},
+
+  {id:12,group:"expert",name:"Withdrawals (Staking)",route:"/expert/withdrawals",
+   cur:[9,8,7],tgt:[9,9,9],ws:"WS4",effort:"sm",
+   state:"Staking portfolio with donut chart, allocation bar, guild position cards, cooldown timers. v2 fixed hardcoded colors. Missing: tooltips on charts, new guild staking button.",
+   issues:[
+     ["gap","No tooltips on donut/allocation charts"],
+     ["gap","No 'Stake in New Guild' action button"],
+   ],
+   changes:[
+     {t:"Add chart tooltips + new guild staking",d:"Wire tooltips to donut chart segments. Add 'Stake in New Guild' button that links to guild picker.",f:"WithdrawalsPage.tsx"},
+   ],
+   files:["src/components/expert/WithdrawalsPage.tsx"]},
+
+  {id:5,group:"expert",name:"Reputation",route:"/expert/reputation",
+   cur:[9,8,9],tgt:[9,9,9],ws:"WS4",effort:"sm",
+   state:"Comprehensive reputation dashboard. v2 fixed fake metrics, added decay countdown. Score history SVG chart has no tooltips.",
+   issues:[["gap","Score history chart has no hover tooltips"]],
+   changes:[
+     {t:"Wire chart tooltips",d:"Use shared useChartTooltip() hook on reputation history chart data points.",f:"ReputationPage.tsx"},
+   ],
+   files:["src/components/expert/ReputationPage.tsx"]},
+
+  // ── TIER 3: Polish (8.0-8.9) ──
+  {id:8,group:"expert",name:"Endorsement Marketplace",route:"/expert/endorsements",
+   cur:[9,8,8],tgt:[9,9,9],ws:"WS3",effort:"sm",
+   state:"v2 added shared Modal, slash risk warning. Applications grid only md:grid-cols-2. No search functionality.",
+   issues:[["gap","No search — can't find applications by candidate or job"]],
+   changes:[{t:"Add search input",d:"Filter applications by candidate name, job title, or company. Client-side debounced filter.",f:"EndorsementMarketplace.tsx"}],
+   files:["src/components/EndorsementMarketplace.tsx"]},
+
+  {id:6,group:"expert",name:"Voting / Applications",route:"/expert/voting",
+   cur:[8,9,8],tgt:[9,9,9],ws:"WS3",effort:"sm",
+   state:"v2 wired staking CTA. No search for applications.",
+   issues:[["gap","No search — can't find specific applications to review"]],
+   changes:[{t:"Add search input",d:"Filter by applicant name.",f:"ApplicationsPage.tsx"}],
+   files:["src/components/expert/applications/ApplicationsPage.tsx"]},
+
+  {id:13,group:"expert",name:"Governance",route:"/expert/governance",
+   cur:[9,8,8.5],tgt:[9,9,9],ws:"—",effort:"sm",
+   state:"v2 added emergency_unilateral. Missing: proposal search.",
+   issues:[["gap","No search — can't find proposals by title"]],
+   changes:[{t:"Add search input",d:"Filter proposals by title/description.",f:"GovernancePage.tsx"}],
+   files:["src/components/governance/GovernancePage.tsx"]},
+
+  {id:19,group:"expert",name:"Guild Ranks",route:"/expert/guild-ranks",
+   cur:[9,9,8],tgt:[9,9,9],ws:"—",effort:"sm",
+   state:"v2 fixed consensus, multi-guild selector, 6-month terms. Missing: actionable guidance for next rank.",
+   issues:[["gap","No actionable text like 'Complete 3 more reviews to reach Craftsman'"]],
+   changes:[{t:"Add guidance text per requirement",d:"Below each progress bar, show 'X more needed' or 'Requirement met' based on current vs target.",f:"GuildRanksProgression.tsx"}],
+   files:["src/components/GuildRanksProgression.tsx"]},
+
+  {id:15,group:"expert",name:"Governance Proposal Detail",route:"/expert/governance/[id]",
+   cur:[9,9,8.5],tgt:[9,9,9],ws:"—",effort:"sm",
+   state:"v2 added vote confirmation, cleaned dead CSS. Missing: execution tracking after proposal passes.",
+   issues:[["gap","No display of what happens after a proposal passes (execution status)"]],
+   changes:[{t:"Add execution status section",d:"For passed proposals, show an 'Execution' section: 'Pending Implementation' or 'Implemented on [date]' based on proposal metadata.",f:"GovernanceProposalDetailPage.tsx"}],
+   files:["src/components/governance/GovernanceProposalDetailPage.tsx"]},
+
+  {id:50,group:"public",name:"Browse Job Detail",route:"/browse/jobs/[jobId]",
+   cur:[8,9,8],tgt:[9,9,9],ws:"—",effort:"sm",
+   state:"Excellent application flow with guild membership checks. Missing: share and save/bookmark.",
+   issues:[["gap","No share button"],["gap","No save/bookmark for logged-in users"]],
+   changes:[{t:"Add share + bookmark",d:"Share button copies URL with toast. Bookmark button (logged-in only) saves to localStorage with visual toggle.",f:"JobDetailView.tsx"}],
+   files:["src/components/browse/JobDetailView.tsx"]},
+
+  // ── Already at 9+ ──
+  {id:46,group:"public",name:"Login",route:"/auth/login",cur:[9,9,9],tgt:[9,9,9],ws:"—",effort:"done",state:"Clean 3-tab auth with auto-login. Forgot password added in v2.",issues:[],changes:[],files:[]},
+  {id:49,group:"public",name:"Browse Jobs",route:"/browse/jobs",cur:[9,9,9],tgt:[9,9,9],ws:"—",effort:"done",state:"Full search, filters, sort, keyboard shortcut, pagination. All added in v2.",issues:[],changes:[],files:[]},
+  {id:25,group:"company",name:"Candidates (ATS)",route:"/dashboard/candidates",cur:[9,9,9],tgt:[9,9,9],ws:"—",effort:"done",state:"Two-panel ATS with endorser names, sort-by-endorsements. Type bug fixed in v2.",issues:[],changes:[],files:[]},
+  {id:20,group:"expert",name:"Leaderboard",route:"/expert/leaderboard",cur:[9,9,9],tgt:[9,9,9],ws:"—",effort:"done",state:"Multi-dimensional with podium, filters, Load More. All fixed in v2.",issues:[],changes:[],files:[]},
+];
+
+// ── Helpers ──
+const sc = v => v >= 9 ? "sc-g" : v >= 7 ? "sc-y" : "sc-r";
+const avg = (a) => ((a[0]+a[1]+a[2])/3).toFixed(1);
+const barCol = v => v >= 9 ? "var(--positive)" : v >= 7 ? "var(--warning)" : "var(--negative)";
+
+let activeFilter = "all";
+const filters = [
+  {id:"all",label:"All Views",count:views.length},
+  {id:"tier1",label:"Tier 1 (<7)",count:views.filter(v=>parseFloat(avg(v.cur))<7).length},
+  {id:"tier2",label:"Tier 2 (7-8)",count:views.filter(v=>{const a=parseFloat(avg(v.cur));return a>=7&&a<8}).length},
+  {id:"tier3",label:"Tier 3 (8-9)",count:views.filter(v=>{const a=parseFloat(avg(v.cur));return a>=8&&a<9}).length},
+  {id:"done",label:"Already 9+",count:views.filter(v=>parseFloat(avg(v.cur))>=9).length},
+];
+
+function renderSidebar(){
+  const el=document.getElementById("sidebar");
+  let html=`<div class="sidebar-header"><h1>V3 Roadmap</h1><p>${views.length} views · ${views.filter(v=>v.changes.length>0).length} to improve</p></div><div class="sidebar-nav">`;
+  const groups={expert:"Expert",company:"Company",candidate:"Candidate",public:"Public"};
+  let curGroup="";
+  // Sort by current avg ascending
+  const sorted=[...views].sort((a,b)=>parseFloat(avg(a.cur))-parseFloat(avg(b.cur)));
+  sorted.forEach(v=>{
+    if(v.group!==curGroup){curGroup=v.group;html+=`<div class="nav-section"><div class="nav-section-title">${groups[v.group]||v.group}</div></div>`;}
+    const ca=avg(v.cur),ta=avg(v.tgt);
+    const changed=parseFloat(ta)>parseFloat(ca);
+    html+=`<div class="nav-item" onclick="scrollTo(${v.id})">
+      <span style="font-size:11px;opacity:0.4;min-width:18px">${v.id}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">${v.name}</span>
+      <div class="nav-scores">
+        ${changed?`<span class="nav-cur">${ca}</span><span class="nav-arrow">→</span>`:''}
+        <span class="nav-target ${sc(parseFloat(ta))}" style="font-size:10px;padding:1px 5px;border-radius:3px;background:${parseFloat(ta)>=9?'var(--positive-dim)':parseFloat(ta)>=7?'var(--warning-dim)':'var(--negative-dim)'};color:${barCol(parseFloat(ta))}">${ta}</span>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function renderSummary(){
+  const curAvg=(views.reduce((s,v)=>s+parseFloat(avg(v.cur)),0)/views.length).toFixed(1);
+  const tgtAvg=(views.reduce((s,v)=>s+parseFloat(avg(v.tgt)),0)/views.length).toFixed(1);
+  const below7=views.filter(v=>parseFloat(avg(v.cur))<7).length;
+  const willBe9=views.filter(v=>parseFloat(avg(v.tgt))>=9).length;
+  const taskCount=views.reduce((s,v)=>s+v.changes.length,0);
+  document.getElementById("summaryBar").innerHTML=`
+    <div class="summary-cell"><div class="val" style="color:var(--warning)">${curAvg}</div><div class="lbl">Current Avg</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--positive)">${tgtAvg}</div><div class="lbl">Target Avg</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--positive)">+${(tgtAvg-curAvg).toFixed(1)}</div><div class="lbl">Improvement</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--negative)">${below7}</div><div class="lbl">Below 7 Now</div></div>
+    <div class="summary-cell"><div class="val" style="color:var(--positive)">${willBe9}</div><div class="lbl">Will Be 9+</div></div>
+    <div class="summary-cell"><div class="val">${taskCount}</div><div class="lbl">Changes Needed</div></div>`;
+}
+
+function renderFilters(){
+  let html="";
+  filters.forEach(f=>{
+    html+=`<button class="filter-pill ${activeFilter===f.id?'active':''}" onclick="setFilter('${f.id}')">${f.label}<span class="cnt">${f.count}</span></button>`;
+  });
+  document.getElementById("filterBar").innerHTML=html;
+}
+
+function renderContent(){
+  let filtered=views;
+  if(activeFilter==="tier1")filtered=views.filter(v=>parseFloat(avg(v.cur))<7);
+  else if(activeFilter==="tier2")filtered=views.filter(v=>{const a=parseFloat(avg(v.cur));return a>=7&&a<8});
+  else if(activeFilter==="tier3")filtered=views.filter(v=>{const a=parseFloat(avg(v.cur));return a>=8&&a<9});
+  else if(activeFilter==="done")filtered=views.filter(v=>parseFloat(avg(v.cur))>=9);
+
+  // Sort by current avg
+  filtered=[...filtered].sort((a,b)=>parseFloat(avg(a.cur))-parseFloat(avg(b.cur)));
+
+  let html="";
+  let lastTier="";
+  filtered.forEach(v=>{
+    const ca=parseFloat(avg(v.cur)),ta=parseFloat(avg(v.tgt));
+    let tier=ca<7?"tier1":ca<8?"tier2":ca<9?"tier3":"done";
+    const tierNames={tier1:"Tier 1: Critical Redesigns",tier2:"Tier 2: Feature Completions",tier3:"Tier 3: Polish",done:"Already at 9+"};
+    const tierDescs={tier1:"Views below 7.0 — need major work for an acceptable experience.",tier2:"Views 7.0-7.9 — missing key features that users expect.",tier3:"Views 8.0-8.9 — close to excellent, needs small additions.",done:"No further work needed."};
+    const tierColors={tier1:"var(--negative)",tier2:"var(--warning)",tier3:"var(--info)",done:"var(--positive)"};
+
+    if(tier!==lastTier && activeFilter==="all"){
+      lastTier=tier;
+      html+=`<div class="tier-header"><div class="tier-title">${tierNames[tier]} <span class="tier-badge" style="background:${tierColors[tier]}20;color:${tierColors[tier]}">${filtered.filter(vv=>{const a=parseFloat(avg(vv.cur));return tier==="tier1"?a<7:tier==="tier2"?(a>=7&&a<8):tier==="tier3"?(a>=8&&a<9):a>=9}).length} views</span></div><div class="tier-desc">${tierDescs[tier]}</div></div>`;
+    }
+
+    const isDone=v.effort==="done";
+    const effortCls=v.effort==="lg"?"effort-lg":v.effort==="md"?"effort-md":"effort-sm";
+
+    html+=`<div class="card" id="view-${v.id}">
+      <div class="card-header" onclick="toggle(${v.id})">
+        <span class="card-num">#${v.id}</span>
+        <span class="card-name">${v.name}<span class="card-route">${v.route}</span></span>
+        ${v.ws!=="—"?`<span class="card-ws" style="background:var(--accent-dim);color:var(--accent)">${v.ws}</span>`:''}
+        ${!isDone?`<span class="card-effort ${effortCls}">${v.effort==="lg"?"Large":v.effort==="md"?"Medium":"Small"}</span>`:`<span class="done-badge">Done</span>`}
+        <div class="card-scores">
+          ${ca!==ta?`<span class="sc sc-old ${sc(ca)}">${ca.toFixed(1)}</span><span class="sc-arrow">→</span>`:''}
+          <span class="sc ${sc(ta)} ${ca!==ta?'sc-target':''}">${ta.toFixed(1)}</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+      </div>
+      ${v.state?`<div class="card-detail">
+        <div class="detail-grid">
+          <div class="detail-left">
+            <div class="detail-section">
+              <h4>Current State</h4>
+              <div class="current-state">${v.state}</div>
+            </div>
+            ${v.issues.length?`<div class="detail-section">
+              <h4>What's Wrong</h4>
+              <ul class="issue-list">
+                ${v.issues.map(i=>`<li class="issue-item"><span class="issue-tag tag-${i[0]}">${i[0]}</span><span>${i[1]}</span></li>`).join("")}
+              </ul>
+            </div>`:''}
+            <div class="score-bars">
+              <div class="score-bar">
+                <div class="score-bar-label"><span>UI</span><span>${v.cur[0]}→${v.tgt[0]}</span></div>
+                <div class="score-bar-track">
+                  <div class="score-bar-old" style="width:${v.cur[0]*10}%;background:${barCol(v.cur[0])}"></div>
+                  <div class="score-bar-new" style="width:${v.tgt[0]*10}%;background:${barCol(v.tgt[0])}"></div>
+                </div>
+              </div>
+              <div class="score-bar">
+                <div class="score-bar-label"><span>UX</span><span>${v.cur[1]}→${v.tgt[1]}</span></div>
+                <div class="score-bar-track">
+                  <div class="score-bar-old" style="width:${v.cur[1]*10}%;background:${barCol(v.cur[1])}"></div>
+                  <div class="score-bar-new" style="width:${v.tgt[1]*10}%;background:${barCol(v.tgt[1])}"></div>
+                </div>
+              </div>
+              <div class="score-bar">
+                <div class="score-bar-label"><span>Func</span><span>${v.cur[2]}→${v.tgt[2]}</span></div>
+                <div class="score-bar-track">
+                  <div class="score-bar-old" style="width:${v.cur[2]*10}%;background:${barCol(v.cur[2])}"></div>
+                  <div class="score-bar-new" style="width:${v.tgt[2]*10}%;background:${barCol(v.tgt[2])}"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="detail-right">
+            ${v.changes.length?`<div class="detail-section">
+              <h4>What Will Change</h4>
+              ${v.changes.map(c=>`<div class="change-item">
+                <div class="change-title"><span class="issue-tag tag-add">add</span>${c.t}</div>
+                <div class="change-desc">${c.d}</div>
+                <div class="change-file">${c.f}</div>
+              </div>`).join("")}
+            </div>`:`<div class="detail-section"><h4>Status</h4><p style="font-size:13px;color:var(--positive)">No changes needed — already at target score.</p></div>`}
+            ${v.files.length?`<div class="detail-section" style="margin-top:12px">
+              <h4>Files Touched</h4>
+              ${v.files.map(f=>`<div style="font-family:monospace;font-size:11px;color:var(--accent);padding:2px 0">${f}</div>`).join("")}
+            </div>`:''}
+          </div>
+        </div>
+      </div>`:''}
+    </div>`;
+  });
+
+  document.getElementById("content").innerHTML=html;
+}
+
+function toggle(id){document.getElementById("view-"+id)?.classList.toggle("open")}
+function scrollTo(id){
+  activeFilter="all";renderFilters();renderContent();
+  setTimeout(()=>{
+    const el=document.getElementById("view-"+id);
+    if(el){el.scrollIntoView({behavior:"smooth",block:"start"});el.classList.add("open")}
+  },50);
+}
+function setFilter(f){activeFilter=f;renderFilters();renderContent();}
+
+renderSidebar();renderSummary();renderFilters();renderContent();
+</script>
+</body>
+</html>

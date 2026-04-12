@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { truncateAddress } from "@/lib/utils";
+import { fullWalletTeardown } from "@/lib/walletConnectCleanup";
 
 export function PendingExpertShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,6 +18,7 @@ export function PendingExpertShell({ children }: { children: React.ReactNode }) 
   const handleDisconnect = () => {
     auth.logout();
     disconnect();
+    fullWalletTeardown();
     router.push("/?section=experts");
   };
 

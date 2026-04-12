@@ -42,7 +42,7 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* ═══ BENTO GRID ═══ */}
-      <div className={`grid grid-cols-1 ${isMember ? "md:grid-cols-[1fr_340px]" : ""} gap-3 mb-3`}>
+      <div className={`grid grid-cols-1 ${isMember ? "md:grid-cols-[1fr_minmax(0,340px)]" : ""} gap-3 mb-3`}>
 
         {/* ── Identity + Description (left, spans 2 rows) ── */}
         <div className="md:row-span-2 relative overflow-hidden rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up">

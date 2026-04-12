@@ -1,3 +1,5 @@
+export type SlashingTier = "severe" | "moderate" | "mild" | "aligned" | "neutral";
+
 // --- Guild Application Flow types (used by GuildApplicationFlow component) ---
 
 export interface GuildApplicationGuild {
@@ -125,6 +127,8 @@ export interface GuildApplication {
   alignment_distance?: number;
   my_reputation_change?: number;
   my_reward_amount?: number;
+  my_slashing_tier?: SlashingTier;
+  my_slash_percent?: number;
   // Item type: "proposal" (Schelling voting), "guild_application" (candidate membership), or "expert_application" (expert membership)
   item_type?: "proposal" | "guild_application" | "expert_application";
   // Consensus failure / tiebreaker fields
@@ -176,7 +180,7 @@ export interface VoteHistoryItem {
   alignment_distance?: number;
   reputation_change?: number;
   reward_amount?: number;
-  slashing_tier?: string;
+  slashing_tier?: SlashingTier;
   comment?: string;
   created_at: string;
 }

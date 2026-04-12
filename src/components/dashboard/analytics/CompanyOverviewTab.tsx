@@ -1,20 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { AnalyticsKPI, type KPIData } from "@/components/analytics/AnalyticsKPI";
+import { AnalyticsKPI } from "@/components/analytics/AnalyticsKPI";
 import { AreaChart } from "@/components/analytics/AreaChart";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface OverviewData {
-  kpis?: KPIData[];
-  applicationsOverTime?: { label: string; apps: number; hires: number }[];
-}
 
 // ── Component ─────────────────────────────────────────────────
 
@@ -28,7 +21,7 @@ export function CompanyOverviewTab({ period }: Props) {
     {}
   );
 
-  const data = rawData as OverviewData | null;
+  const data = rawData;
 
   const chartData = useMemo(() => {
     if (!data?.applicationsOverTime) return [];
@@ -60,9 +53,9 @@ export function CompanyOverviewTab({ period }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load analytics"
+        description="Something went wrong loading your analytics data. Please try again."
       />
     );
   }

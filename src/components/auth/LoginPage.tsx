@@ -10,12 +10,14 @@ import {
   Info,
 } from "lucide-react";
 import Image from "next/image";
-import { useAccount, useConnect } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { useAccount, useAccountEffect } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { candidateApi, companyApi, expertApi, ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { clearTokenAuthState } from "@/lib/auth";
+import { clearWalletConnectState } from "@/lib/walletConnectCleanup";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { isRecentExplicitLogout } from "@/contexts/AuthContext";
 import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useApi } from "@/lib/hooks/useFetch";
@@ -43,10 +45,7 @@ function LoginForm() {
   const userType: UserType = typeParam === "company" ? "company" : typeParam === "expert" ? "expert" : "candidate";
   const auth = useAuthContext();
   const { address, isConnected } = useAccount();
-  const { connectAsync, connectors: allConnectors } = useConnect();
-  const connectors = allConnectors.filter(
-    (c) => c.id === "metaMaskSDK" || c.id === "metaMask" || c.id === "coinbaseWalletSDK"
-  );
+  const { openConnectModal } = useConnectModal();
   const [mounted, setMounted] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -74,29 +73,55 @@ function LoginForm() {
         auth.login("", "expert", profile.id, profile.email, walletAddress);
         localStorage.setItem("expertId", profile.id);
         localStorage.setItem("expertStatus", "approved");
-        router.push("/expert/dashboard");
-      } else if (profile.status === "pending") {
+        router.push(redirectUrl || "/expert/dashboard");
+      } else if (profile.status === "pending" || profile.status === "rejected") {
+        // Both in-progress ("pending") and terminal rejection share the same
+        // status page — ApplicationPendingPage renders a different variant
+        // based on profile.status. Log the user in so the page can fetch
+        // their profile via expertApi.getProfile.
         auth.login("", "expert", profile.id, profile.email, walletAddress);
-        localStorage.setItem("expertStatus", "pending");
+        localStorage.setItem("expertStatus", profile.status);
         router.push("/expert/application-pending");
       } else {
         router.push("/expert/apply");
       }
     } catch (apiError) {
-      if (apiError instanceof ApiError && apiError.status === 404) {
-        auth.logout();
-        router.push("/expert/apply");
+      logger.error("Expert login failed", apiError, { component: "LoginPage" });
+
+      if (apiError instanceof ApiError) {
+        if (apiError.status === 404) {
+          // Expert doesn't exist yet — send them to the application flow
+          auth.logout();
+          router.push("/expert/apply");
+          return;
+        }
+        if (apiError.status === 403) {
+          // Suspended / banned / truly blocked accounts
+          setError(
+            "Your expert account is not active. Please contact support if you think this is a mistake."
+          );
+          return;
+        }
+        setError(
+          `Failed to verify expert status: ${apiError.message || apiError.statusText} (${apiError.status})`
+        );
         return;
       }
-      setError("Failed to verify expert status. Please try again.");
+      const message = apiError instanceof Error ? apiError.message : "Unknown error";
+      setError(`Failed to verify expert status. ${message}`);
     }
   };
 
   handleExpertLoginRef.current = handleExpertLogin;
 
+  // Auto-login when wallet is already connected on mount (e.g. returning user).
+  // Skipped if the user JUST clicked Disconnect — we want them to pick a wallet
+  // explicitly instead of silently reconnecting to the same one.
   useMountEffect(() => {
     clearTokenAuthState();
     setMounted(true);
+
+    if (isRecentExplicitLogout()) return;
 
     const timer = setTimeout(() => {
       if (userType === "expert" && !autoLoginAttempted.current && isConnected && address) {
@@ -107,24 +132,57 @@ function LoginForm() {
     return () => clearTimeout(timer);
   });
 
-  const handleWalletConnect = async (connectorId: string) => {
-    const connector = connectors.find((c) => c.id === connectorId);
-    if (!connector) return;
+  // Auto-login when a fresh wallet connection completes via the RainbowKit modal.
+  // Same logout-guard applies — if the user explicitly disconnected, the modal
+  // must be opened manually by them, not auto-fired from a stale session.
+  useAccountEffect({
+    onConnect: ({ address: connectedAddress }) => {
+      if (isRecentExplicitLogout()) return;
+      if (userType === "expert" && !autoLoginAttempted.current && connectedAddress) {
+        autoLoginAttempted.current = true;
+        handleExpertLoginRef.current?.(connectedAddress);
+      }
+    },
+  });
 
+  // RainbowKit's useConnectModal returns undefined until its provider context
+  // finishes initializing. Treat the provider as "ready" only once we're past
+  // mount AND openConnectModal exists — OR the user already has a connected
+  // wallet (in which case we'll retry login directly, no modal needed).
+  const isWalletProviderReady = mounted && (!!openConnectModal || (isConnected && !!address));
+
+  const handleOpenWalletModal = () => {
     setError("");
     clearTokenAuthState();
+    // Reset so useAccountEffect can re-trigger login after disconnect + reconnect
+    autoLoginAttempted.current = false;
+
+    // If wallet is already connected, just retry the login directly instead of
+    // opening the modal (which would only show the already-connected state)
+    if (isConnected && address) {
+      autoLoginAttempted.current = true;
+      handleExpertLogin(address);
+      return;
+    }
+
+    if (!openConnectModal) {
+      setError("Wallet provider is still initializing. Please wait a moment and try again.");
+      return;
+    }
 
     try {
-      if (isConnected && address) {
-        await handleExpertLogin(address);
-        return;
-      }
-      const result = await connectAsync({ connector, chainId: sepolia.id });
-      await handleExpertLogin(result.accounts[0]);
-    } catch (error) {
-      logger.error("Failed to connect wallet", error, { silent: true });
-      setError("Failed to connect wallet. Please try again.");
+      openConnectModal();
+    } catch (err) {
+      logger.error("Failed to open wallet modal", err, { silent: true });
+      setError("Failed to open wallet connection dialog. Please try again.");
     }
+  };
+
+  const handleForceResetWalletState = () => {
+    const { keysCleared } = clearWalletConnectState();
+    logger.info(`Cleared ${keysCleared} WalletConnect state keys`);
+    // Full reload lets wagmi + RainbowKit re-initialize from scratch
+    window.location.reload();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -269,61 +327,41 @@ function LoginForm() {
                     Experts authenticate with their Web3 wallet. No email or password required.
                   </p>
 
-                  <div className="space-y-3 mb-6">
-                    {mounted && connectors.map((connector) => (
+                  {!mounted ? (
+                    // SSR / pre-hydration skeleton — prevents hydration mismatch
+                    <div className="w-full h-[54px] mb-6 rounded-xl bg-muted/30 animate-pulse" />
+                  ) : isWalletProviderReady ? (
+                    <button
+                      type="button"
+                      onClick={handleOpenWalletModal}
+                      className="w-full flex items-center justify-center gap-3 px-4 py-3.5 mb-6 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
+                    >
+                      <Wallet className="w-5 h-5" />
+                      {isConnected && address ? "Continue with Connected Wallet" : "Connect Wallet"}
+                    </button>
+                  ) : (
+                    // RainbowKit modal context not ready yet — show loading state
+                    // with an escape hatch for users stuck in this state
+                    <div className="mb-6 space-y-2">
+                      <div className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl bg-muted/40 text-muted-foreground text-sm font-bold">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Initializing wallet provider...
+                      </div>
                       <button
-                        key={connector.id}
                         type="button"
-                        onClick={() => handleWalletConnect(connector.id)}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground transition-all hover:-translate-y-px group"
-                        style={
-                          connector.name === "MetaMask"
-                            ? { ["--hover-border" as string]: "rgba(226,118,27,0.5)" }
-                            : { ["--hover-border" as string]: "rgba(0,82,255,0.5)" }
-                        }
+                        onClick={handleForceResetWalletState}
+                        className="text-xs text-muted-foreground/70 hover:text-primary transition-colors underline"
                       >
-                        {connector.name === "MetaMask" ? (
-                          <>
-                            <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 318 318" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M274.1 35.5l-99.5 73.9L193 65.8z" fill="#E2761B" stroke="#E2761B" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M44.4 35.5l98.7 74.6-17.5-44.3zm193.9 171.3l-26.5 40.6 56.7 15.6 16.3-55.3zm-204.4.9L50.1 263l56.7-15.6-26.5-40.6z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M103.6 138.2l-15.8 23.9 56.3 2.5-2-60.5zm111.3 0l-39-34.8-1.3 61.2 56.2-2.5zM106.8 247.4l33.8-16.5-29.2-22.8zm71.1-16.5l33.9 16.5-4.7-39.3z" fill="#E4761B" stroke="#E4761B" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M211.8 247.4l-33.9-16.5 2.7 22.1-.3 9.3zm-105 0l31.5 14.9-.2-9.3 2.5-22.1z" fill="#D7C1B3" stroke="#D7C1B3" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M138.8 193.5l-28.2-8.3 19.9-9.1zm40.9 0l8.3-17.4 20 9.1z" fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M106.8 247.4l4.8-40.6-31.3.9zM206.9 206.8l4.9 40.6 26.4-39.7zm23.8-44.7l-56.2 2.5 5.2 28.9 8.3-17.4 20 9.1zm-120.2 23.1l20-9.1 8.2 17.4 5.3-28.9-56.3-2.5z" fill="#CD6116" stroke="#CD6116" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M87.8 162.1l23.6 46-.8-22.9zm120.3 23.1l-1 22.9 23.7-46zm-64-20.6l-5.3 28.9 6.6 34.1 1.5-44.9zm30.5 0l-2.7 18 1.2 45 6.7-34.1z" fill="#E4751F" stroke="#E4751F" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M179.8 193.5l-6.7 34.1 4.8 3.3 29.2-22.8 1-22.9zm-69.2-8.3l.8 22.9 29.2 22.8 4.8-3.3-6.6-34.1z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M180.3 262.3l.3-9.3-2.5-2.2h-37.7l-2.3 2.2.2 9.3-31.5-14.9 11 9 22.3 15.5h38.3l22.4-15.5 11-9z" fill="#C0AD9E" stroke="#C0AD9E" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M177.9 230.9l-4.8-3.3h-27.7l-4.8 3.3-2.5 22.1 2.3-2.2h37.7l2.5 2.2z" fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M278.3 114.2l8.5-40.8-12.7-37.9-96.2 71.4 37 31.3 52.3 15.3 11.6-13.5-5-3.6 8-7.3-6.2-4.8 8-6.1zM31.8 73.4l8.5 40.8-5.4 4 8 6.1-6.1 4.8 8 7.3-5 3.6 11.5 13.5 52.3-15.3 37-31.3L44.4 35.5z" fill="#763D16" stroke="#763D16" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M267.2 153.5l-52.3-15.3 15.9 23.9-23.7 46 31.2-.4h46.5zm-163.6-15.3l-52.3 15.3-17.4 54.2h46.4l31.1.4-23.6-46zm71 26.4l3.3-57.7 15.2-41.1h-67.5l15 41.1 3.5 57.7 1.2 18.2.1 44.8h27.7l.2-44.8z" fill="#F6851B" stroke="#F6851B" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            MetaMask
-                          </>
-                        ) : connector.name === "Coinbase Wallet" ? (
-                          <>
-                            <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                              <rect width="1024" height="1024" rx="200" fill="#0052FF"/>
-                              <path d="M512 692c-99.4 0-180-80.6-180-180s80.6-180 180-180 180 80.6 180 180-80.6 180-180 180z" fill="#fff"/>
-                              <path d="M440 468h144v88H440z" fill="#0052FF"/>
-                            </svg>
-                            Coinbase Wallet
-                          </>
-                        ) : (
-                          <>
-                            <Wallet className="w-5 h-5 text-muted-foreground" />
-                            {connector.name}
-                          </>
-                        )}
+                        Taking too long? Reset and try again
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Wallet note */}
                   <div className="flex items-start gap-2 p-4 bg-primary/[0.04] border border-primary/10 rounded-lg text-left">
                     <Info className="w-4 h-4 text-primary/70 flex-shrink-0 mt-0.5" />
                     <span className="text-xs text-muted-foreground leading-relaxed">
-                      Expert accounts are wallet-based only. Your on-chain reputation and guild membership are tied directly to your wallet address.
+                      Expert accounts are wallet-based only. Your on-chain reputation and guild membership are tied directly to your wallet address. Supports MetaMask, Coinbase, Rainbow, Trust, and 300+ wallets via WalletConnect.
                     </span>
                   </div>
                 </div>

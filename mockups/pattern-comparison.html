@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted — Pattern Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e0f12;
+    --bg-card: #16171c;
+    --border: rgba(255,255,255,0.06);
+    --text: #e8e6e3;
+    --text-muted: #7a7a7a;
+    --primary: #ff6a00;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #000; color: var(--text); }
+  .display { font-family: 'Bricolage Grotesque', serif; }
+
+  .option-label {
+    position: absolute; top: 16px; left: 16px; z-index: 20;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 10px 18px; border-radius: 10px;
+    font-size: 14px; font-weight: 700; color: white;
+  }
+  .option-label span { color: var(--primary); }
+  .option-desc {
+    position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 20;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 12px; color: var(--text-muted); line-height: 1.6;
+  }
+  .option-desc strong { color: var(--text); }
+
+  .dashboard-sim {
+    position: relative;
+    width: 100%; min-height: 720px;
+    overflow: hidden;
+    border-bottom: 3px solid rgba(255,106,0,0.15);
+  }
+
+  .dash-content {
+    position: relative; z-index: 10;
+    padding: 32px 40px;
+  }
+  .breadcrumb { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .breadcrumb strong { color: var(--text); }
+
+  .stat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 28px;
+  }
+  .stat-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .stat-card p { font-size: 13px; color: var(--text-muted); }
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px;
+  }
+  .stats-row .stat { padding: 8px 0; border-right: 1px solid var(--border); }
+  .stats-row .stat:last-child { border-right: none; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-weight: 700; }
+
+  .tabs {
+    display: flex; gap: 24px; margin: 28px 0 20px;
+    border-bottom: 1px solid var(--border); padding-bottom: 12px;
+  }
+  .tabs span { font-size: 13px; color: var(--text-muted); }
+  .tabs span.active { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: -12px; }
+
+  .review-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .review-card .name { font-weight: 600; font-size: 14px; }
+  .review-card .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .review-card .action { color: var(--primary); font-size: 13px; font-weight: 600; }
+  .review-card .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    background: rgba(255,106,0,0.1); color: var(--primary); margin-left: 8px;
+  }
+
+  .page-header { text-align: center; padding: 60px 24px 40px; }
+  .page-header h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+  .page-header h1 span { color: var(--primary); }
+  .page-header p { color: var(--text-muted); font-size: 14px; max-width: 500px; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1 class="display">Pattern <span>Comparison</span></h1>
+  <p>Two pattern sources, multiple sizes and masks. Scroll to compare all variations side by side.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     1. SQUARE PATTERN — Full tile, small repeat
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>1</span> &mdash; Square Pattern &middot; 540px tile &middot; 6%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: 540px 540px;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 0.06;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Square pattern (BackGround.svg)</strong> — 1080x1080, tiled at 540px. Denser, more intricate shapes. Seamless tiling.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     2. SQUARE PATTERN — Full tile, large (1:1)
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>2</span> &mdash; Square Pattern &middot; 1080px tile &middot; 6%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: 1080px 1080px;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 0.06;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Square pattern at native 1:1 size.</strong> Bigger shapes, more breathing room. Less busy than the smaller tile.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     3. SQUARE PATTERN — Centered, no repeat
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>3</span> &mdash; Square Pattern &middot; Single centered &middot; 8%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.08;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Single instance, cover, no repeat.</strong> Pattern stretches to fill. Each page shows a different "slice" of the pattern as you scroll. No tiling seams.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     4. WIDE PATTERN — Full tile, 600px
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>4</span> &mdash; Wide Pattern &middot; 600px tile &middot; 6%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-dark-overlay.svg);
+    background-size: 600px auto;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 0.06;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Wide pattern (pattern-dark.svg)</strong> — 1200x630 landscape, tiled at 600px. The original login page pattern. More horizontal, rectangular shapes.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     5. SQUARE PATTERN — Top fade + edge vignette
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>5</span> &mdash; Square Pattern &middot; Edges + top fade &middot; 10%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: 540px 540px;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 0.10;
+    mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.3) 80%, black 100%),
+                linear-gradient(to right, black 0%, rgba(0,0,0,0.1) 20%, rgba(0,0,0,0.1) 80%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.3) 80%, black 100%),
+                        linear-gradient(to right, black 0%, rgba(0,0,0,0.1) 20%, rgba(0,0,0,0.1) 80%, black 100%);
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Square pattern with edge emphasis.</strong> Visible at edges and top/bottom, fades in the content zone. Frames the content without cluttering it.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     6. SQUARE PATTERN — Full tile, higher opacity
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>6</span> &mdash; Square Pattern &middot; 540px tile &middot; 12% (bold)</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: 540px 540px;
+    background-repeat: repeat;
+    background-position: center;
+    opacity: 0.12;
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Same square pattern, bolder at 12%.</strong> Like the screenshot you showed earlier. Very visible brand presence. Might be too strong for daily use.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     7. SQUARE PATTERN — Full cover, no repeat + warm glow
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>7</span> &mdash; Square Pattern &middot; Cover + orange glow &middot; 7%</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background-image: url(../public/pattern-square-dark.svg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.07;
+  "></div>
+  <div style="position:absolute;inset:0;z-index:2;pointer-events:none;
+    background: radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255,106,0,0.06), transparent 70%);
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>Cover (no repeat) + warm glow.</strong> Pattern fills the viewport as one big image. No tiling seams. Orange glow adds warmth. Most premium feel.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     8. NO PATTERN — Baseline
+     ═══════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>8</span> &mdash; No pattern (baseline)</div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,106,0,0.04), transparent 50%),
+                linear-gradient(180deg, var(--bg), rgba(255,255,255,0.015) 100%);
+  "></div>
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2><p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs"><span>Expert Reviews</span><span class="active">Candidate Reviews</span><span>Proposals</span><span>History</span></div>
+    <div class="review-card"><div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+    <div class="review-card"><div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; Pending</div></div><div class="action">Review &rarr;</div></div>
+  </div>
+  <div class="option-desc"><strong>No pattern — current state.</strong> Just the existing gradient. Compare against the others.</div>
+</div>
+
+<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; line-height: 1.7;">
+  8 options. Square = BackGround.svg (1080x1080, denser). Wide = pattern-dark.svg (1200x630, sparser).<br>
+  Pick a number and I'll implement it.
+</div>
+
+</body>
+</html>

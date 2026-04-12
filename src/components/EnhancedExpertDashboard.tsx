@@ -469,7 +469,7 @@ export function EnhancedExpertDashboard() {
           </div>
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 min-w-0">
           <RecentActivity activities={profile?.recentActivity ?? []} />
           <SlimNotificationsFeed walletAddress={address!} />
         </div>

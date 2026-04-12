@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { companyApi, blockchainApi } from "@/lib/api";
+import { companyApi, blockchainApi, matchingApi } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useDebounce } from "@/lib/hooks/useDebounce";
@@ -28,6 +29,8 @@ export default function CandidatesPage() {
   const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
   const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
   const [endorsementData, setEndorsementData] = useState<Map<string, EndorsementStats>>(new Map());
+  const [topEndorserData, setTopEndorserData] = useState<Map<string, string>>(new Map());
+  const [viewMode, setViewMode] = useState<"priority" | "byjob">("priority");
 
   // Load candidates first, then fetch endorsements in background
   const { isLoading } = useFetch(
@@ -57,7 +60,23 @@ export default function CandidatesPage() {
     (async () => {
       const endorsements = new Map<string, EndorsementStats>();
       const pairEntries = Array.from(uniquePairs.entries());
-      for (let i = 0; i < pairEntries.length; i += 10) {
+      if (pairEntries.length === 0) return;
+
+      // Probe with a single request first — if the endpoint is down, don't spam the console
+      const [probeKey, { jobId: probeJobId, candidateId: probeCandidateId }] = pairEntries[0];
+      try {
+        const probeStats = await blockchainApi.getEndorsementStats(probeJobId, probeCandidateId);
+        if (probeStats.totalEndorsements > 0) {
+          endorsements.set(probeKey, probeStats);
+        }
+      } catch {
+        // Endpoint is unavailable — skip all endorsement fetches
+        logger.warn("Endorsement stats endpoint unavailable, skipping");
+        return;
+      }
+
+      // Probe succeeded, fetch the rest in batches (start at 1 to skip the probe)
+      for (let i = 1; i < pairEntries.length; i += 10) {
         const batch = pairEntries.slice(i, i + 10);
         const results = await Promise.allSettled(
           batch.map(([key, { jobId, candidateId }]) =>
@@ -71,6 +90,28 @@ export default function CandidatesPage() {
         }
       }
       setEndorsementData(endorsements);
+
+      // Fetch top endorser names for candidates that have endorsements
+      const endorserNames = new Map<string, string>();
+      const endorsedKeys = Array.from(endorsements.keys());
+      for (let i = 0; i < endorsedKeys.length; i += 5) {
+        const batch = endorsedKeys.slice(i, i + 5);
+        const results = await Promise.allSettled(
+          batch.map((key) => {
+            const [jobId, candidateId] = key.split(":");
+            return blockchainApi.getTopEndorsements(jobId, candidateId).then((endorsers) => ({
+              key,
+              name: endorsers[0]?.expertName,
+            }));
+          })
+        );
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value.name) {
+            endorserNames.set(result.value.key, result.value.name);
+          }
+        }
+      }
+      setTopEndorserData(endorserNames);
     })();
   }, [allApplications]);
 
@@ -79,6 +120,47 @@ export default function CandidatesPage() {
       return endorsementData.get(`${app.jobId}:${app.candidateId}`)?.totalEndorsements ?? 0;
     },
     [endorsementData]
+  );
+
+  const getTopEndorserName = useCallback(
+    (app: CompanyApplication): string | undefined => {
+      return topEndorserData.get(`${app.jobId}:${app.candidateId}`);
+    },
+    [topEndorserData]
+  );
+
+  // Lift match score fetching from CandidateJobGroup so both views can use it
+  const [matchScoreData, setMatchScoreData] = useState<Map<string, number>>(new Map());
+  const matchScoresFetched = useRef(false);
+
+  // eslint-disable-next-line no-restricted-syntax -- background fetch after initial data load
+  useEffect(() => {
+    if (allApplications.length === 0 || matchScoresFetched.current) return;
+    matchScoresFetched.current = true;
+
+    const uniqueJobIds = [...new Set(allApplications.map((a) => a.jobId))];
+
+    (async () => {
+      const scores = new Map<string, number>();
+      for (const jobId of uniqueJobIds) {
+        try {
+          const matches = await matchingApi.getTopMatches(jobId, 50);
+          for (const m of matches) {
+            scores.set(`${jobId}:${m.candidateId}`, m.score);
+          }
+        } catch {
+          logger.warn(`Match scores unavailable for job ${jobId}`);
+        }
+      }
+      setMatchScoreData(scores);
+    })();
+  }, [allApplications]);
+
+  const getMatchScore = useCallback(
+    (app: CompanyApplication): number | undefined => {
+      return matchScoreData.get(`${app.jobId}:${app.candidateId}`);
+    },
+    [matchScoreData]
   );
 
   const { updateStatus, isLoading: isUpdatingStatus } = useApplicationStatusUpdate();
@@ -146,6 +228,52 @@ export default function CandidatesPage() {
       })
       .filter(Boolean) as GroupedJob[];
   }, [groupedJobs, debouncedSearch, filterStatus, filterGuild]);
+
+  // Priority view: split applications into three groups
+  const prioritySections = useMemo(() => {
+    const inProgress = allApplications.filter(
+      (a) => a.status === "reviewing" || a.status === "interviewed"
+    );
+
+    const topPicks = allApplications.filter(
+      (a) =>
+        a.status === "pending" &&
+        (endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0) > 0
+    );
+    // Sort by endorsement count descending
+    topPicks.sort((a, b) => {
+      const aCount = endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0;
+      const bCount = endorsementData.get(`${b.jobId}:${b.candidateId}`)?.totalEndorsements ?? 0;
+      return bCount - aCount;
+    });
+
+    const topPickIds = new Set(topPicks.map((a) => a.id));
+    const newCandidates = allApplications
+      .filter((a) => a.status === "pending" && !topPickIds.has(a.id))
+      .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
+
+    return { inProgress, topPicks, newCandidates };
+  }, [allApplications, endorsementData]);
+
+  // Apply search/filter to priority sections
+  const filteredPrioritySections = useMemo(() => {
+    const filterApp = (app: CompanyApplication) => {
+      const matchesSearch =
+        !debouncedSearch ||
+        app.candidate.fullName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        app.candidate.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        app.job.title.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesStatus = filterStatus === "all" || app.status === filterStatus;
+      const matchesGuild = filterGuild === "all" || app.job.guild === filterGuild;
+      return matchesSearch && matchesStatus && matchesGuild;
+    };
+
+    return {
+      inProgress: prioritySections.inProgress.filter(filterApp),
+      topPicks: prioritySections.topPicks.filter(filterApp),
+      newCandidates: prioritySections.newCandidates.filter(filterApp),
+    };
+  }, [prioritySections, debouncedSearch, filterStatus, filterGuild]);
 
   // Auto-expand all groups whenever the filtered list changes
   // eslint-disable-next-line no-restricted-syntax -- sync expanded state with filter changes
@@ -298,6 +426,7 @@ export default function CandidatesPage() {
               onFilterChange={setFilterStatus}
               isLoading={isLoading}
               getEndorsementCount={getEndorsementCount}
+              getTopEndorserName={getTopEndorserName}
               uniqueGuilds={uniqueGuilds}
               filterGuild={filterGuild}
               onGuildFilterChange={setFilterGuild}
@@ -307,6 +436,13 @@ export default function CandidatesPage() {
               onToggleJob={handleToggleJob}
               onExpandAll={handleExpandAll}
               onCollapseAll={handleCollapseAll}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              priorityInProgress={filteredPrioritySections.inProgress}
+              priorityTopPicks={filteredPrioritySections.topPicks}
+              priorityNew={filteredPrioritySections.newCandidates}
+              getMatchScore={getMatchScore}
+              onStatusChange={handleStatusChange}
             />
           </div>
 

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted — Dashboard Background Pattern Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e0f12;
+    --bg-card: #16171c;
+    --border: rgba(255,255,255,0.06);
+    --text: #e8e6e3;
+    --text-muted: #7a7a7a;
+    --primary: #ff6a00;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #000; color: var(--text); }
+  .display { font-family: 'Bricolage Grotesque', serif; }
+
+  .option-label {
+    position: absolute; top: 16px; left: 16px; z-index: 20;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 16px; border-radius: 10px;
+    font-size: 13px; font-weight: 700; color: white;
+  }
+  .option-label span { color: var(--primary); }
+  .option-desc {
+    position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 20;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 12px; color: var(--text-muted); line-height: 1.5;
+  }
+
+  /* Simulated dashboard content */
+  .dashboard-sim {
+    position: relative;
+    width: 100%; height: 700px;
+    overflow: hidden;
+    border-bottom: 2px solid rgba(255,255,255,0.05);
+  }
+
+  .dash-content {
+    position: relative; z-index: 10;
+    padding: 32px 40px;
+  }
+
+  .breadcrumb {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+  }
+  .breadcrumb strong { color: var(--text); }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 28px;
+  }
+  .stat-card h2 {
+    font-size: 20px; font-weight: 700; margin-bottom: 4px;
+  }
+  .stat-card p { font-size: 13px; color: var(--text-muted); }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border);
+    margin-top: 16px; padding-top: 16px;
+  }
+  .stats-row .stat {
+    padding: 8px 0;
+    border-right: 1px solid var(--border);
+  }
+  .stats-row .stat:last-child { border-right: none; }
+  .stats-row .stat-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  .stats-row .stat-value {
+    font-size: 24px; font-weight: 700;
+  }
+
+  .tabs {
+    display: flex; gap: 24px; margin: 28px 0 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+  .tabs span {
+    font-size: 13px; color: var(--text-muted); cursor: pointer;
+  }
+  .tabs span.active { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: -12px; }
+
+  .review-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .review-card .name { font-weight: 600; font-size: 14px; }
+  .review-card .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .review-card .action { color: var(--primary); font-size: 13px; font-weight: 600; }
+  .review-card .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    background: rgba(255,106,0,0.1); color: var(--primary);
+    margin-left: 8px;
+  }
+  .pending { color: var(--primary); font-size: 12px; }
+
+  /* Pattern using the actual SVG file */
+  .pattern-layer {
+    position: absolute; inset: 0; z-index: 1;
+    background-image: url(../public/pattern-dark-overlay.svg);
+    background-size: 600px auto;
+    background-repeat: repeat;
+    background-position: center;
+  }
+
+  .page-header {
+    text-align: center;
+    padding: 60px 24px 40px;
+  }
+  .page-header h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px; }
+  .page-header h1 span { color: var(--primary); }
+  .page-header p { color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1 class="display">Background <span>Pattern</span> Options</h1>
+  <p>6 different approaches — pick what feels right</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION A: Very subtle, full tile (current but lower)
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>A</span> &mdash; Ultra-subtle full tile (4%)</div>
+
+  <div class="pattern-layer" style="opacity: 0.04;"></div>
+
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">Very faint texture — you feel it more than see it. Pattern at 4% opacity, full repeat. Minimal visual noise.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION B: Top fade only (hero zone)
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>B</span> &mdash; Top fade only (hero zone, 8%)</div>
+
+  <div class="pattern-layer" style="opacity: 0.08;
+    mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,0.4) 30%, transparent 50%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,0.4) 30%, transparent 50%);
+  "></div>
+
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">Pattern fades in at the top (8%) and disappears by mid-page. Gives the header area brand identity without cluttering the content zone.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION C: Edges only (vignette)
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>C</span> &mdash; Edge vignette (10%)</div>
+
+  <div class="pattern-layer" style="opacity: 0.10;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, transparent 40%, black 100%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, transparent 40%, black 100%);
+  "></div>
+
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">Pattern only shows at the edges/corners. Center content area stays clean. Gives a "framed" feel — like looking through a window.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION D: Bottom-right corner accent
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>D</span> &mdash; Corner accent (bottom-right, 12%)</div>
+
+  <div class="pattern-layer" style="opacity: 0.12;
+    mask-image: radial-gradient(ellipse 50% 60% at 90% 90%, black 0%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 50% 60% at 90% 90%, black 0%, transparent 70%);
+  "></div>
+
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">Pattern concentrated in the bottom-right corner at higher intensity. Most of the page stays clean — gives a subtle "watermark" brand presence in empty space.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION E: Full tile, lower opacity + warm glow
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>E</span> &mdash; Full tile + warm glow (6%)</div>
+
+  <div class="pattern-layer" style="opacity: 0.06;"></div>
+  <!-- Warm orange glow from top-left -->
+  <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 50% 40% at 15% 10%, rgba(255,106,0,0.05), transparent 70%);"></div>
+
+  <div class="dash-content" style="z-index:10;">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">Full tile at 6% with a warm orange glow from top-left. Adds warmth and depth — pattern provides texture while the glow gives it life.</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     OPTION F: No dashboard pattern (clean)
+     ═══════════════════════════════════════════════════ -->
+<div class="dashboard-sim" style="background: var(--bg);">
+  <div class="option-label"><span>F</span> &mdash; No pattern (clean baseline)</div>
+
+  <!-- Existing content-gradient only -->
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,106,0,0.04) 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg) 0%, rgba(255,255,255,0.02) 100%);
+  "></div>
+
+  <div class="dash-content">
+    <div class="breadcrumb">Dashboard &gt; <strong>Applications</strong></div>
+    <div class="stat-card">
+      <h2>Reviews</h2>
+      <p>Review applications, vote on proposals, and track your review history.</p>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-label">Pending</div><div class="stat-value">2</div></div>
+        <div class="stat"><div class="stat-label">To Vote</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Completed</div><div class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Guilds</div><div class="stat-value">8</div></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <span>Expert Reviews</span>
+      <span class="active">Candidate Reviews <span style="background:rgba(255,106,0,0.15);color:var(--primary);padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600;">2</span></span>
+      <span>Proposals</span>
+      <span>History</span>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Vicki Schulist <span class="badge">Expert</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+    <div class="review-card">
+      <div><div class="name">Blake Quigley <span class="badge">Entry</span></div><div class="meta">3/27/2026 &middot; 0 reviewed &middot; <span class="pending">Pending</span></div></div>
+      <div class="action">Review &rarr;</div>
+    </div>
+  </div>
+
+  <div class="option-desc">No pattern — just the existing content-gradient. Clean and minimal. Pattern only used on hero sections and landing pages, not inside the dashboard.</div>
+</div>
+
+<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">
+  Scroll through all 6 options. Each shows the same dashboard layout with a different pattern treatment.
+</div>
+
+</body>
+</html>

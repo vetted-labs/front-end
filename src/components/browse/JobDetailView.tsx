@@ -281,7 +281,7 @@ export default function JobDetailView() {
           </div>
 
           {/* ---- RIGHT COLUMN (sticky sidebar) ---- */}
-          <div className="lg:sticky lg:top-6 flex flex-col gap-6">
+          <div className="lg:sticky lg:top-6 flex flex-col gap-6 order-first lg:order-none">
 
             {/* Already Applied / Accepted */}
             {hasAlreadyApplied && existingApplication.status === "accepted" && (

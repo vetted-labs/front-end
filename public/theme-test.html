@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head><title>Theme Test — CSS Class</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: sans-serif; display:flex; height:100vh; }
+
+  .half { flex:1; position:relative; display:flex; flex-direction:column; }
+
+  .label { padding:16px; font-weight:bold; font-size:18px; position:relative; z-index:10; text-align:center; background:rgba(255,106,0,0.08); color:#ff6a00; }
+
+  /* EXACT same CSS as globals.css */
+  .vetted-pattern-layer {
+    background-image: url(/pattern-square-nologo.svg);
+    background-size: 1080px 1080px;
+    background-repeat: repeat;
+    background-position: center;
+    filter: none;
+    mix-blend-mode: darken;
+  }
+  .dark .vetted-pattern-layer {
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
+
+  .sidebar { width:208px; position:relative; overflow:hidden; flex-shrink:0; }
+  .content { flex:1; position:relative; overflow:hidden; }
+  .pat { position:absolute; inset:0; }
+  .card { margin:16px; padding:20px; border-radius:12px; position:relative; z-index:10; }
+  .nav-item { padding:8px 12px; margin:2px 8px; border-radius:8px; font-size:13px; position:relative; z-index:10; }
+</style>
+</head>
+<body>
+
+<!-- LIGHT MODE (no .dark class) -->
+<div class="half" style="border-right:2px solid #ff6a00;">
+  <div class="label">LIGHT MODE</div>
+  <div style="display:flex;flex:1;">
+    <div class="sidebar" style="background:#fff;border-right:1px solid #e5e5e5;">
+      <div class="pat vetted-pattern-layer" style="opacity:0.12;"></div>
+      <div style="position:absolute;right:0;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,rgba(255,106,0,0.15),rgba(255,106,0,0.03),transparent);"></div>
+      <div style="padding:16px;font-weight:bold;position:relative;z-index:10;border-bottom:1px solid #e5e5e5;">Vetted</div>
+      <div class="nav-item" style="background:rgba(255,106,0,0.08);color:#ff6a00;border-left:2px solid #ff6a00;">Dashboard</div>
+      <div class="nav-item" style="color:#888;">Notifications</div>
+      <div class="nav-item" style="color:#888;">Applications</div>
+      <div class="nav-item" style="color:#888;">Endorsements</div>
+    </div>
+    <div class="content" style="background:#f0eeed;">
+      <div class="pat vetted-pattern-layer" style="opacity:0.08;"></div>
+      <div class="card" style="background:#fff;border:1px solid #e5e5e5;">
+        <div style="font-weight:700;color:#222;">Dashboard</div>
+        <div style="color:#888;font-size:13px;">Light mode — pattern uses darken blend</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DARK MODE (.dark wrapper) -->
+<div class="half dark">
+  <div class="label">DARK MODE</div>
+  <div style="display:flex;flex:1;">
+    <div class="sidebar" style="background:#0a0b0e;">
+      <div class="pat vetted-pattern-layer" style="opacity:0.12;"></div>
+      <div style="position:absolute;right:0;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,rgba(255,106,0,0.4),rgba(255,106,0,0.08),transparent);"></div>
+      <div style="padding:16px;font-weight:bold;color:#eee;position:relative;z-index:10;border-bottom:1px solid rgba(255,255,255,0.06);">Vetted</div>
+      <div class="nav-item" style="background:rgba(255,106,0,0.10);color:#ff6a00;border-left:2px solid #ff6a00;">Dashboard</div>
+      <div class="nav-item" style="color:#888;">Notifications</div>
+      <div class="nav-item" style="color:#888;">Applications</div>
+      <div class="nav-item" style="color:#888;">Endorsements</div>
+    </div>
+    <div class="content" style="background:#0e0f12;">
+      <div class="pat vetted-pattern-layer" style="opacity:0.22;"></div>
+      <div class="card" style="background:#16171c;border:1px solid rgba(255,255,255,0.06);color:#eee;">
+        <div style="font-weight:700;">Dashboard</div>
+        <div style="color:#888;font-size:13px;">Dark mode — pattern uses invert + screen blend</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>

@@ -236,7 +236,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
           {(
             [
               { key: "all", label: "All", count: allNotifications.length },

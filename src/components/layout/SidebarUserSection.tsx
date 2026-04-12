@@ -11,6 +11,7 @@ import { truncateAddress } from "@/lib/utils";
 import { getNetworkName } from "@/lib/web3Utils";
 import { cn } from "@/lib/utils";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { fullWalletTeardown } from "@/lib/walletConnectCleanup";
 import type { SidebarConfig } from "./sidebar-config";
 
 interface SidebarUserSectionProps {
@@ -44,14 +45,20 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
   const handleDisconnect = () => {
     auth.logout();
     disconnect();
+    // Clear wagmi cookies + WC state so SSR hydration doesn't re-seed the
+    // previous wallet on the next page load, and so the connect modal asks
+    // for a fresh wallet choice instead of silently reconnecting.
+    fullWalletTeardown();
     router.push("/?section=experts");
   };
 
   const handleLogout = () => {
-    if (auth.userType === "expert") {
-      disconnect();
-    }
+    const wasExpert = auth.userType === "expert";
     auth.logout();
+    if (wasExpert) {
+      disconnect();
+      fullWalletTeardown();
+    }
     router.push("/");
   };
 
@@ -102,7 +109,7 @@ export function SidebarUserSection({ variant }: SidebarUserSectionProps) {
             {showWalletMenu && (
               <div
                 className={cn(
-                  "absolute z-50 w-64 rounded-xl border border-border bg-card shadow-xl overflow-hidden",
+                  "absolute z-50 w-[min(90vw,256px)] rounded-xl border border-border bg-card shadow-xl overflow-hidden",
                   isCollapsed ? "bottom-0 left-full ml-2" : "bottom-full left-0 mb-2"
                 )}
               >

@@ -68,13 +68,6 @@ export function ReputationLeaderboard({
     return "bg-muted text-card-foreground";
   };
 
-  const calculateConsensusRate = (approvals: number, rejections: number) => {
-    const total = approvals + rejections;
-    if (total === 0) return 0;
-    // Simplified consensus rate based on participation
-    return Math.round((Math.min(approvals, rejections) / total) * 100);
-  };
-
   if (isLoading) return null;
 
   if (error) {
@@ -129,7 +122,6 @@ export function ReputationLeaderboard({
         <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
           <li>Rankings are determined by total VETD token earnings from completed reviews</li>
           <li><span className="font-medium text-foreground">Earnings</span> accumulate each time you submit a review and the reveal phase resolves</li>
-          <li><span className="font-medium text-foreground">Consensus rate</span> shows the balance between your approval and rejection decisions — a higher rate means more varied, balanced reviewing</li>
           <li>Review more candidates and maintain consistent quality to increase your earnings and climb the ranks</li>
           <li>Members of multiple guilds contribute all their review earnings to their global rank</li>
         </ul>
@@ -211,9 +203,6 @@ export function ReputationLeaderboard({
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Reviews
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Consensus
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -292,23 +281,6 @@ export function ReputationLeaderboard({
                       <div className="text-xs text-muted-foreground">
                         {entry.approvals} / {entry.rejections}
                       </div>
-                    </div>
-                  </td>
-
-                  {/* Consensus Rate */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-muted rounded-full h-2 max-w-[100px]">
-                        <div
-                          className={`${STATUS_COLORS.positive.bg} h-2 rounded-full`}
-                          style={{
-                            width: `${calculateConsensusRate(entry.approvals, entry.rejections)}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        {calculateConsensusRate(entry.approvals, entry.rejections)}%
-                      </span>
                     </div>
                   </td>
                 </tr>

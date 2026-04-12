@@ -25,6 +25,8 @@ import ResumeSection from "./ResumeSection";
 import PersonalInfoSection from "./PersonalInfoSection";
 import { ProfileCompletionBanner } from "./ProfileCompletionBanner";
 import { DataSection } from "@/lib/motion";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 
 export default function CandidateProfilePage() {
   const router = useRouter();
@@ -262,10 +264,17 @@ export default function CandidateProfilePage() {
         <DataSection isLoading={isLoading} skeleton={null}>
         {profile && profileCompletion && (
         <div className="space-y-6">
-          <ProfileCompletionBanner
-            percentage={profileCompletion.percentage}
-            items={profileCompletion.items}
-          />
+          <div className="space-y-2">
+            <ProfileCompletionBanner
+              percentage={profileCompletion.percentage}
+              items={profileCompletion.items}
+            />
+            <div className="flex justify-end px-1">
+              <HelpLink href={DOC_LINKS.candidateProfile} size="sm">
+                Profile tips that actually move the needle
+              </HelpLink>
+            </div>
+          </div>
           <ResumeSection
             resumeUrl={profile.resumeUrl}
             resumeFileName={profile.resumeFileName}
@@ -376,7 +385,7 @@ export default function CandidateProfilePage() {
                 <div key={i} className="rounded-lg border bg-card/50 p-3">
                   {isEditing ? (
                     <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
                           placeholder="Company"
                           value={entry.company}
@@ -390,7 +399,7 @@ export default function CandidateProfilePage() {
                           className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
                           type="month"
                           placeholder="Start"

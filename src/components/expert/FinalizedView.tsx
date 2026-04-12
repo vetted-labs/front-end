@@ -40,6 +40,8 @@ export function FinalizedView({
                 alignment_distance: application.alignment_distance,
                 reputation_change: application.my_reputation_change,
                 reward_amount: application.my_reward_amount,
+                slashing_tier: application.my_slashing_tier,
+                slash_percent: application.my_slash_percent,
               }
             : undefined
         }

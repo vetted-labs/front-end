@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ChevronsLeft, X } from "lucide-react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
-import { Logo } from "@/components/Logo";
 import { useSidebar } from "./SidebarProvider";
 import { SidebarNavGroup } from "./SidebarNavGroup";
 import { SidebarUserSection } from "./SidebarUserSection";
@@ -67,8 +66,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
       {/* Header: logo + collapse toggle */}
       <div
         className={cn(
-          "flex h-16 items-center border-b border-border px-4",
-          isCollapsed ? "justify-center" : "justify-between"
+          "relative flex h-16 items-center justify-center border-b border-border px-4"
         )}
       >
         {isCollapsed ? (
@@ -88,7 +86,20 @@ export function AppSidebar({ config }: AppSidebarProps) {
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <Logo size="sm" onClick={() => router.push("/")} />
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center"
+                aria-label="Vetted home"
+              >
+                <Image
+                  src="/vetted-logo.svg"
+                  alt="Vetted"
+                  width={96}
+                  height={17}
+                  className="h-[18px] w-auto"
+                  priority
+                />
+              </button>
               {config.variant !== "browse" && (
                 <span className={cn(
                   "text-xs font-medium uppercase tracking-widest pt-0.5",
@@ -102,7 +113,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
             </div>
             <button
               onClick={toggle}
-              className="hidden md:inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               aria-label="Collapse sidebar"
             >
               <ChevronsLeft className="h-4 w-4" />
@@ -166,7 +177,7 @@ export function AppSidebar({ config }: AppSidebarProps) {
           {/* Close button for mobile */}
           <button
             onClick={closeMobile}
-            className="absolute right-2 top-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors md:hidden"
+            className="absolute right-2 top-4 inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors md:hidden"
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />

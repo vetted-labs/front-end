@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rank Progress Card — Redesign Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface-0: #0c0f14;
+    --surface-1: #141820;
+    --surface-2: #1a1f2a;
+    --surface-3: #222938;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --primary: #ff6a00;
+    --primary-rgb: 255, 106, 0;
+    --text: #f0f0f5;
+    --text-muted: #6b7084;
+    --positive: #22c55e;
+    --positive-rgb: 34, 197, 94;
+    --warning: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --info: #3b82f6;
+    --info-rgb: 59, 130, 246;
+    --purple: #a855f7;
+    --purple-rgb: 168, 85, 247;
+    --teal: #14b8a6;
+    --teal-rgb: 20, 184, 166;
+    --red: #ef4444;
+    --red-rgb: 239, 68, 68;
+    --rank-master: #f59e0b;
+    --rank-officer: #ff6a00;
+    --rank-craftsman: #ff6a00;
+    --rank-apprentice: #34d399;
+    --rank-recruit: #94a3b8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px;
+  }
+
+  .page-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+
+  /* Simulate the dashboard grid: Review Queue (1.5fr) + Rank Progress (1fr) */
+  .dashboard-sim {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+    margin-bottom: 56px;
+  }
+  .review-placeholder {
+    background: var(--surface-1);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    min-height: 360px;
+  }
+
+  .option-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  .option-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .option-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    max-width: 700px;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+
+  /* ═══ Shared card shell ═══ */
+  .rank-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .rank-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .rank-card-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .rank-card-count {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ═══ OPTION A: Scrollable mini-chips ═══ */
+  .a-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .a-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .a-row:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+  }
+  .a-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .a-info { flex: 1; min-width: 0; }
+  .a-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .a-rank-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-master { background: rgba(245,158,11,0.12); color: var(--rank-master); border: 1px solid rgba(245,158,11,0.2); }
+  .badge-officer { background: rgba(var(--primary-rgb),0.1); color: var(--rank-officer); border: 1px solid rgba(var(--primary-rgb),0.15); }
+  .badge-craftsman { background: rgba(var(--primary-rgb),0.08); color: var(--rank-craftsman); border: 1px solid rgba(var(--primary-rgb),0.12); }
+  .badge-apprentice { background: rgba(52,211,153,0.1); color: var(--rank-apprentice); border: 1px solid rgba(52,211,153,0.15); }
+  .badge-recruit { background: rgba(148,163,184,0.1); color: var(--rank-recruit); border: 1px solid rgba(148,163,184,0.15); }
+
+  /* Guild color icons */
+  .gi-marketing { background: rgba(var(--warning-rgb),0.1); color: var(--warning); }
+  .gi-design { background: rgba(var(--purple-rgb),0.1); color: var(--purple); }
+  .gi-engineering { background: rgba(var(--info-rgb),0.1); color: var(--info); }
+  .gi-data { background: rgba(var(--teal-rgb),0.1); color: var(--teal); }
+  .gi-security { background: rgba(var(--red-rgb),0.1); color: var(--red); }
+  .gi-devops { background: rgba(var(--positive-rgb),0.1); color: var(--positive); }
+  .gi-product { background: rgba(var(--primary-rgb),0.1); color: var(--primary); }
+  .gi-finance { background: rgba(var(--warning-rgb),0.1); color: var(--warning); }
+
+  /* ═══ OPTION B: 2-col mini grid ═══ */
+  .b-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .b-tile {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .b-tile:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+  }
+  .b-tile::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .b-tile.bt-marketing::before { background: linear-gradient(90deg, var(--warning), transparent); }
+  .b-tile.bt-design::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .b-tile.bt-engineering::before { background: linear-gradient(90deg, var(--info), transparent); }
+  .b-tile.bt-data::before { background: linear-gradient(90deg, var(--teal), transparent); }
+  .b-tile.bt-security::before { background: linear-gradient(90deg, var(--red), transparent); }
+  .b-tile.bt-devops::before { background: linear-gradient(90deg, var(--positive), transparent); }
+  .b-tile.bt-product::before { background: linear-gradient(90deg, var(--primary), transparent); }
+  .b-tile.bt-finance::before { background: linear-gradient(90deg, var(--warning), transparent); }
+
+  .b-tile-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .b-tile-rank {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ═══ OPTION C: Compact rows with stats ═══ */
+  .c-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 320px;
+  }
+  .c-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .c-row:hover {
+    border-color: var(--border-hover);
+    background: var(--surface-2);
+  }
+  .c-accent {
+    width: 3px;
+    height: 28px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .ca-marketing { background: var(--warning); }
+  .ca-design { background: var(--purple); }
+  .ca-engineering { background: var(--info); }
+  .ca-data { background: var(--teal); }
+  .ca-security { background: var(--red); }
+  .ca-devops { background: var(--positive); }
+  .ca-product { background: var(--primary); }
+  .ca-finance { background: var(--warning); }
+
+  .c-info { flex: 1; min-width: 0; }
+  .c-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .c-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .c-stats {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .c-stat {
+    text-align: right;
+  }
+  .c-stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .c-stat-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .design-label {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+
+<h1 class="page-title">Rank Progress Card — Redesign</h1>
+<p class="page-subtitle">All options fit inside the existing 1fr column next to Review Queue (1.5fr). Showing all 8 guilds.</p>
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION A: Scrollable list rows
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option A</div>
+<h2 class="option-title">Compact List with Rank Badges</h2>
+<p class="option-desc">Each guild as a small row: colored icon, guild name, rank badge. All 8 visible, scrolls if needed. Clean and minimal, rank is the hero element.</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="rank-card">
+    <div class="rank-card-header">
+      <span class="rank-card-title">Your Guilds</span>
+      <span class="rank-card-count">8 guilds</span>
+    </div>
+    <div class="a-list">
+      <div class="a-row">
+        <div class="a-icon gi-marketing">&#128640;</div>
+        <div class="a-info"><div class="a-name">Marketing & Growth</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-design">&#127912;</div>
+        <div class="a-info"><div class="a-name">Design</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-engineering">&#128187;</div>
+        <div class="a-info"><div class="a-name">Engineering</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-data">&#128202;</div>
+        <div class="a-info"><div class="a-name">Data Science</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-security">&#128274;</div>
+        <div class="a-info"><div class="a-name">Security</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-devops">&#9881;</div>
+        <div class="a-info"><div class="a-name">DevOps</div></div>
+        <span class="a-rank-badge badge-master">Master</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-product">&#128736;</div>
+        <div class="a-info"><div class="a-name">Product</div></div>
+        <span class="a-rank-badge badge-officer">Officer</span>
+      </div>
+      <div class="a-row">
+        <div class="a-icon gi-finance">&#128176;</div>
+        <div class="a-info"><div class="a-name">Finance & Compliance</div></div>
+        <span class="a-rank-badge badge-craftsman">Craftsman</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION B: 2-column mini tile grid
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option B</div>
+<h2 class="option-title">Mini Tile Grid</h2>
+<p class="option-desc">2-column grid of tiles, each with a guild-colored top accent. Guild name + rank badge in a small tile. Visually richer than a list, more distinct per guild. All 8 fit without scrolling.</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="rank-card">
+    <div class="rank-card-header">
+      <span class="rank-card-title">Your Guilds</span>
+      <span class="rank-card-count">8 guilds</span>
+    </div>
+    <div class="b-grid">
+      <div class="b-tile bt-marketing">
+        <div class="b-tile-name">Marketing & Growth</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-design">
+        <div class="b-tile-name">Design</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-engineering">
+        <div class="b-tile-name">Engineering</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-data">
+        <div class="b-tile-name">Data Science</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-security">
+        <div class="b-tile-name">Security</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-devops">
+        <div class="b-tile-name">DevOps</div>
+        <span class="b-tile-rank badge-master">Master</span>
+      </div>
+      <div class="b-tile bt-product">
+        <div class="b-tile-name">Product</div>
+        <span class="b-tile-rank badge-officer">Officer</span>
+      </div>
+      <div class="b-tile bt-finance">
+        <div class="b-tile-name">Finance & Compliance</div>
+        <span class="b-tile-rank badge-craftsman">Craftsman</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION C: Rows with color accent + mini stats
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option C</div>
+<h2 class="option-title">Accent Rows with Stats</h2>
+<p class="option-desc">Each guild gets a left color bar, name + rank, and compact staked/earned numbers. Packs the most info per row — could potentially replace the "Your Guilds" section entirely. Scrolls for 8 guilds.</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="rank-card">
+    <div class="rank-card-header">
+      <span class="rank-card-title">Your Guilds</span>
+      <span class="rank-card-count">8 guilds</span>
+    </div>
+    <div class="c-list">
+      <div class="c-row">
+        <div class="c-accent ca-marketing"></div>
+        <div class="c-info">
+          <div class="c-name">Marketing & Growth</div>
+          <div class="c-meta">Master &middot; 2 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">100</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$164</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-design"></div>
+        <div class="c-info">
+          <div class="c-name">Design</div>
+          <div class="c-meta">Master &middot; 2 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">100</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$127</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-engineering"></div>
+        <div class="c-info">
+          <div class="c-name">Engineering</div>
+          <div class="c-meta">Master &middot; 3 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">400</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$107</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-data"></div>
+        <div class="c-info">
+          <div class="c-name">Data Science</div>
+          <div class="c-meta">Master &middot; 4 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">80</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$92</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-security"></div>
+        <div class="c-info">
+          <div class="c-name">Security</div>
+          <div class="c-meta">Master &middot; 3 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">120</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$68</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-devops"></div>
+        <div class="c-info">
+          <div class="c-name">DevOps</div>
+          <div class="c-meta">Master &middot; 2 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">60</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$45</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-product"></div>
+        <div class="c-info">
+          <div class="c-name">Product</div>
+          <div class="c-meta">Officer &middot; 5 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">40</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$31</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-row">
+        <div class="c-accent ca-finance"></div>
+        <div class="c-info">
+          <div class="c-name">Finance & Compliance</div>
+          <div class="c-meta">Craftsman &middot; 3 members</div>
+        </div>
+        <div class="c-stats">
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--primary);">40</div>
+            <div class="c-stat-label">Staked</div>
+          </div>
+          <div class="c-stat">
+            <div class="c-stat-val" style="color: var(--positive);">$18</div>
+            <div class="c-stat-label">Earned</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="design-label">Rank Progress — Fits in 1fr dashboard slot</div>
+
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Audit V2: After Fixes</title>
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface-2:#1a1a25;--surface-3:#22222f;--border:#2a2a3a;--border-light:#33334a;--text:#e8e8f0;--text-muted:#8888a0;--text-dim:#5a5a70;--accent:#f97316;--accent-dim:rgba(249,115,22,0.15);--accent-glow:rgba(249,115,22,0.08);--positive:#22c55e;--positive-dim:rgba(34,197,94,0.12);--negative:#ef4444;--negative-dim:rgba(239,68,68,0.12);--warning:#eab308;--warning-dim:rgba(234,179,8,0.12);--info:#3b82f6;--info-dim:rgba(59,130,246,0.12);--purple:#a855f7;--purple-dim:rgba(168,85,247,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.main{max-width:1200px;margin:0 auto;padding:20px 32px 80px}
+.hero{padding:40px 0 24px;border-bottom:1px solid var(--border);margin-bottom:24px;background:linear-gradient(135deg,var(--accent-glow) 0%,transparent 40%)}
+.hero h2{font-size:28px;font-weight:800;letter-spacing:-0.03em}
+.hero .sub{font-size:14px;color:var(--text-muted);margin-top:4px}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px}
+.summary-cell{background:var(--surface);padding:16px;text-align:center}
+.summary-cell .val{font-size:22px;font-weight:800;line-height:1}
+.summary-cell .lbl{font-size:10px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.05em}
+.section-title{font-size:18px;font-weight:700;margin:32px 0 14px;letter-spacing:-0.02em;display:flex;align-items:center;gap:10px}
+.section-title .badge{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+thead th{text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+tbody td{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+tbody tr:hover td{background:var(--surface-2)}
+.s{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;min-width:24px;text-align:center}
+.s-g{background:var(--positive-dim);color:var(--positive)}
+.s-y{background:var(--warning-dim);color:var(--warning)}
+.s-r{background:var(--negative-dim);color:var(--negative)}
+.arrow{color:var(--positive);font-weight:700;font-size:13px;margin:0 2px}
+.old{opacity:0.35;text-decoration:line-through}
+.delta{font-size:10px;font-weight:700;color:var(--positive);margin-left:4px}
+.changes{font-size:11px;color:var(--text-muted);max-width:400px}
+.commit-list{list-style:none}
+.commit-list li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+.commit-list li:last-child{border-bottom:none}
+.commit-hash{font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:var(--accent);min-width:64px;flex-shrink:0}
+.commit-msg{color:var(--text-muted)}
+.wp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:12px}
+.wp-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.wp-card-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wp-ring{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.wp-desc{font-size:11px;color:var(--text-muted);line-height:1.5}
+.improved{position:relative}
+.improved::after{content:"";position:absolute;inset:-1px;border-radius:10px;border:1px solid var(--positive);opacity:0.3;pointer-events:none}
+@media(max-width:900px){.summary{grid-template-columns:repeat(3,1fr)}.main{padding:16px}}
+</style>
+</head>
+<body>
+<div class="main">
+<div class="hero">
+  <h2>Platform Audit V2 — After Fixes</h2>
+  <p class="sub">18 commits, 68 files changed, +3,627 / -1,784 lines across frontend + backend</p>
+</div>
+
+<div class="summary" id="summary"></div>
+
+<div class="section-title">All Views — Before & After <span class="badge" style="background:var(--positive-dim);color:var(--positive)">Updated Scores</span></div>
+<table id="viewsTable"></table>
+
+<div class="section-title" style="margin-top:40px">Changelog <span class="badge" style="background:var(--accent-dim);color:var(--accent)">18 commits</span></div>
+<ul class="commit-list" id="commits"></ul>
+
+<div class="section-title" style="margin-top:40px">Whitepaper Compliance — Before & After</div>
+<div class="wp-grid" id="wpGrid"></div>
+
+<div class="section-title" style="margin-top:40px">Backend Fixes <span class="badge" style="background:var(--positive-dim);color:var(--positive)">7 issues resolved</span></div>
+<table id="backendTable"></table>
+</div>
+
+<script>
+const sc = (v) => v >= 8 ? "s-g" : v >= 6 ? "s-y" : "s-r";
+
+const views = [
+// [id, group, name, route, oldUI, oldUX, oldFunc, newUI, newUX, newFunc, changes]
+[1,"expert","Expert Dashboard","/expert/dashboard",8,7,7,8,7,9,"Added vote weight display, reward tier badge, governance summary, decay countdown"],
+[2,"expert","Expert Profile","/expert/profile",9,7,6,9,8,8,"Fixed hardcoded 'Master' rank, added edit mode, rank-specific colors"],
+[3,"expert","Expert Apply","/expert/apply",8,8,8,8,8,8,"No changes needed"],
+[4,"expert","Application Pending","/expert/application-pending",9,8,7,9,8,7,"No changes needed"],
+[5,"expert","Reputation","/expert/reputation",9,8,8,9,8,9,"Replaced fake timeliness/trust metrics with real review & endorsement data, added decay countdown"],
+[6,"expert","Voting / Applications","/expert/voting",8,8,8,8,9,8,"Wired staking CTA button to /expert/withdrawals"],
+[7,"expert","Voting App Detail","/expert/voting/applications/[id]",8,7,7,8,8,8,"Anonymized reviewer names in vote history, added vote confirmation"],
+[8,"expert","Endorsement Marketplace","/expert/endorsements",8,8,7,9,8,8,"Used shared Modal component, added 10% slash risk warning banner"],
+[9,"expert","Endorsements History","/expert/endorsements/history",8,7,5,8,7,7,"Added outcome display (hired/slashed/refunded), sorting, loading skeleton"],
+[10,"expert","Endorsement Disputes","/expert/endorsements/disputes/[id]",6,6,5,6,7,6,"Added appeal filing UI with 7-day window, fixed dynamic Tailwind classes, loading skeleton"],
+[11,"expert","Earnings","/expert/earnings",9,8,7,9,8,7,"No changes needed (chart tooltips deferred)"],
+[12,"expert","Withdrawals (Staking)","/expert/withdrawals",9,8,7,9,8,7,"Fixed hardcoded #d9b45f → STATUS_COLORS.warning"],
+[13,"expert","Governance","/expert/governance",9,8,8,9,8,8.5,"Added emergency_unilateral threshold type"],
+[14,"expert","Governance Create","/expert/governance/create",8,7,7,8,8,7,"Added inline validation on blur, fixed Cancel → deterministic nav"],
+[15,"expert","Governance Proposal Detail","/expert/governance/[id]",9,9,8,9,9,8.5,"Added vote confirmation dialog, removed dead CSS"],
+[16,"expert","Guilds Overview","/expert/guilds",8,8,7,8,8,8,"Fixed totalPendingApplications count bug"],
+[17,"expert","Guild Detail","/expert/guild/[guildId]",8,8,8,8,8,9,"Fixed rank progress bar (3-position → 5-rank)"],
+[18,"expert","Guild App Review (Legacy)","/expert/guild/[guildId]/application/[id]",7,6,6,7,6,6,"Added loading skeleton (was returning null)"],
+[19,"expert","Guild Ranks","/expert/guild-ranks",9,8,7,9,9,8,"Fixed consensus null, multi-guild selector, 6-month term text"],
+[20,"expert","Leaderboard","/expert/leaderboard",9,8,8,9,9,9,"Fixed loading state, hardcoded trophy color, added Load More pagination"],
+[21,"expert","Expert Analytics","/expert/analytics",8,6,3,8,7,7,"Replaced 100% mock data with real API calls, functional time filter, dynamic dates"],
+[22,"company","Company Registration","/company",7,6,6,7,6,7,"Fixed localStorage → AuthContext"],
+[23,"company","Company Profile","/company/profile",7,7,7,7,7,7,"No changes"],
+[24,"company","Dashboard Overview","/dashboard",8,8,7,8,8,8,"Added endorsement accountability summary card"],
+[25,"company","Candidates (ATS)","/dashboard/candidates",9,9,8,9,9,9,"Resolved endorser wallet addresses to expert names, fixed pre-existing type bug"],
+[26,"company","Jobs List","/dashboard/jobs",7,7,7,7,8,7,"Added sort dropdown, fixed action menu click-outside"],
+[27,"company","Job Detail","/dashboard/jobs/[jobId]",7,7,7,7,7,7,"No changes"],
+[28,"company","Job Edit","/dashboard/jobs/[jobId]/edit",7,7,7,8,7,7,"Replaced raw HTML elements with shared UI primitives"],
+[29,"company","Messages Inbox","/dashboard/messages",8,7,7,8,8,7,"Refactored to useFetch (was manual useState+useEffect)"],
+[30,"company","Conversation","/dashboard/messages/[id]",7,7,6,7,7,6,"No changes"],
+[31,"company","Notifications","/dashboard/notifications",8,8,7,8,8,8,"Wired dismiss button onClick, fixed group-hover CSS, settings gear toast"],
+[32,"company","Company Analytics","/dashboard/analytics",9,7,4,9,7,7,"Replaced 100% mock data with real API calls"],
+[33,"company","Analytics Job Detail","/dashboard/analytics/[jobId]",6,4,1,7,6,6,"Replaced 'Coming Soon' blur with real API page + EmptyState fallback"],
+[34,"company","Settings","/dashboard/settings",7,7,5,7,8,5,"Added Coming Soon overlay on non-functional Security/Billing tabs"],
+[35,"company","Create New Job","/jobs/new",7,6,7,8,6,7,"Shared UI primitives (via JobForm fix)"],
+[36,"company","Job Detail (Public)","/jobs/[jobId]",7,6,7,7,6,7,"No changes"],
+[37,"candidate","Candidate Dashboard","/candidate/dashboard",8,8,7,8,8,8.5,"Wired resubmit callback, added appeal mechanism links"],
+[38,"candidate","Candidate Profile","/candidate/profile",7,8,7,7,8,8,"Added skills management section"],
+[39,"candidate","Applications","/candidate/applications",9,8,7,9,8,8,"Fixed hardcoded rejection step → derived from status history"],
+[40,"candidate","Candidate Guilds","/candidate/guilds",8,7,6,8,7,7.5,"Added resubmission flow, appeal links, rejection feedback cards, removed dead code"],
+[41,"candidate","Notifications","/candidate/notifications",8,8,7,8,8,7,"No changes"],
+[42,"candidate","Messages Inbox","/candidate/messages",7,7,6,7,8,6,"Refactored to useFetch"],
+[43,"candidate","Messages Conversation","/candidate/messages/[id]",7,8,7,7,8,7,"No changes"],
+[44,"candidate","Candidate Analytics","/candidate/analytics",8,6,4,8,7,7,"Replaced 100% mock data with real API calls"],
+[45,"public","Homepage","/",8,8,7,8,8,7,"No changes"],
+[46,"public","Login","/auth/login",9,9,8,9,9,9,"Added forgot password link"],
+[47,"public","Signup","/auth/signup",8,8,7,8,8,8,"Added experience level selector, Terms of Service checkbox"],
+[48,"public","Browse Landing","/browse",8,7,6,8,7,6,"No changes"],
+[49,"public","Browse Jobs","/browse/jobs",9,9,8,9,9,9,"Added sort dropdown, wired / keyboard shortcut"],
+[50,"public","Browse Job Detail","/browse/jobs/[jobId]",8,9,8,8,9,8,"No changes"],
+[51,"public","Guilds Directory","/guilds",9,8,7,9,8,7,"Fixed CTA link /expert/register → /expert/apply"],
+[52,"public","Guild Detail","/guilds/[guildId]",8,8,7,8,8,7,"No changes (duplicate tab was already fixed)"],
+[53,"public","Guild Apply","/guilds/[guildId]/apply",8,8,8,8,8,8,"No changes"],
+[54,"public","Guild My Stats","/guilds/[guildId]/my-stats",7,6,4,7,7,5,"Replaced console.warn with logger, added EmptyState, backend ghost endpoints created"],
+[55,"public","Company Public Profile","/companies/[id]",7,7,6,7,7,6,"Fixed job links /jobs/ → /browse/jobs/"],
+[56,"public","Candidate Public Profile","/candidates/[id]",5,6,5,5,6,6,"Added socialLinks array support (legacy fallback kept)"],
+[57,"public","Expert Public Profile","/experts/[wallet]",9,8,7,9,8,7,"No changes"],
+];
+
+function avg(ui,ux,fn){return((ui+ux+fn)/3).toFixed(1)}
+
+// Summary
+const oldAvgs = views.map(v=>parseFloat(avg(v[4],v[5],v[6])));
+const newAvgs = views.map(v=>parseFloat(avg(v[7],v[8],v[9])));
+const oldOverall = (oldAvgs.reduce((a,b)=>a+b,0)/oldAvgs.length).toFixed(1);
+const newOverall = (newAvgs.reduce((a,b)=>a+b,0)/newAvgs.length).toFixed(1);
+const improved = views.filter(v=>parseFloat(avg(v[7],v[8],v[9]))>parseFloat(avg(v[4],v[5],v[6]))).length;
+
+document.getElementById("summary").innerHTML=`
+<div class="summary-cell"><div class="val" style="color:var(--text-dim)">${oldOverall}</div><div class="lbl">Before</div></div>
+<div class="summary-cell"><div class="val" style="color:var(--positive)">${newOverall}</div><div class="lbl">After</div></div>
+<div class="summary-cell"><div class="val" style="color:var(--positive)">+${(newOverall-oldOverall).toFixed(1)}</div><div class="lbl">Improvement</div></div>
+<div class="summary-cell"><div class="val">${improved}</div><div class="lbl">Views Improved</div></div>
+<div class="summary-cell"><div class="val">18</div><div class="lbl">Commits</div></div>
+<div class="summary-cell"><div class="val">68</div><div class="lbl">Files Changed</div></div>`;
+
+// Views table
+let thtml=`<thead><tr><th>#</th><th>View</th><th>Route</th><th>UI</th><th>UX</th><th>Func</th><th>Avg</th><th>What Changed</th></tr></thead><tbody>`;
+let currentGroup="";
+const groupLabels={expert:"Expert",company:"Company / Hiring",candidate:"Candidate",public:"Public / Auth"};
+views.forEach(v=>{
+  if(v[1]!==currentGroup){
+    currentGroup=v[1];
+    thtml+=`<tr><td colspan="8" style="background:var(--surface-2);padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim)">${groupLabels[v[1]]}</td></tr>`;
+  }
+  const oa=avg(v[4],v[5],v[6]);
+  const na=avg(v[7],v[8],v[9]);
+  const changed=parseFloat(na)>parseFloat(oa);
+  const uiChanged=v[7]>v[4],uxChanged=v[8]>v[5],fnChanged=v[9]>v[6];
+  thtml+=`<tr>
+    <td style="color:var(--text-dim);font-size:11px">${v[0]}</td>
+    <td style="font-weight:600;font-size:13px">${v[2]}</td>
+    <td style="font-family:monospace;font-size:11px;color:var(--text-dim)">${v[3]}</td>
+    <td>${uiChanged?`<span class="s old ${sc(v[4])}">${v[4]}</span><span class="arrow">→</span>`:''}<span class="s ${sc(v[7])}">${v[7]}</span></td>
+    <td>${uxChanged?`<span class="s old ${sc(v[5])}">${v[5]}</span><span class="arrow">→</span>`:''}<span class="s ${sc(v[8])}">${v[8]}</span></td>
+    <td>${fnChanged?`<span class="s old ${sc(v[6])}">${v[6]}</span><span class="arrow">→</span>`:''}<span class="s ${sc(v[9])}">${v[9]}</span></td>
+    <td>${changed?`<span class="s old ${sc(parseFloat(oa))}">${oa}</span><span class="arrow">→</span>`:''}<span class="s ${sc(parseFloat(na))}" style="${changed?'box-shadow:0 0 8px var(--positive)':''}">${na}</span>${changed?`<span class="delta">+${(na-oa).toFixed(1)}</span>`:''}</td>
+    <td class="changes">${v[10]}</td>
+  </tr>`;
+});
+thtml+=`</tbody>`;
+document.getElementById("viewsTable").innerHTML=thtml;
+
+// Commits
+const commits=[
+["eb3c755","fix: show actual expert rank, compute consensus rate, and correct Guild Master term length"],
+["cc69633","fix: anonymize reviewer names in vote history and wire staking CTA"],
+["f8b8f85","fix: use shared Modal for endorsement transaction and fix dynamic Tailwind hover classes"],
+["e68f811","fix: replace hardcoded colors with semantic tokens and fix leaderboard loading state"],
+["9df57c2","fix: correct pending count, rank progress bar, and rejection step"],
+["eeca220","fix: replace manual fetch patterns with useFetch and fix routing bugs"],
+["d02a67c","fix: dead code cleanup, loading skeletons, and UI component adoption"],
+["0e27d62","fix: add AuthResponse type to useApi in CompanyForm to fix build error"],
+["7b8317b","feat: expose vote weight and slash risk to experts"],
+["ded8f22","feat: add endorsement outcomes, resubmit wiring, and appeal links"],
+["c4b2e78","feat: vote confirmation dialog, emergency_unilateral threshold, decay countdown"],
+["ba7f408","feat: expert dashboard governance card, profile edit mode, dispute appeals, multi-guild rank selector"],
+["80f73fc","feat: governance inline validation, leaderboard pagination, company dashboard & UX polish"],
+["0ff9426","feat: resolve endorser names, add sort controls, skills section, and socialLinks support"],
+["6bd5bb2","feat: add experience level selector, ToS checkbox, forgot password link, and improved error state"],
+["3316b3f","feat: add analyticsApi namespace to API client"],
+["945bbd4","feat: replace mock data with real API calls in all analytics pages"],
+["8a4b0c6","fix: replace fake/blurred UIs with real data or honest fallbacks"],
+];
+document.getElementById("commits").innerHTML=commits.map(c=>`<li><span class="commit-hash">${c[0]}</span><span class="commit-msg">${c[1]}</span></li>`).join("");
+
+// Whitepaper
+const wp=[
+["Guild Hierarchy (5 Ranks)",6,7,"Fixed consensus calc, multi-guild selector, 5-rank progress bar, 6-month term"],
+["Merit-Weighted Voting",5,7,"Vote weight now displayed on dashboard with computeVoteWeight(), reward tier badge added"],
+["Endorsement Auction",6,7,"Slash risk warning, outcome history (hired/slashed/refunded), sorting added"],
+["Governance (4 Thresholds)",8,9,"Added emergency_unilateral type, vote confirmation dialog"],
+["Reputation System (3 Tiers)",8,9,"Replaced fake metrics with real data, decay countdown added, -10/cycle fixed in backend"],
+["Appeals (Staked, Panel)",4,5,"Appeal filing UI added to disputes, appeal links on candidate pages, 7-day window display"],
+["Candidate Rejection Feedback",7,8,"Resubmission flow wired, backend feedback endpoint created"],
+["Commit-Reveal Voting",7,7,"No changes (already functional in review modals)"],
+["25% Stake Lockup",3,3,"Not yet displayed in UI (backend handles correctly)"],
+["Reputation Decay (-10/cycle)",4,7,"Backend fixed: -1→-10, cron job wired, frontend countdown timer added"],
+["Reviewer Anonymity",5,8,"Finalized vote history now shows pseudonyms ('Expert 1'), not real names"],
+["AI Matching",2,2,"Deferred — no changes"],
+["DID / Sybil Resistance",0,0,"Not implemented — future scope"],
+["Endorsement Accountability",5,6,"Company dashboard summary card added, endorser names resolved in ATS"],
+];
+document.getElementById("wpGrid").innerHTML=wp.map(f=>{
+  const col=f[2]>=7?"var(--positive)":f[2]>=4?"var(--warning)":"var(--negative)";
+  const bgCol=f[2]>=7?"var(--positive-dim)":f[2]>=4?"var(--warning-dim)":"var(--negative-dim)";
+  const changed=f[2]>f[1];
+  return`<div class="wp-card ${changed?'improved':''}">
+    <div class="wp-card-title">
+      <div class="wp-ring" style="background:${bgCol};color:${col};border:2px solid ${col}">${changed?`<span style="opacity:0.4;font-size:9px;text-decoration:line-through">${f[1]}</span>&nbsp;${f[2]}`:f[2]}</div>
+      ${f[0]}
+    </div>
+    <div class="wp-desc">${f[3]}</div>
+  </div>`;
+}).join("");
+
+// Backend
+const be=[
+["Ghost Endpoints (4 routes)","Created /members, /leaderboard, /averages, /activity routes in guilds.routes.ts","FIXED"],
+["Unauthenticated Routes","Added auth middleware to resume download, assigned proposals, vote history","FIXED"],
+["Company Rate Limiting","Added authRateLimiter to company signup and login routes","FIXED"],
+["Reputation Decay Cron","Fixed -1 → -10 penalty, wired applyInactivityDecay() into cron job","FIXED"],
+["Candidate Feedback Endpoint","Created GET /me/guild-applications/:id/feedback with anonymized scores","FIXED"],
+["Quorum Snapshotting","total_eligible_vote_weight now computed and stored at proposal creation","FIXED"],
+["Reconciliation Auto-Correct","Cron now auto-corrects DB reputation when chain diverges (was log-only)","FIXED"],
+];
+document.getElementById("backendTable").innerHTML=`<thead><tr><th>Issue</th><th>What Was Done</th><th>Status</th></tr></thead><tbody>${be.map(b=>`<tr><td style="font-weight:600">${b[0]}</td><td class="changes">${b[1]}</td><td><span class="s s-g">${b[2]}</span></td></tr>`).join("")}</tbody>`;
+</script>
+</body>
+</html>

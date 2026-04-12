@@ -64,6 +64,18 @@ const eslintConfig = [
       ],
     },
   },
+  {
+    // Docs are prose-heavy; apostrophes and quotes in body content are intentional
+    // and don't need to be HTML-escaped. Disable the unescaped-entities rule for
+    // the docs route tree and its supporting components.
+    files: [
+      "src/app/docs/**/*.{ts,tsx}",
+      "src/components/docs/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "react/no-unescaped-entities": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -41,7 +41,7 @@ export function SlimNotificationsFeed({
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6 h-full">
+    <div className="bg-card border border-border rounded-xl p-6 h-full min-w-0 overflow-hidden">
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-foreground">
           Notifications

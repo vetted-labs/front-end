@@ -396,7 +396,7 @@ export function CandidateDetailPanel({
                         className="w-full flex items-center gap-3 p-3 rounded-lg border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all text-left group"
                       >
                         <img
-                          src={getPersonAvatar(resolvedProfile?.fullName ?? endorsement.expertName ?? endorsement.expertAddress)}
+                          src={getPersonAvatar(resolvedProfile?.fullName ?? endorsement.expertName ?? endorsement.expertAddress ?? 'Unknown')}
                           alt=""
                           className="w-8 h-8 rounded-full flex-shrink-0"
                         />

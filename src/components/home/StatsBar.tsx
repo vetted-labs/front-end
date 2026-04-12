@@ -77,10 +77,10 @@ export function StatsBar({ guilds, jobs }: StatsBarProps) {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
       <div className="bg-card border border-border/30 rounded-xl py-5 flex items-center justify-center">
         <div className="flex items-center flex-wrap justify-center gap-y-2">
-          <StatItem label="Expert Reviewers" target={expertReviewers || 120} />
-          <StatItem label="Candidates Vetted" target={candidatesVetted || 350} suffix="+" />
-          <StatItem label="Open Positions" target={openPositions || 24} />
-          <StatItem label="Active Guilds" target={activeGuilds || 8} />
+          <StatItem label="Expert Reviewers" target={expertReviewers} />
+          <StatItem label="Candidates Vetted" target={candidatesVetted} suffix="+" />
+          <StatItem label="Open Positions" target={openPositions} />
+          <StatItem label="Active Guilds" target={activeGuilds} />
         </div>
       </div>
     </div>

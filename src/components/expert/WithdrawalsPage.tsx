@@ -16,6 +16,8 @@ import { useTokenBalance } from "@/lib/hooks/useVettedContracts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { StakingDonutChart } from "@/components/expert/StakingDonutChart";
 import { getGuildHexColor, STATUS_COLORS } from "@/config/colors";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 import type { GuildStakeInfo } from "@/types";
 
 const StakingModal = dynamic(
@@ -246,11 +248,14 @@ export default function WithdrawalsPage() {
       />
 
       {/* ── Lockup Info Banner ── */}
-      <div className={`flex items-center gap-2 p-3 rounded-xl border mb-6 ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
+      <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 p-3 rounded-xl border mb-6 ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle}`}>
         <Lock className={`w-4 h-4 flex-shrink-0 ${STATUS_COLORS.info.text}`} />
         <span className="text-sm text-muted-foreground">
           25% of your guild stake is locked during active reviews and cannot be unstaked until reviews are finalized.
         </span>
+        <HelpLink href={DOC_LINKS.slashing} size="sm" className="ml-auto">
+          How slashing works
+        </HelpLink>
       </div>
 
       {/* ── Hero: Big Number ── */}
@@ -284,8 +289,8 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* ── Stats Strip ── */}
-      <div className="grid grid-cols-3 rounded-xl border border-border overflow-hidden mb-10">
-        <div className="bg-card p-5 border-r border-border">
+      <div className="grid grid-cols-1 sm:grid-cols-3 rounded-xl border border-border overflow-hidden mb-10">
+        <div className="bg-card p-5 border-b sm:border-b-0 sm:border-r border-border">
           <div className="text-xs text-muted-foreground mb-1.5 font-medium">
             Available Balance
           </div>
@@ -296,7 +301,7 @@ export default function WithdrawalsPage() {
             </span>
           </div>
         </div>
-        <div className="bg-card p-5 border-r border-border">
+        <div className="bg-card p-5 border-b sm:border-b-0 sm:border-r border-border">
           <div className="text-xs text-muted-foreground mb-1.5 font-medium">
             Pending Unstake
           </div>

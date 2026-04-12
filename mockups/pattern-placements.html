@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted — Pattern Placement Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0c0e;
+    --bg-surface: #141416;
+    --bg-card: #1a1a1e;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #e8e6e3;
+    --text-muted: #8a8a8a;
+    --primary: #ff6a00;
+    --primary-muted: rgba(255,106,0,0.12);
+    --primary-glow: rgba(255,106,0,0.06);
+    --positive: #22c55e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .display { font-family: 'Bricolage Grotesque', serif; }
+
+  /* ── The Vetted Pattern (CSS recreation of the connected rounded shapes) ── */
+  .vetted-pattern {
+    --pattern-color: rgba(255,255,255,0.035);
+    background-image:
+      /* Horizontal capsules (row 1) */
+      radial-gradient(ellipse 40px 18px at 30px 20px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px),
+      radial-gradient(ellipse 40px 18px at 80px 20px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px),
+      /* Vertical capsules */
+      radial-gradient(ellipse 18px 40px at 55px 45px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px),
+      /* Row 2 offset */
+      radial-gradient(ellipse 40px 18px at 55px 70px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px),
+      radial-gradient(ellipse 18px 40px at 30px 45px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px),
+      radial-gradient(ellipse 18px 40px at 80px 45px, transparent 14px, var(--pattern-color) 14px, var(--pattern-color) 16px, transparent 16px);
+    background-size: 100px 80px;
+  }
+
+  /* SVG-based pattern for higher fidelity */
+  .vetted-pattern-svg {
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.04)' stroke-width='2'%3E%3Crect x='4' y='4' width='52' height='32' rx='16'/%3E%3Crect x='64' y='4' width='52' height='32' rx='16'/%3E%3Crect x='4' y='44' width='32' height='52' rx='16'/%3E%3Crect x='44' y='44' width='32' height='52' rx='16'/%3E%3Crect x='84' y='44' width='32' height='52' rx='16'/%3E%3Crect x='4' y='104' width='52' height='12' rx='6'/%3E%3Crect x='64' y='104' width='52' height='12' rx='6'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+
+  /* More authentic maze pattern using inline SVG */
+  .vetted-maze {
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='160' viewBox='0 0 200 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- Row 1: connected rounded shapes --%3E%3Cpath d='M16 8 h28 a12 12 0 0 1 12 12 v16 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-16 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M76 8 h28 a12 12 0 0 1 12 12 v16 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-16 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M136 8 h28 a12 12 0 0 1 12 12 v16 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-16 a12 12 0 0 1 12-12z'/%3E%3C!-- Row 2: vertical shapes offset --%3E%3Cpath d='M16 56 h8 a12 12 0 0 1 12 12 v36 a12 12 0 0 1-12 12 h-8 a12 12 0 0 1-12-12 v-36 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M56 56 h28 a12 12 0 0 1 12 12 v36 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-36 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M116 56 h8 a12 12 0 0 1 12 12 v36 a12 12 0 0 1-12 12 h-8 a12 12 0 0 1-12-12 v-36 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M156 56 h28 a12 12 0 0 1 12 12 v16 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-16 a12 12 0 0 1 12-12z'/%3E%3Cpath d='M156 100 h28 a12 12 0 0 1 12 12 v16 a12 12 0 0 1-12 12 h-28 a12 12 0 0 1-12-12 v-16 a12 12 0 0 1 12-12z'/%3E%3C!-- Row 3: circles/nodes at junctions --%3E%3Ccircle cx='46' cy='48' r='6'/%3E%3Ccircle cx='106' cy='48' r='6'/%3E%3Ccircle cx='46' cy='120' r='6'/%3E%3Ccircle cx='106' cy='120' r='6'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 200px 160px;
+  }
+
+  /* The authentic Vetted pattern — closest to the real design files */
+  .vetted-authentic {
+    background-image: url("data:image/svg+xml,%3Csvg width='240' height='200' viewBox='0 0 240 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='240' height='200' fill='white'/%3E%3C/mask%3E%3C/defs%3E%3Cg fill='rgba(255,255,255,0.04)' stroke='rgba(255,255,255,0.055)' stroke-width='1.5'%3E%3C!-- Row 1 --%3E%3Crect x='6' y='6' width='64' height='36' rx='18'/%3E%3Crect x='88' y='6' width='64' height='36' rx='18'/%3E%3Crect x='170' y='6' width='64' height='36' rx='18'/%3E%3C!-- Row 2 --%3E%3Crect x='6' y='58' width='36' height='64' rx='18'/%3E%3Crect x='58' y='58' width='64' height='36' rx='18'/%3E%3Crect x='140' y='58' width='36' height='64' rx='18'/%3E%3Crect x='194' y='58' width='36' height='64' rx='18'/%3E%3C!-- Row 3 --%3E%3Crect x='58' y='110' width='64' height='36' rx='18'/%3E%3Crect x='6' y='140' width='36' height='54' rx='18'/%3E%3Crect x='140' y='140' width='64' height='36' rx='18'/%3E%3C!-- Connectors / circles --%3E%3Ccircle cx='52' cy='52' r='8' fill='rgba(255,255,255,0.03)' stroke='rgba(255,255,255,0.04)'/%3E%3Ccircle cx='160' cy='52' r='8' fill='rgba(255,255,255,0.03)' stroke='rgba(255,255,255,0.04)'/%3E%3Ccircle cx='52' cy='138' r='8' fill='rgba(255,255,255,0.03)' stroke='rgba(255,255,255,0.04)'/%3E%3Ccircle cx='132' cy='104' r='8' fill='rgba(255,255,255,0.03)' stroke='rgba(255,255,255,0.04)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 240px 200px;
+  }
+
+  /* ── Section Dividers ── */
+  .proposal-section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .proposal-section:last-child { border-bottom: none; }
+
+  .section-header {
+    max-width: 1200px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+  .section-header .number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--primary-muted);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .section-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .section-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 600px;
+  }
+  .section-header .location {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'SF Mono', Monaco, monospace;
+  }
+
+  /* ── Top-level intro ── */
+  .page-intro {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 24px 0;
+    text-align: center;
+  }
+  .page-intro h1 {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+  .page-intro h1 span { color: var(--primary); }
+  .page-intro p {
+    color: var(--text-muted);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Mock content container ── */
+  .mock-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: var(--primary-muted);
+    border: 1px solid rgba(255,106,0,0.15);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--primary);
+  }
+  .badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* ── Common card styles ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+  }
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  PAGE INTRO                                                      ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="page-intro">
+  <h1 class="display">Vetted <span>Pattern</span> Placements</h1>
+  <p>8 proposals for where to use the Vetted maze pattern across the app. Each section shows a before/after or isolated mockup.</p>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  1. HOMEPAGE HERO — Full-width subtle background               ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">1</div>
+    <h2 class="display">Homepage Hero Section</h2>
+    <p>The pattern tiles behind the hero text at ~3-4% opacity, creating depth without competing with the content. Fades out at the bottom with a gradient mask.</p>
+    <div class="location">src/components/home/HeroSection.tsx</div>
+  </div>
+
+  <div style="position: relative; overflow: hidden; padding: 80px 0 60px; background: var(--bg);">
+    <!-- Pattern layer -->
+    <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.7; mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 60%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);"></div>
+    <!-- Warm glow -->
+    <div style="position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 600px; height: 300px; background: radial-gradient(ellipse, rgba(255,106,0,0.06), transparent 70%); pointer-events: none;"></div>
+
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px;">
+      <div class="badge" style="margin-bottom: 28px;">
+        <span class="dot"></span>
+        Private Beta Live
+      </div>
+
+      <h1 class="display" style="font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px;">
+        The Credibility Layer<br/>for Hiring
+      </h1>
+      <p style="color: var(--text-muted); font-size: 15px; max-width: 480px; margin-bottom: 48px;">
+        Expert signals that separate real talent from noise.
+      </p>
+
+      <!-- Value cards -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;">
+        <div class="card" style="padding: 24px; cursor: pointer;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <svg width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="7" r="4"/><path d="M2 18c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <h3 class="display" style="font-size: 20px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em;">Find Work</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Get vetted by experts. Stand out to employers.</p>
+        </div>
+
+        <div class="card" style="padding: 24px; cursor: pointer; border-color: rgba(255,106,0,0.15); background: rgba(255,106,0,0.03);">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <svg width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="10,2 12.5,7.5 18,8 14,12 15,18 10,15 5,18 6,12 2,8 7.5,7.5"/></svg>
+          </div>
+          <h3 class="display" style="font-size: 20px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em;">Become an Expert</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Stake your reputation. Earn by reviewing talent.</p>
+        </div>
+
+        <div class="card" style="padding: 24px; cursor: pointer;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+            <svg width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 8h6M7 12h3"/></svg>
+          </div>
+          <h3 class="display" style="font-size: 20px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em;">Post a Job</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Hire from a pool pre-vetted by domain experts.</p>
+        </div>
+      </div>
+
+      <!-- Guild pills -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 999px; font-size: 12px; color: var(--text-muted);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary);"></span> Solidity
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 999px; font-size: 12px; color: var(--text-muted);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary);"></span> Frontend
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 999px; font-size: 12px; color: var(--text-muted);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary);"></span> Protocol Design
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 999px; font-size: 12px; color: var(--text-muted);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary);"></span> Security
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 999px; font-size: 12px; color: var(--text-muted);">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--primary);"></span> Data Science
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  2. GUILDS LISTING HERO — Bold pattern behind header            ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">2</div>
+    <h2 class="display">Guilds Listing — Hero Banner</h2>
+    <p>A stronger pattern presence behind "Where Experts Shape Hiring" gives this page its own visual identity. The pattern is slightly more visible here (5-6% opacity) since this is a brand-forward page.</p>
+    <div class="location">src/components/guilds/GuildsListingPage.tsx</div>
+  </div>
+
+  <div style="position: relative; overflow: hidden; background: var(--bg); padding: 80px 0 48px;">
+    <!-- Pattern -->
+    <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 1;
+      mask-image: radial-gradient(ellipse 80% 90% at 50% 30%, rgba(0,0,0,0.8), rgba(0,0,0,0.2) 60%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 30%, rgba(0,0,0,0.8), rgba(0,0,0,0.2) 60%, transparent 90%);
+    "></div>
+    <!-- Warm glow -->
+    <div style="position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 700px; height: 400px; background: radial-gradient(ellipse, rgba(255,106,0,0.07), transparent 70%); pointer-events: none;"></div>
+
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; text-align: center;">
+      <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--primary); margin-bottom: 16px;">
+        &#x2728; Noble Protocol Guilds
+      </p>
+
+      <h1 class="display" style="font-size: 48px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px;">
+        Where Experts<br/>Shape Hiring
+      </h1>
+      <p style="color: var(--text-muted); font-size: 14px; max-width: 520px; margin: 0 auto 40px;">
+        Verified communities stake reputation to identify the best talent. Join a guild to participate in decentralized hiring.
+      </p>
+
+      <!-- Stats row -->
+      <div style="display: flex; justify-content: center; gap: 48px;">
+        <div>
+          <div class="display" style="font-size: 28px; font-weight: 700; color: var(--text);">12</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Active Guilds</div>
+        </div>
+        <div style="width: 1px; background: var(--border);"></div>
+        <div>
+          <div class="display" style="font-size: 28px; font-weight: 700; color: var(--text);">148</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Expert Reviewers</div>
+        </div>
+        <div style="width: 1px; background: var(--border);"></div>
+        <div>
+          <div class="display" style="font-size: 28px; font-weight: 700; color: var(--text);">36</div>
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Open Positions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  3. GUILD CARDS — Pattern as card header accent                 ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">3</div>
+    <h2 class="display">Guild Cards — Header Pattern Strip</h2>
+    <p>Each guild card gets a subtle pattern strip at the top (48px tall), giving cards texture and brand identity. The orange glow peeks through where the guild icon sits.</p>
+    <div class="location">src/components/GuildCard.tsx</div>
+  </div>
+
+  <div class="mock-container">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+
+      <!-- Card 1 -->
+      <div class="card" style="cursor: pointer;">
+        <!-- Pattern header strip -->
+        <div style="position: relative; height: 52px; overflow: hidden;">
+          <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 1.2;"></div>
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 20px; background: linear-gradient(to top, var(--bg-card), transparent);"></div>
+          <!-- Orange glow at icon position -->
+          <div style="position: absolute; top: 20px; left: 28px; width: 60px; height: 40px; background: radial-gradient(ellipse, rgba(255,106,0,0.15), transparent 70%);"></div>
+        </div>
+        <div style="padding: 0 24px 24px; margin-top: -8px; position: relative;">
+          <div style="display: flex; align-items: start; gap: 14px; margin-bottom: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 13px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <h3 class="display" style="font-size: 18px; font-weight: 700; letter-spacing: -0.01em;">Solidity Guild</h3>
+              <span style="display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 2px 10px; border-radius: 999px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.2); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary);">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--primary);"></span>
+                Senior
+              </span>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--primary);">92</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Rep</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 14px; font-weight: 600; color: var(--positive);">2.4k</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">VETD</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--text);">18</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Reviews</div>
+            </div>
+          </div>
+
+          <div style="padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+            Joined Mar 2026
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card" style="cursor: pointer;">
+        <div style="position: relative; height: 52px; overflow: hidden;">
+          <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 1.2;"></div>
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 20px; background: linear-gradient(to top, var(--bg-card), transparent);"></div>
+          <div style="position: absolute; top: 20px; left: 28px; width: 60px; height: 40px; background: radial-gradient(ellipse, rgba(255,106,0,0.15), transparent 70%);"></div>
+        </div>
+        <div style="padding: 0 24px 24px; margin-top: -8px; position: relative;">
+          <div style="display: flex; align-items: start; gap: 14px; margin-bottom: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 13px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="3" width="16" height="16" rx="3"/><path d="M8 8h6v6H8z"/></svg>
+            </div>
+            <div>
+              <h3 class="display" style="font-size: 18px; font-weight: 700; letter-spacing: -0.01em;">Frontend Guild</h3>
+              <span style="display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 2px 10px; border-radius: 999px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.2); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary);">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--primary);"></span>
+                Lead
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--primary);">97</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Rep</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 14px; font-weight: 600; color: var(--positive);">5.1k</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">VETD</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--text);">34</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Reviews</div>
+            </div>
+          </div>
+
+          <div style="padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+            Joined Jan 2026
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card" style="cursor: pointer;">
+        <div style="position: relative; height: 52px; overflow: hidden;">
+          <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 1.2;"></div>
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 20px; background: linear-gradient(to top, var(--bg-card), transparent);"></div>
+          <div style="position: absolute; top: 20px; left: 28px; width: 60px; height: 40px; background: radial-gradient(ellipse, rgba(255,106,0,0.15), transparent 70%);"></div>
+        </div>
+        <div style="padding: 0 24px 24px; margin-top: -8px; position: relative;">
+          <div style="display: flex; align-items: start; gap: 14px; margin-bottom: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 13px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="22" height="22" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <h3 class="display" style="font-size: 18px; font-weight: 700; letter-spacing: -0.01em;">Security Guild</h3>
+              <span style="display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 2px 10px; border-radius: 999px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.2); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary);">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--primary);"></span>
+                Member
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--primary);">74</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Rep</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 14px; font-weight: 600; color: var(--positive);">890</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">VETD</div>
+            </div>
+            <div style="text-align: center; padding: 10px 6px; border-radius: 11px; background: rgba(255,255,255,0.02); border: 1px solid var(--border);">
+              <div style="font-family: 'SF Mono', Monaco, monospace; font-size: 15px; font-weight: 600; color: var(--text);">7</div>
+              <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Reviews</div>
+            </div>
+          </div>
+
+          <div style="padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+            Joined Feb 2026
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  4. BROWSE PAGE HERO — Pattern behind the search hero           ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">4</div>
+    <h2 class="display">Browse Page — Hero Section</h2>
+    <p>The "Find Your Next Web3 Opportunity" hero gets the pattern as a radial backdrop, focused behind the heading. Reinforces the brand identity on the main public-facing discovery page.</p>
+    <div class="location">src/components/browse/BrowsePage.tsx</div>
+  </div>
+
+  <div style="position: relative; overflow: hidden; background: var(--bg); padding: 80px 0 60px;">
+    <!-- Pattern layer with radial mask centered on heading -->
+    <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.9;
+      mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, rgba(0,0,0,0.7), transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, rgba(0,0,0,0.7), transparent 80%);
+    "></div>
+    <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 500px; height: 300px; background: radial-gradient(ellipse, rgba(255,106,0,0.05), transparent 70%); pointer-events: none;"></div>
+
+    <div style="position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 24px; text-align: center;">
+      <div class="badge" style="margin-bottom: 20px;">
+        <svg width="14" height="14" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M7 4v3l2 1"/></svg>
+        Decentralized Talent Marketplace
+      </div>
+
+      <h1 class="display" style="font-size: 48px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px;">
+        Find Your Next<br/><span style="color: var(--primary);">Web3 Opportunity</span>
+      </h1>
+      <p style="color: var(--text-muted); font-size: 14px; max-width: 520px; margin: 0 auto 32px; line-height: 1.7;">
+        Join a decentralized talent marketplace where expertise is validated by guilds and opportunities are vetted by the community.
+      </p>
+      <button style="display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;">
+        Find the Job for You
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  5. STATS BAR — Pattern inside the stats container              ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">5</div>
+    <h2 class="display">Stats Bar — Pattern Background</h2>
+    <p>The homepage stats bar gets a very subtle pattern fill inside the card, adding texture to what is currently a flat surface. Very low opacity (~2-3%) so the numbers remain the focus.</p>
+    <div class="location">src/components/home/StatsBar.tsx</div>
+  </div>
+
+  <div class="mock-container">
+    <div style="position: relative; overflow: hidden; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; padding: 20px 0;">
+      <!-- Pattern inside the bar -->
+      <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.5;"></div>
+      <!-- Gradient overlay to keep focus on numbers -->
+      <div style="position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg-card), transparent 15%, transparent 85%, var(--bg-card)); pointer-events: none;"></div>
+
+      <div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0;">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 36px; border-right: 1px solid rgba(255,255,255,0.04);">
+          <span class="display" style="font-size: 22px; font-weight: 700;">120</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Expert Reviewers</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 36px; border-right: 1px solid rgba(255,255,255,0.04);">
+          <span class="display" style="font-size: 22px; font-weight: 700;">350+</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Candidates Vetted</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 36px; border-right: 1px solid rgba(255,255,255,0.04);">
+          <span class="display" style="font-size: 22px; font-weight: 700;">24</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Open Positions</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 36px;">
+          <span class="display" style="font-size: 22px; font-weight: 700;">8</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Active Guilds</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  6. FOOTER — Pattern accent across footer                      ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">6</div>
+    <h2 class="display">Footer — Pattern Band</h2>
+    <p>The footer gets a pattern layer that fades in from the top, creating a visual bookend that mirrors the hero. Gives the page a satisfying "wrapped in brand" feel.</p>
+    <div class="location">src/components/HomePage.tsx (footer section)</div>
+  </div>
+
+  <div style="position: relative; overflow: hidden; background: var(--bg-surface); border-top: 1px solid var(--border); padding: 64px 0 48px;">
+    <!-- Pattern layer fading in from top -->
+    <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.8;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 90%);
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 50%, transparent 90%);
+    "></div>
+
+    <div style="position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px;">
+      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;">
+        <!-- Brand column -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--primary); display: flex; align-items: center; justify-content: center;">
+              <span style="color: white; font-weight: 800; font-size: 16px;">V</span>
+            </div>
+            <span class="display" style="font-size: 18px; font-weight: 700;">Vetted</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 280px;">
+            The credibility layer for hiring. Expert signals that separate real talent from noise.
+          </p>
+        </div>
+
+        <!-- Platform -->
+        <div>
+          <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 16px;">Platform</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px;">
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Browse Jobs</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Explore Guilds</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Leaderboard</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Governance</a></li>
+          </ul>
+        </div>
+
+        <!-- For Experts -->
+        <div>
+          <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 16px;">For Experts</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px;">
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Apply</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Earnings</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Staking</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div>
+          <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 16px;">Company</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px;">
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">About</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Blog</a></li>
+            <li><a href="#" style="font-size: 13px; color: var(--text); text-decoration: none; opacity: 0.7;">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; color: var(--text-muted);">&copy; 2026 Vetted Protocol. All rights reserved.</span>
+        <div style="display: flex; gap: 16px;">
+          <a href="#" style="font-size: 12px; color: var(--text-muted); text-decoration: none;">Terms</a>
+          <a href="#" style="font-size: 12px; color: var(--text-muted); text-decoration: none;">Privacy</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  7. LEADERBOARD HERO — Pattern behind podium area               ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">7</div>
+    <h2 class="display">Leaderboard — Hero & Podium</h2>
+    <p>The leaderboard header and top-3 podium area gets the pattern, with an orange glow accent emanating from the #1 position. Creates a "stage" feeling.</p>
+    <div class="location">src/components/leaderboard/LeaderboardPage.tsx</div>
+  </div>
+
+  <div style="position: relative; overflow: hidden; background: var(--bg); padding: 48px 0 40px;">
+    <!-- Pattern -->
+    <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.8;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+    "></div>
+    <!-- Center glow for #1 position -->
+    <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 400px; height: 200px; background: radial-gradient(ellipse, rgba(255,106,0,0.08), transparent 70%); pointer-events: none;"></div>
+
+    <div style="position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px; text-align: center;">
+      <div style="font-size: 32px; margin-bottom: 8px;">&#x1F3C6;</div>
+      <h1 class="display" style="font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 8px;">Expert Leaderboard</h1>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 40px;">Top contributors ranked by reputation and impact</p>
+
+      <!-- Podium -->
+      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 16px;">
+        <!-- #2 -->
+        <div style="width: 180px;">
+          <div style="text-align: center; padding: 20px 16px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px 16px 8px 8px;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">#2</div>
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #c0c0c0, #e0e0e0); margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #333; font-size: 18px;">A</div>
+            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">Alice.eth</div>
+            <div style="font-size: 12px; color: var(--primary);">Rep: 94</div>
+          </div>
+        </div>
+
+        <!-- #1 -->
+        <div style="width: 200px;">
+          <div style="text-align: center; padding: 28px 16px 28px; background: var(--bg-card); border: 1px solid rgba(255,106,0,0.2); border-radius: 16px 16px 8px 8px; box-shadow: 0 8px 40px rgba(255,106,0,0.1);">
+            <div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-bottom: 8px;">&#x1F451; #1</div>
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #ff8c00, #ffa940); margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 20px; box-shadow: 0 4px 20px rgba(255,106,0,0.3);">B</div>
+            <div style="font-weight: 700; font-size: 15px; margin-bottom: 2px;">Bob.eth</div>
+            <div style="font-size: 12px; color: var(--primary);">Rep: 98</div>
+          </div>
+        </div>
+
+        <!-- #3 -->
+        <div style="width: 180px;">
+          <div style="text-align: center; padding: 20px 16px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px 16px 8px 8px;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">#3</div>
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #cd7f32, #daa06d); margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 18px;">C</div>
+            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">Carol.eth</div>
+            <div style="font-size: 12px; color: var(--primary);">Rep: 91</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  8. GUILD DETAIL HEADER — Pattern behind guild identity         ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div class="proposal-section">
+  <div class="section-header">
+    <div class="number">8</div>
+    <h2 class="display">Guild Detail — Header Bento Grid</h2>
+    <p>The guild detail page header uses the pattern as a background for the main info panel (left bento cell). Creates a "banner" effect while keeping the right cells clean for data readability.</p>
+    <div class="location">src/components/guild/GuildHeader.tsx</div>
+  </div>
+
+  <div class="mock-container">
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; grid-template-rows: auto auto; gap: 12px;">
+
+      <!-- Main guild info (spans 2 rows) — WITH PATTERN -->
+      <div style="grid-row: span 2; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent); padding: 32px;">
+        <!-- Pattern -->
+        <div class="vetted-authentic" style="position: absolute; inset: 0; opacity: 0.7;
+          mask-image: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+          -webkit-mask-image: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+        "></div>
+        <!-- Glow -->
+        <div style="position: absolute; top: -20px; left: -20px; width: 200px; height: 200px; background: radial-gradient(ellipse, rgba(255,106,0,0.08), transparent 70%); pointer-events: none;"></div>
+
+        <div style="position: relative; z-index: 1;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--primary-muted); border: 1px solid rgba(255,106,0,0.2); display: flex; align-items: center; justify-content: center;">
+              <svg width="28" height="28" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14 2L4 7l10 5 10-5-10-5zM4 17l10 5 10-5M4 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <h2 class="display" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">Solidity Guild</h2>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Smart Contract Development & Auditing</div>
+            </div>
+          </div>
+
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 24px; max-width: 500px;">
+            The premier guild for Solidity developers and auditors. Review candidates, stake reputation, and earn VETD for your expertise in smart contract development.
+          </p>
+
+          <div style="display: flex; gap: 24px;">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px;">Members</div>
+              <div class="display" style="font-size: 24px; font-weight: 700;">24</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px;">Open Jobs</div>
+              <div class="display" style="font-size: 24px; font-weight: 700; color: var(--primary);">6</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px;">Total Staked</div>
+              <div class="display" style="font-size: 24px; font-weight: 700;">45.2k</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Position cell -->
+      <div style="border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent); padding: 24px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px;">Your Position</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 36px; font-weight: 800; color: var(--primary); font-family: 'SF Mono', Monaco, monospace;">#3</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600;">Senior Reviewer</div>
+            <div style="font-size: 12px; color: var(--text-muted);">Top 15% by reputation</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Staking cell -->
+      <div style="border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent); padding: 24px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px;">Staking Status</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 28px; font-weight: 800; color: var(--positive); font-family: 'SF Mono', Monaco, monospace;">2,400</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600;">VETD Staked</div>
+            <div style="font-size: 12px; color: var(--positive);">Active &mdash; earning rewards</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║  SUMMARY                                                        ║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
+<div style="max-width: 1100px; margin: 0 auto; padding: 80px 24px 100px;">
+  <h2 class="display" style="font-size: 28px; font-weight: 700; margin-bottom: 24px; text-align: center;">Implementation Summary</h2>
+
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+    <div class="card" style="padding: 24px;">
+      <div style="font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">High Impact</div>
+      <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--text-muted);">
+        <li>1. Homepage Hero — sets the brand tone instantly</li>
+        <li>2. Guilds Listing Hero — the most "brand" page</li>
+        <li>3. Guild Cards — gives every card a unique texture</li>
+        <li>4. Browse Hero — main public discovery surface</li>
+      </ul>
+    </div>
+    <div class="card" style="padding: 24px;">
+      <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Supporting</div>
+      <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--text-muted);">
+        <li>5. Stats Bar — very subtle, adds texture depth</li>
+        <li>6. Footer — bookends the page nicely</li>
+        <li>7. Leaderboard Hero — "stage" atmosphere</li>
+        <li>8. Guild Detail Header — banner identity</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 24px; margin-top: 16px;">
+    <div style="font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Technique</div>
+    <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--text-muted);">
+      <li>&bull; Use the actual SVG pattern files (BackGround.svg) as <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 12px;">background-image</code> just like login page does</li>
+      <li>&bull; Control with CSS <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 12px;">mask-image</code> gradients for fade-in/out edges</li>
+      <li>&bull; Keep opacity at 3-6% — pattern should be felt, not read</li>
+      <li>&bull; Light mode: use pattern-light.svg / Dark mode: use pattern-dark.svg (already have both)</li>
+      <li>&bull; Create a shared <code style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; font-size: 12px;">&lt;PatternBackground /&gt;</code> component for reuse</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

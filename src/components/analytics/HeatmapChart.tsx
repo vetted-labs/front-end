@@ -12,13 +12,24 @@ const HEAT_CLASSES: Record<number, string> = {
   5: "bg-primary/[0.60]",
 };
 
+const INTENSITY_LABELS: Record<number, string> = {
+  0: "No activity",
+  1: "Very low",
+  2: "Low",
+  3: "Medium",
+  4: "High",
+  5: "Very high",
+};
+
 interface HeatmapChartProps {
   data: number[][];
   rows: string[];
   cols: string[];
+  /** Optional raw counts matching the same shape as `data` — shown in tooltip when available */
+  rawData?: number[][];
 }
 
-export function HeatmapChart({ data, rows, cols }: HeatmapChartProps) {
+export function HeatmapChart({ data, rows, cols, rawData }: HeatmapChartProps) {
   return (
     <div>
       {/* Grid: label column + 7 day columns */}
@@ -48,18 +59,43 @@ export function HeatmapChart({ data, rows, cols }: HeatmapChartProps) {
             </div>
 
             {/* Heat cells */}
-            {row.map((val, colIdx) => (
-              <div
-                key={`cell-${rowIdx}-${colIdx}`}
-                className={cn(
-                  "aspect-square rounded min-h-[32px]",
-                  "transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  "cursor-pointer hover:scale-110 hover:z-10",
-                  HEAT_CLASSES[val] ?? HEAT_CLASSES[0]
-                )}
-                aria-label={`${rows[rowIdx]} ${cols[colIdx]}: intensity ${val}`}
-              />
-            ))}
+            {row.map((val, colIdx) => {
+              const rawCount = rawData?.[rowIdx]?.[colIdx];
+              const tooltipText = rawCount != null
+                ? `${cols[colIdx]} ${rows[rowIdx]} — ${rawCount} application${rawCount !== 1 ? "s" : ""}`
+                : `${cols[colIdx]} ${rows[rowIdx]} — ${INTENSITY_LABELS[val] ?? INTENSITY_LABELS[0]}`;
+
+              return (
+                <div
+                  key={`cell-${rowIdx}-${colIdx}`}
+                  className="relative group"
+                >
+                  <div
+                    className={cn(
+                      "aspect-square rounded min-h-[32px]",
+                      "transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      "cursor-pointer group-hover:scale-110 group-hover:z-10",
+                      HEAT_CLASSES[val] ?? HEAT_CLASSES[0]
+                    )}
+                    aria-label={tooltipText}
+                  />
+                  <div
+                    role="tooltip"
+                    className={cn(
+                      "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
+                      "px-2.5 py-1.5 rounded-lg",
+                      "bg-popover text-popover-foreground border border-border shadow-lg",
+                      "text-[11px] font-medium whitespace-nowrap",
+                      "opacity-0 scale-95 pointer-events-none",
+                      "group-hover:opacity-100 group-hover:scale-100",
+                      "transition-all duration-150 ease-out"
+                    )}
+                  >
+                    {tooltipText}
+                  </div>
+                </div>
+              );
+            })}
           </Fragment>
         ))}
       </div>

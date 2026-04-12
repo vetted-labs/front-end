@@ -11,9 +11,10 @@ import {
 } from "@/lib/hooks/useVettedContracts";
 import { useEndorsementTransaction } from "@/lib/hooks/useEndorsementTransaction";
 import type { EndorsableApplication } from "@/lib/hooks/useEndorsementTransaction";
-import { blockchainApi } from "@/lib/api";
+import { blockchainApi, expertApi } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
-import type { EndorsementApplication, GuildRecord } from "@/types";
+import { useFetch } from "@/lib/hooks/useFetch";
+import type { EndorsementApplication, GuildRecord, EarningsBreakdownResponse } from "@/types";
 
 import {
   Card,
@@ -74,6 +75,12 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
 
   // Use backend API to get user's endorsements (more reliable than blockchain)
   const { endorsements: allUserEndorsements, isLoading: endorsementsLoading, refetch: refetchEndorsements } = useMyActiveEndorsements();
+
+  // Fetch real earnings data for the stats cards
+  const { data: earningsData } = useFetch<EarningsBreakdownResponse>(
+    () => expertApi.getEarningsBreakdown(address!, { limit: 100 }) as Promise<EarningsBreakdownResponse>,
+    { skip: !address }
+  );
 
   // Load applications with server-side pagination
   const APPS_PER_PAGE = 12;
@@ -251,9 +258,9 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         guilds={guilds}
         selectedGuildId={selectedGuildId}
         onGuildChange={onGuildChange}
-        totalEndorsementsCount={allUserEndorsements.length}
-        userEndorsementsCount={userEndorsements.length}
-        applicationsCount={applicationsTotalItems}
+        guildEndorsements={userEndorsements}
+        allEndorsements={allUserEndorsements}
+        earningsData={earningsData}
         userStake={userStake}
       />
 

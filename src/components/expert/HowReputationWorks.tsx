@@ -13,6 +13,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -42,20 +44,23 @@ export function HowReputationWorks() {
 
   return (
     <Card padding="none">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex w-full items-center justify-between px-5 py-4">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 text-left"
+        >
           <Info className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-bold">How Reputation Works</span>
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+          <ChevronDown
+            className={`w-4 h-4 text-muted-foreground transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+        <HelpLink href={DOC_LINKS.reputation} variant="subtle" size="sm">
+          Full guide
+        </HelpLink>
+      </div>
 
       {open && (
         <div className="px-5 pb-5 border-t border-border">
@@ -103,8 +108,8 @@ export function HowReputationWorks() {
               <p className="text-sm text-muted-foreground mb-3">
                 After a vetting round finalizes, the consensus score is calculated using <strong className="text-foreground/80">IQR-based filtering</strong> (statistical outlier removal). Your deviation is measured as a multiple of the IQR distance from the median.
               </p>
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="rounded-lg border border-border overflow-x-auto">
+                <table className="w-full text-sm min-w-[320px]">
                   <thead>
                     <tr className="bg-muted/40 text-muted-foreground text-xs uppercase tracking-wider">
                       <th className="text-left px-3 py-2 font-medium">Deviation</th>

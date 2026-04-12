@@ -64,8 +64,8 @@ function SummarySection({ icon, title, children }: SummarySectionProps) {
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex gap-2">
-      <span className="font-medium text-foreground/70 min-w-[140px]">{label}:</span>
+    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+      <span className="font-medium text-foreground/70 sm:min-w-[140px] sm:flex-shrink-0">{label}:</span>
       <span className="text-foreground break-all">{value || <span className="italic text-muted-foreground/60">Not provided</span>}</span>
     </div>
   );
@@ -92,7 +92,7 @@ export function ReviewSubmitStep({
   onVerify,
 }: ReviewSubmitStepProps) {
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-6 p-4 sm:p-8">
       <div className="mb-2">
         <h2 className="text-xl font-bold text-foreground">Review Your Application</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -111,8 +111,8 @@ export function ReviewSubmitStep({
         {formData.portfolioUrl && (
           <SummaryRow label="Portfolio" value={formData.portfolioUrl} />
         )}
-        <div className="flex gap-2">
-          <span className="font-medium text-foreground/70 min-w-[140px]">Resume:</span>
+        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+          <span className="font-medium text-foreground/70 sm:min-w-[140px] sm:flex-shrink-0">Resume:</span>
           {resumeFile ? (
             <span className="text-foreground">{resumeFile.name}</span>
           ) : (
@@ -132,8 +132,8 @@ export function ReviewSubmitStep({
         <SummaryRow label="Current Title" value={formData.currentTitle} />
         <SummaryRow label="Current Company" value={formData.currentCompany} />
         {formData.expertiseAreas.length > 0 && (
-          <div className="flex gap-2">
-            <span className="font-medium text-foreground/70 min-w-[140px]">Expertise Areas:</span>
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+            <span className="font-medium text-foreground/70 sm:min-w-[140px] sm:flex-shrink-0">Expertise Areas:</span>
             <div className="flex flex-wrap gap-2">
               {formData.expertiseAreas.map((area) => (
                 <span
@@ -153,8 +153,8 @@ export function ReviewSubmitStep({
         icon={<FileText className="w-4 h-4 text-primary" />}
         title="Application Questions"
       >
-        <div className="flex gap-2 mb-1">
-          <span className="font-medium text-foreground/70 min-w-[140px]">No-AI Declaration:</span>
+        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 mb-1">
+          <span className="font-medium text-foreground/70 sm:min-w-[140px] sm:flex-shrink-0">No-AI Declaration:</span>
           <span className={noAiDeclaration ? `${STATUS_COLORS.positive.text} font-medium` : "text-destructive font-medium"}>
             {noAiDeclaration ? "Confirmed" : "Not confirmed"}
           </span>

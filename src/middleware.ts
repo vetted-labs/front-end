@@ -20,8 +20,26 @@ export function middleware(_request: NextRequest) {
     "https://*.alchemy.com",
     "https://*.infura.io",
     "https://eth.merkle.io",
+    // WalletConnect / Reown AppKit (used by RainbowKit getDefaultConfig).
+    // NB: CSP wildcards do NOT match the root domain (e.g. `*.web3modal.org`
+    // does not match `api.web3modal.org`), so each root must be listed
+    // explicitly alongside the wildcard.
+    "https://walletconnect.com",
     "https://*.walletconnect.com",
+    "https://walletconnect.org",
     "https://*.walletconnect.org",
+    "wss://*.walletconnect.com",
+    "wss://*.walletconnect.org",
+    "wss://relay.walletconnect.org",
+    "https://api.web3modal.org",
+    "https://*.web3modal.org",
+    "https://*.web3modal.com",
+    "https://*.reown.com",
+    "https://pulse.walletconnect.org",
+    "https://explorer-api.walletconnect.com",
+    "https://verify.walletconnect.org",
+    "https://relay.walletconnect.org",
+    // Wallet provider endpoints
     "https://*.metamask.io",
     "https://*.cx.metamask.io",
     "https://polygon-rpc.com",
@@ -39,9 +57,9 @@ export function middleware(_request: NextRequest) {
   const devCSP = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline + unsafe-eval for dev compatibility
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline needed for CSS-in-JS libraries
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com", // unsafe-inline needed for CSS-in-JS libraries
     "img-src 'self' data: https: blob:",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
     `connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* ${rpcConnectSrc}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -55,9 +73,9 @@ export function middleware(_request: NextRequest) {
   const prodCSP = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`, // Nonce-based for production security
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // unsafe-inline still needed for Tailwind
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com", // unsafe-inline still needed for Tailwind
     "img-src 'self' data: https: blob:",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
     `connect-src 'self' https://*.up.railway.app ${rpcConnectSrc}`,
     "frame-ancestors 'none'", // Prevent clickjacking
     "base-uri 'self'", // Prevent base tag injection

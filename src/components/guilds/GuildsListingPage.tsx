@@ -95,14 +95,15 @@ export default function GlobalGuildsPage() {
           </p>
 
           <h1 className="font-display font-bold text-[clamp(2.5rem,6vw,4rem)] leading-[1.05] tracking-tight text-foreground mb-4">
-            Where Experts
+            Your Field.
             <br />
-            Shape Hiring
+            Your Standards.
+            <br />
+            Your Guild.
           </h1>
 
           <p className="text-sm text-muted-foreground max-w-md leading-relaxed mb-8">
-            Verified communities stake reputation to vet talent.
-            Join the guild that matches your craft.
+            Curated communities of peer-reviewed domain experts who define what &ldquo;qualified&rdquo; means, vet with skin in the game, and earn from being right.
           </p>
 
           {/* Stats — understated, horizontal */}
@@ -180,7 +181,7 @@ export default function GlobalGuildsPage() {
                           navigateToGuild(guild.id);
                         }
                       }}
-                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-6 md:gap-8 rounded-xl border border-border bg-card px-7 py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="guild-card group relative grid grid-cols-[auto_1fr_auto] items-center gap-4 sm:gap-6 md:gap-8 rounded-xl border border-border bg-card px-4 sm:px-7 py-5 sm:py-6 md:px-9 md:py-7 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {/* Left: Icon with subtle container */}
                       <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">

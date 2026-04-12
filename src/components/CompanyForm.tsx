@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useRouter } from "next/navigation";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   Building2,
   Mail,
@@ -14,7 +15,7 @@ import {
   Users,
   Briefcase,
 } from "lucide-react";
-import { Input, Textarea, NativeSelect, Button, Alert, Modal } from "./ui";
+import { Input, Textarea, NativeSelect, Button, Alert } from "./ui";
 import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
 import type { AuthResponse } from "@/types";
@@ -38,9 +39,8 @@ interface FormData {
 export function CompanyForm() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
+  const { openConnectModal } = useConnectModal();
   const auth = useAuthContext();
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { execute, isLoading, error } = useApi<AuthResponse>();
 
@@ -176,7 +176,8 @@ export function CompanyForm() {
               {!isConnected && (
                 <Button
                   type="button"
-                  onClick={() => setShowWalletModal(true)}
+                  onClick={() => openConnectModal?.()}
+                  disabled={!openConnectModal}
                 >
                   Connect Wallet
                 </Button>
@@ -322,39 +323,6 @@ export function CompanyForm() {
           </p>
         </div>
       </div>
-
-      {/* Wallet Modal */}
-      <Modal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        title="Connect Your Wallet"
-        size="sm"
-      >
-        <div className="space-y-3">
-          {connectors.map((connector) => (
-            <button
-              key={connector.uid}
-              onClick={() => {
-                connect({ connector });
-                setShowWalletModal(false);
-              }}
-              className="w-full py-4 px-6 bg-muted hover:bg-muted rounded-xl transition-colors flex items-center justify-between group"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">
-                  {connector.name === "MetaMask" && "🦊"}
-                  {connector.name === "Coinbase Wallet" && "💙"}
-                  {connector.name === "WalletConnect" && "🔗"}
-                </span>
-                <span className="font-medium text-foreground">
-                  {connector.name}
-                </span>
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-muted-foreground" />
-            </button>
-          ))}
-        </div>
-      </Modal>
     </div>
   );
 }

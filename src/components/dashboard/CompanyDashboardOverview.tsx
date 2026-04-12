@@ -445,6 +445,88 @@ export function CompanyDashboardOverview() {
                 </div>
               )}
             </div>
+
+            {/* Pending Actions & Endorsement Accountability — side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch">
+              {/* Pending Actions */}
+              <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-display font-bold text-foreground">
+                    Pending Actions
+                  </h2>
+                </div>
+                <div className="p-4 space-y-2 flex-1">
+                  {unreadCount > 0 && (
+                    <Link
+                      href="/dashboard/messages"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-positive/10 flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="w-3.5 h-3.5 text-positive" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">Unread Messages</p>
+                        <p className="text-xs text-muted-foreground/50">
+                          {unreadCount} unread {unreadCount === 1 ? "message" : "messages"}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
+                    </Link>
+                  )}
+
+                  {recentApplications.some((a) => a.status === "pending") && (
+                    <Link
+                      href="/dashboard/candidates"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">New Applications</p>
+                        <p className="text-xs text-muted-foreground/50">
+                          {recentApplications.filter((a) => a.status === "pending").length} to review
+                        </p>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
+                    </Link>
+                  )}
+
+                  {unreadCount === 0 && !recentApplications.some((a) => a.status === "pending") && (
+                    <div className="text-center py-6">
+                      <CheckCircle className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground mb-0.5">All Caught Up</p>
+                      <p className="text-xs text-muted-foreground/50">
+                        No pending actions at the moment
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Endorsement Accountability */}
+              <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <h2 className="text-sm font-display font-bold text-foreground">
+                    Endorsement Accountability
+                  </h2>
+                </div>
+                <div className="p-4 flex-1 flex flex-col justify-center">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Track expert endorsement outcomes for candidates you&apos;ve reviewed.
+                  </p>
+                  <Link
+                    href="/dashboard/candidates"
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/30 hover:text-foreground transition-all"
+                  >
+                    View Candidates
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ── RIGHT COLUMN ── */}
@@ -565,84 +647,6 @@ export function CompanyDashboardOverview() {
                   })}
                 </div>
               )}
-            </div>
-
-            {/* Pending Actions */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
-                <Zap className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-display font-bold text-foreground">
-                  Pending Actions
-                </h2>
-              </div>
-              <div className="p-4 space-y-2">
-                {unreadCount > 0 && (
-                  <Link
-                    href="/dashboard/messages"
-                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-positive/10 flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="w-3.5 h-3.5 text-positive" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Unread Messages</p>
-                      <p className="text-xs text-muted-foreground/50">
-                        {unreadCount} unread {unreadCount === 1 ? "message" : "messages"}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
-                  </Link>
-                )}
-
-                {recentApplications.some((a) => a.status === "pending") && (
-                  <Link
-                    href="/dashboard/candidates"
-                    className="flex items-center gap-3 p-4 rounded-xl hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Users className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">New Applications</p>
-                      <p className="text-xs text-muted-foreground/50">
-                        {recentApplications.filter((a) => a.status === "pending").length} to review
-                      </p>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
-                  </Link>
-                )}
-
-                {unreadCount === 0 && !recentApplications.some((a) => a.status === "pending") && (
-                  <div className="text-center py-6">
-                    <CheckCircle className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground mb-0.5">All Caught Up</p>
-                    <p className="text-xs text-muted-foreground/50">
-                      No pending actions at the moment
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Endorsement Accountability */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/20 dark:border-border">
-                <Shield className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-display font-bold text-foreground">
-                  Endorsement Accountability
-                </h2>
-              </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Track expert endorsement outcomes for candidates you&apos;ve reviewed.
-                </p>
-                <Link
-                  href="/dashboard/candidates"
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/30 hover:text-foreground transition-all"
-                >
-                  View Candidates
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
             </div>
           </div>
         </div>

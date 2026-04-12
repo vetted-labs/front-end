@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Analytics v5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0c10;
+    --s0:rgba(255,255,255,0.015);--s1:rgba(255,255,255,0.03);--s2:rgba(255,255,255,0.055);--s3:rgba(255,255,255,0.08);
+    --bd:rgba(255,255,255,0.055);--bdh:rgba(255,255,255,0.1);
+    --t1:#eee9e2;--t2:rgba(238,233,226,0.48);--t3:rgba(238,233,226,0.26);--t4:rgba(238,233,226,0.14);
+    --pri:#ff6a00;--pris:rgba(255,106,0,0.08);--prigl:rgba(255,106,0,0.12);
+    --pos:#4ade80;--poss:rgba(74,222,128,0.08);
+    --neg:#fb7185;--negs:rgba(251,113,133,0.08);
+    --muted:#7c8898;
+    --r:14px;--rs:10px;--rx:6px;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --disp:'Bricolage Grotesque','Inter',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+  /* Noise texture */
+  body::before{content:'';position:fixed;inset:0;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+  /* Ambient glow */
+  body::after{content:'';position:fixed;top:-400px;left:50%;transform:translateX(-50%);width:1200px;height:800px;background:radial-gradient(ellipse,rgba(255,106,0,0.025) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+  .page{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 40px 120px}
+
+  /* ── Role Switcher — glass pill ── */
+  .role-sw{display:flex;gap:2px;background:rgba(255,255,255,0.025);border:1px solid var(--bd);border-radius:999px;padding:3px;width:fit-content;margin-bottom:28px;backdrop-filter:blur(8px)}
+  .role-btn{padding:8px 22px;border-radius:999px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--t3);cursor:pointer;transition:all .25s var(--ease);font-family:var(--sans)}
+  .role-btn:hover{color:var(--t2)}
+  .role-btn.active{background:var(--pri);color:#fff;box-shadow:0 2px 16px rgba(255,106,0,.3),0 0 1px rgba(255,106,0,.5) inset}
+  .role-panel{display:none}.role-panel.active{display:block;animation:fadeIn .4s var(--ease)}
+
+  /* ── Header ── */
+  .hdr{margin-bottom:20px;display:flex;align-items:flex-end;justify-content:space-between}
+  .hdr h1{font-family:var(--disp);font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .hdr p{color:var(--t2);font-size:13px;margin-top:3px}
+  .hdr-live{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);font-family:var(--mono)}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--pos);animation:pulse 2s ease-in-out infinite;box-shadow:0 0 6px var(--pos)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* ── Filters ── */
+  .filters{display:flex;align-items:center;gap:6px;margin-bottom:20px}
+  .fp{padding:5px 13px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--bd);background:transparent;color:var(--t3);cursor:pointer;transition:all .2s;font-family:var(--sans)}
+  .fp:hover{border-color:var(--bdh);color:var(--t2)}
+  .fp.active{background:var(--pris);border-color:rgba(255,106,0,.18);color:var(--pri);box-shadow:0 0 12px rgba(255,106,0,.06)}
+  .filters .spacer{flex:1}
+  .date-range{font-size:11px;color:var(--t3);font-family:var(--mono)}
+
+  /* ── Tabs — glow active ── */
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:28px}
+  .tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-family:var(--sans);user-select:none;position:relative}
+  .tab:hover{color:var(--t2)}
+  .tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+  .tab.active::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:6px;background:var(--pri);filter:blur(6px);opacity:.4}
+  .tab-count{font-size:10px;font-weight:600;padding:1px 6px;border-radius:999px;background:var(--pris);color:var(--pri);font-family:var(--mono);margin-left:5px}
+
+  .tp{display:none}.tp.active{display:block;animation:fadeIn .35s var(--ease)}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── Card — glass surface ── */
+  .card{
+    background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015));
+    border:1px solid var(--bd);border-radius:var(--r);padding:28px;position:relative;overflow:hidden;
+    backdrop-filter:blur(8px);
+    transition:border-color .2s,box-shadow .3s;
+  }
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)}
+  .card:hover{border-color:var(--bdh)}
+  /* Featured card variant */
+  .card-feat{border-color:rgba(255,106,0,.12)}
+  .card-feat::after{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--pri),transparent);opacity:.5}
+  .card-feat:hover{box-shadow:0 0 40px rgba(255,106,0,.04)}
+
+  .card-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+  .card-t{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3)}
+  .card-sub{font-size:11px;color:var(--t4);margin-top:3px}
+  .card-a{font-size:11px;color:var(--t4);cursor:pointer;transition:color .15s}.card-a:hover{color:var(--pri)}
+
+  /* ── Grid ── */
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .mb20{margin-bottom:20px}.mb28{margin-bottom:28px}.mb36{margin-bottom:36px}
+
+  /* ── KPI — bigger numbers ── */
+  .kpi{
+    background:linear-gradient(135deg,rgba(255,255,255,0.025),rgba(255,255,255,0.01));
+    border:1px solid var(--bd);border-radius:var(--r);padding:20px 22px 14px;position:relative;overflow:hidden;
+    backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .3s;
+  }
+  .kpi:hover{border-color:var(--bdh);box-shadow:0 0 30px rgba(255,106,0,.03)}
+  .kpi-bar{position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--pri),transparent)}
+  .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px}
+  .kpi-row{display:flex;align-items:flex-end;justify-content:space-between}
+  .kpi-val{font-family:var(--disp);font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+  .kpi-unit{font-size:14px;color:var(--t2);font-weight:500}
+  .kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;font-family:var(--mono)}
+  .kpi-badge.up{color:var(--pos);background:var(--poss)}.kpi-badge.dn{color:var(--neg);background:var(--negs)}
+  .kpi-spark{margin-top:14px;height:48px}
+  .kpi-spark svg{width:100%;height:100%}
+
+  /* ── Metric row ── */
+  .metric-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.025)}
+  .metric-row:last-child{border-bottom:none}
+  .metric-label{font-size:13px;color:var(--t2)}
+  .metric-val{font-family:var(--mono);font-size:14px;font-weight:600}
+
+  /* ── Stat ── */
+  .stat{background:rgba(255,255,255,.015);border:1px solid var(--bd);border-radius:var(--rx);padding:16px 18px;transition:border-color .15s}
+  .stat:hover{border-color:var(--bdh)}
+  .stat-l{font-size:10px;color:var(--t4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .stat-v{font-family:var(--mono);font-size:17px;font-weight:600}
+  .stat-note{font-size:10px;color:var(--t4);margin-top:3px}
+
+  /* ── SVG chart ── */
+  .gl{stroke:rgba(255,255,255,.03);stroke-width:.5}
+  .gl0{stroke:rgba(255,255,255,.06);stroke-width:.5}
+  .ax{font-size:9px;fill:rgba(238,233,226,.2);font-family:'JetBrains Mono',monospace}
+  .ax-hi{fill:var(--t2)}
+  .cleg{display:flex;gap:18px;margin-top:14px}
+  .cleg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)}
+  /* Glowing data point */
+  @keyframes dotGlow{0%,100%{r:5;opacity:.15}50%{r:7;opacity:.25}}
+  .glow-dot{animation:dotGlow 3s ease-in-out infinite}
+
+  /* ── Progress ── */
+  .prog{width:100%;height:4px;background:var(--s2);border-radius:2px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:2px}
+
+  /* ── Tier ── */
+  .tier{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;font-family:var(--mono)}
+  .tier-1{background:var(--pris);color:var(--pri);box-shadow:0 0 10px rgba(255,106,0,.08)}
+
+  /* ── Guild tag — single style ── */
+  .guild-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;display:inline-block;background:var(--pris);color:var(--pri)}
+
+  /* ── Status tags ── */
+  .status-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;display:inline-block}
+  .st-active{background:var(--poss);color:var(--pos)}
+  .st-review{background:var(--pris);color:var(--pri)}
+  .st-interview{background:var(--s2);color:var(--t2)}
+  .st-offer{background:var(--poss);color:var(--pos);box-shadow:0 0 8px rgba(74,222,128,.1)}
+  .st-paused{background:var(--s2);color:var(--t3)}
+
+  /* ── Table ── */
+  .tbl{width:100%}
+  .tbl-h{display:grid;gap:8px;padding:0 0 12px;border-bottom:1px solid var(--bd)}
+  .tbl-h span{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t4)}
+  .tbl-r{display:grid;gap:8px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:center;transition:all .15s}
+  .tbl-r:last-child{border-bottom:none}
+  .tbl-r:hover{background:rgba(255,255,255,.01);margin:0 -14px;padding:13px 14px;border-radius:var(--rx)}
+  .tbl-name{font-size:13px;font-weight:500;margin-bottom:2px}
+  .tbl-sub{font-size:10px;color:var(--t4)}
+  .tbl-metric{font-size:13px;font-family:var(--mono);font-weight:500}
+
+  /* ── Heatmap ── */
+  .hm{display:grid;grid-template-columns:48px repeat(7,1fr);gap:4px}
+  .hm-h{font-size:9px;color:var(--t4);text-align:center;padding-bottom:5px;font-family:var(--mono);font-weight:500}
+  .hm-rl{font-size:9px;color:var(--t4);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-family:var(--mono)}
+  .hm-c{aspect-ratio:1;border-radius:4px;transition:all .2s var(--ease);cursor:pointer;min-height:32px}
+  .hm-c:hover{transform:scale(1.12);z-index:2;box-shadow:0 0 12px rgba(255,106,0,.1)}
+  .h0{background:rgba(255,255,255,.015)}.h1{background:rgba(255,106,0,.06)}.h2{background:rgba(255,106,0,.14)}.h3{background:rgba(255,106,0,.25)}.h4{background:rgba(255,106,0,.4)}.h5{background:rgba(255,106,0,.6);box-shadow:0 0 8px rgba(255,106,0,.12)}
+
+  /* ── Bottom nav — glass ── */
+  .nav{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(12,14,20,.9);border:1px solid var(--bdh);border-radius:999px;backdrop-filter:blur(24px);z-index:100;box-shadow:0 8px 48px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.04) inset}
+  .nav-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0}
+  .nav-btn:hover{border-color:var(--pri);color:var(--pri);background:var(--pris);box-shadow:0 0 12px rgba(255,106,0,.1)}
+  .nav-btn:disabled{opacity:.2;cursor:default;pointer-events:none}
+  .dots{display:flex;gap:5px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--s3);cursor:pointer;transition:all .25s var(--ease)}
+  .dot.active{background:var(--pri);width:20px;border-radius:3px;box-shadow:0 0 8px rgba(255,106,0,.2)}
+  .nav-label{font-size:11px;color:var(--t3);font-weight:500;white-space:nowrap;min-width:110px;text-align:center;font-family:var(--mono)}
+
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+  @media(max-width:768px){.page{padding:16px 16px 120px}.g4{grid-template-columns:1fr 1fr}.g3,.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="role-sw">
+    <button class="role-btn active" data-role="company">Company</button>
+    <button class="role-btn" data-role="expert">Expert</button>
+    <button class="role-btn" data-role="candidate">Candidate</button>
+  </div>
+
+  <!-- ██ COMPANY ██ -->
+  <div class="role-panel active" id="role-company">
+    <div class="hdr">
+      <div><h1>Company Analytics</h1><p>Hiring performance and pipeline health</p></div>
+      <div class="hdr-live"><div class="live-dot"></div>Updated 2 min ago</div>
+    </div>
+    <div class="filters">
+      <div class="fp active">30D</div><div class="fp">90D</div><div class="fp">YTD</div><div class="fp">All</div>
+      <div class="spacer"></div><span class="date-range">Mar 1 — Mar 30, 2026</span>
+    </div>
+    <div class="tabs" data-tabs="company">
+      <div class="tab active" data-tab="co">Overview</div>
+      <div class="tab" data-tab="cp">Pipeline</div>
+      <div class="tab" data-tab="cj">Jobs<span class="tab-count">8</span></div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tp active" id="tab-co">
+      <div class="g4 mb28">
+        <div class="kpi"><div class="kpi-bar"></div><div class="kpi-label">Applications</div><div class="kpi-row"><div class="kpi-val">1,247</div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>23%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 48" preserveAspectRatio="none"><defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs><path d="M0,42C10,40 20,41 30,37C40,33 50,36 60,31C70,26 80,29 90,23C100,17 110,21 120,15C130,10 140,13 150,8C160,5 170,7 180,4C190,3 195,4 200,2" fill="none" stroke="var(--pri)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,42C10,40 20,41 30,37C40,33 50,36 60,31C70,26 80,29 90,23C100,17 110,21 120,15C130,10 140,13 150,8C160,5 170,7 180,4C190,3 195,4 200,2V48H0Z" fill="url(#s1)"/><circle cx="200" cy="2" r="5" fill="rgba(255,106,0,.12)" class="glow-dot"/><circle cx="200" cy="2" r="2" fill="var(--pri)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--pos),transparent)"></div><div class="kpi-label">Hires</div><div class="kpi-row"><div class="kpi-val">18</div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>38%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 48" preserveAspectRatio="none"><defs><linearGradient id="s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pos)" stop-opacity=".18"/><stop offset="100%" stop-color="var(--pos)" stop-opacity="0"/></linearGradient></defs><path d="M0,44C14,42 28,45 42,38C56,31 70,34 84,28C98,22 112,25 126,18C140,12 154,15 168,9C182,5 192,6 200,3" fill="none" stroke="var(--pos)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,44C14,42 28,45 42,38C56,31 70,34 84,28C98,22 112,25 126,18C140,12 154,15 168,9C182,5 192,6 200,3V48H0Z" fill="url(#s2)"/><circle cx="200" cy="3" r="5" fill="rgba(74,222,128,.12)" class="glow-dot"/><circle cx="200" cy="3" r="2" fill="var(--pos)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--muted),transparent);opacity:.5"></div><div class="kpi-label">Avg. Time to Hire</div><div class="kpi-row"><div class="kpi-val">14 <span class="kpi-unit">days</span></div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 7L7 3H1Z" fill="currentColor"/></svg>-3d</div></div><div class="kpi-spark"><svg viewBox="0 0 200 48" preserveAspectRatio="none"><defs><linearGradient id="s3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--muted)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--muted)" stop-opacity="0"/></linearGradient></defs><path d="M0,6C14,8 28,5 42,12C56,18 70,14 84,20C98,25 112,22 126,28C140,32 154,29 168,34C182,38 192,36 200,42" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><path d="M0,6C14,8 28,5 42,12C56,18 70,14 84,20C98,25 112,22 126,28C140,32 154,29 168,34C182,38 192,36 200,42V48H0Z" fill="url(#s3)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--pri),transparent);opacity:.4"></div><div class="kpi-label">Offer Accept Rate</div><div class="kpi-row"><div class="kpi-val">82<span class="kpi-unit">%</span></div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>5%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 48" preserveAspectRatio="none"><defs><linearGradient id="s4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs><path d="M0,38C14,36 28,40 42,32C56,26 70,28 84,22C98,17 112,19 126,14C140,10 154,12 168,7C182,4 192,4 200,3" fill="none" stroke="var(--pri)" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><path d="M0,38C14,36 28,40 42,32C56,26 70,28 84,22C98,17 112,19 126,14C140,10 154,12 168,7C182,4 192,4 200,3V48H0Z" fill="url(#s4)"/></svg></div></div>
+      </div>
+
+      <!-- Area chart -->
+      <div class="card card-feat">
+        <div class="card-h"><div><span class="card-t">Applications Over Time</span><div class="card-sub">Daily volume and hires</div></div><span class="card-a">Export</span></div>
+        <svg viewBox="0 0 640 280" style="width:100%;display:block;overflow:visible;">
+          <defs>
+            <linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".14"/><stop offset="100%" stop-color="#ff6a00" stop-opacity="0"/></linearGradient>
+            <linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c8898" stop-opacity=".06"/><stop offset="100%" stop-color="#7c8898" stop-opacity="0"/></linearGradient>
+          </defs>
+          <text x="28" y="30" class="ax" text-anchor="end">80</text><text x="28" y="80" class="ax" text-anchor="end">60</text><text x="28" y="130" class="ax" text-anchor="end">40</text><text x="28" y="180" class="ax" text-anchor="end">20</text><text x="28" y="228" class="ax" text-anchor="end">0</text>
+          <line x1="38" y1="26" x2="620" y2="26" class="gl"/><line x1="38" y1="76" x2="620" y2="76" class="gl"/><line x1="38" y1="126" x2="620" y2="126" class="gl"/><line x1="38" y1="176" x2="620" y2="176" class="gl"/><line x1="38" y1="224" x2="620" y2="224" class="gl0"/>
+          <!-- Applications -->
+          <path d="M38,210C56,206 74,196 92,186C110,176 128,182 146,172C164,162 182,146 200,134C218,122 236,136 254,124C272,112 290,94 308,82C326,70 344,84 362,72C380,60 398,44 416,38C434,32 452,46 470,36C488,26 506,32 524,24C542,16 560,12 578,18C596,22 608,20 620,16" fill="none" stroke="var(--pri)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M38,210C56,206 74,196 92,186C110,176 128,182 146,172C164,162 182,146 200,134C218,122 236,136 254,124C272,112 290,94 308,82C326,70 344,84 362,72C380,60 398,44 416,38C434,32 452,46 470,36C488,26 506,32 524,24C542,16 560,12 578,18C596,22 608,20 620,16 L620,224 L38,224Z" fill="url(#ag1)"/>
+          <!-- Hires -->
+          <path d="M38,220C56,219 74,217 92,215C110,213 128,214 146,212C164,210 182,207 200,204C218,200 236,203 254,200C272,196 290,190 308,186C326,182 344,186 362,180C380,174 398,168 416,164C434,160 452,165 470,160C488,154 506,158 524,152C542,146 560,142 578,146C596,150 608,148 620,146" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 3" opacity=".4"/>
+          <path d="M38,220C56,219 74,217 92,215C110,213 128,214 146,212C164,210 182,207 200,204C218,200 236,203 254,200C272,196 290,190 308,186C326,182 344,186 362,180C380,174 398,168 416,164C434,160 452,165 470,160C488,154 506,158 524,152C542,146 560,142 578,146C596,150 608,148 620,146 L620,224 L38,224Z" fill="url(#ag2)"/>
+          <!-- Glow dot -->
+          <circle cx="620" cy="16" r="6" fill="rgba(255,106,0,.1)" class="glow-dot"/>
+          <circle cx="620" cy="16" r="2.5" fill="var(--pri)" stroke="var(--bg)" stroke-width="1.5"/>
+          <!-- X -->
+          <text x="38" y="246" class="ax">Mar 1</text><text x="155" y="246" class="ax">Mar 5</text><text x="272" y="246" class="ax">Mar 10</text><text x="389" y="246" class="ax">Mar 15</text><text x="506" y="246" class="ax">Mar 22</text><text x="598" y="246" class="ax ax-hi">Today</text>
+        </svg>
+        <div class="cleg">
+          <div class="cleg-item"><div style="width:8px;height:2px;background:var(--pri);border-radius:1px;"></div>Applications</div>
+          <div class="cleg-item"><div style="width:12px;height:0;border-top:1.5px dashed var(--muted);opacity:.4"></div>Hires</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="tp" id="tab-cp">
+      <div class="card card-feat mb28">
+        <div class="card-h"><div><span class="card-t">Hiring Funnel</span><div class="card-sub">Conversion through each stage</div></div></div>
+        <svg viewBox="0 0 720 300" style="width:100%;display:block;">
+          <defs>
+            <linearGradient id="f1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".3"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".02"/></linearGradient>
+            <linearGradient id="f2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".22"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".02"/></linearGradient>
+            <linearGradient id="f3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".15"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".01"/></linearGradient>
+            <linearGradient id="f4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".10"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".01"/></linearGradient>
+            <linearGradient id="f5" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="var(--pos)" stop-opacity=".3"/><stop offset="100%" stop-color="var(--pos)" stop-opacity=".02"/></linearGradient>
+            <!-- Center glow line -->
+            <linearGradient id="fglow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--pos)" stop-opacity=".15"/></linearGradient>
+          </defs>
+          <!-- Center spine glow -->
+          <line x1="360" y1="6" x2="360" y2="294" stroke="url(#fglow)" stroke-width="1" opacity=".4"/>
+
+          <polygon points="55,8 665,8 650,52 70,52" fill="url(#f1)" stroke="rgba(255,106,0,.1)" stroke-width=".5" rx="4"/>
+          <text x="360" y="38" text-anchor="middle" font-size="16" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono" letter-spacing="-.02em">1,247</text>
+          <text x="22" y="38" font-size="11" fill="var(--t2)" font-family="Inter" font-weight="500">Applied</text>
+          <text x="698" y="38" text-anchor="end" font-size="10" fill="var(--t4)" font-family="JetBrains Mono">100%</text>
+          <text x="360" y="68" text-anchor="middle" font-size="9" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600" opacity=".8">54% screened</text>
+
+          <polygon points="105,76 615,76 596,118 124,118" fill="url(#f2)" stroke="rgba(255,106,0,.07)" stroke-width=".5"/>
+          <text x="360" y="104" text-anchor="middle" font-size="16" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono" letter-spacing="-.02em">674</text>
+          <text x="22" y="104" font-size="11" fill="var(--t2)" font-family="Inter" font-weight="500">Screened</text>
+          <text x="698" y="104" text-anchor="end" font-size="10" fill="var(--t4)" font-family="JetBrains Mono">54%</text>
+          <text x="360" y="134" text-anchor="middle" font-size="9" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600" opacity=".8">41% to review</text>
+
+          <polygon points="170,142 550,142 528,184 192,184" fill="url(#f3)" stroke="rgba(255,106,0,.05)" stroke-width=".5"/>
+          <text x="360" y="170" text-anchor="middle" font-size="16" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono" letter-spacing="-.02em">276</text>
+          <text x="22" y="170" font-size="11" fill="var(--t2)" font-family="Inter" font-weight="500">Expert Review</text>
+          <text x="698" y="170" text-anchor="end" font-size="10" fill="var(--t4)" font-family="JetBrains Mono">22%</text>
+          <text x="360" y="200" text-anchor="middle" font-size="9" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600" opacity=".8">28% endorsed</text>
+
+          <polygon points="250,208 470,208 455,250 265,250" fill="url(#f4)" stroke="rgba(255,106,0,.03)" stroke-width=".5"/>
+          <text x="360" y="236" text-anchor="middle" font-size="16" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono" letter-spacing="-.02em">78</text>
+          <text x="22" y="236" font-size="11" fill="var(--t2)" font-family="Inter" font-weight="500">Interview</text>
+          <text x="698" y="236" text-anchor="end" font-size="10" fill="var(--t4)" font-family="JetBrains Mono">6.2%</text>
+          <text x="360" y="266" text-anchor="middle" font-size="9" fill="var(--pos)" font-family="JetBrains Mono" font-weight="600" opacity=".8">23% hired</text>
+
+          <!-- Hired — glowing -->
+          <polygon points="320,274 400,274 395,294 325,294" fill="url(#f5)" stroke="rgba(74,222,128,.15)" stroke-width=".5"/>
+          <text x="360" y="290" text-anchor="middle" font-size="14" font-weight="700" fill="var(--pos)" font-family="JetBrains Mono">18</text>
+          <text x="22" y="290" font-size="11" fill="var(--pos)" font-family="Inter" font-weight="600">Hired</text>
+          <text x="698" y="290" text-anchor="end" font-size="10" fill="var(--pos)" font-family="JetBrains Mono" font-weight="600">1.4%</text>
+        </svg>
+      </div>
+
+      <div class="g2 mb28">
+        <!-- Sources -->
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Candidate Sources</span></div></div>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--t2);">Guild Referral</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;color:var(--pri);">67%</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:67%;background:linear-gradient(90deg,rgba(255,106,0,.45),rgba(255,106,0,.1));border-radius:5px;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--t2);">Direct Apply</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">18%</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:18%;background:linear-gradient(90deg,rgba(124,136,152,.35),rgba(124,136,152,.08));border-radius:5px;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--t2);">Endorsement</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">9%</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:9%;background:linear-gradient(90deg,rgba(124,136,152,.25),rgba(124,136,152,.06));border-radius:5px;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--t2);">External</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">6%</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:6%;min-width:6px;background:linear-gradient(90deg,rgba(124,136,152,.15),rgba(124,136,152,.03));border-radius:5px;"></div></div></div>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:18px;margin-top:22px;">
+            <div style="font-size:10px;color:var(--t4);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Hire Rate by Source</div>
+            <div style="display:flex;gap:10px;">
+              <div class="stat" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--pos);">6.1%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Endorsed</div></div>
+              <div class="stat" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--pri);">4.2%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Guild</div></div>
+              <div class="stat" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;">1.8%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Direct</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- Heatmap — bigger cells -->
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Application Activity</span><div class="card-sub">When candidates apply</div></div><span class="card-a" style="color:var(--pri);font-weight:600;">Peak: Tue 2pm</span></div>
+          <div class="hm">
+            <div></div><div class="hm-h">MON</div><div class="hm-h">TUE</div><div class="hm-h">WED</div><div class="hm-h">THU</div><div class="hm-h">FRI</div><div class="hm-h">SAT</div><div class="hm-h">SUN</div>
+            <div class="hm-rl">6am</div><div class="hm-c h0"></div><div class="hm-c h0"></div><div class="hm-c h1"></div><div class="hm-c h0"></div><div class="hm-c h0"></div><div class="hm-c h0"></div><div class="hm-c h0"></div>
+            <div class="hm-rl">9am</div><div class="hm-c h2"></div><div class="hm-c h3"></div><div class="hm-c h3"></div><div class="hm-c h2"></div><div class="hm-c h2"></div><div class="hm-c h1"></div><div class="hm-c h0"></div>
+            <div class="hm-rl">12pm</div><div class="hm-c h3"></div><div class="hm-c h4"></div><div class="hm-c h3"></div><div class="hm-c h3"></div><div class="hm-c h3"></div><div class="hm-c h1"></div><div class="hm-c h0"></div>
+            <div class="hm-rl">2pm</div><div class="hm-c h3"></div><div class="hm-c h5"></div><div class="hm-c h4"></div><div class="hm-c h4"></div><div class="hm-c h3"></div><div class="hm-c h1"></div><div class="hm-c h0"></div>
+            <div class="hm-rl">5pm</div><div class="hm-c h2"></div><div class="hm-c h3"></div><div class="hm-c h3"></div><div class="hm-c h2"></div><div class="hm-c h2"></div><div class="hm-c h1"></div><div class="hm-c h0"></div>
+            <div class="hm-rl">8pm</div><div class="hm-c h1"></div><div class="hm-c h2"></div><div class="hm-c h2"></div><div class="hm-c h1"></div><div class="hm-c h1"></div><div class="hm-c h2"></div><div class="hm-c h1"></div>
+            <div class="hm-rl">11pm</div><div class="hm-c h0"></div><div class="hm-c h1"></div><div class="hm-c h1"></div><div class="hm-c h0"></div><div class="hm-c h1"></div><div class="hm-c h1"></div><div class="hm-c h1"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:3px;margin-top:14px;justify-content:flex-end;"><span style="font-size:9px;color:var(--t4);margin-right:3px;">Less</span><div style="width:12px;height:12px;border-radius:3px;" class="h0"></div><div style="width:12px;height:12px;border-radius:3px;" class="h1"></div><div style="width:12px;height:12px;border-radius:3px;" class="h2"></div><div style="width:12px;height:12px;border-radius:3px;" class="h3"></div><div style="width:12px;height:12px;border-radius:3px;" class="h4"></div><div style="width:12px;height:12px;border-radius:3px;" class="h5"></div><span style="font-size:9px;color:var(--t4);margin-left:3px;">More</span></div>
+        </div>
+      </div>
+
+      <!-- Guild donut — warm spectrum -->
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">Applications by Guild</span></div></div>
+        <div style="display:flex;align-items:center;gap:48px;padding:8px 0;">
+          <div style="position:relative;width:180px;height:180px;flex-shrink:0;">
+            <svg viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(255,255,255,.02)" stroke-width="24"/>
+              <g style="transform:rotate(-90deg);transform-origin:90px 90px;">
+                <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(255,106,0,.65)" stroke-width="24" stroke-dasharray="157 257" stroke-dashoffset="0"/>
+                <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(255,140,50,.45)" stroke-width="24" stroke-dasharray="91 323" stroke-dashoffset="-157"/>
+                <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(200,140,80,.3)" stroke-width="24" stroke-dasharray="75 339" stroke-dashoffset="-248"/>
+                <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(160,140,110,.22)" stroke-width="24" stroke-dasharray="58 356" stroke-dashoffset="-323"/>
+                <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(124,136,152,.12)" stroke-width="24" stroke-dasharray="33 381" stroke-dashoffset="-381"/>
+              </g>
+              <circle cx="90" cy="90" r="50" fill="var(--bg)"/>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;"><div style="font-family:var(--disp);font-size:26px;font-weight:700;">1,247</div><div style="font-size:10px;color:var(--t3);">Total</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,106,0,.65);"></div><span style="font-size:13px;color:var(--t2);flex:1;">Engineering</span><span style="font-size:11px;color:var(--t3);font-family:var(--mono);width:36px;">38%</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">474</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(255,140,50,.45);"></div><span style="font-size:13px;color:var(--t2);flex:1;">Design</span><span style="font-size:11px;color:var(--t3);font-family:var(--mono);width:36px;">22%</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">274</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(200,140,80,.3);"></div><span style="font-size:13px;color:var(--t2);flex:1;">Data Science</span><span style="font-size:11px;color:var(--t3);font-family:var(--mono);width:36px;">18%</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">224</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(160,140,110,.22);"></div><span style="font-size:13px;color:var(--t2);flex:1;">Security</span><span style="font-size:11px;color:var(--t3);font-family:var(--mono);width:36px;">14%</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">175</span></div>
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:10px;height:10px;border-radius:3px;background:rgba(124,136,152,.12);"></div><span style="font-size:13px;color:var(--t2);flex:1;">Other</span><span style="font-size:11px;color:var(--t3);font-family:var(--mono);width:36px;">8%</span><span style="font-size:13px;font-family:var(--mono);font-weight:600;">100</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div class="tp" id="tab-cj">
+      <div class="card mb28">
+        <div class="card-h"><div><span class="card-t">Performance by Role</span></div><span class="card-a">Filter</span></div>
+        <div class="tbl">
+          <div class="tbl-h" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><span>Role</span><span style="text-align:right">Apps</span><span style="text-align:right">Review</span><span style="text-align:right">Time to Hire</span><span style="text-align:right">Views</span><span style="text-align:center">Status</span></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><div><div class="tbl-name">Senior Solidity Developer</div><span class="guild-tag">Engineering</span></div><div style="text-align:right"><div class="tbl-metric">342</div><div class="tbl-sub" style="color:var(--pos);">+28/wk</div></div><div style="text-align:right"><div class="tbl-metric">24</div></div><div style="text-align:right"><div class="tbl-metric">4.2d</div><div class="tbl-sub" style="color:var(--pos);">-2.1d</div></div><div style="text-align:right"><div class="tbl-metric">2,847</div></div><div style="text-align:center"><span class="status-tag st-active">Active</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><div><div class="tbl-name">Product Designer</div><span class="guild-tag">Design</span></div><div style="text-align:right"><div class="tbl-metric">218</div><div class="tbl-sub">+12/wk</div></div><div style="text-align:right"><div class="tbl-metric" style="color:var(--neg);">23</div><div class="tbl-sub" style="color:var(--neg);">slow</div></div><div style="text-align:right"><div class="tbl-metric">8.4d</div><div class="tbl-sub" style="color:var(--neg);">+2.1d</div></div><div style="text-align:right"><div class="tbl-metric">1,923</div></div><div style="text-align:center"><span class="status-tag st-active">Active</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><div><div class="tbl-name">Data Engineer</div><span class="guild-tag">Data Science</span></div><div style="text-align:right"><div class="tbl-metric">187</div><div class="tbl-sub">+19/wk</div></div><div style="text-align:right"><div class="tbl-metric">15</div></div><div style="text-align:right"><div class="tbl-metric">6.1d</div><div class="tbl-sub" style="color:var(--pos);">-0.8d</div></div><div style="text-align:right"><div class="tbl-metric">1,456</div></div><div style="text-align:center"><span class="status-tag st-active">Active</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><div><div class="tbl-name">Smart Contract Auditor</div><span class="guild-tag">Security</span></div><div style="text-align:right"><div class="tbl-metric">156</div><div class="tbl-sub">+8/wk</div></div><div style="text-align:right"><div class="tbl-metric">11</div></div><div style="text-align:right"><div class="tbl-metric">5.7d</div><div class="tbl-sub" style="color:var(--pos);">-1.2d</div></div><div style="text-align:right"><div class="tbl-metric">1,102</div></div><div style="text-align:center"><span class="status-tag st-paused">Paused</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 80px 80px 90px 80px 70px;"><div><div class="tbl-name">Frontend Engineer (React)</div><span class="guild-tag">Engineering</span></div><div style="text-align:right"><div class="tbl-metric">289</div><div class="tbl-sub" style="color:var(--pos);">+31/wk</div></div><div style="text-align:right"><div class="tbl-metric">18</div></div><div style="text-align:right"><div class="tbl-metric">7.3d</div><div class="tbl-sub">avg</div></div><div style="text-align:right"><div class="tbl-metric">2,201</div></div><div style="text-align:center"><span class="status-tag st-active">Active</span></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">Time-to-Hire Distribution</span></div><span class="card-a" style="color:var(--pri);font-weight:600;font-family:var(--mono);">Median: 14d</span></div>
+        <svg viewBox="0 0 640 210" style="width:100%;display:block;">
+          <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6a00"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".25"/></linearGradient></defs>
+          <line x1="50" y1="25" x2="610" y2="25" class="gl"/><line x1="50" y1="58" x2="610" y2="58" class="gl"/><line x1="50" y1="91" x2="610" y2="91" class="gl"/><line x1="50" y1="124" x2="610" y2="124" class="gl"/><line x1="50" y1="165" x2="610" y2="165" class="gl0"/>
+          <rect x="62" y="148" width="52" height="17" rx="4" fill="rgba(255,106,0,.1)"/>
+          <rect x="124" y="118" width="52" height="47" rx="4" fill="rgba(255,106,0,.18)"/>
+          <rect x="186" y="62" width="52" height="103" rx="4" fill="rgba(255,106,0,.3)"/>
+          <rect x="248" y="22" width="52" height="143" rx="4" fill="url(#hg)"/>
+          <rect x="310" y="40" width="52" height="125" rx="4" fill="rgba(255,106,0,.4)"/>
+          <rect x="372" y="80" width="52" height="85" rx="4" fill="rgba(255,106,0,.22)"/>
+          <rect x="434" y="118" width="52" height="47" rx="4" fill="rgba(255,106,0,.12)"/>
+          <rect x="496" y="138" width="52" height="27" rx="4" fill="rgba(255,106,0,.07)"/>
+          <rect x="558" y="152" width="52" height="13" rx="4" fill="rgba(255,106,0,.03)"/>
+          <line x1="274" y1="14" x2="274" y2="165" stroke="var(--pri)" stroke-width="1" stroke-dasharray="3 2" opacity=".35"/>
+          <rect x="256" y="4" width="36" height="13" rx="3" fill="var(--pris)"/><text x="274" y="13" text-anchor="middle" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600">MEDIAN</text>
+          <text x="88" y="184" text-anchor="middle" class="ax">1-3d</text><text x="150" y="184" text-anchor="middle" class="ax">4-7d</text><text x="212" y="184" text-anchor="middle" class="ax">8-14d</text><text x="274" y="184" text-anchor="middle" class="ax ax-hi" font-weight="600">14-21d</text><text x="336" y="184" text-anchor="middle" class="ax">21-28d</text><text x="398" y="184" text-anchor="middle" class="ax">28-35d</text><text x="460" y="184" text-anchor="middle" class="ax">35-42d</text><text x="522" y="184" text-anchor="middle" class="ax">42-56d</text><text x="584" y="184" text-anchor="middle" class="ax">56d+</text>
+        </svg>
+        <div style="display:flex;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--bd);">
+          <div class="stat" style="flex:1;"><div class="stat-l">Fastest</div><div class="stat-v" style="color:var(--pos);">2.1 days</div><div class="stat-note">Solidity Developer</div></div>
+          <div class="stat" style="flex:1;"><div class="stat-l">Slowest</div><div class="stat-v" style="color:var(--neg);">34.2 days</div><div class="stat-note">Product Designer</div></div>
+          <div class="stat" style="flex:1;"><div class="stat-l">Industry Avg</div><div class="stat-v">23.4 days</div><div class="stat-note" style="color:var(--pos);">You're 40% faster</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ██ EXPERT ██ -->
+  <div class="role-panel" id="role-expert">
+    <div class="hdr">
+      <div><h1>Expert Analytics</h1><p>Review performance, reputation, and $VETD earnings</p></div>
+      <div class="hdr-live"><div class="live-dot"></div>On-chain synced</div>
+    </div>
+    <div class="filters"><div class="fp active">30D</div><div class="fp">90D</div><div class="fp">All</div></div>
+    <div class="tabs" data-tabs="expert">
+      <div class="tab active" data-tab="eo">Overview</div>
+      <div class="tab" data-tab="er">Reviews</div>
+      <div class="tab" data-tab="ee">Endorsements<span class="tab-count">3</span></div>
+    </div>
+
+    <div class="tp active" id="tab-eo">
+      <!-- Reputation hero -->
+      <div class="card card-feat mb28">
+        <div style="display:flex;gap:48px;align-items:center;">
+          <div style="flex-shrink:0;text-align:center;min-width:160px;">
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <circle cx="75" cy="75" r="62" fill="none" stroke="rgba(255,255,255,.03)" stroke-width="9"/>
+              <circle cx="75" cy="75" r="62" fill="none" stroke="var(--pri)" stroke-width="9" stroke-dasharray="293 389" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;" opacity=".75"/>
+              <!-- Glow ring -->
+              <circle cx="75" cy="75" r="62" fill="none" stroke="var(--pri)" stroke-width="9" stroke-dasharray="293 389" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;" opacity=".08" filter="url(#blur)"/>
+            </svg>
+            <defs><filter id="blur"><feGaussianBlur stdDeviation="4"/></filter></defs>
+            <div style="margin-top:-102px;position:relative;">
+              <div style="font-family:var(--disp);font-size:32px;font-weight:700;">1,840</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px;">Reputation</div>
+            </div>
+            <div style="margin-top:32px;">
+              <div class="tier tier-1">Established</div>
+              <div style="font-size:10px;color:var(--t4);margin-top:8px;">160 pts to Authority</div>
+              <div class="prog" style="width:120px;margin:6px auto 0;"><div class="prog-fill" style="width:84%;background:var(--pri);box-shadow:0 0 6px rgba(255,106,0,.2);"></div></div>
+            </div>
+          </div>
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="stat"><div class="stat-l">$VETD Balance</div><div class="stat-v" style="color:var(--pri);">4,280</div><div class="stat-note">2,100 staked &middot; 2,180 available</div></div>
+            <div class="stat"><div class="stat-l">Total Earned</div><div class="stat-v" style="color:var(--pos);">12,640 $VETD</div><div class="stat-note" style="color:var(--pos);">+1,240 this period</div></div>
+            <div class="stat"><div class="stat-l">Reviews Completed</div><div class="stat-v">142</div><div class="stat-note">47 this period</div></div>
+            <div class="stat"><div class="stat-l">Consensus Alignment</div><div class="stat-v" style="color:var(--pos);">92%</div><div class="stat-note">Within IQR band</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reputation chart -->
+      <div class="card mb28">
+        <div class="card-h"><div><span class="card-t">Reputation Over Time</span><div class="card-sub">Score progression with tier thresholds</div></div></div>
+        <svg viewBox="0 0 640 240" style="width:100%;display:block;overflow:visible;">
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs>
+          <rect x="40" y="10" width="580" height="56" fill="rgba(255,106,0,.015)" rx="2"/>
+          <text x="46" y="22" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" opacity=".35">Authority (2000+)</text>
+          <rect x="40" y="66" width="580" height="56" fill="rgba(255,106,0,.008)" rx="2"/>
+          <text x="46" y="78" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" opacity=".25">Established (1000)</text>
+          <rect x="40" y="122" width="580" height="72" fill="rgba(255,255,255,.003)" rx="2"/>
+          <text x="46" y="134" font-size="8" fill="var(--t4)" font-family="JetBrains Mono" opacity=".3">Foundation (0)</text>
+          <line x1="40" y1="66" x2="620" y2="66" stroke="rgba(255,106,0,.08)" stroke-width=".5" stroke-dasharray="3 3"/>
+          <line x1="40" y1="122" x2="620" y2="122" stroke="rgba(255,255,255,.04)" stroke-width=".5" stroke-dasharray="3 3"/>
+          <line x1="40" y1="194" x2="620" y2="194" class="gl0"/>
+          <path d="M40,182C72,180 104,172 136,160C168,148 200,153 232,140C264,126 296,120 328,104C360,88 392,94 424,78C456,62 488,54 520,40C552,28 584,24 616,20" fill="none" stroke="var(--pri)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M40,182C72,180 104,172 136,160C168,148 200,153 232,140C264,126 296,120 328,104C360,88 392,94 424,78C456,62 488,54 520,40C552,28 584,24 616,20 L616,194 L40,194Z" fill="url(#rg)"/>
+          <circle cx="616" cy="20" r="5" fill="rgba(255,106,0,.1)" class="glow-dot"/><circle cx="616" cy="20" r="2" fill="var(--pri)" stroke="var(--bg)" stroke-width="1"/>
+          <text x="35" y="16" class="ax" text-anchor="end">2500</text><text x="35" y="72" class="ax" text-anchor="end">2000</text><text x="35" y="128" class="ax" text-anchor="end">1000</text><text x="35" y="198" class="ax" text-anchor="end">0</text>
+          <text x="40" y="212" class="ax">Oct</text><text x="156" y="212" class="ax">Nov</text><text x="272" y="212" class="ax">Dec</text><text x="388" y="212" class="ax">Jan</text><text x="504" y="212" class="ax">Feb</text><text x="600" y="212" class="ax ax-hi">Mar</text>
+        </svg>
+      </div>
+
+      <!-- Earnings bars -->
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">Earnings Breakdown</span><div class="card-sub">$VETD earned and lost by source</div></div><span class="card-a" style="color:var(--pos);font-family:var(--mono);font-weight:600;">Net: +12,520</span></div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;color:var(--t2);">Review Rewards</span><span style="font-size:14px;font-family:var(--mono);font-weight:600;color:var(--pos);">+8,420</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:67%;background:linear-gradient(90deg,rgba(255,106,0,.4),rgba(255,106,0,.1));border-radius:5px;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;color:var(--t2);">Endorsement Payouts</span><span style="font-size:14px;font-family:var(--mono);font-weight:600;color:var(--pos);">+3,200</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:25%;background:linear-gradient(90deg,rgba(255,106,0,.3),rgba(255,106,0,.06));border-radius:5px;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;color:var(--t2);">Governance + Staking</span><span style="font-size:14px;font-family:var(--mono);font-weight:600;color:var(--pos);">+1,020</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:8%;min-width:8px;background:linear-gradient(90deg,rgba(255,106,0,.2),rgba(255,106,0,.04));border-radius:5px;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;color:var(--neg);">Slashing Losses</span><span style="font-size:14px;font-family:var(--mono);font-weight:600;color:var(--neg);">-120</span></div><div style="height:10px;background:var(--s0);border-radius:5px;overflow:hidden;"><div style="height:100%;width:1%;min-width:4px;background:linear-gradient(90deg,rgba(251,113,133,.35),rgba(251,113,133,.08));border-radius:5px;"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp" id="tab-er">
+      <div class="card mb28">
+        <div class="card-h"><div><span class="card-t">Consensus Alignment</span><div class="card-sub">% of votes within IQR band over time</div></div></div>
+        <svg viewBox="0 0 640 220" style="width:100%;display:block;overflow:visible;">
+          <defs><linearGradient id="rag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pos)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--pos)" stop-opacity="0"/></linearGradient></defs>
+          <line x1="38" y1="28" x2="620" y2="28" class="gl"/><line x1="38" y1="73" x2="620" y2="73" class="gl"/><line x1="38" y1="118" x2="620" y2="118" class="gl"/><line x1="38" y1="163" x2="620" y2="163" class="gl"/><line x1="38" y1="198" x2="620" y2="198" class="gl0"/>
+          <text x="33" y="32" class="ax" text-anchor="end">100%</text><text x="33" y="77" class="ax" text-anchor="end">90%</text><text x="33" y="122" class="ax" text-anchor="end">80%</text><text x="33" y="167" class="ax" text-anchor="end">70%</text>
+          <line x1="38" y1="73" x2="620" y2="73" stroke="var(--pos)" stroke-width=".5" stroke-dasharray="3 3" opacity=".2"/>
+          <path d="M38,125C70,112 102,104 134,88C166,74 198,82 230,66C262,54 294,60 326,46C358,38 390,44 422,32C454,28 486,34 518,24C550,22 582,26 614,18" fill="none" stroke="var(--pos)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M38,125C70,112 102,104 134,88C166,74 198,82 230,66C262,54 294,60 326,46C358,38 390,44 422,32C454,28 486,34 518,24C550,22 582,26 614,18 L614,198 L38,198Z" fill="url(#rag)"/>
+          <circle cx="614" cy="18" r="5" fill="rgba(74,222,128,.1)" class="glow-dot"/><circle cx="614" cy="18" r="2" fill="var(--pos)" stroke="var(--bg)" stroke-width="1"/>
+          <text x="38" y="214" class="ax">Oct</text><text x="153" y="214" class="ax">Nov</text><text x="268" y="214" class="ax">Dec</text><text x="383" y="214" class="ax">Jan</text><text x="498" y="214" class="ax">Feb</text><text x="600" y="214" class="ax ax-hi">Mar</text>
+        </svg>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Score Deviation</span><div class="card-sub">Your scores vs consensus median</div></div></div>
+          <svg viewBox="0 0 420 190" style="width:100%;display:block;">
+            <line x1="20" y1="155" x2="400" y2="155" class="gl0"/>
+            <rect x="30" y="20" width="75" height="135" rx="5" fill="rgba(255,106,0,.22)"/>
+            <text x="67" y="16" text-anchor="middle" font-size="12" fill="var(--pos)" font-family="JetBrains Mono" font-weight="600">131</text>
+            <text x="67" y="174" text-anchor="middle" class="ax">In IQR</text>
+            <rect x="125" y="100" width="75" height="55" rx="5" fill="rgba(255,106,0,.1)"/>
+            <text x="162" y="96" text-anchor="middle" font-size="12" fill="var(--t2)" font-family="JetBrains Mono" font-weight="600">8</text>
+            <text x="162" y="174" text-anchor="middle" class="ax">1-1.5x</text>
+            <rect x="220" y="128" width="75" height="27" rx="5" fill="rgba(251,113,133,.1)"/>
+            <text x="257" y="124" text-anchor="middle" font-size="12" fill="var(--neg)" font-family="JetBrains Mono" font-weight="600">2</text>
+            <text x="257" y="174" text-anchor="middle" class="ax">1.5-2x</text>
+            <rect x="315" y="140" width="75" height="15" rx="5" fill="rgba(251,113,133,.16)"/>
+            <text x="352" y="136" text-anchor="middle" font-size="12" fill="var(--neg)" font-family="JetBrains Mono" font-weight="600">1</text>
+            <text x="352" y="174" text-anchor="middle" class="ax">&gt;2x IQR</text>
+          </svg>
+        </div>
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Staking Portfolio</span><div class="card-sub">$VETD allocation</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div class="metric-row"><span class="metric-label">Currently Staked</span><span class="metric-val" style="color:var(--pri);">2,100 $VETD</span></div>
+            <div class="metric-row"><span class="metric-label">Locked in Reviews (25% max)</span><span class="metric-val">525</span></div>
+            <div class="metric-row"><span class="metric-label">Locked in Endorsements</span><span class="metric-val">1,200</span></div>
+            <div class="metric-row"><span class="metric-label">Available to Withdraw</span><span class="metric-val" style="color:var(--pos);">2,180</span></div>
+            <div class="metric-row"><span class="metric-label">Reward Multiplier</span><span class="metric-val" style="color:var(--pri);">1.25x</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp" id="tab-ee">
+      <div class="g3 mb28">
+        <div class="stat"><div class="stat-l">Active Endorsements</div><div class="stat-v" style="color:var(--pri);">3</div><div class="stat-note">1,200 $VETD at risk</div></div>
+        <div class="stat"><div class="stat-l">Success Rate</div><div class="stat-v" style="color:var(--pos);">83%</div><div class="stat-note">10 of 12 hired + retained</div></div>
+        <div class="stat"><div class="stat-l">Total Earned</div><div class="stat-v" style="color:var(--pos);">3,200 $VETD</div><div class="stat-note">From endorsement payouts</div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">Active Endorsements</span><div class="card-sub">Candidates you've staked $VETD on</div></div></div>
+        <div class="tbl">
+          <div class="tbl-h" style="grid-template-columns:2fr 90px 80px 90px 100px;"><span>Candidate / Role</span><span style="text-align:right">Staked</span><span style="text-align:center">Status</span><span style="text-align:right">Payout</span><span style="text-align:center">90-Day</span></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 90px 100px;">
+            <div><div class="tbl-name">Sarah M. — Sr. Solidity Dev</div><span class="guild-tag">Engineering</span></div>
+            <div style="text-align:right"><div class="tbl-metric">400</div></div>
+            <div style="text-align:center"><span class="status-tag st-active">Hired</span></div>
+            <div style="text-align:right"><div class="tbl-metric" style="color:var(--pos);">+200</div><div class="tbl-sub">50% paid</div></div>
+            <div style="text-align:center;"><div style="font-size:10px;color:var(--pri);font-weight:600;font-family:var(--mono);">42/90d</div><div class="prog" style="margin-top:4px;"><div class="prog-fill" style="width:47%;background:var(--pri);box-shadow:0 0 4px rgba(255,106,0,.15);"></div></div></div>
+          </div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 90px 100px;">
+            <div><div class="tbl-name">Alex K. — Data Engineer</div><span class="guild-tag">Data Science</span></div>
+            <div style="text-align:right"><div class="tbl-metric">350</div></div>
+            <div style="text-align:center"><span class="status-tag st-interview">Interview</span></div>
+            <div style="text-align:right"><span style="color:var(--t3);font-size:12px;">Pending</span></div>
+            <div style="text-align:center;font-size:10px;color:var(--t4);">Awaiting</div>
+          </div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 90px 100px;">
+            <div><div class="tbl-name">Jamie L. — Product Designer</div><span class="guild-tag">Design</span></div>
+            <div style="text-align:right"><div class="tbl-metric">450</div></div>
+            <div style="text-align:center"><span class="status-tag st-review">Review</span></div>
+            <div style="text-align:right"><span style="color:var(--t3);font-size:12px;">Pending</span></div>
+            <div style="text-align:center;font-size:10px;color:var(--t4);">Awaiting</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ██ CANDIDATE ██ -->
+  <div class="role-panel" id="role-candidate">
+    <div class="hdr"><div><h1>My Analytics</h1><p>Applications, vetting scores, and visibility</p></div></div>
+    <div class="filters"><div class="fp active">30D</div><div class="fp">90D</div><div class="fp">All</div></div>
+    <div class="tabs" data-tabs="candidate">
+      <div class="tab active" data-tab="do">Overview</div>
+      <div class="tab" data-tab="da">Applications<span class="tab-count">6</span></div>
+      <div class="tab" data-tab="dv">Visibility</div>
+    </div>
+
+    <div class="tp active" id="tab-do">
+      <div class="g4 mb28">
+        <div class="kpi"><div class="kpi-bar"></div><div class="kpi-label">Active Applications</div><div class="kpi-row"><div class="kpi-val">6</div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>2 new</div></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--pos),transparent)"></div><div class="kpi-label">Expert Reviews</div><div class="kpi-row"><div class="kpi-val">14</div></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--muted),transparent);opacity:.5"></div><div class="kpi-label">Profile Views</div><div class="kpi-row"><div class="kpi-val">89</div><div class="kpi-badge up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>34%</div></div></div>
+        <div class="kpi"><div class="kpi-bar" style="background:linear-gradient(90deg,var(--pri),transparent);opacity:.4"></div><div class="kpi-label">Endorsements</div><div class="kpi-row"><div class="kpi-val">3</div></div></div>
+      </div>
+
+      <!-- Pipeline flow -->
+      <div class="card card-feat mb28">
+        <div class="card-h"><div><span class="card-t">Application Pipeline</span><div class="card-sub">Where your applications stand</div></div></div>
+        <div style="display:flex;gap:12px;align-items:stretch;">
+          <div style="flex:1;background:rgba(255,106,0,.04);border:1px solid rgba(255,106,0,.1);border-radius:var(--rs);padding:22px 16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:30px;font-weight:700;color:var(--pri);">2</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:4px;">In Review</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--t4);font-size:18px;opacity:.4;">&rarr;</div>
+          <div style="flex:1;background:rgba(255,106,0,.025);border:1px solid rgba(255,106,0,.06);border-radius:var(--rs);padding:22px 16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:30px;font-weight:700;color:var(--pri);opacity:.65;">1</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:4px;">Endorsed</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--t4);font-size:18px;opacity:.4;">&rarr;</div>
+          <div style="flex:1;background:rgba(255,255,255,.015);border:1px solid var(--bd);border-radius:var(--rs);padding:22px 16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:30px;font-weight:700;color:var(--t2);">2</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:4px;">Interview</div>
+          </div>
+          <div style="display:flex;align-items:center;color:var(--t4);font-size:18px;opacity:.4;">&rarr;</div>
+          <div style="flex:1;background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.1);border-radius:var(--rs);padding:22px 16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:30px;font-weight:700;color:var(--pos);">1</div>
+            <div style="font-size:11px;color:var(--pos);margin-top:4px;">Offer</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vetting Scores -->
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">Vetting Scores</span><div class="card-sub">Consensus scores from 5-7 expert panels</div></div></div>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span class="guild-tag">Engineering</span><span style="font-family:var(--mono);font-size:17px;font-weight:600;color:var(--pos);">88<span style="font-size:11px;color:var(--t3);font-weight:400;">/100</span></span></div><div style="height:8px;background:var(--s0);border-radius:4px;overflow:hidden;"><div style="height:100%;width:88%;background:linear-gradient(90deg,rgba(255,106,0,.45),rgba(255,106,0,.15));border-radius:4px;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span class="guild-tag">Data Science</span><span style="font-family:var(--mono);font-size:17px;font-weight:600;">76<span style="font-size:11px;color:var(--t3);font-weight:400;">/100</span></span></div><div style="height:8px;background:var(--s0);border-radius:4px;overflow:hidden;"><div style="height:100%;width:76%;background:linear-gradient(90deg,rgba(255,106,0,.3),rgba(255,106,0,.08));border-radius:4px;"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span class="guild-tag">Design</span><span style="font-family:var(--mono);font-size:17px;font-weight:600;color:var(--t2);">65<span style="font-size:11px;color:var(--t3);font-weight:400;">/100</span></span></div><div style="height:8px;background:var(--s0);border-radius:4px;overflow:hidden;"><div style="height:100%;width:65%;background:linear-gradient(90deg,rgba(255,106,0,.18),rgba(255,106,0,.04));border-radius:4px;"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp" id="tab-da">
+      <div class="card">
+        <div class="card-h"><div><span class="card-t">All Applications</span></div></div>
+        <div class="tbl">
+          <div class="tbl-h" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><span>Role / Company</span><span style="text-align:center">Score</span><span>Guild</span><span>Endorsements</span><span style="text-align:center">Status</span></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Sr. Solidity Developer</div><div class="tbl-sub">ChainLabs Inc.</div></div><div style="text-align:center"><div class="tbl-metric" style="color:var(--pos);">88</div></div><div><span class="guild-tag">Engineering</span></div><div><span style="font-size:12px;color:var(--t2);">3 experts endorsed</span></div><div style="text-align:center"><span class="status-tag st-offer">Offer</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Backend Engineer</div><div class="tbl-sub">DeFi Protocol</div></div><div style="text-align:center"><div class="tbl-metric" style="color:var(--pos);">88</div></div><div><span class="guild-tag">Engineering</span></div><div><span style="font-size:12px;color:var(--t2);">2 of 3 slots</span></div><div style="text-align:center"><span class="status-tag st-interview">Interview</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Data Pipeline Engineer</div><div class="tbl-sub">Analytics DAO</div></div><div style="text-align:center"><div class="tbl-metric">76</div></div><div><span class="guild-tag">Data Science</span></div><div><span style="font-size:12px;color:var(--t2);">1 pending</span></div><div style="text-align:center"><span class="status-tag st-interview">Interview</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Full Stack Developer</div><div class="tbl-sub">NFT Marketplace</div></div><div style="text-align:center"><div class="tbl-metric" style="color:var(--t3);">—</div></div><div><span class="guild-tag">Engineering</span></div><div><span style="font-size:12px;color:var(--t4);">Awaiting review</span></div><div style="text-align:center"><span class="status-tag st-review">Review</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Product Designer</div><div class="tbl-sub">Web3 Studio</div></div><div style="text-align:center"><div class="tbl-metric" style="color:var(--t2);">65</div></div><div><span class="guild-tag">Design</span></div><div><span style="font-size:12px;color:var(--t4);">Not endorsed</span></div><div style="text-align:center"><span class="status-tag st-review">Review</span></div></div>
+          <div class="tbl-r" style="grid-template-columns:2fr 90px 80px 1fr 80px;"><div><div class="tbl-name">Smart Contract Engineer</div><div class="tbl-sub">Bridge Protocol</div></div><div style="text-align:center"><div class="tbl-metric" style="color:var(--t3);">—</div></div><div><span class="guild-tag">Engineering</span></div><div><span style="font-size:12px;color:var(--t4);">Panel assigned</span></div><div style="text-align:center"><span class="status-tag st-review">Review</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tp" id="tab-dv">
+      <div class="card mb28">
+        <div class="card-h"><div><span class="card-t">Profile Views</span><div class="card-sub">Companies viewing your vetted profile</div></div></div>
+        <svg viewBox="0 0 640 190" style="width:100%;display:block;">
+          <defs><linearGradient id="pvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".12"/><stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs>
+          <line x1="38" y1="25" x2="610" y2="25" class="gl"/><line x1="38" y1="65" x2="610" y2="65" class="gl"/><line x1="38" y1="105" x2="610" y2="105" class="gl"/><line x1="38" y1="150" x2="610" y2="150" class="gl0"/>
+          <text x="33" y="29" class="ax" text-anchor="end">15</text><text x="33" y="69" class="ax" text-anchor="end">10</text><text x="33" y="109" class="ax" text-anchor="end">5</text><text x="33" y="154" class="ax" text-anchor="end">0</text>
+          <!-- Area chart instead of bars -->
+          <path d="M48,135C80,128 112,118 144,100C176,82 208,92 240,75C272,60 304,70 336,50C368,38 400,48 432,32C464,22 496,28 528,15C560,10 592,16 610,12" fill="none" stroke="var(--pri)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M48,135C80,128 112,118 144,100C176,82 208,92 240,75C272,60 304,70 336,50C368,38 400,48 432,32C464,22 496,28 528,15C560,10 592,16 610,12 L610,150 L48,150Z" fill="url(#pvg)"/>
+          <circle cx="610" cy="12" r="5" fill="rgba(255,106,0,.1)" class="glow-dot"/><circle cx="610" cy="12" r="2" fill="var(--pri)" stroke="var(--bg)" stroke-width="1"/>
+          <text x="48" y="170" class="ax">W1</text><text x="190" y="170" class="ax">W2</text><text x="332" y="170" class="ax">W3</text><text x="474" y="170" class="ax">W4</text><text x="595" y="170" class="ax ax-hi">Now</text>
+        </svg>
+        <div style="font-size:11px;color:var(--t3);margin-top:8px;">89 views &middot; <span style="color:var(--pos);">+34%</span> vs prior period</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Discovery</span></div></div>
+          <div class="metric-row"><span class="metric-label">Search Appearances</span><span class="metric-val">312</span></div>
+          <div class="metric-row"><span class="metric-label">Click-Through Rate</span><span class="metric-val">28.5%</span></div>
+          <div class="metric-row"><span class="metric-label">Saved by Companies</span><span class="metric-val" style="color:var(--pri);">7</span></div>
+          <div class="metric-row"><span class="metric-label">Messages Received</span><span class="metric-val">4</span></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><div><span class="card-t">Guild Memberships</span></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,106,0,.02);border:1px solid rgba(255,106,0,.06);border-radius:var(--rs);">
+              <span class="guild-tag">Engineering</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Score: 88</div><div style="font-size:10px;color:var(--t4);">Vetted Mar 2026</div></div>
+              <span style="font-size:10px;color:var(--pos);font-weight:600;">Active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);">
+              <span class="guild-tag">Data Science</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Score: 76</div><div style="font-size:10px;color:var(--t4);">Vetted Feb 2026</div></div>
+              <span style="font-size:10px;color:var(--pos);font-weight:600;">Active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);">
+              <span class="guild-tag">Design</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Score: 65</div><div style="font-size:10px;color:var(--t4);">Vetted Mar 2026</div></div>
+              <span style="font-size:10px;color:var(--t2);font-weight:500;">Improve</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" disabled><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div class="dots" id="dots"></div>
+  <div class="nav-label" id="navLabel"></div>
+  <button class="nav-btn" id="nextBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+</div>
+
+<script>
+  document.querySelectorAll('.role-btn').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.role-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    document.querySelectorAll('.role-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('role-'+b.dataset.role).classList.add('active');
+    initTabs(document.querySelector('.role-panel.active .tabs'));
+  });
+  function initTabs(bar){
+    if(!bar)return;const tabs=bar.querySelectorAll('.tab'),ids=Array.from(tabs).map(t=>t.dataset.tab),labels=Array.from(tabs).map(t=>t.childNodes[0].textContent.trim());let c=0;
+    tabs.forEach((t,i)=>{if(t.classList.contains('active'))c=i});
+    function go(i){c=i;tabs.forEach(t=>t.classList.remove('active'));tabs[i].classList.add('active');ids.forEach(id=>{const e=document.getElementById('tab-'+id);if(e)e.classList.remove('active')});const tgt=document.getElementById('tab-'+ids[i]);if(tgt)tgt.classList.add('active');upNav();window.scrollTo({top:0,behavior:'smooth'});}
+    function upNav(){const d=document.getElementById('dots');d.innerHTML=ids.map((_,i)=>`<div class="dot${i===c?' active':''}" data-i="${i}"></div>`).join('');d.querySelectorAll('.dot').forEach(x=>x.onclick=()=>go(+x.dataset.i));document.getElementById('navLabel').textContent=(c+1)+'/'+ids.length+' — '+labels[c];document.getElementById('prevBtn').disabled=c===0;document.getElementById('nextBtn').disabled=c===ids.length-1;}
+    tabs.forEach((t,i)=>t.onclick=()=>go(i));document.getElementById('prevBtn').onclick=()=>{if(c>0)go(c-1)};document.getElementById('nextBtn').onclick=()=>{if(c<ids.length-1)go(c+1)};
+    document.onkeydown=e=>{if(e.key==='ArrowRight'&&c<ids.length-1)go(c+1);if(e.key==='ArrowLeft'&&c>0)go(c-1)};upNav();
+  }
+  initTabs(document.querySelector('.role-panel.active .tabs'));
+  document.querySelectorAll('.fp').forEach(p=>p.onclick=()=>{p.parentElement.querySelectorAll('.fp').forEach(x=>x.classList.remove('active'));p.classList.add('active')});
+</script>
+</body>
+</html>

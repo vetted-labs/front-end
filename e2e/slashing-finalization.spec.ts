@@ -66,7 +66,7 @@ const VOTE_ALIGNED = makeVoteEntry({
 
 test.describe("Slashing finalization display", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await setExpertSession(page);
   });
 
@@ -76,7 +76,7 @@ test.describe("Slashing finalization display", () => {
       voteHistory: [VOTE_SEVERE],
       crPhase: CR_FINALIZED,
     });
-    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "networkidle" });
+    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("severe").first()).toBeVisible();
@@ -91,7 +91,7 @@ test.describe("Slashing finalization display", () => {
       voteHistory: [VOTE_MILD],
       crPhase: CR_FINALIZED,
     });
-    await page.goto(`/expert/voting/applications/${MILD_ID}`, { waitUntil: "networkidle" });
+    await page.goto(`/expert/voting/applications/${MILD_ID}`, { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("mild").first()).toBeVisible();
@@ -105,7 +105,7 @@ test.describe("Slashing finalization display", () => {
       voteHistory: [VOTE_ALIGNED],
       crPhase: CR_FINALIZED,
     });
-    await page.goto(`/expert/voting/applications/${FINALIZED_ID}`, { waitUntil: "networkidle" });
+    await page.goto(`/expert/voting/applications/${FINALIZED_ID}`, { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Application Approved").first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("aligned").first()).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("Slashing finalization display", () => {
       voteHistory: [VOTE_SEVERE],
       crPhase: CR_FINALIZED,
     });
-    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "networkidle" });
+    await page.goto(`/expert/voting/applications/${SLASHED_ID}`, { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Application Rejected").first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/Median 35\.0/i).first()).toBeVisible();

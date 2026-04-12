@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vetted — Pattern Backgrounds</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; font-family: -apple-system, sans-serif; color: #fff; }
+  .bg-panel {
+    position: relative;
+    width: 100%; height: 100vh;
+    background: #0e0f12;
+    border-bottom: 3px solid rgba(255,106,0,0.25);
+    overflow: hidden;
+  }
+  .panel-label {
+    position: absolute; top: 20px; left: 20px; z-index: 20;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 12px 22px; border-radius: 10px;
+    font-size: 16px; font-weight: 700;
+  }
+  .panel-label span { color: #ff6a00; }
+
+  /* For dark mode: invert the light SVG so shapes become light-on-transparent */
+  .pat-square {
+    position: absolute; inset: 0;
+    background-image: url(/pattern-square.svg);
+    background-position: center;
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
+  .pat-wide {
+    position: absolute; inset: 0;
+    background-image: url(/pattern-dark.svg);
+    background-position: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>1</span> — Square · 540px tile · 15%</div>
+  <div class="pat-square" style="background-size:540px 540px;background-repeat:repeat;opacity:0.15;"></div>
+</div>
+
+<!-- 2 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>2</span> — Square · 1080px tile · 15% · NO LOGO</div>
+  <div style="position:absolute;inset:0;background-image:url(/pattern-square-nologo.svg);background-size:1080px 1080px;background-repeat:repeat;background-position:center;filter:invert(1);mix-blend-mode:screen;opacity:0.15;"></div>
+</div>
+
+<!-- 3 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>3</span> — Square · cover · 15%</div>
+  <div class="pat-square" style="background-size:cover;background-repeat:no-repeat;opacity:0.15;"></div>
+</div>
+
+<!-- 4 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>4</span> — Wide · 600px tile · 15%</div>
+  <div class="pat-wide" style="background-size:600px auto;background-repeat:repeat;opacity:0.15;"></div>
+</div>
+
+<!-- 5 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>5</span> — Wide · cover · 15%</div>
+  <div class="pat-wide" style="background-size:cover;background-repeat:no-repeat;opacity:0.15;"></div>
+</div>
+
+<!-- 6 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>6</span> — Square · 540px tile · 25%</div>
+  <div class="pat-square" style="background-size:540px 540px;background-repeat:repeat;opacity:0.25;"></div>
+</div>
+
+<!-- 7 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>7</span> — Square · cover + glow · 20%</div>
+  <div class="pat-square" style="background-size:cover;background-repeat:no-repeat;opacity:0.20;"></div>
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255,106,0,0.06), transparent 70%);"></div>
+</div>
+
+<!-- 8 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>8</span> — Square · 540px tile · 35% (very bold)</div>
+  <div class="pat-square" style="background-size:540px 540px;background-repeat:repeat;opacity:0.35;"></div>
+</div>
+
+<!-- 9 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>9</span> — Wide · 1200px tile · 20%</div>
+  <div class="pat-wide" style="background-size:1200px auto;background-repeat:repeat;opacity:0.20;"></div>
+</div>
+
+<!-- 10 -->
+<div class="bg-panel">
+  <div class="panel-label"><span>10</span> — No pattern (baseline)</div>
+</div>
+
+</body>
+</html>

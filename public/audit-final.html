@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — All Changes Applied (Final Overview)</title>
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface-2:#1a1a25;--surface-3:#22222f;--border:#2a2a3a;--border-light:#33334a;--text:#e8e8f0;--text-muted:#8888a0;--text-dim:#5a5a70;--accent:#f97316;--accent-dim:rgba(249,115,22,0.15);--accent-glow:rgba(249,115,22,0.08);--positive:#22c55e;--positive-dim:rgba(34,197,94,0.12);--negative:#ef4444;--negative-dim:rgba(239,68,68,0.12);--warning:#eab308;--warning-dim:rgba(234,179,8,0.12);--info:#3b82f6;--info-dim:rgba(59,130,246,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.page{max-width:1200px;margin:0 auto;padding:24px 32px 80px}
+
+.hero{padding:40px 0 32px;border-bottom:1px solid var(--border);margin-bottom:28px;background:linear-gradient(135deg,var(--accent-glow) 0%,transparent 50%)}
+.hero h1{font-size:32px;font-weight:800;letter-spacing:-0.03em}
+.hero .sub{font-size:14px;color:var(--text-muted);margin-top:6px;max-width:600px}
+.hero-stats{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap}
+.hero-stat{display:flex;align-items:baseline;gap:6px}
+.hero-stat .n{font-size:28px;font-weight:800}
+.hero-stat .l{font-size:12px;color:var(--text-dim)}
+
+.tabs{display:flex;gap:2px;background:var(--surface-2);border-radius:8px;padding:3px;margin-bottom:24px;position:sticky;top:12px;z-index:50}
+.tab{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-muted);border:none;background:none;transition:all 0.15s}
+.tab:hover{color:var(--text);background:var(--surface-3)}
+.tab.active{color:var(--text);background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.tab .cnt{font-size:10px;padding:0 5px;border-radius:8px;margin-left:4px;background:rgba(255,255,255,0.08)}
+.panel{display:none}.panel.active{display:block}
+
+.section-h{font-size:16px;font-weight:700;margin:24px 0 12px;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+thead th{text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+tbody td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:top}
+tbody tr:hover td{background:var(--surface-2)}
+.sc{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;min-width:26px;text-align:center}
+.g{background:var(--positive-dim);color:var(--positive)}
+.y{background:var(--warning-dim);color:var(--warning)}
+.r{background:var(--negative-dim);color:var(--negative)}
+.old{opacity:0.3;text-decoration:line-through;margin-right:2px}
+.arr{color:var(--positive);font-weight:700;margin:0 3px}
+.glow{box-shadow:0 0 8px var(--positive)}
+.d{font-size:10px;font-weight:700;color:var(--positive);margin-left:3px}
+.changes-cell{font-size:11px;color:var(--text-muted);max-width:420px;line-height:1.5}
+.file-tag{font-family:'SF Mono',monospace;font-size:10px;color:var(--accent);opacity:0.7}
+.group-row td{background:var(--surface-2);padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim)}
+
+.commit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.commit-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px}
+.commit-card .hash{font-family:'SF Mono',monospace;font-size:10px;color:var(--accent);margin-bottom:2px}
+.commit-card .msg{color:var(--text-muted);line-height:1.4}
+.commit-card.feat{border-left:3px solid var(--positive)}
+.commit-card.fix{border-left:3px solid var(--info)}
+.commit-card.refactor{border-left:3px solid var(--warning)}
+
+.remaining-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:8px}
+.remaining-card .title{font-weight:600;font-size:13px;margin-bottom:4px}
+.remaining-card .desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+.remaining-card .effort{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:6px}
+
+@media(max-width:800px){.commit-grid{grid-template-columns:1fr}.hero-stats{gap:16px}.page{padding:16px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hero">
+  <h1>Platform Audit — Final Overview</h1>
+  <p class="sub">Every change applied across V2 and V3. 26 commits, 84 files, covering all 57 views from expert to hiring to candidate.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="n" style="color:var(--text-dim)">7.2</span><span class="l">was</span></div>
+    <div class="hero-stat"><span class="n" style="color:var(--positive)">8.5</span><span class="l">now (avg)</span></div>
+    <div class="hero-stat"><span class="n">26</span><span class="l">commits</span></div>
+    <div class="hero-stat"><span class="n">84</span><span class="l">files</span></div>
+    <div class="hero-stat"><span class="n" style="color:var(--positive)">+5,705</span><span class="l">lines added</span></div>
+    <div class="hero-stat"><span class="n" style="color:var(--negative)">-2,390</span><span class="l">removed</span></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('views')">All Views<span class="cnt">57</span></button>
+  <button class="tab" onclick="showTab('commits')">Commits<span class="cnt">26</span></button>
+  <button class="tab" onclick="showTab('backend')">Backend<span class="cnt">7</span></button>
+  <button class="tab" onclick="showTab('remaining')">Still Remaining</button>
+</div>
+
+<div class="panel active" id="panel-views"></div>
+<div class="panel" id="panel-commits"></div>
+<div class="panel" id="panel-backend"></div>
+<div class="panel" id="panel-remaining"></div>
+
+</div>
+<script>
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['views','commits','backend','remaining'][i]===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+id));
+}
+
+const sc=v=>v>=9?'g':v>=7?'y':'r';
+
+// [id, group, name, route, oldUI,oldUX,oldFunc, newUI,newUX,newFunc, changes]
+const V=[
+[1,"Expert","Expert Dashboard","/expert/dashboard",8,7,7,8,7,9,"Vote weight display, reward tier badge, governance summary card, decay countdown"],
+[2,"Expert","Expert Profile","/expert/profile",9,7,6,9,8,8,"Fixed hardcoded rank, added edit mode, rank-specific colors"],
+[3,"Expert","Expert Apply","/expert/apply",8,8,8,8,8,8,"—"],
+[4,"Expert","Application Pending","/expert/application-pending",9,8,7,9,8,7,"—"],
+[5,"Expert","Reputation","/expert/reputation",9,8,8,9,9,9,"Replaced fake metrics, decay countdown, chart tooltips"],
+[6,"Expert","Voting / Applications","/expert/voting",8,8,8,8,9,8,"Wired staking CTA, added search"],
+[7,"Expert","Voting App Detail","/expert/voting/apps/[id]",8,7,7,8,8,8,"Anonymized vote history, vote confirmation"],
+[8,"Expert","Endorsement Marketplace","/expert/endorsements",8,8,7,9,8,8,"Shared Modal, slash risk warning, search"],
+[9,"Expert","Endorsements History","/expert/endorsements/history",8,7,5,8,8,7,"Outcome display, sorting, search, loading skeleton"],
+[10,"Expert","Endorsement Disputes","/expert/endorsements/disputes/[id]",6,6,5,9,9,9,"Full redesign: timeline, accent cards, panel display, breadcrumbs"],
+[11,"Expert","Earnings","/expert/earnings",9,8,7,9,9,9,"Chart tooltips, CSV export"],
+[12,"Expert","Withdrawals (Staking)","/expert/withdrawals",9,8,7,9,8,7,"Fixed hardcoded color"],
+[13,"Expert","Governance","/expert/governance",9,8,8,9,8,9,"Emergency_unilateral threshold, search"],
+[14,"Expert","Governance Create","/expert/governance/create",8,7,7,8,8,7,"Inline validation, deterministic cancel nav"],
+[15,"Expert","Governance Proposal Detail","/expert/governance/[id]",9,9,8,9,9,9,"Vote confirmation dialog, dead CSS removed"],
+[16,"Expert","Guilds Overview","/expert/guilds",8,8,7,8,8,8,"Fixed pending count bug"],
+[17,"Expert","Guild Detail","/expert/guild/[guildId]",8,8,8,8,8,9,"Fixed 5-rank progress bar, guild stats row"],
+[18,"Expert","Guild App Review (Legacy)","/expert/guild/.../app/[id]",7,6,6,9,9,9,"Redirected to Guild Detail review modal (eliminated)"],
+[19,"Expert","Guild Ranks","/expert/guild-ranks",9,8,7,9,9,8,"Fixed consensus null, multi-guild selector, 6-month term"],
+[20,"Expert","Leaderboard","/expert/leaderboard",9,8,8,9,9,9,"Fixed loading state, trophy color, Load More pagination"],
+[21,"Expert","Expert Analytics","/expert/analytics",8,6,3,8,8,8,"Replaced 100% mock data with real API calls, chart tooltips"],
+[22,"Company","Company Registration","/company",7,6,6,8,9,7,"Password confirmation, inline validation, AuthContext fix"],
+[23,"Company","Company Profile","/company/profile",7,7,7,7,7,7,"Profile completeness indicator"],
+[24,"Company","Dashboard Overview","/dashboard",8,8,7,8,8,8,"Endorsement accountability card"],
+[25,"Company","Candidates (ATS)","/dashboard/candidates",9,9,8,9,9,9,"Endorser identity resolution, fixed type bug"],
+[26,"Company","Jobs List","/dashboard/jobs",7,7,7,7,8,7,"Sort dropdown, click-outside fix"],
+[27,"Company","Job Detail","/dashboard/jobs/[jobId]",7,7,7,7,7,7,"—"],
+[28,"Company","Job Edit","/dashboard/jobs/[jobId]/edit",7,7,7,8,7,7,"Shared UI primitives"],
+[29,"Company","Messages Inbox","/dashboard/messages",8,7,7,8,8,7,"Refactored to useFetch"],
+[30,"Company","Conversation","/dashboard/messages/[id]",7,7,6,8,9,6,"Candidate profile link, loading skeleton"],
+[31,"Company","Notifications","/dashboard/notifications",8,8,7,8,8,8,"Dismiss button wired, group-hover fix"],
+[32,"Company","Company Analytics","/dashboard/analytics",9,7,4,9,8,7,"Replaced 100% mock with real API calls"],
+[33,"Company","Analytics Job Detail","/dashboard/analytics/[id]",6,4,1,9,8,9,"Full rebuild: pipeline from real application data"],
+[34,"Company","Settings","/dashboard/settings",7,7,5,8,8,7,"Password change form, honest billing EmptyState"],
+[35,"Company","Create New Job","/jobs/new",7,6,7,9,9,9,"Auto-save, preview modal, draft restoration"],
+[36,"Company","Job Detail (Public)","/jobs/[jobId]",7,6,7,8,9,8,"Context-aware nav, share button"],
+[37,"Candidate","Dashboard","/candidate/dashboard",8,8,7,8,8,9,"Wired resubmit, appeal links"],
+[38,"Candidate","Profile","/candidate/profile",7,8,7,7,8,9,"Skills section, work history"],
+[39,"Candidate","Applications","/candidate/applications",9,8,7,9,8,8,"Fixed rejection step derivation"],
+[40,"Candidate","Guilds","/candidate/guilds",8,7,6,8,7,8,"Resubmission flow, appeal links, rejection feedback"],
+[41,"Candidate","Notifications","/candidate/notifications",8,8,7,8,8,7,"—"],
+[42,"Candidate","Messages Inbox","/candidate/messages",7,7,6,8,9,6,"Refactored to useFetch, search, unread count"],
+[43,"Candidate","Messages Conversation","/candidate/messages/[id]",7,8,7,7,8,7,"—"],
+[44,"Candidate","Analytics","/candidate/analytics",8,6,4,8,8,7,"Replaced 100% mock with real API calls"],
+[45,"Public","Homepage","/",8,8,7,8,8,7,"—"],
+[46,"Public","Login","/auth/login",9,9,8,9,9,9,"Forgot password link"],
+[47,"Public","Signup","/auth/signup",8,8,7,8,8,8,"Experience level selector, ToS checkbox"],
+[48,"Public","Browse Landing","/browse",8,7,6,9,8,9,"Guild browse section, trending badges"],
+[49,"Public","Browse Jobs","/browse/jobs",9,9,8,9,9,9,"Sort dropdown, / keyboard shortcut"],
+[50,"Public","Browse Job Detail","/browse/jobs/[jobId]",8,9,8,8,9,8,"—"],
+[51,"Public","Guilds Directory","/guilds",9,8,7,9,9,9,"Search by name, fixed CTA link"],
+[52,"Public","Guild Detail","/guilds/[guildId]",8,8,7,8,8,8,"Guild stats row"],
+[53,"Public","Guild Apply","/guilds/[guildId]/apply",8,8,8,8,8,8,"—"],
+[54,"Public","Guild My Stats","/guilds/[guildId]/my-stats",7,6,4,8,8,8,"Wired real backend data, fixed response mapping"],
+[55,"Public","Company Public Profile","/companies/[id]",7,7,6,9,8,8,"Stats cards, culture section, website link"],
+[56,"Public","Candidate Public Profile","/candidates/[id]",5,6,5,9,9,9,"Full redesign: bento layout, guild memberships, skills, socialLinks"],
+[57,"Public","Expert Public Profile","/experts/[wallet]",9,8,7,9,8,7,"—"],
+];
+
+// ── VIEWS TABLE ──
+function renderViews(){
+  const avg=(u,x,f)=>((u+x+f)/3).toFixed(1);
+  let html='';
+  let curGroup='';
+  V.forEach(v=>{
+    if(v[1]!==curGroup){curGroup=v[1];html+=`<tr><td colspan="8" class="group-row">${v[1]}</td></tr>`;}
+    const oa=avg(v[4],v[5],v[6]),na=avg(v[7],v[8],v[9]);
+    const changed=parseFloat(na)>parseFloat(oa);
+    const uiC=v[7]>v[4],uxC=v[8]>v[5],fnC=v[9]>v[6];
+    html+=`<tr>
+      <td style="color:var(--text-dim);font-size:11px;width:28px">${v[0]}</td>
+      <td style="font-weight:600">${v[2]}</td>
+      <td style="font-family:monospace;font-size:10px;color:var(--text-dim)">${v[3]}</td>
+      <td>${uiC?`<span class="sc old ${sc(v[4])}">${v[4]}</span><span class="arr">→</span>`:''}${`<span class="sc ${sc(v[7])}">${v[7]}</span>`}</td>
+      <td>${uxC?`<span class="sc old ${sc(v[5])}">${v[5]}</span><span class="arr">→</span>`:''}${`<span class="sc ${sc(v[8])}">${v[8]}</span>`}</td>
+      <td>${fnC?`<span class="sc old ${sc(v[6])}">${v[6]}</span><span class="arr">→</span>`:''}${`<span class="sc ${sc(v[9])}">${v[9]}</span>`}</td>
+      <td>${changed?`<span class="sc old ${sc(parseFloat(oa))}">${oa}</span><span class="arr">→</span><span class="sc ${sc(parseFloat(na))} glow">${na}</span><span class="d">+${(na-oa).toFixed(1)}</span>`:`<span class="sc ${sc(parseFloat(na))}">${na}</span>`}</td>
+      <td class="changes-cell">${v[10]==='—'?'<span style="opacity:0.3">No changes</span>':v[10]}</td>
+    </tr>`;
+  });
+  const totalOld=(V.reduce((s,v)=>s+parseFloat(avg(v[4],v[5],v[6])),0)/V.length).toFixed(1);
+  const totalNew=(V.reduce((s,v)=>s+parseFloat(avg(v[7],v[8],v[9])),0)/V.length).toFixed(1);
+  const improved=V.filter(v=>parseFloat(avg(v[7],v[8],v[9]))>parseFloat(avg(v[4],v[5],v[6]))).length;
+  const at9=V.filter(v=>parseFloat(avg(v[7],v[8],v[9]))>=9).length;
+  document.getElementById('panel-views').innerHTML=`
+    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="font-size:13px"><strong>${improved}</strong> <span style="color:var(--text-dim)">views improved</span></div>
+      <div style="font-size:13px"><strong style="color:var(--positive)">${at9}</strong> <span style="color:var(--text-dim)">views at 9+</span></div>
+      <div style="font-size:13px">Avg: <span class="sc old ${sc(parseFloat(totalOld))}">${totalOld}</span><span class="arr">→</span><span class="sc ${sc(parseFloat(totalNew))} glow">${totalNew}</span></div>
+    </div>
+    <table><thead><tr><th>#</th><th>View</th><th>Route</th><th>UI</th><th>UX</th><th>Func</th><th>Avg</th><th>What Changed</th></tr></thead><tbody>${html}</tbody></table>`;
+}
+
+// ── COMMITS ──
+const commits=[
+["eb3c755","fix","show actual expert rank, compute consensus rate, and correct Guild Master term length"],
+["cc69633","fix","anonymize reviewer names in vote history and wire staking CTA"],
+["f8b8f85","fix","use shared Modal for endorsement transaction and fix dynamic Tailwind hover classes"],
+["e68f811","fix","replace hardcoded colors with semantic tokens and fix leaderboard loading state"],
+["9df57c2","fix","correct pending count, rank progress bar, and rejection step"],
+["eeca220","fix","replace manual fetch patterns with useFetch and fix routing bugs"],
+["d02a67c","fix","dead code cleanup, loading skeletons, and UI component adoption"],
+["0e27d62","fix","add AuthResponse type to useApi in CompanyForm to fix build error"],
+["7b8317b","feat","expose vote weight and slash risk to experts"],
+["ded8f22","feat","add endorsement outcomes, resubmit wiring, and appeal links"],
+["c4b2e78","feat","vote confirmation dialog, emergency_unilateral threshold, decay countdown"],
+["ba7f408","feat","expert dashboard governance card, profile edit mode, dispute appeals, multi-guild rank selector"],
+["80f73fc","feat","governance inline validation, leaderboard pagination, company dashboard & UX polish"],
+["0ff9426","feat","resolve endorser names, add sort controls, skills section, and socialLinks support"],
+["6bd5bb2","feat","add experience level selector, ToS checkbox, forgot password link, and improved error state"],
+["3316b3f","feat","add analyticsApi namespace to API client"],
+["945bbd4","feat","replace mock data with real API calls in all analytics pages"],
+["8a4b0c6","fix","replace fake/blurred UIs with real data or honest fallbacks"],
+["aaa4f42","feat","redesign candidate public profile with bento layout and proper loading states"],
+["2d45ab3","refactor","redirect legacy guild app review to Guild Detail review modal"],
+["3cdca94","feat","wire real backend data for guild stats and per-job analytics"],
+["34f1fe8","feat","replace stubs with working UI across settings, registration, and messaging"],
+["43bedc3","feat","job form auto-save/preview, browse guild section, public job share"],
+["def7e2b","feat","add search to 6 views, chart tooltips, and CSV export"],
+["93239d9","feat","add attachment UI, work history, company/guild stats"],
+["9914c02","fix","move useMemo hooks above early return to fix rules-of-hooks error"],
+];
+function renderCommits(){
+  document.getElementById('panel-commits').innerHTML=`
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <div style="font-size:13px"><strong style="color:var(--positive)">${commits.filter(c=>c[1]==='feat').length}</strong> <span style="color:var(--text-dim)">features</span></div>
+      <div style="font-size:13px"><strong style="color:var(--info)">${commits.filter(c=>c[1]==='fix').length}</strong> <span style="color:var(--text-dim)">fixes</span></div>
+      <div style="font-size:13px"><strong style="color:var(--warning)">${commits.filter(c=>c[1]==='refactor').length}</strong> <span style="color:var(--text-dim)">refactors</span></div>
+    </div>
+    <div class="commit-grid">${commits.map(c=>`<div class="commit-card ${c[1]}"><div class="hash">${c[0]}</div><div class="msg"><strong>${c[1]}:</strong> ${c[2]}</div></div>`).join('')}</div>`;
+}
+
+// ── BACKEND ──
+const backend=[
+["Ghost Endpoints (4 routes)","Created GET /:guildId/members, /leaderboard, /averages, /members/:id/activity in guilds.routes.ts","Guild My Stats page now gets real data"],
+["Auth on Sensitive Routes","Added verifyAnyUser to resume download, verifyExpertWallet to assigned proposals, verifyAnyUser to vote history","Resume no longer downloadable without auth"],
+["Company Rate Limiting","Added authRateLimiter to company signup and login (candidates already had it)","Brute force protection for company auth"],
+["Reputation Decay Cron","Fixed -1 → -10 penalty per whitepaper, wired applyInactivityDecay() into cron job","Inactive experts now lose reputation correctly"],
+["Candidate Feedback Endpoint","Created GET /me/guild-applications/:id/feedback with anonymized review scores","Candidates can see why they were rejected"],
+["Quorum Snapshotting","total_eligible_vote_weight now computed at proposal creation, not finalization","Prevents quorum manipulation during voting period"],
+["Reconciliation Auto-Correct","Cron now auto-corrects DB reputation when chain value diverges (was log-only)","Chain is source of truth, DB stays in sync"],
+];
+function renderBackend(){
+  document.getElementById('panel-backend').innerHTML=`
+    <table><thead><tr><th>Fix</th><th>What Was Done</th><th>Impact</th></tr></thead><tbody>
+    ${backend.map(b=>`<tr><td style="font-weight:600;white-space:nowrap">${b[0]}</td><td class="changes-cell">${b[1]}</td><td class="changes-cell">${b[2]}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── REMAINING ──
+const remaining=[
+["25% Stake Lockup Display","Expert views","Smart contract handles lockup correctly but UI never shows how much stake is locked during active reviews. Need a 'X VETD locked in N reviews' indicator on dashboard and withdrawals page.","sm","Whitepaper"],
+["Application Withdrawal","Candidate views","Candidates can't withdraw pending applications. Need withdraw button on Application Pending and Applications pages with confirmation dialog.","sm","UX"],
+["Notification Preferences Page","All user types","No settings page for email vs in-app notification preferences. Company has toggles in Settings but expert/candidate have nothing.","md","UX"],
+["Real-Time Notifications","All user types","Notifications require page refresh. Need WebSocket or polling for real-time badge updates.","md","UX"],
+["Rich Text for Job Description","Job form","Job descriptions are plain text only. A markdown editor or basic rich text would improve job posting quality.","md","Feature"],
+["AI Match Scores","Whitepaper","Deferred — whitepaper describes AI matching for candidates to jobs. No implementation exists. Would need backend ML pipeline.","lg","Whitepaper (deferred)"],
+["DID / Sybil Resistance","Whitepaper","Not implemented. Wallet-only auth allows one person to create unlimited wallets. Needs WorldID, Gitcoin Passport, or similar.","lg","Whitepaper (deferred)"],
+["Messaging File Attachments (Backend)","Messaging","Frontend UI for attachments was added but backend doesn't support file uploads in messages yet. Need multer/S3 integration.","md","Backend"],
+["Company Conversation Status","Messaging","Can't see or change candidate application status from the conversation view. Would streamline the hiring flow.","sm","UX"],
+["Endorsement Bid Refund Claiming","Endorsements","No UI for non-selected endorsers to claim their refund. Backend/contract supports it but no frontend button.","sm","Whitepaper"],
+];
+function renderRemaining(){
+  document.getElementById('panel-remaining').innerHTML=`
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${remaining.length} items remaining to reach a perfect 10 across all views. These are sorted by priority.</p>
+    ${remaining.map(r=>`<div class="remaining-card">
+      <div class="title">${r[0]}</div>
+      <div class="desc">${r[2]}</div>
+      <span class="effort" style="background:${r[3]==='sm'?'var(--positive-dim)':r[3]==='md'?'var(--warning-dim)':'var(--negative-dim)'};color:${r[3]==='sm'?'var(--positive)':r[3]==='md'?'var(--warning)':'var(--negative)'}">${r[3]==='sm'?'Small':r[3]==='md'?'Medium':'Large'}</span>
+      <span class="effort" style="background:var(--accent-dim);color:var(--accent);margin-left:6px">${r[4]}</span>
+    </div>`).join('')}`;
+}
+
+renderViews();renderCommits();renderBackend();renderRemaining();
+</script>
+</body>
+</html>

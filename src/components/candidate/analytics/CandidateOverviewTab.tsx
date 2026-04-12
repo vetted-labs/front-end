@@ -1,32 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { AnalyticsKPI, type KPIData } from "@/components/analytics/AnalyticsKPI";
+import { AnalyticsKPI } from "@/components/analytics/AnalyticsKPI";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface PipelineStage {
-  stage: string;
-  count: number;
-  color: "primary" | "primary-muted" | "muted" | "positive";
-}
-
-interface VettingScore {
-  guild: string;
-  score: number;
-  maxScore: number;
-}
-
-interface OverviewData {
-  kpis?: KPIData[];
-  pipeline?: PipelineStage[];
-  vettingScores?: VettingScore[];
-}
 
 // ── Pipeline stage styling ──────────────────────────────────────
 
@@ -68,7 +48,7 @@ export function CandidateOverviewTab({ period }: Props) {
     {}
   );
 
-  const data = rawData as OverviewData | null;
+  const data = rawData;
 
   const kpis = data?.kpis ?? [];
   const pipeline = data?.pipeline ?? [];
@@ -93,9 +73,9 @@ export function CandidateOverviewTab({ period }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load analytics"
+        description="Something went wrong loading your analytics data. Please try again."
       />
     );
   }

@@ -6,45 +6,9 @@ import { BarDistribution } from "@/components/analytics/BarDistribution";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface JobPerformance {
-  name: string;
-  guild: string;
-  apps: number;
-  appsTrend: string;
-  inReview: number;
-  reviewNote?: string;
-  timeToHire: string;
-  timeDelta: string;
-  timeDeltaPositive: boolean;
-  views: number;
-  status: "active" | "paused";
-}
-
-interface TimeToHireBar {
-  range: string;
-  count: number;
-  opacity: number;
-  isMedian?: boolean;
-}
-
-interface TimeToHireStats {
-  median?: string;
-  fastest?: { value: string; role: string };
-  slowest?: { value: string; role: string };
-  industryAvg?: string;
-  comparisonNote?: string;
-}
-
-interface JobsData {
-  jobs?: JobPerformance[];
-  timeToHireDistribution?: TimeToHireBar[];
-  timeToHireStats?: TimeToHireStats;
-}
+import type { CompanyJobsData } from "@/types/analytics";
 
 // ── Component ─────────────────────────────────────────────────
 
@@ -58,11 +22,9 @@ export function CompanyJobsTab({ period }: Props) {
     {}
   );
 
-  // The endpoint returns either an array of jobs or an object with jobs + stats
-  const data = useMemo((): JobsData => {
+  const data = useMemo((): Partial<CompanyJobsData> => {
     if (!rawData) return {};
-    if (Array.isArray(rawData)) return { jobs: rawData as JobPerformance[] };
-    return rawData as JobsData;
+    return rawData;
   }, [rawData]);
 
   const jobs = data.jobs ?? [];
@@ -85,9 +47,9 @@ export function CompanyJobsTab({ period }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load job analytics"
+        description="Something went wrong loading your job data. Please try again."
       />
     );
   }
@@ -113,7 +75,7 @@ export function CompanyJobsTab({ period }: Props) {
           <div className="overflow-x-auto">
             {/* Header */}
             <div
-              className="grid gap-2 pb-3 border-b border-border/50 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/60"
+              className="hidden sm:grid gap-2 pb-3 border-b border-border/50 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/60"
               style={{ gridTemplateColumns: "2fr 80px 80px 90px 80px 70px" }}
             >
               <span>Role</span>
@@ -128,7 +90,7 @@ export function CompanyJobsTab({ period }: Props) {
             {jobs.map((job) => (
               <div
                 key={job.name}
-                className="grid gap-2 py-3.5 border-b border-border/30 items-center last:border-b-0"
+                className="flex flex-col gap-2 py-3.5 border-b border-border/30 last:border-b-0 sm:grid sm:gap-2 sm:items-center"
                 style={{ gridTemplateColumns: "2fr 80px 80px 90px 80px 70px" }}
               >
                 {/* Role */}
@@ -141,8 +103,24 @@ export function CompanyJobsTab({ period }: Props) {
                   </span>
                 </div>
 
+                {/* Mobile stats summary */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground sm:hidden">
+                  <span>{job.apps} apps</span>
+                  <span>{job.inReview} in review</span>
+                  <span
+                    className={cn(
+                      "inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full capitalize",
+                      job.status === "active"
+                        ? "bg-positive/10 text-positive"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {job.status === "active" ? "Active" : "Paused"}
+                  </span>
+                </div>
+
                 {/* Apps */}
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div className="text-[13px] font-mono font-semibold">
                     {job.apps.toLocaleString()}
                   </div>
@@ -160,7 +138,7 @@ export function CompanyJobsTab({ period }: Props) {
                 </div>
 
                 {/* Review */}
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div
                     className={cn(
                       "text-[13px] font-mono font-semibold",
@@ -177,7 +155,7 @@ export function CompanyJobsTab({ period }: Props) {
                 </div>
 
                 {/* Time to Hire */}
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div className="text-[13px] font-mono font-semibold">
                     {job.timeToHire}
                   </div>
@@ -196,14 +174,14 @@ export function CompanyJobsTab({ period }: Props) {
                 </div>
 
                 {/* Views */}
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                   <div className="text-[13px] font-mono font-semibold">
                     {job.views.toLocaleString()}
                   </div>
                 </div>
 
                 {/* Status */}
-                <div className="text-center">
+                <div className="text-center hidden sm:block">
                   <span
                     className={cn(
                       "inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full capitalize",

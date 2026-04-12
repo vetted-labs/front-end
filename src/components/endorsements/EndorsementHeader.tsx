@@ -12,7 +12,7 @@ import {
 import {
   AlertTriangle,
 } from "lucide-react";
-import type { GuildRecord } from "@/types";
+import type { GuildRecord, ActiveEndorsement, EarningsBreakdownResponse } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
 import { EndorsementStatsGrid } from "./EndorsementStatsGrid";
 
@@ -30,9 +30,9 @@ interface EndorsementHeaderProps {
   selectedGuildId: string | undefined;
   onGuildChange: (guildId: string) => void;
   // Stats
-  totalEndorsementsCount: number;
-  userEndorsementsCount: number;
-  applicationsCount: number;
+  guildEndorsements: ActiveEndorsement[];
+  allEndorsements: ActiveEndorsement[];
+  earningsData: EarningsBreakdownResponse | null;
   userStake: string;
 }
 
@@ -46,9 +46,9 @@ export function EndorsementHeader({
   guilds,
   selectedGuildId,
   onGuildChange,
-  totalEndorsementsCount,
-  userEndorsementsCount,
-  applicationsCount,
+  guildEndorsements,
+  allEndorsements,
+  earningsData,
   userStake,
 }: EndorsementHeaderProps) {
   const stakeNum = parseFloat(userStake);
@@ -124,9 +124,9 @@ export function EndorsementHeader({
 
       {/* Visual stat cards */}
       <EndorsementStatsGrid
-        totalEndorsementsCount={totalEndorsementsCount}
-        userEndorsementsCount={userEndorsementsCount}
-        applicationsCount={applicationsCount}
+        guildEndorsements={guildEndorsements}
+        allEndorsements={allEndorsements}
+        earningsData={earningsData}
       />
     </>
   );

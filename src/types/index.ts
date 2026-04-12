@@ -1,7 +1,7 @@
 export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
 export type { Guild, GuildPublicDetail, GuildPageDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, StakingGuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole, ActivityType, GuildActivity, GuildDetailData, GuildDetailTab, GuildPersonalStats, GuildMyStatsAverages, GuildRecentActivity, GuildMyStatsData } from "./guild";
 export { GUILD_DETAIL_TABS } from "./guild";
-export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, PendingGuildInfo, FieldErrors, GeneralAnswers, ExpertiseLevel } from "./expert";
+export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, GuildApplicationInfo, FieldErrors, GeneralAnswers, ExpertiseLevel } from "./expert";
 export type { CandidateProfile, CandidateUserProfile, CandidateMember, SocialLink, CandidateRejectionFeedback, WorkHistoryEntry } from "./candidate";
 export type {
   ApplicationsTabType,
@@ -33,6 +33,7 @@ export type {
   GuildApplicationGuild,
   GuildApplicationJobData,
   GuildApplicationProfileResume,
+  SlashingTier,
 } from "./guildApplication";
 export { mapAppealResponse, JOB_LEVEL_TO_GUILD_LEVEL } from "./guildApplication";
 export type {
@@ -174,3 +175,19 @@ export type {
 export type { TeamMember, TeamMemberRole, TeamMemberStatus } from "./team";
 export type { ExpertMembershipApplication, CandidateGuildApplication, MyReviewData, ExpertApplicationFinalization, ReviewModalApplication, ReviewGuildApplicationModalProps } from "./review";
 export type { MatchDimension, MatchScoreBreakdown, MatchScoreResult, RecommendedJob } from "./matching";
+export type {
+  EarningsItem,
+  ExpertOverviewData,
+  ReputationPoint,
+  ScoreDistributionItem,
+  StakingItem,
+  ReviewsData,
+  AnalyticsEndorsement,
+  EndorsementStatsData,
+  CompanyOverviewData,
+  CompanyPipelineData,
+  CompanyJobsData,
+  CandidateOverviewData,
+  CandidateApplicationItem,
+  CandidateVisibilityData,
+} from "./analytics";

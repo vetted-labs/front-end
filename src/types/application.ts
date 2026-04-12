@@ -37,6 +37,7 @@ export interface CompanyApplication {
   candidateId: string;
   status: ApplicationStatus;
   appliedAt: string;
+  statusChangedAt?: string;
   coverLetter: string;
   resumeUrl?: string;
   screeningAnswers?: string[];

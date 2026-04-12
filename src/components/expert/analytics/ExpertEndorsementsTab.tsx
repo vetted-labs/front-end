@@ -4,30 +4,8 @@ import { cn } from "@/lib/utils";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface ActiveEndorsement {
-  candidate: string;
-  role: string;
-  guild: string;
-  staked: number;
-  status: "hired" | "interview" | "review";
-  payout?: string;
-  payoutNote?: string;
-  trackingDay?: number;
-  trackingTotal?: number;
-}
-
-interface EndorsementStatsData {
-  active?: number;
-  atRisk?: number;
-  successRate?: number;
-  totalEarned?: number;
-  successRateNote?: string;
-  endorsements?: ActiveEndorsement[];
-}
+import { AlertTriangle } from "lucide-react";
+import type { EndorsementStatsData } from "@/types/analytics";
 
 // ── Status badge config ──────────────────────────────────────
 
@@ -49,7 +27,7 @@ export function ExpertEndorsementsTab({ walletAddress }: Props) {
     { skip: !walletAddress }
   );
 
-  const data = rawData as EndorsementStatsData | null;
+  const data = rawData;
   const endorsements = data?.endorsements ?? [];
 
   if (isLoading) {
@@ -68,9 +46,9 @@ export function ExpertEndorsementsTab({ walletAddress }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load endorsements"
+        description="Something went wrong loading your endorsement data. Please try again."
       />
     );
   }

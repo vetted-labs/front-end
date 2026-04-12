@@ -4,18 +4,8 @@ import { cn } from "@/lib/utils";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface CandidateApplication {
-  role: string;
-  company: string;
-  score: number | null;
-  guild: string;
-  endorsements: string;
-  status: "offer" | "interview" | "review";
-}
+import { AlertTriangle, BarChart3 } from "lucide-react";
+import type { CandidateApplicationItem } from "@/types/analytics";
 
 // ── Status badge styles ─────────────────────────────────────────
 
@@ -33,8 +23,8 @@ export function CandidateApplicationsTab() {
     {}
   );
 
-  const applications: CandidateApplication[] = Array.isArray(rawData)
-    ? (rawData as CandidateApplication[])
+  const applications: CandidateApplicationItem[] = Array.isArray(rawData)
+    ? rawData
     : [];
 
   if (isLoading) {
@@ -46,9 +36,9 @@ export function CandidateApplicationsTab() {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load applications"
+        description="Something went wrong loading your application data. Please try again."
       />
     );
   }

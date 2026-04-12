@@ -101,6 +101,18 @@
     /* Secondary oranges */
     --orange-secondary: 24 85% 60%;
     --orange-light: 24 100% 72%;
+
+    /* Docs callout tokens — explicit per-mode backgrounds (never opacity) */
+    --docs-callout-note-bg: #F3F4F6;
+    --docs-callout-note-border: #9CA3AF;
+    --docs-callout-info-bg: #EFF6FF;
+    --docs-callout-info-border: #3B82F6;
+    --docs-callout-tip-bg: #F0FDF4;
+    --docs-callout-tip-border: #22C55E;
+    --docs-callout-warning-bg: #FFFBEB;
+    --docs-callout-warning-border: #F59E0B;
+    --docs-callout-danger-bg: #FEF2F2;
+    --docs-callout-danger-border: #EF4444;
 }
 
 .dark {
@@ -199,6 +211,18 @@
 
     /* Card elevation - keep existing dark mode shadows */
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    /* Docs callout tokens — dark mode (explicit, no opacity) */
+    --docs-callout-note-bg: #1F2937;
+    --docs-callout-note-border: #6B7280;
+    --docs-callout-info-bg: #1E3A5F;
+    --docs-callout-info-border: #60A5FA;
+    --docs-callout-tip-bg: #14532D;
+    --docs-callout-tip-border: #4ADE80;
+    --docs-callout-warning-bg: #451A03;
+    --docs-callout-warning-border: #FCD34D;
+    --docs-callout-danger-bg: #450A0A;
+    --docs-callout-danger-border: #F87171;
 }
 
 @theme inline {
@@ -260,9 +284,9 @@
     --color-surface-3: hsl(var(--surface-3));
     --color-surface-border: hsl(var(--surface-border));
     --shadow-card: var(--card-shadow);
-    --font-sans: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
-    --font-display: var(--font-display), 'Bricolage Grotesque', 'Inter', sans-serif;
+    --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: var(--font-geist-mono);
 }
 
@@ -273,9 +297,231 @@
 body {
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100dvh;
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Docs prose styles — matched to docs.gitbook.com measurements.
+ *
+ *   body:   16px / 26px
+ *   h2:     28px / 36px / 700, 56px top, 16px bottom
+ *   h3:     24px / 32px / 600, 40px top, 12px bottom
+ *   lists:  16px / 26px, generous spacing
+ *   code:   14px mono in a subtle muted card (light-on-light, not terminal)
+ * ────────────────────────────────────────────────────────────────────── */
+
+.docs-prose {
+    color: hsl(var(--foreground));
+    font-size: 16px;
+    line-height: 26px;
+}
+
+.docs-prose > * + * {
+    margin-top: 20px;
+}
+
+.docs-prose > h2 {
+    margin-top: 56px;
+    margin-bottom: 16px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 36px;
+    letter-spacing: -0.012em;
+    color: hsl(var(--foreground));
+    scroll-margin-top: 76px;
+}
+
+.docs-prose > h3 {
+    margin-top: 40px;
+    margin-bottom: 12px;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 30px;
+    letter-spacing: -0.01em;
+    color: hsl(var(--foreground));
+    scroll-margin-top: 76px;
+}
+
+.docs-prose > h4 {
+    margin-top: 28px;
+    margin-bottom: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 24px;
+    color: hsl(var(--foreground));
+}
+
+.docs-prose > p {
+    margin: 16px 0;
+}
+
+.docs-prose strong {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+}
+
+.docs-prose em {
+    font-style: italic;
+}
+
+.docs-prose a {
+    color: hsl(var(--primary));
+    font-weight: 500;
+    text-underline-offset: 3px;
+}
+.docs-prose a:hover {
+    text-decoration: underline;
+}
+
+/* Lists — generous spacing so bullets breathe (scoped to direct children) */
+.docs-prose > ul,
+.docs-prose > ol {
+    margin: 20px 0;
+    padding-left: 24px;
+}
+.docs-prose > ul {
+    list-style: disc;
+}
+.docs-prose > ol {
+    list-style: decimal;
+}
+.docs-prose > ul > li,
+.docs-prose > ol > li {
+    margin: 10px 0;
+    padding-left: 6px;
+}
+.docs-prose > ul > li::marker,
+.docs-prose > ol > li::marker {
+    color: hsl(var(--muted-foreground));
+}
+.docs-prose > ul > li > ul,
+.docs-prose > ul > li > ol,
+.docs-prose > ol > li > ul,
+.docs-prose > ol > li > ol {
+    margin: 10px 0;
+}
+.docs-prose > ul > li p,
+.docs-prose > ol > li p {
+    margin: 4px 0;
+}
+
+/* Inline code */
+.docs-prose :not(pre) > code {
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    border: 1px solid hsl(var(--border) / 0.6);
+    background: hsl(var(--muted));
+    font-size: 0.875em;
+    font-family: ui-monospace, "SF Mono", "Menlo", "Monaco", "Cascadia Mono", monospace;
+    color: hsl(var(--foreground));
+}
+
+/* Block code handled by DocsCodeBlock component; just reset inside <pre> */
+.docs-prose > pre {
+    margin: 1.75rem 0;
+}
+.docs-prose > pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Blockquotes (scoped to direct children) */
+.docs-prose > blockquote {
+    margin: 1.75rem 0;
+    padding: 0.875rem 1.25rem 0.875rem 1.25rem;
+    border-left: 3px solid hsl(var(--primary) / 0.6);
+    background: hsl(var(--muted) / 0.4);
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Tables (scoped to direct children) */
+.docs-prose > table {
+    width: 100%;
+    margin: 1.75rem 0;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+.docs-prose > table thead th {
+    background: hsl(var(--muted) / 0.5);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    border-bottom: 1px solid hsl(var(--border));
+}
+.docs-prose > table tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: top;
+    border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+.docs-prose > table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Horizontal rules (scoped to direct children) */
+.docs-prose > hr {
+    margin: 2.5rem 0;
+    border: none;
+    border-top: 1px solid hsl(var(--border));
+}
+
+/* Shiki dual-theme code blocks — show light theme by default, dark in .dark */
+.docs-shiki pre {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+}
+.docs-shiki pre.shiki {
+    display: none;
+}
+.docs-shiki pre.shiki.github-light {
+    display: block;
+}
+.dark .docs-shiki pre.shiki.github-light {
+    display: none;
+}
+.dark .docs-shiki pre.shiki.github-dark-dimmed {
+    display: block;
+}
+.docs-shiki pre.shiki code {
+    font-size: 13px;
+    line-height: 22px;
+    font-family: ui-monospace, "SF Mono", "Menlo", "Monaco", "Cascadia Mono", monospace;
+}
+
+/* Definition lists (used by Glossary) */
+.docs-prose > dl {
+    margin: 1.5rem 0;
+}
+.docs-prose > dl dt {
+    margin-top: 1.5rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+.docs-prose > dl dd {
+    margin: 0.375rem 0 0 0;
+    color: hsl(var(--muted-foreground));
+}
+
+/* Custom block components managed their own margin previously — reset so rhythm is consistent */
+.docs-prose > * {
+    max-width: 100%;
+}
+
+/* Docs callout styles — use CSS tokens that swap automatically via .dark class */
+.docs-callout-note    { background: var(--docs-callout-note-bg);    border-left: 3px solid var(--docs-callout-note-border); }
+.docs-callout-info    { background: var(--docs-callout-info-bg);    border-left: 3px solid var(--docs-callout-info-border); }
+.docs-callout-tip     { background: var(--docs-callout-tip-bg);     border-left: 3px solid var(--docs-callout-tip-border); }
+.docs-callout-warning { background: var(--docs-callout-warning-bg); border-left: 3px solid var(--docs-callout-warning-border); }
+.docs-callout-danger  { background: var(--docs-callout-danger-bg);  border-left: 3px solid var(--docs-callout-danger-border); }
 
 /* Legacy glass-card classes — flat opaque replacements (will remove class usage in Phase 2b) */
 .glass-card {

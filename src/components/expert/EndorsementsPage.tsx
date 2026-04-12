@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
 import { Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HelpLink } from "@/components/ui/HelpLink";
+import { DOC_LINKS } from "@/config/docLinks";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 
 export default function EndorsementsPage() {
@@ -46,7 +48,10 @@ export default function EndorsementsPage() {
                 Endorsement Marketplace
               </h1>
               <p className="max-w-2xl text-muted-foreground">
-                Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when the candidate is hired.
+                Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when the candidate is hired.{" "}
+                <HelpLink href={DOC_LINKS.endorsements} size="sm">
+                  How endorsements work
+                </HelpLink>
               </p>
             </div>
             <Button

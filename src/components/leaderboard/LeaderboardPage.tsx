@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Star,
   Coins,
-  Users,
   Zap,
   BarChart3,
   ChevronDown,
@@ -40,7 +39,6 @@ const TABS = [
   { id: "earnings", label: "Earnings", icon: Coins },
   { id: "reputation", label: "Reputation", icon: Star },
   { id: "reviews", label: "Reviews", icon: BarChart3 },
-  { id: "consensus", label: "Consensus", icon: Users },
   { id: "endorsements", label: "Endorsements", icon: Zap },
   { id: "trending", label: "Trending", icon: TrendingUp },
 ] as const;
@@ -70,8 +68,7 @@ const TAB_SORT: Record<string, { primary: SortKey; secondary: SortKey }> = {
   overall: { primary: "reputation", secondary: "totalEarnings" },
   earnings: { primary: "totalEarnings", secondary: "reputation" },
   reputation: { primary: "reputation", secondary: "totalReviews" },
-  reviews: { primary: "totalReviews", secondary: "consensusRate" },
-  consensus: { primary: "consensusRate", secondary: "totalReviews" },
+  reviews: { primary: "totalReviews", secondary: "reputation" },
 };
 
 function sortEntries(entries: LeaderboardEntryV2[], tab: string): LeaderboardEntryV2[] {
@@ -79,12 +76,7 @@ function sortEntries(entries: LeaderboardEntryV2[], tab: string): LeaderboardEnt
   const sortConfig = TAB_SORT[tab];
   if (!sortConfig) return entries;
 
-  let filtered = entries;
-  if (tab === "consensus") {
-    filtered = entries.filter((e) => e.totalReviews >= 3);
-  }
-
-  return [...filtered].sort((a, b) => {
+  return [...entries].sort((a, b) => {
     const aP = Number(a[sortConfig.primary]) || 0;
     const bP = Number(b[sortConfig.primary]) || 0;
     if (bP !== aP) return bP - aP;

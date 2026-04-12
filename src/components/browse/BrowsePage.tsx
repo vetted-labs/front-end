@@ -50,14 +50,13 @@ export default function BrowsePage() {
             Decentralized Talent Marketplace
           </div>
           <h1 className="font-display text-5xl font-bold text-foreground mb-6 tracking-tight">
-            Find Your Next{" "}
+            Get{" "}
             <span className="text-primary">
-              Web3 Opportunity
+              Vetted
             </span>
           </h1>
           <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-            Join a decentralized talent marketplace where expertise is validated
-            by guilds and opportunities are vetted by the community.
+            Prove your skills once. Let domain experts make you visible to the right opportunities.
           </p>
           <Link
             href="/browse/jobs"
@@ -227,7 +226,7 @@ export default function BrowsePage() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className=" border border-border rounded-xl p-12 text-center">
+        <div className="border border-border rounded-xl p-6 sm:p-12 text-center">
           <h2 className="font-display text-3xl font-bold text-foreground mb-4 tracking-tight">
             Ready to Start Your Web3 Journey?
           </h2>

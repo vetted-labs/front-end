@@ -17,6 +17,8 @@ import {
   Coins,
   Handshake,
   Trophy,
+  Clock,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 
@@ -80,6 +82,36 @@ export const expertSidebarConfig: SidebarConfig = {
         { label: "Withdrawals", href: "/expert/withdrawals", icon: Wallet },
       ],
     },
+    {
+      label: "Help",
+      items: [
+        { label: "Docs", href: "/docs/experts", icon: BookOpen },
+      ],
+    },
+  ],
+};
+
+/**
+ * Sidebar shown to experts whose status is NOT "approved" yet — i.e.
+ * pending / rejected. Only the routes the auth guard actually allows
+ * (/expert/application-pending, /guilds) are rendered so the user can't
+ * click into a disabled dashboard and bounce back.
+ */
+export const restrictedExpertSidebarConfig: SidebarConfig = {
+  variant: "expert",
+  groups: [
+    {
+      label: "Application",
+      items: [
+        { label: "My Status", href: "/expert/application-pending", icon: Clock, exact: true },
+      ],
+    },
+    {
+      label: "Explore",
+      items: [
+        { label: "Browse Guilds", href: "/guilds", icon: Users },
+      ],
+    },
   ],
 };
 
@@ -107,6 +139,12 @@ export const companySidebarConfig: SidebarConfig = {
         { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
         { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
+      ],
+    },
+    {
+      label: "Help",
+      items: [
+        { label: "Docs", href: "/docs/companies", icon: BookOpen },
       ],
     },
   ],
@@ -138,6 +176,12 @@ export const candidateSidebarConfig: SidebarConfig = {
         { label: "My Guilds", href: "/candidate/guilds", icon: Shield },
       ],
     },
+    {
+      label: "Help",
+      items: [
+        { label: "Docs", href: "/docs/candidates", icon: BookOpen },
+      ],
+    },
   ],
 };
 
@@ -150,17 +194,18 @@ export const browseSidebarConfig: SidebarConfig = {
         { label: "Home", href: "/", icon: Home },
         { label: "Find Jobs", href: "/browse/jobs", icon: Briefcase },
         { label: "Guilds", href: "/guilds", icon: Users },
+        { label: "Docs", href: "/docs", icon: BookOpen },
       ],
     },
     {
       label: "Get Started",
       items: [
-        { label: "Vet Talent", href: "/auth/login?type=expert", icon: Award },
         {
-          label: "Find Work",
+          label: "Get Vetted",
           href: "/auth/login?type=candidate",
           icon: Users,
         },
+        { label: "Vet Talent", href: "/auth/login?type=expert", icon: Award },
         {
           label: "Start Hiring",
           href: "/auth/login?type=company",

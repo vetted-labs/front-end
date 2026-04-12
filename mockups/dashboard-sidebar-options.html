@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Side Panel — 3 Ideas</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface-0: #0c0f14;
+    --surface-1: #141820;
+    --surface-2: #1a1f2a;
+    --surface-3: #222938;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --primary: #ff6a00;
+    --primary-rgb: 255, 106, 0;
+    --text: #f0f0f5;
+    --text-muted: #6b7084;
+    --positive: #22c55e;
+    --positive-rgb: 34, 197, 94;
+    --warning: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --info: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--surface-0);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px;
+  }
+
+  .page-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+
+  .dashboard-sim {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+    margin-bottom: 56px;
+  }
+  .review-placeholder {
+    background: var(--surface-1);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    min-height: 360px;
+  }
+
+  .option-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  .option-title {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .option-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    max-width: 700px;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+
+  /* Shared card */
+  .side-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .card-link {
+    font-size: 11px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* ═══ OPTION A: Stake Distribution ═══ */
+  .stake-total {
+    text-align: center;
+    padding: 16px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .stake-total-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .stake-total-value {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .stake-total-suffix {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  /* Stacked bar */
+  .stake-bar-container {
+    height: 8px;
+    border-radius: 8px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: var(--surface-3);
+  }
+  .stake-bar-seg {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  .stake-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .stake-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stake-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .stake-guild {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stake-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .stake-pct {
+    font-size: 10px;
+    color: var(--text-muted);
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* ═══ OPTION B: Earnings Breakdown ═══ */
+  .earnings-hero {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .earnings-value {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--positive);
+  }
+  .earnings-suffix {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .earnings-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .earnings-sub span {
+    color: var(--positive);
+    font-weight: 600;
+  }
+
+  .earnings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .earnings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.01);
+    border: 1px solid var(--border);
+  }
+  .er-guild {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .er-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--positive);
+  }
+  .er-bar-wrap {
+    width: 60px;
+    height: 4px;
+    background: var(--surface-3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .er-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--positive);
+  }
+
+  /* ═══ OPTION C: Performance Summary ═══ */
+  .perf-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .perf-tile {
+    padding: 14px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+    text-align: center;
+  }
+  .perf-tile-value {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .perf-tile-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .perf-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .perf-milestones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .milestone-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+  }
+  .milestone-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .mi-gold { background: rgba(var(--warning-rgb), 0.1); }
+  .mi-green { background: rgba(var(--positive-rgb), 0.1); }
+  .mi-orange { background: rgba(var(--primary-rgb), 0.1); }
+  .milestone-info { flex: 1; min-width: 0; }
+  .milestone-title {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .milestone-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .milestone-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+  .mb-done {
+    background: rgba(var(--positive-rgb), 0.1);
+    color: var(--positive);
+    border: 1px solid rgba(var(--positive-rgb), 0.15);
+  }
+  .mb-progress {
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(var(--primary-rgb), 0.15);
+  }
+
+  .design-label {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+
+<h1 class="page-title">What goes next to Review Queue?</h1>
+<p class="page-subtitle">3 ideas for the 1fr slot — each shows info NOT already on the dashboard</p>
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION A: Stake Distribution
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option A</div>
+<h2 class="option-title">Stake Distribution</h2>
+<p class="option-desc">Visual breakdown of where your VETD is allocated. The stats row shows the total — this shows the split. Stacked bar + per-guild amounts. Instantly see if you're overweight on one guild. Links to "Manage Stake".</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="side-card">
+    <div class="card-header">
+      <span class="card-title">Stake Distribution</span>
+      <a href="#" class="card-link">Manage &rarr;</a>
+    </div>
+
+    <div class="stake-total">
+      <div class="stake-total-label">Total Staked</div>
+      <div class="stake-total-value">1,040 <span class="stake-total-suffix">VETD</span></div>
+    </div>
+
+    <!-- Stacked bar -->
+    <div class="stake-bar-container">
+      <div class="stake-bar-seg" style="width:48%; background: var(--primary);"></div>
+      <div class="stake-bar-seg" style="width:12%; background: #ff8533;"></div>
+      <div class="stake-bar-seg" style="width:10%; background: #ffad66;"></div>
+      <div class="stake-bar-seg" style="width:10%; background: #ffc184;"></div>
+      <div class="stake-bar-seg" style="width:8%; background: #ffd6a6;"></div>
+      <div class="stake-bar-seg" style="width:6%; background: #ffe4c4;"></div>
+      <div class="stake-bar-seg" style="width:3%; background: #ffecd6;"></div>
+      <div class="stake-bar-seg" style="width:3%; background: #fff2e6;"></div>
+    </div>
+
+    <div class="stake-list">
+      <div class="stake-row">
+        <div class="stake-dot" style="background: var(--primary);"></div>
+        <span class="stake-guild">Engineering</span>
+        <span class="stake-amount">500</span>
+        <span class="stake-pct">48%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ff8533;"></div>
+        <span class="stake-guild">Security</span>
+        <span class="stake-amount">120</span>
+        <span class="stake-pct">12%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ffad66;"></div>
+        <span class="stake-guild">Marketing & Growth</span>
+        <span class="stake-amount">100</span>
+        <span class="stake-pct">10%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ffc184;"></div>
+        <span class="stake-guild">Design</span>
+        <span class="stake-amount">100</span>
+        <span class="stake-pct">10%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ffd6a6;"></div>
+        <span class="stake-guild">Data Science</span>
+        <span class="stake-amount">80</span>
+        <span class="stake-pct">8%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ffe4c4;"></div>
+        <span class="stake-guild">DevOps</span>
+        <span class="stake-amount">60</span>
+        <span class="stake-pct">6%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #ffecd6;"></div>
+        <span class="stake-guild">Product</span>
+        <span class="stake-amount">40</span>
+        <span class="stake-pct">4%</span>
+      </div>
+      <div class="stake-row">
+        <div class="stake-dot" style="background: #fff2e6;"></div>
+        <span class="stake-guild">Finance & Compliance</span>
+        <span class="stake-amount">40</span>
+        <span class="stake-pct">4%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION B: Earnings Breakdown
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option B</div>
+<h2 class="option-title">Earnings Breakdown</h2>
+<p class="option-desc">Where you're making money. The stats row shows the total — this shows per-guild earnings with proportional bars. Helps you decide where to focus your reviewing effort. Links to full earnings page.</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="side-card">
+    <div class="card-header">
+      <span class="card-title">Earnings</span>
+      <a href="#" class="card-link">Details &rarr;</a>
+    </div>
+
+    <div class="earnings-hero">
+      <span class="earnings-value">$599</span>
+      <span class="earnings-suffix">total earned</span>
+    </div>
+    <div class="earnings-sub"><span>+$19.18</span> this week from aligned votes</div>
+
+    <div class="earnings-list">
+      <div class="earnings-row">
+        <span class="er-guild">Marketing & Growth</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 100%"></div></div>
+        <span class="er-amount">$164</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Design</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 77%"></div></div>
+        <span class="er-amount">$127</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Engineering</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 65%"></div></div>
+        <span class="er-amount">$107</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Data Science</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 56%"></div></div>
+        <span class="er-amount">$92</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Security</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 41%"></div></div>
+        <span class="er-amount">$68</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">DevOps</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 27%"></div></div>
+        <span class="er-amount">$45</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Product</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 19%"></div></div>
+        <span class="er-amount">$31</span>
+      </div>
+      <div class="earnings-row">
+        <span class="er-guild">Finance</span>
+        <div class="er-bar-wrap"><div class="er-bar-fill" style="width: 11%"></div></div>
+        <span class="er-amount">$18</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════
+     OPTION C: Performance & Milestones
+     ═══════════════════════════════════════════════════════ -->
+<div class="option-label">Option C</div>
+<h2 class="option-title">Performance & Milestones</h2>
+<p class="option-desc">Gamified progress view. Key performance metrics at the top, with milestone badges below showing what you've achieved and what's next. Motivating for experts to keep reviewing.</p>
+
+<div class="dashboard-sim">
+  <div class="review-placeholder">Review Queue (1.5fr)</div>
+  <div class="side-card">
+    <div class="card-header">
+      <span class="card-title">Performance</span>
+    </div>
+
+    <div class="perf-grid">
+      <div class="perf-tile">
+        <div class="perf-tile-value" style="color: var(--positive);">59%</div>
+        <div class="perf-tile-label">Consensus</div>
+      </div>
+      <div class="perf-tile">
+        <div class="perf-tile-value" style="color: var(--primary);">17</div>
+        <div class="perf-tile-label">Reviews</div>
+      </div>
+      <div class="perf-tile">
+        <div class="perf-tile-value" style="color: var(--warning);">8</div>
+        <div class="perf-tile-label">Guilds</div>
+      </div>
+      <div class="perf-tile">
+        <div class="perf-tile-value" style="color: var(--text);">3</div>
+        <div class="perf-tile-label">Endorsements</div>
+      </div>
+    </div>
+
+    <div class="perf-section-label">Milestones</div>
+    <div class="perf-milestones">
+      <div class="milestone-row">
+        <div class="milestone-icon mi-gold">&#127942;</div>
+        <div class="milestone-info">
+          <div class="milestone-title">Guild Master x8</div>
+          <div class="milestone-meta">Max rank in all guilds</div>
+        </div>
+        <span class="milestone-badge mb-done">Done</span>
+      </div>
+      <div class="milestone-row">
+        <div class="milestone-icon mi-green">&#10003;</div>
+        <div class="milestone-info">
+          <div class="milestone-title">$500 Earned</div>
+          <div class="milestone-meta">Lifetime earnings milestone</div>
+        </div>
+        <span class="milestone-badge mb-done">Done</span>
+      </div>
+      <div class="milestone-row">
+        <div class="milestone-icon mi-orange">&#9733;</div>
+        <div class="milestone-info">
+          <div class="milestone-title">25 Reviews</div>
+          <div class="milestone-meta">17 / 25 completed</div>
+        </div>
+        <span class="milestone-badge mb-progress">68%</span>
+      </div>
+      <div class="milestone-row">
+        <div class="milestone-icon mi-orange">&#128200;</div>
+        <div class="milestone-info">
+          <div class="milestone-title">75% Consensus</div>
+          <div class="milestone-meta">Currently 59%</div>
+        </div>
+        <span class="milestone-badge mb-progress">79%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="design-label">Dashboard Side Panel — 3 Ideas</div>
+
+</body>
+</html>

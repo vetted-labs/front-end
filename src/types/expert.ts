@@ -5,12 +5,12 @@ export type ExpertStatus = "pending" | "approved" | "rejected";
 /** Validation errors keyed by field name. */
 export type FieldErrors = Record<string, string>;
 
-/** Guild application info returned for pending experts. */
-export interface PendingGuildInfo {
+/** Guild application info returned for the application-status page. */
+export interface GuildApplicationInfo {
   id: string;
   name: string;
   description?: string;
-  status: "pending" | "approved";
+  status: "pending" | "approved" | "rejected";
   role?: string;
   joinedAt?: string;
   reviewCount?: number;
@@ -51,7 +51,7 @@ export interface ExpertProfile {
     description: string;
   } | null;
   /** Present when expert has applied to multiple guilds. */
-  guildApplications?: PendingGuildInfo[];
+  guildApplications?: GuildApplicationInfo[];
   linkedinUrl?: string;
   portfolioUrl?: string;
   currentTitle?: string;

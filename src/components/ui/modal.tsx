@@ -137,7 +137,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
                   <h2 className="text-xl font-bold text-card-foreground">{title}</h2>
                   <button
                     onClick={onClose}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -150,7 +150,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
                 {!title && (
                   <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-muted-foreground hover:text-primary transition-colors"
+                    className="absolute top-4 right-4 p-1 text-muted-foreground hover:text-primary transition-colors"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5 sm:w-6 sm:h-6" />

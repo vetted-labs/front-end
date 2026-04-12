@@ -157,8 +157,11 @@ function ImpactRow({
       </div>
 
       {/* Running total */}
-      <div className="font-display text-sm font-bold min-w-[48px] text-right tabular-nums text-muted-foreground hidden md:block">
-        {runningTotal}
+      <div className="flex flex-col items-end min-w-[48px] hidden md:flex">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">Rep</span>
+        <span className="font-display text-sm font-bold tabular-nums text-muted-foreground">
+          {runningTotal}
+        </span>
       </div>
     </div>
   );

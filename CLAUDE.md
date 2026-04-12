@@ -90,8 +90,8 @@ src/
 |---|---|
 | Framework | Next.js 15.5, React 19, TypeScript (strict) |
 | Styling | TailwindCSS 4, Radix UI primitives, Lucide icons |
-| Fonts | Inter (sans), Bree Serif (serif), Bricolage Grotesque (display) |
-| Web3 | Wagmi, Viem, RainbowKit (MetaMask + Coinbase Wallet) |
+| Fonts | Satoshi (sans + display via Fontshare), Bree Serif (serif) |
+| Web3 | Wagmi, Viem, RainbowKit (MetaMask, Coinbase Wallet, WalletConnect v2) |
 | State | Local `useState`, TanStack Query (via RainbowKit), `AuthContext` |
 | Toasts | Sonner |
 | Env | `dotenv-cli` for `.env.local` loading |
@@ -222,4 +222,4 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 const { address, isConnected } = useAccount();
 ```
 
-WalletConnect is disabled — only MetaMask and Coinbase Wallet are supported.
+RainbowKit's `getDefaultConfig` enables MetaMask, Coinbase Wallet, and WalletConnect v2. The WalletConnect project ID comes from `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`.

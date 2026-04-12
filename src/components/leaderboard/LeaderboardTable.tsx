@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Users, Flame, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { Users } from "lucide-react";
 import { cn, truncateAddress } from "@/lib/utils";
-import { getRankColors, getMatchScoreColors, STATUS_COLORS } from "@/config/colors";
+import { getRankColors, STATUS_COLORS } from "@/config/colors";
 import type { LeaderboardEntryV2 } from "@/types";
 
 interface LeaderboardTableProps {
@@ -17,15 +17,10 @@ const SORT_COLUMN_MAP: Record<string, string> = {
   earnings: "earnings",
   reputation: "reputation",
   reviews: "reviews",
-  consensus: "consensus",
 };
 
 function getRolePillClass(role: string): string {
   return getRankColors(role.toLowerCase()).badge;
-}
-
-function getConsensusBarColor(rate: number): string {
-  return getMatchScoreColors(rate).bg;
 }
 
 export function LeaderboardTable({
@@ -77,21 +72,8 @@ export function LeaderboardTable({
             >
               Reviews
             </th>
-            <th
-              className={cn(
-                "px-4 py-3 text-left text-xs font-medium uppercase tracking-wider",
-                highlightCol === "consensus"
-                  ? "text-primary bg-primary/5"
-                  : "text-muted-foreground"
-              )}
-            >
-              Consensus
-            </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
               Staked
-            </th>
-            <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell w-16">
-              Trend
             </th>
           </tr>
         </thead>
@@ -193,26 +175,6 @@ export function LeaderboardTable({
                   </span>
                 </td>
 
-                {/* Consensus */}
-                <td
-                  className={cn(
-                    "px-4 py-3",
-                    highlightCol === "consensus" && "bg-primary/5"
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-14 h-1 rounded-full bg-muted/50 overflow-hidden">
-                      <div
-                        className={cn("h-full rounded-full", getConsensusBarColor(entry.consensusRate))}
-                        style={{ width: `${Math.min(entry.consensusRate, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {entry.consensusRate}%
-                    </span>
-                  </div>
-                </td>
-
                 {/* Staked — hidden on mobile */}
                 <td className="px-4 py-3 hidden md:table-cell">
                   <span className="text-xs text-muted-foreground tabular-nums">
@@ -220,19 +182,6 @@ export function LeaderboardTable({
                       ? `${Math.round(parseFloat(entry.stakedAmount) / 1e18).toLocaleString()} VETD`
                       : "—"}
                   </span>
-                </td>
-
-                {/* Trend — hidden on mobile */}
-                <td className="px-4 py-3 text-center hidden md:table-cell">
-                  {entry.streak > 2 ? (
-                    <Flame className="w-4 h-4 text-primary inline-block" />
-                  ) : delta > 0 ? (
-                    <ArrowUp className={cn("w-4 h-4 inline-block", STATUS_COLORS.positive.text)} />
-                  ) : delta < 0 ? (
-                    <ArrowDown className={cn("w-4 h-4 inline-block", STATUS_COLORS.negative.text)} />
-                  ) : (
-                    <Minus className="w-4 h-4 text-muted-foreground/40 inline-block" />
-                  )}
                 </td>
               </tr>
             );

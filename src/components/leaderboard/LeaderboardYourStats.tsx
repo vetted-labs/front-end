@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Coins, Users, Zap, Lock } from "lucide-react";
+import { Trophy, Star, Coins, Zap, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatVetd } from "@/lib/utils";
@@ -17,7 +17,6 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
   const stats = [
     { label: "Your Rank", value: `#${rank}`, icon: Trophy, color: "text-primary" },
     { label: "Reviews", value: String(currentUser.totalReviews), icon: Star, color: "text-primary" },
-    { label: "Consensus", value: currentUser.consensusRate > 0 ? `${currentUser.consensusRate}%` : "N/A", icon: Users, color: "text-primary" },
     { label: "Earned", value: formatVetd(currentUser.totalEarnings), icon: Coins, color: "text-primary" },
     { label: "Endorsements", value: String(currentUser.endorsementCount), icon: Zap, color: "text-primary" },
     { label: "Staked", value: formatVetd(parseFloat(currentUser.stakedAmount) / 1e18), icon: Lock, color: "text-primary" },
@@ -34,7 +33,7 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
           You
         </span>
       </div>
-      <div className="grid grid-cols-3 md:grid-cols-6">
+      <div className="grid grid-cols-3 md:grid-cols-5">
         {stats.map((stat, i) => (
           <div
             key={stat.label}

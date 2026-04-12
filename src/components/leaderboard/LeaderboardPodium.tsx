@@ -39,11 +39,6 @@ const METRIC_CONFIG: Record<string, MetricConfig> = {
     getValue: (e) => e.totalReviews,
     format: (v) => v.toLocaleString(),
   },
-  consensus: {
-    label: "Consensus",
-    getValue: (e) => e.consensusRate,
-    format: (v) => `${v.toFixed(1)}%`,
-  },
   endorsements: {
     label: "Endorsements",
     getValue: (e) => e.endorsementCount,

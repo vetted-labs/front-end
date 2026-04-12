@@ -6,39 +6,9 @@ import { AreaChart } from "@/components/analytics/AreaChart";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface ExpertOverviewData {
-  reputation?: number;
-  tier?: string;
-  tierProgress?: number;
-  ptsToNext?: number;
-  vetdBalance?: number;
-  vetdStaked?: number;
-  vetdAvailable?: number;
-  totalEarned?: number;
-  periodEarned?: number;
-  reviewsCompleted?: number;
-  reviewsThisPeriod?: number;
-  consensusAlignment?: number;
-}
-
-interface ReputationPoint {
-  label?: string;
-  month?: string;
-  score?: number;
-  value?: number;
-}
-
-interface EarningsItem {
-  label: string;
-  amount: number;
-  pct: number;
-  positive: boolean;
-}
+import type { ExpertOverviewData, ReputationPoint, EarningsItem } from "@/types/analytics";
 
 // ── Ring constants ────────────────────────────────────────────
 
@@ -96,21 +66,19 @@ export function ExpertOverviewTab({ period, walletAddress }: Props) {
     { skip: !walletAddress }
   );
 
-  const overview = rawOverview as ExpertOverviewData | null;
-  const timeline = rawTimeline as ReputationPoint[] | null;
+  const overview = rawOverview;
+  const timeline = rawTimeline;
 
   const reputationData = useMemo(() => {
     if (!timeline) return [];
     return timeline.map((d) => ({
-      label: d.label ?? d.month ?? "",
-      value: d.value ?? d.score ?? 0,
+      label: d.label,
+      value: d.value,
     }));
   }, [timeline]);
 
-  // Earnings from overview if backend provides it
   const earnings = useMemo((): EarningsItem[] => {
-    const ov = overview as (ExpertOverviewData & { earnings?: EarningsItem[] }) | null;
-    return ov?.earnings ?? [];
+    return overview?.earnings ?? [];
   }, [overview]);
 
   const netTotal = useMemo(
@@ -122,12 +90,22 @@ export function ExpertOverviewTab({ period, walletAddress }: Props) {
   const scoreRatio = reputation / 2500;
   const dashLength = scoreRatio * CIRCUMFERENCE;
 
-  if ((overviewError && timelineError) || (!walletAddress && !overviewLoading)) {
+  if (!walletAddress && !overviewLoading) {
     return (
       <EmptyState
         icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        title="Connect your wallet"
+        description="Connect your wallet to view your analytics."
+      />
+    );
+  }
+
+  if (overviewError && timelineError) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Unable to load analytics"
+        description="Something went wrong loading your analytics data. Please try again."
       />
     );
   }
@@ -148,9 +126,9 @@ export function ExpertOverviewTab({ period, walletAddress }: Props) {
   if (overviewError) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load overview"
+        description="Something went wrong loading your overview data. Please try again."
       />
     );
   }

@@ -21,7 +21,7 @@ export function MobileTopBar({ config }: MobileTopBarProps) {
     <div className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-card px-4 md:hidden">
       <button
         onClick={() => setMobileOpen(true)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
         aria-label="Open navigation"
       >
         <Menu className="h-5 w-5" />

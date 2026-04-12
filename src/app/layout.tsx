@@ -1,15 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Inter, Bree_Serif, Bricolage_Grotesque } from "next/font/google";
+import { Bree_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: '--font-sans',
-  display: 'swap',
-});
 
 const breeSerif = Bree_Serif({
   weight: '400',
@@ -18,16 +12,16 @@ const breeSerif = Bree_Serif({
   display: 'swap',
 });
 
-const bricolageGrotesque = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: '--font-display',
-  display: 'swap',
-  weight: ['400', '500', '700'],
-});
-
 export const metadata: Metadata = {
   title: "Vetted",
   description: "Decentralized Hiring Platform",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default async function RootLayout({
@@ -39,9 +33,20 @@ export default async function RootLayout({
   // Only use nonce in production — dev uses 'unsafe-inline' CSP to avoid hydration mismatches
   const nonce = process.env.NODE_ENV === 'production' ? (headersList.get('x-nonce') || '') : '';
 
+  // Forward the request cookie to <Providers> (client component) so it can
+  // hydrate wagmi's initial state via cookieToInitialState(). We can't call
+  // cookieToInitialState here because doing so would require importing the
+  // wagmi config, which transitively imports RainbowKit's getDefaultConfig
+  // — a client-only module that cannot be executed in a server component.
+  const cookieHeader = headersList.get("cookie");
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap"
+        />
         <script
           {...(nonce ? { nonce } : {})}
           suppressHydrationWarning
@@ -76,9 +81,9 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${breeSerif.variable} ${bricolageGrotesque.variable} font-sans`}>
+      <body className={`${breeSerif.variable} font-sans`}>
         <ErrorBoundary>
-          <Providers>{children}</Providers>
+          <Providers cookieHeader={cookieHeader}>{children}</Providers>
         </ErrorBoundary>
       </body>
     </html>

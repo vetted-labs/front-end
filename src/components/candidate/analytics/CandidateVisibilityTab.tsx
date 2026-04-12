@@ -6,38 +6,8 @@ import { AreaChart } from "@/components/analytics/AreaChart";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
-import { BarChart3 } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
-
-// ── Types ─────────────────────────────────────────────────────
-
-interface ProfileViewPoint {
-  label?: string;
-  week?: string;
-  views?: number;
-  value?: number;
-}
-
-interface DiscoveryMetric {
-  label: string;
-  value: string;
-  color?: "primary" | "muted";
-}
-
-interface GuildMembership {
-  guild: string;
-  score: number;
-  vettedDate: string;
-  status: "active" | "improve";
-}
-
-interface VisibilityData {
-  profileViews?: ProfileViewPoint[];
-  totalViews?: number;
-  viewsChange?: string;
-  discovery?: DiscoveryMetric[];
-  guildMemberships?: GuildMembership[];
-}
 
 // ── Component ─────────────────────────────────────────────────
 
@@ -51,13 +21,13 @@ export function CandidateVisibilityTab({ period }: Props) {
     {}
   );
 
-  const data = rawData as VisibilityData | null;
+  const data = rawData;
 
   const chartData = useMemo(() => {
     if (!data?.profileViews) return [];
     return data.profileViews.map((d) => ({
-      label: d.label ?? d.week ?? "",
-      value: d.value ?? d.views ?? 0,
+      label: d.label,
+      value: d.value,
     }));
   }, [data]);
 
@@ -80,9 +50,9 @@ export function CandidateVisibilityTab({ period }: Props) {
   if (error) {
     return (
       <EmptyState
-        icon={BarChart3}
-        title="Analytics coming soon"
-        description="Real-time analytics will be available once the backend API is deployed."
+        icon={AlertTriangle}
+        title="Unable to load visibility data"
+        description="Something went wrong loading your visibility data. Please try again."
       />
     );
   }

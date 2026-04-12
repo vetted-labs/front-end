@@ -103,13 +103,13 @@ export function GuildLeaderboardTab({
                     <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Reputation
                     </th>
-                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
                       Reviews
                     </th>
-                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
                       Accuracy
                     </th>
-                    <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide hidden md:table-cell">
                       Earnings
                     </th>
                   </tr>
@@ -163,15 +163,15 @@ export function GuildLeaderboardTab({
                           {renderReputationChange(expert.reputationChange)}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-3 py-3 text-center hidden sm:table-cell">
                         <span className="text-muted-foreground text-sm">
                           {expert.totalReviews}
                         </span>
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-3 py-3 text-center hidden sm:table-cell">
                         <span className="text-foreground text-sm">{expert.accuracy}%</span>
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-right hidden md:table-cell">
                         <span className="font-medium text-foreground text-sm">
                           {formatVetd(expert.totalEarnings)}
                         </span>

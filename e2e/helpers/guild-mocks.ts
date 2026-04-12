@@ -863,7 +863,7 @@ export const MOCK_APPLICATION_MILD_SLASH = {
 };
 
 export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING = {
-  timeline: [
+  items: [
     {
       id: "rep-slash-001",
       change_amount: -20,
@@ -922,7 +922,6 @@ export const MOCK_REPUTATION_TIMELINE_WITH_SLASHING = {
       created_at: "2026-03-05T09:00:00Z",
     },
   ],
-  items: [],
   total: 3,
   page: 1,
   limit: 15,

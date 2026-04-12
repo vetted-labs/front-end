@@ -113,9 +113,10 @@ export function InfoTooltip({ content, side = "top", className = "" }: InfoToolt
         type="button"
         onMouseEnter={handleShow}
         onMouseLeave={() => setIsVisible(false)}
+        onClick={() => setIsVisible((v) => !v)}
         onFocus={handleShow}
         onBlur={() => setIsVisible(false)}
-        className={`inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted/60 hover:bg-muted transition-colors border border-border ${className}`}
+        className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted/60 hover:bg-muted transition-colors border border-border ${className}`}
         aria-label="More information"
       >
         <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />

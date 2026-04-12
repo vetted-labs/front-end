@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetted — Analytics v3 (All Roles)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0c0e13;--s0:rgba(255,255,255,0.02);--s1:rgba(255,255,255,0.035);--s2:rgba(255,255,255,0.06);--s3:rgba(255,255,255,0.09);
+    --bd:rgba(255,255,255,0.07);--bdh:rgba(255,255,255,0.13);
+    --t1:#f0ece8;--t2:rgba(240,236,232,0.55);--t3:rgba(240,236,232,0.35);--t4:rgba(240,236,232,0.2);
+    --pri:#ff6a00;--pris:rgba(255,106,0,0.1);--prig:rgba(255,106,0,0.2);
+    --pos:#34d399;--poss:rgba(52,211,153,0.1);
+    --neg:#f87171;--negs:rgba(248,113,113,0.1);
+    --wrn:#fbbf24;--wrns:rgba(251,191,36,0.1);
+    --inf:#60a5fa;--infs:rgba(96,165,250,0.1);
+    --pur:#a78bfa;--purs:rgba(167,139,250,0.1);
+    --tea:#2dd4bf;--teas:rgba(45,212,191,0.1);
+    --r:12px;--rs:8px;--rx:6px;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --disp:'Bricolage Grotesque','Inter',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  body{font-family:var(--sans);background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.01) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.01) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+  body::after{content:'';position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:1000px;height:700px;background:radial-gradient(ellipse,rgba(255,106,0,0.04) 0%,transparent 65%);pointer-events:none;z-index:0}
+
+  .page{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:24px 40px 100px}
+
+  /* ── Role Switcher ── */
+  .role-switcher{display:flex;gap:4px;background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:3px;width:fit-content;margin-bottom:20px}
+  .role-btn{padding:7px 18px;border-radius:999px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--t3);cursor:pointer;transition:all .2s;font-family:var(--sans);display:flex;align-items:center;gap:6px}
+  .role-btn:hover{color:var(--t2)}
+  .role-btn.active{background:var(--pri);color:#fff;box-shadow:0 2px 12px rgba(255,106,0,0.3)}
+  .role-btn svg{width:13px;height:13px}
+  .role-panel{display:none}.role-panel.active{display:block;animation:fadeIn .35s var(--ease)}
+
+  /* ── Common ── */
+  .page-header{margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+  .page-header h1{font-family:var(--disp);font-size:26px;font-weight:700;letter-spacing:-.025em}
+  .page-header p{color:var(--t2);font-size:13px;margin-top:2px}
+  .filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+  .fp{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid var(--bd);background:transparent;color:var(--t3);cursor:pointer;transition:all .2s;font-family:var(--sans)}
+  .fp:hover{border-color:var(--bdh);color:var(--t2)}.fp.active{background:var(--pris);border-color:rgba(255,106,0,0.25);color:var(--pri)}
+  .fd{width:1px;height:16px;background:var(--bd);margin:0 4px}
+  .filter-bar .cr{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+  .cr span{color:var(--t2);font-family:var(--mono);font-size:11px}
+
+  .main-tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:24px}
+  .mt{padding:9px 16px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none;font-family:var(--sans)}
+  .mt:hover{color:var(--t2)}.mt.active{color:var(--pri);border-bottom-color:var(--pri)}
+  .mt .ti{opacity:.4;transition:opacity .15s}.mt.active .ti{opacity:1}
+  .tb{font-size:10px;font-weight:600;padding:1px 6px;border-radius:999px;background:var(--pris);color:var(--pri);font-family:var(--mono)}
+
+  .tp{display:none}.tp.active{display:block;animation:fadeIn .3s var(--ease)}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:24px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)}
+  .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)}
+  .cs{font-size:11px;color:var(--t4);margin-top:2px}
+  .ca{font-size:11px;color:var(--t4);cursor:pointer;display:flex;align-items:center;gap:4px;transition:color .15s}
+  .ca:hover{color:var(--pri)}
+
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+
+  /* ── KPI ── */
+  .kpi{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px 12px;position:relative;overflow:hidden}
+  .kpi-acc{position:absolute;top:0;left:0;width:100%;height:2px}
+  .kpi-l{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:8px}
+  .kpi-r{display:flex;align-items:flex-end;justify-content:space-between}
+  .kpi-v{font-family:var(--disp);font-size:28px;font-weight:700;letter-spacing:-.025em;line-height:1}
+  .kpi-u{font-size:14px;color:var(--t2);font-weight:500}
+  .kpi-c{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 6px;border-radius:999px;font-family:var(--mono)}
+  .kpi-c.up{color:var(--pos);background:var(--poss)}.kpi-c.dn{color:var(--neg);background:var(--negs)}
+  .kpi-spark{margin-top:10px;height:32px}
+  .kpi-spark svg{width:100%;height:100%}
+
+  /* ── Stat box ── */
+  .sb{background:var(--s0);border-radius:var(--rx);padding:12px 14px;border:1px solid var(--bd)}
+  .sb-l{font-size:10px;color:var(--t4);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .sb-v{font-family:var(--mono);font-size:15px;font-weight:600}
+
+  /* ── Insight ── */
+  .ins{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .ins-acc{position:absolute;bottom:0;left:0;right:0;height:2px}
+  .ins-icon{width:28px;height:28px;border-radius:var(--rx);display:flex;align-items:center;justify-content:center;margin-bottom:10px;flex-shrink:0}
+  .ins-t{font-size:12px;font-weight:600;margin-bottom:3px}
+  .ins-d{font-size:11px;color:var(--t3);line-height:1.45;flex:1}
+  .ins-m{font-family:var(--disp);font-size:20px;font-weight:700;margin-top:8px}
+
+  /* ── Chart ── */
+  .gl{stroke:rgba(255,255,255,0.04);stroke-width:.5}
+  .gl0{stroke:rgba(255,255,255,0.08);stroke-width:.5}
+  .al{font-size:9px;fill:var(--t4);font-family:'JetBrains Mono',monospace}
+  .al-a{fill:var(--t2)}
+  .cleg{display:flex;gap:16px;margin-top:12px}
+  .cleg-i{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)}
+  .cleg-d{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+  /* ── Hbar ── */
+  .hbar{display:flex;flex-direction:column;gap:14px}
+  .hbar-r{display:grid;grid-template-columns:80px 1fr 40px;gap:10px;align-items:center}
+  .hbar-l{font-size:12px;color:var(--t2);text-align:right}
+  .hbar-t{height:28px;background:var(--s0);border-radius:var(--rx);overflow:hidden}
+  .hbar-f{height:100%;border-radius:var(--rx);position:relative;overflow:hidden}
+  .hbar-f::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 60%,rgba(255,255,255,0.06))}
+  .hbar-v{font-size:12px;font-weight:600;font-family:var(--mono);color:var(--t2)}
+
+  /* ── Donut ── */
+  .donut-w{display:flex;align-items:center;gap:28px}
+  .donut-c{position:relative;width:148px;height:148px;flex-shrink:0}
+  .donut-ctr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .donut-cv{font-family:var(--disp);font-size:24px;font-weight:700;line-height:1}
+  .donut-cl{font-size:10px;color:var(--t3);margin-top:2px}
+  .donut-leg{display:flex;flex-direction:column;gap:8px;flex:1}
+  .donut-li{display:flex;align-items:center;gap:8px}
+  .donut-lc{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .donut-lt{font-size:12px;color:var(--t2);flex:1}
+  .donut-lv{font-size:12px;font-family:var(--mono);font-weight:600}
+  .donut-lp{font-size:10px;color:var(--t4);font-family:var(--mono);width:30px}
+
+  /* ── Heatmap ── */
+  .hm{display:grid;grid-template-columns:42px repeat(7,1fr);gap:2px}
+  .hm-h{font-size:9px;color:var(--t4);text-align:center;padding-bottom:4px;font-family:var(--mono);font-weight:500;letter-spacing:.03em}
+  .hm-rl{font-size:9px;color:var(--t4);display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-family:var(--mono)}
+  .hm-cell{aspect-ratio:1;border-radius:3px;min-height:20px;transition:all .15s;cursor:pointer}
+  .hm-cell:hover{transform:scale(1.2);z-index:2;box-shadow:0 0 10px rgba(255,106,0,0.12)}
+  .h0{background:rgba(255,255,255,0.025)}.h1{background:rgba(255,106,0,0.08)}.h2{background:rgba(255,106,0,0.18)}.h3{background:rgba(255,106,0,0.32)}.h4{background:rgba(255,106,0,0.5)}.h5{background:rgba(255,106,0,0.72)}
+
+  /* ── Table ── */
+  .dt{width:100%}
+  .dt-h{display:grid;gap:8px;padding:0 0 10px;border-bottom:1px solid var(--bd)}
+  .dt-h span{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t4)}
+  .dt-r{display:grid;gap:8px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.025);align-items:center;transition:background .1s}
+  .dt-r:last-child{border-bottom:none}
+  .dt-r:hover{background:rgba(255,255,255,0.015);margin:0 -12px;padding:11px 12px;border-radius:var(--rx)}
+  .jn{font-size:13px;font-weight:500;margin-bottom:3px}
+  .jg{font-size:10px;font-weight:600;padding:2px 7px;border-radius:999px;display:inline-block}
+  .ge{background:var(--infs);color:var(--inf)}.gd{background:var(--pris);color:var(--pri)}.gda{background:var(--teas);color:var(--tea)}.gs{background:var(--negs);color:var(--neg)}.gp{background:var(--purs);color:var(--pur)}
+  .cm{font-size:13px;font-family:var(--mono);font-weight:500}
+  .csu{font-size:10px;color:var(--t4);font-weight:400;font-family:var(--sans);margin-top:1px}
+  .sp{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;text-align:center;display:inline-block}
+  .sa{background:var(--poss);color:var(--pos)}.spa{background:var(--wrns);color:var(--wrn)}.sc{background:var(--s2);color:var(--t3)}
+
+  /* ── Expert rows ── */
+  .er{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.025)}
+  .er:last-child{border-bottom:none}
+  .ea{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+  .ei{flex:1;min-width:0}
+  .en{font-size:12px;font-weight:600}
+  .egl{font-size:10px;color:var(--t4)}
+  .es{display:flex;gap:16px}
+  .est{text-align:right}
+  .esv{font-size:13px;font-weight:600;font-family:var(--mono)}
+  .esl{font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.04em}
+
+  /* ── Ring ── */
+  .rw{position:relative;display:inline-flex}
+  .rl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .rv{font-family:var(--disp);font-size:18px;font-weight:700;display:block;line-height:1}
+  .rt{font-size:9px;color:var(--t4);display:block;margin-top:2px}
+
+  /* ── Progress bar ── */
+  .prog-wrap{width:100%;height:6px;background:var(--s2);border-radius:3px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:3px;transition:width .6s var(--ease)}
+
+  /* ── Tier badge ── */
+  .tier-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;font-family:var(--mono)}
+  .tier-0{background:var(--s2);color:var(--t2)}
+  .tier-1{background:var(--infs);color:var(--inf)}
+  .tier-2{background:var(--wrns);color:var(--wrn)}
+
+  /* ── Pipeline status ── */
+  .pipe-step{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .pipe-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;position:relative}
+  .pipe-dot::after{content:'';position:absolute;top:10px;left:4px;width:2px;height:24px;background:var(--bd)}
+  .pipe-step:last-child .pipe-dot::after{display:none}
+  .pipe-dot.done{background:var(--pos)}.pipe-dot.current{background:var(--pri);box-shadow:0 0 8px var(--prig)}.pipe-dot.pending{background:var(--s3)}
+
+  /* ── Slide Nav ── */
+  .slide-nav{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(16,18,26,0.92);border:1px solid var(--bdh);border-radius:999px;backdrop-filter:blur(20px);z-index:100;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
+  .snb{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0}
+  .snb:hover{border-color:var(--pri);color:var(--pri);background:var(--pris)}.snb:disabled{opacity:.25;cursor:default;pointer-events:none}
+  .sd{display:flex;gap:5px}
+  .sdi{width:6px;height:6px;border-radius:50%;background:var(--s3);cursor:pointer;transition:all .25s var(--ease)}
+  .sdi.active{background:var(--pri);width:20px;border-radius:3px}
+  .snl{font-size:11px;color:var(--t3);font-weight:500;white-space:nowrap;min-width:110px;text-align:center;font-family:var(--mono)}
+
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+  @media(max-width:768px){.page{padding:16px 16px 100px}.g4{grid-template-columns:1fr 1fr}.g3,.g2{grid-template-columns:1fr}.donut-w{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══ ROLE SWITCHER ═══ -->
+  <div class="role-switcher">
+    <button class="role-btn active" data-role="company">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Company
+    </button>
+    <button class="role-btn" data-role="expert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Expert
+    </button>
+    <button class="role-btn" data-role="candidate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Candidate
+    </button>
+  </div>
+
+
+  <!-- ██████████████████████████████████████ -->
+  <!-- ██  COMPANY ANALYTICS               ██ -->
+  <!-- ██████████████████████████████████████ -->
+  <div class="role-panel active" id="role-company">
+    <div class="page-header"><div><h1>Company Analytics</h1><p>Hiring performance and pipeline health</p></div></div>
+    <div class="filter-bar">
+      <div class="fp active">30D</div><div class="fp">90D</div><div class="fp">YTD</div><div class="fp">All</div>
+      <div class="fd"></div>
+      <div class="cr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Mar 1 — Mar 30, 2026</span></div>
+    </div>
+    <div class="main-tabs" data-tabs="company">
+      <div class="mt active" data-tab="c-overview"><svg class="ti" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Overview</div>
+      <div class="mt" data-tab="c-pipeline"><svg class="ti" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Pipeline</div>
+      <div class="mt" data-tab="c-jobs"><svg class="ti" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>Jobs <span class="tb">8</span></div>
+      <div class="mt" data-tab="c-experts"><svg class="ti" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Experts</div>
+    </div>
+
+    <!-- C-OVERVIEW -->
+    <div class="tp active" id="tab-c-overview">
+      <div class="g4 mb24">
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--pri),transparent)"></div><div class="kpi-l">Total Applications</div><div class="kpi-r"><div class="kpi-v">1,247</div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>23%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 32" preserveAspectRatio="none"><defs><linearGradient id="ks1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pri)" stop-opacity=".25"/><stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs><path d="M0,28C10,26 20,27 30,24C40,21 50,23 60,19C70,15 80,18 90,14C100,10 110,13 120,9C130,6 140,8 150,5C160,4 170,6 180,3C190,2 195,3 200,2" fill="none" stroke="var(--pri)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,28C10,26 20,27 30,24C40,21 50,23 60,19C70,15 80,18 90,14C100,10 110,13 120,9C130,6 140,8 150,5C160,4 170,6 180,3C190,2 195,3 200,2V32H0Z" fill="url(#ks1)"/><circle cx="200" cy="2" r="2" fill="var(--pri)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--pos),transparent)"></div><div class="kpi-l">Hires Made</div><div class="kpi-r"><div class="kpi-v">18</div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>38%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 32" preserveAspectRatio="none"><defs><linearGradient id="ks2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pos)" stop-opacity=".25"/><stop offset="100%" stop-color="var(--pos)" stop-opacity="0"/></linearGradient></defs><path d="M0,30C14,28 28,31 42,26C56,21 70,24 84,20C98,16 112,18 126,14C140,10 154,13 168,8C182,4 192,5 200,3" fill="none" stroke="var(--pos)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,30C14,28 28,31 42,26C56,21 70,24 84,20C98,16 112,18 126,14C140,10 154,13 168,8C182,4 192,5 200,3V32H0Z" fill="url(#ks2)"/><circle cx="200" cy="3" r="2" fill="var(--pos)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--inf),transparent)"></div><div class="kpi-l">Avg. Time to Hire</div><div class="kpi-r"><div class="kpi-v">14 <span class="kpi-u">days</span></div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 7L7 3H1Z" fill="currentColor"/></svg>-3d</div></div><div class="kpi-spark"><svg viewBox="0 0 200 32" preserveAspectRatio="none"><defs><linearGradient id="ks3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--inf)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--inf)" stop-opacity="0"/></linearGradient></defs><path d="M0,4C14,6 28,4 42,8C56,12 70,10 84,14C98,18 112,15 126,20C140,24 154,21 168,26C182,29 192,28 200,30" fill="none" stroke="var(--inf)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,4C14,6 28,4 42,8C56,12 70,10 84,14C98,18 112,15 126,20C140,24 154,21 168,26C182,29 192,28 200,30V32H0Z" fill="url(#ks3)"/><circle cx="200" cy="30" r="2" fill="var(--inf)"/></svg></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--wrn),transparent)"></div><div class="kpi-l">Offer Accept Rate</div><div class="kpi-r"><div class="kpi-v">82<span class="kpi-u">%</span></div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>5%</div></div><div class="kpi-spark"><svg viewBox="0 0 200 32" preserveAspectRatio="none"><defs><linearGradient id="ks4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--wrn)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--wrn)" stop-opacity="0"/></linearGradient></defs><path d="M0,26C14,24 28,28 42,22C56,18 70,20 84,16C98,12 112,14 126,10C140,8 154,11 168,6C182,4 192,3 200,2" fill="none" stroke="var(--wrn)" stroke-width="1.5" stroke-linecap="round"/><path d="M0,26C14,24 28,28 42,22C56,18 70,20 84,16C98,12 112,14 126,10C140,8 154,11 168,6C182,4 192,3 200,2V32H0Z" fill="url(#ks4)"/><circle cx="200" cy="2" r="2" fill="var(--wrn)"/></svg></div></div>
+      </div>
+      <div class="g3 mb24">
+        <div class="ins"><div class="ins-acc" style="background:linear-gradient(90deg,var(--pos),transparent)"></div><div class="ins-icon" style="background:var(--poss);color:var(--pos);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="ins-t">Fastest Pipeline</div><div class="ins-d">Sr. Solidity Developer filled 3x faster than average</div><div class="ins-m" style="color:var(--pos);">4.2 days</div></div>
+        <div class="ins"><div class="ins-acc" style="background:linear-gradient(90deg,var(--wrn),transparent)"></div><div class="ins-icon" style="background:var(--wrns);color:var(--wrn);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="ins-t">Review Bottleneck</div><div class="ins-d">Product Designer apps stuck in expert review 8+ days</div><div class="ins-m" style="color:var(--wrn);">23 pending</div></div>
+        <div class="ins"><div class="ins-acc" style="background:linear-gradient(90deg,var(--pri),transparent)"></div><div class="ins-icon" style="background:var(--pris);color:var(--pri);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="ins-t">Top Source: Guild Referrals</div><div class="ins-d">67% of accepted candidates came through expert endorsements</div><div class="ins-m" style="color:var(--pri);">67%</div></div>
+      </div>
+      <!-- Area chart -->
+      <div class="card">
+        <div class="ch"><div><span class="ct">Applications Over Time</span><div class="cs">Daily volume vs hires</div></div><span class="ca">Export CSV</span></div>
+        <svg viewBox="0 0 600 210" style="width:100%;display:block;overflow:visible;">
+          <defs><linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".18"/><stop offset="100%" stop-color="#ff6a00" stop-opacity="0"/></linearGradient><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60a5fa" stop-opacity=".12"/><stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/></linearGradient></defs>
+          <text x="30" y="22" class="al" text-anchor="end">80</text><text x="30" y="57" class="al" text-anchor="end">60</text><text x="30" y="92" class="al" text-anchor="end">40</text><text x="30" y="127" class="al" text-anchor="end">20</text><text x="30" y="162" class="al" text-anchor="end">0</text>
+          <line x1="40" y1="18" x2="580" y2="18" class="gl"/><line x1="40" y1="53" x2="580" y2="53" class="gl"/><line x1="40" y1="88" x2="580" y2="88" class="gl"/><line x1="40" y1="123" x2="580" y2="123" class="gl"/><line x1="40" y1="158" x2="580" y2="158" class="gl0"/>
+          <path d="M40,148C58,144 76,136 94,128C112,120 130,124 148,116C166,108 184,96 202,88C220,80 238,92 256,84C274,76 292,60 310,52C328,44 346,56 364,48C382,40 400,28 418,24C436,20 454,32 472,24C490,16 508,20 526,16C544,12 562,8 580,12" fill="none" stroke="#ff6a00" stroke-width="2" stroke-linecap="round"/>
+          <path d="M40,148C58,144 76,136 94,128C112,120 130,124 148,116C166,108 184,96 202,88C220,80 238,92 256,84C274,76 292,60 310,52C328,44 346,56 364,48C382,40 400,28 418,24C436,20 454,32 472,24C490,16 508,20 526,16C544,12 562,8 580,12L580,158L40,158Z" fill="url(#ag1)"/>
+          <path d="M40,155C58,154 76,152 94,150C112,148 130,149 148,147C166,145 184,142 202,140C220,138 238,141 256,138C274,135 292,130 310,128C328,125 346,129 364,124C382,120 400,114 418,112C436,110 454,115 472,110C490,105 508,108 526,104C544,100 562,96 580,98" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="5 3"/>
+          <path d="M40,155C58,154 76,152 94,150C112,148 130,149 148,147C166,145 184,142 202,140C220,138 238,141 256,138C274,135 292,130 310,128C328,125 346,129 364,124C382,120 400,114 418,112C436,110 454,115 472,110C490,105 508,108 526,104C544,100 562,96 580,98L580,158L40,158Z" fill="url(#ag2)"/>
+          <circle cx="580" cy="12" r="5" fill="rgba(255,106,0,0.15)"/><circle cx="580" cy="12" r="2.5" fill="#ff6a00" stroke="var(--bg)" stroke-width="1.5"/>
+          <text x="40" y="175" class="al">Mar 1</text><text x="175" y="175" class="al">Mar 8</text><text x="310" y="175" class="al">Mar 15</text><text x="445" y="175" class="al">Mar 22</text><text x="558" y="175" class="al al-a">Today</text>
+        </svg>
+        <div class="cleg"><div class="cleg-i"><div class="cleg-d" style="background:#ff6a00;"></div>Applications</div><div class="cleg-i"><div class="cleg-d" style="background:#60a5fa;border-radius:0;height:2px;width:12px;"></div>Hires</div></div>
+      </div>
+    </div>
+
+    <!-- C-PIPELINE (heavily improved) -->
+    <div class="tp" id="tab-c-pipeline">
+      <div class="g2 mb24">
+        <!-- FUNNEL -->
+        <div class="card">
+          <div class="ch"><div><span class="ct">Hiring Funnel</span><div class="cs">Conversion through each stage</div></div></div>
+          <svg viewBox="0 0 420 310" style="width:100%;display:block;">
+            <defs>
+              <linearGradient id="f1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ff6a00" stop-opacity=".4"/><stop offset="50%" stop-color="#ff6a00" stop-opacity=".2"/><stop offset="100%" stop-color="#ff6a00" stop-opacity=".05"/></linearGradient>
+              <linearGradient id="f2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#60a5fa" stop-opacity=".4"/><stop offset="50%" stop-color="#60a5fa" stop-opacity=".2"/><stop offset="100%" stop-color="#60a5fa" stop-opacity=".05"/></linearGradient>
+              <linearGradient id="f3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a78bfa" stop-opacity=".4"/><stop offset="50%" stop-color="#a78bfa" stop-opacity=".2"/><stop offset="100%" stop-color="#a78bfa" stop-opacity=".05"/></linearGradient>
+              <linearGradient id="f4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".45"/><stop offset="50%" stop-color="#fbbf24" stop-opacity=".2"/><stop offset="100%" stop-color="#fbbf24" stop-opacity=".05"/></linearGradient>
+              <linearGradient id="f5" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34d399" stop-opacity=".5"/><stop offset="50%" stop-color="#34d399" stop-opacity=".25"/><stop offset="100%" stop-color="#34d399" stop-opacity=".05"/></linearGradient>
+            </defs>
+            <!-- Applied -->
+            <polygon points="30,8 390,8 380,48 40,48" fill="url(#f1)" stroke="rgba(255,106,0,0.15)" stroke-width=".5"/>
+            <text x="210" y="34" text-anchor="middle" font-size="14" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono">1,247</text>
+            <text x="10" y="34" font-size="10" fill="var(--t2)" font-family="Inter" font-weight="500">Applied</text>
+            <text x="410" y="34" text-anchor="end" font-size="9" fill="var(--t4)" font-family="JetBrains Mono">100%</text>
+            <text x="210" y="62" text-anchor="middle" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600">54% pass rate</text>
+            <!-- Screened -->
+            <polygon points="62,68 358,68 345,108 75,108" fill="url(#f2)" stroke="rgba(96,165,250,0.15)" stroke-width=".5"/>
+            <text x="210" y="94" text-anchor="middle" font-size="14" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono">674</text>
+            <text x="10" y="94" font-size="10" fill="var(--t2)" font-family="Inter" font-weight="500">Screened</text>
+            <text x="410" y="94" text-anchor="end" font-size="9" fill="var(--t4)" font-family="JetBrains Mono">54%</text>
+            <text x="210" y="122" text-anchor="middle" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600">41% to review</text>
+            <!-- Expert Review -->
+            <polygon points="100,128 320,128 308,168 112,168" fill="url(#f3)" stroke="rgba(167,139,250,0.15)" stroke-width=".5"/>
+            <text x="210" y="154" text-anchor="middle" font-size="14" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono">276</text>
+            <text x="10" y="154" font-size="10" fill="var(--t2)" font-family="Inter" font-weight="500">Expert Review</text>
+            <text x="410" y="154" text-anchor="end" font-size="9" fill="var(--t4)" font-family="JetBrains Mono">22%</text>
+            <text x="210" y="182" text-anchor="middle" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600">28% endorsed</text>
+            <!-- Interview -->
+            <polygon points="145,188 275,188 266,228 154,228" fill="url(#f4)" stroke="rgba(251,191,36,0.15)" stroke-width=".5"/>
+            <text x="210" y="214" text-anchor="middle" font-size="14" font-weight="700" fill="var(--t1)" font-family="JetBrains Mono">78</text>
+            <text x="10" y="214" font-size="10" fill="var(--t2)" font-family="Inter" font-weight="500">Interview</text>
+            <text x="410" y="214" text-anchor="end" font-size="9" fill="var(--t4)" font-family="JetBrains Mono">6.2%</text>
+            <text x="210" y="242" text-anchor="middle" font-size="8" fill="var(--pri)" font-family="JetBrains Mono" font-weight="600">23% accepted</text>
+            <!-- Hired -->
+            <polygon points="178,248 242,248 238,288 182,288" fill="url(#f5)" stroke="rgba(52,211,153,0.2)" stroke-width=".5"/>
+            <text x="210" y="274" text-anchor="middle" font-size="14" font-weight="700" fill="var(--pos)" font-family="JetBrains Mono">18</text>
+            <text x="10" y="274" font-size="10" fill="var(--pos)" font-family="Inter" font-weight="600">Hired</text>
+            <text x="410" y="274" text-anchor="end" font-size="9" fill="var(--pos)" font-family="JetBrains Mono" font-weight="600">1.4%</text>
+          </svg>
+        </div>
+        <!-- SOURCES -->
+        <div class="card">
+          <div class="ch"><div><span class="ct">Candidate Sources</span><div class="cs">Where applicants come from</div></div></div>
+          <div class="hbar" style="margin-bottom:24px;">
+            <div class="hbar-r"><div class="hbar-l">Guild Referral</div><div class="hbar-t"><div class="hbar-f" style="width:67%;background:linear-gradient(90deg,rgba(255,106,0,.45),rgba(255,106,0,.1));"></div></div><div class="hbar-v" style="color:var(--pri);">67%</div></div>
+            <div class="hbar-r"><div class="hbar-l">Direct Apply</div><div class="hbar-t"><div class="hbar-f" style="width:18%;background:linear-gradient(90deg,rgba(96,165,250,.45),rgba(96,165,250,.1));"></div></div><div class="hbar-v" style="color:var(--inf);">18%</div></div>
+            <div class="hbar-r"><div class="hbar-l">Endorsement</div><div class="hbar-t"><div class="hbar-f" style="width:9%;background:linear-gradient(90deg,rgba(167,139,250,.45),rgba(167,139,250,.1));"></div></div><div class="hbar-v" style="color:var(--pur);">9%</div></div>
+            <div class="hbar-r"><div class="hbar-l">External</div><div class="hbar-t"><div class="hbar-f" style="width:6%;min-width:12px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.02));"></div></div><div class="hbar-v">6%</div></div>
+          </div>
+          <div style="border-top:1px solid var(--bd);padding-top:16px;">
+            <div style="font-size:10px;color:var(--t4);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Source Quality — Hire Rate</div>
+            <div style="display:flex;gap:8px;">
+              <div class="sb" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--pur);">6.1%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Endorsed</div></div>
+              <div class="sb" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--pri);">4.2%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Guild</div></div>
+              <div class="sb" style="flex:1;text-align:center;"><div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--inf);">1.8%</div><div style="font-size:10px;color:var(--t4);margin-top:3px;">Direct</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="g2">
+        <!-- GUILD DONUT -->
+        <div class="card">
+          <div class="ch"><div><span class="ct">Applications by Guild</span><div class="cs">Distribution across active guilds</div></div></div>
+          <div class="donut-w">
+            <div class="donut-c">
+              <svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="56" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="22"/><g style="transform:rotate(-90deg);transform-origin:80px 80px;"><circle cx="80" cy="80" r="56" fill="none" stroke="#60a5fa" stroke-width="22" stroke-dasharray="134 220" stroke-dashoffset="0" opacity=".85"/><circle cx="80" cy="80" r="56" fill="none" stroke="#ff6a00" stroke-width="22" stroke-dasharray="78 276" stroke-dashoffset="-134" opacity=".85"/><circle cx="80" cy="80" r="56" fill="none" stroke="#2dd4bf" stroke-width="22" stroke-dasharray="64 290" stroke-dashoffset="-212" opacity=".85"/><circle cx="80" cy="80" r="56" fill="none" stroke="#f87171" stroke-width="22" stroke-dasharray="50 304" stroke-dashoffset="-276" opacity=".8"/><circle cx="80" cy="80" r="56" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="22" stroke-dasharray="28 326" stroke-dashoffset="-326" /></g><circle cx="80" cy="80" r="42" fill="var(--bg)"/></svg>
+              <div class="donut-ctr"><div class="donut-cv">1,247</div><div class="donut-cl">Total</div></div>
+            </div>
+            <div class="donut-leg">
+              <div class="donut-li"><div class="donut-lc" style="background:#60a5fa;"></div><div class="donut-lt">Engineering</div><div class="donut-lp">38%</div><div class="donut-lv">474</div></div>
+              <div class="donut-li"><div class="donut-lc" style="background:#ff6a00;"></div><div class="donut-lt">Design</div><div class="donut-lp">22%</div><div class="donut-lv">274</div></div>
+              <div class="donut-li"><div class="donut-lc" style="background:#2dd4bf;"></div><div class="donut-lt">Data Science</div><div class="donut-lp">18%</div><div class="donut-lv">224</div></div>
+              <div class="donut-li"><div class="donut-lc" style="background:#f87171;"></div><div class="donut-lt">Security</div><div class="donut-lp">14%</div><div class="donut-lv">175</div></div>
+              <div class="donut-li"><div class="donut-lc" style="background:rgba(255,255,255,0.15);"></div><div class="donut-lt">Other</div><div class="donut-lp">8%</div><div class="donut-lv">100</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- HEATMAP -->
+        <div class="card">
+          <div class="ch"><div><span class="ct">Application Activity</span><div class="cs">When candidates apply</div></div><span class="ca" style="color:var(--pri);font-weight:600;">Peak: Tue 2pm</span></div>
+          <div class="hm">
+            <div></div><div class="hm-h">MON</div><div class="hm-h">TUE</div><div class="hm-h">WED</div><div class="hm-h">THU</div><div class="hm-h">FRI</div><div class="hm-h">SAT</div><div class="hm-h">SUN</div>
+            <div class="hm-rl">6am</div><div class="hm-cell h0"></div><div class="hm-cell h0"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div><div class="hm-cell h0"></div><div class="hm-cell h0"></div><div class="hm-cell h0"></div>
+            <div class="hm-rl">9am</div><div class="hm-cell h2"></div><div class="hm-cell h3"></div><div class="hm-cell h3"></div><div class="hm-cell h2"></div><div class="hm-cell h2"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div>
+            <div class="hm-rl">12pm</div><div class="hm-cell h3"></div><div class="hm-cell h4"></div><div class="hm-cell h3"></div><div class="hm-cell h3"></div><div class="hm-cell h3"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div>
+            <div class="hm-rl">2pm</div><div class="hm-cell h3"></div><div class="hm-cell h5"></div><div class="hm-cell h4"></div><div class="hm-cell h4"></div><div class="hm-cell h3"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div>
+            <div class="hm-rl">5pm</div><div class="hm-cell h2"></div><div class="hm-cell h3"></div><div class="hm-cell h3"></div><div class="hm-cell h2"></div><div class="hm-cell h2"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div>
+            <div class="hm-rl">8pm</div><div class="hm-cell h1"></div><div class="hm-cell h2"></div><div class="hm-cell h2"></div><div class="hm-cell h1"></div><div class="hm-cell h1"></div><div class="hm-cell h2"></div><div class="hm-cell h1"></div>
+            <div class="hm-rl">11pm</div><div class="hm-cell h0"></div><div class="hm-cell h1"></div><div class="hm-cell h1"></div><div class="hm-cell h0"></div><div class="hm-cell h1"></div><div class="hm-cell h1"></div><div class="hm-cell h1"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:3px;margin-top:10px;justify-content:flex-end;">
+            <span style="font-size:9px;color:var(--t4);margin-right:3px;">Less</span>
+            <div style="width:10px;height:10px;border-radius:2px;" class="h0"></div><div style="width:10px;height:10px;border-radius:2px;" class="h1"></div><div style="width:10px;height:10px;border-radius:2px;" class="h2"></div><div style="width:10px;height:10px;border-radius:2px;" class="h3"></div><div style="width:10px;height:10px;border-radius:2px;" class="h4"></div><div style="width:10px;height:10px;border-radius:2px;" class="h5"></div>
+            <span style="font-size:9px;color:var(--t4);margin-left:3px;">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C-JOBS (placeholder ref to v2) -->
+    <div class="tp" id="tab-c-jobs"><div class="card" style="text-align:center;padding:60px;"><span class="ct">Jobs tab — same as v2</span><div class="cs" style="margin-top:4px;">Performance table + Time-to-hire histogram</div></div></div>
+    <!-- C-EXPERTS (placeholder ref to v2) -->
+    <div class="tp" id="tab-c-experts"><div class="card" style="text-align:center;padding:60px;"><span class="ct">Experts tab — same as v2</span><div class="cs" style="margin-top:4px;">Review quality rings + Expert leaderboard</div></div></div>
+  </div>
+
+
+  <!-- ██████████████████████████████████████ -->
+  <!-- ██  EXPERT ANALYTICS                ██ -->
+  <!-- ██████████████████████████████████████ -->
+  <div class="role-panel" id="role-expert">
+    <div class="page-header"><div><h1>Expert Analytics</h1><p>Your review performance, reputation, and earnings</p></div></div>
+    <div class="filter-bar">
+      <div class="fp active">30D</div><div class="fp">90D</div><div class="fp">YTD</div><div class="fp">All</div>
+    </div>
+    <div class="main-tabs" data-tabs="expert">
+      <div class="mt active" data-tab="e-overview">Overview</div>
+      <div class="mt" data-tab="e-reviews">Reviews</div>
+      <div class="mt" data-tab="e-endorsements">Endorsements</div>
+      <div class="mt" data-tab="e-governance">Governance</div>
+    </div>
+
+    <!-- E-OVERVIEW -->
+    <div class="tp active" id="tab-e-overview">
+      <!-- Reputation hero -->
+      <div class="card mb24" style="display:flex;gap:32px;align-items:center;">
+        <div style="flex-shrink:0;text-align:center;">
+          <div class="rw">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="8"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--wrn)" stroke-width="8" stroke-dasharray="236 314" stroke-linecap="round" style="transform:rotate(-90deg);transform-origin:center;" opacity=".85"/>
+            </svg>
+            <div class="rl"><span class="rv" style="font-size:24px;color:var(--wrn);">1,840</span><span class="rt">Reputation</span></div>
+          </div>
+          <div class="tier-badge tier-1" style="margin-top:12px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            Established
+          </div>
+          <div style="font-size:10px;color:var(--t4);margin-top:6px;">160 pts to Authority</div>
+          <div class="prog-wrap" style="margin-top:6px;width:100px;margin-left:auto;margin-right:auto;">
+            <div class="prog-fill" style="width:84%;background:linear-gradient(90deg,var(--inf),var(--wrn));"></div>
+          </div>
+        </div>
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div class="sb"><div class="sb-l">$VETD Balance</div><div class="sb-v" style="color:var(--pri);">4,280</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">2,100 staked &middot; 2,180 available</div></div>
+          <div class="sb"><div class="sb-l">Total Earned</div><div class="sb-v" style="color:var(--pos);">12,640 <span style="font-size:11px;color:var(--t4);">$VETD</span></div><div style="font-size:10px;color:var(--pos);margin-top:2px;">+1,240 this period</div></div>
+          <div class="sb"><div class="sb-l">Guild Rank</div><div class="sb-v">Officer</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">Engineering Guild</div></div>
+          <div class="sb"><div class="sb-l">Reviews Completed</div><div class="sb-v">142</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">47 this period</div></div>
+          <div class="sb"><div class="sb-l">Consensus Alignment</div><div class="sb-v" style="color:var(--pos);">92%</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">Within IQR band</div></div>
+          <div class="sb"><div class="sb-l">Active Endorsements</div><div class="sb-v">3</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">1 in 90-day tracking</div></div>
+        </div>
+      </div>
+
+      <!-- Reputation over time -->
+      <div class="card mb24">
+        <div class="ch"><div><span class="ct">Reputation Over Time</span><div class="cs">Score progression and tier thresholds</div></div></div>
+        <svg viewBox="0 0 600 180" style="width:100%;display:block;overflow:visible;">
+          <defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--wrn)" stop-opacity=".15"/><stop offset="100%" stop-color="var(--wrn)" stop-opacity="0"/></linearGradient></defs>
+          <!-- Tier bands -->
+          <rect x="40" y="8" width="540" height="43" fill="rgba(251,191,36,0.03)" rx="2"/>
+          <text x="45" y="18" font-size="8" fill="var(--wrn)" font-family="JetBrains Mono" opacity=".5">Authority (2000+)</text>
+          <rect x="40" y="51" width="540" height="43" fill="rgba(96,165,250,0.03)" rx="2"/>
+          <text x="45" y="61" font-size="8" fill="var(--inf)" font-family="JetBrains Mono" opacity=".5">Established (1000-1999)</text>
+          <rect x="40" y="94" width="540" height="56" fill="rgba(255,255,255,0.01)" rx="2"/>
+          <text x="45" y="104" font-size="8" fill="var(--t4)" font-family="JetBrains Mono" opacity=".5">Foundation (0-999)</text>
+          <!-- Threshold lines -->
+          <line x1="40" y1="51" x2="580" y2="51" stroke="rgba(251,191,36,0.15)" stroke-width=".5" stroke-dasharray="3 3"/>
+          <line x1="40" y1="94" x2="580" y2="94" stroke="rgba(96,165,250,0.15)" stroke-width=".5" stroke-dasharray="3 3"/>
+          <line x1="40" y1="150" x2="580" y2="150" class="gl0"/>
+          <!-- Score line -->
+          <path d="M40,140 C70,138 100,132 130,125 C160,118 190,120 220,110 C250,100 280,95 310,85 C340,75 370,80 400,68 C430,56 460,50 490,42 C520,34 550,30 580,28" fill="none" stroke="var(--wrn)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M40,140 C70,138 100,132 130,125 C160,118 190,120 220,110 C250,100 280,95 310,85 C340,75 370,80 400,68 C430,56 460,50 490,42 C520,34 550,30 580,28L580,150L40,150Z" fill="url(#rg)"/>
+          <circle cx="580" cy="28" r="4" fill="rgba(251,191,36,0.15)"/><circle cx="580" cy="28" r="2" fill="var(--wrn)" stroke="var(--bg)" stroke-width="1"/>
+          <!-- Y labels -->
+          <text x="35" y="14" class="al" text-anchor="end">2500</text>
+          <text x="35" y="55" class="al" text-anchor="end">2000</text>
+          <text x="35" y="98" class="al" text-anchor="end">1000</text>
+          <text x="35" y="154" class="al" text-anchor="end">0</text>
+          <!-- X labels -->
+          <text x="40" y="166" class="al">Oct</text><text x="130" y="166" class="al">Nov</text><text x="220" y="166" class="al">Dec</text><text x="310" y="166" class="al">Jan</text><text x="400" y="166" class="al">Feb</text><text x="490" y="166" class="al">Mar</text><text x="565" y="166" class="al al-a">Now</text>
+        </svg>
+      </div>
+
+      <!-- Earnings breakdown -->
+      <div class="g3">
+        <div class="card">
+          <div class="ch"><div><span class="ct">Earnings Breakdown</span><div class="cs">$VETD earned by source</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span style="font-size:12px;color:var(--t2);">Review Rewards</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--pos);">+8,420 $VETD</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span style="font-size:12px;color:var(--t2);">Endorsement Payouts</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--pos);">+3,200 $VETD</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span style="font-size:12px;color:var(--t2);">Governance Rewards</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--pos);">+640 $VETD</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span style="font-size:12px;color:var(--t2);">Staking Bonus</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--pos);">+380 $VETD</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+              <span style="font-size:12px;color:var(--neg);">Slashing Losses</span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--neg);">-120 $VETD</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div><span class="ct">Staking Portfolio</span><div class="cs">Active $VETD allocations</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="sb"><div class="sb-l">Currently Staked</div><div class="sb-v" style="color:var(--pri);">2,100 $VETD</div></div>
+            <div class="sb"><div class="sb-l">Locked in Reviews</div><div class="sb-v">525 $VETD</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">25% of staked (max slashable)</div></div>
+            <div class="sb"><div class="sb-l">Locked in Endorsements</div><div class="sb-v">1,200 $VETD</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">3 active bids</div></div>
+            <div class="sb"><div class="sb-l">Available to Withdraw</div><div class="sb-v" style="color:var(--pos);">2,180 $VETD</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div><span class="ct">Slashing History</span><div class="cs">Penalties from misaligned votes</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="sb"><div class="sb-l">Total Slashing Events</div><div class="sb-v">3</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">Out of 142 reviews</div></div>
+            <div class="sb"><div class="sb-l">Slash Rate</div><div class="sb-v" style="color:var(--pos);">2.1%</div><div style="font-size:10px;color:var(--pos);margin-top:2px;">Well below 10% threshold</div></div>
+            <div class="sb"><div class="sb-l">Total Lost</div><div class="sb-v" style="color:var(--neg);">120 $VETD</div></div>
+            <div class="sb"><div class="sb-l">Appeals Won</div><div class="sb-v">1 of 1</div><div style="font-size:10px;color:var(--pos);margin-top:2px;">Reputation restored</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-REVIEWS -->
+    <div class="tp" id="tab-e-reviews">
+      <div class="g2 mb24">
+        <div class="card">
+          <div class="ch"><div><span class="ct">Review Accuracy Over Time</span><div class="cs">% of votes aligned with consensus (IQR band)</div></div></div>
+          <svg viewBox="0 0 500 160" style="width:100%;display:block;overflow:visible;">
+            <defs><linearGradient id="rag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--pos)" stop-opacity=".15"/><stop offset="100%" stop-color="var(--pos)" stop-opacity="0"/></linearGradient></defs>
+            <line x1="30" y1="20" x2="480" y2="20" class="gl"/><line x1="30" y1="55" x2="480" y2="55" class="gl"/><line x1="30" y1="90" x2="480" y2="90" class="gl"/><line x1="30" y1="125" x2="480" y2="125" class="gl0"/>
+            <text x="25" y="24" class="al" text-anchor="end">100%</text><text x="25" y="59" class="al" text-anchor="end">90%</text><text x="25" y="94" class="al" text-anchor="end">80%</text><text x="25" y="129" class="al" text-anchor="end">70%</text>
+            <!-- Target line at 90% -->
+            <line x1="30" y1="55" x2="480" y2="55" stroke="var(--pos)" stroke-width=".5" stroke-dasharray="3 3" opacity=".3"/>
+            <path d="M30,70C55,62 80,58 105,50C130,42 155,48 180,38C205,30 230,35 255,28C280,22 305,25 330,20C355,18 380,22 405,16C430,14 455,18 480,15" fill="none" stroke="var(--pos)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M30,70C55,62 80,58 105,50C130,42 155,48 180,38C205,30 230,35 255,28C280,22 305,25 330,20C355,18 380,22 405,16C430,14 455,18 480,15L480,125L30,125Z" fill="url(#rag)"/>
+            <circle cx="480" cy="15" r="3" fill="var(--pos)" stroke="var(--bg)" stroke-width="1.5"/>
+            <text x="30" y="142" class="al">Oct</text><text x="120" y="142" class="al">Nov</text><text x="210" y="142" class="al">Dec</text><text x="300" y="142" class="al">Jan</text><text x="390" y="142" class="al">Feb</text><text x="465" y="142" class="al al-a">Mar</text>
+          </svg>
+        </div>
+        <div class="card">
+          <div class="ch"><div><span class="ct">Score Distribution</span><div class="cs">Your scores vs consensus median</div></div></div>
+          <svg viewBox="0 0 500 160" style="width:100%;display:block;">
+            <line x1="30" y1="125" x2="480" y2="125" class="gl0"/>
+            <text x="25" y="24" class="al" text-anchor="end">15</text><text x="25" y="60" class="al" text-anchor="end">10</text><text x="25" y="96" class="al" text-anchor="end">5</text><text x="25" y="129" class="al" text-anchor="end">0</text>
+            <!-- Bars: deviation buckets -->
+            <rect x="50" y="15" width="65" height="110" rx="3" fill="rgba(52,211,153,0.3)"/>
+            <text x="82" y="140" text-anchor="middle" class="al">In IQR</text>
+            <text x="82" y="11" text-anchor="middle" font-size="10" fill="var(--pos)" font-family="JetBrains Mono" font-weight="600">131</text>
+
+            <rect x="145" y="80" width="65" height="45" rx="3" fill="rgba(251,191,36,0.25)"/>
+            <text x="177" y="140" text-anchor="middle" class="al">1-1.5x</text>
+            <text x="177" y="76" text-anchor="middle" font-size="10" fill="var(--wrn)" font-family="JetBrains Mono" font-weight="600">8</text>
+
+            <rect x="240" y="105" width="65" height="20" rx="3" fill="rgba(248,113,113,0.2)"/>
+            <text x="272" y="140" text-anchor="middle" class="al">1.5-2x</text>
+            <text x="272" y="101" text-anchor="middle" font-size="10" fill="var(--neg)" font-family="JetBrains Mono" font-weight="600">2</text>
+
+            <rect x="335" y="115" width="65" height="10" rx="3" fill="rgba(248,113,113,0.35)"/>
+            <text x="367" y="140" text-anchor="middle" class="al">>2x IQR</text>
+            <text x="367" y="111" text-anchor="middle" font-size="10" fill="var(--neg)" font-family="JetBrains Mono" font-weight="600">1</text>
+          </svg>
+          <div style="font-size:11px;color:var(--t3);margin-top:8px;">92.3% of your scores fall within the consensus IQR band</div>
+        </div>
+      </div>
+      <div class="g3">
+        <div class="sb"><div class="sb-l">Reviews This Period</div><div class="sb-v">47</div></div>
+        <div class="sb"><div class="sb-l">Avg Review Time</div><div class="sb-v">18 hrs</div></div>
+        <div class="sb"><div class="sb-l">Reward Multiplier</div><div class="sb-v" style="color:var(--inf);">1.25x</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">Established tier weight</div></div>
+      </div>
+    </div>
+
+    <!-- E-ENDORSEMENTS -->
+    <div class="tp" id="tab-e-endorsements">
+      <div class="g4 mb24">
+        <div class="sb"><div class="sb-l">Active Endorsements</div><div class="sb-v" style="color:var(--pri);">3</div></div>
+        <div class="sb"><div class="sb-l">$VETD at Risk</div><div class="sb-v">1,200</div></div>
+        <div class="sb"><div class="sb-l">Success Rate</div><div class="sb-v" style="color:var(--pos);">83%</div></div>
+        <div class="sb"><div class="sb-l">Total Earned from Endorsements</div><div class="sb-v" style="color:var(--pos);">3,200 $VETD</div></div>
+      </div>
+      <div class="card mb24">
+        <div class="ch"><div><span class="ct">Active Endorsements</span><div class="cs">Candidates you've staked on</div></div></div>
+        <div class="dt">
+          <div class="dt-h" style="grid-template-columns:2fr 1fr 1fr 1fr 100px;">
+            <span>Candidate / Role</span><span style="text-align:right">$VETD Staked</span><span style="text-align:right">Status</span><span style="text-align:right">Payout</span><span style="text-align:center">Tracking</span>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 1fr 1fr 100px;">
+            <div><div class="jn">Sarah M. — Sr. Solidity Dev</div><span class="jg ge">Engineering</span></div>
+            <div style="text-align:right"><div class="cm">400</div></div>
+            <div style="text-align:right"><span class="sp sa">Hired</span></div>
+            <div style="text-align:right"><div class="cm" style="color:var(--pos);">+200</div><div class="csu">50% paid at hire</div></div>
+            <div style="text-align:center;">
+              <div style="font-size:10px;color:var(--pri);font-weight:600;font-family:var(--mono);">Day 42/90</div>
+              <div class="prog-wrap" style="margin-top:4px;"><div class="prog-fill" style="width:47%;background:var(--pri);"></div></div>
+            </div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 1fr 1fr 100px;">
+            <div><div class="jn">Alex K. — Data Engineer</div><span class="jg gda">Data Science</span></div>
+            <div style="text-align:right"><div class="cm">350</div></div>
+            <div style="text-align:right"><span class="sp" style="background:var(--pris);color:var(--pri);">In Interview</span></div>
+            <div style="text-align:right"><div class="cm" style="color:var(--t3);">Pending</div></div>
+            <div style="text-align:center;"><div style="font-size:10px;color:var(--t4);">Awaiting</div></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 1fr 1fr 100px;">
+            <div><div class="jn">Jamie L. — Product Designer</div><span class="jg gd">Design</span></div>
+            <div style="text-align:right"><div class="cm">450</div></div>
+            <div style="text-align:right"><span class="sp" style="background:var(--pris);color:var(--pri);">Under Review</span></div>
+            <div style="text-align:right"><div class="cm" style="color:var(--t3);">Pending</div></div>
+            <div style="text-align:center;"><div style="font-size:10px;color:var(--t4);">Awaiting</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div><span class="ct">Endorsement History</span><div class="cs">Past outcomes and accountability</div></div></div>
+        <div class="g3">
+          <div class="sb"><div class="sb-l">Total Endorsements Made</div><div class="sb-v">12</div></div>
+          <div class="sb"><div class="sb-l">Hired + Retained 90 Days</div><div class="sb-v" style="color:var(--pos);">8</div><div style="font-size:10px;color:var(--pos);margin-top:2px;">+160 reputation earned</div></div>
+          <div class="sb"><div class="sb-l">Not Hired (10% slash)</div><div class="sb-v" style="color:var(--neg);">2</div><div style="font-size:10px;color:var(--neg);margin-top:2px;">-80 $VETD slashed</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E-GOVERNANCE -->
+    <div class="tp" id="tab-e-governance">
+      <div class="g4 mb24">
+        <div class="sb"><div class="sb-l">Vote Weight</div><div class="sb-v" style="color:var(--pri);">2.84x</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">1 + (1840/1000) capped at 3.0</div></div>
+        <div class="sb"><div class="sb-l">Proposals Voted</div><div class="sb-v">24</div></div>
+        <div class="sb"><div class="sb-l">Proposals Submitted</div><div class="sb-v">2</div></div>
+        <div class="sb"><div class="sb-l">Governance Rewards</div><div class="sb-v" style="color:var(--pos);">640 $VETD</div></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div><span class="ct">Recent Governance Activity</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div class="dt-r" style="grid-template-columns:2fr 80px 80px 80px;display:grid;gap:8px;">
+            <div><div class="jn">Increase minimum review stake to 50 $VETD</div><div style="font-size:10px;color:var(--t4);">Engineering Guild &middot; Standard vote</div></div>
+            <div style="text-align:center"><span class="sp sa">Passed</span></div>
+            <div style="text-align:center;font-size:12px;font-family:var(--mono);color:var(--pos);">Voted For</div>
+            <div style="text-align:right;font-size:12px;font-family:var(--mono);color:var(--pos);">+10 $VETD</div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 80px 80px 80px;display:grid;gap:8px;">
+            <div><div class="jn">Add Marketing Guild to platform</div><div style="font-size:10px;color:var(--t4);">Protocol-level &middot; Standard vote</div></div>
+            <div style="text-align:center"><span class="sp sa">Passed</span></div>
+            <div style="text-align:center;font-size:12px;font-family:var(--mono);color:var(--pos);">Voted For</div>
+            <div style="text-align:right;font-size:12px;font-family:var(--mono);color:var(--pos);">+5 $VETD</div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 80px 80px 80px;display:grid;gap:8px;">
+            <div><div class="jn">Reduce inactivity decay to -5 per cycle</div><div style="font-size:10px;color:var(--t4);">Protocol-level &middot; Major change (67%)</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--negs);color:var(--neg);">Failed</span></div>
+            <div style="text-align:center;font-size:12px;font-family:var(--mono);color:var(--neg);">Voted Against</div>
+            <div style="text-align:right;font-size:12px;font-family:var(--mono);color:var(--pos);">+5 $VETD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ██████████████████████████████████████ -->
+  <!-- ██  CANDIDATE ANALYTICS             ██ -->
+  <!-- ██████████████████████████████████████ -->
+  <div class="role-panel" id="role-candidate">
+    <div class="page-header"><div><h1>My Analytics</h1><p>Track your applications, vetting progress, and visibility</p></div></div>
+    <div class="filter-bar">
+      <div class="fp active">30D</div><div class="fp">90D</div><div class="fp">All</div>
+    </div>
+    <div class="main-tabs" data-tabs="candidate">
+      <div class="mt active" data-tab="d-overview">Overview</div>
+      <div class="mt" data-tab="d-applications">Applications</div>
+      <div class="mt" data-tab="d-profile">Profile & Visibility</div>
+    </div>
+
+    <!-- D-OVERVIEW -->
+    <div class="tp active" id="tab-d-overview">
+      <div class="g4 mb24">
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--pri),transparent)"></div><div class="kpi-l">Active Applications</div><div class="kpi-r"><div class="kpi-v">6</div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>2 new</div></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--pos),transparent)"></div><div class="kpi-l">Expert Reviews Received</div><div class="kpi-r"><div class="kpi-v">14</div></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--inf),transparent)"></div><div class="kpi-l">Profile Views</div><div class="kpi-r"><div class="kpi-v">89</div><div class="kpi-c up"><svg width="8" height="8" viewBox="0 0 8 8"><path d="M4 1L7 5H1Z" fill="currentColor"/></svg>34%</div></div></div>
+        <div class="kpi"><div class="kpi-acc" style="background:linear-gradient(90deg,var(--pur),transparent)"></div><div class="kpi-l">Endorsements Received</div><div class="kpi-r"><div class="kpi-v">3</div></div></div>
+      </div>
+
+      <!-- Application Pipeline -->
+      <div class="card mb24">
+        <div class="ch"><div><span class="ct">Application Pipeline</span><div class="cs">Where your applications stand right now</div></div></div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:24px;font-weight:700;color:var(--pri);">2</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;">Guild Review</div>
+            <div class="prog-wrap" style="margin-top:8px;"><div class="prog-fill" style="width:100%;background:var(--pri);"></div></div>
+          </div>
+          <div style="flex:1;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:24px;font-weight:700;color:var(--pur);">1</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;">Expert Endorsed</div>
+            <div class="prog-wrap" style="margin-top:8px;"><div class="prog-fill" style="width:50%;background:var(--pur);"></div></div>
+          </div>
+          <div style="flex:1;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:24px;font-weight:700;color:var(--wrn);">2</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;">Interview Stage</div>
+            <div class="prog-wrap" style="margin-top:8px;"><div class="prog-fill" style="width:75%;background:var(--wrn);"></div></div>
+          </div>
+          <div style="flex:1;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;text-align:center;">
+            <div style="font-family:var(--disp);font-size:24px;font-weight:700;color:var(--pos);">1</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;">Offer Received</div>
+            <div class="prog-wrap" style="margin-top:8px;"><div class="prog-fill" style="width:100%;background:var(--pos);"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vetting Scores + Profile Views -->
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><div><span class="ct">Vetting Scores</span><div class="cs">Expert consensus scores from your guild reviews</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span class="jg ge">Engineering</span>
+              <div style="flex:1;"><div class="prog-wrap" style="height:8px;"><div class="prog-fill" style="width:88%;background:linear-gradient(90deg,var(--inf),var(--pos));"></div></div></div>
+              <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--pos);width:40px;text-align:right;">88</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.025);">
+              <span class="jg gda">Data Science</span>
+              <div style="flex:1;"><div class="prog-wrap" style="height:8px;"><div class="prog-fill" style="width:76%;background:linear-gradient(90deg,var(--tea),var(--inf));"></div></div></div>
+              <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--inf);width:40px;text-align:right;">76</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;">
+              <span class="jg gd">Design</span>
+              <div style="flex:1;"><div class="prog-wrap" style="height:8px;"><div class="prog-fill" style="width:65%;background:linear-gradient(90deg,var(--pri),var(--wrn));"></div></div></div>
+              <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--wrn);width:40px;text-align:right;">65</span>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--t4);margin-top:12px;">Scores are consensus median from 5-7 expert panel reviews</div>
+        </div>
+        <div class="card">
+          <div class="ch"><div><span class="ct">Profile Views Over Time</span><div class="cs">Companies viewing your vetted profile</div></div></div>
+          <svg viewBox="0 0 440 130" style="width:100%;display:block;">
+            <defs><linearGradient id="pvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--inf)" stop-opacity=".15"/><stop offset="100%" stop-color="var(--inf)" stop-opacity="0"/></linearGradient></defs>
+            <line x1="20" y1="100" x2="420" y2="100" class="gl0"/>
+            <!-- Bar chart for profile views -->
+            <rect x="30" y="85" width="22" height="15" rx="2" fill="rgba(96,165,250,0.15)"/>
+            <rect x="62" y="78" width="22" height="22" rx="2" fill="rgba(96,165,250,0.2)"/>
+            <rect x="94" y="65" width="22" height="35" rx="2" fill="rgba(96,165,250,0.3)"/>
+            <rect x="126" y="50" width="22" height="50" rx="2" fill="rgba(96,165,250,0.4)"/>
+            <rect x="158" y="60" width="22" height="40" rx="2" fill="rgba(96,165,250,0.35)"/>
+            <rect x="190" y="72" width="22" height="28" rx="2" fill="rgba(96,165,250,0.25)"/>
+            <rect x="222" y="55" width="22" height="45" rx="2" fill="rgba(96,165,250,0.4)"/>
+            <rect x="254" y="35" width="22" height="65" rx="2" fill="rgba(96,165,250,0.55)"/>
+            <rect x="286" y="42" width="22" height="58" rx="2" fill="rgba(96,165,250,0.5)"/>
+            <rect x="318" y="25" width="22" height="75" rx="2" fill="rgba(96,165,250,0.65)"/>
+            <rect x="350" y="30" width="22" height="70" rx="2" fill="rgba(96,165,250,0.6)"/>
+            <rect x="382" y="15" width="22" height="85" rx="2" fill="rgba(96,165,250,0.8)"/>
+            <text x="41" y="115" text-anchor="middle" class="al">W1</text><text x="137" y="115" text-anchor="middle" class="al">W2</text><text x="233" y="115" text-anchor="middle" class="al">W3</text><text x="329" y="115" text-anchor="middle" class="al">W4</text><text x="393" y="115" text-anchor="middle" class="al al-a">Now</text>
+          </svg>
+          <div style="font-size:11px;color:var(--t3);margin-top:8px;">89 views this period &middot; 34% increase vs prior period</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D-APPLICATIONS -->
+    <div class="tp" id="tab-d-applications">
+      <div class="card mb24">
+        <div class="ch"><div><span class="ct">All Applications</span><div class="cs">Status of every role you've applied to</div></div></div>
+        <div class="dt">
+          <div class="dt-h" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <span>Role / Company</span><span>Guild</span><span style="text-align:center">Score</span><span>Endorsements</span><span style="text-align:center">Status</span>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Senior Solidity Developer</div><div style="font-size:10px;color:var(--t4);">ChainLabs Inc.</div></div>
+            <div><span class="jg ge">Engineering</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--pos);">88/100</div></div>
+            <div><div style="font-size:12px;color:var(--t2);">3 experts endorsed</div><div style="font-size:10px;color:var(--t4);">Highest bid: 400 $VETD</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--poss);color:var(--pos);">Offer</span></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Backend Engineer</div><div style="font-size:10px;color:var(--t4);">DeFi Protocol</div></div>
+            <div><span class="jg ge">Engineering</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--pos);">88/100</div></div>
+            <div><div style="font-size:12px;color:var(--t2);">2 of 3 slots filled</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--wrns);color:var(--wrn);">Interview</span></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Data Pipeline Engineer</div><div style="font-size:10px;color:var(--t4);">Analytics DAO</div></div>
+            <div><span class="jg gda">Data Science</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--inf);">76/100</div></div>
+            <div><div style="font-size:12px;color:var(--t2);">1 endorsement pending</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--wrns);color:var(--wrn);">Interview</span></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Full Stack Developer</div><div style="font-size:10px;color:var(--t4);">NFT Marketplace</div></div>
+            <div><span class="jg ge">Engineering</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--t3);">Pending</div></div>
+            <div><div style="font-size:12px;color:var(--t4);">Awaiting review</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--purs);color:var(--pur);">In Review</span></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Product Designer</div><div style="font-size:10px;color:var(--t4);">Web3 Studio</div></div>
+            <div><span class="jg gd">Design</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--wrn);">65/100</div></div>
+            <div><div style="font-size:12px;color:var(--t4);">Not yet endorsed</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--pris);color:var(--pri);">Endorsed</span></div>
+          </div>
+          <div class="dt-r" style="grid-template-columns:2fr 1fr 100px 1fr 80px;">
+            <div><div class="jn">Smart Contract Engineer</div><div style="font-size:10px;color:var(--t4);">Bridge Protocol</div></div>
+            <div><span class="jg ge">Engineering</span></div>
+            <div style="text-align:center"><div class="cm" style="color:var(--t3);">Pending</div></div>
+            <div><div style="font-size:12px;color:var(--t4);">Expert panel assigned</div></div>
+            <div style="text-align:center"><span class="sp" style="background:var(--purs);color:var(--pur);">In Review</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D-PROFILE -->
+    <div class="tp" id="tab-d-profile">
+      <div class="g2 mb24">
+        <div class="card">
+          <div class="ch"><div><span class="ct">Guild Memberships</span><div class="cs">Guilds you've been vetted into</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);">
+              <span class="jg ge" style="font-size:11px;">Engineering</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Verified Member</div><div style="font-size:10px;color:var(--t4);">Vetted Mar 2026 &middot; Score: 88</div></div>
+              <span style="font-size:11px;color:var(--pos);font-weight:600;">Active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);">
+              <span class="jg gda" style="font-size:11px;">Data Science</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Verified Member</div><div style="font-size:10px;color:var(--t4);">Vetted Feb 2026 &middot; Score: 76</div></div>
+              <span style="font-size:11px;color:var(--pos);font-weight:600;">Active</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--s0);border:1px solid var(--bd);border-radius:var(--rs);">
+              <span class="jg gd" style="font-size:11px;">Design</span>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Verified Member</div><div style="font-size:10px;color:var(--t4);">Vetted Mar 2026 &middot; Score: 65</div></div>
+              <span style="font-size:11px;color:var(--wrn);font-weight:600;">Improvement suggested</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><div><span class="ct">Visibility Metrics</span><div class="cs">How companies are discovering you</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="sb"><div class="sb-l">Search Appearances</div><div class="sb-v">312</div><div style="font-size:10px;color:var(--pos);margin-top:2px;">+45% vs prior period</div></div>
+            <div class="sb"><div class="sb-l">Profile Click-Through</div><div class="sb-v">89 <span style="font-size:11px;color:var(--t4);">(28.5% CTR)</span></div></div>
+            <div class="sb"><div class="sb-l">Saved by Companies</div><div class="sb-v" style="color:var(--pri);">7</div></div>
+            <div class="sb"><div class="sb-l">Messages Received</div><div class="sb-v">4</div><div style="font-size:10px;color:var(--t4);margin-top:2px;">2 unread</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Slide Nav -->
+<div class="slide-nav">
+  <button class="snb" id="prevBtn" disabled><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div class="sd" id="slideDots"></div>
+  <div class="snl" id="slideLabel"></div>
+  <button class="snb" id="nextBtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+</div>
+
+<script>
+  // Role switching
+  const roleBtns = document.querySelectorAll('.role-btn');
+  const rolePanels = document.querySelectorAll('.role-panel');
+  let currentRole = 'company';
+
+  function switchRole(role) {
+    currentRole = role;
+    roleBtns.forEach(b => b.classList.toggle('active', b.dataset.role === role));
+    rolePanels.forEach(p => p.classList.toggle('active', p.id === 'role-' + role));
+    // Init tabs for this role
+    const tabBar = document.querySelector('.role-panel.active .main-tabs');
+    if (tabBar) initTabs(tabBar);
+  }
+  roleBtns.forEach(b => b.addEventListener('click', () => switchRole(b.dataset.role)));
+
+  // Tab system
+  function initTabs(tabBar) {
+    const tabs = tabBar.querySelectorAll('.mt');
+    const tabIds = Array.from(tabs).map(t => t.dataset.tab);
+    const labels = Array.from(tabs).map(t => t.textContent.trim());
+    let cur = 0;
+
+    // Find active
+    tabs.forEach((t, i) => { if (t.classList.contains('active')) cur = i; });
+
+    function go(i) {
+      cur = i;
+      tabs.forEach(t => t.classList.remove('active'));
+      tabs[i].classList.add('active');
+      tabIds.forEach(id => { const el = document.getElementById('tab-' + id); if (el) el.classList.remove('active'); });
+      const target = document.getElementById('tab-' + tabIds[i]);
+      if (target) target.classList.add('active');
+      updateNav();
+    }
+
+    function updateNav() {
+      const dots = document.getElementById('slideDots');
+      dots.innerHTML = tabIds.map((_, i) => `<div class="sdi${i === cur ? ' active' : ''}" data-i="${i}"></div>`).join('');
+      dots.querySelectorAll('.sdi').forEach(d => d.addEventListener('click', () => go(+d.dataset.i)));
+      document.getElementById('slideLabel').textContent = (cur + 1) + '/' + tabIds.length + ' — ' + labels[cur];
+      document.getElementById('prevBtn').disabled = cur === 0;
+      document.getElementById('nextBtn').disabled = cur === tabIds.length - 1;
+    }
+
+    tabs.forEach((t, i) => t.addEventListener('click', () => go(i)));
+    document.getElementById('prevBtn').onclick = () => { if (cur > 0) go(cur - 1); };
+    document.getElementById('nextBtn').onclick = () => { if (cur < tabIds.length - 1) go(cur + 1); };
+    updateNav();
+
+    // Keyboard
+    document.onkeydown = e => {
+      if (e.key === 'ArrowRight' && cur < tabIds.length - 1) go(cur + 1);
+      if (e.key === 'ArrowLeft' && cur > 0) go(cur - 1);
+    };
+  }
+
+  // Init
+  const firstTabBar = document.querySelector('.role-panel.active .main-tabs');
+  if (firstTabBar) initTabs(firstTabBar);
+
+  // Filter pills
+  document.querySelectorAll('.fp').forEach(p => p.addEventListener('click', () => {
+    p.parentElement.querySelectorAll('.fp').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  }));
+</script>
+</body>
+</html>

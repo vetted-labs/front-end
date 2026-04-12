@@ -16,6 +16,9 @@ import {
   ExternalLink,
   Sparkles,
   CircleDot,
+  XCircle,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,7 +31,7 @@ import { PatternBackground } from "@/components/ui/pattern-background";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { STATUS_COLORS } from "@/config/colors";
-import type { ExpertProfile, PendingGuildInfo } from "@/types";
+import type { ExpertProfile, GuildApplicationInfo } from "@/types";
 
 function getTimeRemaining(deadline?: string) {
   if (!deadline) return null;
@@ -47,7 +50,7 @@ function getTimeRemaining(deadline?: string) {
   return { label: `${minutes}m remaining`, color: STATUS_COLORS.negative.text };
 }
 
-function buildGuildApplications(expert: ExpertProfile): PendingGuildInfo[] {
+function buildGuildApplications(expert: ExpertProfile): GuildApplicationInfo[] {
   if (expert.guildApplications && expert.guildApplications.length > 0) {
     return expert.guildApplications;
   }
@@ -137,6 +140,7 @@ export default function ApplicationPendingPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [selectedGuildId, setSelectedGuildId] = useState<string | null>(null);
   const { execute: withdrawApp, isLoading: withdrawing } = useApi();
 
   const fetchProfile = useCallback(async () => {
@@ -193,34 +197,121 @@ export default function ApplicationPendingPage() {
 
   const guildApplications = buildGuildApplications(expert);
   const pendingApps = guildApplications.filter((g) => g.status === "pending");
-  const totalReviews = expert.reviewCount ?? 0;
-  const reviewProgress = Math.min((totalReviews / MIN_REVIEWS) * 100, 100);
-  const hasOnChain = guildApplications.some((g) => g.blockchainSessionCreated);
+  const hasMultipleGuilds = guildApplications.length > 1;
+
+  // Default selection favors a pending application so users land on something
+  // actionable. Falls through to the first guild of any status, then null.
+  const defaultSelectedId =
+    pendingApps[0]?.id ?? guildApplications[0]?.id ?? null;
+  // If the user withdrew the guild they had selected, it won't exist in the
+  // current list anymore — fall back to the default instead of stranding them
+  // on a phantom selection.
+  const selectedStillExists =
+    selectedGuildId !== null &&
+    guildApplications.some((g) => g.id === selectedGuildId);
+  const effectiveSelectedId = selectedStillExists ? selectedGuildId : defaultSelectedId;
+  const selectedGuild =
+    guildApplications.find((g) => g.id === effectiveSelectedId) ?? null;
+
+  // Per-selected values drive the Review Progress card and Timeline so every
+  // stat on the page corresponds to whichever card the user has focused.
+  const selectedReviews = selectedGuild?.reviewCount ?? 0;
+  const selectedApprovals = selectedGuild?.approvalCount ?? 0;
+  const selectedRejections = selectedGuild?.rejectionCount ?? 0;
+  const isSelectedPending = selectedGuild?.status === "pending";
+  const isSelectedApproved = selectedGuild?.status === "approved";
+  const isSelectedRejected = selectedGuild?.status === "rejected";
+  const reviewProgress = Math.min((selectedReviews / MIN_REVIEWS) * 100, 100);
+  const hasOnChain = selectedGuild?.blockchainSessionCreated ?? false;
+  const selectedTxHash = selectedGuild?.blockchainSessionTxHash;
+
+  // Rejection context — inferred from the selected guild's own review count
+  // so the copy is always accurate for whichever card is being viewed.
+  const rejectedDueToTimeout = isSelectedRejected && selectedReviews === 0;
 
   return (
     <div className="relative min-h-screen bg-background text-foreground animate-page-enter">
       {/* Background */}
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
         <PatternBackground mask="radial-top" intensity="strong" />
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.07] blur-[120px]" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-full max-w-[700px] h-[400px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.07] blur-[120px]" />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ── Hero Header ── */}
         <header className="pt-16 pb-10 md:pt-20 md:pb-12">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-4">
-            <Sparkles className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
-            Application Status
-          </p>
+          {isSelectedRejected ? (
+            <>
+              <p className={`text-xs font-bold uppercase tracking-[0.2em] mb-4 ${STATUS_COLORS.negative.text}`}>
+                <XCircle className="inline w-3 h-3 -mt-0.5 mr-1 opacity-80" />
+                Application Not Approved
+              </p>
 
-          <h1 className="font-display font-bold text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight text-foreground mb-3">
-            Under Guild Review
-          </h1>
+              <h1 className="font-display font-bold text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight text-foreground mb-3">
+                {hasMultipleGuilds && selectedGuild
+                  ? `${selectedGuild.name} — Rejected`
+                  : "Application Rejected"}
+              </h1>
 
-          <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
-            Your {pendingApps.length > 1 ? "applications are" : "application is"} being evaluated by
-            guild members. Once enough reviews are in, you&apos;ll gain access to the expert dashboard.
-          </p>
+              <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+                {rejectedDueToTimeout ? (
+                  <>
+                    Your application wasn&apos;t reviewed before the voting deadline.
+                    This usually happens when a guild is short on active reviewers.
+                    You can reapply to this guild or a different one at any time.
+                  </>
+                ) : (
+                  <>
+                    Your application was reviewed by guild members and did not meet the
+                    consensus threshold for approval. You can reapply to the same guild
+                    or try a different guild that matches your expertise.
+                  </>
+                )}
+              </p>
+            </>
+          ) : isSelectedApproved ? (
+            <>
+              <p className={`text-xs font-bold uppercase tracking-[0.2em] mb-4 ${STATUS_COLORS.positive.text}`}>
+                <CheckCircle className="inline w-3 h-3 -mt-0.5 mr-1 opacity-80" />
+                Approved
+              </p>
+
+              <h1 className="font-display font-bold text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight text-foreground mb-3">
+                Welcome to {selectedGuild?.name ?? "the guild"}
+              </h1>
+
+              <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
+                You were approved{selectedGuild?.role ? ` as a ${selectedGuild.role}` : ""}.
+                Your other applications are still under review — pick any card below to
+                track its progress.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-4">
+                <Sparkles className="inline w-3 h-3 -mt-0.5 mr-1 opacity-70" />
+                Application Status
+              </p>
+
+              <h1 className="font-display font-bold text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight text-foreground mb-3">
+                {hasMultipleGuilds && selectedGuild ? selectedGuild.name : "Under Guild Review"}
+              </h1>
+
+              <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                {hasMultipleGuilds ? (
+                  <>
+                    This application is being evaluated by guild members. Click any other
+                    card below to switch focus and see its progress and timeline.
+                  </>
+                ) : (
+                  <>
+                    Your application is being evaluated by guild members. Once enough
+                    reviews are in, you&apos;ll gain access to the expert dashboard.
+                  </>
+                )}
+              </p>
+            </>
+          )}
         </header>
 
         <Divider className="mb-10" />
@@ -231,20 +322,61 @@ export default function ApplicationPendingPage() {
           <div className="lg:col-span-3 space-y-6">
             {/* Guild Applications */}
             <section>
-              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">
-                Your Guild Applications
-              </h2>
+              <div className="flex items-center justify-between mb-4 gap-3">
+                <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                  Your Guild Applications
+                </h2>
+                {hasMultipleGuilds && (
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                    Click a card to focus
+                  </span>
+                )}
+              </div>
 
               <div className="space-y-3">
-                {guildApplications.map((guild) => (
+                {guildApplications.map((guild) => {
+                  const isSelected = guild.id === effectiveSelectedId;
+                  return (
                   <article
                     key={guild.id}
-                    className="group relative rounded-xl border border-border bg-card px-5 py-4 overflow-hidden"
+                    role={hasMultipleGuilds ? "button" : undefined}
+                    tabIndex={hasMultipleGuilds ? 0 : undefined}
+                    aria-pressed={hasMultipleGuilds ? isSelected : undefined}
+                    onClick={
+                      hasMultipleGuilds
+                        ? () => setSelectedGuildId(guild.id)
+                        : undefined
+                    }
+                    onKeyDown={
+                      hasMultipleGuilds
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedGuildId(guild.id);
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`group relative rounded-xl border bg-card px-5 py-4 overflow-hidden transition-colors ${
+                      hasMultipleGuilds
+                        ? "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                        : ""
+                    } ${
+                      isSelected && hasMultipleGuilds
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border"
+                    }`}
                   >
-                    {/* Top accent */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/40" />
+                    {/* Top accent — red for rejected, brand for pending/approved */}
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-[2px] ${
+                        guild.status === "rejected"
+                          ? STATUS_COLORS.negative.bg
+                          : "bg-primary/40"
+                      }`}
+                    />
 
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
                           <Swords className="w-5 h-5 text-foreground/60" />
@@ -258,12 +390,12 @@ export default function ApplicationPendingPage() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        {guild.status === "pending" ? (
+                        {guild.status === "pending" && (
                           <>
                             <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-1">
                               <Users className="w-3 h-3" />
                               <span className="tabular-nums font-medium">
-                                {guild.reviewCount ?? totalReviews}
+                                {guild.reviewCount ?? 0}
                               </span>
                               <span>reviewed</span>
                             </div>
@@ -293,7 +425,25 @@ export default function ApplicationPendingPage() {
                               Withdraw
                             </Button>
                           </>
-                        ) : (
+                        )}
+                        {guild.status === "rejected" && (
+                          <>
+                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-1">
+                              <Users className="w-3 h-3" />
+                              <span className="tabular-nums font-medium">
+                                {guild.reviewCount ?? 0}
+                              </span>
+                              <span>reviews</span>
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.negative.badge}`}
+                            >
+                              <XCircle className="w-3 h-3" />
+                              Rejected
+                            </span>
+                          </>
+                        )}
+                        {guild.status === "approved" && (
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_COLORS.positive.badge}`}
                           >
@@ -304,7 +454,8 @@ export default function ApplicationPendingPage() {
                       </div>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
 
                 {guildApplications.length === 0 && (
                   <EmptyState icon={Swords} title="No guild applications found" />
@@ -312,16 +463,23 @@ export default function ApplicationPendingPage() {
               </div>
             </section>
 
-            {/* Review Progress */}
-            {pendingApps.length > 0 && (
+            {/* Review Progress — shown when the selected guild is still pending */}
+            {isSelectedPending && (
               <section className="rounded-xl border border-border bg-card p-5 overflow-hidden relative">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/40" />
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
-                    Review Progress
-                  </h3>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {totalReviews} / {MIN_REVIEWS} reviews
+                <div className="flex items-center justify-between mb-4 gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                      Review Progress
+                    </h3>
+                    {hasMultipleGuilds && selectedGuild && (
+                      <p className="text-xs font-medium text-foreground mt-1 truncate">
+                        {selectedGuild.name}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
+                    {selectedReviews} / {MIN_REVIEWS} reviews
                   </span>
                 </div>
 
@@ -334,12 +492,12 @@ export default function ApplicationPendingPage() {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="text-center p-3 rounded-lg bg-muted/30">
-                    <p className="text-xl font-bold text-foreground tabular-nums">{totalReviews}</p>
+                    <p className="text-xl font-bold text-foreground tabular-nums">{selectedReviews}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">Reviews</p>
                   </div>
                   <div className="text-center p-3 rounded-lg bg-muted/30">
                     <p className="text-xl font-bold text-foreground tabular-nums">
-                      {expert.approvalCount ?? 0}
+                      {selectedApprovals}
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">Approvals</p>
                   </div>
@@ -351,31 +509,109 @@ export default function ApplicationPendingPage() {
               </section>
             )}
 
-            {/* Auto-Approval Info */}
-            <section className="rounded-xl border border-border bg-card p-5 overflow-hidden relative">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/40" />
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-[18px] h-[18px] text-primary" />
+            {/* Rejection Breakdown — shown when the selected guild is rejected */}
+            {isSelectedRejected && (
+              <section className={`rounded-xl border p-5 overflow-hidden relative ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`}>
+                <div className={`absolute top-0 left-0 right-0 h-[2px] ${STATUS_COLORS.negative.bg}`} />
+                <div className="flex items-start gap-3 mb-4">
+                  <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.negative.bgSubtle} border ${STATUS_COLORS.negative.border} flex items-center justify-center flex-shrink-0`}>
+                    <AlertTriangle className={`w-[18px] h-[18px] ${STATUS_COLORS.negative.icon}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`font-semibold text-sm mb-1 ${STATUS_COLORS.negative.text}`}>
+                      {rejectedDueToTimeout ? "No Reviews Received in Time" : "Did Not Reach Consensus"}
+                    </p>
+                    {hasMultipleGuilds && selectedGuild && (
+                      <p className="text-xs font-medium text-foreground mb-1 truncate">
+                        {selectedGuild.name}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {rejectedDueToTimeout
+                        ? "The voting deadline passed before any guild members completed their review. This is most common in guilds that are low on active reviewers. You can reapply to the same guild or try another guild."
+                        : `This application received ${selectedReviews} review${selectedReviews === 1 ? "" : "s"} but did not reach the consensus threshold of ${MIN_REVIEWS} approvals required. You can reapply to the same guild or try another guild.`}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-sm text-foreground mb-1">Auto-Approval System</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Your application needs{" "}
-                    <strong className="text-foreground">{MIN_REVIEWS} reviews</strong> from guild members.
-                    Once the consensus threshold is met, you&apos;ll get instant access to the expert
-                    dashboard and join as a &quot;Recruit&quot;.
-                  </p>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className={`text-center p-3 rounded-lg bg-muted/30`}>
+                    <p className="text-xl font-bold text-foreground tabular-nums">{selectedReviews}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Reviews</p>
+                  </div>
+                  <div className={`text-center p-3 rounded-lg bg-muted/30`}>
+                    <p className={`text-xl font-bold tabular-nums ${STATUS_COLORS.positive.text}`}>
+                      {selectedApprovals}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Approvals</p>
+                  </div>
+                  <div className={`text-center p-3 rounded-lg bg-muted/30`}>
+                    <p className={`text-xl font-bold tabular-nums ${STATUS_COLORS.negative.text}`}>
+                      {selectedRejections}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Rejections</p>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
+
+            {/* Auto-Approval Info — only relevant for pending selected applications */}
+            {isSelectedPending && (
+              <section className="rounded-xl border border-border bg-card p-5 overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/40" />
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-[18px] h-[18px] text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-foreground mb-1">Auto-Approval System</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This application needs{" "}
+                      <strong className="text-foreground">{MIN_REVIEWS} reviews</strong> from guild members.
+                      Once the consensus threshold is met, you&apos;ll get instant access to the expert
+                      dashboard and join as a &quot;Recruit&quot;.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Approved Info — shown when the selected guild has accepted the expert */}
+            {isSelectedApproved && selectedGuild && (
+              <section className={`rounded-xl border p-5 overflow-hidden relative ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`}>
+                <div className={`absolute top-0 left-0 right-0 h-[2px] ${STATUS_COLORS.positive.bg}`} />
+                <div className="flex items-start gap-3">
+                  <div className={`w-9 h-9 rounded-xl ${STATUS_COLORS.positive.bgSubtle} border ${STATUS_COLORS.positive.border} flex items-center justify-center flex-shrink-0`}>
+                    <CheckCircle className={`w-[18px] h-[18px] ${STATUS_COLORS.positive.icon}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`font-semibold text-sm mb-1 ${STATUS_COLORS.positive.text}`}>
+                      You&apos;re in
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {selectedGuild.name} accepted your application
+                      {selectedGuild.role ? ` as a ${selectedGuild.role}` : ""}. Once every
+                      pending guild review resolves, you&apos;ll get full access to the expert
+                      dashboard.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
 
           {/* ── Right Column: Timeline ── */}
           <div className="lg:col-span-2">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">
-              Application Timeline
-            </h2>
+            <div className="mb-4">
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                Application Timeline
+              </h2>
+              {hasMultipleGuilds && selectedGuild && (
+                <p className="text-xs font-medium text-foreground mt-1 truncate">
+                  {selectedGuild.name}
+                </p>
+              )}
+            </div>
 
             <div className="relative">
               <TimelineStep
@@ -385,60 +621,97 @@ export default function ApplicationPendingPage() {
                 state="completed"
               />
 
-              {hasOnChain && (() => {
-                const onChainApp = guildApplications.find((g) => g.blockchainSessionCreated);
-                const txHash = onChainApp?.blockchainSessionTxHash;
-                return (
+              {hasOnChain && (
+                <TimelineStep
+                  icon={ShieldCheck}
+                  title="On-Chain Session Created"
+                  description="Your application review is secured on the blockchain."
+                  state="completed"
+                >
+                  {selectedTxHash && (
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${selectedTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1.5 mt-2 text-xs ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
+                    >
+                      View on Etherscan <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </TimelineStep>
+              )}
+
+              {isSelectedRejected ? (
+                <>
                   <TimelineStep
-                    icon={ShieldCheck}
-                    title="On-Chain Session Created"
-                    description="Your application review is secured on the blockchain."
+                    icon={CircleDot}
+                    title="Review Period"
+                    description={
+                      rejectedDueToTimeout
+                        ? "The voting window closed before guild members completed reviews."
+                        : `Guild members reviewed your application. ${selectedReviews} of ${MIN_REVIEWS} required reviews received.`
+                    }
                     state="completed"
+                  />
+
+                  <TimelineStep
+                    icon={XCircle}
+                    title="Application Rejected"
+                    description={
+                      rejectedDueToTimeout
+                        ? "Auto-rejected because the deadline passed with insufficient reviews. You can reapply any time."
+                        : "Did not reach the consensus threshold for approval. You can reapply to the same guild or a different one."
+                    }
+                    state="active"
+                    isLast
+                  />
+                </>
+              ) : isSelectedApproved ? (
+                <>
+                  <TimelineStep
+                    icon={CircleDot}
+                    title="Review Period"
+                    description={`Guild members reviewed your application. ${selectedReviews} of ${MIN_REVIEWS} reviews completed.`}
+                    state="completed"
+                  />
+
+                  <TimelineStep
+                    icon={CheckCircle}
+                    title="Approved"
+                    description={`You joined ${selectedGuild?.name ?? "the guild"}${selectedGuild?.role ? ` as a ${selectedGuild.role}` : ""}.`}
+                    state="active"
+                    isLast
+                  />
+                </>
+              ) : (
+                <>
+                  <TimelineStep
+                    icon={CircleDot}
+                    title="Under Guild Review"
+                    description={`Guild members are reviewing your credentials. ${selectedReviews} of ${MIN_REVIEWS} reviews completed.`}
+                    state="active"
                   >
-                    {txHash && (
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-1.5 mt-2 text-xs ${STATUS_COLORS.positive.text} hover:opacity-80 transition-colors`}
-                      >
-                        View on Etherscan <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    {selectedGuild?.votingDeadline && (() => {
+                      const time = getTimeRemaining(selectedGuild.votingDeadline);
+                      if (!time) return null;
+                      return (
+                        <p className={`text-xs font-medium mt-2 flex items-center gap-1.5 ${time.color}`}>
+                          <Timer className="w-3 h-3" />
+                          {time.label}
+                        </p>
+                      );
+                    })()}
                   </TimelineStep>
-                );
-              })()}
 
-              <TimelineStep
-                icon={CircleDot}
-                title="Under Guild Review"
-                description={`Guild members are reviewing your credentials. ${totalReviews} of ${MIN_REVIEWS} reviews completed.`}
-                state="active"
-              >
-                {(() => {
-                  const deadlines = pendingApps
-                    .map((app) => app.votingDeadline)
-                    .filter((d): d is string => !!d);
-                  if (deadlines.length === 0) return null;
-                  const earliest = deadlines.sort()[0];
-                  const time = getTimeRemaining(earliest);
-                  if (!time) return null;
-                  return (
-                    <p className={`text-xs font-medium mt-2 flex items-center gap-1.5 ${time.color}`}>
-                      <Timer className="w-3 h-3" />
-                      {time.label}
-                    </p>
-                  );
-                })()}
-              </TimelineStep>
-
-              <TimelineStep
-                icon={Mail}
-                title="Approval & Access"
-                description="Once you receive 3 approvals, you'll join as a Recruit and access the dashboard."
-                state="upcoming"
-                isLast
-              />
+                  <TimelineStep
+                    icon={Mail}
+                    title="Approval & Access"
+                    description={`Once you receive ${MIN_REVIEWS} approvals, you'll join as a Recruit and access the dashboard.`}
+                    state="upcoming"
+                    isLast
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -484,12 +757,20 @@ export default function ApplicationPendingPage() {
 
         {/* ── Bottom CTA ── */}
         <div className="rounded-xl border border-border bg-card p-6 mb-8 overflow-hidden relative">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/40" />
+          <div
+            className={`absolute top-0 left-0 right-0 h-[2px] ${
+              isSelectedRejected ? STATUS_COLORS.negative.bg : "bg-primary/40"
+            }`}
+          />
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Explore More Guilds</h3>
+              <h3 className="font-semibold text-foreground text-sm">
+                {isSelectedRejected ? "Ready to Try Again?" : "Explore More Guilds"}
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Browse available guilds and apply to join more communities.
+                {isSelectedRejected
+                  ? "You can reapply to the same guild or pick a different one that better matches your expertise."
+                  : "Browse available guilds and apply to join more communities."}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -499,9 +780,9 @@ export default function ApplicationPendingPage() {
               <Button
                 variant="outline"
                 onClick={() => router.push("/expert/apply?apply=new")}
-                icon={<Plus className="w-4 h-4" />}
+                icon={isSelectedRejected ? <RotateCcw className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               >
-                Apply
+                {isSelectedRejected ? "Reapply" : "Apply"}
               </Button>
             </div>
           </div>

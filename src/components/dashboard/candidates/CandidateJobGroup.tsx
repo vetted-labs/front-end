@@ -1,13 +1,11 @@
 "use client";
 
-import { Briefcase, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Briefcase, ChevronDown, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCandidateStatusDot } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
-import { useFetch } from "@/lib/hooks/useFetch";
-import { matchingApi } from "@/lib/api";
 import { MatchScoreBadge } from "@/components/ui/match-score-badge";
-import { useMemo } from "react";
 import type { CompanyApplication } from "@/types";
 
 interface CandidateJobGroupProps {
@@ -16,27 +14,11 @@ interface CandidateJobGroupProps {
   selectedApplicationId: string | null;
   onSelectApplication: (app: CompanyApplication) => void;
   getEndorsementCount: (app: CompanyApplication) => number;
+  getMatchScore: (app: CompanyApplication) => number | undefined;
   isExpanded: boolean;
   onToggle: () => void;
   visibleCount: number;
   onShowMore: () => void;
-}
-
-/** Deterministic muted avatar background based on name */
-function getAvatarColor(name: string): string {
-  const colors = [
-    "bg-primary/15 text-primary",
-    "bg-info-blue/15 text-info-blue",
-    "bg-positive/15 text-positive",
-    "bg-rank-officer/15 text-rank-officer",
-    "bg-rank-craftsman/15 text-rank-craftsman",
-    "bg-warning/15 text-warning",
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
 }
 
 export function CandidateJobGroup({
@@ -45,23 +27,39 @@ export function CandidateJobGroup({
   selectedApplicationId,
   onSelectApplication,
   getEndorsementCount,
+  getMatchScore,
   isExpanded,
   onToggle,
   visibleCount,
   onShowMore,
 }: CandidateJobGroupProps) {
-  const remaining = applications.length - visibleCount;
+  type GroupSortOption = "endorsements" | "match" | "newest" | "name";
+  const [localSort, setLocalSort] = useState<GroupSortOption>("endorsements");
 
-  // Fetch top match scores for this job's candidates
-  const { data: topMatches } = useFetch(
-    () => matchingApi.getTopMatches(job.id, 50),
-    { skip: !job.id }
-  );
+  const sortedApplications = useMemo(() => {
+    const sorted = [...applications];
+    sorted.sort((a, b) => {
+      switch (localSort) {
+        case "endorsements": {
+          const aCount = getEndorsementCount(a);
+          const bCount = getEndorsementCount(b);
+          return bCount - aCount;
+        }
+        case "match": {
+          const aScore = getMatchScore(a) ?? -1;
+          const bScore = getMatchScore(b) ?? -1;
+          return bScore - aScore;
+        }
+        case "newest":
+          return new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime();
+        case "name":
+          return a.candidate.fullName.localeCompare(b.candidate.fullName);
+      }
+    });
+    return sorted;
+  }, [applications, localSort, getEndorsementCount, getMatchScore]);
 
-  const matchScoreMap = useMemo(() => {
-    if (!topMatches) return new Map<string, number>();
-    return new Map(topMatches.map((m) => [m.candidateId, m.score]));
-  }, [topMatches]);
+  const remaining = sortedApplications.length - visibleCount;
 
   return (
     <div>
@@ -78,6 +76,27 @@ export function CandidateJobGroup({
         <span className="text-xs font-medium text-muted-foreground/40 bg-muted/40 dark:bg-muted/30 px-1.5 py-0.5 rounded flex-shrink-0">
           {applications.length}
         </span>
+        {isExpanded && (
+          <select
+            value={localSort}
+            onChange={(e) => {
+              e.stopPropagation();
+              setLocalSort(e.target.value as GroupSortOption);
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] font-medium text-muted-foreground/60 bg-transparent border-none focus:outline-none cursor-pointer appearance-none pl-1 pr-3"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='7' height='4' viewBox='0 0 7 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l2.5 2.5L6 1' stroke='%236b7280' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 0 center",
+            }}
+          >
+            <option value="endorsements">By endorsements</option>
+            <option value="match">By match score</option>
+            <option value="newest">By newest</option>
+            <option value="name">By name</option>
+          </select>
+        )}
         <ChevronDown
           className={cn(
             "w-3 h-3 text-muted-foreground/40 ml-auto transition-transform duration-150 flex-shrink-0",
@@ -89,10 +108,10 @@ export function CandidateJobGroup({
       {/* Candidate Rows */}
       {isExpanded && (
         <>
-          {applications.slice(0, visibleCount).map((app) => {
+          {sortedApplications.slice(0, visibleCount).map((app) => {
             const isSelected = selectedApplicationId === app.id;
-            const avatarColor = getAvatarColor(app.candidate.fullName);
             const endorsements = getEndorsementCount(app);
+            const matchScore = getMatchScore(app);
 
             return (
               <button
@@ -122,12 +141,13 @@ export function CandidateJobGroup({
                       {app.candidate.fullName}
                     </p>
                     {endorsements > 0 && (
-                      <span className="text-xs font-medium text-muted-foreground/60 flex-shrink-0">
+                      <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-positive bg-positive/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        <Award className="w-3 h-3" />
                         {endorsements}
                       </span>
                     )}
-                    {matchScoreMap.has(app.candidateId) && (
-                      <MatchScoreBadge score={matchScoreMap.get(app.candidateId)!} compact />
+                    {matchScore !== undefined && (
+                      <MatchScoreBadge score={matchScore} compact />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground/50 truncate leading-tight">

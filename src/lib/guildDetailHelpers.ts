@@ -91,11 +91,7 @@ export async function fetchAndNormalizeGuildData(
         normalized.memberCount ??
         publicData.totalMembers ??
         publicData.memberCount ??
-        (normalized.experts.length + normalized.candidates.length);
-      normalized.candidateCount =
-        normalized.candidateCount ??
-        publicData.candidateCount ??
-        normalized.candidates.length;
+        normalized.experts.length + normalized.candidates.length;
       normalized.openPositions =
         normalized.openPositions ??
         publicData.openPositions ??
@@ -103,10 +99,19 @@ export async function fetchAndNormalizeGuildData(
       normalized.totalProposalsReviewed =
         normalized.totalProposalsReviewed ?? publicData.totalProposalsReviewed ?? 0;
       normalized.averageApprovalTime =
-        normalized.averageApprovalTime ?? publicData.averageApprovalTime ?? "\u2014";
+        normalized.averageApprovalTime || publicData.averageApprovalTime || "\u2014";
     } catch (err) {
       logger.warn("Public guild data fallback failed", err);
     }
+  }
+
+  // Always derive counts from the actual member arrays — backend sometimes returns
+  // 0 for these fields even when arrays are populated (VET-63).
+  normalized.candidateCount =
+    normalized.candidates.length ?? normalized.candidateCount ?? 0;
+  if (!normalized.memberCount) {
+    normalized.memberCount =
+      normalized.experts.length + normalized.candidates.length;
   }
 
   const bcGuildId = normalized.blockchainGuildId || data.blockchainGuildId;

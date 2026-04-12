@@ -267,15 +267,13 @@ export default function JobsListing() {
             {totalJobCount} Open Positions
           </div>
           <h1 className="font-display text-3xl sm:text-5xl lg:text-5xl font-bold leading-[1.1] tracking-tighter mb-4">
-            Find Your Next
-            <br />
+            Get{" "}
             <span className="text-primary animate-shimmer-text">
-              Web3 Role
+              Vetted
             </span>
           </h1>
           <p className="text-sm font-medium text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Discover vetted opportunities from top crypto companies. Every role
-            reviewed by guild experts, every hire backed by reputation.
+            Prove your skills once. Let domain experts make you visible to the right opportunities.
           </p>
         </section>
 
@@ -291,7 +289,7 @@ export default function JobsListing() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-card border border-border rounded-xl py-[18px] pl-[52px] pr-14 text-base text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/30 focus:ring-4 focus:ring-primary/[0.08] focus:shadow-sm transition-all"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:block">
               <span className="px-2 py-0.5 bg-muted/30 border border-border rounded-md text-xs font-medium text-muted-foreground/50">
                 /
               </span>
@@ -301,7 +299,7 @@ export default function JobsListing() {
 
         {/* Filter Row */}
         <div className="mb-7">
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap overflow-x-auto pb-2 sm:pb-0 sm:overflow-visible scrollbar-none">
             {/* Guild Filter Group */}
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
               <button
@@ -332,7 +330,7 @@ export default function JobsListing() {
             </div>
 
             {/* Divider */}
-            <Divider orientation="vertical" className="h-6" />
+            <Divider orientation="vertical" className="h-6 hidden sm:block" />
 
             {/* Job Type Group */}
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">
@@ -352,7 +350,7 @@ export default function JobsListing() {
             </div>
 
             {/* Divider */}
-            <Divider orientation="vertical" className="h-6" />
+            <Divider orientation="vertical" className="h-6 hidden sm:block" />
 
             {/* Location Group */}
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full p-1">

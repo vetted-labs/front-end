@@ -16,21 +16,21 @@ const cards = [
   {
     key: "candidate",
     icon: Users,
-    title: "Find Work",
-    desc: "Get vetted by experts. Stand out to employers.",
+    title: "Get Vetted",
+    desc: "Prove your skills once. Let domain experts make you visible to the right opportunities.",
   },
   {
     key: "expert",
     icon: Star,
-    title: "Become an Expert",
-    desc: "Stake your reputation. Earn by reviewing talent.",
+    title: "Monetize Your Judgment",
+    desc: "Define standards. Vet candidates. Build on-chain authority in your field — and earn for accuracy.",
     featured: true,
   },
   {
     key: "company",
     icon: Briefcase,
-    title: "Post a Job",
-    desc: "Hire from a pool pre-vetted by domain experts.",
+    title: "Start Hiring",
+    desc: "Hire with conviction. Get a shortlist of pre-vetted candidates that experts bet on.",
   },
 ] as const;
 
@@ -67,7 +67,7 @@ export function HeroSection({
         The Credibility Layer<br />for Hiring
       </h1>
       <p className="text-sm text-muted-foreground font-normal leading-relaxed max-w-xl mb-12">
-        Expert signals that separate real talent from noise.
+        The first hiring signal built on expert judgment with real skin in the game.
       </p>
 
       {/* Value Cards */}
