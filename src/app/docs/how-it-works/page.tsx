@@ -91,7 +91,7 @@ export default function HowItWorksPage() {
         out a profile. They browse job listings by guild and submit an
         application. Each application
         routes to the guild tied to the job — a backend role goes to the
-        Engineering guild, a systems audit role goes to Security, and so on.
+        Engineering guild, a design role goes to Design, and so on.
       </p>
       <DocsCallout kind="tip" title="The candidate never sees the votes">
         Candidates don't see individual expert scores or comments. They see
@@ -103,7 +103,7 @@ export default function HowItWorksPage() {
       <h3 id="expert-lane">The expert lane</h3>
       <p>
         Experts in the receiving guild see new applications appear in their
-        vetting queue. From there, the review process runs in two phases:
+        vetting queue. From there, the review process runs in three phases:
       </p>
       <DocsStepList
         steps={[
@@ -207,7 +207,7 @@ export default function HowItWorksPage() {
         steps={[
           {
             title: "I'm an expert",
-            description: "Join a guild and start reviewing — 11-page handbook.",
+            description: "Join a guild and start reviewing — 10-page handbook.",
             href: "/docs/experts",
             icon: Shield,
           },

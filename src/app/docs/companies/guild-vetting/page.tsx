@@ -122,7 +122,7 @@ export default function GuildVettingPage() {
       </p>
       <p>
         The scores are relative to the guild's rubric, not to your personal
-        bar. A guild with a very high baseline (e.g. the Security guild) will
+        bar. A guild with a very high baseline (e.g. the Engineering guild) will
         have fewer 90+ scores than a guild with a lower baseline.
       </p>
 

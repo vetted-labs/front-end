@@ -87,9 +87,9 @@ export default function CandidateProfilePage() {
         <em>Backend engineer focused on high-throughput payment systems</em>.
       </p>
       <DocsCallout kind="tip" title="Match the guild's vocabulary">
-        If you're applying to the Security guild, use the specific
-        sub-disciplines they care about (appsec, infra, reversing) rather
-        than a generic "security engineer" label. Guild rubrics are written
+        If you're applying to the Engineering guild, use the specific
+        sub-disciplines they care about (backend, distributed systems,
+        DevOps) rather than a generic "software engineer" label. Guild rubrics are written
         in the guild's own vocabulary, and your headline telegraphs whether
         you speak it.
       </DocsCallout>

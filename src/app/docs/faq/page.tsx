@@ -152,9 +152,9 @@ export default function FAQPage() {
             icon: BookText,
           },
           {
-            title: "Dashboard",
-            description: "If you're already signed in.",
-            href: "/",
+            title: "Browse jobs",
+            description: "If you're already signed in, start browsing.",
+            href: "/browse/jobs",
             icon: LayoutDashboard,
             kind: "app",
           },

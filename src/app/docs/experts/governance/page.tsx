@@ -154,20 +154,18 @@ export default function GovernancePage() {
           <strong>Voting duration</strong> — typically 3, 5, or 7 days
           depending on how much discussion you expect.
         </li>
-        <li>
-          <strong>Quorum requirement</strong> — minimum total vote weight
-          needed for the proposal to be valid.
-        </li>
-        <li>
-          <strong>Approval threshold</strong> — the percentage of{" "}
-          <em>For</em> votes required to pass, computed as{" "}
-          <code>for / (for + against)</code>.
-        </li>
       </ul>
+      <DocsCallout kind="important" title="Proposal stake required">
+        Creating a proposal requires staking a minimum of{" "}
+        <strong>100 VETD</strong> as spam prevention. The stake is returned
+        after the voting period ends, regardless of whether the proposal
+        passes or fails.
+      </DocsCallout>
       <p>
-        Submitting a proposal creates an on-chain record and opens the voting
-        window. Once open, the proposal parameters can't be edited — you can
-        only post comments and clarifications.
+        Quorum (default 10%) and approval threshold (default 51%) are set
+        by the platform. Submitting a proposal creates an on-chain record
+        and opens the voting window. Once open, the proposal parameters
+        can't be edited — you can only post comments and clarifications.
       </p>
 
       <h2 id="voting">Voting on a proposal</h2>
@@ -189,6 +187,10 @@ export default function GovernancePage() {
           without taking a side.
         </li>
       </ul>
+      <DocsCallout kind="note" title="You must have staked VETD to vote">
+        Governance voting requires having VETD staked in at least one guild.
+        Experts with zero stake cannot cast governance votes.
+      </DocsCallout>
       <p>
         Votes are recorded on-chain. You can change your vote while the
         voting window is still open by casting a new vote, which replaces
@@ -202,11 +204,11 @@ export default function GovernancePage() {
       </p>
       <ol>
         <li>
-          <strong>Quorum met.</strong> Total vote weight of{" "}
+          <strong>Quorum met.</strong> At least <strong>3 voters</strong>{" "}
+          have participated, and the total vote weight of{" "}
           <strong>for + against</strong> (abstain does not count) exceeds
-          the proposal's configured quorum. This prevents a
-          tiny minority from passing changes when most of the guild is
-          offline.
+          the quorum threshold. This prevents a tiny minority from passing
+          changes when most of the guild is offline.
         </li>
         <li>
           <strong>Approval threshold met.</strong> The ratio of{" "}

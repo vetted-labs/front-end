@@ -58,7 +58,7 @@ export default function DocsLandingPage() {
             Browse jobs
           </Link>
           <Link
-            href="/auth/login?type=company"
+            href="/auth/signup?type=company"
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
           >
             Post a job
@@ -119,7 +119,7 @@ export default function DocsLandingPage() {
           <MiniExplainer
             icon={ShieldCheck}
             title="Guilds"
-            body="Domain experts form guilds (Engineering, Design, Security, etc.) and collectively evaluate candidates applying for roles in their field."
+            body="Domain experts form guilds (Engineering, Design, Marketing, etc.) and collectively evaluate candidates applying for roles in their field."
           />
           <MiniExplainer
             icon={Vote}

@@ -108,9 +108,7 @@ export default function CompanyQuickstartPage() {
                   website and phone.
                 </p>
                 <p>
-                  You can also click <strong>Continue with LinkedIn</strong>{" "}
-                  for one-click signup. Either way, you'll land on your
-                  company dashboard.
+                  After submitting, you'll land on your company dashboard.
                 </p>
               </>
             ),
@@ -291,7 +289,7 @@ export default function CompanyQuickstartPage() {
           {
             title: "Post my first job",
             description: "Create a company account and publish a job.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Briefcase,
             kind: "app",
           },

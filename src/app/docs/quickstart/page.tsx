@@ -63,7 +63,7 @@ export default function QuickstartHubPage() {
           {
             title: "Post a job",
             description: "Create a company account and publish.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Building2,
             kind: "app",
           },

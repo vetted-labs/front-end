@@ -132,8 +132,8 @@ export default function EndorsementsPage() {
       <h2 id="outcome-math">Outcome math</h2>
       <p>
         When the candidate's hiring outcome is finalized (company marks them
-        as hired or rejected), the contract settles every endorsement on that
-        candidate at once.
+        as hired or rejected), the contract settles the <strong>top 3
+        endorsers</strong> by stake amount.
       </p>
       <p>
         <strong>If the candidate is hired:</strong>
@@ -145,9 +145,11 @@ export default function EndorsementsPage() {
           guild.
         </li>
         <li>
-          You receive a share of the endorsement reward pool, proportional to
-          your stake relative to the total staked across all endorsers for
-          that candidate.
+          You receive an equal share of 7% of the candidate's final
+          compensation, split among the top 3 endorsers. 50% is paid
+          immediately; 50% is locked for a <strong>90-day retention
+          period</strong>. If the company reports a performance issue
+          during that window, the locked half can be forfeited.
         </li>
       </ul>
       <p>

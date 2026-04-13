@@ -242,7 +242,7 @@ await vettedContract.reveal(applicationId, score, nonce);
           <>The hash you commit is immutable on-chain; you cannot edit your vote after committing, period.</>,
           <>Your nonce lives only in browser local storage. Lose it = lose the ability to reveal that vote.</>,
           <>Consensus uses <strong>IQR filtering</strong> (inclusion band: median ± 0.75×IQR) then takes the average of the remaining scores.</>,
-          <>Binary alignment: ≤1×IQR from consensus = aligned (+10 rep). &gt;1×IQR = misaligned (−20 rep, up to 25% stake slashed).</>,
+          <>Binary alignment: ≤1×IQR from median = aligned (+10 rep). &gt;1×IQR = misaligned (−20 rep, up to 25% stake slashed).</>,
           <>Staked votes amplify both sides: bigger reward on alignment, real money slashed on severe misalignment.</>,
         ]}
       />

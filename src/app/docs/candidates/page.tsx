@@ -113,7 +113,7 @@ export default function CandidatesOverviewPage() {
           {
             title: "Sign up",
             description: "Create a candidate account with email or LinkedIn.",
-            href: "/auth/login?type=candidate",
+            href: "/auth/signup?type=candidate",
             icon: UserPlus,
             kind: "app",
           },

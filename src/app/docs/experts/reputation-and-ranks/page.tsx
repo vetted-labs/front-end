@@ -43,9 +43,9 @@ export default function ReputationAndRanksPage() {
     >
       <DocsTldr
         points={[
-          <><DocsGlossaryLink term="reputation">Reputation</DocsGlossaryLink> is a <strong>per-guild integer</strong> attached to your wallet. You can be Master in Engineering and Recruit in Security.</>,
+          <><DocsGlossaryLink term="reputation">Reputation</DocsGlossaryLink> is a <strong>per-guild integer</strong> attached to your wallet. You can be Master in Engineering and Recruit in Design.</>,
           <>Earn from aligned votes (<strong>+10</strong>), successful endorsements (<strong>+20</strong>), governance participation.</>,
-          <>Lose from misaligned votes (outside 1×<DocsGlossaryLink term="iqr-consensus">IQR</DocsGlossaryLink>), inactivity decay (<strong>−10/cycle</strong>), enforcement actions.</>,
+          <>Lose from misaligned votes (outside 1×<DocsGlossaryLink term="iqr-consensus">IQR</DocsGlossaryLink>), inactivity decay (<strong>−10 per 30 days</strong>), enforcement actions.</>,
           <>Five <DocsGlossaryLink term="guild-rank">guild ranks</DocsGlossaryLink> (Recruit → Master) govern permissions. Three reward tiers (Foundation 1.0×, Established 1.25×, Authority 1.5×) determine payout multipliers.</>,
           <>Reputation is <strong>non-transferable</strong>. Can't sell, delegate, or move between wallets.</>,
         ]}
@@ -102,8 +102,8 @@ export default function ReputationAndRanksPage() {
           .
         </li>
         <li>
-          <strong>Inactivity decay (−10 per cycle).</strong> Going a full
-          review cycle without voting or endorsing costs reputation. This
+          <strong>Inactivity decay (−10 per 30 days).</strong> Going 30
+          days without voting or endorsing costs reputation. This
           prevents dormant accounts from holding rank indefinitely.
         </li>
         <li>
@@ -115,7 +115,7 @@ export default function ReputationAndRanksPage() {
       </ul>
 
       <DocsCallout kind="warning" title="Decay is real">
-        An Apprentice (1,000 rep) who stops reviewing for six cycles loses
+        An Apprentice (1,000 rep) who stops reviewing for six months loses
         60 reputation and can drop back to Recruit. If you're going on
         leave, flag it to your guild — some guilds grant grace periods for
         planned absences.
@@ -150,7 +150,7 @@ export default function ReputationAndRanksPage() {
       <h2 id="per-guild">Reputation is per-guild</h2>
       <p>
         Every guild tracks reputation independently. You can hold Master rank
-        in Engineering and Recruit rank in Security at the same time — they're
+        in Engineering and Recruit rank in Design at the same time — they're
         separate counters attached to the same wallet.
       </p>
       <p>

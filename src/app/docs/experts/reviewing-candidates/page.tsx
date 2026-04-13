@@ -95,7 +95,7 @@ export default function ReviewingCandidatesPage() {
         Every guild defines its own rubric. An Engineering rubric might have
         three criteria — Systems Thinking, Code Quality, Communication — each
         scored 0 to 100 with a short description of what each band means. A
-        Security guild might have five criteria including Threat Modeling and
+        Engineering guild might have five criteria including System Design and
         Crypto Fundamentals.
       </p>
       <p>

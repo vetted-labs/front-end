@@ -54,7 +54,7 @@ const RANKS: Rank[] = [
     rewardTier: "Authority",
     multiplier: "1.5×",
     color: "rank-master",
-    unlocks: "Elected guild leader, 1.5× governance vote bonus",
+    unlocks: "Eligible for Guild Master election (if elected: 1.5× governance vote bonus)",
   },
 ];
 
@@ -94,7 +94,7 @@ export function RankTierLadder() {
                 <span className="font-mono text-[12.5px] text-muted-foreground">
                   {rank.repMax
                     ? `${rank.repMin.toLocaleString()} – ${rank.repMax.toLocaleString()} rep`
-                    : `${rank.repMin.toLocaleString()}+ rep`}
+                    : `${rank.repMin.toLocaleString()} rep (max)`}
                 </span>
               </div>
               <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">

@@ -203,14 +203,14 @@ export default function WhyWeb3Page() {
           {
             title: "Post a job",
             description: "Create your company account and publish.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Briefcase,
             kind: "app",
           },
           {
             title: "Sign up",
             description: "Just create the account first; you can post later.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Building2,
             kind: "app",
           },

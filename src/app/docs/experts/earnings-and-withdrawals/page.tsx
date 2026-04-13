@@ -105,14 +105,14 @@ export default function EarningsPage() {
       <h3 id="endorsement-payouts">Endorsement payouts</h3>
       <p>
         If you endorsed a candidate and that candidate is hired, you get your
-        staked VETD back plus a share of the endorsement reward pool for that
-        candidate. The share is proportional to your stake relative to total
-        endorser stake on the same candidate.
+        staked VETD back plus a share of 7% of the candidate's final
+        compensation. Only the <strong>top 3 endorsers</strong> (by stake
+        amount) receive rewards, split equally. 50% is paid immediately;
+        50% is locked for a 90-day retention period.
       </p>
       <p>
-        Endorsement payouts can be significantly larger than voting rewards on
-        a per-candidate basis, because companies pay more into the endorsement
-        pool than into the general review pool.
+        Endorsement payouts can be significantly larger than voting rewards
+        on a per-candidate basis.
       </p>
 
       <h3 id="governance-rewards">Governance rewards</h3>

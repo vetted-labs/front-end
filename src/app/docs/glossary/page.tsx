@@ -28,7 +28,7 @@ const CORE_TERMS: Term[] = [
     id: "guild",
     term: "Guild",
     definition:
-      "A group of domain experts organized around a professional discipline (Engineering, Design, Security, etc.) who collectively review candidates applying for roles in that domain.",
+      "A group of domain experts organized around a professional discipline (Engineering, Design, Marketing, etc.) who collectively review candidates applying for roles in that domain.",
   },
   {
     id: "expert",
@@ -79,7 +79,7 @@ const VOTING_TERMS: Term[] = [
     id: "alignment-tier",
     term: "Alignment tier",
     definition:
-      "How close an expert's revealed score is to the consensus, measured in IQR units. There are two classifications: Aligned (within 1×IQR of median, +10 rep, 0% slash) and Misaligned (beyond 1×IQR, −20 rep, 25% slash).",
+      "How close an expert's revealed score is to the median, measured in IQR units. There are two classifications: Aligned (within 1×IQR of median, +10 rep, 0% slash) and Misaligned (beyond 1×IQR, −20 rep, 25% slash).",
   },
 ];
 

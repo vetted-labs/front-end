@@ -114,7 +114,7 @@ export default function CompaniesOverviewPage() {
           {
             title: "Post a job",
             description: "Create a company account and publish your first hire.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Briefcase,
             kind: "app",
           },

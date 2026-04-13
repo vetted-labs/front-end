@@ -49,7 +49,7 @@ export default function ExpertQuickstartPage() {
           <>You'll connect a wallet, apply to a <DocsGlossaryLink term="guild">guild</DocsGlossaryLink>, and cast your first blind vote in about 10 minutes.</>,
           <>No gas fees during signup — wallet signing is free. You only pay gas for vote commit and reveal.</>,
           <><DocsGlossaryLink term="commit-reveal">Commit-reveal</DocsGlossaryLink> voting means your score is hidden until all experts reveal together — no anchoring or herding.</>,
-          <>After finalization, your alignment with consensus earns or costs <DocsGlossaryLink term="reputation">reputation</DocsGlossaryLink> — up to +10 per review.</>,
+          <>After finalization, your alignment earns or costs <DocsGlossaryLink term="reputation">reputation</DocsGlossaryLink> — +10 per aligned review, −20 if misaligned.</>,
         ]}
       />
 
@@ -91,8 +91,8 @@ export default function ExpertQuickstartPage() {
       {/* ── Step 1 ────────────────────────────────────── */}
       <h2 id="connect-wallet">Step 1 — Connect your wallet</h2>
       <p>
-        From the home page, click <strong>Vet Talent</strong> in the sidebar
-        or <strong>Sign in as Expert</strong> in the hero. You'll land on
+        From the home page, click <strong>Start Vetting</strong> in the
+        navbar or <strong>Monetize Your Judgment</strong> in the hero. You'll land on
         the login page.
       </p>
       <p>
@@ -315,7 +315,7 @@ export default function ExpertQuickstartPage() {
       <p>
         Some applications use commit-reveal voting. You'll see a{" "}
         <strong>Commit-Reveal Voting</strong> card with a phase indicator
-        showing three stages: <strong>Open → Commit → Finalized</strong>.
+        showing three stages: <strong>Commit → Reveal → Finalized</strong>.
         The current phase is highlighted.
       </p>
       <p>
@@ -473,7 +473,7 @@ export default function ExpertQuickstartPage() {
           },
           {
             title: "Full expert handbook",
-            description: "All 11 expert docs, grouped by topic.",
+            description: "All 10 expert docs, grouped by topic.",
             href: "/docs/experts",
             icon: BookOpen,
           },
