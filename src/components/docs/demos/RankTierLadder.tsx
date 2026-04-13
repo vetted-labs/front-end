@@ -1,60 +1,66 @@
 import { cn } from "@/lib/utils";
 
-interface Tier {
+interface Rank {
   name: string;
   repMin: number;
   repMax: number | null;
+  rewardTier: string;
   multiplier: string;
   color: string;
-  description: string;
+  unlocks: string;
 }
 
-const TIERS: Tier[] = [
+const RANKS: Rank[] = [
   {
     name: "Recruit",
     repMin: 0,
     repMax: 999,
+    rewardTier: "Foundation",
     multiplier: "1.0×",
     color: "rank-recruit",
-    description: "Starting tier. Contribute votes to prove alignment. Foundation reward tier.",
+    unlocks: "Vote on applications",
   },
   {
     name: "Apprentice",
     repMin: 1000,
     repMax: 1999,
+    rewardTier: "Established",
     multiplier: "1.25×",
     color: "rank-apprentice",
-    description: "Early-career reviewer with demonstrable track record. Established reward tier.",
+    unlocks: "Create guild posts",
   },
   {
     name: "Craftsman",
     repMin: 2000,
     repMax: 4999,
+    rewardTier: "Authority",
     multiplier: "1.5×",
     color: "rank-craftsman",
-    description: "Established voice. Authority reward tier (max multiplier).",
+    unlocks: "Moderate content, mark duplicates",
   },
   {
     name: "Officer",
     repMin: 5000,
     repMax: 9999,
+    rewardTier: "Authority",
     multiplier: "1.5×",
     color: "rank-officer",
-    description: "Guild leadership. Eligible to propose rubric changes and moderate.",
+    unlocks: "Propose rubric changes, vote on appeals",
   },
   {
     name: "Master",
     repMin: 10000,
     repMax: null,
+    rewardTier: "Authority",
     multiplier: "1.5×",
     color: "rank-master",
-    description: "Elected guild leader. Governance vote weight amplified (1.5× bonus).",
+    unlocks: "Elected guild leader, 1.5× governance vote bonus",
   },
 ];
 
 /**
- * Visual ladder showing the five guild rank tiers, their reputation requirements,
- * and reward multipliers. Purely presentational — no client-side state.
+ * Visual ladder showing the five guild ranks, their reputation requirements,
+ * reward tier, and what each rank unlocks. Purely presentational.
  */
 export function RankTierLadder() {
   return (
@@ -65,43 +71,45 @@ export function RankTierLadder() {
         </p>
       </div>
       <div className="divide-y divide-border">
-        {TIERS.map((tier, i) => (
+        {RANKS.map((rank, i) => (
           <div
-            key={tier.name}
-            className="flex items-center gap-4 px-5 py-4 md:gap-6"
+            key={rank.name}
+            className="flex items-start gap-4 px-5 py-4 md:gap-6"
           >
             <div
               className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold tabular-nums md:h-11 md:w-11"
+                "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold tabular-nums md:h-11 md:w-11"
               )}
               style={{
-                borderColor: `hsl(var(--${tier.color}))`,
-                backgroundColor: `hsl(var(--${tier.color}) / 0.1)`,
-                color: `hsl(var(--${tier.color}))`,
+                borderColor: `hsl(var(--${rank.color}))`,
+                backgroundColor: `hsl(var(--${rank.color}) / 0.1)`,
+                color: `hsl(var(--${rank.color}))`,
               }}
             >
               {i + 1}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                <h4 className="text-[16px] font-bold text-foreground">{tier.name}</h4>
+                <h4 className="text-[16px] font-bold text-foreground">{rank.name}</h4>
                 <span className="font-mono text-[12.5px] text-muted-foreground">
-                  {tier.repMax
-                    ? `${tier.repMin.toLocaleString()} – ${tier.repMax.toLocaleString()} rep`
-                    : `${tier.repMin.toLocaleString()}+ rep`}
+                  {rank.repMax
+                    ? `${rank.repMin.toLocaleString()} – ${rank.repMax.toLocaleString()} rep`
+                    : `${rank.repMin.toLocaleString()}+ rep`}
                 </span>
               </div>
               <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">
-                {tier.description}
+                {rank.unlocks}
               </p>
             </div>
-            <div className="shrink-0 rounded-md border border-border bg-muted/50 px-2.5 py-1 text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Rewards
-              </p>
-              <p className="font-mono text-[14px] font-bold text-foreground">
-                {tier.multiplier}
-              </p>
+            <div className="shrink-0 text-right">
+              <div className="rounded-md border border-border bg-muted/50 px-2.5 py-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {rank.rewardTier}
+                </p>
+                <p className="font-mono text-[14px] font-bold text-foreground">
+                  {rank.multiplier}
+                </p>
+              </div>
             </div>
           </div>
         ))}
