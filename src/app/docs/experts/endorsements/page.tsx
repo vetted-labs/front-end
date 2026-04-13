@@ -44,8 +44,8 @@ export default function EndorsementsPage() {
           <>An <DocsGlossaryLink term="endorsement">endorsement</DocsGlossaryLink> is a <strong>public financial bet</strong> that a candidate will be hired. You <DocsGlossaryLink term="stake">stake</DocsGlossaryLink> <DocsGlossaryLink term="vetd">VETD</DocsGlossaryLink>; settled on hire/reject.</>,
           <>Public-first by design — unlike blind votes, endorsements are visible immediately.</>,
           <>Successful endorsement: stake returned + <strong>+20 reputation</strong> + share of endorsement reward pool.</>,
-          <>Failed endorsement: <strong>stake forfeit</strong>, no reputation loss. Cost is only the VETD.</>,
-          <>Endorsements are <strong>not slashable</strong> — they settle automatically on the hire outcome.</>,
+          <>Failed endorsement: <strong>10% of stake slashed</strong>, remaining 90% returned. Reputation penalty also applies.</>,
+          <>Endorsements settle automatically on the hire outcome.</>,
         ]}
       />
 
@@ -54,7 +54,8 @@ export default function EndorsementsPage() {
         An endorsement is a financial bet on a specific candidate. You lock up
         a chosen amount of VETD, publicly declare that you believe this
         candidate will be hired, and collect a reward if they are. If they're
-        not, your stake is forfeit.
+        not hired, 10% of your stake is slashed and the remaining 90% is
+        returned.
       </p>
       <p>
         Endorsements exist alongside regular voting — they don't replace it.
@@ -89,7 +90,7 @@ export default function EndorsementsPage() {
           rows: [
             <><strong>Public</strong> the moment you stake — visible to other experts and companies.</>,
             <>Upside: return of stake + <strong>+20 reputation</strong> + share of endorsement reward pool.</>,
-            <>Downside: full stake forfeit if the candidate isn't hired. No reputation cost.</>,
+            <>Downside: 10% stake slashed plus reputation penalty if the candidate isn't hired.</>,
             <>Higher risk, higher reward — reserve for high-conviction candidates.</>,
           ],
         }}
@@ -123,7 +124,7 @@ export default function EndorsementsPage() {
         </li>
         <li>
           Confirm. Your wallet will open for the staking transaction. Once
-          confirmed, your VETD is locked in the guild treasury contract until
+          confirmed, your VETD is locked in the endorsement contract until
           the outcome is determined.
         </li>
       </ol>
@@ -154,12 +155,12 @@ export default function EndorsementsPage() {
       </p>
       <ul>
         <li>
-          Your stake is forfeited to the guild treasury. It's used to fund
-          future reward pools and guild operations.
+          10% of your stake is slashed and sent to the guild treasury.
+          The remaining 90% is returned to your balance.
         </li>
         <li>
-          Your reputation is <strong>not</strong> penalised. Unsuccessful
-          endorsements cost money, not standing.
+          You also incur a reputation penalty (−20) in the relevant guild.
+          Failed endorsements cost both stake and standing.
         </li>
       </ul>
 
@@ -202,7 +203,7 @@ export default function EndorsementsPage() {
           <>Public-first on purpose — the hiring signal compounds when experts visibly stake on candidates.</>,
           <>No cooldown on endorsement stakes — they settle automatically when the hire outcome is decided.</>,
           <>Size to conviction, not reflex. A 5 VETD endorsement is a signal boost; a 50 VETD endorsement is a statement.</>,
-          <>Failed endorsement costs money but not reputation — the asymmetry sits on the upside.</>,
+          <>Failed endorsement costs 10% of stake plus reputation — the risk is real, so endorse selectively.</>,
           <>Endorsement success requires candidate hiring — you're betting on the company's decision, not just the guild's.</>,
         ]}
       />

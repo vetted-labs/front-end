@@ -145,10 +145,10 @@ export default function WhatIsVettedPage() {
       </ul>
 
       <DocsCallout kind="tip" title="You don't need to care about crypto">
-        If you're a hiring manager or a candidate, you never need to think about
-        gas fees or transaction hashes. Connect a wallet, read the prompts, and
-        the platform handles the rest. If you're an expert, you'll interact with
-        the chain a bit more — but the UI walks you through it.
+        If you're a hiring manager or a candidate, you sign in with email and
+        password — no wallet, no gas fees, no transaction hashes. The platform
+        looks like a normal web app. If you're an expert, you'll connect a
+        wallet and interact with the chain — but the UI walks you through it.
       </DocsCallout>
 
       <h2 id="what-its-not">What Vetted is not</h2>

@@ -22,7 +22,7 @@ const TOC = [
 const GENERAL: FaqItem[] = [
   {
     q: "Do I need to know anything about crypto to use Vetted?",
-    a: "No. If you're a candidate or a hiring manager, the product looks and feels like a normal web app. You'll connect a wallet once — most people use MetaMask or Coinbase Wallet — and the rest of the flows don't require you to think about the blockchain at all.",
+    a: "No. If you're a candidate or a hiring manager, the product looks and feels like a normal web app — you sign in with email and password, no wallet needed. Experts connect a wallet (MetaMask, Coinbase Wallet, or any WalletConnect-compatible wallet) for on-chain voting and staking, but the rest of the flows don't require you to think about the blockchain.",
   },
   {
     q: "Is Vetted free to use?",
@@ -41,7 +41,7 @@ const WALLETS: FaqItem[] = [
   },
   {
     q: "Which wallets are supported?",
-    a: "MetaMask and Coinbase Wallet are officially supported. WalletConnect is currently disabled while we address stability issues.",
+    a: "MetaMask and Coinbase Wallet are officially supported. WalletConnect v2 is also available for connecting mobile wallets and other compatible wallets.",
   },
   {
     q: "What happens if I lose access to my wallet?",
@@ -71,7 +71,7 @@ const REP: FaqItem[] = [
   },
   {
     q: "Is reputation per-guild or global?",
-    a: "Per-guild. An expert might hold Master rank in Engineering and Recruit rank in Design. Your wallet is the same, but each guild tracks its own reputation and rank progression.",
+    a: "Per-guild. An expert might hold a high rank in Engineering and be a Recruit in Design. Your wallet is the same, but each guild tracks its own reputation and rank progression.",
   },
   {
     q: "Can I sell or transfer my reputation?",

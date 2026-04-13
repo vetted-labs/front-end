@@ -12,7 +12,7 @@ import { RankTierLadder } from "@/components/docs/demos/RankTierLadder";
 export const metadata: Metadata = {
   title: "Reputation & ranks",
   description:
-    "How reputation is earned, lost, and mapped to the five guild rank tiers and their reward multipliers.",
+    "How reputation is earned, lost, and mapped to guild rank tiers and reward multipliers.",
 };
 
 const TOC = [
@@ -36,7 +36,7 @@ export default function ReputationAndRanksPage() {
       ]}
       eyebrow="For experts · Economics"
       title="Reputation & ranks"
-      description="Reputation is the single most important number for an expert on Vetted. This page covers how it moves, how it maps to rank tiers, and how ranks unlock reward multipliers."
+      description="Reputation is the single most important number for an expert on Vetted. This page covers how it moves, how it maps to guild ranks and reward tiers, and how they unlock multipliers and permissions."
       lastUpdated="April 2026"
       badge={<ComplexityBadge level="intermediate" />}
       toc={TOC}
@@ -46,7 +46,7 @@ export default function ReputationAndRanksPage() {
           <><DocsGlossaryLink term="reputation">Reputation</DocsGlossaryLink> is a <strong>per-guild integer</strong> attached to your wallet. You can be Master in Engineering and Recruit in Security.</>,
           <>Earn from aligned votes (<strong>+10</strong>), successful endorsements (<strong>+20</strong>), governance participation.</>,
           <>Lose from misaligned votes (outside 1×<DocsGlossaryLink term="iqr-consensus">IQR</DocsGlossaryLink>), inactivity decay (<strong>−10/cycle</strong>), enforcement actions.</>,
-          <>Five <DocsGlossaryLink term="guild-rank">rank tiers</DocsGlossaryLink> map to reward multipliers: Recruit 1.0× → Master 2.0×.</>,
+          <>Five <DocsGlossaryLink term="guild-rank">guild ranks</DocsGlossaryLink> (Recruit → Master) govern permissions. Three reward tiers (Foundation 1.0×, Established 1.25×, Authority 1.5×) determine payout multipliers.</>,
           <>Reputation is <strong>non-transferable</strong>. Can't sell, delegate, or move between wallets.</>,
         ]}
       />
@@ -93,8 +93,8 @@ export default function ReputationAndRanksPage() {
       <p>Three sources of reputation loss:</p>
       <ul>
         <li>
-          <strong>Misaligned votes (−5 to −20).</strong> Mild, moderate, or
-          severe deviation from consensus triggers the corresponding penalty.
+          <strong>Misaligned votes (−20).</strong> Scoring more than
+          1×IQR from consensus triggers a severe deviation penalty.
           See the{" "}
           <a href="/docs/experts/commit-reveal-voting#alignment-tiers">
             alignment tier table
@@ -115,39 +115,42 @@ export default function ReputationAndRanksPage() {
       </ul>
 
       <DocsCallout kind="warning" title="Decay is real">
-        A Craftsman (2,000 rep) who stops reviewing for six cycles can drop
-        back to Apprentice. If you're going on leave, flag it to your guild —
-        some guilds grant grace periods for planned absences.
+        An Apprentice (1,000 rep) who stops reviewing for six cycles loses
+        60 reputation and can drop back to Recruit. If you're going on
+        leave, flag it to your guild — some guilds grant grace periods for
+        planned absences.
       </DocsCallout>
 
       <h2 id="rank-tiers">Rank tiers</h2>
       <p>
-        Reputation maps to five named rank tiers. Your rank is purely a
-        function of your current reputation score; there is no manual
-        promotion or demotion process.
+        Reputation maps to five named guild ranks (Recruit, Apprentice,
+        Craftsman, Officer, Master). Ranks determine guild permissions
+        and governance eligibility.
       </p>
       <RankTierLadder />
 
       <h2 id="multipliers">Reward multipliers</h2>
       <p>
-        Your rank determines the multiplier applied when voting rewards are
-        distributed. The reward pool for a finalized review is divided among
-        aligned experts in proportion to their weighted share:
+        Reward multipliers follow a three-tier system based on reputation
+        thresholds: Foundation (0–999 rep, 1.0×), Established (1,000–1,999
+        rep, 1.25×), and Authority (2,000+ rep, 1.5×). The reward pool for
+        a finalized review is divided among aligned experts in proportion
+        to their weighted share:
       </p>
       <p>
         <code>your_share = (your_weight × pool) / total_aligned_weight</code>
       </p>
       <p>
-        where <code>your_weight</code> is the rank multiplier (1.0×, 1.25×, and
-        so on). A Master-tier expert earns twice as much as a Recruit for the
-        same aligned vote on the same review, which is the primary economic
-        incentive to climb ranks.
+        An Authority-tier expert earns 1.5× what a Foundation-tier expert
+        earns for the same aligned vote. Officer and Master ranks share the
+        same 1.5× reward multiplier as Craftsman — the value of higher
+        ranks is in governance and moderation privileges.
       </p>
 
       <h2 id="per-guild">Reputation is per-guild</h2>
       <p>
-        Every guild tracks reputation independently. You can be Master-tier in
-        Engineering and Recruit-tier in Security at the same time — they're
+        Every guild tracks reputation independently. You can hold Master rank
+        in Engineering and Recruit rank in Security at the same time — they're
         separate counters attached to the same wallet.
       </p>
       <p>
@@ -179,8 +182,8 @@ export default function ReputationAndRanksPage() {
         points={[
           <>Reputation is per-guild — each guild tracks its own counter.</>,
           <>Non-transferable. Tied to your wallet permanently.</>,
-          <>Decay is real — 6 cycles of inactivity can demote a Craftsman back to Apprentice.</>,
-          <>Rank multiplier amplifies reward share: a Master earns 2× what a Recruit earns for the same aligned vote.</>,
+          <>Decay is real — 6 cycles of inactivity costs 60 reputation, which can cross tier boundaries.</>,
+          <>Reward multiplier caps at 1.5× (Authority tier, 2,000+ rep). Higher ranks unlock governance privileges, not additional multipliers.</>,
           <>Reputation loss and stake slashing are separate mechanics — misaligned unstaked votes cost rep but never touch VETD.</>,
         ]}
       />

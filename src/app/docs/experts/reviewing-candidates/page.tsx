@@ -40,7 +40,7 @@ export default function ReviewingCandidatesPage() {
     >
       <DocsTldr
         points={[
-          <>Budget <strong>15–20 minutes per application</strong>. Rushed reviews get flagged as mild deviations.</>,
+          <>Budget <strong>15–20 minutes per application</strong>. Rushed reviews risk misalignment with consensus.</>,
           <>Score against the rubric's band descriptions — <strong>not</strong> against the last candidate you saw.</>,
           <>Comments are surfaced to both other experts and the hiring company. Keep them specific, evidence-based, 2–4 sentences.</>,
           <>Abstain from reviews where you have any material relationship with the candidate. No platform enforcement — it's on you.</>,
@@ -86,7 +86,7 @@ export default function ReviewingCandidatesPage() {
 
       <DocsCallout kind="tip" title="Budget 15–20 minutes per application">
         Rushing reviews is the fastest way to miss subtle signal and get
-        classified as a mild deviator when consensus lands. Block time for
+        classified as misaligned when consensus lands. Block time for
         reviews the same way you'd block time for interviews.
       </DocsCallout>
 
@@ -171,7 +171,7 @@ export default function ReviewingCandidatesPage() {
         <li>
           <strong>Staying in the middle to avoid risk.</strong> Central-tendency
           bias is a thing. Clustering every score at 60 seems safe but actually
-          gets you flagged as a mild deviator when consensus lands at 30 or 90.
+          gets you flagged as misaligned when consensus lands at 30 or 90.
         </li>
         <li>
           <strong>Forgetting to comment on extreme scores.</strong> If you give
@@ -196,7 +196,7 @@ export default function ReviewingCandidatesPage() {
       <DocsKeyTakeaways
         points={[
           <>Fill in rubric scores <strong>before</strong> letting polish colour your read of the application.</>,
-          <>Use the whole 0–100 range. Central-tendency bias gets flagged as mild deviation.</>,
+          <>Use the whole 0–100 range. Central-tendency bias risks misalignment when consensus diverges.</>,
           <>Write a comment on any extreme score (below 20 or above 95). Unjustified outliers are the #1 post-reveal dispute source.</>,
           <>Abstain on conflicts of interest. Post-hoc COI findings are harder to appeal than self-reporting.</>,
           <>Comments reach the hiring company. Keep them professional — nothing you wouldn't say in a guild meeting.</>,

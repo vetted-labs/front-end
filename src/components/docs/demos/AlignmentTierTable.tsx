@@ -5,49 +5,31 @@ interface AlignmentRow {
   range: string;
   rep: string;
   slash: string;
-  color: "positive" | "warning" | "warning-mid" | "negative";
+  color: "positive" | "negative";
   example: string;
 }
 
 const ROWS: AlignmentRow[] = [
   {
     tier: "Aligned",
-    range: "≤ 1.0 × IQR",
+    range: "≤ 1.0 × IQR from median",
     rep: "+10",
     slash: "0%",
     color: "positive",
     example: "Your 78, consensus 80 → no penalty, full reward.",
   },
   {
-    tier: "Mild deviation",
-    range: "1.0 – 1.5 × IQR",
-    rep: "−5",
-    slash: "5%",
-    color: "warning",
-    example: "Your 88, consensus 80 → small hit, reduced reward.",
-  },
-  {
-    tier: "Moderate deviation",
-    range: "1.5 – 2.0 × IQR",
-    rep: "−10",
-    slash: "15%",
-    color: "warning-mid",
-    example: "Your 95, consensus 80 → notable penalty, no reward.",
-  },
-  {
-    tier: "Severe deviation",
-    range: "> 2.0 × IQR",
+    tier: "Misaligned",
+    range: "> 1.0 × IQR from median",
     rep: "−20",
     slash: "25%",
     color: "negative",
-    example: "Your 100, consensus 60 → max penalty, reputation loss.",
+    example: "Your 45, consensus 80 → max penalty, reputation loss.",
   },
 ];
 
 const COLOR_MAP: Record<AlignmentRow["color"], string> = {
   positive: "text-positive border-positive/40 bg-positive/5",
-  warning: "text-warning border-warning/40 bg-warning/5",
-  "warning-mid": "text-warning border-warning/50 bg-warning/10",
   negative: "text-negative border-negative/40 bg-negative/5",
 };
 

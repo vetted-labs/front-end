@@ -72,7 +72,7 @@ const PAGES: ExpertPage[] = [
     href: "/docs/experts/reputation-and-ranks",
     title: "Reputation & ranks",
     description:
-      "How reputation is earned, lost, and mapped to the five guild rank tiers and their reward multipliers.",
+      "How reputation is earned, lost, and mapped to guild ranks and reward tiers.",
     icon: TrendingUp,
     section: "Core workflows",
   },
@@ -88,7 +88,7 @@ const PAGES: ExpertPage[] = [
     href: "/docs/experts/slashing-and-accountability",
     title: "Slashing & accountability",
     description:
-      "The IQR-based math behind slashing, the four tiers, and how to appeal a slashing decision.",
+      "The IQR-based math behind slashing, alignment classification, and how to appeal a slashing decision.",
     icon: ShieldAlert,
     section: "Economics",
   },

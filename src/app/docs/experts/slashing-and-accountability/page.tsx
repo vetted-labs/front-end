@@ -12,14 +12,14 @@ import { AlignmentTierTable } from "@/components/docs/demos/AlignmentTierTable";
 export const metadata: Metadata = {
   title: "Slashing & accountability",
   description:
-    "The IQR-based math behind slashing, the four tiers, and how to appeal a slashing decision.",
+    "The IQR-based math behind slashing, the alignment classification, and how to appeal a slashing decision.",
 };
 
 const TOC = [
   { id: "what-slashing-is", title: "What slashing is", level: 2 as const },
   { id: "what-triggers-it", title: "What triggers slashing", level: 2 as const },
   { id: "the-math", title: "The math", level: 2 as const },
-  { id: "the-tiers", title: "The four tiers", level: 2 as const },
+  { id: "the-tiers", title: "Alignment classification", level: 2 as const },
   { id: "worked-example", title: "A worked example", level: 2 as const },
   { id: "appeals", title: "Appealing a slashing", level: 2 as const },
   { id: "protection", title: "How to protect yourself", level: 2 as const },
@@ -36,7 +36,7 @@ export default function SlashingPage() {
       ]}
       eyebrow="For experts · Economics"
       title="Slashing & accountability"
-      description="Slashing is the mechanism that gives expert reviews their economic weight. This page explains exactly when it triggers, how the penalty is calculated, and how to appeal if you think a slash was unfair."
+      description="Slashing is the mechanism that gives expert reviews their economic weight. This page explains when it triggers, how the 25% penalty is calculated, and how to appeal."
       lastUpdated="April 2026"
       badge={<ComplexityBadge level="advanced" />}
       toc={TOC}
@@ -44,7 +44,7 @@ export default function SlashingPage() {
       <DocsTldr
         points={[
           <><DocsGlossaryLink term="slashing">Slashing</DocsGlossaryLink> only applies to <DocsGlossaryLink term="stake">staked</DocsGlossaryLink> votes. Unstaked votes can cost reputation but never touch VETD.</>,
-          <>Triggered by severe misalignment (<strong>&gt;2×<DocsGlossaryLink term="iqr-consensus">IQR</DocsGlossaryLink></strong> from consensus) or a pattern of moderate deviations.</>,
+          <>Triggered by misalignment (<strong>&gt;1×<DocsGlossaryLink term="iqr-consensus">IQR</DocsGlossaryLink></strong> from consensus) or enforcement actions via guild governance.</>,
           <>Maximum penalty: <strong>25% of stake</strong> on a severe deviation. Not full forfeiture.</>,
           <>Slashed <DocsGlossaryLink term="vetd">VETD</DocsGlossaryLink> goes to the guild treasury, funding future reward pools.</>,
           <>Decisions are deterministic (no human judgment) but <strong>appealable</strong> once per event via guild governance.</>,
@@ -74,19 +74,13 @@ export default function SlashingPage() {
       </p>
 
       <h2 id="what-triggers-it">What triggers slashing</h2>
-      <p>Three specific conditions can trigger a slash:</p>
+      <p>Two conditions can trigger a slash:</p>
       <ul>
         <li>
-          <strong>Severe misalignment from consensus.</strong> Your revealed
-          score lands more than 2 × IQR from the median of filtered scores.
-          This is the main trigger and accounts for the vast majority of
-          real-world slashes.
-        </li>
-        <li>
-          <strong>Repeated moderate deviation.</strong> A single moderate
-          deviation doesn't slash, but a pattern of them across three
-          consecutive finalized reviews triggers a one-time slash and a
-          reputation review.
+          <strong>Misalignment from consensus.</strong> Your revealed
+          score lands more than 1 × IQR from the median. This is the
+          main trigger and accounts for the vast majority of real-world
+          slashes.
         </li>
         <li>
           <strong>Enforcement action following a governance vote.</strong> If
@@ -113,7 +107,7 @@ export default function SlashingPage() {
         net neutral for the guild as a whole.
       </p>
 
-      <h2 id="the-tiers">The four tiers</h2>
+      <h2 id="the-tiers">Alignment classification</h2>
       <AlignmentTierTable />
       <p>
         The asymmetry between reward and penalty is deliberate. Aligned votes
@@ -135,9 +129,9 @@ export default function SlashingPage() {
         <li>You: 45</li>
       </ul>
       <p>
-        IQR calculation on the five scores gives <code>Q1 = 76.5</code>,
-        <code> Q3 = 83</code>, <code>IQR = 6.5</code>. Your 45 is about 5 × IQR
-        below Q1, so you're classified as a severe deviation.
+        The median of the five scores is 78 and the IQR is 6.5.
+        Your 45 is about 5×IQR below the median — well beyond the 1×IQR
+        threshold — so you're classified as misaligned.
       </p>
       <p>Result:</p>
       <ul>

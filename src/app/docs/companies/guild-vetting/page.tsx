@@ -42,7 +42,7 @@ export default function GuildVettingPage() {
       <DocsTldr
         points={[
           <>Expert panel + <DocsGlossaryLink term="guild">guild</DocsGlossaryLink> <DocsGlossaryLink term="rubric">rubric</DocsGlossaryLink> + <DocsGlossaryLink term="iqr-consensus">IQR consensus</DocsGlossaryLink> → ranked shortlist with scores 0–100.</>,
-          <>Score bands: <strong>85+ strong, 70–85 positive, 55–70 ambiguous, &lt;55 weak</strong>.</>,
+          <>Candidates scoring <strong>≥60 are approved</strong> by the guild. Higher scores indicate stronger consensus among reviewers.</>,
           <><DocsGlossaryLink term="endorsement">Endorsements</DocsGlossaryLink> are a <strong>separate signal</strong> from consensus — experts staking <DocsGlossaryLink term="vetd">VETD</DocsGlossaryLink> on specific candidates.</>,
           <>Your hiring outcomes feed back into the expert panel's calibration — the loop tightens over time.</>,
         ]}
@@ -107,28 +107,19 @@ export default function GuildVettingPage() {
       <h2 id="what-the-score-means">What the consensus score actually means</h2>
       <p>
         Each candidate ends up with a single consensus score on a 0–100
-        scale. That score is not an average — it's the statistical median of
-        expert votes after outliers are filtered out. Ranges to know:
+        scale. That score is not a raw average — outlier votes are first
+        filtered out using IQR statistics, and then the average of the
+        remaining scores becomes the consensus. The guild approval
+        threshold is <strong>60</strong> — candidates at or above this score
+        are approved and appear on your shortlist.
       </p>
-      <ul>
-        <li>
-          <strong>85+ :</strong> Strong positive signal across the panel. Very
-          low false-positive rate at this level. Expected to be a small
-          fraction of applications.
-        </li>
-        <li>
-          <strong>70–85 :</strong> Positive but mixed. Worth interviewing.
-          Often the bulk of a healthy shortlist.
-        </li>
-        <li>
-          <strong>55–70 :</strong> Ambiguous. Some reviewers were enthusiastic,
-          others weren't. Read the feedback before deciding.
-        </li>
-        <li>
-          <strong>Below 55 :</strong> Weak signal. These candidates rarely
-          make it onto the final shortlist the guild presents to the company.
-        </li>
-      </ul>
+      <p>
+        Within your shortlist, higher scores indicate stronger consensus
+        among reviewers. Use score differences directionally — a candidate
+        at 82 versus 76 tells you something, but don't over-fit to small
+        differences. Read the aggregated expert feedback for candidates
+        near the threshold.
+      </p>
       <p>
         The scores are relative to the guild's rubric, not to your personal
         bar. A guild with a very high baseline (e.g. the Security guild) will
@@ -178,8 +169,9 @@ export default function GuildVettingPage() {
         </li>
         <li>
           <strong>Read the aggregated feedback for borderline candidates.</strong>{" "}
-          The 55–70 range is exactly where feedback is most useful — experts
-          often wrote specific observations that explain their scores.
+          Candidates near the approval threshold are exactly where feedback
+          is most useful — experts often wrote specific observations that
+          explain their scores.
         </li>
         <li>
           <strong>Interview broadly from the top of the shortlist.</strong> A
@@ -207,7 +199,7 @@ export default function GuildVettingPage() {
       <DocsKeyTakeaways
         points={[
           <>Don't re-screen on resumes on the shortlist — that discards the whole value of the vetting.</>,
-          <>Read the aggregated feedback for borderline candidates in the 55–70 range. That's where it matters most.</>,
+          <>Read the aggregated feedback for candidates near the approval threshold. That's where it matters most.</>,
           <>Interview broadly from the top — 82 and 86 are not meaningfully different signals.</>,
           <>Endorsements are orthogonal to consensus. High score + strong endorsements is the safest combination.</>,
           <>Marking outcomes (hired/rejected) tightens the panel's calibration for your next job.</>,

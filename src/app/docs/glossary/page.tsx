@@ -40,7 +40,7 @@ const CORE_TERMS: Term[] = [
     id: "endorsement",
     term: "Endorsement",
     definition:
-      "An expert's public bet on a candidate, backed by staked VETD tokens. Unlike votes, endorsements are visible to other experts immediately. Successful endorsements (candidate is hired) return the stake plus reputation; failed endorsements forfeit the stake.",
+      "An expert's public bet on a candidate, backed by staked VETD tokens. Unlike votes, endorsements are visible to other experts immediately. Successful endorsements (candidate is hired) return the stake plus reputation (+20). Failed endorsements have 10% of the stake slashed, the remaining 90% returned, and incur a reputation penalty (−20).",
   },
   {
     id: "rubric",
@@ -73,13 +73,13 @@ const VOTING_TERMS: Term[] = [
     id: "iqr-consensus",
     term: "IQR consensus",
     definition:
-      "The method used to calculate a candidate's final score from multiple expert votes. Outliers more than 1.5× the interquartile range from the median are discarded, and the median of the remaining scores becomes the consensus. This prevents a single extreme vote from swinging the result.",
+      "The method used to calculate a candidate's final score from multiple expert votes. An inclusion band is built around the median (median ± 0.75×IQR), scores outside this band are excluded, and the average of the remaining scores becomes the consensus. This prevents a single extreme vote from swinging the result.",
   },
   {
     id: "alignment-tier",
     term: "Alignment tier",
     definition:
-      "How close an expert's revealed score is to the consensus, measured in IQR units. Tiers are Aligned (under 1 IQR), Mild (1–1.5), Moderate (1.5–2), and Severe (over 2). Each tier maps to a specific reputation and reward change.",
+      "How close an expert's revealed score is to the consensus, measured in IQR units. There are two classifications: Aligned (within 1×IQR of median, +10 rep, 0% slash) and Misaligned (beyond 1×IQR, −20 rep, 25% slash).",
   },
 ];
 
@@ -94,7 +94,7 @@ const REP_TERMS: Term[] = [
     id: "guild-rank",
     term: "Guild rank",
     definition:
-      "An expert's standing within a specific guild, derived from their reputation. Ranks are Recruit, Apprentice, Craftsman, Officer, and Master. Higher ranks unlock larger reward multipliers.",
+      "An expert's standing within a specific guild, derived from their reputation. Ranks are Recruit, Apprentice, Craftsman, Officer, and Master. Higher ranks unlock governance and moderation privileges. Reward multipliers follow a separate three-tier system (Foundation 1.0×, Established 1.25×, Authority 1.5×).",
   },
   {
     id: "slashing",
@@ -112,7 +112,7 @@ const REP_TERMS: Term[] = [
     id: "cooldown",
     term: "Unstake cooldown",
     definition:
-      "A seven-day waiting period between requesting an unstake and being able to withdraw the VETD. Prevents flash-loan attacks and rapid exits immediately before adverse outcomes.",
+      "A waiting period (currently seven days) between requesting an unstake and being able to withdraw the VETD. You can cancel the unstake to re-stake your tokens, but you cannot shorten the timer. Prevents flash-loan attacks and rapid exits immediately before adverse outcomes.",
   },
 ];
 

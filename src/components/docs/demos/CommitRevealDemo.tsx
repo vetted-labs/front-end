@@ -63,16 +63,15 @@ export function CommitRevealDemo() {
   // Tiny deterministic "hash" preview for the demo — not a real hash.
   const fakeHash = `0x${Math.abs(score * 8192 + 0xa91).toString(16).padStart(4, "0")}…${Math.abs((score * 17) ^ 0x42).toString(16).padStart(4, "0")}`;
 
-  // Alignment tier calculation against mock median
+  // Alignment classification against mock median — binary: aligned or misaligned
+  // Mirrors backend voting-consensus.service.ts getSlashingTier(): iqrMultiple <= 1 = aligned, else misaligned
   const distance = Math.abs(score - MEDIAN_OF_OTHERS);
+  const mockIqr = 8; // representative IQR for the demo panel
+  const iqrMultiple = mockIqr > 0 ? distance / mockIqr : 0;
   const tier =
-    distance <= 5
+    iqrMultiple <= 1
       ? { label: "Aligned", color: "text-positive", bg: "bg-positive/10", border: "border-positive/40", rep: "+10", slash: "0%" }
-      : distance <= 10
-      ? { label: "Mild deviation", color: "text-warning", bg: "bg-warning/10", border: "border-warning/40", rep: "−5", slash: "5%" }
-      : distance <= 15
-      ? { label: "Moderate deviation", color: "text-warning", bg: "bg-warning/10", border: "border-warning/40", rep: "−10", slash: "15%" }
-      : { label: "Severe deviation", color: "text-negative", bg: "bg-negative/10", border: "border-negative/40", rep: "−20", slash: "25%" };
+      : { label: "Misaligned", color: "text-negative", bg: "bg-negative/10", border: "border-negative/40", rep: "−20", slash: "25%" };
 
   return (
     <div className="my-8 overflow-hidden rounded-xl border border-border bg-card">

@@ -21,6 +21,7 @@ const TOC = [
   { id: "before-you-start", title: "Before you start", level: 2 as const },
   { id: "the-five-steps", title: "The five steps", level: 2 as const },
   { id: "the-vetting-pipeline", title: "The vetting pipeline", level: 2 as const },
+  { id: "your-dashboard", title: "Your dashboard", level: 2 as const },
 ];
 
 export default function CandidateQuickstartPage() {
@@ -34,7 +35,7 @@ export default function CandidateQuickstartPage() {
       ]}
       eyebrow="For candidates · Quickstart"
       title="Your first 10 minutes as a candidate"
-      description="Sign up, fill in a minimal profile, and submit your first application. Most candidates finish this flow in under ten minutes."
+      description="A guided walkthrough from signup to your first submitted application. Most candidates finish this flow in under ten minutes — no wallet or crypto knowledge needed."
       lastUpdated="April 2026"
       badge={<ComplexityBadge level="beginner" />}
       toc={TOC}
@@ -60,36 +61,32 @@ export default function CandidateQuickstartPage() {
       />
 
       <h2 id="before-you-start">Before you start</h2>
+      <p>You only need two things:</p>
       <ul>
         <li>
-          <strong>A work email.</strong> You'll sign in with email and
-          password, or with LinkedIn if you prefer. No wallet needed —
-          nothing about the candidate side of Vetted touches the blockchain.
+          <strong>An email address</strong> (or a LinkedIn account for
+          one-click signup).
         </li>
         <li>
-          <strong>Your LinkedIn URL.</strong> Required during signup as a
-          verification of your professional background.
-        </li>
-        <li>
-          <strong>A resume or portfolio link.</strong> Optional at signup,
-          but reviewers weight it heavily, so adding one is the single
-          biggest thing you can do to improve your applications.
+          <strong>A resume or portfolio link</strong> — optional at signup,
+          but reviewers weight it heavily.
         </li>
       </ul>
-      <DocsCallout kind="note" title="You never need crypto on the candidate side">
+      <DocsCallout kind="note" title="No crypto, no wallet — ever">
         Vetted is built on an on-chain vetting protocol, but candidates
-        don't see or use any of it directly. The on-chain activity is all
-        on the expert reviewers' side — you see only application status
-        and feedback.
+        don't see or use any of it. The blockchain activity is entirely
+        on the expert reviewers' side. You use a standard email/password
+        login throughout.
       </DocsCallout>
 
       <h2 id="the-five-steps">The five steps</h2>
 
       <h3>Step 1 — Sign up</h3>
       <p>
-        From the home page, click <strong>Get vetted</strong> or go to{" "}
-        <code>/auth/signup?type=candidate</code>. You have two signup options — pick
-        whichever is faster for you.
+        Go to the home page and click <strong>Get vetted</strong>, or navigate
+        directly to <code>/auth/signup</code>. You'll see two tabs at the
+        top: <strong>Job Seeker</strong> and <strong>Employer</strong>. Make
+        sure <strong>Job Seeker</strong> is selected.
       </p>
       <DocsTabs
         tabs={[
@@ -97,18 +94,20 @@ export default function CandidateQuickstartPage() {
             label: "Email & password",
             content: (
               <>
-                <p>Fill in:</p>
+                <p>Fill in the signup form:</p>
                 <ul className="my-2 list-disc pl-6 text-[14.5px] [&_li]:my-1">
-                  <li>Full name</li>
-                  <li>Email address</li>
-                  <li>Password (6+ characters)</li>
-                  <li>Headline — your current role or specialty</li>
-                  <li>LinkedIn URL (required for background verification)</li>
-                  <li>Experience level (Junior / Mid / Senior / Lead)</li>
+                  <li><strong>Full name</strong></li>
+                  <li><strong>Headline</strong> — your current role or specialty (e.g. "Senior Backend Engineer")</li>
+                  <li><strong>LinkedIn URL</strong> — required; experts use it to verify your background</li>
+                  <li><strong>GitHub URL</strong> and <strong>Portfolio URL</strong> — optional, can be added later</li>
+                  <li><strong>Email</strong></li>
+                  <li><strong>Password</strong> (6+ characters)</li>
+                  <li><strong>Experience level</strong> — dropdown: Junior (0–2 yrs), Mid-Level (2–5), Senior (5–10), Lead/Principal (10+)</li>
+                  <li><strong>Terms checkbox</strong> — required to proceed</li>
                 </ul>
                 <p className="mt-3 text-[14px] text-muted-foreground">
-                  You can add GitHub, portfolio URL, and phone later from the profile
-                  editor.
+                  Click <strong>Create Account</strong>. You'll be redirected
+                  straight to your candidate dashboard.
                 </p>
               </>
             ),
@@ -118,9 +117,11 @@ export default function CandidateQuickstartPage() {
             content: (
               <>
                 <p>
-                  One-click signup. The OAuth flow imports your name, current role,
-                  LinkedIn URL, and experience level automatically from LinkedIn. You'll
-                  be asked to confirm and add a password for future email logins.
+                  Click the <strong>Continue with LinkedIn</strong> button.
+                  The OAuth flow imports your name, current role, LinkedIn URL,
+                  and experience level automatically. You'll be asked to
+                  confirm the details and set a password for future email
+                  logins.
                 </p>
                 <p className="mt-3 text-[14px] text-muted-foreground">
                   Fastest option if you already have a complete LinkedIn profile.
@@ -139,14 +140,22 @@ export default function CandidateQuickstartPage() {
             description: (
               <>
                 <p>
-                  Navigate to <code>/candidate/profile</code>. The profile
-                  editor opens in edit mode automatically until you hit
-                  100% completion. Add your bio, location, phone, and
-                  social links (LinkedIn, GitHub, portfolio).
+                  After signup you land on your dashboard. You'll see a{" "}
+                  <strong>profile completion ring</strong> showing your
+                  percentage. Click <strong>Edit Profile</strong> or go to{" "}
+                  <code>/candidate/profile</code>.
                 </p>
+                <p>The profile editor has these sections:</p>
+                <ul className="my-2 list-disc pl-6 text-[14.5px] [&_li]:my-1">
+                  <li><strong>Personal info</strong> — name, headline, bio, phone, experience level</li>
+                  <li><strong>Resume</strong> — drag-and-drop upload area (PDF or DOCX)</li>
+                  <li><strong>Skills</strong> — type a skill and press Enter to add it as a tag</li>
+                  <li><strong>Work history</strong> — add entries with company, role, and dates</li>
+                  <li><strong>Social links</strong> — LinkedIn, GitHub, portfolio URLs</li>
+                </ul>
                 <p>
-                  Upload a PDF or DOCX resume if you have one — the resume
-                  is one of the most-clicked links during expert review.
+                  Hit <strong>Save Changes</strong> when done. The completion
+                  ring updates immediately.
                 </p>
               </>
             ),
@@ -156,47 +165,52 @@ export default function CandidateQuickstartPage() {
             description: (
               <>
                 <p>
-                  Open <strong>Browse jobs</strong> from the sidebar. Filter
-                  by <DocsGlossaryLink term="guild">guild</DocsGlossaryLink>, job type, location type, or keyword. As a
-                  signed-in candidate, each job card shows a personalised
-                  match score so you can prioritise the roles where your
-                  profile is strongest.
+                  Click <strong>Browse jobs</strong> in the sidebar, or go
+                  to <code>/browse/jobs</code>. You'll see a search bar at
+                  the top and filter pills below it:
+                </p>
+                <ul className="my-2 list-disc pl-6 text-[14.5px] [&_li]:my-1">
+                  <li><strong>Guild filter</strong> — Engineering, Design, Marketing, etc.</li>
+                  <li><strong>Job type</strong> — Full-time, Part-time, Contract, Freelance</li>
+                  <li><strong>Location</strong> — Remote, Onsite, Hybrid</li>
+                  <li><strong>Sort</strong> — Newest or Salary: High to Low</li>
+                </ul>
+                <p>
+                  Each job card shows the company, title, location, salary
+                  range, and a <strong>match score</strong> showing how well
+                  your profile fits the role.
                 </p>
               </>
             ),
           },
           {
-            title: "Open a job and review its screening questions",
+            title: "Open a job and read the screening questions",
             description: (
               <>
                 <p>
-                  Click any job to open the detail view. You'll see the
-                  full description, requirements, skills, salary range,
-                  company profile, and — importantly — the screening
-                  questions the company added when they posted.
-                </p>
-                <p>
-                  Read them before you hit <strong>Apply</strong>. The
-                  reviewing guild scores your answers to those questions
-                  against the guild's rubric, so putting real thought into
-                  each answer is how you stand out.
+                  Click any job card to open its detail page. You'll see the
+                  full description, requirements, skills, and — most
+                  importantly — the <strong>screening questions</strong> the
+                  company wrote. These are what the expert guild scores you
+                  on, so read them carefully before clicking{" "}
+                  <strong>Apply</strong>.
                 </p>
               </>
             ),
           },
           {
-            title: "Submit your application",
+            title: "Answer the questions and submit",
             description: (
               <>
                 <p>
-                  Click <strong>Apply</strong>. The application modal opens
-                  with your profile details auto-filled. Answer every
-                  screening question, add an optional cover letter, and
-                  submit. The form auto-saves as you type.
+                  Click <strong>Apply</strong>. A modal opens with your
+                  profile details pre-filled. Answer every screening question
+                  — the form auto-saves as you type. Add an optional cover
+                  letter if you want.
                 </p>
                 <p>
-                  Your application lands in the reviewing guild's queue
-                  immediately. You can track it from{" "}
+                  Hit <strong>Submit</strong>. Your application enters the
+                  guild's review queue immediately. Track it from{" "}
                   <code>/candidate/applications</code>.
                 </p>
               </>
@@ -208,45 +222,71 @@ export default function CandidateQuickstartPage() {
       <h2 id="the-vetting-pipeline">The vetting pipeline</h2>
       <p>
         After you submit, your application walks through a five-stage
-        pipeline. You can see which stage you're in on the application
-        tracker page.
+        pipeline. You can see which stage you're in on the applications page
+        — each application shows a visual pipeline with colored dots for
+        completed, active, and upcoming stages.
       </p>
       <ol>
         <li>
-          <strong>Applied.</strong> We received your application. It's
-          queued for expert review.
+          <strong>Applied.</strong> Your application is queued for expert
+          review. Status dot is blue.
         </li>
         <li>
           <strong>Expert review.</strong> Guild experts are scoring your
-          application against the rubric. This typically takes 2–5 days.
+          answers against the rubric. Typically 2–5 days. Status dot
+          pulses while active.
         </li>
         <li>
-          <strong>Company review.</strong> The company has received the
-          shortlist from the guild and is reading through it.
+          <strong>Company review.</strong> The company received the
+          ranked shortlist and is reading through it.
         </li>
         <li>
-          <strong>Interview.</strong> The company has moved you forward to
-          their own interview process.
+          <strong>Interview.</strong> The company moved you forward to
+          their interview process.
         </li>
         <li>
-          <strong>Offer.</strong> The company has extended an offer — or
-          rejected you with optional feedback visible in the tracker.
+          <strong>Offer.</strong> You received an offer — or a rejection
+          with optional feedback visible in the tracker.
         </li>
       </ol>
 
+      <h2 id="your-dashboard">Your dashboard</h2>
+      <p>
+        Your dashboard at <code>/candidate/dashboard</code> shows everything
+        at a glance:
+      </p>
+      <ul>
+        <li>
+          <strong>Stats cards</strong> — Total Applied, Under Review,
+          Interviews, and Offers.
+        </li>
+        <li>
+          <strong>Recent applications</strong> — each with its pipeline
+          status and a link to the job.
+        </li>
+        <li>
+          <strong>Messages</strong> — conversations with companies,
+          including meeting scheduling.
+        </li>
+        <li>
+          <strong>Guild applications</strong> — if you applied to any
+          guilds (optional for candidates).
+        </li>
+      </ul>
+
       <DocsCallout kind="tip" title="You can withdraw a pending application">
-        If you change your mind before expert review starts, you can
-        withdraw from the application tracker. Once the review has begun,
-        withdrawal is still available but the guild's review record stays
-        on file.
+        On the applications page, pending applications show a{" "}
+        <strong>Withdraw</strong> button. Clicking it opens a confirmation
+        dialog. Once expert review has begun, withdrawal is still available
+        but the guild's review record stays on file.
       </DocsCallout>
 
       <DocsKeyTakeaways
         points={[
           <>No crypto on the candidate side — email or LinkedIn OAuth, no wallet.</>,
           <>Screening answers carry more weight than your resume during expert review.</>,
-          <>You can withdraw a pending application at any point before finalization.</>,
-          <>Match scores on the browse page rank jobs by fit with your profile.</>,
+          <>Match scores on the browse page rank jobs by fit — use them to prioritise.</>,
+          <>The applications page shows a visual pipeline for each application with colored status dots.</>,
           <>Typical review turnaround is 2–5 days; plan applications in batches.</>,
         ]}
       />

@@ -36,7 +36,7 @@ export default function GovernancePage() {
       ]}
       eyebrow="For experts · Advanced"
       title="Governance & proposals"
-      description="Propose and vote on changes to how Vetted works. Your vote weight scales with your reputation rank — this page explains how to create proposals, how votes are counted, and what it takes to pass."
+      description="Propose and vote on changes to how Vetted works. Your vote weight scales with your reputation (max 3.0, or 4.5 for Guild Masters) — this page explains proposals, voting, and thresholds."
       lastUpdated="April 2026"
       badge={<ComplexityBadge level="advanced" />}
       toc={TOC}
@@ -44,9 +44,9 @@ export default function GovernancePage() {
       <DocsTldr
         points={[
           <>Governance has two levels: <strong>guild-level</strong> (affects one guild) and <strong>protocol-level</strong> (all guilds).</>,
-          <>Vote weight is linear: <code>1 + (<DocsGlossaryLink term="reputation">reputation</DocsGlossaryLink> / 1000)</code>, capped at <strong>20</strong> for any single voter.</>,
+          <>Vote weight formula: <code>1 × (1 + min(reputation / 1000, 2.0))</code>, giving a range of <strong>1.0 to 3.0</strong>. Guild Masters get a 1.5× bonus (max 4.5).</>,
           <>A proposal passes only when <strong>both</strong> quorum and approval thresholds are met.</>,
-          <>Votes are <strong>immutable</strong> once cast on-chain — you cannot change your mind.</>,
+          <>You can change your vote while the voting window is still open by voting again.</>,
         ]}
       />
 
@@ -114,22 +114,22 @@ export default function GovernancePage() {
         proposal is being voted:
       </p>
       <p>
-        <code>vote_weight = 1 + (reputation / 1000)</code>
+        <code>vote_weight = 1 × (1 + min(reputation / 1000, 2.0))</code>
       </p>
       <p>
-        That means a Recruit-tier expert has a weight of ~1, while a Master-
-        tier expert with 15,000 rep has a weight of 16. The slope is
-        deliberately linear — one extra unit of reputation always buys the
-        same extra unit of governance weight, up to the cap. This gives
-        long-term participants meaningful voice without making governance a
-        plutocracy where you can't be heard until you've been there for
-        years.
+        That means a new expert with 0 reputation has a weight of 1.0,
+        while an expert at 2,000+ reputation hits the cap at 3.0. Guild
+        Masters receive an additional 1.5× multiplier, giving them a
+        maximum weight of 4.5. The slope is deliberately linear — one
+        extra unit of reputation always buys the same extra unit of
+        governance weight, up to the reputation multiplier cap of 2.0.
+        This gives long-term participants meaningful voice without making
+        governance a plutocracy.
       </p>
       <DocsCallout kind="note">
-        Vote weight is capped at 20 for any individual. Experts with very
-        high reputation still hit the cap — the assumption is that no single
-        voter should be able to swing a contested proposal single-handedly,
-        however well-earned their reputation.
+        The reputation multiplier caps at 2.0 (reached at 2,000 reputation),
+        giving a maximum vote weight of 3.0 for standard experts or 4.5 for
+        Guild Masters. No single voter can dominate a contested proposal.
       </DocsCallout>
 
       <h2 id="creating">Creating a proposal</h2>
@@ -184,14 +184,15 @@ export default function GovernancePage() {
           <strong>Against.</strong> Your weight counts toward rejecting.
         </li>
         <li>
-          <strong>Abstain.</strong> Counts toward quorum but not toward the
-          approval calculation.
+          <strong>Abstain.</strong> Does not count toward quorum or the
+          approval calculation. Use when you want to signal engagement
+          without taking a side.
         </li>
       </ul>
       <p>
-        Votes are submitted on-chain and are immutable once confirmed — you
-        cannot change your vote after the fact. Comments, however, are
-        editable until the voting window closes.
+        Votes are recorded on-chain. You can change your vote while the
+        voting window is still open by casting a new vote, which replaces
+        the previous one. Comments are editable until the window closes.
       </p>
 
       <h2 id="quorum">Quorum and approval thresholds</h2>
@@ -201,8 +202,9 @@ export default function GovernancePage() {
       </p>
       <ol>
         <li>
-          <strong>Quorum met.</strong> Total vote weight (for + against +
-          abstain) exceeds the proposal's configured quorum. This prevents a
+          <strong>Quorum met.</strong> Total vote weight of{" "}
+          <strong>for + against</strong> (abstain does not count) exceeds
+          the proposal's configured quorum. This prevents a
           tiny minority from passing changes when most of the guild is
           offline.
         </li>
@@ -233,50 +235,56 @@ export default function GovernancePage() {
 
       <h3>Sample vote weights</h3>
       <p>
-        Here's how the linear weight formula plays out across the five rank tiers. The cap at 20 means even a Master-tier expert at ~15,000 rep hits the ceiling at 16 — and anyone beyond that stays at 20.
+        Here's how the weight formula plays out at different reputation levels.
       </p>
       <table>
         <thead>
           <tr>
-            <th>Rank</th>
             <th>Reputation</th>
+            <th>Rep multiplier</th>
             <th>Vote weight</th>
+            <th>Typical profile</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Recruit</td>
-            <td>0 – 999</td>
-            <td>1.0× — 2.0×</td>
+            <td>0</td>
+            <td>0.0</td>
+            <td>1.0</td>
+            <td>New participant</td>
           </tr>
           <tr>
+            <td>500</td>
+            <td>0.5</td>
+            <td>1.5</td>
+            <td>Active Recruit</td>
+          </tr>
+          <tr>
+            <td>1,000</td>
+            <td>1.0</td>
+            <td>2.0</td>
             <td>Apprentice</td>
-            <td>1,000 – 1,999</td>
-            <td>2.0× — 3.0×</td>
           </tr>
           <tr>
-            <td>Craftsman</td>
-            <td>2,000 – 4,999</td>
-            <td>3.0× — 6.0×</td>
+            <td>2,000+</td>
+            <td>2.0 (capped)</td>
+            <td>3.0</td>
+            <td>Craftsman / Officer</td>
           </tr>
           <tr>
-            <td>Officer</td>
-            <td>5,000 – 9,999</td>
-            <td>6.0× — 11.0×</td>
-          </tr>
-          <tr>
-            <td>Master</td>
-            <td>10,000+</td>
-            <td>11.0× — 20× (capped)</td>
+            <td>2,000+ (Guild Master)</td>
+            <td>2.0 + 1.5× role bonus</td>
+            <td>4.5</td>
+            <td>Elected Guild Master</td>
           </tr>
         </tbody>
       </table>
 
       <DocsKeyTakeaways
         points={[
-          <>Vote weight scales linearly with reputation, capped at 20 — no single voter can dominate contested proposals.</>,
+          <>Vote weight scales linearly with reputation, capped at 3.0 (4.5 for Guild Masters) — no single voter can dominate contested proposals.</>,
           <>Quorum failure ≠ rejection. Quorum failure means resubmit with a lower threshold or longer window.</>,
-          <>Votes are immutable once cast — read the proposal carefully before confirming.</>,
+          <>You can change your vote while the window is open, but read the proposal carefully before casting.</>,
           <>Use 3-day windows for clean parameter tweaks and 7-day windows for changes that need discussion.</>,
           <>Don't resubmit a failed proposal unchanged. Address the objections first.</>,
         ]}

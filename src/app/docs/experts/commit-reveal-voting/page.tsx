@@ -47,8 +47,8 @@ export default function CommitRevealPage() {
         points={[
           <><DocsGlossaryLink term="commit-reveal">Commit-reveal</DocsGlossaryLink> is a two-phase voting protocol that hides scores until all reviewers have committed, preventing anchoring and herding bias.</>,
           <>Phase 1: you submit a <DocsGlossaryLink term="hash">hash</DocsGlossaryLink> of <em>(score + <DocsGlossaryLink term="nonce">nonce</DocsGlossaryLink>)</em> on-chain. Phase 2: you reveal the actual score; the chain verifies it matches.</>,
-          <>Consensus is calculated with an <DocsGlossaryLink term="iqr-consensus">IQR filter</DocsGlossaryLink> — outliers beyond 1.5×IQR are discarded, and the median of the rest becomes the final score.</>,
-          <>Your alignment with consensus earns or costs <DocsGlossaryLink term="reputation">reputation</DocsGlossaryLink>: +10 aligned, −5 mild, −10 moderate, −20 severe.</>,
+          <>Consensus is calculated with an <DocsGlossaryLink term="iqr-consensus">IQR filter</DocsGlossaryLink> — scores outside the band <code>[median − 0.75×IQR, median + 0.75×IQR]</code> are excluded, and the average of the rest becomes the final score.</>,
+          <>Your alignment with consensus earns or costs <DocsGlossaryLink term="reputation">reputation</DocsGlossaryLink>: +10 if within 1×IQR of median (aligned), −20 if beyond (misaligned).</>,
         ]}
       />
 
@@ -155,7 +155,8 @@ await vettedContract.reveal(applicationId, score, nonce);
         When every expert has revealed (or the reveal window expires),
         finalization runs. The backend gathers all revealed scores, filters
         outliers using interquartile-range math, computes the consensus
-        median, and classifies each expert's alignment.
+        score (average of included scores), and classifies each expert's
+        alignment.
       </p>
 
       <h2 id="try-it">Try it yourself</h2>
@@ -185,26 +186,27 @@ await vettedContract.reveal(applicationId, score, nonce);
           <code>IQR = Q3 − Q1</code>).
         </li>
         <li>
-          Discard any score more than <code>1.5 × IQR</code> below{" "}
-          <code>Q1</code> or above <code>Q3</code>.
+          Build an inclusion band around the median:{" "}
+          <code>[median − 0.75 × IQR, median + 0.75 × IQR]</code>.
+          Scores outside this band are excluded.
         </li>
         <li>
-          The consensus score is the <strong>median</strong> of the remaining
+          The consensus score is the <strong>average</strong> of the remaining
           scores.
         </li>
       </ol>
       <p>
-        Using median-of-filtered rather than mean-of-everything means one wild
-        score (either honest mistake or bad-faith) cannot swing the consensus
-        away from where the bulk of experts landed. It also means consensus is
-        stable under small changes in reviewer set, which makes reputation
-        outcomes feel more fair over time.
+        Using the average of the filtered set rather than a raw average of
+        everything means one wild score (either honest mistake or bad-faith)
+        cannot swing the consensus away from where the bulk of experts
+        landed. The IQR filter excludes outliers first, then the average
+        of the remaining scores gives a stable consensus.
       </p>
 
       <h2 id="alignment-tiers">Alignment tiers</h2>
       <p>
         Your reputation change is determined by how far your score landed from
-        the consensus, measured in IQR units. Four tiers:
+        the consensus, measured in IQR units. Two tiers:
       </p>
       <AlignmentTierTable />
       <p>
@@ -239,8 +241,8 @@ await vettedContract.reveal(applicationId, score, nonce);
           <>Commit-reveal hides scores until everyone has committed — this is how you prevent anchoring and vote-switching.</>,
           <>The hash you commit is immutable on-chain; you cannot edit your vote after committing, period.</>,
           <>Your nonce lives only in browser local storage. Lose it = lose the ability to reveal that vote.</>,
-          <>Consensus uses <strong>IQR filtering</strong> (discard outliers beyond 1.5×IQR) then takes the median of what's left. Not a simple average.</>,
-          <>Alignment tiers: ≤1×IQR from consensus = aligned (+10 rep). &gt;2×IQR = severe deviation (−20 rep, up to 25% stake slashed).</>,
+          <>Consensus uses <strong>IQR filtering</strong> (inclusion band: median ± 0.75×IQR) then takes the average of the remaining scores.</>,
+          <>Binary alignment: ≤1×IQR from consensus = aligned (+10 rep). &gt;1×IQR = misaligned (−20 rep, up to 25% stake slashed).</>,
           <>Staked votes amplify both sides: bigger reward on alignment, real money slashed on severe misalignment.</>,
         ]}
       />
@@ -255,7 +257,7 @@ await vettedContract.reveal(applicationId, score, nonce);
           },
           {
             title: "Slashing deep-dive",
-            description: "The IQR math, the four penalty tiers, and how to appeal a slashing decision.",
+            description: "The IQR math, alignment classification, and how to appeal a slashing decision.",
             href: "/docs/experts/slashing-and-accountability",
             icon: ShieldAlert,
           },

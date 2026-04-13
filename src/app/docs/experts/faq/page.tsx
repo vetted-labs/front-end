@@ -57,11 +57,11 @@ const VOTING: FaqItem[] = [
 const REWARDS: FaqItem[] = [
   {
     q: "When do voting rewards land?",
-    a: "Immediately when a review finalizes. There's no claim step for voting rewards — they settle into your spendable balance as soon as the IQR calculation completes and the contract distributes the pool.",
+    a: "When a review finalizes, rewards are calculated and published. On-chain claims use a Merkle-proof system — you have 90 days to claim before they expire.",
   },
   {
     q: "Can I opt out of rewards?",
-    a: "You can refuse to claim endorsement payouts, but voting rewards land automatically. Some experts who want to contribute pro-bono periodically donate their claimed balance back to the guild treasury.",
+    a: "You can choose not to claim rewards. Some experts who want to contribute pro-bono periodically donate their claimed balance back to the guild treasury.",
   },
   {
     q: "Do I need to stake to earn voting rewards?",
@@ -86,8 +86,8 @@ const SLASHING: FaqItem[] = [
 
 const CAREER: FaqItem[] = [
   {
-    q: "How long does it take to reach Master rank?",
-    a: "There's no official target, but at a steady 10 rep per aligned review, hitting 10,000 requires about 1,000 aligned reviews. Most Master-tier experts have been on the platform for at least a year and have histories of hundreds of finalized reviews.",
+    q: "How long does it take to reach the highest reward tier?",
+    a: "The Authority reward tier starts at 2,000 reputation. At +10 per aligned review, that's about 200 aligned reviews. Most experts who reach Authority have been active for several months with consistent reviewing.",
   },
   {
     q: "Does reputation carry across guilds if I move to a new one?",

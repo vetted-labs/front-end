@@ -51,7 +51,8 @@ export default function CandidateEndorsementsPage() {
         An endorsement is a public, financial bet by a <DocsGlossaryLink term="guild">guild</DocsGlossaryLink> expert that you
         will be hired. The expert locks up a chosen amount of VETD tokens on
         your application. If you're hired, they get their stake back plus a
-        reward and reputation gain. If you're not, they lose the stake.
+        reward and reputation gain. If you're not, 10% of their stake is
+        slashed and they incur a reputation penalty.
       </p>
       <p>
         The important part is the word <em>lose</em>. On most hiring
@@ -144,7 +145,7 @@ export default function CandidateEndorsementsPage() {
           icon: ShieldCheck,
           accent: "positive",
           rows: [
-            <>Costs the endorser real VETD — forfeited if you're not hired.</>,
+            <>Costs the endorser real VETD — 10% slashed if you're not hired.</>,
             <>The endorser's own reputation moves on the outcome.</>,
             <>Surfaced on the company shortlist as a separate signal.</>,
             <>Made by a guild expert picked for the role, not your personal network.</>,

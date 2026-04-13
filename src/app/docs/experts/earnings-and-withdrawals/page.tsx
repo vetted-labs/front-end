@@ -44,10 +44,10 @@ export default function EarningsPage() {
     >
       <DocsTldr
         points={[
-          <>Three earning streams: <strong>voting rewards</strong> (auto-settle), <strong>endorsement payouts</strong> (manual claim), <strong>governance rewards</strong> (small nudges).</>,
+          <>Three earning streams: <strong>voting rewards</strong> (calculated on finalization, 90-day claim window), <strong>endorsement payouts</strong> (manual claim), <strong>governance rewards</strong> (small nudges).</>,
           <>Voting rewards are weighted by rank multiplier and optional <DocsGlossaryLink term="stake">stake</DocsGlossaryLink> factor: <code>(your_weight × pool) / total_aligned_weight</code>.</>,
           <>Endorsement claims require a gas-paying transaction. Batch multiple claims if gas is high.</>,
-          <>Unstaking has a <strong>7-day <DocsGlossaryLink term="cooldown">cooldown</DocsGlossaryLink></strong> that cannot be shortened or cancelled.</>,
+          <>Unstaking has a <strong>7-day <DocsGlossaryLink term="cooldown">cooldown</DocsGlossaryLink></strong>. You can cancel to re-stake, but you cannot shorten the timer.</>,
         ]}
       />
 
@@ -77,8 +77,8 @@ export default function EarningsPage() {
       </p>
       <ul>
         <li>
-          <strong>Rank multiplier</strong> — 1.0× at Recruit up to 2.0× at
-          Master. Fixed by your per-guild reputation.
+          <strong>Reward tier multiplier</strong> — Foundation 1.0×, Established
+          1.25×, Authority 1.5×. Based on your per-guild reputation.
         </li>
         <li>
           <strong>Stake factor</strong> — optional. Staking VETD on a specific
@@ -88,7 +88,7 @@ export default function EarningsPage() {
       </ul>
       <p>
         <code>
-          your_weight = rank_multiplier × (1 + stake_factor)
+          your_weight = tier_multiplier × (1 + stake_factor)
         </code>
         <br />
         <code>
@@ -96,9 +96,10 @@ export default function EarningsPage() {
         </code>
       </p>
       <p>
-        Voting rewards land immediately after the review is finalized. They
-        don't need to be claimed manually — they settle into your spendable
-        balance automatically.
+        Voting rewards are credited to your balance when the review is
+        finalized. On-chain reward claims use a Merkle-proof system with a
+        90-day claim window — make sure to claim pending rewards before
+        they expire.
       </p>
 
       <h3 id="endorsement-payouts">Endorsement payouts</h3>
@@ -128,9 +129,11 @@ export default function EarningsPage() {
 
       <h2 id="claiming">Claiming rewards</h2>
       <p>
-        Voting rewards and governance rewards land automatically. Endorsement
-        payouts require a manual claim because they involve a settlement
-        transaction tied to the hiring outcome.
+        Voting rewards and governance rewards are calculated automatically
+        when reviews finalize. On-chain claims use a Merkle-proof system
+        with a 90-day window. Endorsement payouts require a separate manual
+        claim because they involve a settlement transaction tied to the
+        hiring outcome.
       </p>
       <p>
         To claim a pending endorsement payout:
@@ -174,7 +177,8 @@ export default function EarningsPage() {
       <DocsCallout kind="tip" title="Batch claims when gas is high">
         You don't have to claim every endorsement the moment it's settled.
         Batching several small claims into one session is cheaper on gas.
-        There's no expiry on pending claims.
+        Note: on-chain reward claims expire after 90 days — don't wait
+        too long.
       </DocsCallout>
 
       <h2 id="unstaking">Unstaking and cooldown</h2>
@@ -212,8 +216,8 @@ export default function EarningsPage() {
             description: (
               <p>
                 A progress bar shows the cooldown timer. During this window
-                your VETD is locked — you can't cancel the unstake and you
-                can't withdraw. The timer is deliberate: it prevents
+                you can cancel the unstake to restore the tokens to active
+                stake, but you cannot withdraw until the cooldown expires. The timer is deliberate: it prevents
                 flash-loan attacks and rapid exits immediately before adverse
                 outcomes.
               </p>
@@ -250,9 +254,9 @@ export default function EarningsPage() {
 
       <DocsKeyTakeaways
         points={[
-          <>Voting rewards don't need a claim — they auto-settle into your balance on finalization.</>,
+          <>Voting rewards are calculated on finalization. On-chain claims use Merkle proofs with a 90-day window.</>,
           <>Endorsement claims require a real on-chain transaction. Gas applies.</>,
-          <>The 7-day unstake cooldown is immutable — plan liquidity accordingly.</>,
+          <>The unstake cooldown (currently 7 days) cannot be shortened — but you can cancel it to re-stake.</>,
           <>Partial unstakes cool down independently; the remaining staked balance keeps earning (and risks slashing).</>,
           <>Export earnings to CSV from the Earnings page for tax records.</>,
         ]}

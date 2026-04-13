@@ -16,7 +16,7 @@ const TIERS: Tier[] = [
     repMax: 999,
     multiplier: "1.0×",
     color: "rank-recruit",
-    description: "Starting tier. Contribute votes to prove alignment.",
+    description: "Starting tier. Contribute votes to prove alignment. Foundation reward tier.",
   },
   {
     name: "Apprentice",
@@ -24,7 +24,7 @@ const TIERS: Tier[] = [
     repMax: 1999,
     multiplier: "1.25×",
     color: "rank-apprentice",
-    description: "Early-career reviewer with demonstrable track record.",
+    description: "Early-career reviewer with demonstrable track record. Established reward tier.",
   },
   {
     name: "Craftsman",
@@ -32,23 +32,23 @@ const TIERS: Tier[] = [
     repMax: 4999,
     multiplier: "1.5×",
     color: "rank-craftsman",
-    description: "Established voice. Unlocks endorsement mentoring.",
+    description: "Established voice. Authority reward tier (max multiplier).",
   },
   {
     name: "Officer",
     repMin: 5000,
     repMax: 9999,
-    multiplier: "1.75×",
+    multiplier: "1.5×",
     color: "rank-officer",
-    description: "Guild leadership. Eligible to propose rubric changes.",
+    description: "Guild leadership. Eligible to propose rubric changes and moderate.",
   },
   {
     name: "Master",
     repMin: 10000,
     repMax: null,
-    multiplier: "2.0×",
+    multiplier: "1.5×",
     color: "rank-master",
-    description: "Top tier. Governance vote weight is amplified.",
+    description: "Elected guild leader. Governance vote weight amplified (1.5× bonus).",
   },
 ];
 

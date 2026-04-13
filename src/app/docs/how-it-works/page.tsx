@@ -87,8 +87,9 @@ export default function HowItWorksPage() {
 
       <h3 id="candidate-lane">The candidate lane</h3>
       <p>
-        A candidate signs up, connects a wallet, and fills out a profile. They
-        browse job listings by guild and submit an application. Each application
+        A candidate signs up with email and password (or LinkedIn), and fills
+        out a profile. They browse job listings by guild and submit an
+        application. Each application
         routes to the guild tied to the job — a backend role goes to the
         Engineering guild, a systems audit role goes to Security, and so on.
       </p>
@@ -138,10 +139,10 @@ export default function HowItWorksPage() {
               <>
                 <p>
                   Consensus is calculated using interquartile-range filtering
-                  (outliers are statistically discarded, median of the rest
-                  becomes the consensus score). Each expert's deviation from
-                  consensus is classified as Aligned, Mild, Moderate, or Severe,
-                  and reputation/rewards move accordingly.
+                  (scores outside the median ± 0.75×IQR band are excluded,
+                  average of the rest becomes the consensus score). Each
+                  expert's deviation from consensus is classified as Aligned
+                  or Misaligned, and reputation/rewards move accordingly.
                 </p>
               </>
             ),
