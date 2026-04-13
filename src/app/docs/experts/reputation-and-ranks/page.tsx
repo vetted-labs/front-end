@@ -182,7 +182,7 @@ export default function ReputationAndRanksPage() {
         points={[
           <>Reputation is per-guild — each guild tracks its own counter.</>,
           <>Non-transferable. Tied to your wallet permanently.</>,
-          <>Decay is real — 6 cycles of inactivity costs 60 reputation, which can cross tier boundaries.</>,
+          <>Decay is real — 6 months of inactivity costs 60 reputation, which can cross tier boundaries.</>,
           <>Reward multiplier caps at 1.5× (Authority tier, 2,000+ rep). Higher ranks unlock governance privileges, not additional multipliers.</>,
           <>Reputation loss and stake slashing are separate mechanics — misaligned unstaked votes cost rep but never touch VETD.</>,
         ]}

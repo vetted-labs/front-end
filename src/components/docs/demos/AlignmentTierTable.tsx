@@ -40,7 +40,7 @@ export function AlignmentTierTable() {
         <thead>
           <tr className="border-b border-border bg-muted/40 text-left">
             <th className="px-4 py-3 font-semibold text-foreground">Tier</th>
-            <th className="px-4 py-3 font-semibold text-foreground">Distance from consensus</th>
+            <th className="px-4 py-3 font-semibold text-foreground">Distance from median</th>
             <th className="px-4 py-3 font-semibold text-foreground">Reputation</th>
             <th className="px-4 py-3 font-semibold text-foreground">Stake slashed</th>
           </tr>

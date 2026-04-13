@@ -168,9 +168,8 @@ export default function WhyWeb3Page() {
       </p>
       <ul>
         <li>
-          <strong>Sign up and sign in with email and password</strong> (or
-          LinkedIn OAuth). No wallet, no seed phrase, no chain
-          interaction.
+          <strong>Sign up and sign in with email and password.</strong> No
+          wallet, no seed phrase, no chain interaction.
         </li>
         <li>
           <strong>Post jobs, manage applications, message candidates,

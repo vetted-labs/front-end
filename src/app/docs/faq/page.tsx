@@ -152,11 +152,10 @@ export default function FAQPage() {
             icon: BookText,
           },
           {
-            title: "Browse jobs",
-            description: "If you're already signed in, start browsing.",
-            href: "/browse/jobs",
+            title: "How it works",
+            description: "Walk through the full lifecycle from application to hire.",
+            href: "/docs/how-it-works",
             icon: LayoutDashboard,
-            kind: "app",
           },
         ]}
       />

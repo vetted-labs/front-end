@@ -153,7 +153,7 @@ export default function ExpertQuickstartPage() {
             title: "Personal info",
             description: (
               <p>
-                Full name, email, phone, headline (e.g. "Senior Backend
+                Full name, email, headline (e.g. "Senior Backend
                 Engineer"), and a short bio. Your wallet address is already
                 connected and shown. Click <strong>Continue</strong> at the
                 bottom to proceed.

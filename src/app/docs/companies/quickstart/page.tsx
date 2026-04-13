@@ -42,7 +42,7 @@ export default function CompanyQuickstartPage() {
       <DocsTldr
         points={[
           <>~<strong>30 minutes</strong> of active work from signup to published job.</>,
-          <>No crypto — email/password signup or LinkedIn OAuth.</>,
+          <>No crypto — email/password signup. No wallet or tokens needed.</>,
           <>Guild selection is <strong>locked at post time</strong>. Pick the guild that matches the role's domain carefully.</>,
           <>3–5 screening questions do most of the reviewing work. Keep them specific.</>,
         ]}
@@ -101,7 +101,7 @@ export default function CompanyQuickstartPage() {
             description: (
               <>
                 <p>
-                  Go to the home page and click <strong>Start hiring</strong>,
+                  Go to the home page and click <strong>Start Hiring</strong>,
                   or navigate to <code>/auth/signup</code>. Select the{" "}
                   <strong>Employer</strong> tab at the top. Enter your email,
                   a password (6+ characters), your company name, and optional

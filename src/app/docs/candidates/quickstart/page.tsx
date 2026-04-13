@@ -83,7 +83,7 @@ export default function CandidateQuickstartPage() {
 
       <h3>Step 1 — Sign up</h3>
       <p>
-        Go to the home page and click <strong>Get vetted</strong>, or navigate
+        Go to the home page and click <strong>Get Vetted</strong>, or navigate
         directly to <code>/auth/signup</code>. You'll see two tabs at the
         top: <strong>Job Seeker</strong> and <strong>Employer</strong>. Make
         sure <strong>Job Seeker</strong> is selected.

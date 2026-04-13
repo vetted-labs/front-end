@@ -156,7 +156,7 @@ export default function DocsLandingPage() {
           {
             title: "Post a job",
             description: "Create a company account and publish your first hire.",
-            href: "/auth/login?type=company",
+            href: "/auth/signup?type=company",
             icon: Building2,
             kind: "app",
           },
