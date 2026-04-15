@@ -46,7 +46,7 @@ function ShellContent({ config, children }: AppShellProps) {
           </div>
         )}
         <main className="relative flex-1 overflow-auto min-h-0 content-gradient">
-          <div className="relative z-10">
+          <div className="relative z-10 h-full">
             {children}
           </div>
         </main>

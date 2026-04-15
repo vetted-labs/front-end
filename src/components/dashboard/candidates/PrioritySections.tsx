@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { PriorityCandidateRow } from "./PriorityCandidateRow";
 import { FastReviewModal } from "./FastReviewModal";
 import type { CompanyApplication, ApplicationStatus } from "@/types";
@@ -20,7 +20,7 @@ interface PrioritySectionsProps {
   onStatusChange?: (applicationId: string, newStatus: ApplicationStatus) => Promise<void>;
 }
 
-const INITIAL_NEW_VISIBLE = 15;
+const PER_PAGE = 10;
 
 function capitalizeStatus(status: string): string {
   return status.charAt(0).toUpperCase() + status.slice(1);
@@ -42,36 +42,24 @@ function formatShortDate(dateStr: string): string {
 /* ── Reusable section header ──────────────────────────────────────── */
 
 interface SectionHeaderProps {
-  sectionId: string;
   label: string;
   count: number;
   badgeClassName: string;
   isCollapsed: boolean;
   onToggle: () => void;
   hint?: string;
-  items: CompanyApplication[];
-  selectedIds: Set<string>;
-  onSelectAll: (apps: CompanyApplication[]) => void;
-  onDeselectAll: (apps: CompanyApplication[]) => void;
   trailing?: React.ReactNode;
 }
 
 function SectionHeader({
-  sectionId,
   label,
   count,
   badgeClassName,
   isCollapsed,
   onToggle,
   hint,
-  items,
-  selectedIds,
-  onSelectAll,
-  onDeselectAll,
   trailing,
 }: SectionHeaderProps) {
-  const allSelected = items.length > 0 && items.every((a) => selectedIds.has(a.id));
-
   return (
     <button
       type="button"
@@ -87,29 +75,6 @@ function SectionHeader({
       {hint && (
         <span className="text-[10px] text-muted-foreground/40">{hint}</span>
       )}
-      {items.length > 0 && (
-        <span
-          role="presentation"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (allSelected) onDeselectAll(items);
-            else onSelectAll(items);
-          }}
-          className="flex-shrink-0"
-        >
-          <input
-            type="checkbox"
-            checked={allSelected}
-            onChange={() => {
-              if (allSelected) onDeselectAll(items);
-              else onSelectAll(items);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Select all ${sectionId}`}
-            className="w-3.5 h-3.5 rounded border border-border/60 accent-primary cursor-pointer"
-          />
-        </span>
-      )}
       {trailing}
       <ChevronDown
         className={cn(
@@ -119,6 +84,45 @@ function SectionHeader({
         )}
       />
     </button>
+  );
+}
+
+/* ── Pagination controls ─────────────────────────────────────────── */
+
+function SectionPagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-2 py-1.5 px-4">
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage <= 1}
+        className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-[10px] font-medium text-muted-foreground/60 tabular-nums">
+        {currentPage} / {totalPages}
+      </span>
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+        aria-label="Next page"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -138,50 +142,12 @@ export function PrioritySections({
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
     () => new Set()
   );
-  const [newVisibleCount, setNewVisibleCount] = useState(INITIAL_NEW_VISIBLE);
   const [showFastReview, setShowFastReview] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isBulkActioning, setIsBulkActioning] = useState(false);
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function selectAll(apps: CompanyApplication[]) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      for (const app of apps) next.add(app.id);
-      return next;
-    });
-  }
-
-  function deselectAll(apps: CompanyApplication[]) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      for (const app of apps) next.delete(app.id);
-      return next;
-    });
-  }
-
-  async function handleBulkAction(newStatus: ApplicationStatus) {
-    if (!onStatusChange) return;
-    setIsBulkActioning(true);
-    const ids = Array.from(selectedIds);
-    const results = await Promise.allSettled(
-      ids.map((id) => onStatusChange(id, newStatus))
-    );
-    const failCount = results.filter((r) => r.status === "rejected").length;
-    if (failCount > 0) {
-      toast.error(`${failCount} of ${ids.length} updates failed`);
-    }
-    setSelectedIds(new Set());
-    setIsBulkActioning(false);
-  }
+  // Per-section pagination
+  const inProgressPagination = useClientPagination(inProgress, PER_PAGE);
+  const topPicksPagination = useClientPagination(topPicks, PER_PAGE);
+  const newPagination = useClientPagination(newCandidates, PER_PAGE);
 
   function toggleSection(section: string) {
     setCollapsedSections((prev) => {
@@ -195,64 +161,21 @@ export function PrioritySections({
     });
   }
 
-  const visibleNew = newCandidates.slice(0, newVisibleCount);
-  const newRemaining = newCandidates.length - newVisibleCount;
-
   return (
-    <div>
+    <div className="min-h-full">
       {/* ── In Progress ─────────────────────────────────────────── */}
       <div>
         <SectionHeader
-          sectionId="in-progress"
           label="In Progress"
           count={inProgress.length}
           badgeClassName="text-info-blue bg-info-blue/10"
           isCollapsed={collapsedSections.has("in-progress")}
           onToggle={() => toggleSection("in-progress")}
-          items={inProgress}
-          selectedIds={selectedIds}
-          onSelectAll={selectAll}
-          onDeselectAll={deselectAll}
         />
 
-        {!collapsedSections.has("in-progress") &&
-          inProgress.map((app) => (
-            <PriorityCandidateRow
-              key={app.id}
-              application={app}
-              isSelected={selectedApplicationId === app.id}
-              onSelect={onSelectApplication}
-              endorsementCount={getEndorsementCount(app)}
-              endorserName={getTopEndorserName(app)}
-              matchScore={getMatchScore(app)}
-              subtitle={`${app.job.title} · ${capitalizeStatus(app.status)}`}
-              daysAgo={getDaysAgo(app.statusChangedAt ?? app.appliedAt)}
-              selectable
-              isChecked={selectedIds.has(app.id)}
-              onToggleSelect={toggleSelect}
-            />
-          ))}
-      </div>
-
-      {/* ── Top Picks ───────────────────────────────────────────── */}
-      {topPicks.length > 0 && (
-        <div className="border-t border-border/20 mt-1">
-          <SectionHeader
-            sectionId="top-picks"
-            label="Top Picks"
-            count={topPicks.length}
-            badgeClassName="text-positive bg-positive/10"
-            isCollapsed={collapsedSections.has("top-picks")}
-            onToggle={() => toggleSection("top-picks")}
-            hint="endorsed by guild experts"
-            items={topPicks}
-            selectedIds={selectedIds}
-            onSelectAll={selectAll}
-            onDeselectAll={deselectAll}
-          />
-
-          {!collapsedSections.has("top-picks") &&
-            topPicks.map((app) => (
+        {!collapsedSections.has("in-progress") && (
+          <>
+            {inProgressPagination.paginatedItems.map((app) => (
               <PriorityCandidateRow
                 key={app.id}
                 application={app}
@@ -261,29 +184,64 @@ export function PrioritySections({
                 endorsementCount={getEndorsementCount(app)}
                 endorserName={getTopEndorserName(app)}
                 matchScore={getMatchScore(app)}
-                subtitle={`${app.job.title} · Pending`}
-                selectable
-                isChecked={selectedIds.has(app.id)}
-                onToggleSelect={toggleSelect}
+                subtitle={`${app.job.title} · ${capitalizeStatus(app.status)}`}
+                daysAgo={getDaysAgo(app.statusChangedAt ?? app.appliedAt)}
               />
             ))}
+            <SectionPagination
+              currentPage={inProgressPagination.currentPage}
+              totalPages={inProgressPagination.totalPages}
+              onPageChange={inProgressPagination.setCurrentPage}
+            />
+          </>
+        )}
+      </div>
+
+      {/* ── Top Picks ───────────────────────────────────────────── */}
+      {topPicks.length > 0 && (
+        <div className="border-t border-border/20 mt-1">
+          <SectionHeader
+            label="Top Picks"
+            count={topPicks.length}
+            badgeClassName="text-positive bg-positive/10"
+            isCollapsed={collapsedSections.has("top-picks")}
+            onToggle={() => toggleSection("top-picks")}
+            hint="endorsed by guild experts"
+          />
+
+          {!collapsedSections.has("top-picks") && (
+            <>
+              {topPicksPagination.paginatedItems.map((app) => (
+                <PriorityCandidateRow
+                  key={app.id}
+                  application={app}
+                  isSelected={selectedApplicationId === app.id}
+                  onSelect={onSelectApplication}
+                  endorsementCount={getEndorsementCount(app)}
+                  endorserName={getTopEndorserName(app)}
+                  matchScore={getMatchScore(app)}
+                  subtitle={`${app.job.title} · Pending`}
+                />
+              ))}
+              <SectionPagination
+                currentPage={topPicksPagination.currentPage}
+                totalPages={topPicksPagination.totalPages}
+                onPageChange={topPicksPagination.setCurrentPage}
+              />
+            </>
+          )}
         </div>
       )}
 
       {/* ── New ─────────────────────────────────────────────────── */}
       <div className="border-t border-border/20 mt-1">
         <SectionHeader
-          sectionId="new"
           label="New"
           count={newCandidates.length}
           badgeClassName="text-muted-foreground bg-muted/60"
           isCollapsed={collapsedSections.has("new")}
           onToggle={() => toggleSection("new")}
           hint="pending review"
-          items={visibleNew}
-          selectedIds={selectedIds}
-          onSelectAll={selectAll}
-          onDeselectAll={deselectAll}
           trailing={
             newCandidates.length > 0 && onStatusChange ? (
               <span
@@ -310,7 +268,7 @@ export function PrioritySections({
 
         {!collapsedSections.has("new") && (
           <>
-            {visibleNew.map((app) => (
+            {newPagination.paginatedItems.map((app) => (
               <PriorityCandidateRow
                 key={app.id}
                 application={app}
@@ -320,60 +278,16 @@ export function PrioritySections({
                 endorserName={getTopEndorserName(app)}
                 matchScore={getMatchScore(app)}
                 subtitle={`${app.job.title} · ${formatShortDate(app.appliedAt)}`}
-                selectable
-                isChecked={selectedIds.has(app.id)}
-                onToggleSelect={toggleSelect}
               />
             ))}
-
-            {newRemaining > 0 && (
-              <button
-                type="button"
-                onClick={() =>
-                  setNewVisibleCount((prev) => prev + INITIAL_NEW_VISIBLE)
-                }
-                className="w-full py-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors border-b border-border/20"
-              >
-                Show {newRemaining} more candidate{newRemaining !== 1 ? "s" : ""}
-              </button>
-            )}
+            <SectionPagination
+              currentPage={newPagination.currentPage}
+              totalPages={newPagination.totalPages}
+              onPageChange={newPagination.setCurrentPage}
+            />
           </>
         )}
       </div>
-
-      {/* ── Bulk Action Bar ───────────────────────��──────────── */}
-      {selectedIds.size > 0 && (
-        <div className="sticky bottom-0 mx-4 mb-2 flex items-center gap-2 p-2.5 rounded-xl bg-background border border-border shadow-lg">
-          <span className="text-xs font-medium text-foreground tabular-nums">
-            {selectedIds.size} selected
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleBulkAction("reviewing")}
-              disabled={isBulkActioning}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-positive/10 text-positive hover:bg-positive/20 border border-positive/20 transition-colors disabled:opacity-50"
-            >
-              Advance
-            </button>
-            <button
-              type="button"
-              onClick={() => handleBulkAction("rejected")}
-              disabled={isBulkActioning}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg bg-negative/10 text-negative hover:bg-negative/20 border border-negative/20 transition-colors disabled:opacity-50"
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedIds(new Set())}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      )}
 
       {showFastReview && onStatusChange && (
         <FastReviewModal

@@ -26,16 +26,19 @@ export function useClientPagination<T>(
 
   const totalPages = Math.max(1, Math.ceil(items.length / perPage));
 
+  // Clamp page to valid range when items shrink (e.g. after filtering)
+  const effectivePage = Math.min(currentPage, totalPages);
+
   const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * perPage;
+    const start = (effectivePage - 1) * perPage;
     return items.slice(start, start + perPage);
-  }, [items, currentPage, perPage]);
+  }, [items, effectivePage, perPage]);
 
   const resetPage = useCallback(() => setCurrentPage(1), []);
 
   return {
     paginatedItems,
-    currentPage,
+    currentPage: effectivePage,
     totalPages,
     setCurrentPage,
     resetPage,

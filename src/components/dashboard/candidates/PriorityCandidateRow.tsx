@@ -1,6 +1,6 @@
 "use client";
 
-import { Award } from "lucide-react";
+import { Award, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCandidateStatusDot, getMatchScoreColors } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
@@ -22,9 +22,6 @@ interface PriorityCandidateRowProps {
   matchScore?: number;
   subtitle: string;
   daysAgo?: number;
-  selectable?: boolean;
-  isChecked?: boolean;
-  onToggleSelect?: (id: string) => void;
 }
 
 export function PriorityCandidateRow({
@@ -32,13 +29,9 @@ export function PriorityCandidateRow({
   isSelected,
   onSelect,
   endorsementCount,
-  endorserName,
   matchScore,
   subtitle,
   daysAgo,
-  selectable,
-  isChecked,
-  onToggleSelect,
 }: PriorityCandidateRowProps) {
   return (
     <button
@@ -50,27 +43,6 @@ export function PriorityCandidateRow({
           : "hover:bg-muted/20 dark:hover:bg-muted/20 border-l-transparent"
       )}
     >
-      {/* Bulk-select checkbox */}
-      {selectable && (
-        <span
-          role="presentation"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleSelect?.(application.id);
-          }}
-          className="flex-shrink-0"
-        >
-          <input
-            type="checkbox"
-            checked={!!isChecked}
-            onChange={() => onToggleSelect?.(application.id)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Select ${application.candidate.fullName}`}
-            className="w-4 h-4 rounded border border-border accent-primary cursor-pointer"
-          />
-        </span>
-      )}
-
       {/* Avatar */}
       <img
         src={getPersonAvatar(application.candidate.fullName)}
@@ -89,16 +61,6 @@ export function PriorityCandidateRow({
           >
             {application.candidate.fullName}
           </p>
-          {endorsementCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-positive bg-positive/10 px-1.5 py-0.5 rounded-full flex-shrink-0 max-w-[180px]">
-              <Award className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">
-                {endorserName
-                  ? `${endorsementCount} · ${endorserName}`
-                  : endorsementCount}
-              </span>
-            </span>
-          )}
           {matchScore != null && (
             <span
               className={cn(
@@ -115,8 +77,19 @@ export function PriorityCandidateRow({
         </p>
       </div>
 
-      {/* Aging label + Status dot */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      {/* Endorsements + Aging label + Status dot */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {endorsementCount > 0 ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-positive bg-positive/15 border border-positive/30 px-2 py-1 rounded-md flex-shrink-0">
+            <Award className="w-3.5 h-3.5 flex-shrink-0" />
+            {endorsementCount}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/40 bg-muted/20 px-2 py-1 rounded-md flex-shrink-0">
+            <Users className="w-3.5 h-3.5" />
+            0
+          </span>
+        )}
         {daysAgo != null && (() => {
           const aging = getAgingLabel(daysAgo);
           if (!aging) return null;

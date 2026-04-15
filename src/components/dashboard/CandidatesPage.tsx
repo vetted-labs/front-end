@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { companyApi, blockchainApi, matchingApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
@@ -14,6 +13,7 @@ import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpda
 import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
+import { CandidateOverviewPanel } from "./candidates/CandidateOverviewPanel";
 import { DataSection } from "@/lib/motion";
 import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption, GroupedJob } from "@/types";
 
@@ -462,13 +462,13 @@ export default function CandidatesPage() {
                 showBackButton
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <EmptyState
-                  icon={Users}
-                  title="Select a candidate"
-                  description="Choose a candidate from the list to view their details"
-                />
-              </div>
+              <CandidateOverviewPanel
+                allApplications={allApplications}
+                stats={stats}
+                getEndorsementCount={getEndorsementCount}
+                getMatchScore={getMatchScore}
+                onSelectApplication={setSelectedApplication}
+              />
             )}
           </div>
         </div>
