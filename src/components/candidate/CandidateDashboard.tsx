@@ -20,7 +20,6 @@ import {
   Check,
   Circle,
   ArrowRight,
-  Gavel,
   Sparkles,
 } from "lucide-react";
 import { candidateApi, applicationsApi, messagingApi, matchingApi, extractApiError } from "@/lib/api";
@@ -316,7 +315,7 @@ export default function CandidateDashboard() {
 
         <DataSection isLoading={isLoading} skeleton={null}>
         {profile && profileCompletion && (
-        <>
+        <div className="space-y-6">
         {/* ── Quick Stats Strip ── */}
         <div className="flex items-stretch gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {/* Applications */}
@@ -390,14 +389,12 @@ export default function CandidateDashboard() {
           </div>
         </div>
 
-        {/* ── Two-Column Main Grid ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* ── Main Content Grid (3-column) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* ── Left Column (3 cols) ── */}
-          <div className="lg:col-span-3 space-y-6">
-
-            {/* Active Applications */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {/* ── Row 1: Active Applications + Profile/Your Profile ── */}
+          <div className="lg:col-span-2">
+            <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-4 h-4 text-muted-foreground/50" />
@@ -439,11 +436,9 @@ export default function CandidateDashboard() {
                         href={`/browse/jobs/${app.job.id}`}
                         className="flex items-start gap-4 w-full px-5 py-4 text-left hover:bg-muted/30 transition-colors group"
                       >
-                        {/* Company avatar */}
                         <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-sm font-bold text-muted-foreground">
                           {companyInitial}
                         </div>
-                        {/* Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -467,7 +462,6 @@ export default function CandidateDashboard() {
                               {statusStyle.label}
                             </span>
                           </div>
-                          {/* Mini pipeline */}
                           <MiniPipeline status={app.status} />
                         </div>
                       </Link>
@@ -476,10 +470,114 @@ export default function CandidateDashboard() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Recommended Jobs */}
-            {recommendedJobs && recommendedJobs.length > 0 && (
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="lg:col-span-1">
+            {profileCompletion.percentage < 100 ? (
+              /* Profile Completion (incomplete) */
+              <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
+                    Profile Completion
+                  </h2>
+                </div>
+                <div className="px-5 py-5">
+                  <div className="flex flex-col items-center mb-4">
+                    <ProfileRing percentage={profileCompletion.percentage} />
+                  </div>
+                  <div className="space-y-2">
+                    {profileCompletion.items.map((item) => (
+                      <div
+                        key={item.label}
+                        className={`flex items-center gap-3 py-1.5 text-sm ${item.done ? "text-muted-foreground" : "text-foreground"}`}
+                      >
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                          item.done ? STATUS_COLORS.positive.bgSubtle : "bg-muted/40"
+                        }`}>
+                          {item.done ? (
+                            <Check className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`} />
+                          ) : (
+                            <Circle className="w-3 h-3 text-muted-foreground/40" />
+                          )}
+                        </div>
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href="/candidate/profile"
+                    className="block w-full mt-4 px-4 py-2.5 text-center text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  >
+                    Complete Your Profile
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* Your Profile (complete) */
+              <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
+                    Your Profile
+                  </h2>
+                  <Link
+                    href="/candidate/profile"
+                    className="text-xs text-primary hover:underline flex items-center gap-2"
+                  >
+                    Edit <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
+                <div className="px-5 py-5">
+                  <div className="flex flex-col items-center text-center">
+                    <img
+                      src={getPersonAvatar(profile.fullName)}
+                      alt={profile.fullName}
+                      className="w-16 h-16 rounded-full object-cover bg-muted mb-3"
+                    />
+                    <p className="text-sm font-semibold text-foreground">{profile.fullName}</p>
+                    {profile.headline && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{profile.headline}</p>
+                    )}
+                    {profile.skills && profile.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 justify-center mt-3">
+                        {profile.skills.slice(0, 4).map((skill) => (
+                          <span
+                            key={skill}
+                            className="px-2.5 py-1 rounded-md text-xs bg-primary/10 text-primary border border-primary/20"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {profile.skills.length > 4 && (
+                          <span className="px-2.5 py-1 rounded-md text-xs bg-muted/50 text-muted-foreground">
+                            +{profile.skills.length - 4}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-border">
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-primary font-display">{stats.total}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Applied</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-primary font-display">{stats.interviewed}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Interviews</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-primary font-display">{guildApplications.length}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Guilds</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Row 2: Recommended Jobs + Upcoming Meetings ── */}
+          <div className={recommendedJobs && recommendedJobs.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+            {recommendedJobs && recommendedJobs.length > 0 ? (
+              <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary" />
@@ -523,58 +621,20 @@ export default function CandidateDashboard() {
                   ))}
                 </div>
               </div>
+            ) : (
+              <UpcomingMeetings userType="candidate" />
             )}
-
-            {/* Upcoming Meetings */}
-            <UpcomingMeetings userType="candidate" />
           </div>
 
-          {/* ── Right Column (2 cols) ── */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Profile Completion Ring */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
-                  Profile Completion
-                </h2>
-              </div>
-              <div className="px-5 py-5">
-                <div className="flex flex-col items-center mb-4">
-                  <ProfileRing percentage={profileCompletion.percentage} />
-                </div>
-                <div className="space-y-2">
-                  {profileCompletion.items.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex items-center gap-3 py-1.5 text-sm ${item.done ? "text-muted-foreground" : "text-foreground"}`}
-                    >
-                      <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
-                        item.done ? STATUS_COLORS.positive.bgSubtle : "bg-muted/40"
-                      }`}>
-                        {item.done ? (
-                          <Check className={`w-3 h-3 ${STATUS_COLORS.positive.icon}`} />
-                        ) : (
-                          <Circle className="w-3 h-3 text-muted-foreground/40" />
-                        )}
-                      </div>
-                      <span className="text-sm">{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-                {profileCompletion.percentage < 100 && (
-                  <Link
-                    href="/candidate/profile"
-                    className="block w-full mt-4 px-4 py-2.5 text-center text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                  >
-                    Complete Your Profile
-                  </Link>
-                )}
-              </div>
+          {recommendedJobs && recommendedJobs.length > 0 && (
+            <div className="lg:col-span-1">
+              <UpcomingMeetings userType="candidate" />
             </div>
+          )}
 
-            {/* Guild Applications */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {/* ── Row 3: Guild Apps | Messages | Quick Actions ── */}
+          <div className="lg:col-span-1">
+            <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Guild Applications
@@ -606,12 +666,6 @@ export default function CandidateDashboard() {
                   {recentGuildApps.map((app) => {
                     const guildStatusConfig = GUILD_APPLICATION_STATUS_CONFIG[app.status] || GUILD_APPLICATION_STATUS_CONFIG.pending;
                     const feedback = rejectionFeedback[app.id];
-                    const isRejected = app.status === "rejected" || app.status === "finalized";
-                    const rejectedAt = new Date(app.createdAt || app.submittedAt || Date.now());
-                    const appealDeadline = new Date(rejectedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    const canAppeal = isRejected && new Date() < appealDeadline;
-                    const daysLeft = Math.ceil((appealDeadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-                    const guildId = app.guildId || app.guild?.id;
                     return (
                       <div key={app.id}>
                         <div className="px-5 py-3.5">
@@ -619,22 +673,9 @@ export default function CandidateDashboard() {
                             <p className="text-sm font-medium text-foreground truncate">
                               {app.guildName || app.guild?.name || "Guild"}
                             </p>
-                            <div className="flex items-center gap-2">
-                              {canAppeal && guildId && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => router.push(`/guilds/${guildId}/appeal`)}
-                                  className="h-6 px-2 text-xs gap-1"
-                                >
-                                  <Gavel className="w-3 h-3" />
-                                  Appeal ({daysLeft}d)
-                                </Button>
-                              )}
-                              <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${guildStatusConfig.className}`}>
-                                {guildStatusConfig.label}
-                              </span>
-                            </div>
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${guildStatusConfig.className}`}>
+                              {guildStatusConfig.label}
+                            </span>
                           </div>
                           {app.jobTitle && (
                             <p className="text-xs text-muted-foreground flex items-center gap-2">
@@ -668,9 +709,10 @@ export default function CandidateDashboard() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Messages */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="lg:col-span-1">
+            <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
@@ -741,9 +783,10 @@ export default function CandidateDashboard() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Quick Actions */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="lg:col-span-1">
+            <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
               <div className="px-5 py-4 border-b border-border">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                   Quick Actions
@@ -770,7 +813,7 @@ export default function CandidateDashboard() {
             </div>
           </div>
         </div>
-        </>
+        </div>
         )}
         </DataSection>
       </div>

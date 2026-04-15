@@ -83,8 +83,10 @@ export function HomePage() {
         onPostJob={handlePostJob}
       />
 
-      {/* Stats Bar */}
-      <StatsBar guilds={guilds ?? []} jobs={jobs ?? []} />
+      {/* Stats Bar — only render once data is loaded so count-up animation targets are correct */}
+      {!isLoadingGuilds && !isLoadingJobs && (
+        <StatsBar guilds={guilds ?? []} jobs={jobs ?? []} />
+      )}
 
       {/* Job Browser */}
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />

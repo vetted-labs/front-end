@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Loader2,
@@ -10,7 +10,7 @@ import {
   Info,
 } from "lucide-react";
 import Image from "next/image";
-import { useAccount, useAccountEffect } from "wagmi";
+import { useAccount, useAccountEffect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { candidateApi, companyApi, expertApi, ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
@@ -46,6 +46,7 @@ function LoginForm() {
   const auth = useAuthContext();
   const { address, isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
+  const { disconnect } = useDisconnect();
   const [mounted, setMounted] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -54,6 +55,7 @@ function LoginForm() {
   const [error, setError] = useState("");
 
   const autoLoginAttempted = useRef(false);
+  const pendingModalOpen = useRef(false);
   const handleExpertLoginRef = useRef<((addr: string) => Promise<void>) | undefined>(undefined);
 
   const handleUserTypeChange = (newType: string) => {
@@ -148,8 +150,23 @@ function LoginForm() {
   // RainbowKit's useConnectModal returns undefined until its provider context
   // finishes initializing. Treat the provider as "ready" only once we're past
   // mount AND openConnectModal exists — OR the user already has a connected
-  // wallet (in which case we'll retry login directly, no modal needed).
+  // wallet (in which case we'll disconnect first to show the picker).
   const isWalletProviderReady = mounted && (!!openConnectModal || (isConnected && !!address));
+
+  // After disconnect, openConnectModal only becomes available on the next render.
+  // This effect opens the modal once it's ready.
+  // eslint-disable-next-line no-restricted-syntax -- depends on runtime wallet provider state
+  useEffect(() => {
+    if (pendingModalOpen.current && openConnectModal) {
+      pendingModalOpen.current = false;
+      try {
+        openConnectModal();
+      } catch (err) {
+        logger.error("Failed to open wallet modal", err, { silent: true });
+        setError("Failed to open wallet connection dialog. Please try again.");
+      }
+    }
+  }, [openConnectModal]);
 
   const handleOpenWalletModal = () => {
     setError("");
@@ -157,11 +174,13 @@ function LoginForm() {
     // Reset so useAccountEffect can re-trigger login after disconnect + reconnect
     autoLoginAttempted.current = false;
 
-    // If wallet is already connected, just retry the login directly instead of
-    // opening the modal (which would only show the already-connected state)
-    if (isConnected && address) {
-      autoLoginAttempted.current = true;
-      handleExpertLogin(address);
+    // If a wallet is already connected, disconnect first so the modal shows the
+    // wallet picker instead of the already-connected state. openConnectModal is
+    // typically undefined while connected — the useEffect above opens it once
+    // RainbowKit makes it available after disconnect.
+    if (isConnected) {
+      pendingModalOpen.current = true;
+      disconnect();
       return;
     }
 
@@ -243,28 +262,18 @@ function LoginForm() {
     <div className="flex min-h-screen bg-background">
       {/* ===== LEFT: Brand Banner (hidden on mobile) ===== */}
       <div
-        className="hidden lg:flex flex-[0_0_60%] relative items-center justify-center overflow-hidden bg-[#E7E6E4] dark:bg-[#111113]"
+        className="hidden lg:flex flex-[0_0_60%] relative items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: "var(--pattern-bg)",
-          backgroundSize: "100% auto",
-          backgroundRepeat: "repeat-y",
+          backgroundImage: "var(--login-pattern-bg)",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
         }}
       >
-        {/* Light pattern (set via CSS custom property) */}
         <style>{`
-          :root { --pattern-bg: url(/pattern-light.svg); }
-          .dark { --pattern-bg: url(/pattern-dark.svg); }
+          :root { --login-pattern-bg: url(/login-bg-light.svg); }
+          .dark { --login-pattern-bg: url(/login-bg-dark.svg); }
         `}</style>
-        {/* Centered VETTED logo */}
-        <Image
-          src="/vetted-logo.svg"
-          alt="Vetted"
-          width={480}
-          height={83}
-          className="relative z-10"
-          priority
-        />
       </div>
 
       {/* ===== RIGHT: Auth Form ===== */}
@@ -337,7 +346,7 @@ function LoginForm() {
                       className="w-full flex items-center justify-center gap-3 px-4 py-3.5 mb-6 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
                     >
                       <Wallet className="w-5 h-5" />
-                      {isConnected && address ? "Continue with Connected Wallet" : "Connect Wallet"}
+                      Connect Wallet
                     </button>
                   ) : (
                     // RainbowKit modal context not ready yet — show loading state

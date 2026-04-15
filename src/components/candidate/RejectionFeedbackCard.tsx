@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { STATUS_COLORS, getMatchScoreColors } from "@/config/colors";
+import { GUILD_RESUBMIT_CONFIG } from "@/config/constants";
 import type { CandidateRejectionFeedback } from "@/types";
 
 interface RejectionFeedbackCardProps {
@@ -130,22 +131,50 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
           )}
 
           {/* Resubmit CTA */}
-          {feedback.canResubmit && onResubmit && (
-            <div className={`pt-2 border-t ${STATUS_COLORS.negative.border}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onResubmit}
-                className="gap-2"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Resubmit Application
-              </Button>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                You have {1 - feedback.resubmissionCount} resubmission{1 - feedback.resubmissionCount !== 1 ? "s" : ""} remaining.
-              </p>
-            </div>
-          )}
+          {feedback.canResubmit && onResubmit && (() => {
+            const cooldownMs = GUILD_RESUBMIT_CONFIG.COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+            const rejectedAt = feedback.finalizedAt ? new Date(feedback.finalizedAt).getTime() : 0;
+            const reapplyAt = rejectedAt + cooldownMs;
+            const now = Date.now();
+            const daysLeft = Math.ceil((reapplyAt - now) / (24 * 60 * 60 * 1000));
+            const cooldownActive = rejectedAt > 0 && now < reapplyAt;
+
+            return (
+              <div className={`pt-2 border-t ${STATUS_COLORS.negative.border}`}>
+                {cooldownActive ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled
+                      className="gap-2 opacity-50"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Reapply in {daysLeft} day{daysLeft !== 1 ? "s" : ""}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      You can reapply {GUILD_RESUBMIT_CONFIG.COOLDOWN_DAYS} days after rejection.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onResubmit}
+                      className="gap-2"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Resubmit Application
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      You have {GUILD_RESUBMIT_CONFIG.MAX_RESUBMISSIONS - feedback.resubmissionCount} resubmission{GUILD_RESUBMIT_CONFIG.MAX_RESUBMISSIONS - feedback.resubmissionCount !== 1 ? "s" : ""} remaining.
+                    </p>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

@@ -12,7 +12,6 @@ import {
   ArrowRight,
   Eye,
   Star,
-  Gavel,
 } from "lucide-react";
 import { candidateApi, extractApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
@@ -24,7 +23,7 @@ import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
 import type { GuildApplicationSummary, CandidateRejectionFeedback } from "@/types";
 import { DataSection } from "@/lib/motion";
 import { RejectionFeedbackCard } from "@/components/candidate/RejectionFeedbackCard";
-import { Button } from "@/components/ui/button";
+
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
@@ -174,11 +173,6 @@ export default function CandidateGuilds() {
               const StatusIcon = GUILD_STATUS_ICONS[app.status] || Clock;
               const appliedDate = app.submittedAt || app.createdAt;
 
-              const isRejected = app.status === "rejected" || app.status === "finalized";
-              const rejectedAt = new Date(app.createdAt || app.submittedAt || Date.now());
-              const appealDeadline = new Date(rejectedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-              const canAppeal = isRejected && new Date() < appealDeadline;
-              const daysLeft = Math.ceil((appealDeadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
               const guildId = app.guildId || app.guild?.id;
               const feedback = rejectionFeedback[app.id];
 
@@ -245,19 +239,6 @@ export default function CandidateGuilds() {
                       </div>
                     </div>
                   </button>
-
-                  {/* Appeal button — shown outside card to avoid button nesting */}
-                  {canAppeal && guildId && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/guilds/${guildId}/appeal`)}
-                      className="w-full gap-2"
-                    >
-                      <Gavel className="w-4 h-4" />
-                      Appeal Decision ({daysLeft}d left)
-                    </Button>
-                  )}
 
                   {/* Rejection feedback */}
                   {feedback && (

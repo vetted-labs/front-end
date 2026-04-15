@@ -114,6 +114,16 @@ export const JOB_STATUS_CONFIG: Record<string, { label: string; className: strin
 };
 
 /**
+ * Guild application resubmission configuration.
+ */
+export const GUILD_RESUBMIT_CONFIG = {
+  /** Days after rejection before candidate can reapply */
+  COOLDOWN_DAYS: 30,
+  /** Maximum number of resubmissions allowed per guild */
+  MAX_RESUBMISSIONS: 1,
+} as const;
+
+/**
  * Shared appeal status configuration.
  * Maps appeal statuses to labels and text color classes.
  */

@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Linkedin,
   Globe,
+  Download,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
 import { getPlatformIcon } from "@/lib/social-links";
@@ -33,6 +34,8 @@ export interface ReviewProfileStepProps {
 
 
 export function ReviewProfileStep({ application, level }: ReviewProfileStepProps) {
+  const resumeUrl = application.resumeUrl ? getAssetUrl(application.resumeUrl) : null;
+
   const displayName = application.fullName;
   const displayTitle = application.currentTitle;
   const displayCompany = application.currentCompany;
@@ -106,15 +109,15 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           {/* Links */}
           {(application.resumeUrl || application.socialLinks?.some((l) => l.url?.trim()) || application.linkedinUrl || application.portfolioUrl) && (
             <div className="flex flex-wrap gap-3">
-              {application.resumeUrl && (
+              {resumeUrl && (
                 <a
-                  href={getAssetUrl(application.resumeUrl)}
+                  href={resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 rounded-lg bg-muted/20 border border-border px-3.5 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-border/70 transition-colors duration-200"
                 >
-                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                  Resume / CV
+                  <Download className="w-3.5 h-3.5 shrink-0" />
+                  Download Resume
                   <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-80 transition-opacity" />
                 </a>
               )}
@@ -166,6 +169,23 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
                     )}
                   </>
                 )}
+            </div>
+          )}
+
+          {/* Inline Resume Viewer */}
+          {resumeUrl && (
+            <div className="rounded-xl border border-border bg-muted/10 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/30">
+                <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Resume / CV Preview
+                </span>
+              </div>
+              <iframe
+                src={resumeUrl}
+                title="Resume preview"
+                className="w-full h-[500px] bg-white"
+              />
             </div>
           )}
         </div>

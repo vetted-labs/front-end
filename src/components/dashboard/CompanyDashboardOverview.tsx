@@ -356,12 +356,9 @@ export function CompanyDashboardOverview() {
         {/* ═══ MAIN CONTENT GRID ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 mb-6">
 
-          {/* ── LEFT COLUMN ── */}
-          <div className="space-y-6">
-
-            {/* Recent Activity */}
+            {/* Recent Activity — spans full width */}
             {activityFeed.length > 0 && (
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="lg:col-span-2 rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                   <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" />
@@ -400,7 +397,7 @@ export function CompanyDashboardOverview() {
             )}
 
             {/* Recent Applications */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground">
                   Recent Applications
@@ -441,6 +438,59 @@ export function CompanyDashboardOverview() {
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getCandidateStatusDot(app.status)}`} />
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
                     </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Your Jobs */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
+                <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  Your Jobs
+                </h2>
+                <Link href="/dashboard/jobs" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-2">
+                  Manage
+                  <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+              {recentJobs.length === 0 ? (
+                <div className="text-center py-10 flex-1 flex flex-col items-center justify-center">
+                  <Briefcase className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-foreground mb-0.5">No jobs posted</p>
+                  <p className="text-xs text-muted-foreground/60 mb-3">
+                    Post your first job to start receiving applications
+                  </p>
+                  <Link
+                    href="/jobs/new"
+                    className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    Post a Job
+                  </Link>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/10 dark:divide-white/[0.03] flex-1">
+                  {recentJobs.map((job) => (
+                      <Link
+                        key={job.id}
+                        href={`/dashboard/jobs/${job.id}`}
+                        className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
+                      >
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          job.status === "active" ? "bg-positive" : job.status === "paused" ? "bg-warning" : "bg-muted-foreground/30"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                            {job.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground/50 mt-0.5">
+                            {job.location} &middot; {job.applicants ?? 0} applicants
+                          </p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
+                      </Link>
                   ))}
                 </div>
               )}
@@ -527,66 +577,9 @@ export function CompanyDashboardOverview() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* ── RIGHT COLUMN ── */}
-          <div className="space-y-6">
-
-            {/* Your Jobs */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
-                <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-primary" />
-                  Your Jobs
-                </h2>
-                <Link href="/dashboard/jobs" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-2">
-                  Manage
-                  <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-              {recentJobs.length === 0 ? (
-                <div className="text-center py-10">
-                  <Briefcase className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-foreground mb-0.5">No jobs posted</p>
-                  <p className="text-xs text-muted-foreground/60 mb-3">
-                    Post your first job to start receiving applications
-                  </p>
-                  <Link
-                    href="/jobs/new"
-                    className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    Post a Job
-                  </Link>
-                </div>
-              ) : (
-                <div className="divide-y divide-border/10 dark:divide-white/[0.03]">
-                  {recentJobs.map((job) => (
-                      <Link
-                        key={job.id}
-                        href={`/dashboard/jobs/${job.id}`}
-                        className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 dark:hover:bg-muted/20 transition-colors group"
-                      >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          job.status === "active" ? "bg-positive" : job.status === "paused" ? "bg-warning" : "bg-muted-foreground/30"
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                            {job.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground/50 mt-0.5">
-                            {job.location} &middot; {job.applicants ?? 0} applicants
-                          </p>
-                        </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
-                      </Link>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Upcoming Meetings */}
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/20 dark:border-border">
                 <h2 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-primary" />
@@ -648,7 +641,6 @@ export function CompanyDashboardOverview() {
                 </div>
               )}
             </div>
-          </div>
         </div>
 
         {/* ═══ QUICK ACTIONS ═══ */}
