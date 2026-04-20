@@ -6,8 +6,6 @@ import {
   Building2,
   Globe,
   MapPin,
-  Users,
-  Briefcase,
   Upload,
   Save,
   X,
@@ -16,6 +14,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { toast } from "sonner";
 import { Button, Input, Textarea, NativeSelect, Alert } from "@/components/ui";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
@@ -388,7 +387,7 @@ export default function CompanyProfilePage() {
                     Company Size
                   </label>
                   <p className="text-foreground flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <VettedIcon name="profile" className="w-4 h-4 text-muted-foreground" />
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </p>
                 </div>
@@ -400,7 +399,7 @@ export default function CompanyProfilePage() {
                     Industry
                   </label>
                   <p className="text-foreground flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <VettedIcon name="job" className="w-4 h-4 text-muted-foreground" />
                     {INDUSTRIES.find((i) => i.value === profile.industry)?.label ||
                       profile.industry}
                   </p>

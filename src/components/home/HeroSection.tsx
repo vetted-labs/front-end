@@ -1,6 +1,7 @@
 "use client";
 
-import { Users, Star, Briefcase, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild } from "@/types";
 
@@ -12,27 +13,27 @@ interface HeroSectionProps {
   onPostJob: () => void;
 }
 
-const cards = [
+const cards: { key: string; icon: VettedIconName; title: string; desc: string; featured?: boolean }[] = [
   {
     key: "candidate",
-    icon: Users,
+    icon: "vet-talent",
     title: "Get Vetted",
     desc: "Prove your skills once. Let domain experts make you visible to the right opportunities.",
   },
   {
     key: "expert",
-    icon: Star,
+    icon: "vetting",
     title: "Monetize Your Judgment",
     desc: "Define standards. Vet candidates. Build on-chain authority in your field — and earn for accuracy.",
     featured: true,
   },
   {
     key: "company",
-    icon: Briefcase,
+    icon: "job",
     title: "Start Hiring",
     desc: "Hire with conviction. Get a shortlist of pre-vetted candidates that experts bet on.",
   },
-] as const;
+];
 
 export function HeroSection({
   guilds,
@@ -73,14 +74,12 @@ export function HeroSection({
       {/* Value Cards */}
       <div className="grid md:grid-cols-3 gap-4 mb-9">
         {cards.map((card) => {
-          const Icon = card.icon;
-          const featured = "featured" in card && card.featured;
           return (
             <button
               key={card.key}
               onClick={handlers[card.key]}
               className={`relative text-left rounded-xl p-6 border transition-colors cursor-pointer group ${
-                featured
+                card.featured
                   ? "border-primary/15 bg-primary/[0.04] hover:border-primary/25"
                   : "bg-card border-border hover:border-border"
               }`}
@@ -91,7 +90,7 @@ export function HeroSection({
               </span>
 
               <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 bg-primary/10 border border-primary/15">
-                <Icon className="w-5 h-5 text-primary" />
+                <VettedIcon name={card.icon} className="w-5 h-5 text-primary" />
               </div>
               <h3 className="font-display font-bold text-xl tracking-tight text-foreground mb-1.5">
                 {card.title}

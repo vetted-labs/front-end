@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Shield } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { JobFormData } from "@/hooks/useJobForm";
 import type { Guild } from "@/types";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +27,7 @@ export function JobRequirements({
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
           <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-info-blue" />
+            <VettedIcon name="guild-ranks" className="w-5 h-5 text-info-blue" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-foreground">
@@ -63,7 +63,7 @@ export function JobRequirements({
       <div className="p-8 space-y-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
           <div className="w-10 h-10 bg-info-blue/10 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-info-blue" />
+            <VettedIcon name="document" className="w-5 h-5 text-info-blue" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-foreground">

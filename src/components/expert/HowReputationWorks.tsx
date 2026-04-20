@@ -5,23 +5,27 @@ import { Card } from "@/components/ui/card";
 import {
   Info,
   ChevronDown,
-  Vote,
-  Award,
-  Landmark,
-  ShieldAlert,
-  Calculator,
-  TrendingUp,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import { HelpLink } from "@/components/ui/HelpLink";
 import { DOC_LINKS } from "@/config/docLinks";
 
-function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
+function SectionIcon({ icon }: { icon: React.ElementType | VettedIconName }) {
+  if (typeof icon === "string") {
+    return <VettedIcon name={icon as VettedIconName} className="w-4 h-4 text-muted-foreground" />;
+  }
+  const Icon = icon;
+  return <Icon className="w-4 h-4 text-muted-foreground" />;
+}
+
+function Section({ icon, title, children }: { icon: React.ElementType | VettedIconName; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-4 h-4 text-muted-foreground" />
+          <SectionIcon icon={icon} />
         </div>
         <h4 className="text-sm font-bold">{title}</h4>
       </div>
@@ -65,7 +69,7 @@ export function HowReputationWorks() {
       {open && (
         <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
-            <Section icon={Vote} title="Vetting">
+            <Section icon="voting" title="Vetting">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Review candidates and submit your score</Bullet>
                 <Bullet>Scores are compared to <strong className="text-foreground/80">IQR-based consensus</strong> after finalization</Bullet>
@@ -73,7 +77,7 @@ export function HowReputationWorks() {
               </ul>
             </Section>
 
-            <Section icon={Award} title="Endorsements">
+            <Section icon="endorsement" title="Endorsements">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Stake on candidates you believe in</Bullet>
                 <Bullet>Earn <strong className="text-foreground/80">+20 reputation</strong> when your endorsed candidate gets hired</Bullet>
@@ -81,7 +85,7 @@ export function HowReputationWorks() {
               </ul>
             </Section>
 
-            <Section icon={Landmark} title="Governance">
+            <Section icon={"voting" as VettedIconName} title="Governance">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Vote on guild proposals and governance decisions</Bullet>
                 <Bullet>Earn <strong className="text-foreground/80">+5 to +10 reputation</strong> per vote</Bullet>
@@ -89,7 +93,7 @@ export function HowReputationWorks() {
               </ul>
             </Section>
 
-            <Section icon={ShieldAlert} title="Slashing Risk">
+            <Section icon={"staking" as VettedIconName} title="Slashing Risk">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Scores far from consensus trigger stake slashing</Bullet>
                 <Bullet>Up to <strong className="text-foreground/80">25% of staked VETD</strong> may be slashed</Bullet>
@@ -101,7 +105,7 @@ export function HowReputationWorks() {
             <div className="sm:col-span-2 rounded-xl border border-border bg-muted/20 p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
+                  <VettedIcon name="consensus" className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <h4 className="text-sm font-bold">How Alignment Is Calculated</h4>
               </div>
@@ -171,7 +175,7 @@ export function HowReputationWorks() {
               </div>
             </div>
 
-            <Section icon={TrendingUp} title="Reward Tiers">
+            <Section icon="reputation" title="Reward Tiers">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation <span className="text-muted-foreground/50 text-xs">0 &ndash; 999</span></span>
@@ -189,7 +193,7 @@ export function HowReputationWorks() {
               <p className="text-xs text-muted-foreground/60 mt-2.5">Higher tiers earn a larger share of every vetting reward pool</p>
             </Section>
 
-            <Section icon={Calculator} title="Pool Distribution">
+            <Section icon={"earnings" as VettedIconName} title="Pool Distribution">
               <div className="bg-background/60 rounded-lg px-3.5 py-2.5 border border-border font-mono text-xs text-center text-muted-foreground leading-relaxed">
                 Reward = (Your Weight / Total Aligned Weights) &times; Pool
               </div>

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { Coins, Vote, Award, Layers } from "lucide-react";
+import { Coins, Layers } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { STAT_ICON, STATUS_COLORS } from "@/config/colors";
 import type { EarningsEntry, PaginationInfo } from "@/types";
 
@@ -15,9 +16,9 @@ const typeSubLabels: Record<string, string> = {
   endorsement: "Endorsement payout",
 };
 
-const typeIcons: Record<string, typeof Vote> = {
-  voting_reward: Vote,
-  endorsement: Award,
+const typeIcons: Record<string, VettedIconName> = {
+  voting_reward: "voting",
+  endorsement: "endorsement",
 };
 
 function groupByDate(items: EarningsEntry[]): Record<string, EarningsEntry[]> {
@@ -87,7 +88,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
             {/* Transaction rows */}
             <div className="flex flex-col gap-2">
               {entries.map((entry, i) => {
-                const TypeIcon = typeIcons[entry.type] || Coins;
+                const typeIconName = typeIcons[entry.type];
                 const subLabel = typeSubLabels[entry.type];
                 const currency = entry.currency || "VETD";
 
@@ -104,7 +105,11 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                       {/* Info section */}
                       <div className="flex items-center gap-4 px-4 py-3.5 min-w-0">
                         <div className={`w-8 h-8 rounded-lg ${STAT_ICON.bg} flex items-center justify-center flex-shrink-0`}>
-                          <TypeIcon className={`w-4 h-4 ${STAT_ICON.text}`} />
+                          {typeIconName ? (
+                            <VettedIcon name={typeIconName} className={`w-4 h-4 ${STAT_ICON.text}`} />
+                          ) : (
+                            <Coins className={`w-4 h-4 ${STAT_ICON.text}`} />
+                          )}
                         </div>
 
                         <div className="min-w-0 flex-1">

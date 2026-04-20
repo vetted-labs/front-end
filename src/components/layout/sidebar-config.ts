@@ -1,31 +1,17 @@
 import {
-  Home,
-  Users,
-  Award,
-  Landmark,
-  TrendingUp,
-  Wallet,
-  Bell,
-  LayoutDashboard,
-  BarChart3,
-  Settings,
-  Briefcase,
   Building2,
-  FileText,
-  Shield,
-  MessageSquare,
-  Coins,
-  Handshake,
-  Trophy,
+  Settings,
   Clock,
-  BookOpen,
   type LucideIcon,
 } from "lucide-react";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
+
+export type SidebarIcon = LucideIcon | VettedIconName;
 
 export interface NavItem {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: SidebarIcon;
   /** Show badge from useNotificationCount or useMessageCount */
   badge?: "notifications" | "messages";
   /** When true, only highlight on exact pathname match (no prefix matching) */
@@ -48,44 +34,44 @@ export const expertSidebarConfig: SidebarConfig = {
     {
       label: "Home",
       items: [
-        { label: "Dashboard", href: "/expert/dashboard", icon: Home },
-        { label: "Notifications", href: "/expert/notifications", icon: Bell, badge: "notifications" },
+        { label: "Dashboard", href: "/expert/dashboard", icon: "home" },
+        { label: "Notifications", href: "/expert/notifications", icon: "notification", badge: "notifications" },
       ],
     },
     {
       label: "Vetting",
       items: [
-        { label: "Applications", href: "/expert/voting", icon: FileText },
-        { label: "Endorsements", href: "/expert/endorsements", icon: Handshake },
+        { label: "Applications", href: "/expert/voting", icon: "application" },
+        { label: "Endorsements", href: "/expert/endorsements", icon: "endorsement" },
       ],
     },
     {
       label: "Guilds",
       items: [
-        { label: "My Guilds", href: "/expert/guilds", icon: Users },
-        { label: "Guild Ranks", href: "/expert/guild-ranks", icon: Shield },
+        { label: "My Guilds", href: "/expert/guilds", icon: "guilds" },
+        { label: "Guild Ranks", href: "/expert/guild-ranks", icon: "guild-ranks" },
       ],
     },
     {
       label: "Governance",
       items: [
-        { label: "Proposals", href: "/expert/governance", icon: Landmark },
+        { label: "Proposals", href: "/expert/governance", icon: "voting" },
       ],
     },
     {
       label: "Rewards",
       items: [
-        { label: "Analytics", href: "/expert/analytics", icon: BarChart3 },
-        { label: "Earnings", href: "/expert/earnings", icon: Coins },
-        { label: "Reputation", href: "/expert/reputation", icon: TrendingUp },
-        { label: "Leaderboard", href: "/expert/leaderboard", icon: Trophy },
-        { label: "Withdrawals", href: "/expert/withdrawals", icon: Wallet },
+        { label: "Analytics", href: "/expert/analytics", icon: "reputation" },
+        { label: "Earnings", href: "/expert/earnings", icon: "earnings" },
+        { label: "Reputation", href: "/expert/reputation", icon: "reputation" },
+        { label: "Leaderboard", href: "/expert/leaderboard", icon: "leaderboard" },
+        { label: "Withdrawals", href: "/expert/withdrawals", icon: "wallet" },
       ],
     },
     {
       label: "Help",
       items: [
-        { label: "Docs", href: "/docs/experts", icon: BookOpen },
+        { label: "Docs", href: "/docs/experts", icon: "document" },
       ],
     },
   ],
@@ -109,7 +95,7 @@ export const restrictedExpertSidebarConfig: SidebarConfig = {
     {
       label: "Explore",
       items: [
-        { label: "Browse Guilds", href: "/guilds", icon: Users },
+        { label: "Browse Guilds", href: "/guilds", icon: "guilds" },
       ],
     },
   ],
@@ -121,30 +107,30 @@ export const companySidebarConfig: SidebarConfig = {
     {
       label: "Home",
       items: [
-        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
-        { label: "Notifications", href: "/dashboard/notifications", icon: Bell, badge: "notifications" },
+        { label: "Dashboard", href: "/dashboard", icon: "home", exact: true },
+        { label: "Notifications", href: "/dashboard/notifications", icon: "notification", badge: "notifications" },
       ],
     },
     {
       label: "Hiring",
       items: [
-        { label: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
-        { label: "Candidates", href: "/dashboard/candidates", icon: Users },
-        { label: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
+        { label: "Jobs", href: "/dashboard/jobs", icon: "job" },
+        { label: "Candidates", href: "/dashboard/candidates", icon: "vet-talent" },
+        { label: "Messages", href: "/dashboard/messages", icon: "message", badge: "messages" },
       ],
     },
     {
       label: "Company",
       items: [
         { label: "Company Profile", href: "/dashboard/company-profile", icon: Building2 },
-        { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+        { label: "Analytics", href: "/dashboard/analytics", icon: "reputation" },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
     },
     {
       label: "Help",
       items: [
-        { label: "Docs", href: "/docs/companies", icon: BookOpen },
+        { label: "Docs", href: "/docs/companies", icon: "document" },
       ],
     },
   ],
@@ -156,30 +142,30 @@ export const candidateSidebarConfig: SidebarConfig = {
     {
       label: "Home",
       items: [
-        { label: "Dashboard", href: "/candidate/dashboard", icon: LayoutDashboard, exact: true },
-        { label: "Notifications", href: "/candidate/notifications", icon: Bell, badge: "notifications" },
-        { label: "Analytics", href: "/candidate/analytics", icon: BarChart3 },
+        { label: "Dashboard", href: "/candidate/dashboard", icon: "home", exact: true },
+        { label: "Notifications", href: "/candidate/notifications", icon: "notification", badge: "notifications" },
+        { label: "Analytics", href: "/candidate/analytics", icon: "reputation" },
       ],
     },
     {
       label: "Jobs",
       items: [
-        { label: "Browse Jobs", href: "/browse/jobs", icon: Briefcase },
-        { label: "My Applications", href: "/candidate/applications", icon: FileText },
-        { label: "Messages", href: "/candidate/messages", icon: MessageSquare, badge: "messages" },
+        { label: "Browse Jobs", href: "/browse/jobs", icon: "job" },
+        { label: "My Applications", href: "/candidate/applications", icon: "application" },
+        { label: "Messages", href: "/candidate/messages", icon: "message", badge: "messages" },
       ],
     },
     {
       label: "Guilds",
       items: [
-        { label: "Browse Guilds", href: "/guilds", icon: Users },
-        { label: "My Guilds", href: "/candidate/guilds", icon: Shield },
+        { label: "Browse Guilds", href: "/guilds", icon: "guilds" },
+        { label: "My Guilds", href: "/candidate/guilds", icon: "guild-ranks" },
       ],
     },
     {
       label: "Help",
       items: [
-        { label: "Docs", href: "/docs/candidates", icon: BookOpen },
+        { label: "Docs", href: "/docs/candidates", icon: "document" },
       ],
     },
   ],
@@ -191,10 +177,10 @@ export const browseSidebarConfig: SidebarConfig = {
     {
       label: "Explore",
       items: [
-        { label: "Home", href: "/", icon: Home },
-        { label: "Find Jobs", href: "/browse/jobs", icon: Briefcase },
-        { label: "Guilds", href: "/guilds", icon: Users },
-        { label: "Docs", href: "/docs", icon: BookOpen },
+        { label: "Home", href: "/", icon: "home" },
+        { label: "Find Jobs", href: "/browse/jobs", icon: "job" },
+        { label: "Guilds", href: "/guilds", icon: "guilds" },
+        { label: "Docs", href: "/docs", icon: "document" },
       ],
     },
     {
@@ -203,9 +189,9 @@ export const browseSidebarConfig: SidebarConfig = {
         {
           label: "Get Vetted",
           href: "/auth/login?type=candidate",
-          icon: Users,
+          icon: "vet-talent",
         },
-        { label: "Vet Talent", href: "/auth/login?type=expert", icon: Award },
+        { label: "Vet Talent", href: "/auth/login?type=expert", icon: "vetting" },
         {
           label: "Start Hiring",
           href: "/auth/login?type=company",

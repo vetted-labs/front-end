@@ -2,20 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type LucideIcon } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
+import type { SidebarIcon } from "./sidebar-config";
 import { useSidebar } from "./SidebarProvider";
 import { cn } from "@/lib/utils";
 
 interface SidebarNavItemProps {
   href: string;
-  icon: LucideIcon;
+  icon: SidebarIcon;
   label: string;
   badge?: number;
   disabled?: boolean;
   exact?: boolean;
 }
 
-export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact }: SidebarNavItemProps) {
+function renderIcon(icon: SidebarIcon) {
+  if (typeof icon === "string") {
+    return <VettedIcon name={icon as VettedIconName} className="h-5 w-5 flex-shrink-0" />;
+  }
+  const Icon = icon;
+  return <Icon className="h-5 w-5 flex-shrink-0" />;
+}
+
+export function SidebarNavItem({ href, icon, label, badge, disabled, exact }: SidebarNavItemProps) {
   const pathname = usePathname();
   const { isCollapsed } = useSidebar();
   const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
@@ -30,7 +39,7 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
         )}
         aria-disabled="true"
       >
-        <Icon className="h-5 w-5 flex-shrink-0" />
+        {renderIcon(icon)}
         {!isCollapsed && <span className="truncate">{label}</span>}
         {isCollapsed && (
           <span className="pointer-events-none absolute left-full z-50 ml-2 hidden whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md border border-border group-hover:block">
@@ -53,7 +62,7 @@ export function SidebarNavItem({ href, icon: Icon, label, badge, disabled, exact
         isCollapsed && "justify-center px-2"
       )}
     >
-      <Icon className="h-5 w-5 flex-shrink-0" />
+      {renderIcon(icon)}
 
       {!isCollapsed && (
         <>

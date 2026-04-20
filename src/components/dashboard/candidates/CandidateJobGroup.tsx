@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Briefcase, ChevronDown, Award } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { cn } from "@/lib/utils";
 import { getCandidateStatusDot } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
@@ -69,7 +70,7 @@ export function CandidateJobGroup({
         onClick={onToggle}
         className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors border-b border-border/20 dark:border-border"
       >
-        <Briefcase className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+        <VettedIcon name="job" className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
           {job.title}
         </span>
@@ -142,7 +143,7 @@ export function CandidateJobGroup({
                     </p>
                     {endorsements > 0 && (
                       <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-positive bg-positive/10 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                        <Award className="w-3 h-3" />
+                        <VettedIcon name="endorsement" className="w-3 h-3" />
                         {endorsements}
                       </span>
                     )}

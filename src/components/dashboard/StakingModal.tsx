@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { formatEther } from "viem";
 import { sepolia } from "wagmi/chains";
-import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, Wallet, Shield, ArrowRight } from "lucide-react";
+import { X, AlertTriangle, TrendingUp, TrendingDown, ChevronDown, ArrowRight } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { useVettedToken, useGuildStaking, useTransactionConfirmation } from "@/lib/hooks/useVettedContracts";
 import { usePermitOrApprove } from "@/lib/hooks/usePermitOrApprove";
 import { STATUS_COLORS } from "@/config/colors";
@@ -392,7 +393,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                   {isGuildLocked ? (
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                        <Shield className="w-5 h-5 text-primary" />
+                        <VettedIcon name="guilds" className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold truncate">{selectedGuild?.name || "Loading..."}</h4>
@@ -406,7 +407,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                       className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                        <Shield className="w-5 h-5 text-primary" />
+                        <VettedIcon name="guilds" className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold truncate">
@@ -451,14 +452,14 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                 {/* ── Balance & Staked (inline like endorsement modal) ── */}
                 <div className="flex items-center justify-between text-xs px-1">
                   <div className="flex items-center gap-2">
-                    <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <VettedIcon name="wallet" className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Balance:</span>
                     <span className="font-medium tabular-nums">
                       {formatTokenAmount(currentBalance)} {balanceLabel}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                    <VettedIcon name="staking" className="w-3.5 h-3.5 text-primary" />
                     <span className="text-primary/70">Staked:</span>
                     <span className="font-medium text-primary tabular-nums">
                       {selectedGuild ? `${formatTokenAmount(currentStake)} ${stakeLabel}` : "—"}

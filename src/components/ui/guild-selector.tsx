@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Shield, ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getGuildIcon } from "@/lib/guildHelpers";
+import { getGuildIconName } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import type { GuildOption } from "@/types/guild";
 
@@ -61,7 +62,8 @@ export function GuildSelector({
         aria-label={allLabel}
         aria-expanded={open}
       >
-        <Shield
+        <VettedIcon
+          name="guilds"
           className={cn(
             "text-muted-foreground flex-shrink-0",
             size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"
@@ -93,7 +95,7 @@ export function GuildSelector({
               )}
             >
               <div className="w-8 h-8 rounded-lg border border-border/60 bg-muted/50 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-4 h-4 text-muted-foreground" />
+                <VettedIcon name="guilds" className="w-4 h-4 text-muted-foreground" />
               </div>
               <span className="flex-1 text-sm font-medium">{allLabel}</span>
               {value === "all" && (
@@ -103,7 +105,7 @@ export function GuildSelector({
 
             {/* Guild options */}
             {guilds.map((guild) => {
-              const GuildIcon = getGuildIcon(guild.name);
+              const guildIconName = getGuildIconName(guild.name);
               const isSelected = value === guild.id;
 
               return (
@@ -119,7 +121,7 @@ export function GuildSelector({
                   )}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/10 border border-border/60 flex items-center justify-center flex-shrink-0">
-                    <GuildIcon className="w-4 h-4 text-primary" />
+                    <VettedIcon name={guildIconName} className="w-4 h-4 text-primary" />
                   </div>
                   <span className="flex-1 text-sm font-medium truncate group-hover:text-primary transition-colors">
                     {guild.name}

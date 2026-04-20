@@ -10,9 +10,9 @@ import {
   ExternalLink,
   X,
   Tag,
-  Briefcase,
   Plus,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { toast } from "sonner";
 import { candidateApi } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
@@ -352,7 +352,7 @@ export default function CandidateProfilePage() {
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-muted-foreground" />
+                <VettedIcon name="job" className="w-4 h-4 text-muted-foreground" />
                 Work History
               </h2>
               {isEditing && (

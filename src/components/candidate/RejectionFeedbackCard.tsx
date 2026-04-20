@@ -6,10 +6,9 @@ import {
   ChevronDown,
   ChevronUp,
   Target,
-  TrendingUp,
-  MessageSquare,
   RefreshCw,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Button } from "@/components/ui/button";
 import { STATUS_COLORS, getMatchScoreColors } from "@/config/colors";
 import { GUILD_RESUBMIT_CONFIG } from "@/config/constants";
@@ -95,7 +94,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
           {feedback.feedbackSummary.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                <VettedIcon name="message" className="w-4 h-4 text-muted-foreground" />
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Reviewer Feedback
                 </p>
@@ -114,7 +113,7 @@ export function RejectionFeedbackCard({ feedback, onResubmit }: RejectionFeedbac
           {feedback.improvementAreas.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                <VettedIcon name="reputation" className="w-4 h-4 text-muted-foreground" />
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Areas for Improvement
                 </p>

@@ -1,4 +1,5 @@
-import { Target, Activity, BookOpen, Award } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import { computeAccuracy, computeConsistency } from "@/lib/reputation-helpers";
 
@@ -106,8 +107,9 @@ export function ReputationBreakdownCards({
   const cards = [
     {
       name: "Review Accuracy",
+
+      vettedIcon: "reputation" as VettedIconName,
       value: `${accuracyPct}%`,
-      icon: Target,
       viz: (
         <ProgressArc
           value={accuracyPct}
@@ -127,7 +129,8 @@ export function ReputationBreakdownCards({
     {
       name: "Consistency",
       value: `${consistencyPct}%`,
-      icon: Activity,
+
+      vettedIcon: "consensus" as VettedIconName,
       viz: <MiniBarChart values={miniChartValues} />,
       cardBg: "bg-info-blue/[0.04]",
       borderColor: "border-info-blue/[0.12]",
@@ -141,7 +144,8 @@ export function ReputationBreakdownCards({
     {
       name: "Review Activity",
       value: String(reviewCount),
-      icon: BookOpen,
+
+      vettedIcon: "vetting" as VettedIconName,
       viz: (
         <CountDisplay
           count={reviewCount}
@@ -161,7 +165,8 @@ export function ReputationBreakdownCards({
     {
       name: "Endorsement Record",
       value: String(endorsementCount),
-      icon: Award,
+
+      vettedIcon: "endorsement" as VettedIconName,
       viz: (
         <CountDisplay
           count={endorsementCount}
@@ -186,9 +191,7 @@ export function ReputationBreakdownCards({
         Score Breakdown
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
+        {cards.map((card) => (
             <div
               key={card.name}
               className={`
@@ -203,7 +206,7 @@ export function ReputationBreakdownCards({
               {/* Header: icon + visualization */}
               <div className="flex items-start justify-between mb-5">
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${card.iconBg}`}>
-                  <Icon className={`w-[22px] h-[22px] ${card.iconColor}`} />
+                  <VettedIcon name={card.vettedIcon} className={`w-[22px] h-[22px] ${card.iconColor}`} />
                 </div>
                 {card.viz}
               </div>
@@ -226,8 +229,7 @@ export function ReputationBreakdownCards({
                 />
               </div>
             </div>
-          );
-        })}
+          ))}
       </div>
     </section>
   );

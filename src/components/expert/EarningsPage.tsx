@@ -25,6 +25,7 @@ import type {
 
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { EarningsSummaryCards } from "@/components/expert/EarningsSummaryCards";
 import { ClaimRewardsCard } from "@/components/expert/ClaimRewardsCard";
 import { HowEarningsWork } from "@/components/expert/HowEarningsWork";
@@ -187,9 +188,12 @@ export default function EarningsPage() {
         {/* ── Page header ── */}
         <div>
           <div className="w-12 h-[3px] rounded-full bg-primary mb-4" />
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Earnings
-          </h1>
+          <div className="flex items-center gap-3">
+            <VettedIcon name="earnings" className="w-7 h-7 text-primary" />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              Earnings
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground/60 mt-1">
             Track your review income, pending payouts, and on-chain transactions
           </p>

@@ -1,6 +1,7 @@
 "use client";
 
-import { TrendingUp, CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { GUILD_RANK_CRITERIA, GUILD_RANK_ORDER } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertRole } from "@/types";
@@ -38,7 +39,7 @@ export function PromotionProgressCard({
     return (
       <div className={`rounded-xl border ${STATUS_COLORS.warning.border} ${STATUS_COLORS.warning.bgSubtle} p-6`}>
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
+          <VettedIcon name="reputation" className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Rank: Guild Master
           </p>
@@ -97,7 +98,7 @@ export function PromotionProgressCard({
     <div className="rounded-xl border border-border bg-card p-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" />
+          <VettedIcon name="reputation" className="w-4 h-4 text-primary" />
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Next Rank: {RANK_LABELS[nextRank] ?? nextRank}
           </p>

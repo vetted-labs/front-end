@@ -13,8 +13,8 @@ import {
   BarChart3,
   Star,
   Loader2,
-  Vote,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { toast } from "sonner";
 import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
 import { LiveVoteBanner } from "@/components/governance/LiveVoteBanner";
@@ -109,13 +109,16 @@ export default function GovernancePage() {
             {/* Left: Title area */}
             <div className="flex-1 min-w-0">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-medium text-primary uppercase tracking-wider mb-5">
-                <Vote className="w-3.5 h-3.5" />
+                <VettedIcon name="voting" className="w-3.5 h-3.5" />
                 Protocol Governance
               </div>
 
-              <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-[1.05] mb-4 text-foreground">
-                Shape the<br />Protocol
-              </h1>
+              <div className="flex items-center gap-3 mb-4">
+                <VettedIcon name="voting" className="w-8 h-8 text-primary" />
+                <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-[1.05] text-foreground">
+                  Shape the<br />Protocol
+                </h1>
+              </div>
 
               <p className="text-base text-muted-foreground max-w-lg leading-relaxed mb-7">
                 Your voice carries weight. Propose changes, vote on the future of Vetted,

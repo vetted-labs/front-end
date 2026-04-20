@@ -1,13 +1,4 @@
 import {
-  Shield,
-  Code2,
-  Palette,
-  Package,
-  Megaphone,
-  Handshake,
-  Settings,
-  Calculator,
-  UserPlus,
   FileText,
   CheckCircle,
   Briefcase,
@@ -15,6 +6,7 @@ import {
   Activity,
   type LucideIcon,
 } from "lucide-react";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import type { GuildRecord } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
 
@@ -38,29 +30,29 @@ export const resolveGuildId = (
   })?.id;
 };
 
-// Get guild icon based on guild name
-export const getGuildIcon = (guildName: string): LucideIcon => {
+// Get guild icon name based on guild name
+export const getGuildIconName = (guildName: string): VettedIconName => {
   const name = guildName.toLowerCase();
 
   if (name.includes('engineering') || name.includes('technology')) {
-    return Code2;
+    return "engineering";
   } else if (name.includes('design') || name.includes('ux')) {
-    return Palette;
+    return "design";
   } else if (name.includes('product')) {
-    return Package;
+    return "product";
   } else if (name.includes('marketing') || name.includes('growth')) {
-    return Megaphone;
+    return "marketing";
   } else if (name.includes('sales') || name.includes('success')) {
-    return Handshake;
+    return "sales";
   } else if (name.includes('operations') || name.includes('strategy')) {
-    return Settings;
+    return "operations";
   } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
-    return Calculator;
+    return "finance";
   } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
-    return UserPlus;
+    return "hr";
   }
 
-  return Shield; // Default fallback
+  return "guilds"; // Default fallback
 };
 
 // Get guild color gradient based on guild name

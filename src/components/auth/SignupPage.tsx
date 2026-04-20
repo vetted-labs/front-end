@@ -1,7 +1,7 @@
 "use client";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Phone, Lock, Loader2, ArrowRight, Linkedin, User, Building2 } from "lucide-react";
+import { Mail, Phone, Lock, Loader2, ArrowRight, Linkedin, Building2 } from "lucide-react";
 import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import { AuthTabSelector } from "@/components/auth/AuthTabSelector";
 import type { AuthTab } from "@/components/auth/AuthTabSelector";
@@ -17,7 +17,7 @@ import { useApi } from "@/lib/hooks/useFetch";
 type UserType = "candidate" | "company";
 
 const tabs: AuthTab[] = [
-  { type: "candidate", label: "Job Seeker", icon: User },
+  { type: "candidate", label: "Job Seeker", icon: "profile" },
   { type: "company", label: "Employer", icon: Building2 },
 ];
 

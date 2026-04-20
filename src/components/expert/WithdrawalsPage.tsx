@@ -5,6 +5,7 @@ import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { formatEther } from "viem";
 import { hashToBytes32 } from "@/lib/blockchain";
 import { Loader2, ChevronRight, Lock } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
@@ -260,9 +261,12 @@ export default function WithdrawalsPage() {
 
       {/* ── Hero: Big Number ── */}
       <div className="mb-10 mt-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
-          Total Staked Value
-        </p>
+        <div className="flex items-center gap-2 mb-2">
+          <VettedIcon name="wallet" className="w-5 h-5 text-primary" />
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Total Staked Value
+          </p>
+        </div>
         <div className="flex items-baseline gap-3 mb-3">
           <span className="text-5xl sm:text-6xl font-extrabold tracking-tighter tabular-nums">
             {formatCompactNumber(totalStaked)}

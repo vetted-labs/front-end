@@ -1,11 +1,13 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 
 export interface AuthTab {
   type: string;
   label: string;
-  icon: LucideIcon;
+  icon: LucideIcon | VettedIconName;
 }
 
 interface AuthTabSelectorProps {
@@ -18,8 +20,14 @@ export function AuthTabSelector({ tabs, activeType, onSelect }: AuthTabSelectorP
   return (
     <div className="flex border-b border-border bg-muted/30">
       {tabs.map((tab) => {
-        const Icon = tab.icon;
         const isActive = activeType === tab.type;
+        const renderIcon = () => {
+          if (typeof tab.icon === "string") {
+            return <VettedIcon name={tab.icon} className="w-4 h-4" />;
+          }
+          const Icon = tab.icon;
+          return <Icon className="w-4 h-4" />;
+        };
         return (
           <button
             key={tab.type}
@@ -31,7 +39,7 @@ export function AuthTabSelector({ tabs, activeType, onSelect }: AuthTabSelectorP
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Icon className="w-4 h-4" />
+            {renderIcon()}
             <span>{tab.label}</span>
             {isActive && (
               <span className="absolute bottom-0 inset-x-3 h-0.5 rounded-full bg-primary" />

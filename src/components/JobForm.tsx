@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Eye } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useJobForm } from "@/hooks/useJobForm";
 import { Modal } from "@/components/ui/modal";
@@ -65,9 +66,12 @@ export function JobForm() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2 font-display">
-            {isEditing ? "Edit Job Posting" : "Create New Job Posting"}
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <VettedIcon name="job" className="w-7 h-7 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground font-display">
+              {isEditing ? "Edit Job Posting" : "Create New Job Posting"}
+            </h1>
+          </div>
           <p className="text-muted-foreground">
             {isEditing
               ? "Update the details of your job posting"

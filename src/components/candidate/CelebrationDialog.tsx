@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui";
 import { STATUS_COLORS } from "@/config/colors";
-import { CheckCircle2, Building2, Briefcase, X } from "lucide-react";
+import { CheckCircle2, Building2, X } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import type { CandidateApplication } from "@/types";
 
 interface CelebrationDialogProps {
@@ -53,7 +54,7 @@ export function CelebrationDialog({ application, open, onClose }: CelebrationDia
                 </span>
               )}
               <span className="flex items-center gap-2">
-                <Briefcase className="w-3.5 h-3.5" />
+                <VettedIcon name="job" className="w-3.5 h-3.5" />
                 {application.job.type}
               </span>
             </div>

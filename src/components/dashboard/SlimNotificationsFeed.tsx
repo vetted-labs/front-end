@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { notificationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import {
@@ -60,7 +60,7 @@ export function SlimNotificationsFeed({
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2">
-          <Bell className="w-5 h-5 text-muted-foreground" />
+          <VettedIcon name="notification" className="w-5 h-5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">All caught up</p>
         </div>
       ) : (

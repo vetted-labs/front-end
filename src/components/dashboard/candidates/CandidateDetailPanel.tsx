@@ -7,16 +7,15 @@ import {
   Linkedin,
   Github,
   ExternalLink,
-  FileText,
   Calendar,
   Send,
   Loader2,
   Shield,
   CheckCircle,
   XCircle,
-  Star,
   ArrowLeft,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { applicationsApi, blockchainApi, companyApi, expertApi, getAssetUrl, messagingApi, matchingApi, ApiError } from "@/lib/api";
 import type { EndorsementStats, EndorsementInfo } from "@/types";
 import { getPersonAvatar } from "@/lib/avatars";
@@ -303,7 +302,7 @@ export function CandidateDetailPanel({
                     className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/20 hover:bg-primary/[0.02] transition-all group"
                   >
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-primary" />
+                      <VettedIcon name="document" className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">View Resume</p>
@@ -314,7 +313,7 @@ export function CandidateDetailPanel({
                 ) : (
                   <div className="flex items-center gap-4 p-4 rounded-xl border border-dashed border-border">
                     <div className="w-12 h-12 rounded-xl bg-muted/30 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-muted-foreground/50" />
+                      <VettedIcon name="document" className="w-5 h-5 text-muted-foreground/50" />
                     </div>
                     <p className="text-sm text-muted-foreground">No resume uploaded</p>
                   </div>
@@ -378,7 +377,7 @@ export function CandidateDetailPanel({
               <div className="rounded-xl border border-border overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
+                    <VettedIcon name="endorsement" className="w-4 h-4 text-primary" />
                     <p className="text-sm font-semibold text-foreground">Expert Endorsements</p>
                   </div>
                   <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
@@ -534,7 +533,7 @@ export function CandidateDetailPanel({
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
+                              <VettedIcon name="reputation" className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
                               <span className="text-xs font-medium text-foreground">{review.overallScore}</span>
                             </div>
                           </div>

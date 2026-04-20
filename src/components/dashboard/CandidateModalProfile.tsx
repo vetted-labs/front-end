@@ -4,9 +4,8 @@ import {
   Linkedin,
   Github,
   ExternalLink,
-  FileText,
-  Wallet,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { truncateAddress, ensureHttps } from "@/lib/utils";
 import type { CandidateProfile } from "@/types";
 import { getPlatformIcon } from "@/lib/social-links";
@@ -34,7 +33,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
           >
-            <FileText className="w-4 h-4" />
+            <VettedIcon name="document" className="w-4 h-4" />
             View / Download Resume
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -137,7 +136,7 @@ export function CandidateModalProfile({ candidate, resumeUrl }: CandidateModalPr
         )}
         {candidate.walletAddress && (
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-mono text-muted-foreground">
-            <Wallet className="w-3 h-3" />
+            <VettedIcon name="wallet" className="w-3 h-3" />
             {truncateAddress(candidate.walletAddress)}
           </span>
         )}

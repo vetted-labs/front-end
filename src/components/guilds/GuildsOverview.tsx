@@ -12,7 +12,8 @@ import { Alert } from "../ui/alert";
 import { Modal } from "../ui/modal";
 import { GuildCard } from "../GuildCard";
 import LeaderboardPage from "../leaderboard/LeaderboardPage";
-import { getGuildDetailedInfo, getGuildIcon, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { getGuildDetailedInfo, getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import type { ExpertProfile, Guild } from "@/types";
 
 type TabType = "guilds" | "leaderboard";
@@ -95,9 +96,12 @@ export function GuildsOverview() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-1">
-            My Guilds
-          </h1>
+          <div className="flex items-center gap-3 mb-1">
+            <VettedIcon name="guilds" className="w-7 h-7 text-primary" />
+            <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">
+              My Guilds
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground">
             Manage your guild memberships, review applications, and track rankings
           </p>
@@ -190,7 +194,7 @@ export function GuildsOverview() {
                 {profileGuilds
                   .filter((g) => g.pendingProposals > 0)
                   .map((guild) => {
-                    const GIcon = getGuildIcon(guild.name);
+                    const gIconName = getGuildIconName(guild.name);
                     return (
                       <button
                         key={guild.id}
@@ -199,7 +203,7 @@ export function GuildsOverview() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-[30px] h-[30px] rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center">
-                            <GIcon className="w-3.5 h-3.5 text-primary" />
+                            <VettedIcon name={gIconName} className="w-3.5 h-3.5 text-primary" />
                           </div>
                           <div className="text-left">
                             <p className="text-sm font-medium text-foreground">{guild.name}</p>
@@ -306,7 +310,7 @@ export function GuildsOverview() {
             </div>
           ) : (
             filteredAvailableGuilds.map((guild) => {
-              const GIcon = getGuildIcon(guild.name);
+              const gIconName = getGuildIconName(guild.name);
               return (
                 <button
                   key={guild.id}
@@ -317,7 +321,7 @@ export function GuildsOverview() {
                   className="group w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/[0.03] transition-all"
                 >
                   <div className="w-[38px] h-[38px] rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0">
-                    <GIcon className="w-[18px] h-[18px] text-primary" />
+                    <VettedIcon name={gIconName} className="w-[18px] h-[18px] text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">

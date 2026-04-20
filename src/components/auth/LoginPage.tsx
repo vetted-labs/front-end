@@ -3,12 +3,11 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Loader2,
-  User,
   Building2,
-  Shield,
-  Wallet,
   Info,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import Image from "next/image";
 import { useAccount, useAccountEffect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -27,13 +26,13 @@ type UserType = "candidate" | "company" | "expert";
 interface TabDef {
   type: UserType;
   label: string;
-  icon: typeof User;
+  icon: VettedIconName;
 }
 
 const tabs: TabDef[] = [
-  { type: "candidate", label: "Job Seeker", icon: User },
-  { type: "company", label: "Company", icon: Building2 },
-  { type: "expert", label: "Expert", icon: Shield },
+  { type: "candidate", label: "Job Seeker", icon: "profile" },
+  { type: "company", label: "Company", icon: "job" },
+  { type: "expert", label: "Expert", icon: "guild-ranks" },
 ];
 
 function LoginForm() {
@@ -345,7 +344,7 @@ function LoginForm() {
                       onClick={handleOpenWalletModal}
                       className="w-full flex items-center justify-center gap-3 px-4 py-3.5 mb-6 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:shadow-md hover:-translate-y-px transition-all"
                     >
-                      <Wallet className="w-5 h-5" />
+                      <VettedIcon name="wallet" className="w-5 h-5" />
                       Connect Wallet
                     </button>
                   ) : (

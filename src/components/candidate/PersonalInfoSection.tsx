@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  User,
   Mail,
   Phone,
-  Briefcase,
-  Award,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import type { CandidateProfile } from "@/types";
 
 const EXPERIENCE_LABELS: Record<string, string> = {
@@ -32,7 +30,7 @@ export default function PersonalInfoSection({
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="px-6 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <User className="w-4 h-4 text-muted-foreground" />
+          <VettedIcon name="profile" className="w-4 h-4 text-muted-foreground" />
           Personal Information
         </h2>
       </div>
@@ -154,7 +152,7 @@ export default function PersonalInfoSection({
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Experience</p>
               <div className="flex items-center gap-2">
-                <Award className="w-3.5 h-3.5 text-muted-foreground" />
+                <VettedIcon name="endorsement" className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">
                   {(profile.experienceLevel && EXPERIENCE_LABELS[profile.experienceLevel]) || profile.experienceLevel || "\u2014"}
                 </p>
@@ -163,7 +161,7 @@ export default function PersonalInfoSection({
             <div className="space-y-2 md:col-span-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Headline</p>
               <div className="flex items-center gap-2">
-                <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
+                <VettedIcon name="job" className="w-3.5 h-3.5 text-muted-foreground" />
                 <p className="text-sm text-foreground">{profile.headline || "\u2014"}</p>
               </div>
             </div>

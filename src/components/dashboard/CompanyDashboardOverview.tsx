@@ -13,7 +13,6 @@ import {
   Video,
   ExternalLink,
   Calendar,
-  FileText,
   Edit,
   ChevronRight,
   Settings,
@@ -22,6 +21,7 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { companyApi, dashboardApi, jobsApi, messagingApi, extractApiError } from "@/lib/api";
 import { STATUS_COLORS, getCandidateStatusDot } from "@/config/colors";
@@ -38,20 +38,24 @@ import { DataSection } from "@/lib/motion";
 import type { Job, DashboardStats, CompanyApplication, MeetingDetails, ApplicationStatus } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
-function getActivityIcon(actionType: string): { icon: LucideIcon; bg: string; color: string } {
+type ActivityIconResult =
+  | { type: "lucide"; icon: LucideIcon; bg: string; color: string }
+  | { type: "vetted"; icon: VettedIconName; bg: string; color: string };
+
+function getActivityIcon(actionType: string): ActivityIconResult {
   switch (actionType) {
     case "job_created":
-      return { icon: Briefcase, bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
+      return { type: "vetted", icon: "job", bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
     case "job_updated":
-      return { icon: Edit, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
+      return { type: "lucide", icon: Edit, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
     case "status_changed":
-      return { icon: FileText, bg: STATUS_COLORS.warning.bgSubtle, color: STATUS_COLORS.warning.text };
+      return { type: "vetted", icon: "document", bg: STATUS_COLORS.warning.bgSubtle, color: STATUS_COLORS.warning.text };
     case "message_sent":
-      return { icon: MessageSquare, bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
+      return { type: "vetted", icon: "message", bg: STATUS_COLORS.positive.bgSubtle, color: STATUS_COLORS.positive.text };
     case "meeting_scheduled":
-      return { icon: Video, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
+      return { type: "lucide", icon: Video, bg: STATUS_COLORS.info.bgSubtle, color: STATUS_COLORS.info.text };
     default:
-      return { icon: Zap, bg: STATUS_COLORS.neutral.bgSubtle, color: STATUS_COLORS.neutral.text };
+      return { type: "lucide", icon: Zap, bg: STATUS_COLORS.neutral.bgSubtle, color: STATUS_COLORS.neutral.text };
   }
 }
 
@@ -374,7 +378,11 @@ export function CompanyDashboardOverview() {
                         className="flex items-center gap-3 px-5 py-3"
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${iconConfig.bg}`}>
-                          <iconConfig.icon className={`w-3.5 h-3.5 ${iconConfig.color}`} />
+                          {iconConfig.type === "vetted" ? (
+                            <VettedIcon name={iconConfig.icon} className={`w-3.5 h-3.5 ${iconConfig.color}`} />
+                          ) : (
+                            <iconConfig.icon className={`w-3.5 h-3.5 ${iconConfig.color}`} />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-foreground/90 truncate">

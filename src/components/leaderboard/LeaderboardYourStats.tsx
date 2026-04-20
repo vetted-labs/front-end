@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Coins, Zap, Lock } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatVetd } from "@/lib/utils";
@@ -14,19 +14,19 @@ interface LeaderboardYourStatsProps {
 export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStatsProps) {
   if (!currentUser) return null;
 
-  const stats = [
-    { label: "Your Rank", value: `#${rank}`, icon: Trophy, color: "text-primary" },
-    { label: "Reviews", value: String(currentUser.totalReviews), icon: Star, color: "text-primary" },
-    { label: "Earned", value: formatVetd(currentUser.totalEarnings), icon: Coins, color: "text-primary" },
-    { label: "Endorsements", value: String(currentUser.endorsementCount), icon: Zap, color: "text-primary" },
-    { label: "Staked", value: formatVetd(parseFloat(currentUser.stakedAmount) / 1e18), icon: Lock, color: "text-primary" },
+  const stats: { label: string; value: string; icon: VettedIconName; color: string }[] = [
+    { label: "Your Rank", value: `#${rank}`, icon: "leaderboard", color: "text-primary" },
+    { label: "Reviews", value: String(currentUser.totalReviews), icon: "vetting", color: "text-primary" },
+    { label: "Earned", value: formatVetd(currentUser.totalEarnings), icon: "earnings", color: "text-primary" },
+    { label: "Endorsements", value: String(currentUser.endorsementCount), icon: "endorsement", color: "text-primary" },
+    { label: "Staked", value: formatVetd(parseFloat(currentUser.stakedAmount) / 1e18), icon: "staking", color: "text-primary" },
   ];
 
   return (
     <Card className="border-primary/20 bg-primary/[0.03]" padding="none">
       <div className="px-5 py-3 flex items-center gap-2 border-b border-primary/10">
         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
-          <Trophy className="w-3.5 h-3.5 text-primary" />
+          <VettedIcon name="leaderboard" className="w-3.5 h-3.5 text-primary" />
         </div>
         <span className="text-xs font-medium text-foreground">Your Position</span>
         <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ml-1">
@@ -42,7 +42,7 @@ export function LeaderboardYourStats({ currentUser, rank }: LeaderboardYourStats
               i < stats.length - 1 && "border-r border-border"
             )}
           >
-            <stat.icon className={cn("w-3.5 h-3.5 shrink-0", stat.color)} />
+            <VettedIcon name={stat.icon} className={cn("w-3.5 h-3.5 shrink-0", stat.color)} />
             <div className="min-w-0">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
                 {stat.label}

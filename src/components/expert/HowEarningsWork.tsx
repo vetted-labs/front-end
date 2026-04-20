@@ -4,14 +4,12 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import {
   ChevronDown,
-  Vote,
-  Award,
   ArrowDownToLine,
   Info,
-  TrendingUp,
   ShieldAlert,
   Calculator,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -59,7 +57,7 @@ export function HowEarningsWork() {
       {open && (
         <div className="px-5 pb-5 border-t border-border">
           <div className="grid sm:grid-cols-2 gap-4 pt-4">
-            <Section icon={Vote} title="Vetting Rewards">
+            <Section icon={({ className }: { className?: string }) => <VettedIcon name="voting" className={className ?? ""} />} title="Vetting Rewards">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Review candidates and submit your score</Bullet>
                 <Bullet>Earn VETD when your score <strong className="text-foreground/80">aligns with consensus</strong></Bullet>
@@ -67,7 +65,7 @@ export function HowEarningsWork() {
               </ul>
             </Section>
 
-            <Section icon={TrendingUp} title="Tier Multipliers">
+            <Section icon={({ className }: { className?: string }) => <VettedIcon name="reputation" className={className ?? ""} />} title="Tier Multipliers">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center justify-between">
                   <span>Foundation</span>
@@ -85,7 +83,7 @@ export function HowEarningsWork() {
               <p className="text-xs text-muted-foreground/60 mt-2.5">Higher tiers earn a larger share of every pool</p>
             </Section>
 
-            <Section icon={Award} title="Endorsement Rewards">
+            <Section icon={({ className }: { className?: string }) => <VettedIcon name="endorsement" className={className ?? ""} />} title="Endorsement Rewards">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <Bullet>Endorse a candidate you believe in</Bullet>
                 <Bullet>If they get hired, you <strong className="text-foreground/80">share the reward pool</strong></Bullet>

@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Loader2,
-  Briefcase,
   Clock,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
 
@@ -123,7 +123,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
       ) : (
         <div className="text-center py-16 bg-card rounded-xl border border-border/30">
           <div className="w-16 h-16 rounded-xl bg-muted/30 flex items-center justify-center mx-auto mb-5">
-            <Briefcase className="w-8 h-8 text-muted-foreground/40" />
+            <VettedIcon name="job" className="w-8 h-8 text-muted-foreground/40" />
           </div>
           <h3 className="text-xl font-display font-bold text-foreground mb-2">
             No positions yet

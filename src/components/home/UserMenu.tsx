@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, ReactNode } from "react";
-import { User, LogOut, ChevronDown, Wallet } from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getNetworkName } from "@/lib/web3Utils";
 import { truncateAddress } from "@/lib/utils";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
@@ -53,7 +54,7 @@ export function UserMenu({
           className="flex items-center gap-2 px-4 py-2 bg-card rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
         >
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Wallet className="w-4 h-4 text-primary" />
+            <VettedIcon name="wallet" className="w-4 h-4 text-primary" />
           </div>
           <div className="flex flex-col items-start">
             <span className="text-xs font-mono text-foreground font-medium">
@@ -72,7 +73,7 @@ export function UserMenu({
           className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors"
         >
           <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
-            <User className="w-4 h-4 text-primary" />
+            <VettedIcon name="profile" className="w-4 h-4 text-primary" />
           </div>
           <span className="text-sm font-medium text-foreground hidden sm:block">
             {address && !userEmail
@@ -94,7 +95,7 @@ export function UserMenu({
                 </p>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Wallet className="w-4 h-4 text-primary" />
+                    <VettedIcon name="wallet" className="w-4 h-4 text-primary" />
                   </div>
                   <p className="text-sm font-mono text-foreground break-all font-medium">
                     {address}
@@ -114,7 +115,7 @@ export function UserMenu({
                 onClick={onNavigateDashboard}
                 className="w-full flex items-center px-4 py-3 text-sm text-card-foreground hover:bg-muted transition-all"
               >
-                <User className="w-4 h-4 mr-2" />
+                <VettedIcon name="profile" className="w-4 h-4 mr-2" />
                 Expert Dashboard
               </button>
               {extraMenuItems?.map((item, i) => (
@@ -158,7 +159,7 @@ export function UserMenu({
                 onClick={onNavigateDashboard}
                 className="w-full px-4 py-2 text-left text-sm text-card-foreground hover:bg-muted flex items-center gap-2"
               >
-                <User className="w-4 h-4" />
+                <VettedIcon name="profile" className="w-4 h-4" />
                 {userType === "company" ? "Dashboard" : "My Profile"}
               </button>
               {extraMenuItems?.map((item, i) => (

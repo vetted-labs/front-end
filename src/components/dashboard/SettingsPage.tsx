@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
-  Bell,
   Lock,
   CreditCard,
   ArrowLeft,
   Loader2,
   ExternalLink,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { companyNotificationsApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -169,7 +169,7 @@ export default function SettingsPage() {
                     : "text-foreground hover:bg-muted/50"
                 }`}
               >
-                <Bell className="w-5 h-5" />
+                <VettedIcon name="notification" className="w-5 h-5" />
                 <span className="font-medium">Notifications</span>
               </button>
 

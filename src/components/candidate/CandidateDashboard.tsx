@@ -6,22 +6,18 @@ import { useRouter } from "next/navigation";
 import {
   Eye,
   XCircle,
-  Briefcase,
-  Users,
   Building2,
   MapPin,
   Search,
   UserPen,
   ChevronRight,
-  MessageSquare,
-  Star,
-  FileText,
   Calendar,
   Check,
   Circle,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { candidateApi, applicationsApi, messagingApi, matchingApi, extractApiError } from "@/lib/api";
 import { STATUS_COLORS, STAT_ICON } from "@/config/colors";
 import { logger } from "@/lib/logger";
@@ -321,7 +317,7 @@ export default function CandidateDashboard() {
           {/* Applications */}
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${STAT_ICON.bg}`}>
-              <FileText className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
+              <VettedIcon name="application" className={`w-[18px] h-[18px] ${STAT_ICON.text}`} />
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-foreground">{stats.total}</span>
@@ -344,7 +340,7 @@ export default function CandidateDashboard() {
           <div className="flex-1 min-w-[150px] flex items-center gap-3 rounded-xl border border-warning/20 bg-card px-4 py-3.5 relative overflow-hidden">
             <div className="absolute inset-0 bg-transparent pointer-events-none rounded-xl" />
             <div className="relative w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-warning/15">
-              <Star className="w-[18px] h-[18px] text-warning" />
+              <VettedIcon name="leaderboard" className="w-[18px] h-[18px] text-warning" />
             </div>
             <div className="relative flex flex-col gap-2">
               <span className="text-xl font-display font-bold tabular-nums text-warning">{stats.accepted}</span>
@@ -397,7 +393,7 @@ export default function CandidateDashboard() {
             <div className="rounded-xl border border-border bg-card overflow-hidden h-full">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-muted-foreground/50" />
+                  <VettedIcon name="job" className="w-4 h-4 text-muted-foreground/50" />
                   <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider font-display">
                     Active Applications
                   </h2>
@@ -421,7 +417,7 @@ export default function CandidateDashboard() {
                     href="/browse/jobs"
                     className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   >
-                    <Briefcase className="w-4 h-4" />
+                    <VettedIcon name="job" className="w-4 h-4" />
                     Browse Jobs
                   </Link>
                 </div>
@@ -651,7 +647,7 @@ export default function CandidateDashboard() {
               {recentGuildApps.length === 0 ? (
                 <div className="flex flex-col items-center py-10 px-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                    <Users className="w-6 h-6 text-muted-foreground/40" />
+                    <VettedIcon name="guilds" className="w-6 h-6 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">No guild applications</p>
                   <Link
@@ -679,7 +675,7 @@ export default function CandidateDashboard() {
                           </div>
                           {app.jobTitle && (
                             <p className="text-xs text-muted-foreground flex items-center gap-2">
-                              <Briefcase className="w-3 h-3" />
+                              <VettedIcon name="job" className="w-3 h-3" />
                               {app.jobTitle}
                             </p>
                           )}
@@ -736,7 +732,7 @@ export default function CandidateDashboard() {
               {recentConversations.length === 0 ? (
                 <div className="flex flex-col items-center py-10 px-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                    <MessageSquare className="w-6 h-6 text-muted-foreground/40" />
+                    <VettedIcon name="message" className="w-6 h-6 text-muted-foreground/40" />
                   </div>
                   <p className="text-sm text-muted-foreground">No messages yet</p>
                 </div>
@@ -793,18 +789,18 @@ export default function CandidateDashboard() {
                 </h2>
               </div>
               <div className="p-2">
-                {[
-                  { label: "Browse Jobs",    icon: Briefcase,      href: "/browse/jobs" },
-                  { label: "Messages",       icon: MessageSquare,  href: "/candidate/messages" },
-                  { label: "Explore Guilds", icon: Users,          href: "/guilds" },
-                  { label: "Edit Profile",   icon: UserPen,        href: "/candidate/profile" },
-                ].map(({ label, icon: QIcon, href }) => (
+                {([
+                  { label: "Browse Jobs",    icon: "job" as VettedIconName,     href: "/browse/jobs" },
+                  { label: "Messages",       icon: "message" as VettedIconName, href: "/candidate/messages" },
+                  { label: "Explore Guilds", icon: "guilds" as VettedIconName,  href: "/guilds" },
+                  { label: "Edit Profile",   icon: "profile" as VettedIconName, href: "/candidate/profile" },
+                ]).map(({ label, icon, href }) => (
                   <Link
                     key={href}
                     href={href}
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors group"
                   >
-                    <QIcon className="w-4 h-4 text-primary" />
+                    <VettedIcon name={icon} className="w-4 h-4 text-primary" />
                     <span className="flex-1 text-left">{label}</span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
                   </Link>

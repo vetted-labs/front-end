@@ -1,7 +1,8 @@
 "use client";
 
 import { Users, Award, Target, Shield, User } from "lucide-react";
-import { getGuildIcon } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import { getGuildIconName } from "@/lib/guildHelpers";
 import { formatVetd } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
 import { PatternBackground } from "@/components/ui/pattern-background";
@@ -37,7 +38,7 @@ interface GuildHeaderProps {
 }
 
 export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeaderProps) {
-  const GuildIcon = getGuildIcon(guild.name);
+  const guildIconName = getGuildIconName(guild.name);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -50,7 +51,7 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
           <div className="pointer-events-none absolute -top-5 -left-5 w-[200px] h-[200px] rounded-full bg-primary/[0.06] blur-[80px]" />
 
           <div className="relative z-10 w-14 h-14 rounded-xl bg-primary/[0.08] border border-primary/20 flex items-center justify-center mb-4">
-            <GuildIcon className="w-7 h-7 text-primary" />
+            <VettedIcon name={guildIconName} className="w-7 h-7 text-primary" />
           </div>
 
           <h1 className="relative z-10 text-3xl font-bold font-display tracking-tight text-foreground mb-2">

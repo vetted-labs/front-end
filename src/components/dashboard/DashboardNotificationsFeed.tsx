@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { notificationsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
@@ -64,7 +65,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-muted-foreground" />
+          <VettedIcon name="notification" className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Recent Notifications
           </h2>
@@ -123,7 +124,7 @@ export function DashboardNotificationsFeed({ walletAddress }: DashboardNotificat
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-8">
-            <Bell className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+            <VettedIcon name="notification" className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium text-foreground mb-1">
               {filter === "unread" ? "All Caught Up!" : "No Notifications Yet"}
             </p>

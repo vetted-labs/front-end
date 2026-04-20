@@ -1,9 +1,8 @@
 import {
-  Shield,
   CheckCircle,
   XCircle,
-  Star,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import type { CandidateGuildReport } from "@/types";
 
@@ -15,7 +14,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
   if (!guildReport?.guildApplication) {
     return (
       <div className="text-center py-10">
-        <Shield className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+        <VettedIcon name="guild-ranks" className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
         <p className="text-sm font-medium text-foreground mb-1">No Guild Review</p>
         <p className="text-xs text-muted-foreground">
           This candidate has not been reviewed by a guild for this position
@@ -85,7 +84,7 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Star className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
+                    <VettedIcon name="reputation" className={`w-3 h-3 ${STATUS_COLORS.warning.icon}`} />
                     <span className="text-xs font-medium text-foreground">{review.overallScore}</span>
                   </div>
                 </div>

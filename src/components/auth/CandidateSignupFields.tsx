@@ -1,5 +1,6 @@
 "use client";
-import { User, Briefcase, Linkedin, Github, Globe } from "lucide-react";
+import { Linkedin, Github, Globe } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 
 const inputClass =
   "w-full pl-10 pr-4 py-2.5 text-sm bg-background/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 text-foreground placeholder:text-muted-foreground/60 transition-all outline-none";
@@ -38,7 +39,7 @@ export function CandidateSignupFields({
           Full Name <span className="text-destructive">*</span>
         </label>
         <div className="relative">
-          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <VettedIcon name="profile" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             value={fullName}
@@ -57,7 +58,7 @@ export function CandidateSignupFields({
           Current Occupation <span className="text-destructive">*</span>
         </label>
         <div className="relative">
-          <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <VettedIcon name="job" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="text"
             value={headline}

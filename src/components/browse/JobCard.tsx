@@ -8,9 +8,9 @@ import {
   CheckCircle2,
   Star,
   Users,
-  Briefcase,
   ArrowRight,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getAssetUrl } from "@/lib/api";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { useGuilds } from "@/lib/hooks/useGuilds";
@@ -110,7 +110,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCa
           {job.locationType || job.location}
         </span>
         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
-          <Briefcase className="w-3 h-3 opacity-60" />
+          <VettedIcon name="job" className="w-3 h-3 opacity-60" />
           {job.type}
         </span>
       </div>

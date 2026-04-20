@@ -7,7 +7,7 @@ import { NotificationBell } from "./NotificationBell";
 import { CompanyNotificationBell } from "./CompanyNotificationBell";
 import { CandidateNotificationBell } from "./CandidateNotificationBell";
 import { cn } from "@/lib/utils";
-import { PatternBackground, PatternOpacityToggle } from "@/components/ui/pattern-background";
+import { PatternBackground } from "@/components/ui/pattern-background";
 import type { SidebarConfig } from "./sidebar-config";
 
 interface AppShellProps {
@@ -51,7 +51,6 @@ function ShellContent({ config, children }: AppShellProps) {
           </div>
         </main>
       </div>
-      {process.env.NODE_ENV === "development" && <PatternOpacityToggle />}
     </div>
   );
 }

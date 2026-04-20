@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  FileText,
   Upload,
   Loader2,
   CheckCircle,
   Download,
   X,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getAssetUrl } from "@/lib/api";
 import { STATUS_COLORS } from "@/config/colors";
 
@@ -42,7 +42,7 @@ export default function ResumeSection({
     <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="px-6 py-4 border-b border-border">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <FileText className="w-4 h-4 text-muted-foreground" />
+          <VettedIcon name="document" className="w-4 h-4 text-muted-foreground" />
           Resume / CV
         </h2>
       </div>
@@ -107,7 +107,7 @@ export default function ResumeSection({
           </div>
         ) : (
           <div className="text-center py-6">
-            <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+            <VettedIcon name="document" className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm text-muted-foreground">No resume uploaded yet</p>
           </div>
         )}
@@ -116,7 +116,7 @@ export default function ResumeSection({
           <div className="mt-4 p-4 bg-primary/5 border border-primary/15 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" />
+                <VettedIcon name="document" className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium text-foreground">
                   {resumeFile.name}
                 </span>

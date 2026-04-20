@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { Coins, Vote, Award, TrendingUp } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import type { VettedIconName } from "@/components/ui/vetted-icon";
 import type { EarningsSummary } from "@/types";
 import { getRewardTierProgress } from "@/types";
 import { STAT_ICON, REWARD_TIER_COLORS } from "@/config/colors";
@@ -14,27 +15,27 @@ export function EarningsSummaryCards({ summary, reputation }: EarningsSummaryCar
   const votingTotal = summary?.byType?.find((t) => t.type === "voting_reward")?.total ?? 0;
   const endorsementTotal = summary?.byType?.find((t) => t.type === "endorsement")?.total ?? 0;
 
-  const cards = [
+  const cards: { icon: VettedIconName; label: string; value: string; sub: string; tierName?: string }[] = [
     {
-      icon: Coins,
+      icon: "earnings",
       label: "Total Earned",
       value: (summary?.totalVetd ?? 0).toFixed(2),
       sub: "VETD",
     },
     {
-      icon: Vote,
+      icon: "voting",
       label: "Voting",
       value: votingTotal.toFixed(2),
       sub: "VETD",
     },
     {
-      icon: Award,
+      icon: "endorsement",
       label: "Endorsements",
       value: endorsementTotal.toFixed(2),
       sub: "VETD",
     },
     {
-      icon: TrendingUp,
+      icon: "reputation",
       label: "Reward Tier",
       value: tier.name,
       sub: `${tier.rewardWeight}x multiplier`,
@@ -45,7 +46,6 @@ export function EarningsSummaryCards({ summary, reputation }: EarningsSummaryCar
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {cards.map((card) => {
-        const Icon = card.icon;
         const tierTextColor = card.tierName
           ? REWARD_TIER_COLORS[card.tierName]?.text ?? "text-foreground"
           : undefined;
@@ -63,7 +63,7 @@ export function EarningsSummaryCards({ summary, reputation }: EarningsSummaryCar
             <div className="p-5">
               {/* Icon box */}
               <div className={`w-10 h-10 rounded-xl ${STAT_ICON.bg} border border-primary/10 flex items-center justify-center mb-4`}>
-                <Icon className={`w-5 h-5 ${STAT_ICON.text}`} />
+                <VettedIcon name={card.icon} className={`w-5 h-5 ${STAT_ICON.text}`} />
               </div>
 
               {/* Label */}

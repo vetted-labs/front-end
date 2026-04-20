@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Award, CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/modal";
@@ -177,7 +178,7 @@ export function FastReviewModal({
               {/* Endorsement badge */}
               {getEndorsementCount(current) > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-positive/10 text-positive border border-positive/20">
-                  <Award className="w-3.5 h-3.5" />
+                  <VettedIcon name="endorsement" className="w-3.5 h-3.5" />
                   {getEndorsementCount(current)}
                   {endorserName?.(current) && (
                     <span className="text-positive/70">

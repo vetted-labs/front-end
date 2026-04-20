@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Vote, Coins, TrendingUp } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertActivity } from "@/types";
@@ -11,25 +11,25 @@ interface RecentActivityProps {
 
 const ACTIVITY_CONFIG: Record<
   string,
-  { icon: typeof Vote; color: string; bgColor: string }
+  { icon: VettedIconName; color: string; bgColor: string }
 > = {
   proposal_vote: {
-    icon: Vote,
+    icon: "voting",
     color: STATUS_COLORS.info.text,
     bgColor: STATUS_COLORS.info.bgSubtle,
   },
   endorsement: {
-    icon: Award,
+    icon: "endorsement",
     color: STATUS_COLORS.warning.text,
     bgColor: STATUS_COLORS.warning.bgSubtle,
   },
   earning: {
-    icon: Coins,
+    icon: "earnings",
     color: STATUS_COLORS.positive.text,
     bgColor: STATUS_COLORS.positive.bgSubtle,
   },
   reputation_gain: {
-    icon: TrendingUp,
+    icon: "reputation",
     color: STATUS_COLORS.info.text,
     bgColor: STATUS_COLORS.info.bgSubtle,
   },
@@ -52,7 +52,6 @@ export function RecentActivity({ activities }: RecentActivityProps) {
         <div className="flex flex-col gap-2 mt-4">
           {displayed.map((activity) => {
             const config = ACTIVITY_CONFIG[activity.type] ?? ACTIVITY_CONFIG.earning;
-            const Icon = config.icon;
 
             return (
               <div
@@ -62,7 +61,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                 <div
                   className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0 ${config.bgColor}`}
                 >
-                  <Icon className={`w-[14px] h-[14px] ${config.color}`} />
+                  <VettedIcon name={config.icon} className={`w-[14px] h-[14px] ${config.color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-foreground truncate">

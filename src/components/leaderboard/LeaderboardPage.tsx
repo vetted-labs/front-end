@@ -4,18 +4,14 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
-  Trophy,
   TrendingUp,
-  Star,
-  Coins,
-  Zap,
   BarChart3,
   ChevronDown,
-  Shield,
   Calendar,
   Building2,
   Check,
 } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { useClickOutside } from "@/lib/hooks/useClickOutside";
 import { expertApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -35,11 +31,11 @@ import type { LeaderboardEntryV2, LeaderboardResponse, Guild } from "@/types";
 /* ─── Tab & Filter Definitions ─────────────────────────────── */
 
 const TABS = [
-  { id: "overall", label: "Overall", icon: Trophy },
-  { id: "earnings", label: "Earnings", icon: Coins },
-  { id: "reputation", label: "Reputation", icon: Star },
+  { id: "overall", label: "Overall", icon: "leaderboard" as VettedIconName },
+  { id: "earnings", label: "Earnings", icon: "earnings" as VettedIconName },
+  { id: "reputation", label: "Reputation", icon: "reputation" as VettedIconName },
   { id: "reviews", label: "Reviews", icon: BarChart3 },
-  { id: "endorsements", label: "Endorsements", icon: Zap },
+  { id: "endorsements", label: "Endorsements", icon: "endorsement" as VettedIconName },
   { id: "trending", label: "Trending", icon: TrendingUp },
 ] as const;
 
@@ -278,7 +274,7 @@ export default function LeaderboardPage() {
         <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[150px] rounded-full bg-primary/[0.05] blur-[80px]" />
         <div className="relative z-10">
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-            <Trophy className={`w-6 h-6 ${STAT_ICON.text}`} />
+            <VettedIcon name="leaderboard" className={`w-6 h-6 ${STAT_ICON.text}`} />
             Leaderboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -302,7 +298,11 @@ export default function LeaderboardPage() {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               )}
             >
-              <tab.icon className="w-3.5 h-3.5" />
+              {typeof tab.icon === "string" ? (
+                <VettedIcon name={tab.icon} className="w-3.5 h-3.5" />
+              ) : (
+                <tab.icon className="w-3.5 h-3.5" />
+              )}
               {tab.label}
             </button>
           ))}
@@ -326,7 +326,7 @@ export default function LeaderboardPage() {
             onChange={setPeriod}
           />
           <FilterDropdown
-            icon={Shield}
+            icon={({ className }: { className?: string }) => <VettedIcon name="guilds" className={className ?? ""} />}
             value={role}
             options={ROLES}
             onChange={setRole}

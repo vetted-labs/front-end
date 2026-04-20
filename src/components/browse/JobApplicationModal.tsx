@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
   HelpCircle,
   Send,
   Upload,
@@ -13,6 +12,7 @@ import {
   ExternalLink,
   Link2,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Modal, Button, Alert, Textarea } from "@/components/ui";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { STATUS_COLORS } from "@/config/colors";
@@ -213,7 +213,8 @@ export default function JobApplicationModal({
                         <div className="w-3 h-3 rounded-full bg-primary/100"></div>
                       )}
                     </div>
-                    <FileText
+                    <VettedIcon
+                      name="document"
                       className={`w-5 h-5 ${useProfileResume ? "text-primary" : "text-muted-foreground"}`}
                     />
                     <div>
@@ -256,7 +257,7 @@ export default function JobApplicationModal({
                       <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center">
                         <div className="w-3 h-3 rounded-full bg-primary/100"></div>
                       </div>
-                      <FileText className="w-5 h-5 text-primary" />
+                      <VettedIcon name="document" className="w-5 h-5 text-primary" />
                       <div>
                         <p className="text-sm font-medium text-foreground">
                           Upload New Resume

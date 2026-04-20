@@ -4,15 +4,15 @@ import { use, useCallback } from "react";
 import Link from "next/link";
 import {
   Building2,
+  Briefcase,
   Globe,
   MapPin,
-  Users,
-  Briefcase,
   CheckCircle2,
   ArrowLeft,
   ExternalLink,
   Calendar,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { companyApi, getAssetUrl } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { STATUS_COLORS } from "@/config/colors";
@@ -97,13 +97,13 @@ export default function CompanyPublicProfilePage({ params }: Props) {
                 )}
                 {profile.industry && (
                   <span className="inline-flex items-center gap-2">
-                    <Briefcase className="w-3.5 h-3.5" />
+                    <VettedIcon name="job" className="w-3.5 h-3.5" />
                     {INDUSTRIES.find((i) => i.value === profile.industry)?.label || profile.industry}
                   </span>
                 )}
                 {profile.size && (
                   <span className="inline-flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5" />
+                    <VettedIcon name="profile" className="w-3.5 h-3.5" />
                     {COMPANY_SIZES.find((s) => s.value === profile.size)?.label || profile.size}
                   </span>
                 )}

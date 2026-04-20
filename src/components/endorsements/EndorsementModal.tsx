@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import { logger } from "@/lib/logger";
 import { getAssetUrl } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
-import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign, Briefcase } from 'lucide-react';
+import { CheckCircle, XCircle, ExternalLink, Loader2, Award, FileText, Linkedin, Github, MapPin, DollarSign } from 'lucide-react';
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import type { EndorsementApplication } from "@/types";
 
@@ -290,7 +291,7 @@ export function EndorsementModal({
                     )}
                     {application.job_type && (
                       <span className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" />
+                        <VettedIcon name="job" className="w-4 h-4" />
                         {application.job_type}
                       </span>
                     )}

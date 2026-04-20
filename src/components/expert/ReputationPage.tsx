@@ -5,6 +5,7 @@ import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { Shield } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Skeleton, SkeletonStatCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
@@ -99,6 +100,16 @@ export default function ReputationPage() {
   return (
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      {/* Page Header */}
+      <div className="pt-8 pb-2">
+        <div className="flex items-center gap-3">
+          <VettedIcon name="reputation" className="w-7 h-7 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Reputation
+          </h1>
+        </div>
+      </div>
+
       {/* Hero Score Section */}
       <DataSection
         isLoading={loading}

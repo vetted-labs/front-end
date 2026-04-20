@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { getGuildIcon } from "@/lib/guildHelpers";
+import { getGuildIconName } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { formatDateMonthYear } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Badge, getRankBadgeVariant } from "./ui/badge";
@@ -27,7 +28,7 @@ const formatDate = (dateString: string) => formatDateMonthYear(dateString);
 
 export function GuildMembershipCard({ guild, variant = "default" }: GuildMembershipCardProps) {
   const router = useRouter();
-  const GuildIcon = getGuildIcon(guild.name);
+  const guildIconName = getGuildIconName(guild.name);
   const totalProposals = guild.pendingProposals + guild.ongoingProposals + guild.closedProposals;
 
   const handleClick = () => {
@@ -45,7 +46,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
           <div className="flex items-start gap-3">
             {/* Guild Icon Badge with Nested Gradients */}
             <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
-              <GuildIcon className="w-5 h-5 text-muted-foreground" />
+              <VettedIcon name={guildIconName} className="w-5 h-5 text-muted-foreground" />
             </div>
 
             {/* Guild Name & Rank */}
@@ -110,7 +111,7 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
         <div className="flex items-center gap-3">
           {/* Guild Icon Badge with Nested Gradients */}
           <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
-            <GuildIcon className="w-7 h-7 text-muted-foreground" />
+            <VettedIcon name={guildIconName} className="w-7 h-7 text-muted-foreground" />
           </div>
 
           {/* Guild Name & Rank */}

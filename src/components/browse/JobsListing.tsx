@@ -5,8 +5,8 @@ import {
   Search,
   Filter,
   X,
-  Briefcase,
 } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { jobsApi, applicationsApi, matchingApi } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
@@ -266,12 +266,15 @@ export default function JobsListing() {
             <Search className="w-3.5 h-3.5" />
             {totalJobCount} Open Positions
           </div>
-          <h1 className="font-display text-3xl sm:text-5xl lg:text-5xl font-bold leading-[1.1] tracking-tighter mb-4">
-            Get{" "}
-            <span className="text-primary animate-shimmer-text">
-              Vetted
-            </span>
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <VettedIcon name="job" className="w-8 h-8 text-primary" />
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-5xl font-bold leading-[1.1] tracking-tighter">
+              Get{" "}
+              <span className="text-primary animate-shimmer-text">
+                Vetted
+              </span>
+            </h1>
+          </div>
           <p className="text-sm font-medium text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Prove your skills once. Let domain experts make you visible to the right opportunities.
           </p>
@@ -438,7 +441,7 @@ export default function JobsListing() {
             </>
           ) : (
             <div className="text-center py-16 bg-card rounded-xl border border-border">
-              <Briefcase className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+              <VettedIcon name="job" className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-foreground mb-2">
                 No jobs found
               </h3>

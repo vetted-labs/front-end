@@ -24,6 +24,7 @@ import {
   formatTimeAgo,
   buildNotificationUrl,
 } from "@/lib/notification-helpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
@@ -206,6 +207,7 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
           <div className="flex items-center gap-4">
+            <VettedIcon name="notification" className="w-7 h-7 text-primary" />
             <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
               Notifications
             </h1>

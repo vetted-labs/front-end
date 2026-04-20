@@ -16,7 +16,8 @@ import {
 import { candidateApi, extractApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import { getGuildIcon, getGuildColor } from "@/lib/guildHelpers";
+import { getGuildIconName, getGuildColor } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo } from "@/lib/utils";
 import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
@@ -166,7 +167,7 @@ export default function CandidateGuilds() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((app) => {
               const guildName = app.guildName || app.guild?.name || "Guild";
-              const GuildIcon = getGuildIcon(guildName);
+              const guildIconName = getGuildIconName(guildName);
               const gradient = getGuildColor(guildName);
               const configKey = GUILD_STATUS_KEY[app.status] || app.status;
               const statusStyle = APPLICATION_STATUS_CONFIG[configKey] || APPLICATION_STATUS_CONFIG.pending;
@@ -189,7 +190,7 @@ export default function CandidateGuilds() {
                       <div className="absolute inset-0 bg-black/20" />
                       <div className="absolute bottom-3 left-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center border border-muted-foreground/20">
-                          <GuildIcon className="w-5 h-5 text-white" />
+                          <VettedIcon name={guildIconName} className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-white leading-tight">{guildName}</h3>

@@ -19,7 +19,8 @@ import { ListSkeleton } from "@/components/ui/page-skeleton";
 import { Divider } from "@/components/ui/divider";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { getGuildIcon, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild } from "@/types";
 
@@ -161,7 +162,7 @@ export default function GlobalGuildsPage() {
               ) : (
                 <div className="grid gap-4">
                 {currentGuilds.map((guild) => {
-                  const GuildIcon = getGuildIcon(guild.name);
+                  const guildIconName = getGuildIconName(guild.name);
                   const description =
                     guild.description || getGuildPreviewDescription(guild.name);
                   const members =
@@ -185,9 +186,9 @@ export default function GlobalGuildsPage() {
                     >
                       {/* Left: Icon with subtle container */}
                       <div className="relative flex items-center justify-center w-[52px] h-[52px] md:w-[60px] md:h-[60px] rounded-xl bg-muted/40 dark:bg-muted/30 border border-border">
-                        <GuildIcon
+                        <VettedIcon
+                          name={guildIconName}
                           className="w-[22px] h-[22px] md:w-6 md:h-6 text-foreground/70"
-                          strokeWidth={1.8}
                         />
                         {/* Hover glow — single orange, not per-guild */}
                         <div className="absolute inset-0 rounded-xl bg-primary/0 transition-colors duration-300 group-hover:bg-primary/[0.06]" />

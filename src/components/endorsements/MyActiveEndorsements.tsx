@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPersonAvatar } from "@/lib/avatars";
 
-import { Award, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
 
@@ -192,7 +193,7 @@ export function MyActiveEndorsements({
       {/* Horizontally scrollable cards */}
       {userEndorsements.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <Award className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
+          <VettedIcon name="endorsement" className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground mb-2">
             You haven&apos;t endorsed any candidates in {guildName} yet
           </p>

@@ -3,7 +3,8 @@
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { UserMenu } from "./UserMenu";
-import { Briefcase, Swords, Award, Globe } from "lucide-react";
+import { Building2, type LucideIcon } from "lucide-react";
+import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { useRouter, usePathname } from "next/navigation";
 
 interface HomeNavbarProps {
@@ -42,11 +43,11 @@ export function HomeNavbar({
   const router = useRouter();
   const pathname = usePathname();
 
-  const navItems = [
-    { label: "Find Jobs", icon: Briefcase, onClick: onFindJob },
-    { label: "Start Vetting", icon: Award, onClick: onStartVetting },
-    { label: "Start Hiring", icon: Briefcase, onClick: onStartHiring },
-    { label: "Guilds", icon: Swords, onClick: onViewGuilds },
+  const navItems: { label: string; icon: LucideIcon | VettedIconName; onClick: () => void }[] = [
+    { label: "Find Jobs", icon: "job", onClick: onFindJob },
+    { label: "Start Vetting", icon: "vetting", onClick: onStartVetting },
+    { label: "Start Hiring", icon: Building2, onClick: onStartHiring },
+    { label: "Guilds", icon: "guilds", onClick: onViewGuilds },
   ];
 
   return (
@@ -60,14 +61,17 @@ export function HomeNavbar({
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item, index) => {
-                const Icon = item.icon;
                 return (
                   <button
                     key={index}
                     onClick={item.onClick}
                     className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all text-muted-foreground hover:text-foreground hover:bg-muted"
                   >
-                    <Icon className="w-4 h-4" />
+                    {typeof item.icon === "string" ? (
+                      <VettedIcon name={item.icon as VettedIconName} className="w-4 h-4" />
+                    ) : (
+                      <item.icon className="w-4 h-4" />
+                    )}
                     {item.label}
                   </button>
                 );

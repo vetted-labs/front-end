@@ -1,6 +1,7 @@
 "use client";
 
-import { Zap, Coins } from "lucide-react";
+import { Zap } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Card } from "@/components/ui/card";
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -93,13 +94,13 @@ export function LeaderboardEndorsements({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <VettedIcon name="endorsement" className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="text-sm font-bold tabular-nums">{entry.endorsementCount}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Coins className="w-3.5 h-3.5 text-positive shrink-0" />
+                      <VettedIcon name="earnings" className="w-3.5 h-3.5 text-positive shrink-0" />
                       <span className="text-sm font-medium tabular-nums">
                         {formatVetd(bidVetd)}
                       </span>

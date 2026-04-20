@@ -1,6 +1,7 @@
 "use client";
 
-import { getGuildIcon, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { getGuildIconName, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { formatDateMonthYear, formatVetd } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-react";
@@ -32,7 +33,7 @@ export function GuildCard({
   onViewDetails,
   showDescription = true,
 }: GuildCardProps) {
-  const GuildIcon = getGuildIcon(guild.name);
+  const guildIconName = getGuildIconName(guild.name);
 
   // ── Membership variant (profile "Guild Positions" section) ──
   if (variant === "membership") {
@@ -54,7 +55,7 @@ export function GuildCard({
           {/* Header: Icon + Name + Rank */}
           <div className="flex items-start gap-4 mb-4">
             <div className="w-11 h-11 rounded-[13px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
-              <GuildIcon className="w-[22px] h-[22px] text-primary" />
+              <VettedIcon name={guildIconName} className="w-[22px] h-[22px] text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-bold font-display text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
@@ -142,7 +143,7 @@ export function GuildCard({
             {/* Header */}
             <div className="flex items-center gap-3 mb-3.5">
               <div className="w-10 h-10 rounded-[11px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
-                <GuildIcon className="w-5 h-5 text-primary" />
+                <VettedIcon name={guildIconName} className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">

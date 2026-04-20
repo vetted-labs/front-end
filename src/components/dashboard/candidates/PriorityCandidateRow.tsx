@@ -1,7 +1,7 @@
 "use client";
 
-import { Award, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getCandidateStatusDot, getMatchScoreColors } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
 import type { CompanyApplication } from "@/types";
@@ -81,12 +81,12 @@ export function PriorityCandidateRow({
       <div className="flex items-center gap-2 flex-shrink-0">
         {endorsementCount > 0 ? (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-positive bg-positive/15 border border-positive/30 px-2 py-1 rounded-md flex-shrink-0">
-            <Award className="w-3.5 h-3.5 flex-shrink-0" />
+            <VettedIcon name="endorsement" className="w-3.5 h-3.5 flex-shrink-0" />
             {endorsementCount}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/40 bg-muted/20 px-2 py-1 rounded-md flex-shrink-0">
-            <Users className="w-3.5 h-3.5" />
+            <VettedIcon name="vet-talent" className="w-3.5 h-3.5" />
             0
           </span>
         )}

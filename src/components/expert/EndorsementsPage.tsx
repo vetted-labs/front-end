@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EndorsementMarketplace } from "@/components/EndorsementMarketplace";
-import { Award } from "lucide-react";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { Button } from "@/components/ui/button";
 import { HelpLink } from "@/components/ui/HelpLink";
 import { DOC_LINKS } from "@/config/docLinks";
@@ -44,9 +44,12 @@ export default function EndorsementsPage() {
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
-              <h1 className="text-3xl font-bold md:text-3xl font-display">
-                Endorsement Marketplace
-              </h1>
+              <div className="flex items-center gap-3">
+                <VettedIcon name="endorsement" className="w-7 h-7 text-primary" />
+                <h1 className="text-3xl font-bold md:text-3xl font-display">
+                  Endorsement Marketplace
+                </h1>
+              </div>
               <p className="max-w-2xl text-muted-foreground">
                 Endorse candidates you believe will succeed. Top 3 endorsers earn rewards when the candidate is hired.{" "}
                 <HelpLink href={DOC_LINKS.endorsements} size="sm">
@@ -59,7 +62,7 @@ export default function EndorsementsPage() {
               size="sm"
               onClick={() => router.push("/expert/earnings")}
             >
-              <Award className="w-4 h-4 mr-2" />
+              <VettedIcon name="endorsement" className="w-4 h-4 mr-2" />
               View Rewards
             </Button>
           </div>
