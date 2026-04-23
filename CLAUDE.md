@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> **Start here first:** [`/Users/svendaneel/Desktop/vetted/PROJECT_MAP.md`](../PROJECT_MAP.md)
+> It's the master orientation doc across every Vetted sub-project (backend, front-end, smart-contracts, vetted-enterprise) — strategic thesis, project inventory, cross-project data flow, and live gap map. Read it before making cross-cutting decisions.
+>
+> This project is the **public Web3 product** (candidate / company / expert portals + marketing). The **Intelligence arm** (enterprise pilot delivery) lives in `../vetted-enterprise/`.
+
 ## Git Commits
 
 - NEVER add "Co-Authored-By: Claude" or similar attribution to commit messages
