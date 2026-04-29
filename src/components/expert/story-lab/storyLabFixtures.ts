@@ -39,22 +39,6 @@ export const STORY_LAB_GUILD: GuildRecord = {
   name: "Engineering",
 };
 
-export const STORY_LAB_EXPERT_GUILD: ExpertGuild = {
-  id: STORY_LAB_GUILD.id,
-  name: STORY_LAB_GUILD.name,
-  description:
-    "Software engineers, data scientists, and technical builders who review engineering applications.",
-  memberCount: 128,
-  expertRole: "craftsman",
-  reputation: 420,
-  totalEarnings: 138.5,
-  joinedAt: STORY_LAB_TIMESTAMPS.expertJoined,
-  pendingProposals: 1,
-  pendingApplications: 0,
-  ongoingProposals: 2,
-  closedProposals: 18,
-};
-
 export const STORY_LAB_REVIEW_APPLICATION_ID = "story-lab-review-maya-chen";
 export const STORY_LAB_ENDORSEMENT_APPLICATION_ID = "story-lab-endorsement-riley-park";
 export const STORY_LAB_GOVERNANCE_PROPOSAL_ID = "story-lab-governance-review-quorum";
@@ -68,6 +52,22 @@ export const STORY_LAB_VOTE_OUTCOME = {
   weightMultiplier: 1.4,
   voteResolvedAt: STORY_LAB_TIMESTAMPS.voteResolvedAt,
 } as const;
+
+export const STORY_LAB_EXPERT_GUILD: ExpertGuild = {
+  id: STORY_LAB_GUILD.id,
+  name: STORY_LAB_GUILD.name,
+  description:
+    "Software engineers, data scientists, and technical builders who review engineering applications.",
+  memberCount: 128,
+  expertRole: "craftsman",
+  reputation: 42 + STORY_LAB_VOTE_OUTCOME.reputationDelta,
+  totalEarnings: STORY_LAB_VOTE_OUTCOME.reward,
+  joinedAt: STORY_LAB_TIMESTAMPS.expertJoined,
+  pendingProposals: 1,
+  pendingApplications: 0,
+  ongoingProposals: 2,
+  closedProposals: 18,
+};
 
 export const STORY_LAB_REVIEW_APPLICATION: ExpertMembershipApplication = {
   ...PRACTICE_REVIEW_APPLICATION,

@@ -239,4 +239,12 @@ describe("expert story lab data", () => {
     ];
     expect(withStoryLabGuildStakes(real)).toEqual(real);
   });
+
+  it("rebases STORY_LAB_EXPERT_GUILD aggregates onto the canonical outcome", async () => {
+    const fx = await import("@/components/expert/story-lab/storyLabFixtures");
+    expect(fx.STORY_LAB_EXPERT_GUILD.totalEarnings).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
+    expect(fx.STORY_LAB_EXPERT_GUILD.reputation).toBeGreaterThanOrEqual(
+      fx.STORY_LAB_VOTE_OUTCOME.reputationDelta,
+    );
+  });
 });
