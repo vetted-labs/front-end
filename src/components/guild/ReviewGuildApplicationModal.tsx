@@ -26,6 +26,8 @@ import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import type { TransactionPhase } from "@/components/ui/transaction-status";
 import { GENERAL_RESPONSE_KEY_MAP, FALLBACK_GENERAL_QUESTIONS } from "@/components/guild/review/constants";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { getStoryLabReviewModalStep } from "@/components/expert/story-lab/storyLabFixtures";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,
@@ -72,7 +74,16 @@ export function ReviewGuildApplicationModal({
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [isCommitting, setIsCommitting] = useState(false);
 
-  const isCommitPhase = commitRevealPhase === "commit";
+  const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
+  const storyLabStep = isStoryLabPreview ? getStoryLabReviewModalStep(activeSubStopId) : null;
+  const renderStep = storyLabStep ?? currentStep;
+
+  // In story mode the synthetic application's getPhaseStatus call fails so
+  // commitRevealPhase stays undefined. Force-enable the commit phase whenever
+  // the tour is parked on the commit step so the CommitRevealExplainer marker
+  // renders (review-commit maps to renderStep 3 inside the modal).
+  const isStoryLabCommitPhase = isStoryLabPreview && renderStep === 3;
+  const isCommitPhase = commitRevealPhase === "commit" || isStoryLabCommitPhase;
   const { address } = useAccount();
 
   const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
@@ -95,6 +106,7 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- reset all form state when a new application is opened
   useEffect(() => {
     if (!application) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- bulk-reset form state when the parent swaps to a new application; this prop->state sync is the effect's purpose
     setCurrentStep(1);
     setFeedback("");
     setGeneralScores({});
@@ -113,6 +125,7 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- sync stake from parent prop
   useEffect(() => {
     if (proposalContext?.requiredStake != null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror parent prop into local stake state when proposal context changes
       setStakeAmount(proposalContext.requiredStake);
     }
   }, [proposalContext?.requiredStake]);
@@ -407,7 +420,7 @@ export function ReviewGuildApplicationModal({
 
           {/* Content */}
           <div ref={contentRef} className="relative flex-1 overflow-y-auto px-6 py-5">
-            <StepIndicator currentStep={currentStep} />
+            <StepIndicator currentStep={renderStep} />
 
             {templateError && <Alert variant="error">{templateError}</Alert>}
             {loadingTemplates && (
@@ -417,10 +430,10 @@ export function ReviewGuildApplicationModal({
               </div>
             )}
 
-            {currentStep === 1 && (
+            {renderStep === 1 && (
               <ReviewProfileStep application={application} level={level} />
             )}
-            {currentStep === 2 && (
+            {renderStep === 2 && (
               <GeneralReviewStep
                 loadingTemplates={loadingTemplates}
                 generalTemplate={generalTemplate}
@@ -437,7 +450,7 @@ export function ReviewGuildApplicationModal({
                 onGeneralJustificationsChange={setGeneralJustifications}
               />
             )}
-            {currentStep === 3 && (
+            {renderStep === 3 && (
               <>
                 <DomainReviewStep
                   loadingTemplates={loadingTemplates}
@@ -481,7 +494,7 @@ export function ReviewGuildApplicationModal({
                 />
               </>
             )}
-            {currentStep === 4 && (
+            {renderStep === 4 && (
               <ReviewSuccessStep
                 isCommitPhase={isCommitPhase}
                 apiResponse={apiResponse}

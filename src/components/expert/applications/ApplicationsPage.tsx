@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { expertApi, guildsApi, guildApplicationsApi, extractApiError } from "@/lib/api";
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { useApplicationsData } from "@/lib/hooks/useApplicationsData";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import { WalletRequiredState } from "@/components/ui/wallet-required-state";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Coins, Shield } from "lucide-react";
@@ -36,9 +38,18 @@ const ReviewGuildApplicationModal = dynamic(
 
 const ALL_GUILDS = { id: "all", name: "All Guilds" } as const;
 
+const STORY_LAB_REVIEW_STEP_IDS = new Set([
+  "review-evidence",
+  "review-scoring",
+  "review-red-flags",
+  "review-commit",
+  "review-result",
+]);
+
 export default function ApplicationsPage() {
   const router = useRouter();
   const data = useApplicationsData();
+  const { isActive: isStoryLabPreview, activeStepId } = useStoryLabContext();
 
   // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -58,6 +69,43 @@ export default function ApplicationsPage() {
 
   // Search
   const [search, setSearch] = useState("");
+
+  // Auto-open the practice review modal when the story-lab tour walks through
+  // the review-* sub-stops. Steps 6-10 share the /expert/voting route but the
+  // markers they target only render inside the review modal — keep modal state
+  // synced with the tour's active step so the spotlight has something to anchor.
+  // eslint-disable-next-line no-restricted-syntax -- reactive sync to story-lab tour state
+  useEffect(() => {
+    if (!isStoryLabPreview) {
+      if (showReviewModal && selectedReviewApp?.id === STORY_LAB_REVIEW_APPLICATION_ID) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- close the synthetic modal when story mode exits; this DOM->state cleanup is the effect's purpose
+        setShowReviewModal(false);
+        setSelectedReviewApp(null);
+        setReviewProposalContext(undefined);
+      }
+      return;
+    }
+
+    const isReviewStep = activeStepId !== null && STORY_LAB_REVIEW_STEP_IDS.has(activeStepId);
+
+    if (isReviewStep) {
+      const alreadyOpenForStory =
+        showReviewModal && selectedReviewApp?.id === STORY_LAB_REVIEW_APPLICATION_ID;
+      if (alreadyOpenForStory) return;
+
+      const storyApp = data.expertApps.find((app) => app.id === STORY_LAB_REVIEW_APPLICATION_ID);
+      if (!storyApp) return;
+
+      setSelectedReviewApp(storyApp);
+      setReviewType("expert");
+      setReviewProposalContext(undefined);
+      setShowReviewModal(true);
+    } else if (showReviewModal && selectedReviewApp?.id === STORY_LAB_REVIEW_APPLICATION_ID) {
+      setShowReviewModal(false);
+      setSelectedReviewApp(null);
+      setReviewProposalContext(undefined);
+    }
+  }, [isStoryLabPreview, activeStepId, data.expertApps, showReviewModal, selectedReviewApp?.id]);
 
   // Handlers
   const handleReviewExpert = async (application: ExpertMembershipApplication) => {
