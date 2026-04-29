@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { Alert } from "./ui/alert";
 import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -49,7 +49,7 @@ interface GuildDetailViewProps {
 }
 
 export function GuildDetailView({ guildId }: GuildDetailViewProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useExpertAccount();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [guild, setGuild] = useState<GuildDetailData | null>(null);
