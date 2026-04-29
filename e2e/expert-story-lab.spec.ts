@@ -431,6 +431,32 @@ test.describe("expert story lab", () => {
     await expect(page.getByText(/100 VETD/)).toBeVisible({ timeout: 15000 });
   });
 
+  test("Finish scrubs all story params and persists completion", async ({ page }) => {
+    let putBody: unknown = null;
+    await setupStoryLabMocks(page);
+    await seedExpertBrowserSession(page);
+
+    // Capture the PUT to /api/experts/me/onboarding-state.
+    await page.route("**/api/experts/me/onboarding-state", async (route) => {
+      if (route.request().method() === "PUT") {
+        putBody = route.request().postDataJSON();
+      }
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: putBody ?? null }),
+      });
+    });
+
+    // Walk to the last step directly via URL state, then click Finish.
+    await page.goto("/expert/dashboard?storyLab=expert&storyStep=complete");
+    await page.getByRole("link", { name: "Finish" }).click();
+
+    await expect(page).toHaveURL(/\/expert\/dashboard$/);
+    expect(new URL(page.url()).searchParams.toString()).toBe("");
+    await expect.poll(() => putBody).toMatchObject({ completed: true });
+  });
+
   test("provides a deterministic story guild when the real expert has no guilds", async ({
     page,
   }) => {

@@ -19,7 +19,6 @@ import {
   buildStoryLabRoute,
   canAdvanceStoryLabStep,
   getStoryLabStepIndex,
-  getStoryLabCompletionRoute,
   isExpertStoryLabSearchParams,
   markStoryLabCompletionReady,
   STORY_LAB_DOM,
@@ -27,6 +26,8 @@ import {
   STORY_LAB_STEPS,
   type StoryLabStep,
 } from "./storyLabData";
+import { expertApi } from "@/lib/api";
+import { createExpertOnboardingState } from "@/lib/expert-onboarding-tour";
 
 interface TargetRect {
   top: number;
@@ -243,7 +244,10 @@ export function ExpertStoryLabDriver() {
 
     if (isLastStep) {
       markStoryLabCompletionReady();
-      router.push(getStoryLabCompletionRoute());
+      void expertApi
+        .updateOnboardingState({ ...createExpertOnboardingState(), completed: true })
+        .catch(() => {});
+      router.replace("/expert/dashboard");
       return;
     }
 
@@ -252,7 +256,7 @@ export function ExpertStoryLabDriver() {
 
   const backStep = STORY_LAB_STEPS[Math.max(0, activeIndex - 1)];
   const nextStep = STORY_LAB_STEPS[Math.min(STORY_LAB_STEPS.length - 1, activeIndex + 1)];
-  const primaryHref = isLastStep ? getStoryLabCompletionRoute() : getStepHref(nextStep);
+  const primaryHref = isLastStep ? "/expert/dashboard" : getStepHref(nextStep);
 
   // eslint-disable-next-line no-restricted-syntax -- captures document.body after client mount for the story-mode portal
   useEffect(() => {
