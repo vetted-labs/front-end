@@ -22,6 +22,11 @@ import { StakeModal } from "./guild/StakeModal";
 import dynamic from "next/dynamic";
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
 import { fetchAndNormalizeGuildData, transformLeaderboardData } from "@/lib/guildDetailHelpers";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import {
+  STORY_LAB_GUILD,
+  buildStoryLabGuildDetail,
+} from "@/components/expert/story-lab/storyLabFixtures";
 import type {
   GuildDetailData, GuildDetailTab, GuildApplicationSummary, LeaderboardExpert,
   LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication, ExpertRole, ExpertCRPhaseStatus,
@@ -89,9 +94,21 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const { execute: executeLeaderboard, isLoading: isLoadingLeaderboard } = useApi();
   const { execute: executeStake, isLoading: isStaking } = useApi();
 
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const isStoryLabSyntheticGuild =
+    isStoryLabPreview && guildId === STORY_LAB_GUILD.id;
+
   const { isLoading, error, refetch } = useFetch(
     async () => {
       if (!address) throw new Error("No wallet address");
+
+      if (isStoryLabSyntheticGuild) {
+        const synthetic = buildStoryLabGuildDetail();
+        setGuild(synthetic);
+        setStakingStatus({ meetsMinimum: true });
+        setCandidateApplications([]);
+        return synthetic;
+      }
 
       const { guild: normalized, blockchainGuildId: bcGuildId, currentExpertId: expertId } =
         await fetchAndNormalizeGuildData(guildId, address);
@@ -146,19 +163,21 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (isConnected && address) refetch();
   }, [guildId, address]);
 
-  // eslint-disable-next-line no-restricted-syntax -- lazy-load leaderboard when tab becomes active
+  // eslint-disable-next-line no-restricted-syntax -- lazy-load leaderboard when tab becomes active; fetchLeaderboard is hoisted later
   useEffect(() => {
     if (isConnected && address && activeTab === "leaderboard" && guild &&
         leaderboardData.topExperts.length === 0 && !isLoadingLeaderboard) {
+      // eslint-disable-next-line react-hooks/immutability -- fetchLeaderboard is declared later in the same component scope
       fetchLeaderboard();
     }
   }, [activeTab, guildId, isConnected, address, guild]);
 
-  // eslint-disable-next-line no-restricted-syntax -- auto-open review from URL param after data loads
+  // eslint-disable-next-line no-restricted-syntax -- auto-open review from URL param once after data loads
   useEffect(() => {
     if (!guild || autoOpenedReview) return;
     const applicationId = searchParams?.get("applicationId");
     if (!applicationId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot URL→state sync, gated by autoOpenedReview
     setActiveTab("membershipApplications");
     setAutoOpenedReview(true);
     if (stakingStatus?.meetsMinimum) {
