@@ -406,7 +406,9 @@ export function ReviewGuildApplicationModal({
                 {proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
+                {isStoryLabPreview
+                  ? "Practice sample / synthetic applicant"
+                  : reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
               </p>
             </div>
             <button
