@@ -13,6 +13,7 @@ import type {
   GovernanceProposalDetail,
   GuildDetailData,
   GuildRecord,
+  GuildStakeInfo,
   Notification,
   PaginationInfo,
   ReputationTimelineEntry,
@@ -411,6 +412,20 @@ export function withStoryLabGovernance(
     proposals ?? [],
     STORY_LAB_GOVERNANCE_PROPOSAL,
     (item) => item.id
+  );
+}
+
+export function withStoryLabGuildStakes(
+  stakes: GuildStakeInfo[] | null | undefined
+): GuildStakeInfo[] {
+  return prependUniqueById(
+    stakes ?? [],
+    {
+      guildId: STORY_LAB_GUILD.id,
+      stakedAmount: String(STORY_LAB_VOTE_OUTCOME.stake),
+      meetsMinimum: true,
+    },
+    (item) => item.guildId
   );
 }
 

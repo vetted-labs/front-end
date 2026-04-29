@@ -217,4 +217,26 @@ describe("expert story lab data", () => {
     expect(result.summary.byGuild?.[0]?.total).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
     expect(result.summary.byType?.[0]?.total).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
   });
+
+  it("injects a deterministic story-mode guild stake matching the canonical stake amount", async () => {
+    const { withStoryLabGuildStakes, STORY_LAB_VOTE_OUTCOME, STORY_LAB_GUILD } =
+      await import("@/components/expert/story-lab/storyLabFixtures");
+    const result = withStoryLabGuildStakes([]);
+    expect(result).toEqual([
+      {
+        guildId: STORY_LAB_GUILD.id,
+        stakedAmount: String(STORY_LAB_VOTE_OUTCOME.stake),
+        meetsMinimum: true,
+      },
+    ]);
+  });
+
+  it("does not duplicate a real stake for the story guild", async () => {
+    const { withStoryLabGuildStakes, STORY_LAB_GUILD } =
+      await import("@/components/expert/story-lab/storyLabFixtures");
+    const real = [
+      { guildId: STORY_LAB_GUILD.id, stakedAmount: "200", meetsMinimum: true },
+    ];
+    expect(withStoryLabGuildStakes(real)).toEqual(real);
+  });
 });

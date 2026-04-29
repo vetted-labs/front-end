@@ -141,9 +141,10 @@ export interface StakeBalance {
 
 export interface GuildStakeInfo {
   guildId: string;
-  guildName: string;
+  guildName?: string;
   stakedAmount: string;
   stakeTimestamp?: string;
+  meetsMinimum?: boolean;
 }
 
 export interface UnstakeRequest {
