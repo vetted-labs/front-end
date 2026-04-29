@@ -416,6 +416,16 @@ test.describe("expert story lab", () => {
 
   test("dashboard surfaces the canonical 100 VETD stake during story mode", async ({ page }) => {
     await setupStoryLabMocks(page);
+    // Override the real-API staking mock with an empty list so this assertion
+    // actually proves withStoryLabGuildStakes ran. If the injector regresses,
+    // the dashboard sees no stake and the test fails.
+    await page.route("**/api/blockchain/staking/guilds/**", (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: [] }),
+      });
+    });
     await seedExpertBrowserSession(page);
     await page.goto("/story-lab/expert");
     await expect(page.getByText(/100 VETD/)).toBeVisible({ timeout: 15000 });

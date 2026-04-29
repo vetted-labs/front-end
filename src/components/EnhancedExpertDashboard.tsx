@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Lock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 
-import { Skeleton, SkeletonStatCard, SkeletonCard } from "@/components/ui/skeleton";
+import { SkeletonStatCard, SkeletonCard } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
@@ -17,9 +18,25 @@ import { RankProgress } from "@/components/dashboard/RankProgress";
 import { GuildsSection } from "@/components/dashboard/GuildsSection";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { SlimNotificationsFeed } from "@/components/dashboard/SlimNotificationsFeed";
-import { WalletVerificationModal } from "@/components/WalletVerificationModal";
-import { useWalletVerification } from "@/lib/hooks/useWalletVerification";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
+import { useExpertOnboardingTour } from "@/lib/hooks/useExpertOnboardingTour";
+import { isApprovedExpertForOnboarding } from "@/lib/expert-onboarding-route-markers";
+import {
+  consumeStoryLabCompletionReady,
+  isExpertStoryLabCompletionSearchParams,
+  isExpertStoryLabSearchParams,
+} from "@/components/expert/story-lab/storyLabData";
+import {
+  STORY_LAB_VOTE_OUTCOME,
+  STORY_LAB_GUILD,
+} from "@/components/expert/story-lab/storyLabFixtures";
+import { EXPERT_STORY_COMPLETION_EVENTS } from "@/components/expert/onboarding/ExpertStoryMode";
+import {
+  TOUR_TARGETS,
+  dataTourTarget,
+  tourTargetSelector,
+} from "@/components/expert/onboarding/tourTargets";
 
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
@@ -80,16 +97,38 @@ function getDaysUntilDecay(lastActivityTimestamp: number | null): number {
   return Math.max(0, Math.ceil((decayDate - Date.now()) / (24 * 60 * 60 * 1000)));
 }
 
+function findVisibleCommitRevealTarget(): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+
+  const target = document.querySelector<HTMLElement>(
+    tourTargetSelector(TOUR_TARGETS.commitReveal)
+  );
+  if (!target) return null;
+
+  const rect = target.getBoundingClientRect();
+  const isVisible =
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.bottom >= 0 &&
+    rect.right >= 0 &&
+    rect.top <= window.innerHeight &&
+    rect.left <= window.innerWidth;
+
+  return isVisible ? target : null;
+}
+
 export function EnhancedExpertDashboard() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isStoryLabPreview = isExpertStoryLabSearchParams(searchParams);
+  const isStoryLabCompletionReturn = isExpertStoryLabCompletionSearchParams(searchParams);
   const { address, isConnected, isReconnecting } = useExpertAccount();
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const {
-    isSigning,
-    error: verificationError,
-    checkVerification,
-    requestVerification,
-  } = useWalletVerification();
+    expertStatus,
+    isHydrated: expertStatusHydrated,
+    setExpertStatus,
+  } = useExpertStatus();
 
   // Redirect when disconnected (with grace period for reconnection)
   // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi connection state
@@ -144,13 +183,6 @@ export function EnhancedExpertDashboard() {
     },
     {
       skip: !address,
-      onSuccess: () => {
-        if (!address) return;
-        // Check wallet verification in background
-        checkVerification(address).then((verified) => {
-          if (!verified) setShowVerificationModal(true);
-        });
-      },
       onError: (message) => {
         toast.error(message);
       },
@@ -222,6 +254,11 @@ export function EnhancedExpertDashboard() {
         }
       }
 
+      if (isStoryLabPreview && !stakesMap[STORY_LAB_GUILD.id]) {
+        stakesMap[STORY_LAB_GUILD.id] = String(STORY_LAB_VOTE_OUTCOME.stake);
+        totalStaked += STORY_LAB_VOTE_OUTCOME.stake;
+      }
+
       return { stakesMap, totalStaked };
     },
     {
@@ -233,7 +270,16 @@ export function EnhancedExpertDashboard() {
   // Uses a probe-first pattern: try the first guild, only sync the rest if it succeeds.
   // eslint-disable-next-line no-restricted-syntax -- fire-and-forget sync after blockchain data loads
   useEffect(() => {
-    if (!stakesData || !address || !profile?.guilds?.length || error) return;
+    if (
+      isStoryLabPreview ||
+      isStoryLabCompletionReturn ||
+      !stakesData ||
+      !address ||
+      !profile?.guilds?.length ||
+      error
+    ) {
+      return;
+    }
 
     const guilds = profile.guilds;
     const firstBlockchainGuildId = hashToBytes32(guilds[0].id);
@@ -249,7 +295,7 @@ export function EnhancedExpertDashboard() {
       .catch(() => {
         logger.warn("Stake sync endpoint unavailable, skipping background sync");
       });
-  }, [stakesData, address, profile?.guilds, error]);
+  }, [isStoryLabPreview, isStoryLabCompletionReturn, stakesData, address, profile?.guilds, error]);
 
   // Derived state for new dashboard layout
   const guildStakes = stakesData?.stakesMap ?? {};
@@ -313,37 +359,98 @@ export function EnhancedExpertDashboard() {
   }
   const rewardTier = getRewardTier(profile?.reputation ?? 0);
 
-  const handleVerifyWallet = async () => {
-    if (!address) return;
-    const success = await requestVerification(address);
-    if (success) {
-      setShowVerificationModal(false);
-    }
-  };
-
   const loading = isLoading || !profile;
+  const profileLoaded = !loading && !!profile;
+  const profileStatus = profile?.status;
+  // eslint-disable-next-line no-restricted-syntax -- keeps shared shell chrome synchronized with loaded profile status
+  useEffect(() => {
+    if (!profileStatus || expertStatus === profileStatus) return;
+    setExpertStatus(profileStatus);
+  }, [expertStatus, profileStatus, setExpertStatus]);
+
+  const isApprovedExpertForOnboardingValue = isApprovedExpertForOnboarding({
+    profileLoaded,
+    profileStatus,
+    expertStatus,
+    expertStatusHydrated,
+    requireSyncedExpertStatus: true,
+  });
+  const persistOnboardingState = useCallback((state: Parameters<typeof expertApi.updateOnboardingState>[0]) => {
+    void expertApi.updateOnboardingState(state).catch((err) => {
+      logger.warn("Failed to persist expert onboarding state", err);
+    });
+  }, []);
+  const onboarding = useExpertOnboardingTour({
+    expertId: profile?.id,
+    walletAddress: address,
+    isApprovedExpert: !isStoryLabPreview && isApprovedExpertForOnboardingValue,
+    isDashboardRoute: pathname === "/expert/dashboard",
+    profileLoaded,
+    serverState: profile?.onboardingState ?? null,
+    onStateChange: isStoryLabPreview ? undefined : persistOnboardingState,
+  });
+  const { completeTour, markChecklistEvent } = onboarding;
+
+  const focusCommitRevealExplainer = useCallback(() => {
+    const target = document.querySelector<HTMLElement>(
+      tourTargetSelector(TOUR_TARGETS.commitReveal)
+    );
+    target?.scrollIntoView({ block: "center", behavior: "smooth" });
+    target?.focus({ preventScroll: true });
+  }, []);
+  const handleCommitRevealExplainerViewed = useCallback(() => {
+    const target = findVisibleCommitRevealTarget();
+    if (!target) {
+      focusCommitRevealExplainer();
+      return;
+    }
+
+    markChecklistEvent("commitRevealViewed");
+  }, [focusCommitRevealExplainer, markChecklistEvent]);
+  const handleStoryComplete = useCallback(() => {
+    for (const event of EXPERT_STORY_COMPLETION_EVENTS) {
+      markChecklistEvent(event);
+    }
+    completeTour();
+  }, [completeTour, markChecklistEvent]);
+
+  // eslint-disable-next-line no-restricted-syntax -- story-lab completion must retire the first-run dashboard story before rendering normal dashboard chrome
+  useEffect(() => {
+    if (!isStoryLabCompletionReturn || loading) return;
+
+    if (!onboarding.canStartTour) {
+      consumeStoryLabCompletionReady();
+      router.replace("/expert/dashboard", { scroll: false });
+      return;
+    }
+
+    if (!consumeStoryLabCompletionReady()) {
+      router.replace("/expert/dashboard", { scroll: false });
+      return;
+    }
+
+    handleStoryComplete();
+    router.replace("/expert/dashboard", { scroll: false });
+  }, [
+    handleStoryComplete,
+    isStoryLabCompletionReturn,
+    loading,
+    onboarding.canStartTour,
+    router,
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Wallet verification modal */}
-      {showVerificationModal && (
-        <WalletVerificationModal
-          isOpen={showVerificationModal}
-          onClose={() => setShowVerificationModal(false)}
-          onVerify={handleVerifyWallet}
-          isSigning={isSigning}
-          error={verificationError}
-          walletAddress={address!}
-        />
-      )}
-
       {/* Error alert — inline, not full-page replacement */}
       {error && (
         <Alert variant="error">Failed to load dashboard: {error}</Alert>
       )}
 
       {/* Section 1: Header — always visible */}
-      <div className="flex items-center justify-between">
+      <div
+        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+        {...dataTourTarget(TOUR_TARGETS.dashboardOverview)}
+      >
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Dashboard
@@ -356,10 +463,12 @@ export function EnhancedExpertDashboard() {
           )}
         </div>
         {!loading && (
-          <ActionButtonPanel
-            stakingStatus={stakingStatus}
-            onRefresh={refetch}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <ActionButtonPanel
+              stakingStatus={stakingStatus}
+              onRefresh={refetch}
+            />
+          </div>
         )}
       </div>
 
@@ -389,12 +498,14 @@ export function EnhancedExpertDashboard() {
               </span>
             )}
           </div>
-          <StatCard
-            label="Earnings"
-            value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
-            subtext="total earned"
-            subtextVariant="default"
-          />
+          <div className="self-start" {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}>
+            <StatCard
+              label="Earnings"
+              value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
+              subtext="total earned"
+              subtextVariant="default"
+            />
+          </div>
           <div className="flex flex-col gap-1">
             <StatCard
               label="Staked VETD"
@@ -439,12 +550,37 @@ export function EnhancedExpertDashboard() {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-          <ReviewQueue applications={assignedApplications ?? []} />
-          <RankProgress
-            guilds={profile?.guilds ?? []}
-            guildStakes={guildStakes}
-            totalStaked={totalStaked}
+          <ReviewQueue
+            applications={assignedApplications ?? []}
           />
+          <div className="flex flex-col gap-4">
+            <div
+              className="rounded-xl border border-border bg-card p-5"
+              tabIndex={-1}
+              {...dataTourTarget(TOUR_TARGETS.commitReveal)}
+            >
+              <p className="text-sm font-bold text-foreground">Commit/reveal</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Some rounds hide scores while experts vote. Commit blind; the app
+                reveals or finalizes when the round is ready.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-3 px-0"
+                onClick={handleCommitRevealExplainerViewed}
+              >
+                Mark explainer viewed
+              </Button>
+            </div>
+            <RankProgress
+              guilds={profile?.guilds ?? []}
+              guildStakes={guildStakes}
+              totalStaked={totalStaked}
+              onManageStake={() => markChecklistEvent("stakingExplanationViewed")}
+            />
+          </div>
         </div>
       </DataSection>
 
