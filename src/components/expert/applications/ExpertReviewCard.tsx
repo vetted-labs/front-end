@@ -7,6 +7,7 @@ import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -54,6 +55,10 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const isReviewed = application.expertHasReviewed;
   const phase = application.votingPhase;
   const isCommitReveal = phase === "commit" || phase === "finalized";
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const storyLabReviewUrl = application.guildId
+    ? `/expert/guild/${application.guildId}?tab=applications&applicationId=${application.id}`
+    : `/expert/applications?applicationId=${application.id}`;
 
   const activeDeadline = phase === "commit"
     ? application.commitDeadline
@@ -84,7 +89,10 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const initials = getInitials(application.fullName);
 
   return (
-    <div className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
+    <div
+      className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border"
+      {...(isStoryLabPreview ? { "data-story-lab-review-url": storyLabReviewUrl } : {})}
+    >
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}

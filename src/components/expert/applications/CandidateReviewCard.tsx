@@ -3,6 +3,7 @@
 import { ChevronRight, Clock, Briefcase, Users } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type { CandidateGuildApplication } from "@/types";
 
 interface CandidateReviewCardProps {
@@ -21,15 +22,22 @@ function getInitials(fullName: string): string {
 
 export function CandidateReviewCard({ application, onReview, onViewReview, showGuildBadge }: CandidateReviewCardProps) {
   const isReviewed = application.expertHasReviewed;
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
 
   const avatarBg = isReviewed
     ? "bg-positive/70"
     : "bg-primary/70";
 
   const initials = getInitials(application.candidateName);
+  const storyLabReviewUrl = application.guildId
+    ? `/expert/guild/${application.guildId}?tab=membershipApplications&candidateApplicationId=${application.id}`
+    : `/expert/applications?candidateApplicationId=${application.id}`;
 
   return (
-    <div className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
+    <div
+      className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border"
+      {...(isStoryLabPreview ? { "data-story-lab-review-url": storyLabReviewUrl } : {})}
+    >
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}

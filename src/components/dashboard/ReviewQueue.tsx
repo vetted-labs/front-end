@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type { GuildApplication } from "@/types";
 
 interface ReviewQueueProps {
@@ -32,6 +33,7 @@ function getReviewUrl(app: GuildApplication): string {
 
 export function ReviewQueue({ applications }: ReviewQueueProps) {
   const router = useRouter();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const displayed = applications.slice(0, 5);
   const hasMore = applications.length > 5;
 
@@ -63,6 +65,9 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
               <button
                 key={`${app.item_type ?? "proposal"}-${app.id}`}
                 onClick={() => router.push(getReviewUrl(app))}
+                {...(isStoryLabPreview
+                  ? { "data-story-lab-review-url": getReviewUrl(app) }
+                  : {})}
                 className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
                   isFirst
                     ? `${STATUS_COLORS.warning.bgSubtle} border ${STATUS_COLORS.warning.border} hover:bg-warning/[0.08]`

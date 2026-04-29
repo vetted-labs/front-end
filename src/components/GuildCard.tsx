@@ -7,6 +7,7 @@ import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import { PatternBackground } from "@/components/ui/pattern-background";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type { Guild, ExpertGuild } from "@/types";
 
 /** Union of public Guild and ExpertGuild fields, plus card-specific extras. */
@@ -34,6 +35,7 @@ export function GuildCard({
   showDescription = true,
 }: GuildCardProps) {
   const guildIconName = getGuildIconName(guild.name);
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
 
   // ── Membership variant (profile "Guild Positions" section) ──
   if (variant === "membership") {
@@ -42,6 +44,7 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
+        {...(isStoryLabPreview ? { "data-story-lab-guild-id": guild.id } : {})}
         className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.08)]"
       >
         {/* Pattern header strip */}
@@ -115,6 +118,7 @@ export function GuildCard({
     return (
       <div
         onClick={() => onViewDetails?.(guild.id)}
+        {...(isStoryLabPreview ? { "data-story-lab-guild-id": guild.id } : {})}
         className={`group relative cursor-pointer overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-0.5 ${
           isUrgent
             ? "border-warning/20 hover:border-warning/35 bg-card"

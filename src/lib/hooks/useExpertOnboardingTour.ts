@@ -129,8 +129,15 @@ function mergeOnboardingState(
 
 export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions) {
   const { expertId, walletAddress, onStateChange, serverState } = options;
+  // Only treat the server snapshot as authoritative when the profile load
+  // produced a real onboarding-state object. `null`/`undefined` means we
+  // either haven't fetched yet or no record exists, in which case the
+  // localStorage-derived state must be preserved (otherwise hydrating with
+  // the empty default would clobber any locally-persisted `completed: true`).
   const hasAuthoritativeServerState =
-    options.profileLoaded && serverState !== undefined;
+    options.profileLoaded &&
+    serverState !== undefined &&
+    serverState !== null;
   const serverStateKey = JSON.stringify(serverState ?? null);
   const normalizedServerState = useMemo(
     () =>
