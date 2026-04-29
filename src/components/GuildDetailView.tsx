@@ -22,11 +22,8 @@ import { StakeModal } from "./guild/StakeModal";
 import dynamic from "next/dynamic";
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
 import { fetchAndNormalizeGuildData, transformLeaderboardData } from "@/lib/guildDetailHelpers";
+import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
-import {
-  STORY_LAB_GUILD,
-  buildStoryLabGuildDetail,
-} from "@/components/expert/story-lab/storyLabFixtures";
 import type {
   GuildDetailData, GuildDetailTab, GuildApplicationSummary, LeaderboardExpert,
   LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication, ExpertRole, ExpertCRPhaseStatus,
@@ -102,18 +99,16 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     async () => {
       if (!address) throw new Error("No wallet address");
 
-      if (isStoryLabSyntheticGuild) {
-        const synthetic = buildStoryLabGuildDetail();
-        setGuild(synthetic);
-        setStakingStatus({ meetsMinimum: true });
-        setCandidateApplications([]);
-        return synthetic;
-      }
-
       const { guild: normalized, blockchainGuildId: bcGuildId, currentExpertId: expertId } =
         await fetchAndNormalizeGuildData(guildId, address);
       setGuild(normalized);
       if (expertId) setCurrentExpertId(expertId);
+
+      if (isStoryLabSyntheticGuild) {
+        setStakingStatus({ meetsMinimum: true });
+        setCandidateApplications([]);
+        return normalized;
+      }
 
       // Fetch staking status
       try {

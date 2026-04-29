@@ -1,6 +1,11 @@
 import type { GuildDetailData, GuildActivity, GuildEarningsOverview, ExpertMember, LeaderboardExpert, LeaderboardEntry } from "@/types";
 import { expertApi, guildsApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import {
+  STORY_LAB_GUILD,
+  buildStoryLabGuildDetail,
+} from "@/components/expert/story-lab/storyLabFixtures";
+import { parseStoryLabActive } from "@/lib/story-lab/parseStoryLabActive";
 
 /**
  * Fetches and normalizes guild detail data from the expert API,
@@ -14,6 +19,18 @@ export async function fetchAndNormalizeGuildData(
   blockchainGuildId: string | undefined;
   currentExpertId: string | null;
 }> {
+  if (
+    guildId === STORY_LAB_GUILD.id &&
+    typeof window !== "undefined" &&
+    parseStoryLabActive(window.location.search)
+  ) {
+    return {
+      guild: buildStoryLabGuildDetail(),
+      blockchainGuildId: undefined,
+      currentExpertId: null,
+    };
+  }
+
   const data = await expertApi.getGuildDetails(guildId, walletAddress);
 
   // Find the current user's expert entry to extract personal stats
