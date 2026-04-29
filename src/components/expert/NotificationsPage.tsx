@@ -18,6 +18,7 @@ import { NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
 import {
   type Notification,
   getNotificationIcon,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- pre-existing unused import preserved to avoid scope creep in this story-lab wiring change
   getNotificationColor,
   isDeadlineNotification,
   getApplicantTypeTag,
@@ -32,7 +33,10 @@ import { STATUS_COLORS } from "@/config/colors";
 import { DataSection } from "@/lib/motion";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
-import { STORY_LAB_NOTIFICATION_RESULT_ID } from "@/components/expert/story-lab/storyLabFixtures";
+import {
+  STORY_LAB_NOTIFICATION_RESULT_ID,
+  withStoryLabNotifications,
+} from "@/components/expert/story-lab/storyLabFixtures";
 
 type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
@@ -53,7 +57,10 @@ export default function NotificationsPage() {
       skip: !isConnected || !address,
       onSuccess: (result) => {
         const notificationsData = result?.notifications ?? [];
-        setAllNotifications(notificationsData);
+        const finalData = isStoryLabPreview
+          ? withStoryLabNotifications(notificationsData)
+          : notificationsData;
+        setAllNotifications(finalData);
         setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
       },
     }

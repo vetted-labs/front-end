@@ -31,6 +31,8 @@ import { ClaimRewardsCard } from "@/components/expert/ClaimRewardsCard";
 import { HowEarningsWork } from "@/components/expert/HowEarningsWork";
 import { EarningsTimeline } from "@/components/expert/EarningsTimeline";
 import { EarningsChart } from "@/components/expert/EarningsChart";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { withStoryLabEarnings } from "@/components/expert/story-lab/storyLabFixtures";
 
 function exportEarningsCSV(data: EarningsEntry[]) {
   const headers = "Date,Type,Amount (VETD),Guild,Candidate\n";
@@ -68,6 +70,7 @@ export default function EarningsPage() {
   const { address: wagmiAddress } = useExpertAccount();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [items, setItems] = useState<EarningsEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -87,6 +90,7 @@ export default function EarningsPage() {
     if (isConfirmed && claimTxHash) {
       toast.success("Rewards claimed successfully!");
       refetchAll();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing tx hash after on-chain confirmation is the synchronization point with wagmi
       setClaimTxHash(undefined);
     }
   }, [isConfirmed, claimTxHash, refetchAll]);
@@ -95,6 +99,7 @@ export default function EarningsPage() {
   useEffect(() => {
     if (claimFailed && claimTxHash) {
       toast.error(getTransactionErrorMessage(claimError, "Failed to claim rewards on-chain"));
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing tx hash after on-chain failure is the synchronization point with wagmi
       setClaimTxHash(undefined);
     }
   }, [claimFailed, claimTxHash, claimError]);
@@ -137,9 +142,19 @@ export default function EarningsPage() {
         if (!result) return;
         setProfile(result.profileResult);
         const data = result.earningsResult;
-        setSummary(data.summary || null);
-        setItems(data.items?.items || []);
-        setPagination(data.items?.pagination || null);
+        const rawSummary = data.summary || null;
+        const rawItems = data.items?.items || [];
+        const rawPagination = data.items?.pagination || null;
+        if (isStoryLabPreview) {
+          const injected = withStoryLabEarnings(rawSummary, rawItems, rawPagination);
+          setSummary(injected.summary);
+          setItems(injected.items);
+          setPagination(injected.pagination);
+        } else {
+          setSummary(rawSummary);
+          setItems(rawItems);
+          setPagination(rawPagination);
+        }
       },
       onError: () => {
         toast.error("Failed to load earnings data");

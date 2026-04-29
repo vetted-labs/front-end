@@ -26,12 +26,15 @@ import { RewardTierTower } from "./RewardTierTower";
 import { ReputationScoreChart } from "./ReputationScoreChart";
 import { HowReputationWorks } from "./HowReputationWorks";
 import { ReputationTimeline } from "./ReputationTimeline";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { withStoryLabReputation } from "@/components/expert/story-lab/storyLabFixtures";
 
 
 export default function ReputationPage() {
   const { address: wagmiAddress } = useExpertAccount();
   const auth = useAuthContext();
   const address = wagmiAddress || auth.walletAddress;
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [profile, setProfile] = useState<ExpertProfile | null>(null);
   const [timeline, setTimeline] = useState<ReputationTimelineEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -50,10 +53,20 @@ export default function ReputationPage() {
       skip: !address,
       onSuccess: (result) => {
         if (!result) return;
-        setProfile(result.profileRes);
+        const rawProfile = result.profileRes;
         const tData = result.timelineRes.data ?? result.timelineRes;
-        setTimeline(tData.items || []);
-        setPagination(tData.pagination || null);
+        const rawTimeline = tData.items || [];
+        const rawPagination = tData.pagination || null;
+        if (isStoryLabPreview) {
+          const injected = withStoryLabReputation(rawProfile, rawTimeline, rawPagination);
+          setProfile(injected.profile);
+          setTimeline(injected.timeline);
+          setPagination(injected.pagination);
+        } else {
+          setProfile(rawProfile);
+          setTimeline(rawTimeline);
+          setPagination(rawPagination);
+        }
       },
       onError: () => {
         toast.error("Failed to load reputation data");
