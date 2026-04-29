@@ -6,7 +6,7 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
 import { isProposalVoteable, VOTEABLE_PROPOSAL_STATUS } from "@/lib/proposal-review";
-import { isExpertStoryLabSearchParams } from "@/components/expert/story-lab/storyLabData";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import {
   buildStoryLabReviewApplication,
   prependUniqueById,
@@ -34,7 +34,7 @@ export function useApplicationsData() {
   const { address } = useExpertAccount();
   const searchParams = useSearchParams();
   const { guilds: guildRecords } = useGuilds();
-  const isStoryLabPreview = isExpertStoryLabSearchParams(searchParams);
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const storyGuild = useMemo(
     () => guildRecords[0] ?? { id: "story-lab-engineering-guild", name: "Engineering" },
     [guildRecords]
