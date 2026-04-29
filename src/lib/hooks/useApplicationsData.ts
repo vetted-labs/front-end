@@ -5,6 +5,13 @@ import { expertApi, guildsApi, guildApplicationsApi, blockchainApi } from "@/lib
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useGuilds } from "@/lib/hooks/useGuilds";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
+import { isProposalVoteable, VOTEABLE_PROPOSAL_STATUS } from "@/lib/proposal-review";
+import { isExpertStoryLabSearchParams } from "@/components/expert/story-lab/storyLabData";
+import {
+  buildStoryLabReviewApplication,
+  prependUniqueById,
+  withStoryLabGuildStakes,
+} from "@/components/expert/story-lab/storyLabFixtures";
 import { toast } from "sonner";
 import type {
   ApplicationsTabType,
@@ -27,6 +34,11 @@ export function useApplicationsData() {
   const { address } = useExpertAccount();
   const searchParams = useSearchParams();
   const { guilds: guildRecords } = useGuilds();
+  const isStoryLabPreview = isExpertStoryLabSearchParams(searchParams);
+  const storyGuild = useMemo(
+    () => guildRecords[0] ?? { id: "story-lab-engineering-guild", name: "Engineering" },
+    [guildRecords]
+  );
 
   const [selectedGuild, setSelectedGuild] = useState<{ id: string; name: string }>(ALL_GUILDS);
   const [filterMode, setFilterMode] = useState<ApplicationsFilterMode>("assigned");
@@ -47,10 +59,18 @@ export function useApplicationsData() {
     { skip: !address },
   );
 
+  const effectiveGuildStakes = useMemo(() => {
+    if (!isStoryLabPreview) return guildStakes ?? [];
+    return withStoryLabGuildStakes(guildStakes ?? []);
+  }, [guildStakes, isStoryLabPreview]);
+
   const stakedGuildIds = useMemo(() => {
-    if (!guildStakes) return new Set<string>();
-    return new Set(guildStakes.filter(s => parseFloat(s.stakedAmount) > 0).map(s => s.guildId));
-  }, [guildStakes]);
+    return new Set(
+      effectiveGuildStakes
+        .filter((s) => parseFloat(s.stakedAmount) > 0)
+        .map((s) => s.guildId),
+    );
+  }, [effectiveGuildStakes]);
 
   const isStakedInGuild = (guildId?: string) => {
     if (!guildId) return stakedGuildIds.size > 0;
@@ -116,15 +136,16 @@ export function useApplicationsData() {
         return guildApplicationsApi.getAssigned(
           expertData.id,
           isAllGuilds ? undefined : selectedGuild.id,
+          VOTEABLE_PROPOSAL_STATUS,
         );
       }
       if (isAllGuilds) {
         const results = await Promise.all(
-          guildRecords.map((g) => guildApplicationsApi.getByGuild(g.id, "ongoing")),
+          guildRecords.map((g) => guildApplicationsApi.getByGuild(g.id, VOTEABLE_PROPOSAL_STATUS)),
         );
         return results.flat();
       }
-      return guildApplicationsApi.getByGuild(selectedGuild.id, "pending");
+      return guildApplicationsApi.getByGuild(selectedGuild.id, VOTEABLE_PROPOSAL_STATUS);
     },
     { onError: (err) => toast.error(err) },
   );
@@ -169,7 +190,15 @@ export function useApplicationsData() {
   );
 
   // Derived data
-  const expertApps = expertAppsRaw ?? [];
+  const expertApps = useMemo(() => {
+    const raw = expertAppsRaw ?? [];
+    if (!isStoryLabPreview) return raw;
+    return prependUniqueById(
+      raw,
+      buildStoryLabReviewApplication(storyGuild),
+      (item) => item.id
+    );
+  }, [expertAppsRaw, isStoryLabPreview, storyGuild]);
 
   const candidateApps = useMemo(() => {
     const raw = candidateAppsRaw ?? [];
@@ -249,9 +278,7 @@ export function useApplicationsData() {
 
   // Stats
   const pendingReviews = (expertApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0) + (candidateApps?.filter((a) => !a.expertHasReviewed)?.length ?? 0);
-  const proposalsToVote = proposals.filter(
-    (p) => (p.is_assigned_reviewer || p.is_tiebreaker_reviewer) && !p.has_voted
-  ).length;
+  const proposalsToVote = proposals.filter(isProposalVoteable).length;
 
   const isLoading = activeTab === "expert" ? expertAppsLoading
     : activeTab === "candidate" ? candidateAppsLoading
@@ -274,7 +301,7 @@ export function useApplicationsData() {
     isAllGuilds,
 
     // Staking
-    guildStakes,
+    guildStakes: effectiveGuildStakes,
     hasAnyStake,
     isStakedInGuild,
 
@@ -286,7 +313,7 @@ export function useApplicationsData() {
     historyCount,
 
     // Loading
-    isLoading,
+    isLoading: isStoryLabPreview ? false : isLoading,
 
     // Pagination
     activeItems,
