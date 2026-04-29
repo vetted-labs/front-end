@@ -14,6 +14,7 @@ import { GuildCard } from "../GuildCard";
 import LeaderboardPage from "../leaderboard/LeaderboardPage";
 import { getGuildDetailedInfo, getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ExpertProfile, Guild } from "@/types";
 
 type TabType = "guilds" | "leaderboard";
@@ -255,7 +256,10 @@ export function GuildsOverview() {
                 )}
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+                {...dataTourTarget(TOUR_TARGETS.guildDirectory)}
+              >
                 {sortedGuilds.map((guild) => (
                   <GuildCard
                     key={guild.id}
