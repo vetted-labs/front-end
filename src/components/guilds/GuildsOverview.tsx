@@ -15,6 +15,8 @@ import LeaderboardPage from "../leaderboard/LeaderboardPage";
 import { getGuildDetailedInfo, getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { withStoryLabGuilds } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ExpertProfile, Guild } from "@/types";
 
 type TabType = "guilds" | "leaderboard";
@@ -37,7 +39,9 @@ export function GuildsOverview() {
     { skip: !isConnected || !address },
   );
 
-  const profileGuilds = Array.isArray(profile?.guilds) ? profile.guilds : [];
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const realGuilds = Array.isArray(profile?.guilds) ? profile.guilds : [];
+  const profileGuilds = isStoryLabPreview ? withStoryLabGuilds(realGuilds) : realGuilds;
 
   const openGuildPicker = async () => {
     setShowGuildPicker(true);
