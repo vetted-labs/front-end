@@ -294,9 +294,10 @@ export function prependUniqueById<T>(
   storyItem: T,
   getId: (item: T) => string
 ): T[] {
+  const safe = Array.isArray(items) ? items : [];
   const storyId = getId(storyItem);
-  if (items.some((item) => getId(item) === storyId)) return items;
-  return [storyItem, ...items];
+  if (safe.some((item) => getId(item) === storyId)) return safe;
+  return [storyItem, ...safe];
 }
 
 export function withStoryLabNotifications(items: Notification[]): Notification[] {
