@@ -41,6 +41,7 @@ import {
 import { expertApi } from "@/lib/api";
 import { createExpertOnboardingState } from "@/lib/expert-onboarding-tour";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_GUILD } from "./storyLabFixtures";
 
 interface TargetRect {
   top: number;
@@ -112,9 +113,23 @@ function getFirstAttributeValue(attribute: string): string | null {
   );
 }
 
+function getCanonicalAttributeValue(
+  attribute: string,
+  preferredValue: string
+): string | null {
+  const preferred = document.querySelector<HTMLElement>(
+    `[${attribute}="${preferredValue}"]`
+  );
+  if (preferred) return preferredValue;
+  return getFirstAttributeValue(attribute);
+}
+
 function resolveDynamicRoute(step: StoryLabStep): string {
   if (step.dynamicRoute === "firstGuild") {
-    const guildId = getFirstAttributeValue(STORY_LAB_DOM.guildId);
+    const guildId = getCanonicalAttributeValue(
+      STORY_LAB_DOM.guildId,
+      STORY_LAB_GUILD.id
+    );
     if (guildId) return `/expert/guild/${encodeURIComponent(guildId)}`;
   }
 

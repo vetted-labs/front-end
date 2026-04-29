@@ -1186,10 +1186,14 @@ export async function setupDisputeDetailMocks(
 /**
  * Dashboard page mocks with elevated vote weight (high reputation profile)
  */
-export async function setupDashboardWithVoteWeight(page: Page): Promise<void> {
+export async function setupDashboardWithVoteWeight(
+  page: Page,
+  options?: { expertProfile?: Record<string, unknown> }
+): Promise<void> {
   const highRepProfile = {
     ...MOCK_EXPERT_PROFILE,
     reputation: 1500,
+    ...(options?.expertProfile ?? {}),
   };
 
   await setupCommonExpertMocks(page, { expertProfile: highRepProfile });
