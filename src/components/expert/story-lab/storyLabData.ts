@@ -232,7 +232,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       {
         id: "review-evidence",
         target: TOUR_TARGETS.practiceReviewProfile,
-        fallbackTarget: TOUR_TARGETS.applicationReview,
+        fallbackTarget: TOUR_TARGETS.applicationsQueue,
         placement: "auto",
         eyebrow: "Review surface",
         title: "Start review by reading evidence",
@@ -243,7 +243,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
     ],
     target: TOUR_TARGETS.practiceReviewProfile,
-    fallbackTarget: TOUR_TARGETS.applicationReview,
+    fallbackTarget: TOUR_TARGETS.applicationsQueue,
     title: "Start review by reading evidence",
     eyebrow: "Review surface",
     body:
@@ -262,7 +262,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       {
         id: "review-scoring",
         target: TOUR_TARGETS.practiceReviewGeneralRubric,
-        fallbackTarget: TOUR_TARGETS.applicationReview,
+        fallbackTarget: TOUR_TARGETS.applicationsQueue,
         placement: "auto",
         eyebrow: "Review mechanics",
         title: "Score evidence against the rubric",
@@ -273,7 +273,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
     ],
     target: TOUR_TARGETS.practiceReviewGeneralRubric,
-    fallbackTarget: TOUR_TARGETS.applicationReview,
+    fallbackTarget: TOUR_TARGETS.applicationsQueue,
     title: "Score evidence against the rubric",
     eyebrow: "Review mechanics",
     body:
@@ -292,7 +292,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       {
         id: "review-red-flags",
         target: TOUR_TARGETS.practiceReviewDomainRubric,
-        fallbackTarget: TOUR_TARGETS.applicationReview,
+        fallbackTarget: TOUR_TARGETS.applicationsQueue,
         placement: "auto",
         eyebrow: "Risk check",
         title: "Record domain signal and red flags",
@@ -303,7 +303,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
     ],
     target: TOUR_TARGETS.practiceReviewDomainRubric,
-    fallbackTarget: TOUR_TARGETS.applicationReview,
+    fallbackTarget: TOUR_TARGETS.applicationsQueue,
     title: "Record domain signal and red flags",
     eyebrow: "Risk check",
     body:
@@ -322,7 +322,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       {
         id: "review-commit",
         target: TOUR_TARGETS.practiceReviewCommitReveal,
-        fallbackTarget: TOUR_TARGETS.applicationReview,
+        fallbackTarget: TOUR_TARGETS.applicationsQueue,
         placement: "auto",
         eyebrow: "Blockchain mechanics",
         title: "Commit/reveal protects independent judgment",
@@ -333,7 +333,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
     ],
     target: TOUR_TARGETS.practiceReviewCommitReveal,
-    fallbackTarget: TOUR_TARGETS.applicationReview,
+    fallbackTarget: TOUR_TARGETS.applicationsQueue,
     title: "Commit/reveal protects independent judgment",
     eyebrow: "Blockchain mechanics",
     body:
@@ -352,7 +352,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       {
         id: "review-result",
         target: TOUR_TARGETS.practiceReviewResult,
-        fallbackTarget: TOUR_TARGETS.applicationReview,
+        fallbackTarget: TOUR_TARGETS.applicationsQueue,
         placement: "auto",
         eyebrow: "Practice result",
         title: "The practice judgment resolves safely",
@@ -363,7 +363,7 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
       },
     ],
     target: TOUR_TARGETS.practiceReviewResult,
-    fallbackTarget: TOUR_TARGETS.applicationReview,
+    fallbackTarget: TOUR_TARGETS.applicationsQueue,
     title: "The practice judgment resolves safely",
     eyebrow: "Practice result",
     body:

@@ -47,8 +47,10 @@ function getAccentColors(vettingState: string): {
 }
 
 /** Derives 1-2 uppercase initials from a full name */
-function getInitials(fullName: string): string {
+function getInitials(fullName: string | undefined | null): string {
+  if (!fullName) return "??";
   const parts = fullName.trim().split(/\s+/);
+  if (!parts[0]) return "??";
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
@@ -88,7 +90,11 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
 
   const stateConfig = VETTING_REVIEW_STATE_CONFIG[vettingState];
   const accentColors = getAccentColors(vettingState);
-  const initials = getInitials(application.fullName);
+  // Tolerate synthetic/fixture data that mirrors the snake_case backend shape
+  // (e.g. story-lab applications) where `fullName` may be absent.
+  const snakeCaseName = (application as Partial<Record<"candidate_name", string>>).candidate_name;
+  const displayName = application.fullName ?? snakeCaseName ?? "Story Application";
+  const initials = getInitials(displayName);
 
   const isStoryLabReviewCard =
     isStoryLabPreview && application.id === STORY_LAB_REVIEW_APPLICATION_ID;
@@ -103,8 +109,8 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
         <img
-          src={getPersonAvatar(application.fullName)}
-          alt={application.fullName}
+          src={getPersonAvatar(displayName)}
+          alt={displayName}
           className="shrink-0 w-[46px] h-[46px] rounded-xl object-cover bg-muted"
         />
 
@@ -113,7 +119,7 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
           {/* Row 1: Name + level badge + guild pill */}
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-base font-bold text-foreground truncate">
-              {application.fullName}
+              {displayName}
             </h4>
             <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border">
               {application.expertiseLevel}
