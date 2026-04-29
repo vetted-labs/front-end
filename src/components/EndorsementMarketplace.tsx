@@ -45,7 +45,10 @@ import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
-import { STORY_LAB_ENDORSEMENT_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
+import {
+  STORY_LAB_ENDORSEMENT_APPLICATION_ID,
+  withStoryLabEndorsements,
+} from "@/components/expert/story-lab/storyLabFixtures";
 
 function isBiddingExpired(app: EndorsementApplication): boolean {
   const deadline = app.bidding_deadline
@@ -97,7 +100,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     [guildId, address]
   );
   const {
-    data: applications,
+    data: rawApplications,
     isLoading: loading,
     refetch: reloadApplications,
     page: applicationsPage,
@@ -113,6 +116,16 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         toast.error(error || "Failed to load applications");
       },
     }
+  );
+
+  // Inject the synthetic story-lab endorsement application so the gated
+  // tour marker has something to anchor on in story preview mode.
+  const applications = useMemo(
+    () =>
+      isStoryLabPreview
+        ? withStoryLabEndorsements(rawApplications ?? [])
+        : rawApplications,
+    [rawApplications, isStoryLabPreview]
   );
 
   // Transaction hook -- encapsulates approval + bid flow, tx tracking, error handling

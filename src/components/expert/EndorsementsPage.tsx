@@ -7,13 +7,19 @@ import { Button } from "@/components/ui/button";
 import { HelpLink } from "@/components/ui/HelpLink";
 import { DOC_LINKS } from "@/config/docLinks";
 import { useGuilds } from "@/lib/hooks/useGuilds";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { withStoryLabGuildRecords } from "@/components/expert/story-lab/storyLabFixtures";
 
 export default function EndorsementsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const applicationIdParam = searchParams.get("applicationId");
   const guildIdParam = searchParams.get("guildId");
-  const { guilds: guildRecords } = useGuilds();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const { guilds: realGuildRecords } = useGuilds();
+  const guildRecords = isStoryLabPreview
+    ? withStoryLabGuildRecords(realGuildRecords)
+    : realGuildRecords;
 
   const [manualGuildId, setManualGuildId] = useState<string | null>(null);
 

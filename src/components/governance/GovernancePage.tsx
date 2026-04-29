@@ -26,7 +26,10 @@ import { Divider } from "@/components/ui/divider";
 import { Input } from "@/components/ui/input";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
-import { STORY_LAB_GOVERNANCE_PROPOSAL_ID } from "@/components/expert/story-lab/storyLabFixtures";
+import {
+  STORY_LAB_GOVERNANCE_PROPOSAL_ID,
+  withStoryLabGovernance,
+} from "@/components/expert/story-lab/storyLabFixtures";
 
 const FILTERS: { value: GovernanceFilterStatus; label: string }[] = [
   { value: "active", label: "Active" },
@@ -52,11 +55,18 @@ export default function GovernancePage() {
     return Array.isArray(response) ? response : [];
   }, []);
 
-  const { data: proposals, isLoading, refetch } = useFetch<GovernanceProposalDetail[]>(
+  const { data: rawProposals, isLoading, refetch } = useFetch<GovernanceProposalDetail[]>(
     fetchProposals,
     {
       onError: () => toast.error("Failed to load proposals"),
     }
+  );
+
+  // Inject the synthetic story-lab proposal so the gated tour marker has
+  // something to anchor on while story preview mode is active.
+  const proposals = useMemo(
+    () => (isStoryLabPreview ? withStoryLabGovernance(rawProposals ?? undefined) : rawProposals),
+    [rawProposals, isStoryLabPreview]
   );
 
   // Fetch reputation for voting power display

@@ -160,6 +160,10 @@ export function withStoryLabGuilds(guilds: ExpertGuild[]): ExpertGuild[] {
   return prependUniqueById(guilds, STORY_LAB_EXPERT_GUILD, (guild) => guild.id);
 }
 
+export function withStoryLabGuildRecords(guilds: GuildRecord[]): GuildRecord[] {
+  return prependUniqueById(guilds, STORY_LAB_GUILD, (guild) => guild.id);
+}
+
 export const STORY_LAB_NOTIFICATIONS: Notification[] = [
   {
     id: STORY_LAB_NOTIFICATION_RESULT_ID,
