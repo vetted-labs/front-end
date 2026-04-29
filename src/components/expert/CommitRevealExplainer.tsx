@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 export function CommitRevealExplainer() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
+    <div
+      className="rounded-lg border bg-muted/30 p-3"
+      {...dataTourTarget(TOUR_TARGETS.practiceReviewCommitReveal)}
+    >
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-2 text-sm font-medium w-full text-left"

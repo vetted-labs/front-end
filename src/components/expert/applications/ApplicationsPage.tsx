@@ -18,6 +18,7 @@ import { ViewReviewModal } from "./ViewReviewModal";
 import { ApplicationsStatsRow } from "./ApplicationsStatsRow";
 import { ApplicationsFilters } from "./ApplicationsFilters";
 import { ApplicationsCardList } from "./ApplicationsCardList";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   ApplicationsTabType,
   ExpertMembershipApplication,
@@ -245,7 +246,10 @@ export default function ApplicationsPage() {
           { label: "Applications" },
         ]} />
         {/* Header + Stats merged card */}
-        <div className="rounded-xl bg-card border border-border overflow-hidden">
+        <div
+          className="rounded-xl bg-card border border-border overflow-hidden"
+          {...dataTourTarget(TOUR_TARGETS.applicationsOverview)}
+        >
           <div className="px-6 py-5">
             <h1 className="text-xl font-bold tracking-tight">Reviews</h1>
             <p className="text-sm text-muted-foreground mt-1">

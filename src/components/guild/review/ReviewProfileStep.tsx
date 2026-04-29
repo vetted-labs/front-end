@@ -10,6 +10,7 @@ import {
 import { getAssetUrl } from "@/lib/api";
 import { getPlatformIcon } from "@/lib/social-links";
 import { getPersonAvatar } from "@/lib/avatars";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { SocialLink } from "@/types";
 
 interface ReviewProfileStepApplication {
@@ -47,7 +48,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
     .join("");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewProfile)}>
 
       {/* Applicant Header Card — accent bar style */}
       <div className="border border-border rounded-xl bg-card overflow-hidden">

@@ -3,6 +3,7 @@
 import { AlertTriangle, Award, Loader2 } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { LevelReviewTemplate, ReviewDomainTopic, RubricRedFlag } from "@/types";
 
 export interface DomainReviewStepProps {
@@ -49,7 +50,7 @@ export function DomainReviewStep({
   onFeedbackChange,
 }: DomainReviewStepProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
       {/* Domain / Level Questions */}
       <div className="space-y-6">
         <div className="flex items-center gap-3 mb-1">

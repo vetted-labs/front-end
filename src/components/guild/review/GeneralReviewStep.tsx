@@ -3,6 +3,7 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,
@@ -44,7 +45,7 @@ export function GeneralReviewStep({
   onGeneralJustificationsChange,
 }: GeneralReviewStepProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralRubric)}>
       <div className="flex items-center gap-3 mb-1">
         <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
           <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />

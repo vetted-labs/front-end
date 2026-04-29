@@ -8,6 +8,8 @@ import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -88,10 +90,14 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const accentColors = getAccentColors(vettingState);
   const initials = getInitials(application.fullName);
 
+  const isStoryLabReviewCard =
+    isStoryLabPreview && application.id === STORY_LAB_REVIEW_APPLICATION_ID;
+
   return (
     <div
       className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border"
       {...(isStoryLabPreview ? { "data-story-lab-review-url": storyLabReviewUrl } : {})}
+      {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationReviewCard) : {})}
     >
 
       <div className="flex items-center gap-4 p-5">

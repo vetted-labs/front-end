@@ -2,6 +2,7 @@
 
 import { CheckCircle, CheckCircle2, Sparkles } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ReviewSubmitResponse } from "@/types";
 
 export interface ReviewSuccessStepProps {
@@ -31,7 +32,7 @@ export function ReviewSuccessStep({
   const scorePercent = overallMax > 0 ? Math.round((overallScore / overallMax) * 100) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewResult)}>
       {/* Success Banner */}
       <div className="text-center py-6">
         <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} mb-4`}>
