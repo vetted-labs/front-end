@@ -30,12 +30,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { STATUS_COLORS } from "@/config/colors";
 import { DataSection } from "@/lib/motion";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_NOTIFICATION_RESULT_ID } from "@/components/expert/story-lab/storyLabFixtures";
 
 type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
 export default function NotificationsPage() {
   const router = useRouter();
   const { address, isConnected } = useExpertAccount();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
@@ -305,7 +309,7 @@ export default function NotificationsPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-8" {...dataTourTarget(TOUR_TARGETS.notificationsList)}>
               {dateGroups.map((group) => (
                 <div key={group.label}>
                   <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
@@ -325,6 +329,9 @@ export default function NotificationsPage() {
                           key={notification.id}
                           onClick={() => handleNotificationClick(notification)}
                           disabled={isClicked}
+                          {...(isStoryLabPreview && notification.id === STORY_LAB_NOTIFICATION_RESULT_ID
+                            ? dataTourTarget(TOUR_TARGETS.notificationResultCard)
+                            : {})}
                           className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                             isClicked ? "opacity-60 cursor-wait" : ""
                           } ${isUnread ? "" : "opacity-60"} ${isUrgent ? "border-negative/12" : ""}`}

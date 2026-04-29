@@ -42,6 +42,8 @@ export const STORY_LAB_GUILD: GuildRecord = {
 export const STORY_LAB_REVIEW_APPLICATION_ID = "story-lab-review-maya-chen";
 export const STORY_LAB_ENDORSEMENT_APPLICATION_ID = "story-lab-endorsement-riley-park";
 export const STORY_LAB_GOVERNANCE_PROPOSAL_ID = "story-lab-governance-review-quorum";
+export const STORY_LAB_NOTIFICATION_RESULT_ID = "story-lab-notification-review-result";
+export const STORY_LAB_NOTIFICATION_REWARD_ID = "story-lab-notification-reward";
 
 export const STORY_LAB_VOTE_OUTCOME = {
   applicationId: STORY_LAB_REVIEW_APPLICATION_ID,
@@ -160,7 +162,7 @@ export function withStoryLabGuilds(guilds: ExpertGuild[]): ExpertGuild[] {
 
 export const STORY_LAB_NOTIFICATIONS: Notification[] = [
   {
-    id: "story-lab-notification-review-result",
+    id: STORY_LAB_NOTIFICATION_RESULT_ID,
     expertId: "story-lab-expert",
     type: "application_status",
     title: "Maya Chen review reached consensus",
@@ -175,7 +177,7 @@ export const STORY_LAB_NOTIFICATIONS: Notification[] = [
     createdAt: STORY_LAB_TIMESTAMPS.notificationResult,
   },
   {
-    id: "story-lab-notification-reward",
+    id: STORY_LAB_NOTIFICATION_REWARD_ID,
     expertId: "story-lab-expert",
     type: "reward_earned",
     title: `Reward posted: +${STORY_LAB_VOTE_OUTCOME.reward} VETD`,

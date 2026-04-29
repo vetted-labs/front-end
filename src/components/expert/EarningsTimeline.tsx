@@ -4,6 +4,9 @@ import { PaginationNav } from "@/components/ui/pagination-nav";
 import { Coins, Layers } from "lucide-react";
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { STAT_ICON, STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import type { EarningsEntry, PaginationInfo } from "@/types";
 
 const typeLabels: Record<string, string> = {
@@ -44,11 +47,12 @@ interface EarningsTimelineProps {
 }
 
 export function EarningsTimeline({ items, pagination, page, onPageChange }: EarningsTimelineProps) {
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const totalCount = pagination?.total ?? items.length;
 
   if (items.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" {...dataTourTarget(TOUR_TARGETS.earningsTimeline)}>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold tracking-tight">Recent Transactions</h2>
         </div>
@@ -64,7 +68,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
   const grouped = groupByDate(items);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.earningsTimeline)}>
       {/* Section heading */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold tracking-tight">Recent Transactions</h2>
@@ -92,11 +96,15 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                 const subLabel = typeSubLabels[entry.type];
                 const currency = entry.currency || "VETD";
 
+                const isStoryRewardRow =
+                  isStoryLabPreview && entry.proposal_id === STORY_LAB_REVIEW_APPLICATION_ID;
+
                 return (
                   <Card
                     key={i}
                     padding="none"
                     className="overflow-hidden group"
+                    {...(isStoryRewardRow ? dataTourTarget(TOUR_TARGETS.earningsRewardRow) : {})}
                   >
                     <div className="grid grid-cols-[4px_1fr_auto] sm:grid-cols-[4px_1fr_auto] items-center">
                       {/* Left accent stripe -- single brand color */}

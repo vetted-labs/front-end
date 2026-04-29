@@ -4,6 +4,9 @@ import { Card } from "@/components/ui/card";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ReputationTimelineEntry, ReputationTierConfig, PaginationInfo } from "@/types";
 
 const tierConfig: Record<string, ReputationTierConfig> = {
@@ -49,9 +52,11 @@ interface ReputationTimelineProps {
 function ImpactRow({
   entry,
   runningTotal,
+  isStoryDeltaRow,
 }: {
   entry: ReputationTimelineEntry;
   runningTotal: number;
+  isStoryDeltaRow: boolean;
 }) {
   const tier = tierConfig[entry.reason] || tierConfig.aligned;
   const isPositive = entry.change_amount >= 0;
@@ -59,6 +64,7 @@ function ImpactRow({
 
   return (
     <div
+      {...(isStoryDeltaRow ? dataTourTarget(TOUR_TARGETS.reputationDeltaRow) : {})}
       className={`
         group relative flex items-center gap-4 px-6 py-[18px]
         bg-card dark:bg-surface-1/40
@@ -173,6 +179,7 @@ export function ReputationTimeline({
   page,
   onPageChange,
 }: ReputationTimelineProps) {
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   // Compute running totals from cumulative changes
   const runningTotals = timeline.length > 0
     ? (() => {
@@ -195,7 +202,7 @@ export function ReputationTimeline({
     : [];
 
   return (
-    <section>
+    <section {...dataTourTarget(TOUR_TARGETS.reputationTimeline)}>
       <div className="flex items-center justify-between mb-5">
         <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
           Recent Impact
@@ -224,6 +231,9 @@ export function ReputationTimeline({
               key={`${entry.created_at}-${i}`}
               entry={entry}
               runningTotal={runningTotals[i] ?? 0}
+              isStoryDeltaRow={
+                isStoryLabPreview && entry.proposal_id === STORY_LAB_REVIEW_APPLICATION_ID
+              }
             />
           ))}
         </div>
