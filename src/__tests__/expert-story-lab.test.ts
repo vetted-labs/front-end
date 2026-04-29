@@ -31,7 +31,7 @@ afterEach(() => {
 describe("expert story lab data", () => {
   it("launches into the real expert dashboard route with story lab params", () => {
     expect(getStoryLabLaunchRoute()).toBe(
-      "/expert/dashboard?storyLab=expert&storyStep=overview"
+      "/expert/dashboard?storyLab=expert&storyStep=overview&storySub=overview"
     );
   });
 

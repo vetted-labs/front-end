@@ -24,6 +24,9 @@ import { computeVoteWeight } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import { Divider } from "@/components/ui/divider";
 import { Input } from "@/components/ui/input";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_GOVERNANCE_PROPOSAL_ID } from "@/components/expert/story-lab/storyLabFixtures";
 
 const FILTERS: { value: GovernanceFilterStatus; label: string }[] = [
   { value: "active", label: "Active" },
@@ -35,10 +38,12 @@ const FILTERS: { value: GovernanceFilterStatus; label: string }[] = [
 export default function GovernancePage() {
   const router = useRouter();
   const { address } = useAccount();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [filter, setFilter] = useState<GovernanceFilterStatus>("active");
   const [showPast, setShowPast] = useState(true);
   const [search, setSearch] = useState("");
   const filterRef = useRef(filter);
+  // eslint-disable-next-line react-hooks/refs -- intentional: keep filterRef in sync so fetchProposals can read the latest filter without re-creating the callback
   filterRef.current = filter;
 
   const fetchProposals = useCallback(async () => {
@@ -222,7 +227,10 @@ export default function GovernancePage() {
           <>
             {/* Active section */}
             {activeProposals.length > 0 && (
-              <div className="mb-10">
+              <div
+                className="mb-10"
+                {...dataTourTarget(TOUR_TARGETS.governanceProposals)}
+              >
                 <div className="flex items-center justify-between mb-5 pt-2">
                   <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
                     Active & Pending
@@ -233,13 +241,28 @@ export default function GovernancePage() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {activeProposals.map((proposal) => (
-                    <GovernanceProposalCard
-                      key={proposal.id}
-                      proposal={proposal}
-                      onClick={() => router.push(`/expert/governance/${proposal.id}`)}
-                    />
-                  ))}
+                  {(() => {
+                    // Mark the story-lab proposal when story mode is active and the
+                    // synthetic proposal is present; otherwise mark the first card
+                    // as a stable fallback anchor for the onboarding tour.
+                    const storyIdx = isStoryLabPreview
+                      ? activeProposals.findIndex(p => p.id === STORY_LAB_GOVERNANCE_PROPOSAL_ID)
+                      : -1;
+                    const markedIdx = storyIdx >= 0 ? storyIdx : 0;
+                    return activeProposals.map((proposal, idx) => (
+                      <div
+                        key={proposal.id}
+                        {...(idx === markedIdx
+                          ? dataTourTarget(TOUR_TARGETS.governanceProposalCard)
+                          : {})}
+                      >
+                        <GovernanceProposalCard
+                          proposal={proposal}
+                          onClick={() => router.push(`/expert/governance/${proposal.id}`)}
+                        />
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
             )}

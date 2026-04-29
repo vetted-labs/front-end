@@ -43,6 +43,9 @@ import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 import { STATUS_COLORS } from "@/config/colors";
 import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { STORY_LAB_ENDORSEMENT_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 
 function isBiddingExpired(app: EndorsementApplication): boolean {
   const deadline = app.bidding_deadline
@@ -64,6 +67,7 @@ interface EndorsementMarketplaceProps {
 export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId, guilds, selectedGuildId, onGuildChange }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
@@ -162,7 +166,9 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       );
       if (targetApp) {
         hasAutoOpened.current = true;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: open the matching application's modal once it finishes loading
         setSelectedApp(targetApp);
+         
         setTransactionModalOpen(true);
       }
     }
@@ -247,7 +253,10 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const isOnSepolia = chain?.id === sepolia.id;
 
   return (
-    <div className="min-h-screen space-y-6 min-w-0 overflow-x-hidden">
+    <div
+      className="min-h-screen space-y-6 min-w-0 overflow-x-hidden"
+      {...dataTourTarget(TOUR_TARGETS.endorsementMarketplace)}
+    >
       <EndorsementHeader
         address={address!}
         shortAddress={shortAddress}
@@ -358,6 +367,8 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           emptyDescription={applicationFilter === 'active'
             ? 'All applications on this page have closed bidding, or there are no applications yet.'
             : 'There are no applications with closed bidding on this page.'}
+          markedApplicationId={isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined}
+          markedCardProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateCard)}
         />
         {!loading && (
           <PaginationNav

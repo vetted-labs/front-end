@@ -609,7 +609,9 @@ export function buildStoryLabRoute(
 
 export function getStoryLabLaunchRoute(): string {
   const firstStep = STORY_LAB_STEPS[0];
-  return buildStoryLabRoute(firstStep.route, firstStep.id);
+  // Always include the first sub-stop id so the launch URL is canonical and
+  // the driver does not have to back-fill `storySub` on first paint.
+  return buildStoryLabRoute(firstStep.route, firstStep.id, firstStep.subStops[0]?.id);
 }
 
 export function getStoryLabCompletionRoute(): string {

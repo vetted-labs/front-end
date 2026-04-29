@@ -10,9 +10,17 @@ interface ApplicationsGridProps {
   onQuickEndorse?: (app: EndorsementApplication) => void;
   emptyTitle?: string;
   emptyDescription?: string;
+  /**
+   * If provided, the card whose `application_id` matches will receive
+   * `markedCardProps` on its outer element. Used by story-lab/onboarding
+   * to anchor a tour marker on a specific card. When the id is not found
+   * (or omitted), the first card in the grid receives `markedCardProps`.
+   */
+  markedApplicationId?: string;
+  markedCardProps?: Record<string, string>;
 }
 
-export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription }: ApplicationsGridProps) {
+export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription, markedApplicationId, markedCardProps }: ApplicationsGridProps) {
   if (loading) {
     return null;
   }
@@ -31,14 +39,25 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
     );
   }
 
+  const markedIdx = markedCardProps
+    ? (() => {
+        if (markedApplicationId) {
+          const idx = applications.findIndex(a => a.application_id === markedApplicationId);
+          if (idx >= 0) return idx;
+        }
+        return 0;
+      })()
+    : -1;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {applications.map(app => (
+      {applications.map((app, idx) => (
         <ApplicationCard
           key={app.application_id}
           application={app}
           onViewDetails={onSelectApplication}
           onQuickEndorse={onQuickEndorse}
+          rootProps={idx === markedIdx ? markedCardProps : undefined}
         />
       ))}
     </div>
