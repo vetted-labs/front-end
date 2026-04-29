@@ -217,7 +217,13 @@ async function expectStoryStep(
   const driver = page.getByTestId("expert-story-lab-driver");
   try {
     await expect(driver).toBeVisible();
-    await expect(driver).toContainText(step);
+    // The popover content lives in the new expert-story-lab-popover testid
+    // since the rewrite (commit 436d665). Asserting on the popover specifically
+    // (rather than the whole driver portal) keeps the heading-text match
+    // resilient to the spotlight/centered-fallback layout split.
+    const popover = page.getByTestId("expert-story-lab-popover");
+    await expect(popover).toBeVisible();
+    await expect(popover).toContainText(step);
     await expect(driver.getByText("Target visible")).toBeVisible({ timeout: 20_000 });
     if (expectedTarget) {
       await expect(page.getByTestId("expert-story-lab-spotlight")).toHaveAttribute(
@@ -226,6 +232,10 @@ async function expectStoryStep(
         { timeout: 20_000 }
       );
     }
+    // Sanity: the rewrite renders Back / Next as <button>, not <a>. If anyone
+    // regresses to <a href> the next click would still work but would issue a
+    // full navigation instead of a router.push/replace, breaking sub-stop URL
+    // semantics. This guard catches that regression.
     await expect(driver.locator('a[aria-label^="Go to"]')).toHaveCount(0);
     await expect(driver.getByRole("button", { name: /skip|close/i })).toHaveCount(0);
   } catch (error) {
@@ -234,6 +244,68 @@ async function expectStoryStep(
     console.log("STORY_LAB_FAILURE_BODY", bodyText.slice(0, 2000));
     console.log("STORY_LAB_FAILURE_DIAGNOSTICS", diagnostics);
     throw error;
+  }
+}
+
+/**
+ * Per-step sub-stop ids in author order.
+ *
+ * Source of truth: `src/components/expert/story-lab/storyLabData.ts`
+ * (`STORY_LAB_STEPS[i].subStops`). When that file gains additional sub-stops
+ * for any step, mirror them here so the per-step walk in the arc test asserts
+ * URL transitions for every authored sub-stop.
+ *
+ * Right now (commit 436d665 / 5a5bd22), every step has exactly one sub-stop
+ * with id === step.id, so the inner walk loop is a no-op per step. The walk
+ * itself is exercised cross-step via clicks on the step's action button.
+ */
+const STORY_LAB_SUB_STOPS_BY_STEP: Record<string, string[]> = {
+  overview: ["overview"],
+  guilds: ["guilds"],
+  "guild-detail": ["guild-detail"],
+  applications: ["applications"],
+  "application-card": ["application-card"],
+  "review-evidence": ["review-evidence"],
+  "review-scoring": ["review-scoring"],
+  "review-red-flags": ["review-red-flags"],
+  "review-commit": ["review-commit"],
+  "review-result": ["review-result"],
+  notification: ["notification"],
+  earnings: ["earnings"],
+  reputation: ["reputation"],
+  endorsement: ["endorsement"],
+  governance: ["governance"],
+  complete: ["complete"],
+};
+
+/**
+ * Walks the remaining sub-stops within a single step. Each click is on the
+ * step's action button and is expected to call `router.replace` with the next
+ * sub-stop id appended as `storySub=<id>`. The first sub-stop is implicit
+ * (the test arrived at the step on the previous cross-step click); we only
+ * walk subStops[1..n-1] here.
+ *
+ * For step authoring with a single sub-stop this is a no-op. The function is
+ * still called so future sub-stop expansions get coverage automatically — the
+ * only thing a future author needs to do is update STORY_LAB_SUB_STOPS_BY_STEP.
+ */
+async function walkRemainingSubStopsWithinStep(
+  page: Page,
+  stepId: string,
+  actionLabel: string,
+) {
+  const subStopIds = STORY_LAB_SUB_STOPS_BY_STEP[stepId];
+  if (!subStopIds || subStopIds.length <= 1) return;
+
+  for (let i = 1; i < subStopIds.length; i += 1) {
+    const nextId = subStopIds[i];
+    await page.getByRole("button", { name: actionLabel }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`storyStep=${stepId}.*storySub=${nextId}`),
+      { timeout: 10_000 },
+    );
+    // Driver should still be open and on the same step.
+    await expect(page.getByTestId("expert-story-lab-popover")).toBeVisible();
   }
 }
 
@@ -291,74 +363,102 @@ test.describe("expert story lab", () => {
     await expect(appRoot).toHaveAttribute("aria-hidden", "true");
     await expect.poll(() => appRoot.evaluate((node) => (node as HTMLElement).inert)).toBe(true);
 
-    await page.getByRole("link", { name: "Go to guilds" }).click();
+    // Walk per-step sub-stops first (no-op when a step has only one sub-stop).
+    await walkRemainingSubStopsWithinStep(page, "overview", "Go to guilds");
+
+    // Cross-step transition contract: clicking the step's action button must
+    // navigate from storyStep=overview to storyStep=guilds (router.push), and
+    // the URL must NOT retain the previous storyStep value. This locks in the
+    // step→step routing so a regression to e.g. additive params is caught.
+    await page.getByRole("button", { name: "Go to guilds" }).click();
+    await expect(page).toHaveURL(/\/expert\/guilds\?storyLab=expert&storyStep=guilds/, {
+      timeout: 20_000,
+    });
+    await expect(page).not.toHaveURL(/storyStep=overview/);
     await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
     await page.mouse.click(95, 180);
     await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
-    await page.getByRole("link", { name: "Back" }).focus();
+    await page.getByRole("button", { name: "Back" }).focus();
     await page.keyboard.press("Enter");
     await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
-    await page.getByRole("link", { name: "Go to guilds" }).click();
+    await page.getByRole("button", { name: "Go to guilds" }).click();
     await expectStoryStep(page, "Guilds are where expertise is organized", /\/expert\/guilds\?storyLab=expert&storyStep=guilds/, diagnostics, TOUR_TARGETS.guildDirectory);
+    await walkRemainingSubStopsWithinStep(page, "guilds", "Open a guild");
 
-    const openGuild = page.getByRole("link", { name: "Open a guild" });
-    await expect(openGuild).toHaveAttribute(
-      "href",
-      /\/expert\/guild\/story-lab-engineering-guild/,
-      { timeout: 20_000 }
-    );
-    await openGuild.click();
+    // The "Open a guild" action navigates via dynamic route resolution. The
+    // primary button is rendered as a <button>; the test only asserts the
+    // resulting URL after click rather than reading an href off the button.
+    await page.getByRole("button", { name: "Open a guild" }).click();
     await expectStoryStep(page, "Inspect guild standards before reviewing", /\/expert\/guild\/story-lab-engineering-guild\?storyLab=expert&storyStep=guild-detail/, diagnostics, TOUR_TARGETS.guildStandards);
+    await walkRemainingSubStopsWithinStep(page, "guild-detail", "Go to applications");
 
-    await page.getByRole("link", { name: "Go to applications" }).click();
+    await page.getByRole("button", { name: "Go to applications" }).click();
     await expectStoryStep(page, "The review queue is the workbench", /\/expert\/voting\?storyLab=expert&storyStep=applications/, diagnostics, TOUR_TARGETS.applicationsOverview);
     await expect(page.getByText("Maya Chen")).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "applications", "Show story application");
 
-    const openReview = page.getByRole("link", { name: "Show story application" });
-    await openReview.click();
+    await page.getByRole("button", { name: "Show story application" }).click();
     await expectStoryStep(page, "Maya Chen is the story application", /\/expert\/voting\?storyLab=expert&storyStep=application-card/, diagnostics, TOUR_TARGETS.applicationReviewCard);
+    await walkRemainingSubStopsWithinStep(page, "application-card", "Open review walkthrough");
 
-    await page.getByRole("link", { name: "Open review walkthrough" }).click();
+    await page.getByRole("button", { name: "Open review walkthrough" }).click();
     await expectStoryStep(page, "Start review by reading evidence", /\/expert\/voting\?storyLab=expert&storyStep=review-evidence/, diagnostics, TOUR_TARGETS.practiceReviewProfile);
     await expect(page.getByText("Practice sample / synthetic applicant")).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "review-evidence", "Show scoring rubric");
 
-    await page.getByRole("link", { name: "Show scoring rubric" }).click();
+    await page.getByRole("button", { name: "Show scoring rubric" }).click();
     await expectStoryStep(page, "Score evidence against the rubric", /\/expert\/voting\?storyLab=expert&storyStep=review-scoring/, diagnostics, TOUR_TARGETS.practiceReviewGeneralRubric);
+    await walkRemainingSubStopsWithinStep(page, "review-scoring", "Show red flags");
 
-    await page.getByRole("link", { name: "Show red flags" }).click();
+    await page.getByRole("button", { name: "Show red flags" }).click();
     await expectStoryStep(page, "Record domain signal and red flags", /\/expert\/voting\?storyLab=expert&storyStep=review-red-flags/, diagnostics, TOUR_TARGETS.practiceReviewDomainRubric);
+    await walkRemainingSubStopsWithinStep(page, "review-red-flags", "Show commit behavior");
 
-    await page.getByRole("link", { name: "Show commit behavior" }).click();
+    await page.getByRole("button", { name: "Show commit behavior" }).click();
     await expectStoryStep(page, "Commit/reveal protects independent judgment", /\/expert\/voting\?storyLab=expert&storyStep=review-commit/, diagnostics, TOUR_TARGETS.practiceReviewCommitReveal);
+    await walkRemainingSubStopsWithinStep(page, "review-commit", "Show simulated result");
 
-    await page.getByRole("link", { name: "Show simulated result" }).click();
+    await page.getByRole("button", { name: "Show simulated result" }).click();
     await expectStoryStep(page, "The practice judgment resolves safely", /\/expert\/voting\?storyLab=expert&storyStep=review-result/, diagnostics, TOUR_TARGETS.practiceReviewResult);
+    await walkRemainingSubStopsWithinStep(page, "review-result", "Show result notification");
 
-    await page.getByRole("link", { name: "Show result notification" }).click();
+    await page.getByRole("button", { name: "Show result notification" }).click();
     await expectStoryStep(page, "Consensus result arrives", /\/expert\/notifications\?storyLab=expert&storyStep=notification/, diagnostics, TOUR_TARGETS.notificationResultCard);
     await expect(page.getByText("Maya Chen review reached consensus")).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "notification", "Open earnings");
 
-    await page.getByRole("link", { name: "Open earnings" }).click();
+    await page.getByRole("button", { name: "Open earnings" }).click();
     await expectStoryStep(page, "Reward is posted in Earnings", /\/expert\/earnings\?storyLab=expert&storyStep=earnings/, diagnostics, TOUR_TARGETS.earningsRewardRow);
     await expect(page.getByText(/Voting Reward: Maya Chen/)).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "earnings", "Open reputation");
 
-    await page.getByRole("link", { name: "Open reputation" }).click();
+    await page.getByRole("button", { name: "Open reputation" }).click();
     await expectStoryStep(page, "Reputation changes explain judgment quality", /\/expert\/reputation\?storyLab=expert&storyStep=reputation/, diagnostics, TOUR_TARGETS.reputationDeltaRow);
     await expect(page.getByText(/Aligned review on Maya Chen/)).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "reputation", "Open endorsements");
 
-    await page.getByRole("link", { name: "Open endorsements" }).click();
+    await page.getByRole("button", { name: "Open endorsements" }).click();
     await expectStoryStep(page, "Endorsement is a different kind of backing", /\/expert\/endorsements\?storyLab=expert&storyStep=endorsement/, diagnostics, TOUR_TARGETS.endorsementCandidateCard);
     await expect(page.getByText("Riley Park")).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "endorsement", "Open governance");
 
-    await page.getByRole("link", { name: "Open governance" }).click();
+    await page.getByRole("button", { name: "Open governance" }).click();
     await expectStoryStep(page, "Guild decisions live in Governance", /\/expert\/governance\?storyLab=expert&storyStep=governance/, diagnostics, TOUR_TARGETS.governanceProposalCard);
     await expect(page.getByText(/Raise Engineering review quorum/).first()).toBeVisible();
+    await walkRemainingSubStopsWithinStep(page, "governance", "Finish story");
 
-    await page.getByRole("link", { name: "Finish story" }).click();
+    await page.getByRole("button", { name: "Finish story" }).click();
     await expectStoryStep(page, "The full expert story now makes sense", /\/expert\/dashboard\?storyLab=expert&storyStep=complete/, diagnostics, TOUR_TARGETS.dashboardOverview);
+    await walkRemainingSubStopsWithinStep(page, "complete", "Finish");
 
-    await page.getByRole("link", { name: "Finish" }).click();
+    await page.getByRole("button", { name: "Finish" }).click();
     await expect(page).toHaveURL(/\/expert\/dashboard$/);
+    // After Finish the URL must contain none of the story params — proves the
+    // Finish path scrubs storyLab, storyStep, and storySub on completion.
+    const finalUrl = new URL(page.url());
+    expect(finalUrl.searchParams.get("storyLab")).toBeNull();
+    expect(finalUrl.searchParams.get("storyStep")).toBeNull();
+    expect(finalUrl.searchParams.get("storySub")).toBeNull();
     await expect(page.getByTestId("expert-story-lab-driver")).toHaveCount(0);
     await expect(page.getByRole("dialog", { name: "Expert story mode" })).toHaveCount(0);
     const actionableDiagnostics = diagnostics.filter(
@@ -450,7 +550,7 @@ test.describe("expert story lab", () => {
 
     // Walk to the last step directly via URL state, then click Finish.
     await page.goto("/expert/dashboard?storyLab=expert&storyStep=complete");
-    await page.getByRole("link", { name: "Finish" }).click();
+    await page.getByRole("button", { name: "Finish" }).click();
 
     await expect(page).toHaveURL(/\/expert\/dashboard$/);
     expect(new URL(page.url()).searchParams.toString()).toBe("");
@@ -611,7 +711,7 @@ test.describe("expert story lab", () => {
       TOUR_TARGETS.dashboardOverview
     );
 
-    await page.getByRole("link", { name: "Go to guilds" }).click();
+    await page.getByRole("button", { name: "Go to guilds" }).click();
     await expectStoryStep(
       page,
       "Guilds are where expertise is organized",
@@ -620,13 +720,10 @@ test.describe("expert story lab", () => {
       TOUR_TARGETS.guildDirectory
     );
 
-    const openGuild = page.getByRole("link", { name: "Open a guild" });
-    await expect(openGuild).toHaveAttribute(
-      "href",
-      /\/expert\/guild\/story-lab-engineering-guild/,
-      { timeout: 20_000 }
-    );
-    await openGuild.click();
+    // The action button is now a <button>; the dynamic guild route is resolved
+    // inside goNextSubStop, not exposed as an href on the trigger. Assert by
+    // observing the resulting URL after the click instead.
+    await page.getByRole("button", { name: "Open a guild" }).click();
     await expectStoryStep(
       page,
       "Inspect guild standards before reviewing",
