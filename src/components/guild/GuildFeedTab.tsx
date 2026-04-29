@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Plus, MessageSquare, Flame, Clock, TrendingUp, Bookmark } from "lucide-react";
 import { guildFeedApi } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
+import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useAccount } from "wagmi";
 import { getFeedPrivileges } from "@/lib/feedPrivileges";
@@ -86,7 +87,7 @@ export function GuildFeedTab({
           .then((res) => ({ data: res.data, total: res.total })),
       [guildId, sortMode, tagFilter, timeWindow]
     ),
-    { limit: 20 }
+    { limit: 20, skip: guildId === STORY_LAB_GUILD.id }
   );
 
   const handlePostCreated = () => {
