@@ -247,4 +247,15 @@ describe("expert story lab data", () => {
       fx.STORY_LAB_VOTE_OUTCOME.reputationDelta,
     );
   });
+
+  it("StoryLabLeakDetector renders nothing on the server (SSR safe)", async () => {
+    const { renderToString } = await import("react-dom/server");
+    const React = await import("react");
+    const { StoryLabLeakDetector } = await import(
+      "@/components/expert/story-lab/StoryLabLeakDetector"
+    );
+    expect(() =>
+      renderToString(React.createElement(StoryLabLeakDetector)),
+    ).not.toThrow();
+  });
 });

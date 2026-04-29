@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { AppShell } from "@/components/layout/AppShell";
 import { PendingExpertShell } from "@/components/layout/PendingExpertShell";
@@ -9,10 +9,30 @@ import {
   expertSidebarConfig,
   restrictedExpertSidebarConfig,
 } from "@/components/layout/sidebar-config";
+import { ExpertSetupGuide } from "@/components/expert/onboarding/ExpertSetupGuide";
+import { ExpertStoryLabDriver } from "@/components/expert/story-lab/ExpertStoryLabDriver";
+import { StoryLabLeakDetector } from "@/components/expert/story-lab/StoryLabLeakDetector";
 import { expertApi } from "@/lib/api";
 import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
+import { useExpertOnboardingTour } from "@/lib/hooks/useExpertOnboardingTour";
+import {
+  getStoryLabLaunchRoute,
+  isExpertStoryLabCompletionSearchParams,
+  isExpertStoryLabSearchParams,
+} from "@/components/expert/story-lab/storyLabData";
+import {
+  EXPERT_ONBOARDING_CHECKLIST_EVENT_NAME,
+  getExpertOnboardingChecklistEventFromEvent,
+  getExpertOnboardingEventForRoute,
+  hasExpertProfileVerificationError,
+  isApprovedExpertForOnboarding,
+  resolveVerifiedExpertIdForOnboarding,
+  resolveVerifiedExpertStatusForShell,
+} from "@/lib/expert-onboarding-route-markers";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { isRecentExplicitLogout } from "@/contexts/AuthContext";
+import type { ExpertStatus } from "@/types";
+import type { ExpertOnboardingState } from "@/lib/expert-onboarding-tour";
 
 
 /** Routes a restricted expert (pending / rejected) is allowed to visit */
@@ -44,32 +64,115 @@ function isChromelessRoute(pathname: string) {
 
 export default function ExpertLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const isE2E = process.env.NEXT_PUBLIC_E2E_MODE === "true";
+  const isStoryLabPreview = isExpertStoryLabSearchParams(searchParams);
+  const isStoryLabCompletionReturn = isExpertStoryLabCompletionSearchParams(searchParams);
+  const isStoryLabRoute = isStoryLabPreview || isStoryLabCompletionReturn;
+  const canUseLocalStoryLabPreview =
+    isStoryLabRoute && (isE2E || process.env.NODE_ENV !== "production");
   const { address: wagmiAddress, isConnected, status } = useAccount();
   const auth = useAuthContext();
-  const expertId = auth.userId;
+  const authExpertId = auth.userId;
   // In E2E mode, fall back to localStorage wallet address when wagmi isn't connected
-  const isE2E = process.env.NEXT_PUBLIC_E2E_MODE === "true";
-  const address = wagmiAddress || (isE2E ? auth.walletAddress : undefined);
+  const canUseLocalStorageWalletFallback = isE2E || process.env.NODE_ENV !== "production";
+  const storedExpertWallet =
+    canUseLocalStorageWalletFallback &&
+    typeof window !== "undefined" &&
+    localStorage.getItem("userType") === "expert"
+      ? localStorage.getItem("walletAddress") ?? undefined
+      : undefined;
+  const hasExpertSessionWallet =
+    auth.userType === "expert" && (!!auth.walletAddress || !!storedExpertWallet);
+  const expertSessionWallet = auth.walletAddress || storedExpertWallet;
+  const address =
+    wagmiAddress ||
+    ((isE2E || hasExpertSessionWallet) ? expertSessionWallet : undefined);
   const { expertStatus, isHydrated, setExpertStatus, clearExpertStatus } = useExpertStatus();
+  const [profileVerification, setProfileVerification] = useState<{
+    address: string | null;
+    loaded: boolean;
+    found?: boolean | null;
+    expertId?: string | null;
+    status?: ExpertStatus | null;
+    onboardingState?: ExpertOnboardingState | null;
+    error?: boolean;
+  }>({
+    address: null,
+    loaded: false,
+    found: null,
+    expertId: null,
+    status: null,
+    onboardingState: null,
+    error: false,
+  });
+  const profileVerificationLoaded =
+    canUseLocalStoryLabPreview ||
+    isE2E ||
+    (profileVerification.loaded && profileVerification.address === (address ?? null));
+  const verifiedExpertStatus = resolveVerifiedExpertStatusForShell({
+    isE2E,
+    expertStatus,
+    expertStatusHydrated: isHydrated,
+    profileLoaded: profileVerificationLoaded,
+    profileStatus: canUseLocalStoryLabPreview || isE2E ? undefined : profileVerification.status,
+  });
+  const verifiedExpertId = resolveVerifiedExpertIdForOnboarding({
+    isE2E,
+    authExpertId,
+    profileLoaded: profileVerificationLoaded,
+    profileExpertId: profileVerification.expertId,
+  });
+  const hasMalformedProfileVerification = hasExpertProfileVerificationError({
+    isE2E,
+    profileLoaded: profileVerificationLoaded,
+    profileFound: profileVerification.found,
+    profileStatus: profileVerification.status,
+    profileExpertId: profileVerification.expertId,
+  });
+  const isApprovedForOnboardingProgress = isApprovedExpertForOnboarding({
+    profileLoaded: profileVerificationLoaded,
+    profileStatus: canUseLocalStoryLabPreview || isE2E ? undefined : profileVerification.status,
+    expertStatus,
+    expertStatusHydrated: isHydrated,
+    requireSyncedExpertStatus: !canUseLocalStoryLabPreview && !isE2E,
+  });
+  const persistOnboardingState = (state: ExpertOnboardingState) => {
+    void expertApi.updateOnboardingState(state).catch(() => {});
+  };
+  const onboardingProgress = useExpertOnboardingTour({
+    expertId: hasMalformedProfileVerification ? null : verifiedExpertId,
+    walletAddress: address,
+    isApprovedExpert:
+      !isStoryLabRoute &&
+      isApprovedForOnboardingProgress &&
+      (isE2E || verifiedExpertId !== null) &&
+      !hasMalformedProfileVerification,
+    isDashboardRoute: false,
+    profileLoaded: profileVerificationLoaded,
+    serverState: profileVerification.onboardingState ?? null,
+    onStateChange: isStoryLabPreview ? undefined : persistOnboardingState,
+  });
+  const { markChecklistEvent: markOnboardingChecklistEvent } = onboardingProgress;
 
   // Both "pending" and "rejected" experts are restricted — they can only see
   // the status page, apply flow, and guild browsing. Anything else (dashboard,
   // voting, rewards, etc.) redirects back to the status page.
-  const isRestrictedStatus = expertStatus === "pending" || expertStatus === "rejected";
+  const isRestrictedStatus =
+    verifiedExpertStatus === "pending" || verifiedExpertStatus === "rejected";
+  const shouldEnforceRestrictedStatus = profileVerificationLoaded && isRestrictedStatus;
 
-  // Sidebar config picked by status. Defaults to the restricted config until
-  // we have confirmed "approved" — this prevents the brief flash of the full
-  // expert sidebar during initial hydration / backend verification when
-  // localStorage might still hold a stale "approved" value.
+  // Only a confirmed pending/rejected profile gets the restricted sidebar.
+  // Unknown/loading status should not lock approved experts out of navigation.
   const sidebarConfig =
-    expertStatus === "approved" ? expertSidebarConfig : restrictedExpertSidebarConfig;
+    shouldEnforceRestrictedStatus ? restrictedExpertSidebarConfig : expertSidebarConfig;
 
   // Resolve checked synchronously when possible to avoid an extra render cycle.
   // If hydrated + wallet connected + not restricted → show children immediately.
   const canShow = isHydrated && (isE2E || status !== "reconnecting" && status !== "connecting")
     && (isE2E ? !!address : (isConnected || status === "disconnected"))
-    && !isRestrictedStatus;
+    && !shouldEnforceRestrictedStatus;
   const [checked, setChecked] = useState(canShow);
   const verifiedRef = useRef(false);
 
@@ -91,25 +194,35 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
       return () => clearTimeout(timer);
     }
 
-    if (isRestrictedStatus && !isAllowedForRestricted(pathname)) {
+    if (shouldEnforceRestrictedStatus && !isAllowedForRestricted(pathname)) {
       router.replace("/expert/application-pending");
     } else {
       setChecked(true);
     }
-  }, [pathname, router, expertStatus, isRestrictedStatus, isHydrated, status, isConnected, address]);
+  }, [pathname, router, shouldEnforceRestrictedStatus, isHydrated, status, isConnected, address, isE2E]);
 
   // Reset verification when wallet address changes
   // eslint-disable-next-line no-restricted-syntax -- resets verification when wallet changes
   useEffect(() => {
     verifiedRef.current = false;
+    setProfileVerification({
+      address: address ?? null,
+      loaded: false,
+      found: null,
+      expertId: null,
+      status: null,
+      onboardingState: null,
+      error: false,
+    });
   }, [address]);
 
   // Backend verification — source of truth, prevents localStorage tampering
   // Skip in E2E mode — tests use mocked APIs and fake wallet addresses
   // eslint-disable-next-line no-restricted-syntax -- verifies expert status against backend
   useEffect(() => {
-    if (isE2E) return;
-    if (!address || !expertId || verifiedRef.current) return;
+    if (canUseLocalStoryLabPreview || isE2E) return;
+    if (!address) return;
+    if (verifiedRef.current) return;
     verifiedRef.current = true;
 
     let cancelled = false;
@@ -117,33 +230,153 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     expertApi.getProfile(address).then((result) => {
       if (cancelled) return;
       const resolvedStatus = result?.status;
+      setProfileVerification({
+        address,
+        loaded: true,
+        found: true,
+        expertId: result?.id ?? null,
+        status: resolvedStatus ?? null,
+        onboardingState: result?.onboardingState ?? null,
+        error: false,
+      });
       if (resolvedStatus) {
         setExpertStatus(resolvedStatus);
-      }
-      if (
-        (resolvedStatus === "pending" || resolvedStatus === "rejected") &&
-        !isAllowedForRestricted(pathname)
-      ) {
-        router.replace("/expert/application-pending");
       }
     }).catch((err) => {
       if (cancelled) return;
       // No expert profile exists for this wallet — redirect to apply
       if (err?.status === 404) {
+        setProfileVerification({
+          address,
+          loaded: true,
+          found: false,
+          expertId: null,
+          status: null,
+          onboardingState: null,
+          error: false,
+        });
         localStorage.removeItem("expertId");
         clearExpertStatus();
         router.replace("/expert/apply");
+      } else {
+        verifiedRef.current = false;
+        setProfileVerification({
+          address,
+          loaded: true,
+          found: null,
+          expertId: null,
+          status: null,
+          onboardingState: null,
+          error: true,
+        });
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [address, expertId, pathname, router, setExpertStatus, clearExpertStatus]);
+  }, [address, authExpertId, router, setExpertStatus, clearExpertStatus, canUseLocalStoryLabPreview, isE2E]);
+
+  // eslint-disable-next-line no-restricted-syntax -- redirects restricted verified expert profiles after route changes
+  useEffect(() => {
+    if (!profileVerificationLoaded) return;
+    if (
+      shouldEnforceRestrictedStatus &&
+      (profileVerification.status === "pending" || profileVerification.status === "rejected") &&
+      !isAllowedForRestricted(pathname)
+    ) {
+      router.replace("/expert/application-pending");
+    }
+  }, [pathname, profileVerification.status, profileVerificationLoaded, router, shouldEnforceRestrictedStatus]);
+
+  // eslint-disable-next-line no-restricted-syntax -- records durable onboarding progress from expert route visits
+  useEffect(() => {
+    if (
+      isStoryLabPreview ||
+      !isApprovedForOnboardingProgress ||
+      hasMalformedProfileVerification ||
+      (!isE2E && verifiedExpertId === null)
+    ) return;
+
+    const event = getExpertOnboardingEventForRoute(pathname, searchParams);
+    if (!event) return;
+
+    markOnboardingChecklistEvent(event);
+  }, [
+    hasMalformedProfileVerification,
+    isApprovedForOnboardingProgress,
+    isE2E,
+    isStoryLabPreview,
+    markOnboardingChecklistEvent,
+    pathname,
+    searchParams,
+    verifiedExpertId,
+  ]);
+
+  // eslint-disable-next-line no-restricted-syntax -- records checklist progress only after review UIs prove they opened
+  useEffect(() => {
+    if (
+      isStoryLabPreview ||
+      !isApprovedForOnboardingProgress ||
+      hasMalformedProfileVerification ||
+      (!isE2E && verifiedExpertId === null)
+    ) return;
+
+    const handleChecklistEvent = (event: Event) => {
+      const checklistEvent = getExpertOnboardingChecklistEventFromEvent(event);
+      if (!checklistEvent) return;
+      markOnboardingChecklistEvent(checklistEvent);
+    };
+
+    window.addEventListener(
+      EXPERT_ONBOARDING_CHECKLIST_EVENT_NAME,
+      handleChecklistEvent
+    );
+
+    return () => {
+      window.removeEventListener(
+        EXPERT_ONBOARDING_CHECKLIST_EVENT_NAME,
+        handleChecklistEvent
+      );
+    };
+  }, [
+    hasMalformedProfileVerification,
+    isApprovedForOnboardingProgress,
+    isE2E,
+    isStoryLabPreview,
+    markOnboardingChecklistEvent,
+    verifiedExpertId,
+  ]);
+
+  const shouldForceExpertStoryStart =
+    !isStoryLabPreview &&
+    !isStoryLabCompletionReturn &&
+    isApprovedForOnboardingProgress &&
+    onboardingProgress.isHydrated &&
+    !hasMalformedProfileVerification &&
+    profileVerificationLoaded &&
+    (isE2E || verifiedExpertId !== null) &&
+    !onboardingProgress.hasCompletedSetup;
+
+  // eslint-disable-next-line no-restricted-syntax -- first-run experts must complete story mode before using deep-linked expert pages
+  useEffect(() => {
+    if (!shouldForceExpertStoryStart) return;
+    if (isChromelessRoute(pathname)) return;
+    router.replace(getStoryLabLaunchRoute());
+  }, [pathname, router, shouldForceExpertStoryStart]);
 
   // /expert/apply is a full-screen onboarding form with its own chrome.
   // Render it without the sidebar, regardless of expert status.
   if (isChromelessRoute(pathname)) {
+    if (profileVerification.error || hasMalformedProfileVerification) {
+      return (
+        <PendingExpertShell>
+          <div className="mx-auto max-w-xl px-4 py-10 text-sm text-muted-foreground">
+            We could not verify your expert profile. Refresh the page to try again.
+          </div>
+        </PendingExpertShell>
+      );
+    }
     return <PendingExpertShell>{children}</PendingExpertShell>;
   }
 
@@ -153,13 +386,24 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   // but suppress children until the useEffect redirect lands them on the
   // status page. React never commits the forbidden page to the DOM.
   const isForbiddenRoute =
-    isRestrictedStatus && !isAllowedForRestricted(pathname);
+    shouldEnforceRestrictedStatus && !isAllowedForRestricted(pathname);
+  const isAwaitingWalletAuth =
+    !isE2E &&
+    (status === "reconnecting" ||
+      status === "connecting" ||
+      (!isConnected && !address));
+  const isAwaitingProfileVerification =
+    !isE2E &&
+    Boolean(address) &&
+    !profileVerificationLoaded;
 
-  // While the wallet is reconnecting or the auth guard hasn't settled, we
-  // render AppShell with the restricted config (safe default) so the user
-  // never sees a full-access sidebar they're not entitled to.
+  // While the wallet is reconnecting or the auth guard hasn't settled, keep
+  // the shell mounted. Only confirmed pending/rejected experts suppress
+  // protected children.
   const isWaitingForAuth =
-    !checked || (!isE2E && (status === "reconnecting" || status === "connecting"));
+    !checked ||
+    isAwaitingWalletAuth ||
+    isAwaitingProfileVerification;
 
   // Suppress children if:
   //  1. The user is in a restricted status on a forbidden route (redirect
@@ -167,13 +411,25 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
   //  2. We haven't finished verifying auth yet and localStorage status is
   //     unknown — avoids rendering any privileged page content speculatively.
   const shouldSuppressChildren =
-    isForbiddenRoute || (isWaitingForAuth && !isRestrictedStatus && expertStatus !== "approved");
+    isForbiddenRoute ||
+    isAwaitingWalletAuth ||
+    isAwaitingProfileVerification ||
+    (isWaitingForAuth && shouldEnforceRestrictedStatus);
 
-  const activeConfig = isWaitingForAuth ? restrictedExpertSidebarConfig : sidebarConfig;
-
+  const activeConfig =
+    isAwaitingWalletAuth || isAwaitingProfileVerification
+      ? restrictedExpertSidebarConfig
+      : sidebarConfig;
   return (
     <AppShell config={activeConfig}>
       {shouldSuppressChildren ? null : children}
+      <ExpertStoryLabDriver />
+      <StoryLabLeakDetector />
+      <ExpertSetupGuide
+        enabled={false}
+        checklistEvents={onboardingProgress.checklistEvents}
+        markChecklistEvent={markOnboardingChecklistEvent}
+      />
     </AppShell>
   );
 }

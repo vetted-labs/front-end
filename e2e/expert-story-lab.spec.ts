@@ -287,7 +287,7 @@ test.describe("expert story lab", () => {
     await page.goto("/story-lab/expert", { waitUntil: "domcontentloaded" });
     await expectStoryStep(page, "Start with the expert loop", /\/expert\/dashboard\?storyLab=expert&storyStep=overview/, diagnostics, TOUR_TARGETS.dashboardOverview);
     await expectFocusInsideStoryDriver(page);
-    const appRoot = page.getByTestId("story-lab-background-root");
+    const appRoot = page.getByTestId("app-shell-root");
     await expect(appRoot).toHaveAttribute("aria-hidden", "true");
     await expect.poll(() => appRoot.evaluate((node) => (node as HTMLElement).inert)).toBe(true);
 
