@@ -177,7 +177,7 @@ export const STORY_LAB_NOTIFICATIONS: Notification[] = [
     id: "story-lab-notification-reward",
     expertId: "story-lab-expert",
     type: "reward_earned",
-    title: "Reward posted: +12.50 VETD",
+    title: `Reward posted: +${STORY_LAB_VOTE_OUTCOME.reward} VETD`,
     message:
       "Consensus finalized the review. Your aligned vote produced a story reward and a reputation gain.",
     guildId: STORY_LAB_GUILD.id,
@@ -191,28 +191,28 @@ export const STORY_LAB_NOTIFICATIONS: Notification[] = [
 ];
 
 export const STORY_LAB_EARNINGS_ENTRY: EarningsEntry = {
-  amount: 12.5,
+  amount: STORY_LAB_VOTE_OUTCOME.reward,
   currency: "VETD",
   type: "voting_reward",
   guild_name: STORY_LAB_GUILD.name,
-  candidate_name: "Maya Chen",
-  proposal_id: STORY_LAB_REVIEW_APPLICATION_ID,
+  candidate_name: STORY_LAB_VOTE_OUTCOME.candidateName,
+  proposal_id: STORY_LAB_VOTE_OUTCOME.applicationId,
   created_at: STORY_LAB_TIMESTAMPS.earningsPosted,
 };
 
 export const STORY_LAB_REPUTATION_ENTRY: ReputationTimelineEntry = {
-  change_amount: 5,
+  change_amount: STORY_LAB_VOTE_OUTCOME.reputationDelta,
   reason: "aligned",
-  description: "Aligned review on Maya Chen's Engineering guild application",
+  description: `Aligned review on ${STORY_LAB_VOTE_OUTCOME.candidateName}'s ${STORY_LAB_GUILD.name} guild application`,
   guild_name: STORY_LAB_GUILD.name,
   vote_score: 82,
   alignment_distance: 3.5,
   slash_percent: null,
-  reward_amount: 12.5,
+  reward_amount: STORY_LAB_VOTE_OUTCOME.reward,
   consensus_score: 78.5,
-  candidate_name: "Maya Chen",
+  candidate_name: STORY_LAB_VOTE_OUTCOME.candidateName,
   outcome: "approved",
-  proposal_id: STORY_LAB_REVIEW_APPLICATION_ID,
+  proposal_id: STORY_LAB_VOTE_OUTCOME.applicationId,
   created_at: STORY_LAB_TIMESTAMPS.reputationPosted,
 };
 
@@ -319,19 +319,21 @@ export function withStoryLabEarnings(
   const currentTotalVetd = currentSummary.totalVetd ?? 0;
   const byGuild = prependOrBumpTotal(
     currentByGuild,
-    { guildId: STORY_LAB_GUILD.id, guildName: STORY_LAB_GUILD.name, total: 12.5 },
+    { guildId: STORY_LAB_GUILD.id, guildName: STORY_LAB_GUILD.name, total: STORY_LAB_VOTE_OUTCOME.reward },
     (item) => item.guildId
   );
   const byType = prependOrBumpTotal(
     currentByType,
-    { type: "voting_reward", total: 12.5 },
+    { type: "voting_reward", total: STORY_LAB_VOTE_OUTCOME.reward },
     (item) => item.type
   );
 
   return {
     summary: {
       ...currentSummary,
-      totalVetd: Math.max(currentTotalVetd, 0) + (items.length === nextItems.length ? 0 : 12.5),
+      totalVetd:
+        Math.max(currentTotalVetd, 0) +
+        (items.length === nextItems.length ? 0 : STORY_LAB_VOTE_OUTCOME.reward),
       byGuild,
       byType,
     },

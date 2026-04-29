@@ -194,4 +194,27 @@ describe("expert story lab data", () => {
       voteResolvedAt: "2026-04-29T12:00:00.000Z",
     });
   });
+
+  it("derives every reward/reputation display from STORY_LAB_VOTE_OUTCOME", async () => {
+    const fx = await import("@/components/expert/story-lab/storyLabFixtures");
+    const reward = fx.STORY_LAB_VOTE_OUTCOME.reward;
+    const repDelta = fx.STORY_LAB_VOTE_OUTCOME.reputationDelta;
+
+    expect(fx.STORY_LAB_EARNINGS_ENTRY.amount).toBe(reward);
+    expect(fx.STORY_LAB_REPUTATION_ENTRY.change_amount).toBe(repDelta);
+    expect(fx.STORY_LAB_REPUTATION_ENTRY.reward_amount).toBe(reward);
+
+    const rewardNotification = fx.STORY_LAB_NOTIFICATIONS.find(
+      (n) => n.type === "reward_earned",
+    );
+    expect(rewardNotification?.title).toContain(String(reward));
+  });
+
+  it("aggregates story earnings totals from the canonical reward", async () => {
+    const fx = await import("@/components/expert/story-lab/storyLabFixtures");
+    const result = fx.withStoryLabEarnings(null, [], null);
+    expect(result.summary.totalVetd).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
+    expect(result.summary.byGuild?.[0]?.total).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
+    expect(result.summary.byType?.[0]?.total).toBe(fx.STORY_LAB_VOTE_OUTCOME.reward);
+  });
 });
