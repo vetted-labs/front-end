@@ -30,6 +30,7 @@ import { tourTargetSelector } from "@/components/expert/onboarding/tourTargets";
 import {
   buildStoryLabRoute,
   canAdvanceStoryLabSubStop,
+  getStoryLabCompletionRoute,
   getStoryLabStepIndex,
   markStoryLabCompletionReady,
   STORY_LAB_DOM,
@@ -322,7 +323,7 @@ export function ExpertStoryLabDriver() {
       void expertApi
         .updateOnboardingState({ ...createExpertOnboardingState(), completed: true })
         .catch(() => {});
-      router.replace("/expert/dashboard");
+      router.replace(getStoryLabCompletionRoute());
       return;
     }
 
