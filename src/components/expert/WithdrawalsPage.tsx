@@ -354,7 +354,7 @@ export default function WithdrawalsPage() {
                     background: getGuildHexColor(g.guildName || g.guildId),
                     minWidth: pct > 0 ? 3 : 0,
                   }}
-                  title={`${g.guildName}: ${parseFloat(g.stakedAmount).toFixed(2)} VETD (${pct.toFixed(1)}%)`}
+                  title={`${g.guildName || g.guildId}: ${parseFloat(g.stakedAmount).toFixed(2)} VETD (${pct.toFixed(1)}%)`}
                 />
               );
             })}
