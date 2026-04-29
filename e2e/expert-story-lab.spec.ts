@@ -457,6 +457,143 @@ test.describe("expert story lab", () => {
     await expect.poll(() => putBody).toMatchObject({ completed: true });
   });
 
+  test("non-story expert routes do not render any story-lab DOM", async ({ page }) => {
+    // Mock minimal dashboard endpoints so the page actually renders.
+    await page.route("**/api/experts/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: {} }),
+      }),
+    );
+    await page.route("**/api/blockchain/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: [] }),
+      }),
+    );
+
+    // Capture any uncaught exceptions — if the StoryLabLeakDetector throws,
+    // the page errors propagate here.
+    const pageErrors: string[] = [];
+    page.on("pageerror", (err) => pageErrors.push(err.message));
+
+    await seedExpertBrowserSession(page);
+
+    // Mark onboarding completed locally so the layout doesn't auto-redirect
+    // into story mode. Key shape: vetted:expert-onboarding-tour:v1:<expertId>.
+    await page.addInitScript((expertId) => {
+      const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          dismissed: false,
+          completed: true,
+          checklistDismissed: false,
+          events: {},
+        }),
+      );
+    }, MOCK_EXPERT.expertId);
+
+    await page.goto("/expert/dashboard");
+
+    // Wait briefly for the dashboard tree to mount.
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+
+    // No story-prefixed DOM should be present.
+    const leaks = page.locator("[id^='story-lab-'], [data-story-lab-guild-id], [data-story-lab-review-url]");
+    await expect(leaks).toHaveCount(0);
+
+    // The leak detector must not have thrown.
+    const storyLabErrors = pageErrors.filter((m) => m.includes("StoryLab leak"));
+    expect(storyLabErrors).toEqual([]);
+  });
+
+  test("leak detector throws when story-lab DOM appears outside story mode", async ({
+    page,
+  }) => {
+    // This proves the detector itself works. We synthetically inject a node
+    // with `data-story-lab-guild-id` while the URL has neither `storyLab=expert`
+    // nor `storyLabComplete=expert`. The MutationObserver inside
+    // StoryLabLeakDetector must throw a "StoryLab leak detected" error.
+    await page.route("**/api/experts/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: {} }),
+      }),
+    );
+    await page.route("**/api/blockchain/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true, data: [] }),
+      }),
+    );
+
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (err) => pageErrors.push(err.message));
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+
+    await seedExpertBrowserSession(page);
+
+    // Suppress the auto-redirect into story mode so the URL stays clean.
+    await page.addInitScript((expertId) => {
+      const key = `vetted:expert-onboarding-tour:v1:${expertId}`;
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          dismissed: false,
+          completed: true,
+          checklistDismissed: false,
+          events: {},
+        }),
+      );
+    }, MOCK_EXPERT.expertId);
+
+    await page.goto("/expert/dashboard");
+    await page.waitForLoadState("domcontentloaded");
+
+    // Confirm the URL is clean before injecting (otherwise the detector early-returns).
+    const url = new URL(page.url());
+    expect(url.searchParams.get("storyLab")).toBeNull();
+    expect(url.searchParams.get("storyLabComplete")).toBeNull();
+
+    // Wait briefly for the layout's StoryLabLeakDetector effect to mount and
+    // start observing the DOM. If we inject before mount, the initial sweep
+    // would catch it but only via querySelector (still fine), but observing a
+    // mounted MutationObserver is the more interesting code path.
+    await page.waitForTimeout(500);
+
+    // Inject a leak. This must trigger the detector.
+    await page.evaluate(() => {
+      const el = document.createElement("div");
+      el.setAttribute("data-story-lab-guild-id", "synthetic-leak");
+      el.textContent = "synthetic story-lab leak";
+      document.body.appendChild(el);
+    });
+
+    // The detector calls console.error AND throws. We assert on both because:
+    // - console.error is the dev-mode signal users see in their terminal
+    // - throw is what fails Playwright/CI when story DOM truly leaks
+    await expect
+      .poll(() => consoleErrors.find((m) => m.includes("StoryLab leak detected")), {
+        timeout: 2000,
+      })
+      .toBeTruthy();
+
+    await expect
+      .poll(() => pageErrors.find((m) => m.includes("StoryLab leak detected")), {
+        timeout: 2000,
+      })
+      .toBeTruthy();
+  });
+
   test("provides a deterministic story guild when the real expert has no guilds", async ({
     page,
   }) => {
