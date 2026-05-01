@@ -34,7 +34,7 @@ export function ReviewSuccessStep({
   return (
     <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewResult)}>
       {/* Success Banner */}
-      <div className="text-center py-6">
+      <div className="text-center py-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewSuccessBanner)}>
         <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} mb-4`}>
           <CheckCircle className={`w-8 h-8 ${STATUS_COLORS.positive.icon}`} />
         </div>
@@ -58,7 +58,7 @@ export function ReviewSuccessStep({
       )}
 
       {/* Score Summary */}
-      <div className="rounded-xl border border-border bg-muted/20 p-6 space-y-4">
+      <div className="rounded-xl border border-border bg-muted/20 p-6 space-y-4" {...dataTourTarget(TOUR_TARGETS.practiceReviewScoreSummary)}>
         <h4 className="text-sm font-bold text-foreground tracking-wide uppercase">
           Your Review Summary
         </h4>
@@ -85,7 +85,7 @@ export function ReviewSuccessStep({
         </div>
 
         {/* Overall Score */}
-        <div className="pt-4 border-t border-border">
+        <div className="pt-4 border-t border-border" {...dataTourTarget(TOUR_TARGETS.practiceReviewOverallBar)}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-muted-foreground">Overall Score</span>
             <span className="text-2xl font-bold text-foreground">
@@ -110,7 +110,10 @@ export function ReviewSuccessStep({
 
       {/* On-chain transaction */}
       {commitTxHash && (
-        <div className={`rounded-xl ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4`}>
+        <div
+          className={`rounded-xl ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4`}
+          {...dataTourTarget(TOUR_TARGETS.practiceReviewTxConfirmed)}
+        >
           <div className="flex items-start gap-3">
             <CheckCircle className={`w-4 h-4 ${STATUS_COLORS.positive.icon} mt-0.5 shrink-0`} />
             <div className="text-sm flex-1 min-w-0">
@@ -138,7 +141,10 @@ export function ReviewSuccessStep({
       )}
 
       {/* What happens next */}
-      <div className={`rounded-xl border border-border ${STATUS_COLORS.info.bgSubtle} p-4`}>
+      <div
+        className={`rounded-xl border border-border ${STATUS_COLORS.info.bgSubtle} p-4`}
+        {...dataTourTarget(TOUR_TARGETS.practiceReviewWhatsNext)}
+      >
         <div className="flex items-start gap-3">
           <Sparkles className={`w-4 h-4 ${STATUS_COLORS.info.icon} mt-0.5 shrink-0`} />
           <div className="text-sm text-muted-foreground">

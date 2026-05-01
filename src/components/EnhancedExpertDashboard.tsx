@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Lock } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
@@ -331,11 +331,12 @@ export function EnhancedExpertDashboard() {
     return timestamps.length > 0 ? Math.max(...timestamps) : null;
   })();
 
-  const isDecayActive = (() => {
+  const isDecayActive = useMemo(() => {
     if (mostRecentActivityMs === null) return true;
+    // eslint-disable-next-line react-hooks/purity -- Date.now compared against stored activity timestamps, memoized on activity change
     const daysSince = Math.floor((Date.now() - mostRecentActivityMs) / (1000 * 60 * 60 * 24));
     return daysSince >= REPUTATION_DECAY_WARNING_DAYS;
-  })();
+  }, [mostRecentActivityMs]);
 
   const daysUntilDecay = profile ? getDaysUntilDecay(mostRecentActivityMs) : null;
 
@@ -464,10 +465,12 @@ export function EnhancedExpertDashboard() {
         </div>
         {!loading && (
           <div className="flex flex-wrap items-center gap-3">
-            <ActionButtonPanel
-              stakingStatus={stakingStatus}
-              onRefresh={refetch}
-            />
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardActionPanel)}>
+              <ActionButtonPanel
+                stakingStatus={stakingStatus}
+                onRefresh={refetch}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -481,8 +484,14 @@ export function EnhancedExpertDashboard() {
           </div>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="flex flex-col gap-1">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
+          {...dataTourTarget(TOUR_TARGETS.dashboardStatsRow)}
+        >
+          <div
+            className="flex flex-col gap-1"
+            {...dataTourTarget(TOUR_TARGETS.dashboardReputationStat)}
+          >
             <StatCard
               label="Reputation"
               value={profile?.reputation ?? 0}
@@ -550,9 +559,11 @@ export function EnhancedExpertDashboard() {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-          <ReviewQueue
-            applications={assignedApplications ?? []}
-          />
+          <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
+            <ReviewQueue
+              applications={assignedApplications ?? []}
+            />
+          </div>
           <div className="flex flex-col gap-4">
             <div
               className="rounded-xl border border-border bg-card p-5"
@@ -589,10 +600,12 @@ export function EnhancedExpertDashboard() {
         isLoading={loading}
         skeleton={<SkeletonCard className="min-h-[160px]" />}
       >
-        <GuildsSection
-          guilds={profile?.guilds ?? []}
-          guildStakes={guildStakes}
-        />
+        <div {...dataTourTarget(TOUR_TARGETS.dashboardGuildsSection)}>
+          <GuildsSection
+            guilds={profile?.guilds ?? []}
+            guildStakes={guildStakes}
+          />
+        </div>
       </DataSection>
 
       {/* Section 5: Recent Activity + Notifications */}
@@ -606,13 +619,21 @@ export function EnhancedExpertDashboard() {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 min-w-0">
-          <RecentActivity activities={profile?.recentActivity ?? []} />
-          <SlimNotificationsFeed walletAddress={address!} />
+          <div {...dataTourTarget(TOUR_TARGETS.dashboardRecentActivity)}>
+            <RecentActivity activities={profile?.recentActivity ?? []} />
+          </div>
+          <div {...dataTourTarget(TOUR_TARGETS.dashboardNotificationsFeed)}>
+            <SlimNotificationsFeed walletAddress={address!} />
+          </div>
         </div>
       </DataSection>
 
       {/* Section 6: Governance Summary */}
-      {!loading && <GovernanceSummaryCard />}
+      {!loading && (
+        <div {...dataTourTarget(TOUR_TARGETS.dashboardGovernanceCard)}>
+          <GovernanceSummaryCard />
+        </div>
+      )}
     </div>
   );
 }

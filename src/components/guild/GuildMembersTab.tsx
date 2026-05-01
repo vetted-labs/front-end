@@ -6,6 +6,7 @@ import { Users, Award, TrendingUp, CheckCircle, Star, Wallet, ChevronDown } from
 import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { truncateAddress } from "@/lib/utils";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ExpertMember, CandidateMember } from "@/types";
 
 const MEMBERS_PER_SECTION = 12;
@@ -68,7 +69,10 @@ export function GuildMembersTab({
         <div>
           {sortedExperts.length > 0 ? (
             <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              {...dataTourTarget(TOUR_TARGETS.guildMembers)}
+            >
               {sortedExperts.slice(0, expertsVisible).map((expert) => (
                 <button
                   key={expert.id}

@@ -8,6 +8,7 @@ import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-rea
 import { STATUS_COLORS } from "@/config/colors";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { Guild, ExpertGuild } from "@/types";
 
 /** Union of public Guild and ExpertGuild fields, plus card-specific extras. */
@@ -26,6 +27,8 @@ interface GuildCardProps {
   membershipSubVariant?: "default" | "compact";
   onViewDetails?: (guildId: string) => void;
   showDescription?: boolean;
+  tourMarkerProps?: Record<string, string>;
+  isStoryLabFirstCard?: boolean;
 }
 
 export function GuildCard({
@@ -33,6 +36,8 @@ export function GuildCard({
   variant,
   onViewDetails,
   showDescription = true,
+  tourMarkerProps,
+  isStoryLabFirstCard = false,
 }: GuildCardProps) {
   const guildIconName = getGuildIconName(guild.name);
   const { isActive: isStoryLabPreview } = useStoryLabContext();
@@ -119,6 +124,7 @@ export function GuildCard({
       <div
         onClick={() => onViewDetails?.(guild.id)}
         {...(isStoryLabPreview ? { "data-story-lab-guild-id": guild.id } : {})}
+        {...(tourMarkerProps ?? {})}
         className={`group relative cursor-pointer overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-0.5 ${
           isUrgent
             ? "border-warning/20 hover:border-warning/35 bg-card"
@@ -135,7 +141,10 @@ export function GuildCard({
         <div className="relative">
           {/* Urgent banner */}
           {isUrgent && (
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-warning/15 bg-warning/5">
+            <div
+              className="flex items-center gap-2 px-4 py-2.5 border-b border-warning/15 bg-warning/5"
+              {...(isStoryLabFirstCard ? dataTourTarget(TOUR_TARGETS.guildCardUrgentBanner) : {})}
+            >
               <span className="w-[7px] h-[7px] rounded-full bg-warning animate-glow-pulse" />
               <span className="font-display text-xs font-bold text-warning">
                 <span className="font-mono">{pendingCount}</span> pending review{pendingCount !== 1 ? "s" : ""}
@@ -160,7 +169,10 @@ export function GuildCard({
                 </div>
               </div>
               {isExpertView ? (
-                <div className="w-[26px] h-[26px] rounded-[7px] bg-muted/20 border border-border/30 flex items-center justify-center text-muted-foreground transition-all group-hover:bg-primary/[0.08] group-hover:border-primary/20 group-hover:text-primary group-hover:translate-x-0.5">
+                <div
+                  className="w-[26px] h-[26px] rounded-[7px] bg-muted/20 border border-border/30 flex items-center justify-center text-muted-foreground transition-all group-hover:bg-primary/[0.08] group-hover:border-primary/20 group-hover:text-primary group-hover:translate-x-0.5"
+                  {...(isStoryLabFirstCard ? dataTourTarget(TOUR_TARGETS.guildCardOpenAffordance) : {})}
+                >
                   <ArrowRight className="w-[13px] h-[13px]" />
                 </div>
               ) : (
@@ -176,7 +188,10 @@ export function GuildCard({
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-2">
+            <div
+              className="grid grid-cols-3 gap-2"
+              {...(isStoryLabFirstCard ? dataTourTarget(TOUR_TARGETS.guildCardStats) : {})}
+            >
               {isExpertView ? (
                 <>
                   <div className="text-center py-2.5 px-1 rounded-[9px] bg-muted/30 border border-border">

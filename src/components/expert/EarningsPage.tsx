@@ -33,6 +33,7 @@ import { EarningsTimeline } from "@/components/expert/EarningsTimeline";
 import { EarningsChart } from "@/components/expert/EarningsChart";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { withStoryLabEarnings } from "@/components/expert/story-lab/storyLabFixtures";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 function exportEarningsCSV(data: EarningsEntry[]) {
   const headers = "Date,Type,Amount (VETD),Guild,Candidate\n";
@@ -225,10 +226,12 @@ export default function EarningsPage() {
             </div>
           }
         >
-          <EarningsSummaryCards
-            summary={summary}
-            reputation={profile?.reputation ?? 0}
-          />
+          <div {...dataTourTarget(TOUR_TARGETS.earningsSummary)}>
+            <EarningsSummaryCards
+              summary={summary}
+              reputation={profile?.reputation ?? 0}
+            />
+          </div>
         </DataSection>
 
         {/* ── Claim Rewards ── */}
@@ -242,7 +245,7 @@ export default function EarningsPage() {
         />
 
         {/* ── Time range filter pills ── */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3" {...dataTourTarget(TOUR_TARGETS.earningsFilters)}>
           <div className="flex gap-2 p-1 rounded-xl bg-muted/30 dark:bg-muted/20 border border-border">
             {(["day", "week", "month", "all"] as TimeRange[]).map((range) => (
               <button

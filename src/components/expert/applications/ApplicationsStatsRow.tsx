@@ -1,3 +1,5 @@
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+
 interface ApplicationsStatsRowProps {
   pendingReviews: number;
   proposalsToVote: number;
@@ -34,7 +36,10 @@ export function ApplicationsStatsRow({
 }: ApplicationsStatsRowProps) {
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        {...dataTourTarget(TOUR_TARGETS.applicationsStats)}
+      >
         <StatCell label="Pending" value={pendingReviews} />
         <StatCell label="To Vote" value={proposalsToVote} />
         <StatCell label="Completed" value={completedReviews} />

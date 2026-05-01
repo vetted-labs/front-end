@@ -176,6 +176,10 @@ export default function NotificationsPage() {
           n.type !== "guild_application"
         );
 
+  // First deadline-typed notification ID (for tour target gating — only the first matching card)
+  const firstDeadlineNotificationId =
+    filteredNotifications.find((n) => isDeadlineNotification(n.type))?.id ?? null;
+
   // Group filtered notifications by date
   const dateGroups = (() => {
     const now = new Date();
@@ -216,7 +220,10 @@ export default function NotificationsPage() {
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-[1]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
+        <div
+          className="flex items-center justify-between mb-9 flex-wrap gap-4"
+          {...dataTourTarget(TOUR_TARGETS.notificationsHeader)}
+        >
           <div className="flex items-center gap-4">
             <VettedIcon name="notification" className="w-7 h-7 text-primary" />
             <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
@@ -237,6 +244,7 @@ export default function NotificationsPage() {
               onClick={handleMarkAllAsRead}
               disabled={isLoading || isMarkingAllRead || unreadCount === 0}
               className="inline-flex items-center gap-2 bg-card border border-border text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              {...dataTourTarget(TOUR_TARGETS.notificationsMarkAllRead)}
             >
               {isMarkingAllRead ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -249,7 +257,10 @@ export default function NotificationsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
+        <div
+          className="flex flex-wrap sm:flex-nowrap gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none"
+          {...dataTourTarget(TOUR_TARGETS.notificationsFilterTabs)}
+        >
           {(
             [
               { key: "all", label: "All", count: allNotifications.length },
@@ -306,7 +317,10 @@ export default function NotificationsPage() {
               <Alert variant="error">{error}</Alert>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="bg-card rounded-xl p-12 text-center border border-border">
+            <div
+              className="bg-card rounded-xl p-12 text-center border border-border"
+              {...dataTourTarget(TOUR_TARGETS.notificationsEmptyState)}
+            >
               <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold text-foreground mb-2">No notifications</h3>
               <p className="text-muted-foreground">
@@ -338,6 +352,8 @@ export default function NotificationsPage() {
                           disabled={isClicked}
                           {...(isStoryLabPreview && notification.id === STORY_LAB_NOTIFICATION_RESULT_ID
                             ? dataTourTarget(TOUR_TARGETS.notificationResultCard)
+                            : notification.id === firstDeadlineNotificationId
+                            ? dataTourTarget(TOUR_TARGETS.notificationsActionGroup)
                             : {})}
                           className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                             isClicked ? "opacity-60 cursor-wait" : ""

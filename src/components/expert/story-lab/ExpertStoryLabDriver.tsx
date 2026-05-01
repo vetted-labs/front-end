@@ -40,7 +40,13 @@ import {
   type StoryLabSubStop,
 } from "./storyLabData";
 import { expertApi } from "@/lib/api";
-import { createExpertOnboardingState } from "@/lib/expert-onboarding-tour";
+import {
+  buildExpertOnboardingStorageKey,
+  createExpertOnboardingState,
+  getExpertOnboardingState,
+  markExpertOnboardingComplete,
+} from "@/lib/expert-onboarding-tour";
+import { dispatchExpertOnboardingStateChange } from "@/lib/hooks/useExpertOnboardingTour";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { STORY_LAB_GUILD } from "./storyLabFixtures";
 
@@ -83,9 +89,12 @@ interface ResolvedTarget {
 }
 
 function findTarget(subStop: StoryLabSubStop): ResolvedTarget | null {
-  const targets = [subStop.target, subStop.fallbackTarget].filter(
-    Boolean
-  ) as StoryLabSubStop["target"][];
+  // navTrigger sub-stops anchor on the sidebar nav item the user must click
+  // (the next step's destination), not on the regular page target.
+  const targets = (subStop.navTrigger
+    ? [subStop.navTrigger.target, subStop.target, subStop.fallbackTarget]
+    : [subStop.target, subStop.fallbackTarget]
+  ).filter(Boolean) as StoryLabSubStop["target"][];
 
   for (const target of targets) {
     const selector = tourTargetSelector(target);
@@ -114,24 +123,12 @@ function getFirstAttributeValue(attribute: string): string | null {
   );
 }
 
-function getCanonicalAttributeValue(
-  attribute: string,
-  preferredValue: string
-): string | null {
-  const preferred = document.querySelector<HTMLElement>(
-    `[${attribute}="${preferredValue}"]`
-  );
-  if (preferred) return preferredValue;
-  return getFirstAttributeValue(attribute);
-}
-
 function resolveDynamicRoute(step: StoryLabStep): string {
   if (step.dynamicRoute === "firstGuild") {
-    const guildId = getCanonicalAttributeValue(
-      STORY_LAB_DOM.guildId,
-      STORY_LAB_GUILD.id
-    );
-    if (guildId) return `/expert/guild/${encodeURIComponent(guildId)}`;
+    // Story-lab always uses the synthetic guild id — navigate directly so
+    // the route doesn't fall back to /expert/guilds when the source card's
+    // DOM marker hasn't hydrated yet.
+    return `/expert/guild/${encodeURIComponent(STORY_LAB_GUILD.id)}`;
   }
 
   if (step.dynamicRoute === "firstReview") {
@@ -168,6 +165,14 @@ function shouldUseCenteredFallback(
   if (typeof window === "undefined") return false;
   if (window.innerWidth < 720) return true;
   if (rect.width / window.innerWidth > 0.85) return true;
+  // If neither side of the target has room for the anchored popover (~440px
+  // including the offset + arrow), fall back to centered. Otherwise the
+  // popover gets clipped against the viewport edge — which is what was
+  // happening on wide dashboard sections.
+  const popoverMinSpace = 440;
+  const spaceRight = window.innerWidth - (rect.left + rect.width);
+  const spaceLeft = rect.left;
+  if (spaceRight < popoverMinSpace && spaceLeft < popoverMinSpace) return true;
   return false;
 }
 
@@ -221,6 +226,10 @@ export function ExpertStoryLabDriver() {
     useState<StoryLabSubStop["target"] | null>(null);
   const [dynamicRoutes, setDynamicRoutes] = useState<Record<string, string>>({});
   const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
+  // Gate the popover until either the target element is found or a short
+  // grace period elapses, so the underlying real route has time to paint
+  // before the dialog appears on top of it.
+  const [popoverReady, setPopoverReady] = useState(false);
   const scrolledStopRef = useRef<string | null>(null);
   const driverRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLDivElement | null>(null);
@@ -250,11 +259,6 @@ export function ExpertStoryLabDriver() {
     () => shouldUseCenteredFallback(targetRect, activeSubStop.placement),
     [targetRect, activeSubStop.placement]
   );
-
-  const currentRouteLabel = useMemo(() => {
-    if (typeof window === "undefined") return pathname ?? "";
-    return `${pathname ?? ""}${window.location.search ?? ""}`;
-  }, [pathname]);
 
   const refreshDynamicRoutes = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -320,6 +324,27 @@ export function ExpertStoryLabDriver() {
 
     if (isFinalSubStop) {
       markStoryLabCompletionReady();
+      // Persist completion to localStorage synchronously and notify the
+      // layout's onboarding hook *before* the API call lands. Without this,
+      // the layout's `shouldForceExpertStoryStart` reads stale state and
+      // re-redirects the user back into the walkthrough.
+      if (typeof window !== "undefined") {
+        try {
+          const expertId = window.localStorage.getItem("expertId");
+          const walletAddress = window.localStorage.getItem("walletAddress");
+          const storageKey = buildExpertOnboardingStorageKey({
+            expertId: expertId ?? undefined,
+            walletAddress: walletAddress ?? undefined,
+          });
+          if (storageKey) {
+            markExpertOnboardingComplete(window.localStorage, storageKey);
+            const persistedState = getExpertOnboardingState(window.localStorage, storageKey);
+            dispatchExpertOnboardingStateChange(storageKey, persistedState);
+          }
+        } catch {
+          // Storage unavailable — fall through to API persist.
+        }
+      }
       void expertApi
         .updateOnboardingState({ ...createExpertOnboardingState(), completed: true })
         .catch(() => {});
@@ -329,8 +354,11 @@ export function ExpertStoryLabDriver() {
 
     if (!isLastSubStopOfStep) {
       const next = activeStep.subStops[activeSubIndex + 1];
+      // Use the resolved route (which honors dynamicRoute) so intra-step
+      // navigation stays on the same page the user is currently viewing —
+      // otherwise sub-stop 2 of guild-detail would route back to /expert/guilds.
       router.replace(
-        buildStoryLabRoute(activeStep.route, activeStep.id, next.id),
+        buildStoryLabRoute(getResolvedStepRoute(activeStep), activeStep.id, next.id),
         { scroll: false }
       );
       return;
@@ -358,8 +386,9 @@ export function ExpertStoryLabDriver() {
   const goBackSubStop = useCallback(() => {
     if (activeSubIndex > 0) {
       const prev = activeStep.subStops[activeSubIndex - 1];
+      // Same dynamic-route fix as goNextSubStop: stay on the resolved page.
       router.replace(
-        buildStoryLabRoute(activeStep.route, activeStep.id, prev.id),
+        buildStoryLabRoute(getResolvedStepRoute(activeStep), activeStep.id, prev.id),
         { scroll: false }
       );
       return;
@@ -451,6 +480,10 @@ export function ExpertStoryLabDriver() {
   // eslint-disable-next-line no-restricted-syntax -- mandatory story mode must isolate the live page behind the portaled dialog
   useEffect(() => {
     if (!isOpen || !portalHost) return;
+    // navTrigger sub-stops require the user to click the live sidebar, so we
+    // can't make the app shell inert — that would block the click that
+    // advances the walkthrough.
+    if (activeSubStop.navTrigger) return;
 
     const roots = Array.from(
       document.querySelectorAll<HTMLElement>("[data-app-shell-root]")
@@ -476,14 +509,32 @@ export function ExpertStoryLabDriver() {
         root.inert = inert;
       }
     };
-  }, [isOpen, portalHost]);
+  }, [isOpen, portalHost, activeSubStop.navTrigger]);
 
   useLayoutEffect(() => {
     if (!isOpen) return;
     scrolledStopRef.current = null;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- updateTarget syncs target rect from the live DOM into local state on every sub-stop change; that DOM->state synchronization is the effect's purpose
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset visibility gate so the route paints before the dialog reappears on the new sub-stop
+    setPopoverReady(false);
     updateTarget({ scroll: true });
   }, [activeStep.id, activeSubStop.id, isOpen, updateTarget]);
+
+  // eslint-disable-next-line no-restricted-syntax -- gate the popover briefly so the page paints before the dialog
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (targetResolved) {
+      // Target is in the DOM — show the popover on the next frame so the
+      // browser commits the spotlight position alongside the fade-in.
+      const frame = window.requestAnimationFrame(() => setPopoverReady(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    // Target hasn't appeared yet (route still loading). Give the page a short
+    // grace period to paint, then show the centered popover.
+    const timeout = window.setTimeout(() => setPopoverReady(true), 350);
+    return () => window.clearTimeout(timeout);
+  }, [activeStep.id, activeSubStop.id, isOpen, targetResolved]);
 
   // eslint-disable-next-line no-restricted-syntax -- real pages may mount route targets after route data and dynamic chunks settle
   useEffect(() => {
@@ -562,6 +613,7 @@ export function ExpertStoryLabDriver() {
         goBackSubStop();
       }
       if (event.key === "ArrowRight" || event.key === "Enter") {
+        if (activeSubStop.navTrigger) return;
         event.preventDefault();
         goNextSubStop();
       }
@@ -569,12 +621,59 @@ export function ExpertStoryLabDriver() {
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [goBackSubStop, goNextSubStop, isOpen]);
+  }, [goBackSubStop, goNextSubStop, isOpen, activeSubStop.navTrigger]);
+
+  // navTrigger sub-stops: intercept the user clicking the sidebar nav link
+  // and push the storyLab-aware URL for the next step's first sub-stop, so
+  // the walkthrough survives navigation. Without this the storyLab params are
+  // dropped and the popover disappears mid-flow.
+  // eslint-disable-next-line no-restricted-syntax -- intercepts sidebar Link clicks during a navTrigger sub-stop
+  useEffect(() => {
+    if (!isOpen || !activeSubStop.navTrigger) return;
+    const trigger = activeSubStop.navTrigger;
+    const nextStep = STORY_LAB_STEPS[activeIndex + 1];
+    if (!nextStep) return;
+
+    const handler = (event: MouseEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target as Element | null;
+      if (!target) return;
+      const link = target.closest(
+        `a[data-tour-target="${trigger.target}"]`
+      ) as HTMLAnchorElement | null;
+      if (!link) return;
+      event.preventDefault();
+      const firstSub = nextStep.subStops[0];
+      scrolledStopRef.current = null;
+      router.push(
+        buildStoryLabRoute(getResolvedStepRoute(nextStep), nextStep.id, firstSub?.id),
+        { scroll: false }
+      );
+    };
+
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [
+    isOpen,
+    activeSubStop.navTrigger,
+    activeIndex,
+    getResolvedStepRoute,
+    router,
+  ]);
 
   if (!isOpen || !portalHost) return null;
 
   const backDisabled = activeIndex === 0 && activeSubIndex === 0;
-  const primaryLabel = isFinalSubStop ? "Finish" : activeStep.actionLabel;
+  // Inside a step the button is just "Continue" so the label doesn't promise
+  // a page change before the last sub-stop. Only the LAST sub-stop of a step
+  // shows the configured actionLabel (which navigates to the next route).
+  const primaryLabel = isFinalSubStop
+    ? "Finish"
+    : isLastSubStopOfStep
+      ? activeStep.actionLabel
+      : "Continue";
   const PrimaryIcon = isFinalSubStop ? Check : ArrowRight;
 
   const panelContent = (
@@ -599,7 +698,7 @@ export function ExpertStoryLabDriver() {
               : "bg-muted text-muted-foreground"
           )}
         >
-          {canAdvanceCurrentStop ? "Target visible" : "Target not visible"}
+          {canAdvanceCurrentStop ? "Ready" : "Loading…"}
         </span>
       </div>
 
@@ -628,13 +727,9 @@ export function ExpertStoryLabDriver() {
 
       {!targetResolved && (
         <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3 text-xs leading-5 text-muted-foreground">
-          This target is not visible in the current real page state. The page underneath is still the actual route, so use this to decide whether the production story needs backend seed data or a different anchor.
+          Loading the next part of the story…
         </div>
       )}
-
-      <code className="mt-4 block truncate rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
-        {currentRouteLabel}
-      </code>
 
       <div
         className="mt-5 grid gap-1"
@@ -678,7 +773,18 @@ export function ExpertStoryLabDriver() {
             Back
           </button>
         )}
-        {canAdvanceCurrentStop ? (
+        {activeSubStop.navTrigger ? (
+          <span
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "sm" }),
+              "pointer-events-none gap-2 border-primary/30 bg-primary/10 text-primary"
+            )}
+            aria-live="polite"
+          >
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            Click <span className="font-bold">{activeSubStop.navTrigger.label}</span> in the sidebar →
+          </span>
+        ) : canAdvanceCurrentStop ? (
           <button
             type="button"
             onClick={(event) => {
@@ -703,6 +809,16 @@ export function ExpertStoryLabDriver() {
     </>
   );
 
+  const stopKey = `${activeStep.id}:${activeSubStop.id}`;
+  const animatedPanel = (
+    <div
+      key={stopKey}
+      className="animate-in fade-in-0 slide-in-from-bottom-1 duration-300"
+    >
+      {panelContent}
+    </div>
+  );
+
   const popover = useCenteredFallback ? (
     <FloatingFocusManager context={centeredContext} modal>
       <section
@@ -711,14 +827,14 @@ export function ExpertStoryLabDriver() {
         data-active-target={resolvedTarget ?? activeSubStop.target}
         data-placement="center"
         style={getCenteredPanelStyle()}
-        className="z-[1001] rounded-xl border border-border bg-card p-5 shadow-2xl"
+        className="z-[1001] rounded-xl border border-border bg-card p-5 shadow-2xl transition-[top,left,transform] duration-300 ease-out"
         role="dialog"
         aria-modal="true"
         aria-labelledby="story-lab-title"
         aria-describedby="story-lab-body"
         tabIndex={-1}
       >
-        {panelContent}
+        {animatedPanel}
       </section>
     </FloatingFocusManager>
   ) : (
@@ -736,7 +852,7 @@ export function ExpertStoryLabDriver() {
         aria-describedby="story-lab-body"
         tabIndex={-1}
       >
-        {panelContent}
+        {animatedPanel}
         <div
           ref={(node) => {
             arrowRef.current = node;
@@ -756,11 +872,19 @@ export function ExpertStoryLabDriver() {
       data-testid="expert-story-lab-driver"
       aria-live="polite"
     >
-      <div className="absolute inset-0 bg-background/10" />
+      <div
+        className={cn(
+          "absolute inset-0 bg-background/10 transition-opacity duration-300 ease-out",
+          popoverReady ? "opacity-100" : "opacity-0"
+        )}
+      />
 
-      {targetRect && !useCenteredFallback && (
+      {targetRect && (
         <div
-          className="fixed rounded-xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.42),0_0_0_6px_rgba(255,106,0,0.18)]"
+          className={cn(
+            "fixed rounded-xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.42),0_0_0_6px_rgba(255,106,0,0.18)] transition-[top,left,width,height,opacity] duration-300 ease-out",
+            popoverReady ? "opacity-100" : "opacity-0"
+          )}
           data-testid="expert-story-lab-spotlight"
           data-active-target={resolvedTarget ?? activeSubStop.target}
           style={{
@@ -772,7 +896,15 @@ export function ExpertStoryLabDriver() {
         />
       )}
 
-      <div className="pointer-events-auto">{popover}</div>
+      <div
+        className={cn(
+          "pointer-events-auto transition-opacity duration-300 ease-out",
+          popoverReady ? "opacity-100" : "opacity-0"
+        )}
+        aria-hidden={!popoverReady}
+      >
+        {popover}
+      </div>
     </div>,
     portalHost
   );

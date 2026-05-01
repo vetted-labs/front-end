@@ -1,14 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
   // 🔐 SECURITY: CSP headers moved to src/middleware.ts for nonce-based policy
   // Middleware provides better control and per-request nonce generation
+  turbopack: {
+    resolveAlias: {
+      "pino-pretty": { browser: "./src/lib/empty-module.ts" },
+      "@react-native-async-storage/async-storage": "./src/lib/empty-module.ts",
+    },
+  },
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

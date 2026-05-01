@@ -25,6 +25,7 @@ import { getExplorerTxUrl } from "@/lib/blockchain";
 import { STATUS_COLORS } from "@/config/colors";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import { truncateAddress } from "@/lib/utils";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { EndorsementApplication } from "@/types";
 
 interface EndorsementTransactionModalProps {
@@ -61,8 +62,10 @@ export function EndorsementTransactionModal({
     { fallbackStart: application?.applied_at, expiredLabel: "Bidding closed" },
   );
 
+  // eslint-disable-next-line no-restricted-syntax -- resets form fields when modal reopens
   useEffect(() => {
     if (isOpen && txStep === 'idle') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale bid/error on modal open
       setBidAmount('');
       setErrorMessage('');
     }
@@ -120,7 +123,10 @@ export function EndorsementTransactionModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
           {/* ── Header ── */}
-          <div className="relative flex-shrink-0 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-5">
+          <div
+            className="relative flex-shrink-0 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-5"
+            {...dataTourTarget(TOUR_TARGETS.endorseModal)}
+          >
             {/* Decorative glow layer */}
             <div className="absolute inset-0 overflow-hidden rounded-t-xl pointer-events-none">
               <div className="absolute -top-20 -left-20 w-72 h-72 bg-primary/10 rounded-full blur-[100px]" />
@@ -275,7 +281,10 @@ export function EndorsementTransactionModal({
                   </div>
                 ) : (<>
                 {/* Slash Risk Warning */}
-                <div className={`p-3 rounded-lg border ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}>
+                <div
+                  className={`p-3 rounded-lg border ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}
+                  {...dataTourTarget(TOUR_TARGETS.endorseSlashWarning)}
+                >
                   <div className="flex items-start gap-2">
                     <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${STATUS_COLORS.warning.icon}`} />
                     <div>
@@ -309,7 +318,10 @@ export function EndorsementTransactionModal({
                 </div>
 
                 {/* Amount Input Card */}
-                <div className="rounded-xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20">
+                <div
+                  className="rounded-xl bg-muted/20 border border-border p-4 space-y-2 transition-colors focus-within:border-primary/20"
+                  {...dataTourTarget(TOUR_TARGETS.endorseAmountInput)}
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Your bid</span>
                     <button
@@ -394,6 +406,7 @@ export function EndorsementTransactionModal({
                     onClick={handleSubmit}
                     disabled={!bidAmount || parseFloat(bidAmount) <= 0 || !!application?.current_bid}
                     className="flex-[0.6] h-[3.25rem] flex items-center justify-center gap-2 rounded-xl font-bold text-sm bg-primary text-primary-foreground shadow-xl hover:brightness-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    {...dataTourTarget(TOUR_TARGETS.endorseSubmitButton)}
                   >
                     <Zap className="w-4 h-4" />
                     {application?.current_bid ? 'Already Placed' : 'Place Endorsement'}

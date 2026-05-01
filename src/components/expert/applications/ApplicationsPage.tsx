@@ -352,7 +352,7 @@ export default function ApplicationsPage() {
           pendingCounts={pendingCounts}
         />
 
-        <div>
+        <div {...dataTourTarget(TOUR_TARGETS.applicationsSearch)}>
           <Input
             placeholder="Search by applicant name..."
             value={search}

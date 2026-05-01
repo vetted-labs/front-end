@@ -6,6 +6,7 @@ import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import type { SidebarIcon } from "./sidebar-config";
 import { useSidebar } from "./SidebarProvider";
 import { cn } from "@/lib/utils";
+import { getNavTourTargetForHref } from "@/components/expert/onboarding/tourTargets";
 
 interface SidebarNavItemProps {
   href: string;
@@ -50,10 +51,13 @@ export function SidebarNavItem({ href, icon, label, badge, disabled, exact }: Si
     );
   }
 
+  const navTourTarget = getNavTourTargetForHref(href);
+
   return (
     <Link
       href={href}
       prefetch={true}
+      {...(navTourTarget ? { "data-tour-target": navTourTarget } : {})}
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         isActive

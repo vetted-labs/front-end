@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Wallet, ExternalLink } from "lucide-react";
 import { getExplorerTxUrl } from "@/lib/blockchain";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 interface ClaimRewardsCardProps {
   pendingAmount: string;
@@ -21,7 +22,7 @@ export function ClaimRewardsCard({
   onClaim,
 }: ClaimRewardsCardProps) {
   return (
-    <Card padding="none" className="relative overflow-hidden">
+    <Card padding="none" className="relative overflow-hidden" {...dataTourTarget(TOUR_TARGETS.earningsClaimCard)}>
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-border opacity-50" />
 

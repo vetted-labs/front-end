@@ -18,9 +18,10 @@ interface ApplicationsGridProps {
    */
   markedApplicationId?: string;
   markedCardProps?: Record<string, string>;
+  markedCtaProps?: Record<string, string>;
 }
 
-export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription, markedApplicationId, markedCardProps }: ApplicationsGridProps) {
+export function ApplicationsGrid({ applications, loading, onSelectApplication, onQuickEndorse, emptyTitle, emptyDescription, markedApplicationId, markedCardProps, markedCtaProps }: ApplicationsGridProps) {
   if (loading) {
     return null;
   }
@@ -58,6 +59,7 @@ export function ApplicationsGrid({ applications, loading, onSelectApplication, o
           onViewDetails={onSelectApplication}
           onQuickEndorse={onQuickEndorse}
           rootProps={idx === markedIdx ? markedCardProps : undefined}
+          ctaProps={idx === markedIdx ? markedCtaProps : undefined}
         />
       ))}
     </div>

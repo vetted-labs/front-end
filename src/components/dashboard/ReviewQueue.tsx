@@ -5,11 +5,32 @@ import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import {
+  STORY_LAB_GUILD,
+  STORY_LAB_REVIEW_APPLICATION_ID,
+} from "@/components/expert/story-lab/storyLabFixtures";
 import type { GuildApplication } from "@/types";
 
 interface ReviewQueueProps {
   applications: GuildApplication[];
 }
+
+const STORY_LAB_QUEUE_ROW: GuildApplication = {
+  id: STORY_LAB_REVIEW_APPLICATION_ID,
+  candidate_name: "Maya Chen",
+  candidate_email: "maya.chen@example.com",
+  guild_id: STORY_LAB_GUILD.id,
+  guild_name: STORY_LAB_GUILD.name,
+  required_stake: 100,
+  status: "active",
+  created_at: "2026-04-27T12:00:00.000Z",
+  voting_deadline: "2026-05-02T12:00:00.000Z",
+  vote_count: 1,
+  finalized: false,
+  is_assigned_reviewer: true,
+  has_voted: false,
+  item_type: "expert_application",
+};
 
 function getInitials(name: string): string {
   return name
@@ -34,8 +55,12 @@ function getReviewUrl(app: GuildApplication): string {
 export function ReviewQueue({ applications }: ReviewQueueProps) {
   const router = useRouter();
   const { isActive: isStoryLabPreview } = useStoryLabContext();
-  const displayed = applications.slice(0, 5);
-  const hasMore = applications.length > 5;
+  const effectiveApplications =
+    isStoryLabPreview && applications.length === 0
+      ? [STORY_LAB_QUEUE_ROW]
+      : applications;
+  const displayed = effectiveApplications.slice(0, 5);
+  const hasMore = effectiveApplications.length > 5;
 
   return (
     <div className="bg-card border border-border rounded-xl p-6 h-full">
@@ -44,9 +69,9 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
         <span className="text-sm font-bold text-foreground">
           Review Queue
         </span>
-        {applications.length > 0 && (
+        {effectiveApplications.length > 0 && (
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS.warning.badge}`}>
-            {applications.length} pending
+            {effectiveApplications.length} pending
           </span>
         )}
       </div>

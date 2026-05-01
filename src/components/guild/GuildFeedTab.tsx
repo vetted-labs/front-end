@@ -17,6 +17,7 @@ import { PostCard } from "./feed/PostCard";
 import { NewPostModal } from "./feed/NewPostModal";
 import { PostDetailModal } from "./feed/PostDetailModal";
 import { Divider } from "@/components/ui/divider";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   GuildPost,
   PostSortMode,
@@ -261,7 +262,7 @@ export function GuildFeedTab({
           : posts;
         if (displayPosts.length === 0) return null;
         return (
-          <div className="space-y-3">
+          <div className="space-y-3" {...dataTourTarget(TOUR_TARGETS.guildPostFeed)}>
             {displayPosts.map((post) => (
               <PostCard
                 key={post.id}

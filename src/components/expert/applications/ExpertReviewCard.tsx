@@ -117,15 +117,24 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
         {/* Info */}
         <div className="flex-1 min-w-0">
           {/* Row 1: Name + level badge + guild pill */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className="flex items-center gap-2 flex-wrap"
+            {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardIdentity) : {})}
+          >
             <h4 className="text-base font-bold text-foreground truncate">
               {displayName}
             </h4>
-            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border">
+            <span
+              className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border"
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardLevel) : {})}
+            >
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (
-              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-xs ${STATUS_COLORS.info.text} font-medium`}>
+              <span
+                className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-xs ${STATUS_COLORS.info.text} font-medium`}
+                {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardGuild) : {})}
+              >
                 {application.guildName}
               </span>
             )}
@@ -142,7 +151,10 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
               <Clock className="w-3.5 h-3.5" />
               {new Date(application.appliedAt).toLocaleDateString()}
             </span>
-            <span className="inline-flex items-center gap-2">
+            <span
+              className="inline-flex items-center gap-2"
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardProgress) : {})}
+            >
               <Users className="w-3.5 h-3.5" />
               {application.reviewCount} reviewed
             </span>
@@ -194,13 +206,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 On-chain <ExternalLink className="w-3 h-3" />
               </a>
             )}
-            <span className={`inline-flex items-center gap-2 font-medium ${
-              vettingState === "finalized" || vettingState === "revealed"
-                ? STATUS_COLORS.positive.text
-                : vettingState === "committed"
-                ? STATUS_COLORS.info.text
-                : "text-primary"
-            }`}>
+            <span
+              className={`inline-flex items-center gap-2 font-medium ${
+                vettingState === "finalized" || vettingState === "revealed"
+                  ? STATUS_COLORS.positive.text
+                  : vettingState === "committed"
+                  ? STATUS_COLORS.info.text
+                  : "text-primary"
+              }`}
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardStatus) : {})}
+            >
               <span className={`w-[5px] h-[5px] rounded-full ${
                 vettingState === "finalized" || vettingState === "revealed"
                   ? STATUS_COLORS.positive.dot
@@ -220,14 +235,21 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 {phaseLabel[phase!] ?? phase}
               </span>
               {activeDeadline && phase !== "finalized" && (
-                <CountdownBadge deadline={activeDeadline} label="Commit" />
+                <span
+                  {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardDeadline) : {})}
+                >
+                  <CountdownBadge deadline={activeDeadline} label="Commit" />
+                </span>
               )}
             </div>
           )}
         </div>
 
         {/* Action */}
-        <div className="shrink-0 flex items-center">
+        <div
+          className="shrink-0 flex items-center"
+          {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardCta) : {})}
+        >
           {isReviewed ? (
             onViewReview ? (
               <button

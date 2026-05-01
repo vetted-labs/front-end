@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { getRewardTierProgress, REWARD_TIERS } from "@/types";
 import { REWARD_TIER_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 interface RewardTierTowerProps {
   reputation: number;
@@ -44,7 +45,7 @@ export function RewardTierTower({ reputation }: RewardTierTowerProps) {
   const { tier: currentTier } = getRewardTierProgress(reputation);
 
   return (
-    <section>
+    <section {...dataTourTarget(TOUR_TARGETS.reputationTierTower)}>
       <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Tier Progression
       </p>

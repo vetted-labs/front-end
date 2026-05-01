@@ -52,6 +52,8 @@ function dispatchOnboardingStateChange(
   );
 }
 
+export const dispatchExpertOnboardingStateChange = dispatchOnboardingStateChange;
+
 function getOnboardingStateChangeDetail(
   event: Event,
 ): ExpertOnboardingStateChangeDetail | null {
@@ -199,6 +201,7 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
   // eslint-disable-next-line no-restricted-syntax -- hydrates guarded local/server onboarding state
   useEffect(() => {
     autoStartedKeyRef.current = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets hydration flag before re-reading storage
     setIsHydrated(false);
     setHydratedStorageKey(null);
 
@@ -240,6 +243,7 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
     if (!tourState.dismissed && !tourState.completed) {
       autoStartedKeyRef.current = null;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- closes tour when eligibility is lost
     setIsTourOpen(false);
   }, [canStartTour, tourState.completed, tourState.dismissed]);
 

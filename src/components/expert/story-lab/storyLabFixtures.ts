@@ -29,9 +29,12 @@ const STORY_LAB_TIMESTAMPS = {
   earningsPosted: "2026-04-29T11:50:00.000Z",
   reputationPosted: "2026-04-29T11:52:00.000Z",
   endorsementApplied: "2026-04-29T09:00:00.000Z",
-  endorsementDeadline: "2026-04-30T08:00:00.000Z",
+  // Pushed well past "now" — story mode runs against the user's wall clock, so
+  // a deadline ≤ today filters the synthetic candidate into "Closed" and the
+  // bid-mechanic sub-stop loses its anchor.
+  endorsementDeadline: "2026-05-15T08:00:00.000Z",
   governanceCreated: "2026-04-28T12:00:00.000Z",
-  governanceDeadline: "2026-05-03T12:00:00.000Z",
+  governanceDeadline: "2026-05-15T12:00:00.000Z",
 } as const;
 
 export const STORY_LAB_GUILD: GuildRecord = {
@@ -437,9 +440,20 @@ export function withStoryLabGuildStakes(
 }
 
 export function getStoryLabReviewModalStep(stepId: string | null): 1 | 2 | 3 | 4 | null {
-  if (stepId === "review-evidence") return 1;
-  if (stepId === "review-scoring") return 2;
-  if (stepId === "review-red-flags" || stepId === "review-commit") return 3;
-  if (stepId === "review-result") return 4;
+  if (!stepId) return null;
+  // Multi-substop blocks: each substop id is a unique kebab string. Map by
+  // prefix so any new substop inside a parent step resolves to the same modal
+  // page the parent does.
+  if (stepId === "review-evidence" || stepId.startsWith("evidence-")) return 1;
+  if (stepId === "review-scoring" || stepId.startsWith("scoring-")) return 2;
+  if (
+    stepId === "review-red-flags" ||
+    stepId === "review-commit" ||
+    stepId.startsWith("domain-") ||
+    stepId.startsWith("commit-")
+  ) {
+    return 3;
+  }
+  if (stepId === "review-result" || stepId.startsWith("result-")) return 4;
   return null;
 }

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useChartTooltip } from "@/components/analytics/ChartTooltip";
 import type { ReputationTimelineEntry } from "@/types";
 import { buildMonthlyScores } from "@/lib/reputation-helpers";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 interface ReputationScoreChartProps {
   timeline: ReputationTimelineEntry[];
@@ -86,7 +87,7 @@ export function ReputationScoreChart({ timeline, reputation }: ReputationScoreCh
   if (monthlyScores.length < 2) return null;
 
   return (
-    <section>
+    <section {...dataTourTarget(TOUR_TARGETS.reputationScoreChart)}>
       <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Score History
       </p>

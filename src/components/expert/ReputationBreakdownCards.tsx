@@ -2,6 +2,7 @@ import { VettedIcon } from "@/components/ui/vetted-icon";
 import type { VettedIconName } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
 import { computeAccuracy, computeConsistency } from "@/lib/reputation-helpers";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 interface ReputationBreakdownCardsProps {
   reputation: number;
@@ -186,7 +187,7 @@ export function ReputationBreakdownCards({
   ];
 
   return (
-    <section>
+    <section {...dataTourTarget(TOUR_TARGETS.reputationBreakdownCards)}>
       <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground mb-5">
         Score Breakdown
       </p>

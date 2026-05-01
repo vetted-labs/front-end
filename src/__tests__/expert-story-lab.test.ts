@@ -135,8 +135,8 @@ describe("expert story lab data", () => {
     expect(STORY_LAB_EARNINGS_ENTRY.created_at).toBe("2026-04-29T11:50:00.000Z");
     expect(STORY_LAB_REPUTATION_ENTRY.created_at).toBe("2026-04-29T11:52:00.000Z");
     expect(STORY_LAB_ENDORSEMENT_APPLICATION.applied_at).toBe("2026-04-29T09:00:00.000Z");
-    expect(STORY_LAB_ENDORSEMENT_APPLICATION.bidding_deadline).toBe("2026-04-30T08:00:00.000Z");
-    expect(STORY_LAB_GOVERNANCE_PROPOSAL.voting_deadline).toBe("2026-05-03T12:00:00.000Z");
+    expect(STORY_LAB_ENDORSEMENT_APPLICATION.bidding_deadline).toBe("2026-05-15T08:00:00.000Z");
+    expect(STORY_LAB_GOVERNANCE_PROPOSAL.voting_deadline).toBe("2026-05-15T12:00:00.000Z");
     expect(STORY_LAB_GOVERNANCE_PROPOSAL.created_at).toBe("2026-04-28T12:00:00.000Z");
   });
 

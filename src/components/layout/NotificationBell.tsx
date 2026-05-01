@@ -28,10 +28,21 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  // Defer the first real render until after hydration: wagmi's `useAccount`
+  // and `useExpertStatus` (localStorage) only resolve to truthy values on the
+  // client, so rendering them on the server-built first paint causes a
+  // hydration mismatch in the parent tree.
+  const [hasMounted, setHasMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
+
+  // eslint-disable-next-line no-restricted-syntax -- mark client-only after first paint to avoid SSR/CSR hydration mismatch from wagmi + localStorage
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentionally flips client-only flag after the first paint to defer the SSR/CSR boundary
+    setHasMounted(true);
+  }, []);
 
   // eslint-disable-next-line no-restricted-syntax -- fetches on dropdown open with optimistic read updates
   useEffect(() => {
@@ -75,6 +86,7 @@ export function NotificationBell() {
     router.push(buildNotificationUrl(notification));
   };
 
+  if (!hasMounted) return null;
   if (!isConnected || !address || !isApprovedExpert) return null;
 
   return (

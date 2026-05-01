@@ -119,7 +119,7 @@ export default function GovernancePage() {
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ─── Hero Section ─── */}
-        <section className="pt-14 pb-10 relative">
+        <section className="pt-14 pb-10 relative" {...dataTourTarget(TOUR_TARGETS.governanceHero)}>
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
             {/* Left: Title area */}
             <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export default function GovernancePage() {
               </p>
 
               {/* Voting Power + Tier badges */}
-              <div className="flex items-center gap-8 flex-wrap">
+              <div className="flex items-center gap-8 flex-wrap" {...dataTourTarget(TOUR_TARGETS.governanceVoteWeight)}>
                 <div className="flex flex-col gap-2">
                   <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     Your Voting Power
@@ -172,6 +172,7 @@ export default function GovernancePage() {
               <button
                 onClick={() => router.push("/expert/governance/create")}
                 className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-sm font-bold text-white bg-primary hover:translate-y-[-2px] transition-all"
+                {...dataTourTarget(TOUR_TARGETS.governanceCreateCta)}
               >
                 <Plus className="w-[18px] h-[18px]" />
                 Create Proposal
@@ -182,11 +183,17 @@ export default function GovernancePage() {
 
         {/* ─── Live Vote Banner ─── */}
         {liveProposal && (
-          <LiveVoteBanner
-            proposal={liveProposal}
-            voteWeight={voteWeight}
-            onClick={() => router.push(`/expert/governance/${liveProposal.id}`)}
-          />
+          <div
+            {...dataTourTarget(TOUR_TARGETS.governanceProposals)}
+          >
+            <div {...dataTourTarget(TOUR_TARGETS.governanceProposalCard)}>
+              <LiveVoteBanner
+                proposal={liveProposal}
+                voteWeight={voteWeight}
+                onClick={() => router.push(`/expert/governance/${liveProposal.id}`)}
+              />
+            </div>
+          </div>
         )}
 
         {/* ─── Filter Tabs + Search ─── */}
@@ -279,7 +286,7 @@ export default function GovernancePage() {
 
             {/* Past Proposals section */}
             {pastProposals.length > 0 && (
-              <div className="mb-10">
+              <div className="mb-10" {...dataTourTarget(TOUR_TARGETS.governancePastSection)}>
                 <div className="flex items-center justify-between mb-5 pt-2">
                   <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
                     Past Proposals

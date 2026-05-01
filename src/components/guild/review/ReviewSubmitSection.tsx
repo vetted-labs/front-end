@@ -1,6 +1,7 @@
 "use client";
 
 import { Coins } from "lucide-react";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 export interface ReviewSubmitSectionProps {
   proposalContext?: { requiredStake: number };
@@ -17,7 +18,7 @@ export function ReviewSubmitSection({
   if (!proposalContext) return null;
 
   return (
-    <div className="mt-6 rounded-xl border border-border bg-muted/20 p-6 space-y-3">
+    <div className="mt-6 rounded-xl border border-border bg-muted/20 p-6 space-y-3" {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}>
       <h4 className="text-sm font-bold text-foreground tracking-wide uppercase flex items-center gap-2">
         <Coins className="w-4 h-4 text-primary" />
         Stake VETD

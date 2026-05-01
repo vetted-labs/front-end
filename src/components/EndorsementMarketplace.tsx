@@ -70,7 +70,15 @@ interface EndorsementMarketplaceProps {
 export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId, guilds, selectedGuildId, onGuildChange }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
-  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
+  const STORY_LAB_OPEN_MODAL_SUBSTOPS = useMemo(
+    () => new Set(["bid-mechanic", "consequences"]),
+    []
+  );
+  const shouldStoryLabOpenModal =
+    isStoryLabPreview &&
+    activeSubStopId !== null &&
+    STORY_LAB_OPEN_MODAL_SUBSTOPS.has(activeSubStopId);
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
@@ -181,11 +189,31 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         hasAutoOpened.current = true;
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: open the matching application's modal once it finishes loading
         setSelectedApp(targetApp);
-         
+
         setTransactionModalOpen(true);
       }
     }
   }, [initialApplicationId, applications, loading]);
+
+  // Sync modal open/closed state to the active story-lab sub-stop so the
+  // walkthrough's popovers can anchor inside the modal during bid-mechanic +
+  // consequences and the page returns to the marketplace for accountability.
+  // eslint-disable-next-line no-restricted-syntax -- driven by URL-derived activeSubStopId
+  useEffect(() => {
+    if (!isStoryLabPreview) return;
+    if ((applications ?? []).length === 0) return;
+    const storyApp = (applications ?? []).find(
+      (app) => app.application_id === STORY_LAB_ENDORSEMENT_APPLICATION_ID
+    );
+    if (!storyApp) return;
+    if (shouldStoryLabOpenModal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs story-lab modal open state from URL params
+      setSelectedApp(storyApp);
+      setTransactionModalOpen(true);
+    } else {
+      setTransactionModalOpen(false);
+    }
+  }, [isStoryLabPreview, shouldStoryLabOpenModal, applications]);
 
   // ── Modal handlers ──
 
@@ -328,13 +356,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       </DataSection>
 
       {/* Applications */}
-      <div className="mt-8">
+      <div className="mt-8" {...dataTourTarget(TOUR_TARGETS.endorsementApplicationsList)}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <h2 className="font-display font-bold text-xl tracking-tight">
             Applications
           </h2>
           {!loading && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" {...dataTourTarget(TOUR_TARGETS.endorsementFilters)}>
               <Input
                 placeholder="Search applications..."
                 value={search}
@@ -382,6 +410,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
             : 'There are no applications with closed bidding on this page.'}
           markedApplicationId={isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined}
           markedCardProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateCard)}
+          markedCtaProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateBidCta)}
         />
         {!loading && (
           <PaginationNav
