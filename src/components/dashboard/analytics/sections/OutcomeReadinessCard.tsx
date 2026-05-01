@@ -46,9 +46,10 @@ export function OutcomeReadinessCard({ readiness }: OutcomeReadinessCardProps) {
           <div className="text-2xl font-semibold text-foreground">
             {readiness.trackedHireOutcomes}
             <span className="text-base text-muted-foreground"> / {readiness.requiredHireOutcomes}</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground">({pct}%)</span>
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
-            tracked hire outcomes ({pct}%)
+            {readiness.trackedHireOutcomes} of {readiness.requiredHireOutcomes} tracked hire outcomes collected
           </div>
         </div>
       </div>

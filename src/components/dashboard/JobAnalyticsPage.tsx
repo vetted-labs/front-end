@@ -19,8 +19,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { CompanyApplication } from "@/types";
+import { JobAnalyticsWorkspace } from "@/components/dashboard/analytics/JobAnalyticsWorkspace";
+import { jobAnalyticsFixture } from "@/components/dashboard/analytics/job-detail-fixture";
+import { isAnalyticsFixtureModeEnabled } from "@/components/dashboard/analytics/job-detail-helpers";
 
 export default function JobAnalyticsPage() {
+  // VET-83…91: when the analytics-fixture flag is set, route directly to the
+  // pilot workspace with the typed fixture so reviewers can see the full
+  // pilot UX without the backend contract being live. Done before any hook
+  // fires so the legacy KPI page's hooks don't run in fixture mode.
+  if (isAnalyticsFixtureModeEnabled()) {
+    return <JobAnalyticsWorkspace data={jobAnalyticsFixture} isFixtureMode />;
+  }
+
+  return <LegacyJobAnalyticsPage />;
+}
+
+function LegacyJobAnalyticsPage() {
   const router = useRouter();
   const params = useParams();
   const jobId = typeof params?.jobId === "string" ? params.jobId : "";
