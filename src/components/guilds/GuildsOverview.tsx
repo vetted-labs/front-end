@@ -14,6 +14,9 @@ import { GuildCard } from "../GuildCard";
 import LeaderboardPage from "../leaderboard/LeaderboardPage";
 import { getGuildDetailedInfo, getGuildIconName, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { withStoryLabGuilds } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ExpertProfile, Guild } from "@/types";
 
 type TabType = "guilds" | "leaderboard";
@@ -36,7 +39,9 @@ export function GuildsOverview() {
     { skip: !isConnected || !address },
   );
 
-  const profileGuilds = Array.isArray(profile?.guilds) ? profile.guilds : [];
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const realGuilds = Array.isArray(profile?.guilds) ? profile.guilds : [];
+  const profileGuilds = isStoryLabPreview ? withStoryLabGuilds(realGuilds) : realGuilds;
 
   const openGuildPicker = async () => {
     setShowGuildPicker(true);
@@ -109,6 +114,7 @@ export function GuildsOverview() {
         <button
           onClick={openGuildPicker}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-display font-bold rounded-xl hover:shadow-[0_6px_24px_hsl(var(--primary)/0.35)] hover:scale-[1.02] transition-all text-sm"
+          {...dataTourTarget(TOUR_TARGETS.guildsJoinCta)}
         >
           <Plus className="w-4 h-4" />
           Join Guild
@@ -169,7 +175,10 @@ export function GuildsOverview() {
 
           {/* Action Required */}
           {!isLoading && !error && totalPendingApplications > 0 && (
-            <div className="rounded-xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden">
+            <div
+              className="rounded-xl p-6 bg-warning/[0.04] border border-warning/15 relative overflow-hidden"
+              {...dataTourTarget(TOUR_TARGETS.guildsActionRequired)}
+            >
               <div className="absolute inset-x-0 top-0 h-px bg-border opacity-80" />
               <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
                 <div className="flex items-start gap-3">
@@ -255,14 +264,19 @@ export function GuildsOverview() {
                 )}
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sortedGuilds.map((guild) => (
+              <div
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+                {...dataTourTarget(TOUR_TARGETS.guildDirectory)}
+              >
+                {sortedGuilds.map((guild, index) => (
                   <GuildCard
                     key={guild.id}
                     guild={guild}
                     variant="browse"
                     showDescription={true}
                     onViewDetails={handleGuildClick}
+                    tourMarkerProps={index === 0 ? dataTourTarget(TOUR_TARGETS.guildCardItem) : undefined}
+                    isStoryLabFirstCard={index === 0}
                   />
                 ))}
               </div>

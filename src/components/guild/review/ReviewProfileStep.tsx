@@ -10,6 +10,7 @@ import {
 import { getAssetUrl } from "@/lib/api";
 import { getPlatformIcon } from "@/lib/social-links";
 import { getPersonAvatar } from "@/lib/avatars";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { SocialLink } from "@/types";
 
 interface ReviewProfileStepApplication {
@@ -34,7 +35,12 @@ export interface ReviewProfileStepProps {
 
 
 export function ReviewProfileStep({ application, level }: ReviewProfileStepProps) {
-  const resumeUrl = application.resumeUrl ? getAssetUrl(application.resumeUrl) : null;
+  const isSyntheticResume = application.resumeUrl?.startsWith("demo://") ?? false;
+  const resumeUrl = isSyntheticResume
+    ? null
+    : application.resumeUrl
+      ? getAssetUrl(application.resumeUrl)
+      : null;
 
   const displayName = application.fullName;
   const displayTitle = application.currentTitle;
@@ -47,10 +53,10 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
     .join("");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewProfile)}>
 
       {/* Applicant Header Card — accent bar style */}
-      <div className="border border-border rounded-xl bg-card overflow-hidden">
+      <div className="border border-border rounded-xl bg-card overflow-hidden" {...dataTourTarget(TOUR_TARGETS.practiceReviewApplicantHeader)}>
         {/* Orange gradient accent bar */}
         <div className="h-[3px] bg-primary" />
 
@@ -108,7 +114,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
 
           {/* Links */}
           {(application.resumeUrl || application.socialLinks?.some((l) => l.url?.trim()) || application.linkedinUrl || application.portfolioUrl) && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3" {...dataTourTarget(TOUR_TARGETS.practiceReviewLinks)}>
               {resumeUrl && (
                 <a
                   href={resumeUrl}
@@ -173,19 +179,98 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           )}
 
           {/* Inline Resume Viewer */}
-          {resumeUrl && (
-            <div className="rounded-xl border border-border bg-muted/10 overflow-hidden">
+          {(resumeUrl || isSyntheticResume) && (
+            <div className="rounded-xl border border-border bg-muted/10 overflow-hidden" {...dataTourTarget(TOUR_TARGETS.practiceReviewResume)}>
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/30">
                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Resume / CV Preview
                 </span>
               </div>
-              <iframe
-                src={resumeUrl}
-                title="Resume preview"
-                className="w-full h-[500px] bg-white"
-              />
+              {resumeUrl ? (
+                <iframe
+                  src={resumeUrl}
+                  title="Resume preview"
+                  className="w-full h-[500px] bg-white"
+                />
+              ) : (
+                <div className="bg-white text-zinc-900 p-8 h-[500px] overflow-y-auto">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="border-b border-zinc-200 pb-4 mb-5">
+                      <h2 className="text-2xl font-bold tracking-tight">{displayName}</h2>
+                      <p className="text-sm text-zinc-600 mt-1">
+                        {displayTitle ?? "Senior Full-Stack Engineer"}
+                        {displayCompany ? ` · ${displayCompany}` : ""}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-2">
+                        San Francisco, CA · maya.chen@example.com · linkedin.com/in/mayachen
+                      </p>
+                    </div>
+
+                    <section className="mb-5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Summary</h3>
+                      <p className="text-sm text-zinc-800 leading-relaxed">
+                        {application.yearsOfExperience ?? 7}+ years building production
+                        TypeScript and React systems. Led platform migrations, distributed
+                        systems work, and team mentorship across mid-stage startups.
+                      </p>
+                    </section>
+
+                    <section className="mb-5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Experience</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex items-baseline justify-between">
+                            <p className="text-sm font-semibold">Senior Full-Stack Engineer · Northstar Labs</p>
+                            <span className="text-xs text-zinc-500">2023 – present</span>
+                          </div>
+                          <ul className="mt-1 list-disc list-outside ml-5 text-sm text-zinc-800 space-y-1">
+                            <li>Owned the migration from REST to a typed GraphQL gateway, cutting p95 latency 38%.</li>
+                            <li>Designed an idempotent event pipeline (Kafka → Postgres) handling 4M events/day.</li>
+                            <li>Mentored 3 mid-level engineers; ran the architecture review for the realtime team.</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <div className="flex items-baseline justify-between">
+                            <p className="text-sm font-semibold">Software Engineer · Brightlane</p>
+                            <span className="text-xs text-zinc-500">2020 – 2023</span>
+                          </div>
+                          <ul className="mt-1 list-disc list-outside ml-5 text-sm text-zinc-800 space-y-1">
+                            <li>Shipped the multi-tenant billing rewrite (Stripe Connect), unblocking 20+ enterprise deals.</li>
+                            <li>Wrote the company&apos;s first end-to-end test harness (Playwright + a fixture-driven seed).</li>
+                          </ul>
+                        </div>
+
+                        <div>
+                          <div className="flex items-baseline justify-between">
+                            <p className="text-sm font-semibold">Junior Engineer · Aperture Health</p>
+                            <span className="text-xs text-zinc-500">2018 – 2020</span>
+                          </div>
+                          <ul className="mt-1 list-disc list-outside ml-5 text-sm text-zinc-800 space-y-1">
+                            <li>Built the patient-facing scheduling UI; HIPAA-compliant audit trail for record access.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="mb-5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Skills</h3>
+                      <p className="text-sm text-zinc-800">
+                        {(application.expertiseAreas && application.expertiseAreas.length > 0
+                          ? application.expertiseAreas
+                          : ["TypeScript", "React", "Node.js", "Postgres", "AWS", "GraphQL"]
+                        ).join(" · ")}
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Education</h3>
+                      <p className="text-sm text-zinc-800">B.S. Computer Science · UC Berkeley · 2018</p>
+                    </section>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -202,7 +287,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
           </div>
         )}
         {application.motivation && (
-          <div className="rounded-xl border border-border bg-muted/30 p-6">
+          <div className="rounded-xl border border-border bg-muted/30 p-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewMotivation)}>
             <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-2">Motivation</p>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {application.motivation}
@@ -213,7 +298,7 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
 
       {/* Expertise Areas — preserved (skills-based evaluation) */}
       {application.expertiseAreas && application.expertiseAreas.length > 0 && (
-        <div>
+        <div {...dataTourTarget(TOUR_TARGETS.practiceReviewExpertise)}>
           <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3">
             Expertise Areas
           </p>

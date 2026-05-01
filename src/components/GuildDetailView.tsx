@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useAccount } from "wagmi";
+import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { Alert } from "./ui/alert";
 import { PillTabs } from "./ui/pill-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,12 +22,15 @@ import { StakeModal } from "./guild/StakeModal";
 import dynamic from "next/dynamic";
 import { mapCandidateToReviewApplication } from "@/lib/reviewHelpers";
 import { fetchAndNormalizeGuildData, transformLeaderboardData } from "@/lib/guildDetailHelpers";
+import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type {
   GuildDetailData, GuildDetailTab, GuildApplicationSummary, LeaderboardExpert,
   LeaderboardEntry, ExpertMembershipApplication, CandidateGuildApplication, ExpertRole, ExpertCRPhaseStatus,
 } from "@/types";
 import { GUILD_DETAIL_TABS } from "@/types";
 import { GuildDetailSkeleton } from "@/components/ui/page-skeleton";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 const ReviewGuildApplicationModal = dynamic(
   () => import("./guild/ReviewGuildApplicationModal").then(m => ({ default: m.ReviewGuildApplicationModal })),
@@ -47,7 +50,7 @@ interface GuildDetailViewProps {
 }
 
 export function GuildDetailView({ guildId }: GuildDetailViewProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useExpertAccount();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [guild, setGuild] = useState<GuildDetailData | null>(null);
@@ -89,6 +92,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   const { execute: executeLeaderboard, isLoading: isLoadingLeaderboard } = useApi();
   const { execute: executeStake, isLoading: isStaking } = useApi();
 
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const isStoryLabSyntheticGuild =
+    isStoryLabPreview && guildId === STORY_LAB_GUILD.id;
+
   const { isLoading, error, refetch } = useFetch(
     async () => {
       if (!address) throw new Error("No wallet address");
@@ -97,6 +104,12 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
         await fetchAndNormalizeGuildData(guildId, address);
       setGuild(normalized);
       if (expertId) setCurrentExpertId(expertId);
+
+      if (isStoryLabSyntheticGuild) {
+        setStakingStatus({ meetsMinimum: true });
+        setCandidateApplications([]);
+        return normalized;
+      }
 
       // Fetch staking status
       try {
@@ -146,19 +159,21 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     if (isConnected && address) refetch();
   }, [guildId, address]);
 
-  // eslint-disable-next-line no-restricted-syntax -- lazy-load leaderboard when tab becomes active
+  // eslint-disable-next-line no-restricted-syntax -- lazy-load leaderboard when tab becomes active; fetchLeaderboard is hoisted later
   useEffect(() => {
     if (isConnected && address && activeTab === "leaderboard" && guild &&
         leaderboardData.topExperts.length === 0 && !isLoadingLeaderboard) {
+      // eslint-disable-next-line react-hooks/immutability -- fetchLeaderboard is declared later in the same component scope
       fetchLeaderboard();
     }
   }, [activeTab, guildId, isConnected, address, guild]);
 
-  // eslint-disable-next-line no-restricted-syntax -- auto-open review from URL param after data loads
+  // eslint-disable-next-line no-restricted-syntax -- auto-open review from URL param once after data loads
   useEffect(() => {
     if (!guild || autoOpenedReview) return;
     const applicationId = searchParams?.get("applicationId");
     if (!applicationId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot URL→state sync, gated by autoOpenedReview
     setActiveTab("membershipApplications");
     setAutoOpenedReview(true);
     if (stakingStatus?.meetsMinimum) {
@@ -384,7 +399,10 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           {/* Sticky tab bar */}
-          <div className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
+          <div
+            className="sticky top-0 z-20 bg-background/85 border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6"
+            {...dataTourTarget(TOUR_TARGETS.guildPendingReviews)}
+          >
             <PillTabs
               tabs={[
                 { value: "feed" as const, label: "Feed" },

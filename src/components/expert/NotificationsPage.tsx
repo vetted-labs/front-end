@@ -18,6 +18,7 @@ import { NOTIFICATION_READ_EVENT } from "@/lib/hooks/useNotificationCount";
 import {
   type Notification,
   getNotificationIcon,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- pre-existing unused import preserved to avoid scope creep in this story-lab wiring change
   getNotificationColor,
   isDeadlineNotification,
   getApplicantTypeTag,
@@ -30,12 +31,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { STATUS_COLORS } from "@/config/colors";
 import { DataSection } from "@/lib/motion";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import {
+  STORY_LAB_NOTIFICATION_RESULT_ID,
+  withStoryLabNotifications,
+} from "@/components/expert/story-lab/storyLabFixtures";
 
 type FilterType = "all" | "reviews" | "rewards" | "guild" | "system";
 
 export default function NotificationsPage() {
   const router = useRouter();
   const { address, isConnected } = useExpertAccount();
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [clickedNotificationId, setClickedNotificationId] = useState<string | null>(null);
@@ -49,7 +57,10 @@ export default function NotificationsPage() {
       skip: !isConnected || !address,
       onSuccess: (result) => {
         const notificationsData = result?.notifications ?? [];
-        setAllNotifications(notificationsData);
+        const finalData = isStoryLabPreview
+          ? withStoryLabNotifications(notificationsData)
+          : notificationsData;
+        setAllNotifications(finalData);
         setHasMore(notificationsData.length >= NOTIFICATIONS_PER_PAGE);
       },
     }
@@ -165,6 +176,10 @@ export default function NotificationsPage() {
           n.type !== "guild_application"
         );
 
+  // First deadline-typed notification ID (for tour target gating — only the first matching card)
+  const firstDeadlineNotificationId =
+    filteredNotifications.find((n) => isDeadlineNotification(n.type))?.id ?? null;
+
   // Group filtered notifications by date
   const dateGroups = (() => {
     const now = new Date();
@@ -205,7 +220,10 @@ export default function NotificationsPage() {
     <div className="min-h-full animate-page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-[1]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-9 flex-wrap gap-4">
+        <div
+          className="flex items-center justify-between mb-9 flex-wrap gap-4"
+          {...dataTourTarget(TOUR_TARGETS.notificationsHeader)}
+        >
           <div className="flex items-center gap-4">
             <VettedIcon name="notification" className="w-7 h-7 text-primary" />
             <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
@@ -226,6 +244,7 @@ export default function NotificationsPage() {
               onClick={handleMarkAllAsRead}
               disabled={isLoading || isMarkingAllRead || unreadCount === 0}
               className="inline-flex items-center gap-2 bg-card border border-border text-muted-foreground text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-muted/30 hover:border-border hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              {...dataTourTarget(TOUR_TARGETS.notificationsMarkAllRead)}
             >
               {isMarkingAllRead ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -238,7 +257,10 @@ export default function NotificationsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none">
+        <div
+          className="flex flex-wrap sm:flex-nowrap gap-2 mb-9 overflow-x-auto pb-1 scrollbar-none"
+          {...dataTourTarget(TOUR_TARGETS.notificationsFilterTabs)}
+        >
           {(
             [
               { key: "all", label: "All", count: allNotifications.length },
@@ -295,7 +317,10 @@ export default function NotificationsPage() {
               <Alert variant="error">{error}</Alert>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="bg-card rounded-xl p-12 text-center border border-border">
+            <div
+              className="bg-card rounded-xl p-12 text-center border border-border"
+              {...dataTourTarget(TOUR_TARGETS.notificationsEmptyState)}
+            >
               <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-bold text-foreground mb-2">No notifications</h3>
               <p className="text-muted-foreground">
@@ -305,7 +330,7 @@ export default function NotificationsPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-8" {...dataTourTarget(TOUR_TARGETS.notificationsList)}>
               {dateGroups.map((group) => (
                 <div key={group.label}>
                   <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
@@ -325,6 +350,11 @@ export default function NotificationsPage() {
                           key={notification.id}
                           onClick={() => handleNotificationClick(notification)}
                           disabled={isClicked}
+                          {...(isStoryLabPreview && notification.id === STORY_LAB_NOTIFICATION_RESULT_ID
+                            ? dataTourTarget(TOUR_TARGETS.notificationResultCard)
+                            : notification.id === firstDeadlineNotificationId
+                            ? dataTourTarget(TOUR_TARGETS.notificationsActionGroup)
+                            : {})}
                           className={`w-full flex items-start gap-4 px-6 py-5 bg-card border border-border rounded-xl relative overflow-hidden cursor-pointer text-left transition-all duration-200 hover:bg-muted/30 hover:border-border hover:translate-y-[-1px] ${
                             isClicked ? "opacity-60 cursor-wait" : ""
                           } ${isUnread ? "" : "opacity-60"} ${isUrgent ? "border-negative/12" : ""}`}

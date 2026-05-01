@@ -19,7 +19,11 @@ function ShellContent({ config, children }: AppShellProps) {
   const { isCollapsed, hasMounted } = useSidebar();
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div
+      className="flex h-screen overflow-hidden"
+      data-app-shell-root
+      data-testid="app-shell-root"
+    >
       {/* Full-page pattern background — behind sidebar only, content has its own bg */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />

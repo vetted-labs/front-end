@@ -7,6 +7,7 @@ import { formatVetd } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { GUILD_RANK_ORDER } from "@/config/constants";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 function getRankProgress(rank: string): number {
   const index = GUILD_RANK_ORDER.indexOf(rank.toLowerCase());
@@ -46,7 +47,10 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
       <div className={`grid grid-cols-1 ${isMember ? "md:grid-cols-[1fr_minmax(0,340px)]" : ""} gap-3 mb-3`}>
 
         {/* ── Identity + Description (left, spans 2 rows) ── */}
-        <div className="md:row-span-2 relative overflow-hidden rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up">
+        <div
+          className="md:row-span-2 relative overflow-hidden rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-8 shadow-sm dark:shadow-none animate-fade-up"
+          {...dataTourTarget(TOUR_TARGETS.guildStandards)}
+        >
           <PatternBackground mask="fade-diagonal" intensity="medium" />
           <div className="pointer-events-none absolute -top-5 -left-5 w-[200px] h-[200px] rounded-full bg-primary/[0.06] blur-[80px]" />
 
@@ -91,7 +95,10 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
         </div>
 
         {/* ── Your Position (right, row 1) — member only ── */}
-        {isMember && <div className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col animate-fade-up animate-delay-100">
+        {isMember && <div
+          className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col animate-fade-up animate-delay-100"
+          {...dataTourTarget(TOUR_TARGETS.guildYourPosition)}
+        >
           <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-4 flex items-center gap-2">
             <User className="w-3 h-3 text-primary" />
             Your Position
@@ -130,7 +137,10 @@ export function GuildHeader({ guild, onStakeClick, isMember = true }: GuildHeade
         {/* ── Health Stats (left, row 2) — handled by GuildStatsPanel ── */}
 
         {/* ── Staking (right, row 2) — member only ── */}
-        {isMember && <div className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col justify-center animate-fade-up animate-delay-200">
+        {isMember && <div
+          className="rounded-xl border border-border/50 dark:border-border bg-gradient-to-br from-muted/30 to-transparent dark:from-transparent p-6 shadow-sm dark:shadow-none flex flex-col justify-center animate-fade-up animate-delay-200"
+          {...dataTourTarget(TOUR_TARGETS.guildStakeWidget)}
+        >
           <div className="text-xs font-bold uppercase tracking-[1.2px] text-muted-foreground mb-2.5 flex items-center gap-2">
             <Shield className="w-3 h-3 text-primary" />
             Guild Staking

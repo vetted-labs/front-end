@@ -3,6 +3,7 @@
 import { AlertTriangle, Award, Loader2 } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { LevelReviewTemplate, ReviewDomainTopic, RubricRedFlag } from "@/types";
 
 export interface DomainReviewStepProps {
@@ -49,7 +50,7 @@ export function DomainReviewStep({
   onFeedbackChange,
 }: DomainReviewStepProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
       {/* Domain / Level Questions */}
       <div className="space-y-6">
         <div className="flex items-center gap-3 mb-1">
@@ -67,7 +68,7 @@ export function DomainReviewStep({
         ) : topicList.length === 0 ? (
           <p className="text-sm text-muted-foreground">No level-specific rubric available for this guild.</p>
         ) : (
-          topicList.map((topic) => {
+          topicList.map((topic, index) => {
             const score = topicScores[topic.id] || 0;
             const pct = (score / 5) * 100;
 
@@ -75,6 +76,7 @@ export function DomainReviewStep({
               <div
                 key={topic.id}
                 className="rounded-xl border border-border bg-card overflow-hidden"
+                {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicCard) : {})}
               >
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
                   <p className="text-sm font-semibold text-foreground">
@@ -106,7 +108,10 @@ export function DomainReviewStep({
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
                     <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
                     {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
-                      <div className="space-y-2">
+                      <div
+                        className="space-y-2"
+                        {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewWhatToLookFor) : {})}
+                      >
                         <p className="text-xs font-medium text-foreground">What to look for</p>
                         <ul className="space-y-2">
                           {topic.whatToLookFor.map((item: string, idx: number) => (
@@ -141,7 +146,7 @@ export function DomainReviewStep({
                         }))
                       }
                     />
-                    <div>
+                    <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicJustification) : {})}>
                       <p className="text-xs text-muted-foreground mb-2">
                         Justification <span className={`${STATUS_COLORS.negative.text} opacity-60`}>*</span>
                       </p>
@@ -167,7 +172,10 @@ export function DomainReviewStep({
       </div>
 
       {/* Red Flags */}
-      <div className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}>
+      <div
+        className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}
+        {...dataTourTarget(TOUR_TARGETS.practiceReviewRedFlagList)}
+      >
         <div className={`flex items-center gap-3 px-5 py-3.5 border-b ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`}>
           <AlertTriangle className={`w-4 h-4 ${STATUS_COLORS.negative.icon}`} />
           <h3 className="text-sm font-bold text-foreground">Red Flags (Deductions)</h3>
@@ -211,7 +219,10 @@ export function DomainReviewStep({
       </div>
 
       {/* Overall Score Summary */}
-      <div className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-6">
+      <div
+        className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-6"
+        {...dataTourTarget(TOUR_TARGETS.practiceReviewOverallSummary)}
+      >
         <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
@@ -242,7 +253,7 @@ export function DomainReviewStep({
       </div>
 
       {/* Feedback */}
-      <div>
+      <div {...dataTourTarget(TOUR_TARGETS.practiceReviewFeedback)}>
         <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3">
           Feedback (Optional)
         </p>

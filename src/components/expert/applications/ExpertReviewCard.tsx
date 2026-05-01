@@ -7,6 +7,9 @@ import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { VETTING_REVIEW_STATE_CONFIG } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
 import { getPersonAvatar } from "@/lib/avatars";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
 import type { ExpertMembershipApplication } from "@/types";
 
 const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
@@ -44,8 +47,10 @@ function getAccentColors(vettingState: string): {
 }
 
 /** Derives 1-2 uppercase initials from a full name */
-function getInitials(fullName: string): string {
+function getInitials(fullName: string | undefined | null): string {
+  if (!fullName) return "??";
   const parts = fullName.trim().split(/\s+/);
+  if (!parts[0]) return "??";
   if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
@@ -54,6 +59,10 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   const isReviewed = application.expertHasReviewed;
   const phase = application.votingPhase;
   const isCommitReveal = phase === "commit" || phase === "finalized";
+  const { isActive: isStoryLabPreview } = useStoryLabContext();
+  const storyLabReviewUrl = application.guildId
+    ? `/expert/guild/${application.guildId}?tab=applications&applicationId=${application.id}`
+    : `/expert/applications?applicationId=${application.id}`;
 
   const activeDeadline = phase === "commit"
     ? application.commitDeadline
@@ -81,31 +90,51 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
 
   const stateConfig = VETTING_REVIEW_STATE_CONFIG[vettingState];
   const accentColors = getAccentColors(vettingState);
-  const initials = getInitials(application.fullName);
+  // Tolerate synthetic/fixture data that mirrors the snake_case backend shape
+  // (e.g. story-lab applications) where `fullName` may be absent.
+  const snakeCaseName = (application as Partial<Record<"candidate_name", string>>).candidate_name;
+  const displayName = application.fullName ?? snakeCaseName ?? "Story Application";
+  const initials = getInitials(displayName);
+
+  const isStoryLabReviewCard =
+    isStoryLabPreview && application.id === STORY_LAB_REVIEW_APPLICATION_ID;
 
   return (
-    <div className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border">
+    <div
+      className="group rounded-xl bg-card border border-border transition-all hover:border-primary/30 dark:hover:border-border"
+      {...(isStoryLabPreview ? { "data-story-lab-review-url": storyLabReviewUrl } : {})}
+      {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationReviewCard) : {})}
+    >
 
       <div className="flex items-center gap-4 p-5">
         {/* Avatar */}
         <img
-          src={getPersonAvatar(application.fullName)}
-          alt={application.fullName}
+          src={getPersonAvatar(displayName)}
+          alt={displayName}
           className="shrink-0 w-[46px] h-[46px] rounded-xl object-cover bg-muted"
         />
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           {/* Row 1: Name + level badge + guild pill */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className="flex items-center gap-2 flex-wrap"
+            {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardIdentity) : {})}
+          >
             <h4 className="text-base font-bold text-foreground truncate">
-              {application.fullName}
+              {displayName}
             </h4>
-            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border">
+            <span
+              className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs uppercase tracking-wider text-muted-foreground font-medium border border-border"
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardLevel) : {})}
+            >
               {application.expertiseLevel}
             </span>
             {showGuildBadge && application.guildName && (
-              <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-xs ${STATUS_COLORS.info.text} font-medium`}>
+              <span
+                className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full ${STATUS_COLORS.info.bgSubtle} border ${STATUS_COLORS.info.border} text-xs ${STATUS_COLORS.info.text} font-medium`}
+                {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardGuild) : {})}
+              >
                 {application.guildName}
               </span>
             )}
@@ -122,7 +151,10 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
               <Clock className="w-3.5 h-3.5" />
               {new Date(application.appliedAt).toLocaleDateString()}
             </span>
-            <span className="inline-flex items-center gap-2">
+            <span
+              className="inline-flex items-center gap-2"
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardProgress) : {})}
+            >
               <Users className="w-3.5 h-3.5" />
               {application.reviewCount} reviewed
             </span>
@@ -174,13 +206,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 On-chain <ExternalLink className="w-3 h-3" />
               </a>
             )}
-            <span className={`inline-flex items-center gap-2 font-medium ${
-              vettingState === "finalized" || vettingState === "revealed"
-                ? STATUS_COLORS.positive.text
-                : vettingState === "committed"
-                ? STATUS_COLORS.info.text
-                : "text-primary"
-            }`}>
+            <span
+              className={`inline-flex items-center gap-2 font-medium ${
+                vettingState === "finalized" || vettingState === "revealed"
+                  ? STATUS_COLORS.positive.text
+                  : vettingState === "committed"
+                  ? STATUS_COLORS.info.text
+                  : "text-primary"
+              }`}
+              {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardStatus) : {})}
+            >
               <span className={`w-[5px] h-[5px] rounded-full ${
                 vettingState === "finalized" || vettingState === "revealed"
                   ? STATUS_COLORS.positive.dot
@@ -200,14 +235,21 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
                 {phaseLabel[phase!] ?? phase}
               </span>
               {activeDeadline && phase !== "finalized" && (
-                <CountdownBadge deadline={activeDeadline} label="Commit" />
+                <span
+                  {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardDeadline) : {})}
+                >
+                  <CountdownBadge deadline={activeDeadline} label="Commit" />
+                </span>
               )}
             </div>
           )}
         </div>
 
         {/* Action */}
-        <div className="shrink-0 flex items-center">
+        <div
+          className="shrink-0 flex items-center"
+          {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardCta) : {})}
+        >
           {isReviewed ? (
             onViewReview ? (
               <button

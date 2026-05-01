@@ -4,6 +4,7 @@ import { History, Inbox } from "lucide-react";
 import { ExpertReviewCard } from "./ExpertReviewCard";
 import { CandidateReviewCard } from "./CandidateReviewCard";
 import { ProposalCard } from "./ProposalCard";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   ApplicationsTabType,
   ApplicationsFilterMode,
@@ -109,7 +110,7 @@ export function ApplicationsCardList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" {...dataTourTarget(TOUR_TARGETS.applicationsQueue)}>
       {activeTab === "expert" && (
         (paginatedItems as ExpertMembershipApplication[]).map((app) => (
           <ExpertReviewCard

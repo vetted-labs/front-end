@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Plus, MessageSquare, Flame, Clock, TrendingUp, Bookmark } from "lucide-react";
 import { guildFeedApi } from "@/lib/api";
 import { usePaginatedFetch } from "@/lib/hooks/usePaginatedFetch";
+import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useAccount } from "wagmi";
 import { getFeedPrivileges } from "@/lib/feedPrivileges";
@@ -16,6 +17,7 @@ import { PostCard } from "./feed/PostCard";
 import { NewPostModal } from "./feed/NewPostModal";
 import { PostDetailModal } from "./feed/PostDetailModal";
 import { Divider } from "@/components/ui/divider";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   GuildPost,
   PostSortMode,
@@ -86,7 +88,7 @@ export function GuildFeedTab({
           .then((res) => ({ data: res.data, total: res.total })),
       [guildId, sortMode, tagFilter, timeWindow]
     ),
-    { limit: 20 }
+    { limit: 20, skip: guildId === STORY_LAB_GUILD.id }
   );
 
   const handlePostCreated = () => {
@@ -260,7 +262,7 @@ export function GuildFeedTab({
           : posts;
         if (displayPosts.length === 0) return null;
         return (
-          <div className="space-y-3">
+          <div className="space-y-3" {...dataTourTarget(TOUR_TARGETS.guildPostFeed)}>
             {displayPosts.map((post) => (
               <PostCard
                 key={post.id}

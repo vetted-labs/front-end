@@ -43,6 +43,12 @@ import { MyActiveEndorsements } from "./endorsements/MyActiveEndorsements";
 import { STATUS_COLORS } from "@/config/colors";
 import { SkeletonCard, Skeleton } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import {
+  STORY_LAB_ENDORSEMENT_APPLICATION_ID,
+  withStoryLabEndorsements,
+} from "@/components/expert/story-lab/storyLabFixtures";
 
 function isBiddingExpired(app: EndorsementApplication): boolean {
   const deadline = app.bidding_deadline
@@ -64,6 +70,15 @@ interface EndorsementMarketplaceProps {
 export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: blockchainGuildIdProp, initialApplicationId, guilds, selectedGuildId, onGuildChange }: EndorsementMarketplaceProps) {
   const { address, isConnected, chain } = useExpertAccount();
   const { switchChain } = useSwitchChain();
+  const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
+  const STORY_LAB_OPEN_MODAL_SUBSTOPS = useMemo(
+    () => new Set(["bid-mechanic", "consequences"]),
+    []
+  );
+  const shouldStoryLabOpenModal =
+    isStoryLabPreview &&
+    activeSubStopId !== null &&
+    STORY_LAB_OPEN_MODAL_SUBSTOPS.has(activeSubStopId);
   const [selectedApp, setSelectedApp] = useState<EndorsementApplication | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
@@ -93,7 +108,7 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
     [guildId, address]
   );
   const {
-    data: applications,
+    data: rawApplications,
     isLoading: loading,
     refetch: reloadApplications,
     page: applicationsPage,
@@ -109,6 +124,16 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
         toast.error(error || "Failed to load applications");
       },
     }
+  );
+
+  // Inject the synthetic story-lab endorsement application so the gated
+  // tour marker has something to anchor on in story preview mode.
+  const applications = useMemo(
+    () =>
+      isStoryLabPreview
+        ? withStoryLabEndorsements(rawApplications ?? [])
+        : rawApplications,
+    [rawApplications, isStoryLabPreview]
   );
 
   // Transaction hook -- encapsulates approval + bid flow, tx tracking, error handling
@@ -162,11 +187,33 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       );
       if (targetApp) {
         hasAutoOpened.current = true;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: open the matching application's modal once it finishes loading
         setSelectedApp(targetApp);
+
         setTransactionModalOpen(true);
       }
     }
   }, [initialApplicationId, applications, loading]);
+
+  // Sync modal open/closed state to the active story-lab sub-stop so the
+  // walkthrough's popovers can anchor inside the modal during bid-mechanic +
+  // consequences and the page returns to the marketplace for accountability.
+  // eslint-disable-next-line no-restricted-syntax -- driven by URL-derived activeSubStopId
+  useEffect(() => {
+    if (!isStoryLabPreview) return;
+    if ((applications ?? []).length === 0) return;
+    const storyApp = (applications ?? []).find(
+      (app) => app.application_id === STORY_LAB_ENDORSEMENT_APPLICATION_ID
+    );
+    if (!storyApp) return;
+    if (shouldStoryLabOpenModal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs story-lab modal open state from URL params
+      setSelectedApp(storyApp);
+      setTransactionModalOpen(true);
+    } else {
+      setTransactionModalOpen(false);
+    }
+  }, [isStoryLabPreview, shouldStoryLabOpenModal, applications]);
 
   // ── Modal handlers ──
 
@@ -247,7 +294,10 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const isOnSepolia = chain?.id === sepolia.id;
 
   return (
-    <div className="min-h-screen space-y-6 min-w-0 overflow-x-hidden">
+    <div
+      className="min-h-screen space-y-6 min-w-0 overflow-x-hidden"
+      {...dataTourTarget(TOUR_TARGETS.endorsementMarketplace)}
+    >
       <EndorsementHeader
         address={address!}
         shortAddress={shortAddress}
@@ -306,13 +356,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
       </DataSection>
 
       {/* Applications */}
-      <div className="mt-8">
+      <div className="mt-8" {...dataTourTarget(TOUR_TARGETS.endorsementApplicationsList)}>
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <h2 className="font-display font-bold text-xl tracking-tight">
             Applications
           </h2>
           {!loading && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" {...dataTourTarget(TOUR_TARGETS.endorsementFilters)}>
               <Input
                 placeholder="Search applications..."
                 value={search}
@@ -358,6 +408,9 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
           emptyDescription={applicationFilter === 'active'
             ? 'All applications on this page have closed bidding, or there are no applications yet.'
             : 'There are no applications with closed bidding on this page.'}
+          markedApplicationId={isStoryLabPreview ? STORY_LAB_ENDORSEMENT_APPLICATION_ID : undefined}
+          markedCardProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateCard)}
+          markedCtaProps={dataTourTarget(TOUR_TARGETS.endorsementCandidateBidCta)}
         />
         {!loading && (
           <PaginationNav

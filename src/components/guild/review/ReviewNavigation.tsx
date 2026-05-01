@@ -11,6 +11,12 @@ export interface ReviewNavigationProps {
   onNext: () => void;
   onBack: () => void;
   onSubmit: () => void;
+  /**
+   * Optional data-* attributes to spread onto the submit button (step 3). Used
+   * by the expert onboarding tour / story-lab driver to mark the practice
+   * review submit affordance without leaking markers into real flows.
+   */
+  tourMarkerProps?: Record<string, string>;
 }
 
 export function ReviewNavigation({
@@ -22,6 +28,7 @@ export function ReviewNavigation({
   onNext,
   onBack,
   onSubmit,
+  tourMarkerProps,
 }: ReviewNavigationProps) {
   if (currentStep === 1) {
     return (
@@ -78,6 +85,7 @@ export function ReviewNavigation({
           onClick={onSubmit}
           disabled={isReviewing || isCommitting}
           className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+          {...(tourMarkerProps ?? {})}
         >
           {isReviewing || isCommitting ? (
             <>

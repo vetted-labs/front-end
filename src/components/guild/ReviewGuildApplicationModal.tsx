@@ -25,7 +25,14 @@ import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
 import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer";
 import { TransactionStatus } from "@/components/ui/transaction-status";
 import type { TransactionPhase } from "@/components/ui/transaction-status";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { GENERAL_RESPONSE_KEY_MAP, FALLBACK_GENERAL_QUESTIONS } from "@/components/guild/review/constants";
+import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
+import {
+  getStoryLabReviewModalStep,
+  STORY_LAB_GENERAL_TEMPLATE,
+  STORY_LAB_LEVEL_TEMPLATE,
+} from "@/components/expert/story-lab/storyLabFixtures";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,
@@ -72,7 +79,16 @@ export function ReviewGuildApplicationModal({
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [isCommitting, setIsCommitting] = useState(false);
 
-  const isCommitPhase = commitRevealPhase === "commit";
+  const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
+  const storyLabStep = isStoryLabPreview ? getStoryLabReviewModalStep(activeSubStopId) : null;
+  const renderStep = storyLabStep ?? currentStep;
+
+  // In story mode the synthetic application's getPhaseStatus call fails so
+  // commitRevealPhase stays undefined. Force-enable the commit phase whenever
+  // the tour is parked on the commit step so the CommitRevealExplainer marker
+  // renders (review-commit maps to renderStep 3 inside the modal).
+  const isStoryLabCommitPhase = isStoryLabPreview && renderStep === 3;
+  const isCommitPhase = commitRevealPhase === "commit" || isStoryLabCommitPhase;
   const { address } = useAccount();
 
   const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
@@ -95,6 +111,7 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- reset all form state when a new application is opened
   useEffect(() => {
     if (!application) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- bulk-reset form state when the parent swaps to a new application; this prop->state sync is the effect's purpose
     setCurrentStep(1);
     setFeedback("");
     setGeneralScores({});
@@ -113,6 +130,7 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- sync stake from parent prop
   useEffect(() => {
     if (proposalContext?.requiredStake != null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror parent prop into local stake state when proposal context changes
       setStakeAmount(proposalContext.requiredStake);
     }
   }, [proposalContext?.requiredStake]);
@@ -126,6 +144,19 @@ export function ReviewGuildApplicationModal({
   // eslint-disable-next-line no-restricted-syntax -- fetch templates when application/guild changes
   useEffect(() => {
     if (!application || !isOpen || !guildId) return;
+
+    // In story mode the synthetic guild does not exist on the backend, so the
+    // real template fetch returns "Template for this guild/stage/level not
+    // found". Use the local practice templates instead so the modal renders
+    // the same surface without a fake error banner.
+    if (isStoryLabPreview) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding local templates from fixtures when the synthetic story flow opens this modal; this prop->state sync is the effect's purpose
+      setGeneralTemplate(STORY_LAB_GENERAL_TEMPLATE);
+      setLevelTemplate(STORY_LAB_LEVEL_TEMPLATE);
+      setTemplateError(null);
+      setLoadingTemplates(false);
+      return;
+    }
 
     const loadTemplates = async () => {
       setLoadingTemplates(true);
@@ -148,7 +179,7 @@ export function ReviewGuildApplicationModal({
     };
 
     loadTemplates();
-  }, [application?.id, guildId, isOpen, level]);
+  }, [application?.id, guildId, isOpen, isStoryLabPreview, level]);
 
   const generalQuestions: GeneralReviewQuestion[] = generalTemplate?.generalQuestions?.length
     ? generalTemplate.generalQuestions
@@ -393,13 +424,16 @@ export function ReviewGuildApplicationModal({
                 {proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
+                {isStoryLabPreview
+                  ? "Practice sample / synthetic applicant"
+                  : reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
               </p>
             </div>
             <button
               onClick={onClose}
               aria-label="Close review modal"
               className="w-8 h-8 rounded-lg bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+              {...(isStoryLabPreview ? dataTourTarget(TOUR_TARGETS.practiceReviewCloseButton) : {})}
             >
               <X className="w-4 h-4" />
             </button>
@@ -407,7 +441,7 @@ export function ReviewGuildApplicationModal({
 
           {/* Content */}
           <div ref={contentRef} className="relative flex-1 overflow-y-auto px-6 py-5">
-            <StepIndicator currentStep={currentStep} />
+            <StepIndicator currentStep={renderStep} />
 
             {templateError && <Alert variant="error">{templateError}</Alert>}
             {loadingTemplates && (
@@ -417,10 +451,10 @@ export function ReviewGuildApplicationModal({
               </div>
             )}
 
-            {currentStep === 1 && (
+            {renderStep === 1 && (
               <ReviewProfileStep application={application} level={level} />
             )}
-            {currentStep === 2 && (
+            {renderStep === 2 && (
               <GeneralReviewStep
                 loadingTemplates={loadingTemplates}
                 generalTemplate={generalTemplate}
@@ -437,7 +471,7 @@ export function ReviewGuildApplicationModal({
                 onGeneralJustificationsChange={setGeneralJustifications}
               />
             )}
-            {currentStep === 3 && (
+            {renderStep === 3 && (
               <>
                 <DomainReviewStep
                   loadingTemplates={loadingTemplates}
@@ -463,15 +497,29 @@ export function ReviewGuildApplicationModal({
                 {isCommitPhase && (
                   <div className="mt-4 space-y-3">
                     <CommitRevealExplainer />
-                    <TransactionStatus
-                      phase={
-                        (isCommitting
-                          ? commitTxHash ? "confirmed" : "awaiting-signature"
-                          : commitTxHash ? "confirmed" : "idle") as TransactionPhase
-                      }
-                      txHash={commitTxHash ?? undefined}
-                      chainExplorerUrl="https://sepolia.etherscan.io"
-                    />
+                    {isStoryLabPreview ? (
+                      <div {...dataTourTarget(TOUR_TARGETS.practiceReviewTxStatus)}>
+                        <TransactionStatus
+                          phase={
+                            (isCommitting
+                              ? commitTxHash ? "confirmed" : "awaiting-signature"
+                              : commitTxHash ? "confirmed" : "idle") as TransactionPhase
+                          }
+                          txHash={commitTxHash ?? undefined}
+                          chainExplorerUrl="https://sepolia.etherscan.io"
+                        />
+                      </div>
+                    ) : (
+                      <TransactionStatus
+                        phase={
+                          (isCommitting
+                            ? commitTxHash ? "confirmed" : "awaiting-signature"
+                            : commitTxHash ? "confirmed" : "idle") as TransactionPhase
+                        }
+                        txHash={commitTxHash ?? undefined}
+                        chainExplorerUrl="https://sepolia.etherscan.io"
+                      />
+                    )}
                   </div>
                 )}
                 <ReviewSubmitSection
@@ -481,17 +529,24 @@ export function ReviewGuildApplicationModal({
                 />
               </>
             )}
-            {currentStep === 4 && (
+            {renderStep === 4 && (
               <ReviewSuccessStep
                 isCommitPhase={isCommitPhase}
                 apiResponse={apiResponse}
-                generalTotal={generalTotal}
-                generalMax={generalMax}
-                topicTotal={topicTotal}
-                topicMax={topicMax}
+                generalTotal={isStoryLabPreview ? Math.max(generalTotal, Math.round((generalMax || 5) * 0.8)) : generalTotal}
+                generalMax={generalMax || (isStoryLabPreview ? 5 : 0)}
+                topicTotal={isStoryLabPreview ? Math.max(topicTotal, Math.round((topicMax || 5) * 0.8)) : topicTotal}
+                topicMax={topicMax || (isStoryLabPreview ? 5 : 0)}
                 redFlagDeductions={redFlagDeductions}
-                overallScore={overallScore}
-                commitTxHash={commitTxHash}
+                overallScore={
+                  isStoryLabPreview
+                    ? Math.max(
+                        overallScore,
+                        Math.round((generalMax || 5) * 0.8) + Math.round((topicMax || 5) * 0.8)
+                      )
+                    : overallScore
+                }
+                commitTxHash={isStoryLabPreview && !commitTxHash ? "0x9b3a7c1f4e2d8a5b6c0d9e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b" : commitTxHash}
               />
             )}
 
@@ -514,6 +569,11 @@ export function ReviewGuildApplicationModal({
               onNext={handleNext}
               onBack={handleBack}
               onSubmit={handleSubmit}
+              tourMarkerProps={
+                isStoryLabPreview && currentStep === 3
+                  ? dataTourTarget(TOUR_TARGETS.practiceReviewSubmitButton)
+                  : undefined
+              }
             />
           </div>
         </div>

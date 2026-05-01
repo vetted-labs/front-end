@@ -2,12 +2,14 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ExpertGuild } from "@/types";
 
 interface StakeDistributionProps {
   guilds: ExpertGuild[];
   guildStakes: Record<string, string>;
   totalStaked: number;
+  onManageStake?: () => void;
 }
 
 /**
@@ -25,6 +27,7 @@ export function RankProgress({
   guilds,
   guildStakes,
   totalStaked,
+  onManageStake,
 }: StakeDistributionProps) {
   const router = useRouter();
 
@@ -37,17 +40,21 @@ export function RankProgress({
       .sort((a, b) => b.stake - a.stake);
   }, [guilds, guildStakes]);
 
-  const maxStake = sortedGuilds[0]?.stake ?? 1;
-
   return (
-    <div className="bg-card border border-border rounded-xl p-5 h-full flex flex-col">
+    <div
+      className="bg-card border border-border rounded-xl p-5 h-full flex flex-col"
+      {...dataTourTarget(TOUR_TARGETS.stakingStatus)}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-bold text-foreground">
           Stake Distribution
         </span>
         <button
-          onClick={() => router.push("/expert/withdrawals")}
+          onClick={() => {
+            onManageStake?.();
+            router.push("/expert/withdrawals");
+          }}
           className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
         >
           Manage &rarr;
@@ -60,7 +67,7 @@ export function RankProgress({
           Total Staked
         </p>
         <p className="text-3xl font-display font-extrabold text-primary leading-none tabular-nums">
-          {Math.round(totalStaked).toLocaleString()}
+          {Math.round(totalStaked).toLocaleString()}{" "}
           <span className="text-sm font-semibold text-muted-foreground ml-1.5 font-sans">
             VETD
           </span>

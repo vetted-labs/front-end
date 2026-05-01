@@ -12,15 +12,65 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { jobsApi, applicationsApi } from "@/lib/api";
+import { jobsApi, applicationsApi, analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
-import type { CompanyApplication } from "@/types";
+import type { CompanyApplication, JobAnalyticsDetail } from "@/types";
+import { JobAnalyticsWorkspace } from "@/components/dashboard/analytics/JobAnalyticsWorkspace";
+import { jobAnalyticsFixture } from "@/components/dashboard/analytics/job-detail-fixture";
+import { isAnalyticsFixtureModeEnabled } from "@/components/dashboard/analytics/job-detail-helpers";
 
 export default function JobAnalyticsPage() {
+  // Fixture mode shortcut for local demos / Storybook captures: bypass the
+  // network entirely and render the typed fixture. Hooks must not run before
+  // this branch, so the real-data path is its own component below.
+  if (isAnalyticsFixtureModeEnabled()) {
+    return <JobAnalyticsWorkspace data={jobAnalyticsFixture} isFixtureMode />;
+  }
+
+  return <PilotAnalyticsPage />;
+}
+
+/**
+ * Production analytics page — calls GET /companies/me/analytics/jobs/:jobId
+ * and renders the pilot workspace. Falls back to the legacy KPI page only
+ * if the endpoint errors (e.g. backend not deployed in this environment).
+ */
+function PilotAnalyticsPage() {
+  const params = useParams();
+  const jobId = typeof params?.jobId === "string" ? params.jobId : "";
+
+  const { data, isLoading, error } = useFetch<JobAnalyticsDetail>(
+    () => analyticsApi.getJobAnalytics(jobId),
+    { skip: !jobId },
+  );
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <Skeleton className="h-10 w-64" />
+        <div className="mt-6 grid gap-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
+
+  // Backend not yet rolled out in this environment — degrade gracefully to
+  // the legacy KPI view rather than blanking the page.
+  if (error || !data) {
+    return <LegacyJobAnalyticsPage />;
+  }
+
+  return <JobAnalyticsWorkspace data={data} />;
+}
+
+function LegacyJobAnalyticsPage() {
   const router = useRouter();
   const params = useParams();
   const jobId = typeof params?.jobId === "string" ? params.jobId : "";

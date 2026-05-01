@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { useChartTooltip } from "@/components/analytics/ChartTooltip";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { EarningsEntry } from "@/types";
 
 interface EarningsChartProps {
@@ -65,7 +66,7 @@ export function EarningsChart({ items }: EarningsChartProps) {
   }
 
   return (
-    <Card padding="none" className="overflow-hidden">
+    <Card padding="none" className="overflow-hidden" {...dataTourTarget(TOUR_TARGETS.earningsChart)}>
       {/* Chart header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-2">
         <div className="flex items-center gap-2">

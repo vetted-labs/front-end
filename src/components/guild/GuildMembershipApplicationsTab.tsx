@@ -8,6 +8,7 @@ import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import type { ExpertMembershipApplication, CandidateGuildApplication } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 const ITEMS_PER_SECTION = 10;
 
@@ -134,10 +135,11 @@ export function GuildMembershipApplicationsTab({
             </div>
           ) : (
             <div className="space-y-3">
-              {(guildApplications || []).slice(0, expertVisible).map((application) => (
+              {(guildApplications || []).slice(0, expertVisible).map((application, idx) => (
                 <div
                   key={application.id}
                   className="rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40"
+                  {...(idx === 0 ? dataTourTarget(TOUR_TARGETS.guildStartReviewing) : {})}
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">

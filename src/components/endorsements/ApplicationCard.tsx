@@ -14,6 +14,16 @@ interface ApplicationCardProps {
   application: EndorsementApplication;
   onViewDetails: (application: EndorsementApplication) => void;
   onQuickEndorse?: (application: EndorsementApplication) => void;
+  /**
+   * Extra DOM attributes (e.g. `data-tour-target`) to spread on the card's
+   * outer element. Used by story-lab/onboarding to mark a specific card.
+   */
+  rootProps?: Record<string, string>;
+  /**
+   * Extra DOM attributes (e.g. `data-tour-target`) to spread on the primary
+   * Endorse CTA. Used by story-lab/onboarding to anchor the bid CTA marker.
+   */
+  ctaProps?: Record<string, string>;
 }
 
 const MATCH_RING_CIRCUMFERENCE = 2 * Math.PI * 27;
@@ -84,7 +94,7 @@ function MatchScoreBadge({ score }: { score: number | null }) {
   );
 }
 
-export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: ApplicationCardProps) {
+export function ApplicationCard({ application, onViewDetails, onQuickEndorse, rootProps, ctaProps }: ApplicationCardProps) {
   const { label: countdownLabel, isExpired, remaining } = useCountdown(
     application.bidding_deadline,
     { fallbackStart: application.applied_at, expiredLabel: "Bidding closed" },
@@ -122,7 +132,9 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
     : null;
 
   return (
-    <div className={`group relative flex flex-col overflow-hidden rounded-xl border h-full ${
+    <div
+      {...(rootProps ?? {})}
+      className={`group relative flex flex-col overflow-hidden rounded-xl border h-full ${
       isExpired
         ? 'border-border/50 bg-card dark:bg-muted/5'
         : 'border-border bg-card dark:bg-muted/20 transition-all duration-300 hover:translate-y-[-4px] hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.45),0_0_0_1px_rgba(249,115,22,0.08),0_0_32px_-8px_rgba(249,115,22,0.06)]'
@@ -245,6 +257,7 @@ export function ApplicationCard({ application, onViewDetails, onQuickEndorse }: 
           </div>
         ) : (
           <Button
+            {...(ctaProps ?? {})}
             className="flex-1 h-10 rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-[0_2px_12px_-3px_hsl(var(--primary)/0.3)] hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.45)] hover:translate-y-[-1px] transition-all"
             disabled={!onQuickEndorse}
             onClick={(e) => {

@@ -3,6 +3,7 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
   GeneralReviewTemplate,
   GeneralReviewQuestion,
@@ -44,7 +45,7 @@ export function GeneralReviewStep({
   onGeneralJustificationsChange,
 }: GeneralReviewStepProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralRubric)}>
       <div className="flex items-center gap-3 mb-1">
         <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
           <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
@@ -62,7 +63,7 @@ export function GeneralReviewStep({
       ) : (
         generalQuestions
           .filter((question) => generalRubricQuestions[question.id])
-          .map((question) => {
+          .map((question, index) => {
             const rubric = generalRubricQuestions[question.id];
             const criteria: RubricCriterion[] = rubric?.criteria || [];
             const maxPoints =
@@ -77,7 +78,10 @@ export function GeneralReviewStep({
                 className="rounded-xl border border-border bg-card overflow-hidden"
               >
                 {/* Question header with score */}
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
+                <div
+                  className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30"
+                  {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewQuestionPrompt) : {})}
+                >
                   <p className="text-sm font-semibold text-foreground">{question.prompt}</p>
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -133,27 +137,36 @@ export function GeneralReviewStep({
                   </div>
 
                   {/* Scoring area */}
-                  <div className="rounded-xl bg-card border border-border p-4 space-y-4">
+                  <div
+                    className="rounded-xl bg-card border border-border p-4 space-y-4"
+                    {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewCriteria) : {})}
+                  >
                     <p className={`text-xs ${STATUS_COLORS.warning.text} opacity-70 uppercase tracking-wider font-bold`}>Scoring</p>
-                    {criteria.map((criterion) => (
+                    {criteria.map((criterion, criterionIndex) => (
                       <div key={criterion.id} className="space-y-2">
                         <p className="text-xs text-muted-foreground">
                           {criterion.label}{" "}
                           <span className="text-muted-foreground/60">(max {criterion.maxPoints || criterion.max || 0})</span>
                         </p>
-                        <ScoreButtons
-                          value={generalScores[question.id]?.[criterion.id] || 0}
-                          max={criterion.maxPoints || criterion.max || 0}
-                          onChange={(val) =>
-                            onGeneralScoresChange((prev) => ({
-                              ...prev,
-                              [question.id]: { ...prev[question.id], [criterion.id]: val },
-                            }))
-                          }
-                        />
+                        <div
+                          {...(index === 0 && criterionIndex === 0
+                            ? dataTourTarget(TOUR_TARGETS.practiceReviewScoreButtons)
+                            : {})}
+                        >
+                          <ScoreButtons
+                            value={generalScores[question.id]?.[criterion.id] || 0}
+                            max={criterion.maxPoints || criterion.max || 0}
+                            onChange={(val) =>
+                              onGeneralScoresChange((prev) => ({
+                                ...prev,
+                                [question.id]: { ...prev[question.id], [criterion.id]: val },
+                              }))
+                            }
+                          />
+                        </div>
                       </div>
                     ))}
-                    <div>
+                    <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewJustification) : {})}>
                       <p className="text-xs text-muted-foreground mb-2">
                         Justification <span className="text-negative/60">*</span>
                       </p>
@@ -179,7 +192,7 @@ export function GeneralReviewStep({
 
       {/* Interpretation Guide */}
       {interpretationGuide.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-hidden" {...dataTourTarget(TOUR_TARGETS.practiceReviewInterpretationGuide)}>
           <div className="px-5 py-3.5 border-b border-border bg-muted/30">
             <p className="text-sm font-semibold text-foreground">Interpretation Guide</p>
           </div>
@@ -208,7 +221,10 @@ export function GeneralReviewStep({
       )}
 
       {/* Running subtotal */}
-      <div className={`flex items-center justify-between p-4 rounded-xl ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}>
+      <div
+        className={`flex items-center justify-between p-4 rounded-xl ${STATUS_COLORS.warning.bgSubtle} ${STATUS_COLORS.warning.border}`}
+        {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralSubtotal)}
+      >
         <p className="text-sm text-muted-foreground font-medium">General Subtotal</p>
         <p className="text-sm font-bold text-primary tabular-nums">
           {generalTotal}{generalMax ? ` / ${generalMax}` : ""}

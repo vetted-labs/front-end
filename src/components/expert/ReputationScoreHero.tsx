@@ -3,6 +3,7 @@
 import { Star, TrendingUp } from "lucide-react";
 import { getRewardTierProgress } from "@/types";
 import { REWARD_TIER_COLORS, STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 
 interface ReputationScoreHeroProps {
   reputation: number;
@@ -29,7 +30,7 @@ export function ReputationScoreHero({
       : 100;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-8 mt-6">
+    <div className="rounded-xl border border-border bg-card p-8 mt-6" {...dataTourTarget(TOUR_TARGETS.reputationScoreHero)}>
       {/* Score */}
       <p className="text-5xl sm:text-6xl font-extrabold tracking-tighter text-foreground tabular-nums">
         {reputation}

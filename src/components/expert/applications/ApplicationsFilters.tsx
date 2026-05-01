@@ -1,4 +1,5 @@
 import { PillTabs } from "@/components/ui/pill-tabs";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import {
   Select,
   SelectContent,
@@ -94,9 +95,12 @@ export function ApplicationsFilters({
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+        <div {...dataTourTarget(TOUR_TARGETS.applicationsTabs)}>
+          <PillTabs tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+        </div>
 
         <div className="flex items-center gap-3">
+          <div {...dataTourTarget(TOUR_TARGETS.applicationsGuildFilter)}>
           <Select value={selectedGuildId} onValueChange={onGuildChange}>
             <SelectTrigger className="w-[160px] h-8 text-xs rounded-lg border-border bg-background/70">
               <SelectValue placeholder="All Guilds" />
@@ -110,8 +114,12 @@ export function ApplicationsFilters({
               ))}
             </SelectContent>
           </Select>
+          </div>
 
-          <div className="flex items-center rounded-lg border border-border overflow-hidden">
+          <div
+            className="flex items-center rounded-lg border border-border overflow-hidden"
+            {...dataTourTarget(TOUR_TARGETS.applicationsAssignmentToggle)}
+          >
             <button
               onClick={() => onFilterModeChange("assigned")}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${

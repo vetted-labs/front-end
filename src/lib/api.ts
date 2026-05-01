@@ -6,10 +6,12 @@ import type {
   CompanyOverviewData,
   CompanyPipelineData,
   CompanyJobsData,
+  JobAnalyticsDetail,
   CandidateOverviewData,
   CandidateApplicationItem,
   CandidateVisibilityData,
 } from "@/types/analytics";
+import { parseStoryLabActive } from "@/lib/story-lab/parseStoryLabActive";
 
 // Ensure the API URL is absolute (has protocol)
 const getApiBaseUrl = () => {
@@ -22,6 +24,10 @@ const getApiBaseUrl = () => {
 };
 
 const API_BASE_URL = getApiBaseUrl();
+const STORY_LAB_READONLY_ERROR = "Story mode is read-only.";
+const STORY_LAB_ALLOWED_MUTATION_PATHS = new Set([
+  "/api/experts/me/onboarding-state",
+]);
 
 interface ApiRequestOptions extends RequestInit {
   requiresAuth?: boolean;
@@ -152,6 +158,25 @@ async function attemptTokenRefresh(): Promise<boolean> {
  */
 const inflightGets = new Map<string, Promise<unknown>>();
 
+function isStoryLabRoute(): boolean {
+  if (typeof window === "undefined") return false;
+  return parseStoryLabActive(window.location.search);
+}
+
+function getEndpointPathname(endpoint: string): string {
+  try {
+    return new URL(endpoint, API_BASE_URL).pathname;
+  } catch {
+    return endpoint.split("?")[0] || endpoint;
+  }
+}
+
+function shouldBlockStoryLabMutation(endpoint: string, method: string): boolean {
+  if (!isStoryLabRoute()) return false;
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") return false;
+  return !STORY_LAB_ALLOWED_MUTATION_PATHS.has(getEndpointPathname(endpoint));
+}
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: ApiRequestOptions = {}
@@ -177,8 +202,8 @@ export async function apiRequest<T = unknown>(
     }
   }
 
-  // Expert wallet-based auth: always send wallet header if available
-  // Backend verifyExpertWallet reads X-Wallet-Address for identity
+  // Compatibility header for older wallet-aware handlers. Protected expert
+  // routes still derive identity from the Bearer token.
   if (typeof window !== "undefined") {
     const walletAddress = localStorage.getItem("walletAddress");
     if (walletAddress && !requestHeaders["X-Wallet-Address"]) {
@@ -188,6 +213,10 @@ export async function apiRequest<T = unknown>(
 
   const url = `${API_BASE_URL}${endpoint}`;
   const method = (fetchOptions.method || "GET").toUpperCase();
+
+  if (shouldBlockStoryLabMutation(endpoint, method)) {
+    throw new ApiError(409, "Conflict", { message: STORY_LAB_READONLY_ERROR }, STORY_LAB_READONLY_ERROR);
+  }
 
   // Deduplicate concurrent GET requests to the same URL
   if (method === "GET" && !_isRetry) {
@@ -325,8 +354,12 @@ export const authApi = {
     localStorage.removeItem("userType");
     localStorage.removeItem("candidateId");
     localStorage.removeItem("companyId");
+    localStorage.removeItem("expertId");
     localStorage.removeItem("candidateEmail");
     localStorage.removeItem("companyEmail");
+    localStorage.removeItem("expertEmail");
+    localStorage.removeItem("walletAddress");
+    localStorage.removeItem("expertStatus");
   },
 };
 
@@ -620,10 +653,29 @@ export const candidateApi = {
     }),
 };
 
-// Expert API
 export const expertApi = {
   getProfile: (walletAddress: string) =>
-    apiRequest<import("@/types").ExpertProfile>(`/api/experts/profile?wallet=${walletAddress}`),
+    apiRequest<import("@/types").ExpertProfile>(`/api/experts/profile?wallet=${walletAddress}`, {
+      requiresAuth: false,
+    }),
+
+  getOnboardingState: () =>
+    apiRequest<import("@/lib/expert-onboarding-tour").ExpertOnboardingState>(
+      "/api/experts/me/onboarding-state",
+      { requiresAuth: false }
+    ),
+
+  updateOnboardingState: (
+    state: import("@/lib/expert-onboarding-tour").ExpertOnboardingState
+  ) =>
+    apiRequest<import("@/lib/expert-onboarding-tour").ExpertOnboardingState>(
+      "/api/experts/me/onboarding-state",
+      {
+        method: "PUT",
+        requiresAuth: false,
+        body: JSON.stringify(state),
+      }
+    ),
 
   apply: (data: Record<string, unknown>) =>
     apiRequest<{ id: string; status: string }>("/api/experts/apply", {
@@ -644,35 +696,43 @@ export const expertApi = {
   },
 
   getGuildDetails: (guildId: string, walletAddress: string) =>
-    apiRequest<import("@/types").ExpertGuildDetail>(`/api/experts/guilds/${encodeURIComponent(guildId)}?wallet=${encodeURIComponent(walletAddress)}`),
+    apiRequest<import("@/types").ExpertGuildDetail>(
+      `/api/experts/guilds/${encodeURIComponent(guildId)}?wallet=${encodeURIComponent(walletAddress)}`,
+      { requiresAuth: false }
+    ),
 
   // Note: Backend still uses /proposals/ path for staking endpoint
   stakeOnApplication: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/experts/proposals/${applicationId}/stake`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
   endorseApplication: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/experts/applications/${applicationId}/endorse`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
   reviewGuildApplication: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ message?: string }>(`/api/experts/guild-applications/${applicationId}/review`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
   getMyExpertApplicationReview: (applicationId: string, wallet: string) =>
     apiRequest<import("@/types").MyReviewData>(
-      `/api/experts/guild-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`
+      `/api/experts/guild-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`,
+      { requiresAuth: false }
     ),
 
   saveGuildTemplate: (guildId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/experts/guilds/${guildId}/templates`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
@@ -681,6 +741,7 @@ export const expertApi = {
     formData.append("resume", file);
     return apiRequest<{ resumeUrl: string }>(`/api/experts/${expertId}/resume`, {
       method: "POST",
+      requiresAuth: false,
       body: formData,
     });
   },
@@ -688,6 +749,7 @@ export const expertApi = {
   updateProfile: (walletAddress: string, data: Record<string, unknown>) =>
     apiRequest<import("@/types").ExpertProfile>(`/api/experts/profile?wallet=${walletAddress}`, {
       method: "PUT",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
@@ -720,7 +782,9 @@ export const expertApi = {
     if (params?.dateTo) q.append("dateTo", params.dateTo);
     if (params?.page) q.append("page", params.page.toString());
     if (params?.limit) q.append("limit", params.limit.toString());
-    return apiRequest<import("@/types").ReputationTimeline>(`/api/experts/reputation/timeline?${q.toString()}`);
+    return apiRequest<import("@/types").ReputationTimeline>(`/api/experts/reputation/timeline?${q.toString()}`, {
+      requiresAuth: false,
+    });
   },
 
   getEarningsBreakdown: (walletAddress: string, params?: { guildId?: string; type?: string; dateFrom?: string; dateTo?: string; page?: number; limit?: number }) => {
@@ -731,40 +795,47 @@ export const expertApi = {
     if (params?.dateTo) q.append("dateTo", params.dateTo);
     if (params?.page) q.append("page", params.page.toString());
     if (params?.limit) q.append("limit", params.limit.toString());
-    return apiRequest<import("@/types").EarningsBreakdown>(`/api/experts/earnings/breakdown?${q.toString()}`);
+    return apiRequest<import("@/types").EarningsBreakdown>(`/api/experts/earnings/breakdown?${q.toString()}`, {
+      requiresAuth: false,
+    });
   },
 
   getProposalRewardDetail: (walletAddress: string, proposalId: string) =>
-    apiRequest<import("@/types").RewardDetail>(`/api/experts/proposals/${proposalId}/reward-detail?wallet=${walletAddress}`),
+    apiRequest<import("@/types").RewardDetail>(`/api/experts/proposals/${proposalId}/reward-detail?wallet=${walletAddress}`, {
+      requiresAuth: false,
+    }),
 
   getExpertApplicationFinalization: (applicationId: string) =>
     apiRequest<import("@/types").ExpertApplicationFinalization>(
-      `/api/experts/guild-applications/${applicationId}/finalization`
+      `/api/experts/guild-applications/${applicationId}/finalization`,
+      { requiresAuth: false }
     ),
 
   // Expert application commit-reveal
   expertCommitReveal: {
     getPhaseStatus: (applicationId: string) =>
       apiRequest<import("@/types").ExpertCRPhaseStatus>(
-        `/api/experts/guild-applications/${applicationId}/commit-reveal/status`
+        `/api/experts/guild-applications/${applicationId}/commit-reveal/status`,
+        { requiresAuth: false }
       ),
 
     generateHash: (score: number, nonce: string) =>
       apiRequest<import("@/types").CommitRevealHash>(
         "/api/experts/guild-applications/commit-reveal/generate-hash",
-        { method: "POST", body: JSON.stringify({ score, nonce }) }
+        { method: "POST", requiresAuth: false, body: JSON.stringify({ score, nonce }) }
       ),
 
     submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
       apiRequest<{ success: boolean }>(
         `/api/experts/guild-applications/${applicationId}/commit`,
-        { method: "POST", body: JSON.stringify(data) }
+        { method: "POST", requiresAuth: false, body: JSON.stringify(data) }
       ),
   },
 
   withdrawGuildApplication: (applicationId: string) =>
     apiRequest<{ success: boolean }>(`/api/experts/guild-applications/${applicationId}`, {
       method: "DELETE",
+      requiresAuth: false,
     }),
 };
 
@@ -781,17 +852,22 @@ export const notificationsApi = {
     if (filters?.type) queryParams.append("type", filters.type);
     if (filters?.limit) queryParams.append("limit", filters.limit.toString());
     if (filters?.offset) queryParams.append("offset", filters.offset.toString());
-    return apiRequest<import("@/types").NotificationsResponse>(`/api/experts/notifications?${queryParams.toString()}`);
+    return apiRequest<import("@/types").NotificationsResponse>(`/api/experts/notifications?${queryParams.toString()}`, {
+      requiresAuth: false,
+    });
   },
 
   // Get unread notification count
   getUnreadCount: (walletAddress: string) =>
-    apiRequest<import("@/types").NotificationUnreadCount>(`/api/experts/notifications/unread-count?wallet=${walletAddress}`),
+    apiRequest<import("@/types").NotificationUnreadCount>(`/api/experts/notifications/unread-count?wallet=${walletAddress}`, {
+      requiresAuth: false,
+    }),
 
   // Mark a specific notification as read
   markAsRead: (notificationId: string, walletAddress: string) =>
     apiRequest<{ success: boolean }>(`/api/experts/notifications/${notificationId}/read`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify({ wallet: walletAddress }),
     }),
 
@@ -799,6 +875,7 @@ export const notificationsApi = {
   markAllAsRead: (walletAddress: string) =>
     apiRequest<{ success: boolean }>("/api/experts/notifications/mark-all-read", {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify({ wallet: walletAddress }),
     }),
 };
@@ -885,7 +962,9 @@ export const guildsApi = {
     if (wallet) params.set("wallet", wallet);
     if (status) params.set("status", status);
     const query = params.toString() ? `?${params.toString()}` : "";
-    return apiRequest<import("@/types").CandidateGuildApplication[]>(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`);
+    return apiRequest<import("@/types").CandidateGuildApplication[]>(`/api/guilds/${encodeURIComponent(guildId)}/candidate-applications${query}`, {
+      requiresAuth: false,
+    });
   },
 
   // Review candidate guild application (expert)
@@ -894,13 +973,15 @@ export const guildsApi = {
     const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
     return apiRequest<{ message?: string }>(`/api/guilds/candidate-applications/${applicationId}/review${query}`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     });
   },
 
   getMyCandidateApplicationReview: (applicationId: string, wallet: string) =>
     apiRequest<import("@/types").MyReviewData>(
-      `/api/guilds/candidate-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`
+      `/api/guilds/candidate-applications/${applicationId}/my-review?wallet=${encodeURIComponent(wallet)}`,
+      { requiresAuth: false }
     ),
 
   // Get guild members (experts + candidates)
@@ -931,8 +1012,8 @@ export const guildsApi = {
 };
 
 // Helper: build auth headers for feed endpoints.
-// Experts use wallet-based auth (no JWT), so we pass wallet/expertId via headers.
-// Candidates/companies use the standard Bearer token.
+// Bearer auth is authoritative; wallet/expert headers remain for legacy feed
+// compatibility where handlers still inspect them.
 function getFeedAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
   const token = typeof window !== "undefined"
@@ -1136,6 +1217,7 @@ export const blockchainApi = {
   syncEndorsement: (applicationId: string, walletAddress: string, jobId: string, candidateId: string) =>
     apiRequest<{ success: boolean }>("/api/blockchain/endorsements/sync", {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify({ applicationId, walletAddress, jobId, candidateId }),
     }),
 
@@ -1148,7 +1230,7 @@ export const blockchainApi = {
     // Use rawEnvelope to preserve `total` alongside `data` (auto-unwrap would strip it)
     const json = await apiRequest<{ success?: boolean; data?: import("@/types").EndorsementApplication[]; total?: number }>(
       `/api/blockchain/endorsements/applications/${guildId}${query}`,
-      { rawEnvelope: true }
+      { rawEnvelope: true, requiresAuth: false }
     );
     return { data: json.data ?? [], total: json.total ?? (json.data?.length ?? 0) };
   },
@@ -1295,13 +1377,16 @@ export const guildApplicationsApi = {
   }) =>
     apiRequest<{ id: string }>("/api/proposals", {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
   // Get guild applications for a guild
   getByGuild: async (guildId: string, status?: string) => {
     const query = status ? `?status=${status}` : "";
-    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/guild/${guildId}${query}`);
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/guild/${guildId}${query}`, {
+      requiresAuth: false,
+    });
     return data.map(mapProposalToGuildApplication);
   },
 
@@ -1309,8 +1394,8 @@ export const guildApplicationsApi = {
   getDetails: async (applicationId: string, expertId?: string): Promise<import("@/types").GuildApplicationDetail> => {
     const query = expertId ? `?expertId=${expertId}` : "";
     const [data, votesRaw] = await Promise.all([
-      apiRequest<Record<string, unknown>>(`/api/proposals/${applicationId}${query}`),
-      apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`).catch(() => [] as Record<string, unknown>[]),
+      apiRequest<Record<string, unknown>>(`/api/proposals/${applicationId}${query}`, { requiresAuth: false }),
+      apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`, { requiresAuth: false }).catch(() => [] as Record<string, unknown>[]),
     ]);
     const app = mapProposalToGuildApplication(data);
     const votes: import("@/types").GuildApplicationVote[] = votesRaw.map((v) => ({
@@ -1324,6 +1409,7 @@ export const guildApplicationsApi = {
       votedAt: (v.createdAt ?? v.created_at ?? "") as string,
     }));
     return {
+      ...app,
       id: app.id,
       candidateId: app.candidate_id,
       candidateName: app.candidate_name,
@@ -1336,7 +1422,7 @@ export const guildApplicationsApi = {
       status: app.status as "pending" | "ongoing" | "approved" | "rejected",
       createdAt: app.created_at,
       votes,
-    };
+    } as import("@/types").GuildApplicationDetail & import("@/types").GuildApplication;
   },
 
   // Vote on a guild application (supports both legacy vote and new score)
@@ -1360,6 +1446,7 @@ export const guildApplicationsApi = {
   ) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/vote`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
@@ -1367,12 +1454,15 @@ export const guildApplicationsApi = {
   close: (applicationId: string, approved: boolean) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/close`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify({ approved }),
     }),
 
   // Get all votes for a guild application
   getVotes: async (applicationId: string) => {
-    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`);
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/${applicationId}/votes`, {
+      requiresAuth: false,
+    });
     return data.map((v): import("@/types").VoteHistoryItem => ({
       id: v.id as string,
       expert_id: (v.expertId ?? v.expert_id) as string,
@@ -1392,7 +1482,9 @@ export const guildApplicationsApi = {
 
   // Get expert's vote on a guild application
   getExpertVote: (applicationId: string, expertId: string) =>
-    apiRequest<import("@/types").VoteHistoryItem | null>(`/api/proposals/${applicationId}/vote/${expertId}`),
+    apiRequest<import("@/types").VoteHistoryItem | null>(`/api/proposals/${applicationId}/vote/${expertId}`, {
+      requiresAuth: false,
+    }),
 
   // Get guild applications assigned to a specific expert
   getAssigned: async (expertId: string, guildId?: string, status?: string) => {
@@ -1400,13 +1492,55 @@ export const guildApplicationsApi = {
     if (guildId) params.set("guildId", guildId);
     if (status) params.set("status", status);
     const query = params.toString() ? `?${params.toString()}` : "";
-    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/assigned/${expertId}${query}`);
+    const data = await apiRequest<Record<string, unknown>[]>(`/api/proposals/assigned/${expertId}${query}`, {
+      requiresAuth: false,
+    });
     return data.map(mapProposalToGuildApplication);
   },
 
   // Check if expert is eligible to vote on a guild application
   checkEligibility: (applicationId: string, expertId: string) =>
-    apiRequest<import("@/types").VoteEligibility>(`/api/proposals/${applicationId}/eligibility/${expertId}`),
+    apiRequest<import("@/types").VoteEligibility>(`/api/proposals/${applicationId}/eligibility/${expertId}`, {
+      requiresAuth: false,
+    }),
+};
+
+export type ResumeDownloadScope =
+  | "application"
+  | "endorsementApplication"
+  | "candidateApplication"
+  | "expertApplication"
+  | "candidateProfile";
+
+export interface ResumeDownloadUrlResponse {
+  url: string;
+  expiresAt: string;
+  fileName?: string;
+}
+
+export const resumeApi = {
+  getDownloadUrl: (scope: ResumeDownloadScope, id?: string) => {
+    if (scope === "candidateProfile") {
+      return apiRequest<ResumeDownloadUrlResponse>("/api/candidates/me/resume/download-url", {
+        requiresAuth: true,
+      });
+    }
+
+    if (!id) throw new Error("Missing resume application id");
+
+    const endpoint =
+      scope === "candidateApplication"
+        ? `/api/guilds/candidate-applications/${encodeURIComponent(id)}/resume/download-url`
+        : scope === "endorsementApplication"
+          ? `/api/experts/applications/${encodeURIComponent(id)}/resume/download-url`
+        : scope === "expertApplication"
+          ? `/api/experts/guild-applications/${encodeURIComponent(id)}/resume/download-url`
+          : `/api/applications/${encodeURIComponent(id)}/resume/download-url`;
+
+    return apiRequest<ResumeDownloadUrlResponse>(endpoint, {
+      requiresAuth: scope === "application",
+    });
+  },
 };
 
 // Utility function to get asset URL
@@ -1638,21 +1772,26 @@ export const commitRevealApi = {
   enableCommitReveal: (applicationId: string, data?: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/commit-reveal/enable`, {
       method: "POST",
+      requiresAuth: false,
       body: data ? JSON.stringify(data) : undefined,
     }),
 
   getPhaseStatus: (applicationId: string) =>
-    apiRequest<import("@/types").CommitRevealPhaseStatus>(`/api/proposals/${applicationId}/commit-reveal/status`),
+    apiRequest<import("@/types").CommitRevealPhaseStatus>(`/api/proposals/${applicationId}/commit-reveal/status`, {
+      requiresAuth: false,
+    }),
 
   submitCommitment: (applicationId: string, data: Record<string, unknown>) =>
     apiRequest<{ success: boolean }>(`/api/proposals/${applicationId}/commit`, {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify(data),
     }),
 
   generateHash: (score: number, nonce: string) =>
     apiRequest<import("@/types").CommitRevealHash>("/api/proposals/commit-reveal/generate-hash", {
       method: "POST",
+      requiresAuth: false,
       body: JSON.stringify({ score, nonce }),
     }),
 };
@@ -1673,6 +1812,7 @@ export const guildAppealApi = {
       `/api/guilds/appeals`,
       {
         method: "POST",
+        requiresAuth: true,
         headers: { "X-Wallet-Address": data.wallet },
         body: JSON.stringify({
           applicationId: data.applicationId,
@@ -1726,6 +1866,7 @@ export const guildAppealApi = {
       `/api/guilds/appeals/${appealId}/vote`,
       {
         method: "POST",
+        requiresAuth: true,
         headers: { "X-Wallet-Address": data.wallet },
         body: JSON.stringify({
           vote: backendVote,
@@ -1790,7 +1931,7 @@ export const analyticsApi = {
     ),
 
   getJobAnalytics: (jobId: string) =>
-    apiRequest<Record<string, unknown>>(
+    apiRequest<JobAnalyticsDetail>(
       `/api/companies/me/analytics/jobs/${jobId}`,
       { requiresAuth: true }
     ),

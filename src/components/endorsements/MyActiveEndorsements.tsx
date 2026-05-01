@@ -8,6 +8,7 @@ import { getPersonAvatar } from "@/lib/avatars";
 import { Users } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
+import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
 
 function getInitials(name: string): string {
@@ -177,7 +178,10 @@ export function MyActiveEndorsements({
             </span>
           )}
           {allUserEndorsements.length > 0 && (
-            <Link href="/expert/endorsements/history">
+            <Link
+              href="/expert/endorsements/history"
+              {...dataTourTarget(TOUR_TARGETS.endorsementHistoryLink)}
+            >
               <Button
                 variant="outline"
                 size="sm"
