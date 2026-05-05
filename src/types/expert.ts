@@ -1,3 +1,4 @@
+import type { ExpertOnboardingState } from "@/lib/expert-onboarding-tour";
 import type { ExpertGuild } from "./guild";
 
 export type ExpertStatus = "pending" | "approved" | "rejected";
@@ -28,6 +29,7 @@ export interface ExpertProfile {
   email?: string;
   walletAddress: string;
   status?: ExpertStatus;
+  onboardingState?: ExpertOnboardingState;
   reputation: number;
   totalEarnings?: number;
   endorsementEarnings?: number;

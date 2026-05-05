@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { CheckCircle, CheckCircle2, Sparkles } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
@@ -15,6 +16,8 @@ export interface ReviewSuccessStepProps {
   redFlagDeductions: number;
   overallScore: number;
   commitTxHash: string | null;
+  isPracticeMode?: boolean;
+  practiceActions?: ReactNode | null;
 }
 
 export function ReviewSuccessStep({
@@ -27,6 +30,8 @@ export function ReviewSuccessStep({
   redFlagDeductions,
   overallScore,
   commitTxHash,
+  isPracticeMode = false,
+  practiceActions,
 }: ReviewSuccessStepProps) {
   const overallMax = (generalMax || 0) + (topicMax || 0);
   const scorePercent = overallMax > 0 ? Math.round((overallScore / overallMax) * 100) : 0;
@@ -39,15 +44,17 @@ export function ReviewSuccessStep({
           <CheckCircle className={`w-8 h-8 ${STATUS_COLORS.positive.icon}`} />
         </div>
         <h3 className="text-xl font-bold text-foreground mb-1">
-          {isCommitPhase ? "Commitment Submitted" : "Review Submitted"}
+          {isPracticeMode ? "Practice Complete" : isCommitPhase ? "Commitment Submitted" : "Review Submitted"}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {apiResponse?.message || "Your review has been recorded. Thanks for voting!"}
+          {isPracticeMode
+            ? "No real review was submitted. Your practice calibration is complete."
+            : apiResponse?.message || "Your review has been recorded. Thanks for voting!"}
         </p>
       </div>
 
       {/* Vote Locked Confirmation (commit-reveal only) */}
-      {isCommitPhase && (
+      {isCommitPhase && !isPracticeMode && (
         <div className={`rounded-lg ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle} p-4 text-center`}>
           <CheckCircle2 className={`h-6 w-6 ${STATUS_COLORS.positive.icon} mx-auto mb-2`} />
           <p className="font-semibold text-foreground">Vote committed!</p>
@@ -151,12 +158,20 @@ export function ReviewSuccessStep({
             <p className="font-medium text-foreground mb-1">What happens next?</p>
             <p>
               {isCommitPhase
-                ? "Your vote is hidden until all assigned reviewers have submitted theirs. Once everyone votes (or the deadline passes), all scores are revealed simultaneously and the application is finalized using IQR-based consensus."
+                ? isPracticeMode
+                  ? "Practice calibration lets you try the scoring workflow without touching live applications, wallets, or on-chain commitments."
+                  : "Your vote is hidden until all assigned reviewers have submitted theirs. Once everyone votes (or the deadline passes), all scores are revealed simultaneously and the application is finalized using IQR-based consensus."
                 : "Once all assigned reviewers submit their scores, the application will be finalized immediately using IQR-based consensus. If not all reviewers submit before the deadline, finalization runs automatically. Your alignment with the consensus will affect your reputation and rewards."}
             </p>
           </div>
         </div>
       </div>
+
+      {isPracticeMode && practiceActions && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {practiceActions}
+        </div>
+      )}
     </div>
   );
 }

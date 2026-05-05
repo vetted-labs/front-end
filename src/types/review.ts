@@ -1,4 +1,11 @@
-import type { ApplicationResponses, ReviewSubmitPayload, ReviewSubmitResponse } from "./rubric";
+import type { ReactNode } from "react";
+import type {
+  ApplicationResponses,
+  GeneralReviewTemplate,
+  LevelReviewTemplate,
+  ReviewSubmitPayload,
+  ReviewSubmitResponse,
+} from "./rubric";
 
 // --- Types used by ReviewGuildApplicationModal ---
 
@@ -43,6 +50,21 @@ export interface ReviewGuildApplicationModalProps {
   onReviewSuccess?: () => void;
   /** Type of application being reviewed — controls modal title */
   reviewType?: "expert" | "candidate" | "proposal";
+  /** Practice mode runs against local fixtures and never submits a real review. */
+  mode?: "live" | "practice";
+  /** Local templates used by practice/story flows instead of live guild template requests. */
+  templateOverrides?: {
+    generalTemplate: GeneralReviewTemplate;
+    levelTemplate: LevelReviewTemplate;
+  };
+  /** Called when a practice review reaches completion. */
+  onPracticeComplete?: () => void;
+  /** Optional actions rendered on the practice completion screen. */
+  practiceActions?: ReactNode | null;
+  /** Hide close/cancel controls until practice mode reaches completion. */
+  forceCompletion?: boolean;
+  /** Submit button label for practice completion. */
+  completionActionLabel?: string;
 }
 
 /** Expert applying to join a guild as a member */

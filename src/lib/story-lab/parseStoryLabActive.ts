@@ -3,9 +3,13 @@ import { STORY_LAB_QUERY } from "@/components/expert/story-lab/storyLabData";
 type ParserInput =
   | URLSearchParams
   | Pick<URLSearchParams, "get">
-  | string;
+  | string
+  | null
+  | undefined;
 
 export function parseStoryLabActive(input: ParserInput): boolean {
+  if (!input) return false;
+
   const params =
     typeof input === "string"
       ? new URLSearchParams(input.startsWith("?") ? input.slice(1) : input)

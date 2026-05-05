@@ -17,6 +17,7 @@ export interface Job {
   locationType?: LocationType;
   type: JobType;
   salary: JobSalary;
+  guildId?: string;
   guild?: string;
   description?: string;
   requirements?: string[];

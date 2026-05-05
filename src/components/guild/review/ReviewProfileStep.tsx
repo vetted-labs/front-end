@@ -180,7 +180,11 @@ export function ReviewProfileStep({ application, level }: ReviewProfileStepProps
 
           {/* Inline Resume Viewer */}
           {(resumeUrl || isSyntheticResume) && (
-            <div className="rounded-xl border border-border bg-muted/10 overflow-hidden" {...dataTourTarget(TOUR_TARGETS.practiceReviewResume)}>
+            <div
+              className="rounded-xl border border-border bg-muted/10 overflow-hidden"
+              aria-label={isSyntheticResume ? "Demo resume sample only" : undefined}
+              {...dataTourTarget(TOUR_TARGETS.practiceReviewResume)}
+            >
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/30">
                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">

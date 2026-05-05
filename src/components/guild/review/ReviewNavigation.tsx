@@ -11,6 +11,8 @@ export interface ReviewNavigationProps {
   onNext: () => void;
   onBack: () => void;
   onSubmit: () => void;
+  canClose?: boolean;
+  submitLabel?: string;
   /**
    * Optional data-* attributes to spread onto the submit button (step 3). Used
    * by the expert onboarding tour / story-lab driver to mark the practice
@@ -28,17 +30,21 @@ export function ReviewNavigation({
   onNext,
   onBack,
   onSubmit,
+  canClose = true,
+  submitLabel,
   tourMarkerProps,
 }: ReviewNavigationProps) {
   if (currentStep === 1) {
     return (
       <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
-        <button
-          onClick={onClose}
-          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-        >
-          Cancel
-        </button>
+        {canClose && (
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+          >
+            Cancel
+          </button>
+        )}
         <button
           onClick={onNext}
           className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
@@ -95,7 +101,7 @@ export function ReviewNavigation({
           ) : (
             <>
               <CheckCircle className="w-4 h-4" />
-              {isCommitPhase ? "Submit Commitment" : "Submit Review"}
+              {submitLabel ?? (isCommitPhase ? "Submit Commitment" : "Submit Review")}
             </>
           )}
         </button>

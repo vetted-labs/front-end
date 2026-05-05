@@ -19,9 +19,9 @@ export function useStoryLabContext(): StoryLabContextValue {
     return {
       isActive: parseStoryLabActive(searchParams),
       isCompletionReturn:
-        searchParams.get(STORY_LAB_QUERY.completion) === STORY_LAB_QUERY.value,
-      activeStepId: searchParams.get(STORY_LAB_QUERY.step),
-      activeSubStopId: searchParams.get("storySub"),
+        searchParams?.get(STORY_LAB_QUERY.completion) === STORY_LAB_QUERY.value,
+      activeStepId: searchParams?.get(STORY_LAB_QUERY.step) ?? null,
+      activeSubStopId: searchParams?.get("storySub") ?? null,
     };
   }, [searchParams]);
 }
