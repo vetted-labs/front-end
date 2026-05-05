@@ -144,9 +144,10 @@ export function EnhancedExpertDashboard() {
     async () => {
       if (!address) throw new Error("No wallet address");
 
-      const [data, earningsResult] = await Promise.all([
+      const [data, earningsResult, onboardingState] = await Promise.all([
         expertApi.getProfile(address),
         expertApi.getEarningsBreakdown(address, { limit: 1 }).catch(() => null),
+        expertApi.getOnboardingState(address).catch(() => null),
       ]);
 
       if (!data) {
@@ -174,6 +175,7 @@ export function EnhancedExpertDashboard() {
       }
       return {
         ...data,
+        onboardingState: onboardingState ?? data.onboardingState ?? null,
         guilds,
         pendingTasks: {
           pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
@@ -376,11 +378,14 @@ export function EnhancedExpertDashboard() {
     expertStatusHydrated,
     requireSyncedExpertStatus: true,
   });
-  const persistOnboardingState = useCallback((state: Parameters<typeof expertApi.updateOnboardingState>[0]) => {
-    void expertApi.updateOnboardingState(state).catch((err) => {
-      logger.warn("Failed to persist expert onboarding state", err);
-    });
-  }, []);
+  const persistOnboardingState = useCallback(
+    async (state: Parameters<typeof expertApi.updateOnboardingState>[0]) => {
+      const persistedState = await expertApi.updateOnboardingState(state, address);
+      void refetch();
+      return persistedState;
+    },
+    [address, refetch]
+  );
   const onboarding = useExpertOnboardingTour({
     expertId: profile?.id,
     walletAddress: address,
@@ -412,7 +417,13 @@ export function EnhancedExpertDashboard() {
     for (const event of EXPERT_STORY_COMPLETION_EVENTS) {
       markChecklistEvent(event);
     }
-    completeTour();
+    const completionResult = completeTour();
+    if (completionResult) {
+      return completionResult.catch((err: unknown) => {
+        logger.warn("Failed to persist expert onboarding completion", err);
+      });
+    }
+    return undefined;
   }, [completeTour, markChecklistEvent]);
 
   // eslint-disable-next-line no-restricted-syntax -- story-lab completion must retire the first-run dashboard story before rendering normal dashboard chrome

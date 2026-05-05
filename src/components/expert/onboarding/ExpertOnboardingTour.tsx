@@ -38,7 +38,7 @@ interface ExpertOnboardingTourProps {
   steps: readonly TourStep[];
   canDismiss?: boolean;
   onDismiss: () => void;
-  onComplete: () => void;
+  onComplete: () => void | Promise<void>;
   onStepViewed?: (event: ExpertTourStepViewEvent) => void;
   onStepAction?: (step: TourStep) => void;
 }
@@ -494,17 +494,21 @@ export function ExpertOnboardingTour({
     setActiveIndex(nextIndex);
   }, []);
 
-  const completeTour = useCallback(() => {
+  const completeTour = useCallback(async () => {
     if (completionNotifiedRef.current) return;
 
     completionNotifiedRef.current = true;
-    onComplete();
+    try {
+      await onComplete();
+    } catch {
+      completionNotifiedRef.current = false;
+    }
   }, [onComplete]);
 
   const goNext = useCallback(() => {
     const currentIndex = activeIndexRef.current;
     if (currentIndex >= steps.length - 1) {
-      completeTour();
+      void completeTour();
       return;
     }
 

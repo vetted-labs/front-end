@@ -22,7 +22,9 @@ interface UseExpertOnboardingTourOptions {
   isDashboardRoute: boolean;
   profileLoaded: boolean;
   serverState?: ExpertOnboardingState | null;
-  onStateChange?: (state: ExpertOnboardingState) => void;
+  onStateChange?: (
+    state: ExpertOnboardingState
+  ) => ExpertOnboardingState | void | Promise<ExpertOnboardingState | void>;
 }
 
 interface ExpertOnboardingStateChangeDetail {
@@ -87,6 +89,15 @@ function canRecordExpertOnboardingProgress({
 
 function autoStartFlagEnabled(): boolean {
   return process.env.NEXT_PUBLIC_EXPERT_ONBOARDING_TOUR !== "false";
+}
+
+function isPromiseLike<T>(value: unknown): value is Promise<T> {
+  return (
+    value !== null &&
+    (typeof value === "object" || typeof value === "function") &&
+    "then" in value &&
+    typeof (value as { then?: unknown }).then === "function"
+  );
 }
 
 function mergeOnboardingState(
@@ -279,11 +290,32 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
       const baselineState = mergeOnboardingState(tourStateRef.current, latestState);
       const nextState = createExpertOnboardingState(update(baselineState));
 
-      writeExpertOnboardingState(localStorage, storageKey, nextState);
-      tourStateRef.current = nextState;
-      setTourState(nextState);
-      dispatchOnboardingStateChange(storageKey, nextState);
-      onStateChangeRef.current?.(nextState);
+      const commitState = (state: ExpertOnboardingState) => {
+        const persistedState = createExpertOnboardingState(state);
+        writeExpertOnboardingState(localStorage, storageKey, persistedState);
+        tourStateRef.current = persistedState;
+        setTourState(persistedState);
+        dispatchOnboardingStateChange(storageKey, persistedState);
+      };
+
+      commitState(nextState);
+
+      const maybePersistedState = onStateChangeRef.current?.(nextState);
+      if (isPromiseLike<ExpertOnboardingState | void>(maybePersistedState)) {
+        return maybePersistedState.then((persistedState) => {
+          commitState(
+            mergeOnboardingState(
+              persistedState ? createExpertOnboardingState(persistedState) : nextState,
+              tourStateRef.current
+            )
+          );
+        });
+      }
+
+      const persistedState = createExpertOnboardingState(
+        maybePersistedState ?? nextState
+      );
+      commitState(mergeOnboardingState(persistedState, tourStateRef.current));
     },
     [storageKey]
   );
@@ -295,24 +327,30 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
 
   const completeTour = useCallback(() => {
     const shouldPersistTourAction = canStartTour || isTourOpen;
-    setIsTourOpen(false);
     if (!canWriteCurrentIdentity || !shouldPersistTourAction) return;
-    persistState((state) =>
+    const persistResult = persistState((state) =>
       createExpertOnboardingState({ ...state, completed: true, dismissed: false })
     );
+    if (persistResult) {
+      return persistResult.then(() => {
+        setIsTourOpen(false);
+      });
+    }
+    setIsTourOpen(false);
   }, [canStartTour, canWriteCurrentIdentity, isTourOpen, persistState]);
 
   const dismissTour = useCallback(() => {
     const shouldPersistTourAction = canStartTour || isTourOpen;
     setIsTourOpen(false);
     if (!canWriteCurrentIdentity || !shouldPersistTourAction) return;
-    persistState((state) =>
+    const persistResult = persistState((state) =>
       createExpertOnboardingState({
         ...state,
         dismissed: state.completed ? false : true,
         completed: state.completed,
       })
     );
+    if (persistResult) void persistResult.catch(() => {});
   }, [canStartTour, canWriteCurrentIdentity, isTourOpen, persistState]);
 
   const replayTour = useCallback(() => {
@@ -336,15 +374,16 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
 
   const dismissChecklist = useCallback(() => {
     if (!canWriteProgress) return;
-    persistState((state) =>
+    const persistResult = persistState((state) =>
       createExpertOnboardingState({ ...state, checklistDismissed: true })
     );
+    if (persistResult) void persistResult.catch(() => {});
   }, [canWriteProgress, persistState]);
 
   const markChecklistEvent = useCallback(
     (event: ExpertOnboardingChecklistEvent) => {
       if (!canWriteProgress) return;
-      persistState((state) => {
+      const persistResult = persistState((state) => {
         const events = { ...state.events, [event]: true };
         const hasCompletedSetup = hasCompletedExpertOnboardingSetup({
           events,
@@ -358,6 +397,7 @@ export function useExpertOnboardingTour(options: UseExpertOnboardingTourOptions)
           events,
         });
       });
+      if (persistResult) void persistResult.catch(() => {});
     },
     [canWriteProgress, persistState]
   );

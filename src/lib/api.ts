@@ -659,20 +659,25 @@ export const expertApi = {
       requiresAuth: false,
     }),
 
-  getOnboardingState: () =>
+  getOnboardingState: (walletAddress?: string | null) =>
     apiRequest<import("@/lib/expert-onboarding-tour").ExpertOnboardingState>(
       "/api/experts/me/onboarding-state",
-      { requiresAuth: false }
+      {
+        requiresAuth: false,
+        headers: walletAddress ? { "X-Wallet-Address": walletAddress } : undefined,
+      }
     ),
 
   updateOnboardingState: (
-    state: import("@/lib/expert-onboarding-tour").ExpertOnboardingState
+    state: import("@/lib/expert-onboarding-tour").ExpertOnboardingState,
+    walletAddress?: string | null
   ) =>
     apiRequest<import("@/lib/expert-onboarding-tour").ExpertOnboardingState>(
       "/api/experts/me/onboarding-state",
       {
         method: "PUT",
         requiresAuth: false,
+        headers: walletAddress ? { "X-Wallet-Address": walletAddress } : undefined,
         body: JSON.stringify(state),
       }
     ),

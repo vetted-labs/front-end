@@ -43,8 +43,7 @@ import { expertApi } from "@/lib/api";
 import {
   buildExpertOnboardingStorageKey,
   createExpertOnboardingState,
-  getExpertOnboardingState,
-  markExpertOnboardingComplete,
+  writeExpertOnboardingState,
 } from "@/lib/expert-onboarding-tour";
 import { dispatchExpertOnboardingStateChange } from "@/lib/hooks/useExpertOnboardingTour";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -201,7 +200,6 @@ function getAnchoredPanelWidth(): CSSProperties {
 
 export function ExpertStoryLabDriver() {
   const router = useRouter();
-  const pathname = usePathname();
   const { isActive, isCompletionReturn, activeStepId, activeSubStopId } =
     useStoryLabContext();
   const isOpen = isActive && !isCompletionReturn;
@@ -319,35 +317,34 @@ export function ExpertStoryLabDriver() {
     [activeStep.id, activeSubStop, isOpen, refreshDynamicRoutes]
   );
 
-  const goNextSubStop = useCallback(() => {
+  const goNextSubStop = useCallback(async () => {
     if (!canAdvanceCurrentStop) return;
 
     if (isFinalSubStop) {
-      markStoryLabCompletionReady();
-      // Persist completion to localStorage synchronously and notify the
-      // layout's onboarding hook *before* the API call lands. Without this,
-      // the layout's `shouldForceExpertStoryStart` reads stale state and
-      // re-redirects the user back into the walkthrough.
+      const completionState = createExpertOnboardingState({ completed: true });
       if (typeof window !== "undefined") {
         try {
           const expertId = window.localStorage.getItem("expertId");
           const walletAddress = window.localStorage.getItem("walletAddress");
+          const persistedState = await expertApi.updateOnboardingState(
+            completionState,
+            walletAddress
+          );
           const storageKey = buildExpertOnboardingStorageKey({
             expertId: expertId ?? undefined,
             walletAddress: walletAddress ?? undefined,
           });
           if (storageKey) {
-            markExpertOnboardingComplete(window.localStorage, storageKey);
-            const persistedState = getExpertOnboardingState(window.localStorage, storageKey);
+            writeExpertOnboardingState(window.localStorage, storageKey, persistedState);
             dispatchExpertOnboardingStateChange(storageKey, persistedState);
           }
         } catch {
-          // Storage unavailable — fall through to API persist.
+          return;
         }
+      } else {
+        await expertApi.updateOnboardingState(completionState);
       }
-      void expertApi
-        .updateOnboardingState({ ...createExpertOnboardingState(), completed: true })
-        .catch(() => {});
+      markStoryLabCompletionReady();
       router.replace(getStoryLabCompletionRoute());
       return;
     }
@@ -615,7 +612,7 @@ export function ExpertStoryLabDriver() {
       if (event.key === "ArrowRight" || event.key === "Enter") {
         if (activeSubStop.navTrigger) return;
         event.preventDefault();
-        goNextSubStop();
+        void goNextSubStop();
       }
     };
 
@@ -789,7 +786,7 @@ export function ExpertStoryLabDriver() {
             type="button"
             onClick={(event) => {
               event.preventDefault();
-              goNextSubStop();
+              void goNextSubStop();
             }}
             className={buttonVariants({ size: "sm" })}
           >

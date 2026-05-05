@@ -317,7 +317,7 @@ export default function ApplicationsPage() {
         <FirstTimeReviewerGuide />
 
         {/* Staking Warning */}
-        {data.guildStakes && !data.hasAnyStake && (
+        {!data.guildStakesLoading && !data.hasAnyStake && (
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-sm">

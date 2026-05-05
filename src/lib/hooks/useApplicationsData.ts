@@ -54,7 +54,7 @@ export function useApplicationsData() {
   );
 
   // Per-guild staking data
-  const { data: guildStakes } = useFetch<GuildStakeInfo[]>(
+  const { data: guildStakes, isLoading: guildStakesLoading } = useFetch<GuildStakeInfo[]>(
     () => blockchainApi.getExpertGuildStakes(address as string),
     { skip: !address },
   );
@@ -247,6 +247,7 @@ export function useApplicationsData() {
     const guildParam = searchParams.get("guild");
     if (guildParam && guildRecords.length > 0) {
       const match = guildRecords.find((g) => g.id === guildParam);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs controlled guild selection from the URL query parameter
       if (match) setSelectedGuild(match);
     }
   }, [searchParams, guildRecords]);
@@ -302,6 +303,7 @@ export function useApplicationsData() {
 
     // Staking
     guildStakes: effectiveGuildStakes,
+    guildStakesLoading,
     hasAnyStake,
     isStakedInGuild,
 

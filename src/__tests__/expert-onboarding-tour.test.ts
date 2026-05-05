@@ -246,6 +246,43 @@ describe("useExpertOnboardingTour", () => {
     expect(result.current.shouldShowChecklist).toBe(false);
   });
 
+  it("does not reopen after finish when the next profile snapshot is stale", async () => {
+    const staleServerState = createExpertOnboardingState();
+    const completedServerState = createExpertOnboardingState({ completed: true });
+    const onStateChange = vi.fn(async () => completedServerState);
+
+    const { result, rerender } = renderHook(
+      ({ serverState }: { serverState: ReturnType<typeof createExpertOnboardingState> }) =>
+        useExpertOnboardingTour({
+          expertId: "expert-stale-finish-profile",
+          walletAddress: "0xABC",
+          isApprovedExpert: true,
+          isDashboardRoute: true,
+          profileLoaded: true,
+          serverState,
+          onStateChange,
+        }),
+      { initialProps: { serverState: staleServerState } }
+    );
+
+    expect(result.current.isTourOpen).toBe(true);
+
+    await act(async () => {
+      await result.current.completeTour();
+    });
+
+    expect(result.current.hasCompletedTour).toBe(true);
+    expect(result.current.isTourOpen).toBe(false);
+
+    rerender({ serverState: createExpertOnboardingState() });
+
+    await waitFor(() => {
+      expect(result.current.hasCompletedTour).toBe(true);
+      expect(result.current.shouldShowTour).toBe(false);
+      expect(result.current.isTourOpen).toBe(false);
+    });
+  });
+
   it("treats loaded server state as authoritative over stale browser cache", () => {
     const storageKey = buildExpertOnboardingStorageKey({
       expertId: "expert-server-reset",
