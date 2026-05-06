@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
 import { useApi } from "@/lib/hooks/useFetch";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import { STATUS_COLORS } from "@/config/colors";
 
 interface StructuredProposalFormProps {
@@ -41,6 +43,7 @@ export function StructuredProposalForm({
   onSubmit,
   onCancel,
 }: StructuredProposalFormProps) {
+  const auth = useAuthContext();
   const [formData, setFormData] = useState<StructuredProposalData>({
     candidateName: "",
     candidateEmail: "",
@@ -57,6 +60,19 @@ export function StructuredProposalForm({
   const [currentAchievement, setCurrentAchievement] = useState("");
   const { execute: executeSubmit, isLoading: isSubmitting } = useApi();
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Draft persistence — proposals are long-form and easy to lose. Scoped per
+  // proposing expert + guild so an expert drafting proposals for two guilds
+  // doesn't collide.
+  const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
+    useFormPersistence<StructuredProposalData>({
+      namespace: "guild-proposal",
+      identity: auth.userId,
+      variant: guildId,
+      version: 1,
+      onRestore: (draft) => setFormData(draft),
+    });
+  useDraftAutosave(saveDraft, formData);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -91,7 +107,11 @@ export function StructuredProposalForm({
       return;
     }
 
-    await executeSubmit(() => onSubmit(formData));
+    await executeSubmit(() => onSubmit(formData), {
+      onSuccess: () => {
+        clearDraft();
+      },
+    });
   };
 
   const addAchievement = () => {
@@ -130,6 +150,19 @@ export function StructuredProposalForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {draftRestored && (
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+            <span>We restored your previous proposal draft.</span>
+            <button
+              type="button"
+              onClick={dismissRestored}
+              className="text-foreground hover:opacity-80 text-xs font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Section 1: Basic Information */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">

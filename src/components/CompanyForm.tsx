@@ -18,6 +18,7 @@ import {
 import { Input, Textarea, NativeSelect, Button, Alert } from "./ui";
 import { companyApi } from "@/lib/api";
 import { useApi } from "@/lib/hooks/useFetch";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
 import type { AuthResponse } from "@/types";
 import { COMPANY_SIZES, INDUSTRIES } from "@/config/constants";
 import { truncateAddress } from "@/lib/utils";
@@ -56,6 +57,19 @@ export function CompanyForm() {
     description: "",
     walletAddress: "",
   });
+
+  // Draft persistence — anonymous (pre-signup) so identity is null. Hook
+  // resolves null identity to a per-tab sessionStorage token for kiosk
+  // safety. Passwords stripped before write so credentials never persist.
+  const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
+    useFormPersistence<FormData>({
+      namespace: "company-form",
+      identity: null,
+      version: 1,
+      excludeFields: ["password", "confirmPassword"],
+      onRestore: (draft) => setFormData((prev) => ({ ...prev, ...draft })),
+    });
+  useDraftAutosave(saveDraft, formData);
 
   const validateField = (field: keyof FormData, value: string) => {
     let message = "";
@@ -124,6 +138,7 @@ export function CompanyForm() {
         onSuccess: (data) => {
           const companyId = data.company?.id ?? "";
           const companyEmail = data.company?.email ?? "";
+          clearDraft();
           auth.login(data.token, "company", companyId, companyEmail, address, data.refreshToken);
           router.push("/dashboard");
         },
@@ -187,6 +202,19 @@ export function CompanyForm() {
               <p className="text-destructive text-sm mt-2">{errors.wallet}</p>
             )}
           </div>
+
+          {draftRestored && (
+            <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+              <span>We restored your previous company details on this device.</span>
+              <button
+                type="button"
+                onClick={dismissRestored}
+                className="text-foreground hover:opacity-80 text-xs font-medium"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
