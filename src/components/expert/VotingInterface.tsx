@@ -12,6 +12,8 @@ interface VotingInterfaceProps {
   application: GuildApplication;
   crPhase: CommitRevealPhase | null;
   expertId: string | undefined;
+  /** Wallet bound to the reviewer in auth context, threaded into CommitmentForm. */
+  expertWallet: string | undefined;
   hasVoted: boolean;
   meetsMinimumStake: boolean;
   showVoting: boolean;
@@ -25,6 +27,7 @@ export function VotingInterface({
   application,
   crPhase,
   expertId,
+  expertWallet,
   hasVoted,
   meetsMinimumStake,
   showVoting,
@@ -84,7 +87,8 @@ export function VotingInterface({
         {/* Commit phase */}
         {crPhase?.phase === "commit" &&
           !crPhase.userCommitted &&
-          expertId && (
+          expertId &&
+          expertWallet && (
             <div className="bg-card border border-border border-t-2 border-t-primary rounded-xl p-6">
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 Submit Your Vote
@@ -95,6 +99,7 @@ export function VotingInterface({
               <CommitmentForm
                 applicationId={application.id}
                 expertId={expertId}
+                expertWallet={expertWallet}
                 requiredStake={application.required_stake}
                 onSubmit={onCommit}
                 onCancel={() => {}}

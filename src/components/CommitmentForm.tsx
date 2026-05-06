@@ -1,163 +1,174 @@
 "use client";
 
-import { useState } from "react";
-import { useAccount, usePublicClient } from "wagmi";
+import { useMemo, useState } from "react";
+import { useAccount, usePublicClient, useChainId } from "wagmi";
+import { sepolia } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { commitRevealApi } from "@/lib/api";
-import { logger } from "@/lib/logger";
-import {
-  generateBytes32Salt,
-  computeOnChainCommitHash,
-  mapScoreToChain,
-  isUserRejection,
-  getTransactionErrorMessage,
-} from "@/lib/blockchain";
+import { reviewsApi, extractApiError } from "@/lib/api";
 import { useVettingManager } from "@/lib/hooks/useVettedContracts";
-import { STATUS_COLORS } from "@/config/colors";
+import { useReviewDraft } from "@/lib/hooks/useReviewDraft";
+import { useReviewState } from "@/lib/hooks/useReviewState";
+import {
+  OnChainStatusBanner,
+  type OnChainStatus,
+} from "@/components/reviews/OnChainStatusBanner";
 
 interface CommitmentFormProps {
-  applicationId: string;
+  applicationId: string; // proposalId
   expertId: string;
+  /**
+   * Wallet bound to the reviewer in auth context. We refuse to submit unless
+   * the connected wallet matches this — prevents accidentally signing with
+   * a different account than the one registered for the panel seat.
+   */
+  expertWallet: string;
   requiredStake: number;
-  onSubmit: () => void;
-  onCancel: () => void;
   blockchainSessionId?: string;
   blockchainSessionCreated?: boolean;
+  onSubmit: () => void;
+  onCancel: () => void;
 }
 
-function generateNonce(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
-}
+type Body = { score: number; stake: number };
 
 export function CommitmentForm({
   applicationId,
-  expertId,
+  expertWallet,
   requiredStake,
-  onSubmit,
-  onCancel,
   blockchainSessionId,
   blockchainSessionCreated,
+  onSubmit,
+  onCancel,
 }: CommitmentFormProps) {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const publicClient = usePublicClient();
-  const [score, setScore] = useState(50);
-  const [nonce] = useState(generateNonce);
-  const [stakeAmount, setStakeAmount] = useState(requiredStake.toString());
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { commitVote } = useVettingManager(
+    blockchainSessionId as `0x${string}` | undefined
+  );
+  const draft = useReviewDraft<Body>("proposal", applicationId, {
+    score: 50,
+    stake: requiredStake,
+  });
+  const state = useReviewState("proposal", applicationId);
+  const [submitState, setSubmitState] = useState<OnChainStatus>({ kind: "ready" });
 
-  const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
-  const { commitVote, isCommitted } = useVettingManager(sessionIdBytes32);
+  const sessionReady = !!blockchainSessionId && !!blockchainSessionCreated;
+  const onSepolia = chainId === sepolia.id;
+  const walletMatches = !!(
+    address && address.toLowerCase() === expertWallet.toLowerCase()
+  );
 
-  const hasOnChainSession = !!blockchainSessionId && blockchainSessionCreated;
+  const banner: OnChainStatus = useMemo(() => {
+    if (state.data?.kind === "committed") {
+      return { kind: "confirmed", txHash: state.data.txHash || "0x0" };
+    }
+    if (!sessionReady) return { kind: "preparing_session" };
+    return submitState;
+  }, [state.data, sessionReady, submitState]);
+
+  // Crash recovery: if the BE state says committed, this is read-only.
+  if (state.data?.kind === "committed") {
+    return (
+      <div className="space-y-4">
+        <OnChainStatusBanner status={banner} sessionId={blockchainSessionId} />
+        <p className="text-sm text-muted-foreground">
+          Your vote was committed on-chain. It will be revealed automatically
+          when all reviewers commit.
+        </p>
+        <Button variant="outline" onClick={onCancel} className="w-full">
+          Close
+        </Button>
+      </div>
+    );
+  }
+
+  const canSubmit =
+    sessionReady &&
+    isConnected &&
+    onSepolia &&
+    walletMatches &&
+    submitState.kind === "ready";
 
   const handleSubmit = async () => {
+    if (!sessionReady || !isConnected || !onSepolia || !walletMatches) return;
     try {
-      setIsSubmitting(true);
+      setSubmitState({ kind: "awaiting_signature" });
+      // 1. Get expected commit hash from BE (server derives the salt deterministically).
+      const ch = await reviewsApi.proposal.getCommitHash(
+        applicationId,
+        draft.body.score
+      );
+      const expectedCommitHash = ch.expectedCommitHash;
 
-      let onChainCommitHash: string | undefined;
-      let onChainSalt: string | undefined;
-      let onChainScore: number | undefined;
-      let onChainTxHash: string | undefined;
+      // 2. Sign on-chain.
+      const txHash = await commitVote(
+        expectedCommitHash as `0x${string}`
+      );
+      setSubmitState({ kind: "confirming", txHash });
 
-      // Step 1: On-chain commit if blockchain session is ready
-      if (hasOnChainSession && address && sessionIdBytes32) {
-        if (isCommitted) {
-          // Already committed on-chain — skip wallet interaction
-          logger.info("On-chain commit already exists", { silent: true });
-          toast.info("On-chain vote already committed — saving to backend.");
-        } else {
-          // Fresh commit
-          const salt = generateBytes32Salt();
-          onChainScore = mapScoreToChain(score);
-          onChainCommitHash = computeOnChainCommitHash(
-            sessionIdBytes32,
-            address,
-            onChainScore,
-            salt
-          );
-          onChainSalt = salt;
-
-          // Send on-chain TX and wait for confirmation
-          const txHash = await commitVote(onChainCommitHash as `0x${string}`);
-          onChainTxHash = txHash;
-
-          if (publicClient) {
-            const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-            if (receipt.status === "reverted") {
-              throw new Error("On-chain commit transaction was reverted");
-            }
-          }
-        }
+      // 3. Wait for finality (12 blocks).
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({
+          hash: txHash,
+          confirmations: 12,
+        });
       }
 
-      // Step 2: Generate off-chain hash via backend
-      const hashResponse = await commitRevealApi.generateHash(score, nonce);
-
-      // Step 3: Submit commitment with score + nonce to backend (auto-reveal when all commit)
-      await commitRevealApi.submitCommitment(applicationId, {
-        expertId,
-        commitHash: hashResponse.hash,
-        score,
-        nonce,
-        stakeAmount: parseFloat(stakeAmount),
-        onChainCommitHash,
-        onChainSalt,
-        onChainScore,
-        onChainTxHash,
+      // 4. Submit to BE for verification + persistence.
+      await reviewsApi.proposal.submit(applicationId, {
+        score: draft.body.score,
+        txHash,
       });
 
-      toast.success("Vote submitted! It will be revealed automatically when all reviewers have voted.");
+      setSubmitState({ kind: "confirmed", txHash });
+      toast.success("Vote committed on-chain");
       onSubmit();
-    } catch (error: unknown) {
-      if (isUserRejection(error)) {
-        toast.error("Transaction rejected in wallet");
-        return;
-      }
-      logger.error("Commitment error", error, { silent: true });
-      toast.error(getTransactionErrorMessage(error, "Failed to submit commitment"));
-    } finally {
-      setIsSubmitting(false);
+    } catch (err: unknown) {
+      const reason = extractApiError(err, "On-chain commit failed");
+      setSubmitState({ kind: "failed", reason, canRetry: true });
+      toast.error(reason);
     }
   };
 
-  // Disable if on-chain session exists but isn't created yet
-  const sessionPending = !!blockchainSessionId && !blockchainSessionCreated;
-
   return (
-    <div className="space-y-6">
-      {/* Session pending notice */}
-      {sessionPending && (
-        <div className={`flex items-start gap-3 rounded-xl border ${STATUS_COLORS.info.border} ${STATUS_COLORS.info.bgSubtle} p-3`}>
-          <Clock className={`w-5 h-5 ${STATUS_COLORS.info.icon} mt-0.5 flex-shrink-0`} />
-          <div className="text-sm">
-            <p className="font-medium text-foreground mb-1">Session being created...</p>
-            <p className="text-muted-foreground">
-              The on-chain voting session is being set up. This usually takes a minute.
-            </p>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <OnChainStatusBanner
+        status={banner}
+        sessionId={blockchainSessionId}
+        onRetry={() => setSubmitState({ kind: "ready" })}
+      />
+
+      {!walletMatches && isConnected && (
+        <p className="text-sm text-destructive">
+          Connected wallet does not match your registered reviewer wallet.
+          Switch to {truncate(expertWallet)}.
+        </p>
+      )}
+      {!onSepolia && isConnected && (
+        <p className="text-sm text-destructive">
+          Wrong network. Switch to Sepolia testnet.
+        </p>
       )}
 
-      {/* Score Slider */}
+      {/* Score */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">Your Score</label>
           <Badge variant="secondary" className="text-base px-3">
-            {score}/100
+            {draft.body.score}/100
           </Badge>
         </div>
         <input
           type="range"
           min={0}
           max={100}
-          value={score}
-          onChange={(e) => setScore(parseInt(e.target.value))}
+          value={draft.body.score}
+          onChange={(e) => draft.update({ score: parseInt(e.target.value) })}
           className="w-full accent-primary"
         />
         <div className="flex justify-between text-xs text-muted-foreground">
@@ -173,10 +184,12 @@ export function CommitmentForm({
         <Input
           type="number"
           min={requiredStake}
-          value={stakeAmount}
-          onChange={(e) => setStakeAmount(e.target.value)}
+          value={draft.body.stake}
+          onChange={(e) => draft.update({ stake: Number(e.target.value) })}
         />
-        <p className="text-xs text-muted-foreground">Minimum: {requiredStake} VETD</p>
+        <p className="text-xs text-muted-foreground">
+          Minimum: {requiredStake} VETD
+        </p>
       </div>
 
       <div className="flex gap-3">
@@ -185,23 +198,25 @@ export function CommitmentForm({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isSubmitting || sessionPending}
+          disabled={!canSubmit}
           className="flex-1"
         >
-          {isSubmitting ? (
+          {submitState.kind === "awaiting_signature" ||
+          submitState.kind === "confirming" ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              {hasOnChainSession ? "Confirm in wallet..." : "Submitting..."}
+              Submitting…
             </>
-          ) : sessionPending ? (
-            "Session being created..."
-          ) : hasOnChainSession ? (
-            "Sign & Submit Vote"
           ) : (
-            "Submit Vote"
+            "Sign & Submit On-Chain"
           )}
         </Button>
       </div>
     </div>
   );
+}
+
+function truncate(s: string) {
+  if (s.length <= 10) return s;
+  return `${s.slice(0, 6)}…${s.slice(-4)}`;
 }

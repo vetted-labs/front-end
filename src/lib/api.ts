@@ -1801,6 +1801,121 @@ export const commitRevealApi = {
     }),
 };
 
+// ─── Resilient Review Flow API ─────────────────────────────────────
+// Server-side draft autosave + verified on-chain commit submission.
+// Endpoints come in two symmetric flavors: candidate proposal review
+// (`/api/proposals/:proposalId/review/*`) and guild-application review
+// (`/api/experts/guild-applications/:applicationId/review/*`).
+
+export interface ReviewDraftResponse<TBody = Record<string, unknown>> {
+  applicationId: string;
+  reviewerId: string;
+  context: "candidate_proposal" | "expert_application";
+  body: TBody;
+  lastModified: string;
+}
+
+export interface ReviewCommitHashResponse {
+  expectedCommitHash: string;
+}
+
+export interface ReviewSubmitResponse {
+  success: boolean;
+  txHash: string;
+}
+
+export type ReviewStateResponse =
+  | { kind: "committed"; txHash: string | null; commitHash: string }
+  | { kind: "draft"; body: Record<string, unknown> }
+  | { kind: "empty" };
+
+export interface ReviewSubmitPayload {
+  score: number;
+  txHash: string;
+  nonce?: string;
+}
+
+export const reviewsApi = {
+  proposal: {
+    getDraft: (proposalId: string) =>
+      apiRequest<ReviewDraftResponse | null>(
+        `/api/proposals/${proposalId}/review/draft`,
+        { requiresAuth: false }
+      ),
+    putDraft: (proposalId: string, body: Record<string, unknown>) =>
+      apiRequest<ReviewDraftResponse>(
+        `/api/proposals/${proposalId}/review/draft`,
+        {
+          method: "PUT",
+          requiresAuth: false,
+          body: JSON.stringify({ body }),
+        }
+      ),
+    getCommitHash: (proposalId: string, score: number) =>
+      apiRequest<ReviewCommitHashResponse>(
+        `/api/proposals/${proposalId}/review/commit-hash`,
+        {
+          method: "POST",
+          requiresAuth: false,
+          body: JSON.stringify({ score }),
+        }
+      ),
+    submit: (proposalId: string, payload: ReviewSubmitPayload) =>
+      apiRequest<ReviewSubmitResponse>(
+        `/api/proposals/${proposalId}/review/submit`,
+        {
+          method: "POST",
+          requiresAuth: false,
+          body: JSON.stringify(payload),
+        }
+      ),
+    getState: (proposalId: string) =>
+      apiRequest<ReviewStateResponse>(
+        `/api/proposals/${proposalId}/review/state`,
+        { requiresAuth: false }
+      ),
+  },
+  guildApplication: {
+    getDraft: (applicationId: string) =>
+      apiRequest<ReviewDraftResponse | null>(
+        `/api/experts/guild-applications/${applicationId}/review/draft`,
+        { requiresAuth: false }
+      ),
+    putDraft: (applicationId: string, body: Record<string, unknown>) =>
+      apiRequest<ReviewDraftResponse>(
+        `/api/experts/guild-applications/${applicationId}/review/draft`,
+        {
+          method: "PUT",
+          requiresAuth: false,
+          body: JSON.stringify({ body }),
+        }
+      ),
+    getCommitHash: (applicationId: string, score: number) =>
+      apiRequest<ReviewCommitHashResponse>(
+        `/api/experts/guild-applications/${applicationId}/review/commit-hash`,
+        {
+          method: "POST",
+          requiresAuth: false,
+          body: JSON.stringify({ score }),
+        }
+      ),
+    submit: (applicationId: string, payload: ReviewSubmitPayload) =>
+      apiRequest<ReviewSubmitResponse>(
+        `/api/experts/guild-applications/${applicationId}/review/submit`,
+        {
+          method: "POST",
+          requiresAuth: false,
+          body: JSON.stringify(payload),
+        }
+      ),
+    getState: (applicationId: string) =>
+      apiRequest<ReviewStateResponse>(
+        `/api/experts/guild-applications/${applicationId}/review/state`,
+        { requiresAuth: false }
+      ),
+  },
+};
+
 // Guild Application Appeal API (Stage 2b: Decentralized Arbitration)
 export const guildAppealApi = {
   /** File an appeal for a rejected guild application */
