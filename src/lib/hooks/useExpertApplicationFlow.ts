@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useFormPersistence } from "@/lib/hooks/useFormPersistence";
+import { useExpertStatus } from "@/lib/hooks/useExpertStatus";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { expertApi, guildsApi, ApiError } from "@/lib/api";
@@ -159,6 +160,7 @@ export function useExpertApplicationFlow(
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string[]>([]);
   const errorRef = useRef<HTMLDivElement | null>(null);
+  const { setExpertStatus } = useExpertStatus();
 
   const {
     isSigning,
@@ -260,6 +262,7 @@ export function useExpertApplicationFlow(
   // Track whether wallet was ever connected so we can show disconnect recovery instead of hard-blocking
   // eslint-disable-next-line no-restricted-syntax -- tracks runtime connection state change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot latch on first wallet connect
     if (isConnected) setWasEverConnected(true);
   }, [isConnected]);
 
@@ -312,12 +315,14 @@ export function useExpertApplicationFlow(
   // eslint-disable-next-line no-restricted-syntax -- loads template when guild selection changes
   useEffect(() => {
     if (!selectedGuildId) return;
+    // eslint-disable-next-line react-hooks/immutability -- helper declared later in same hook body
     loadGeneralTemplate(selectedGuildId);
   }, [selectedGuildId]);
 
   // eslint-disable-next-line no-restricted-syntax -- loads level template when expertise level changes
   useEffect(() => {
     if (!selectedGuildId || !formData.expertiseLevel) return;
+    // eslint-disable-next-line react-hooks/immutability -- helper declared later in same hook body
     loadLevelTemplate(selectedGuildId, formData.expertiseLevel);
   }, [selectedGuildId, formData.expertiseLevel]);
 
@@ -751,6 +756,7 @@ export function useExpertApplicationFlow(
     if (isLastStep) {
       // Trigger form submission — the orchestrator will call handleSubmit
       // We fire a synthetic form event since the submit handler expects one
+      // eslint-disable-next-line react-hooks/immutability -- handler declared later in same hook body
       handleSubmitInternal();
     } else {
       setCurrentStep((prev) => prev + 1);
@@ -859,7 +865,20 @@ export function useExpertApplicationFlow(
       }
 
       clearDraft();
-      localStorage.setItem("expertStatus", "pending");
+      // Source of truth via the same-tab `expertStatusChange` event +
+      // cross-tab `storage` event. Replaces the prior raw localStorage write.
+      setExpertStatus("pending");
+      // Write-through cache seed for the expert layout — uses the apply
+      // response payload directly so no follow-up getProfile call is needed
+      // (avoids the read-replica/cache-lag race that an immediate refetch
+      // would hit).
+      if (address && expertId) {
+        window.dispatchEvent(
+          new CustomEvent("vetted:expert-profile-seed", {
+            detail: { walletAddress: address, expertId, status: "pending" as const },
+          })
+        );
+      }
       setSuccess(true);
       setTimeout(() => {
         onSuccess?.();

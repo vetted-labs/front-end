@@ -47,6 +47,19 @@ const RESTRICTED_ALLOWED_PREFIXES = [
 ];
 
 /**
+ * Dispatched by the apply-submit handler with the new expert profile from the
+ * apply response payload, so the layout can seed `profileVerification` without
+ * an immediate refetch (avoids replica-lag / read-after-write races).
+ */
+const EXPERT_PROFILE_SEED_EVENT = "vetted:expert-profile-seed";
+
+interface ExpertProfileSeedDetail {
+  walletAddress: string;
+  expertId: string;
+  status: ExpertStatus;
+}
+
+/**
  * Routes that render a full-screen chromeless shell (no sidebar). This is
  * reserved for the onboarding application form itself — every other expert
  * route uses the sidebar layout, including the status page for
@@ -217,6 +230,12 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     && !shouldEnforceRestrictedStatus;
   const [checked, setChecked] = useState(canShow);
   const verifiedRef = useRef(false);
+  const [verificationTick, setVerificationTick] = useState(0);
+  const profileStatusRef = useRef<ExpertStatus | null | undefined>(profileVerification.status);
+  // eslint-disable-next-line no-restricted-syntax -- keeps stable status reference for cross-tab event handlers
+  useEffect(() => {
+    profileStatusRef.current = profileVerification.status;
+  }, [profileVerification.status]);
 
   // Auth guard — redirect disconnected wallets or restricted experts
   // eslint-disable-next-line no-restricted-syntax -- guards route access based on wagmi + expert status
@@ -258,6 +277,56 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
       onboardingState: null,
       error: false,
     });
+  }, [address]);
+
+  // Write-through cache: the apply-submit handler dispatches this event with
+  // the new expert profile from the apply response. Same DB transaction that
+  // wrote the row, so there is no race vs. an immediate getProfile refetch.
+  // eslint-disable-next-line no-restricted-syntax -- subscribes to cross-component DOM event
+  useEffect(() => {
+    if (!address) return;
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<ExpertProfileSeedDetail>).detail;
+      if (!detail || detail.walletAddress?.toLowerCase() !== address.toLowerCase()) return;
+      verifiedRef.current = true;
+      profileStatusRef.current = detail.status;
+      setProfileVerification({
+        address,
+        loaded: true,
+        found: true,
+        expertId: detail.expertId,
+        status: detail.status,
+        onboardingState: null,
+        error: false,
+      });
+    };
+    window.addEventListener(EXPERT_PROFILE_SEED_EVENT, handler);
+    return () => window.removeEventListener(EXPERT_PROFILE_SEED_EVENT, handler);
+  }, [address]);
+
+  // Cross-tab and same-tab invalidation when expertStatus changes (apply,
+  // withdraw, approve, dispute, etc.). Skipped when the new value matches our
+  // current profile status to avoid looping with the verification effect's
+  // own setExpertStatus call below.
+  // eslint-disable-next-line no-restricted-syntax -- subscribes to cross-tab storage and same-tab status events
+  useEffect(() => {
+    if (!address) return;
+    const invalidate = () => {
+      const next =
+        typeof window === "undefined" ? null : window.localStorage.getItem("expertStatus");
+      if (next === profileStatusRef.current) return;
+      verifiedRef.current = false;
+      setVerificationTick((t) => t + 1);
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "expertStatus") invalidate();
+    };
+    window.addEventListener("expertStatusChange", invalidate);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("expertStatusChange", invalidate);
+      window.removeEventListener("storage", onStorage);
+    };
   }, [address]);
 
   // Backend verification — source of truth, prevents localStorage tampering
@@ -322,7 +391,7 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     return () => {
       cancelled = true;
     };
-  }, [address, authExpertId, router, setExpertStatus, clearExpertStatus, canUseUnauthenticatedStoryLabPreview, isE2E]);
+  }, [address, authExpertId, router, setExpertStatus, clearExpertStatus, canUseUnauthenticatedStoryLabPreview, isE2E, verificationTick]);
 
   // eslint-disable-next-line no-restricted-syntax -- redirects restricted verified expert profiles after route changes
   useEffect(() => {

@@ -25,6 +25,7 @@ export function useExpertStatus() {
   // Subscribe to cross-tab and same-tab storage changes
   useEffect(() => {
     // Re-read on mount in case SSR value was stale
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-SSR hydration of localStorage-backed state
     setStatus(localStorage.getItem(STORAGE_KEY));
     setIsHydrated(true);
 
@@ -49,6 +50,7 @@ export function useExpertStatus() {
   }, []);
 
   const setExpertStatus = useCallback((value: string) => {
+    if (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY) === value) return;
     localStorage.setItem(STORAGE_KEY, value);
     setStatus(value);
     window.dispatchEvent(new Event("expertStatusChange"));
