@@ -5,16 +5,17 @@ import { Loader2, XCircle, X } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { STATUS_COLORS } from "@/config/colors";
 import { toast } from "sonner";
-import { useAccount } from "wagmi";
-import { expertApi } from "@/lib/api";
-import {
-  generateBytes32Salt,
-  computeOnChainCommitHash,
-  mapScoreToChain,
-  isUserRejection,
-  getTransactionErrorMessage,
-} from "@/lib/blockchain";
+import { useAccount, useChainId, usePublicClient } from "wagmi";
+import { sepolia } from "wagmi/chains";
+import { expertApi, reviewsApi, extractApiError } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useVettingManager } from "@/lib/hooks/useVettedContracts";
+import { useReviewState } from "@/lib/hooks/useReviewState";
+import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import {
+  OnChainStatusBanner,
+  type OnChainStatus,
+} from "@/components/reviews/OnChainStatusBanner";
 import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
@@ -23,8 +24,6 @@ import { ReviewSuccessStep } from "@/components/guild/review/ReviewSuccessStep";
 import { ReviewSubmitSection } from "@/components/guild/review/ReviewSubmitSection";
 import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
 import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer";
-import { TransactionStatus } from "@/components/ui/transaction-status";
-import type { TransactionPhase } from "@/components/ui/transaction-status";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { GENERAL_RESPONSE_KEY_MAP, FALLBACK_GENERAL_QUESTIONS } from "@/components/guild/review/constants";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
@@ -48,12 +47,28 @@ import type {
 export { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
 
 const STORY_LAB_FALLBACK_COMMIT_TX_HASH = "story-lab-demo-transaction";
+const DRAFT_DEBOUNCE_MS = 1500;
 
 function scrollContentToTop(content: HTMLDivElement | null): void {
   if (typeof content?.scrollTo === "function") {
     content.scrollTo(0, 0);
   }
 }
+
+/**
+ * Shape persisted to the server-side review_drafts table for guild
+ * applications. All scoring/justification state is mirrored here so a
+ * mid-signing crash can be recovered on remount.
+ */
+type GuildReviewDraftBody = {
+  feedback: string;
+  generalScores: Record<string, Record<string, number>>;
+  generalJustifications: Record<string, string>;
+  topicScores: Record<string, number>;
+  topicJustifications: Record<string, string>;
+  redFlags: Record<string, boolean>;
+  stakeAmount: number;
+};
 
 export function ReviewGuildApplicationModal({
   isOpen,
@@ -68,6 +83,7 @@ export function ReviewGuildApplicationModal({
   blockchainSessionCreated,
   onReviewSuccess,
   reviewType: reviewTypeProp,
+  expertWallet,
   mode = "live",
   templateOverrides,
   onPracticeComplete,
@@ -91,7 +107,8 @@ export function ReviewGuildApplicationModal({
   const [apiResponse, setApiResponse] = useState<{ message?: string } | null>(null);
   const [commitTxHash, setCommitTxHash] = useState<string | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
-  const [isCommitting, setIsCommitting] = useState(false);
+  const [submitState, setSubmitState] = useState<OnChainStatus>({ kind: "ready" });
+  const [draftHydrated, setDraftHydrated] = useState(false);
 
   const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
   const storyLabStep = isStoryLabPreview ? getStoryLabReviewModalStep(activeSubStopId) : null;
@@ -105,11 +122,60 @@ export function ReviewGuildApplicationModal({
   // renders (review-commit maps to renderStep 3 inside the modal).
   const isStoryLabCommitPhase = isStoryLabPreview && renderStep === 3;
   const isCommitPhase = !isPracticeMode && (commitRevealPhase === "commit" || isStoryLabCommitPhase);
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const publicClient = usePublicClient();
 
   const sessionIdBytes32 = blockchainSessionId as `0x${string}` | undefined;
   const { commitVote } = useVettingManager(
     isCommitPhase && blockchainSessionCreated ? sessionIdBytes32 : undefined
+  );
+
+  const onSepolia = chainId === sepolia.id;
+  const walletMatches = !!(
+    expertWallet && address && address.toLowerCase() === expertWallet.toLowerCase()
+  );
+  const sessionReady = !!blockchainSessionId && !!blockchainSessionCreated;
+
+  // ─── Draft hydration on mount: load any prior draft from the server ────
+  // This is the crash-recovery hook. We only run it for live, non-practice
+  // flows that target a real application id.
+  const shouldHydrateDraft = !!application?.id && !isPracticeMode && !isStoryLabPreview;
+  useMountEffect(() => {
+    if (!shouldHydrateDraft) return;
+    let alive = true;
+    reviewsApi.guildApplication
+      .getDraft(application!.id)
+      .then((draft) => {
+        if (!alive || !draft) return;
+        const body = draft.body as Partial<GuildReviewDraftBody> | undefined;
+        if (!body) return;
+        if (typeof body.feedback === "string") setFeedback(body.feedback);
+        if (body.generalScores) setGeneralScores(body.generalScores);
+        if (body.generalJustifications) setGeneralJustifications(body.generalJustifications);
+        if (body.topicScores) setTopicScores(body.topicScores);
+        if (body.topicJustifications) setTopicJustifications(body.topicJustifications);
+        if (body.redFlags) setRedFlags(body.redFlags);
+        if (typeof body.stakeAmount === "number") setStakeAmount(body.stakeAmount);
+      })
+      .catch(() => {
+        /* no draft yet — silent */
+      })
+      .finally(() => {
+        if (alive) setDraftHydrated(true);
+      });
+    return () => {
+      alive = false;
+    };
+  });
+
+  // ─── Crash recovery: if the BE state says "committed", show success ────
+  // Skipped in practice/story flows — those use synthetic ids that don't
+  // exist on the backend.
+  const reviewState = useReviewState(
+    "guildApplication",
+    application?.id ?? "",
+    { skip: !application?.id || isPracticeMode || isStoryLabPreview }
   );
 
   // eslint-disable-next-line no-restricted-syntax -- body overflow side-effect tied to open state
@@ -141,6 +207,9 @@ export function ReviewGuildApplicationModal({
     setValidationError(null);
     setApiResponse(null);
     setStakeAmount(0);
+    setSubmitState({ kind: "ready" });
+    setCommitTxHash(null);
+    setDraftHydrated(false);
   }, [application?.id, isOpen]);
 
   // eslint-disable-next-line no-restricted-syntax -- sync stake from parent prop
@@ -150,6 +219,49 @@ export function ReviewGuildApplicationModal({
       setStakeAmount(proposalContext.requiredStake);
     }
   }, [proposalContext?.requiredStake]);
+
+  // ─── Auto-save draft on any scoring / feedback change ──────────────────
+  // Debounced PUT to the BE so a mid-signing crash retains progress.
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // eslint-disable-next-line no-restricted-syntax -- debounced auto-save to external system (server-side draft store)
+  useEffect(() => {
+    if (!shouldHydrateDraft || !draftHydrated || !application?.id) return;
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    const body: GuildReviewDraftBody = {
+      feedback,
+      generalScores,
+      generalJustifications,
+      topicScores,
+      topicJustifications,
+      redFlags,
+      stakeAmount,
+    };
+    draftSaveTimerRef.current = setTimeout(() => {
+      reviewsApi.guildApplication
+        .putDraft(application.id, body as unknown as Record<string, unknown>)
+        .catch((err) => {
+          logger.warn(
+            "Guild review draft save failed (will retry on next edit)",
+            err,
+            { silent: true }
+          );
+        });
+    }, DRAFT_DEBOUNCE_MS);
+    return () => {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    };
+  }, [
+    shouldHydrateDraft,
+    draftHydrated,
+    application?.id,
+    feedback,
+    generalScores,
+    generalJustifications,
+    topicScores,
+    topicJustifications,
+    redFlags,
+    stakeAmount,
+  ]);
 
   const responses = application?.applicationResponses || {};
   const generalResponses = responses.general || {};
@@ -273,6 +385,15 @@ export function ReviewGuildApplicationModal({
 
   const overallScore = Math.max(0, generalTotal + topicTotal - redFlagDeductions);
 
+  // Banner state shown above the on-chain commit submit button.
+  const banner: OnChainStatus = useMemo(() => {
+    if (reviewState.data?.kind === "committed") {
+      return { kind: "confirmed", txHash: reviewState.data.txHash || "0x0" };
+    }
+    if (isCommitPhase && !sessionReady) return { kind: "preparing_session" };
+    return submitState;
+  }, [reviewState.data, isCommitPhase, sessionReady, submitState]);
+
   if (!application || !isOpen) return null;
 
   const validateStep2 = () => {
@@ -354,64 +475,77 @@ export function ReviewGuildApplicationModal({
     }
 
     if (isCommitPhase && application?.id) {
-      setIsCommitting(true);
+      // Resilient Review flow: server derives the salt, we sign on-chain,
+      // then the BE verifies the receipt against the recomputed hash.
+      if (!sessionReady || !isConnected || !onSepolia || !walletMatches) {
+        if (!walletMatches) {
+          toast.error(
+            "Connected wallet does not match your registered reviewer wallet."
+          );
+        } else if (!onSepolia) {
+          toast.error("Wrong network. Switch to Sepolia testnet.");
+        } else if (!sessionReady) {
+          toast.error("On-chain session is still being prepared. Try again shortly.");
+        } else {
+          toast.error("Connect your wallet to submit on-chain.");
+        }
+        return;
+      }
       try {
         const normalizedScore = computedOverallMax > 0
           ? Math.round((overallScore / computedOverallMax) * 100)
           : 0;
-        const nonce = crypto.randomUUID();
 
-        let onChainSalt: string | undefined;
-        let onChainCommitHash: string | undefined;
-        let onChainScore: number | undefined;
-        let onChainTxHash: string | undefined;
+        setSubmitState({ kind: "awaiting_signature" });
 
-        if (blockchainSessionId && blockchainSessionCreated && address) {
-          onChainSalt = generateBytes32Salt();
-          onChainScore = mapScoreToChain(normalizedScore);
-          onChainCommitHash = computeOnChainCommitHash(
-            sessionIdBytes32!,
-            address as `0x${string}`,
-            onChainScore,
-            onChainSalt as `0x${string}`
-          );
+        // 1. Get expected commit hash from BE (server derives the salt).
+        const ch = await reviewsApi.guildApplication.getCommitHash(
+          application.id,
+          normalizedScore
+        );
+        const expectedCommitHash = ch.expectedCommitHash;
 
-          try {
-            onChainTxHash = await commitVote(onChainCommitHash as `0x${string}`);
-            setCommitTxHash(onChainTxHash || null);
-          } catch (err: unknown) {
-            if (isUserRejection(err)) { setIsCommitting(false); return; }
-            toast.error(getTransactionErrorMessage(err, "On-chain commit failed"));
-            setIsCommitting(false);
-            return;
-          }
+        // 2. Sign on-chain.
+        const txHash = await commitVote(expectedCommitHash as `0x${string}`);
+        setCommitTxHash(txHash || null);
+        setSubmitState({ kind: "confirming", txHash });
+
+        // 3. Wait for finality (12 blocks).
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({
+            hash: txHash,
+            confirmations: 12,
+          });
         }
 
-        const hashResult = await expertApi.expertCommitReveal.generateHash(normalizedScore, nonce);
-        await expertApi.expertCommitReveal.submitCommitment(application.id, {
-          commitHash: hashResult.hash,
-          normalizedScore,
-          nonce,
+        // 4. Submit to BE for verification + persistence. The BE static-calls
+        // the contract to confirm the on-chain commitment matches our recomputed
+        // hash, then writes the canonical row in expert_application_reviews.
+        // Rich criteria fields are passed through so they land alongside the
+        // on-chain commit (the auto-saved draft is ephemeral).
+        await reviewsApi.guildApplication.submit(application.id, {
+          score: normalizedScore,
+          txHash,
           feedback: feedback || undefined,
           criteriaScores: buildCriteriaScores(),
           criteriaJustifications: buildCriteriaJustifications(),
           overallScore,
           redFlagDeductions,
-          onChainCommitHash: onChainCommitHash || undefined,
-          onChainSalt: onChainSalt || undefined,
-          onChainScore: onChainScore ?? undefined,
-          onChainTxHash: onChainTxHash || undefined,
         });
 
-        setApiResponse({ message: "Vote submitted! Scores will be revealed automatically when all reviewers have voted." });
+        setSubmitState({ kind: "confirmed", txHash });
+        setApiResponse({
+          message:
+            "Vote submitted! Scores will be revealed automatically when all reviewers have voted.",
+        });
         setCurrentStep(4);
         scrollContentToTop(contentRef.current);
+        toast.success("Vote committed on-chain");
         onReviewSuccess?.();
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to submit commitment";
-        toast.error(message);
-      } finally {
-        setIsCommitting(false);
+        const reason = extractApiError(err, "On-chain commit failed");
+        setSubmitState({ kind: "failed", reason, canRetry: true });
+        toast.error(reason);
       }
       return;
     }
@@ -432,6 +566,9 @@ export function ReviewGuildApplicationModal({
       // Error is handled by the parent via toast
     }
   };
+
+  const isCommitting =
+    submitState.kind === "awaiting_signature" || submitState.kind === "confirming";
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -531,30 +668,27 @@ export function ReviewGuildApplicationModal({
                   onFeedbackChange={setFeedback}
                 />
                 {isCommitPhase && (
-                  <div className="mt-4 space-y-3">
+                  <div
+                    className="mt-4 space-y-3"
+                    {...(isStoryLabPreview
+                      ? dataTourTarget(TOUR_TARGETS.practiceReviewTxStatus)
+                      : {})}
+                  >
                     <CommitRevealExplainer />
-                    {isStoryLabPreview ? (
-                      <div {...dataTourTarget(TOUR_TARGETS.practiceReviewTxStatus)}>
-                        <TransactionStatus
-                          phase={
-                            (isCommitting
-                              ? commitTxHash ? "confirmed" : "awaiting-signature"
-                              : commitTxHash ? "confirmed" : "idle") as TransactionPhase
-                          }
-                          txHash={commitTxHash ?? undefined}
-                          chainExplorerUrl="https://sepolia.etherscan.io"
-                        />
-                      </div>
-                    ) : (
-                      <TransactionStatus
-                        phase={
-                          (isCommitting
-                            ? commitTxHash ? "confirmed" : "awaiting-signature"
-                            : commitTxHash ? "confirmed" : "idle") as TransactionPhase
-                        }
-                        txHash={commitTxHash ?? undefined}
-                        chainExplorerUrl="https://sepolia.etherscan.io"
-                      />
+                    <OnChainStatusBanner
+                      status={banner}
+                      sessionId={blockchainSessionId}
+                      onRetry={() => setSubmitState({ kind: "ready" })}
+                    />
+                    {!walletMatches && isConnected && expertWallet && (
+                      <p className="text-sm text-destructive">
+                        Connected wallet does not match your registered reviewer wallet.
+                      </p>
+                    )}
+                    {!onSepolia && isConnected && (
+                      <p className="text-sm text-destructive">
+                        Wrong network. Switch to Sepolia testnet.
+                      </p>
                     )}
                   </div>
                 )}

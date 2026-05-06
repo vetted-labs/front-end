@@ -495,6 +495,7 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
           blockchainSessionId={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
           blockchainSessionCreated={applicationReviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
           reviewerId={currentExpertId || undefined}
+          expertWallet={address || undefined}
           onReviewSuccess={handleReviewSuccess}
           reviewType={applicationReviewType}
         />

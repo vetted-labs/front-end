@@ -448,6 +448,7 @@ export default function VotingApplicationPage({
                 application={application}
                 crPhase={crPhase}
                 expertId={expertData?.id}
+                expertWallet={expertData?.walletAddress ?? address ?? undefined}
                 hasVoted={!!hasVoted}
                 meetsMinimumStake={canVote}
                 showVoting={showVoting}

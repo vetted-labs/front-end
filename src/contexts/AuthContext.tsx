@@ -138,12 +138,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (walletStatus !== 'disconnected' || authState.userType !== 'expert') return;
 
     const timer = setTimeout(() => {
+      // Snapshot identity before clearing so we can wipe drafts for the
+      // disconnected wallet (mirrors the explicit-logout cleanup below).
+      const walletForCleanup = localStorage.getItem('walletAddress');
+      const userIdForCleanup = authState.userId;
       clearAllAuthState();
+      if (walletForCleanup) clearAllDraftsForIdentity(walletForCleanup);
+      if (userIdForCleanup) clearAllDraftsForIdentity(userIdForCleanup);
       setAuthState({ isAuthenticated: false, userType: null, userId: null, email: null, token: null, walletAddress: undefined });
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [walletStatus, authState.userType]);
+  }, [walletStatus, authState.userType, authState.userId]);
 
   const login = (token: string, userType: string, userId: string, email?: string, walletAddress?: string, refreshToken?: string) => {
     // Store in localStorage — experts may not have a token
