@@ -9,7 +9,12 @@ export function ThemeToggle() {
 
   return (
     <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={(event) =>
+        setTheme(theme === "light" ? "dark" : "light", {
+          x: event.clientX,
+          y: event.clientY,
+        })
+      }
       className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
       aria-label="Toggle theme"
     >
@@ -23,6 +28,14 @@ export function ThemeToggle() {
 export function ThemeToggleWithDropdown() {
   const { setTheme } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
+
+  function getButtonOrigin(event: React.MouseEvent<HTMLButtonElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+  }
 
   return (
     <div className="relative">
@@ -44,8 +57,8 @@ export function ThemeToggleWithDropdown() {
           <div className="absolute right-0 mt-2 w-32 rounded-lg border border-border bg-popover shadow-lg z-50">
             <div className="py-1">
               <button
-                onClick={() => {
-                  setTheme("light");
+                onClick={(event) => {
+                  setTheme("light", getButtonOrigin(event));
                   setIsOpen(false);
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -53,8 +66,8 @@ export function ThemeToggleWithDropdown() {
                 Light
               </button>
               <button
-                onClick={() => {
-                  setTheme("dark");
+                onClick={(event) => {
+                  setTheme("dark", getButtonOrigin(event));
                   setIsOpen(false);
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -62,8 +75,8 @@ export function ThemeToggleWithDropdown() {
                 Dark
               </button>
               <button
-                onClick={() => {
-                  setTheme("system");
+                onClick={(event) => {
+                  setTheme("system", getButtonOrigin(event));
                   setIsOpen(false);
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"

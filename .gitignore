@@ -49,3 +49,9 @@ next-env.d.ts
 /screenshots
 /docs/
 /.playwright-mcp
+/.playwright-cli/
+/output/
+
+# tooling local state
+/.claude/
+/.sec/
