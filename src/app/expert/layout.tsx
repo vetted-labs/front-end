@@ -473,12 +473,20 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     profileVerificationLoaded &&
     (isE2E || verifiedExpertId !== null) &&
     !onboardingProgress.hasCompletedSetup;
+  // The driver overlay should be hidden only when we're confident the expert
+  // has finished onboarding. Using the same staged source-of-truth as the
+  // dashboard ↔ story-lab redirect logic (fast hint pre-hydrate, tour hook
+  // post-hydrate) keeps the three signals from disagreeing — otherwise the
+  // dashboard force-redirects here while the driver gets suppressed, leaving
+  // the user staring at a bare dashboard on a story-lab URL.
   const shouldSuppressStoryLabDriver =
     isStoryLabPreview &&
     !canUseUnauthenticatedStoryLabPreview &&
-    (hasCompletedOnboardingFastHint ||
-      !profileVerificationLoaded ||
-      profileVerification.onboardingState?.completed === true);
+    (
+      (!onboardingProgress.isHydrated && hasCompletedOnboardingFastHint) ||
+      (onboardingProgress.isHydrated && onboardingProgress.hasCompletedSetup) ||
+      !profileVerificationLoaded
+    );
 
   // eslint-disable-next-line no-restricted-syntax -- first-run experts must complete story mode before using deep-linked expert pages
   useEffect(() => {
