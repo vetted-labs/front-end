@@ -520,11 +520,17 @@ export function ReviewGuildApplicationModal({
 
         // 4. Submit to BE for verification + persistence. The BE static-calls
         // the contract to confirm the on-chain commitment matches our recomputed
-        // hash, then stores the canonical record. Rich criteria data is already
-        // server-side via the auto-saved draft.
+        // hash, then writes the canonical row in expert_application_reviews.
+        // Rich criteria fields are passed through so they land alongside the
+        // on-chain commit (the auto-saved draft is ephemeral).
         await reviewsApi.guildApplication.submit(application.id, {
           score: normalizedScore,
           txHash,
+          feedback: feedback || undefined,
+          criteriaScores: buildCriteriaScores(),
+          criteriaJustifications: buildCriteriaJustifications(),
+          overallScore,
+          redFlagDeductions,
         });
 
         setSubmitState({ kind: "confirmed", txHash });

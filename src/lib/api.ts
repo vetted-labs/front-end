@@ -1833,6 +1833,15 @@ export interface ReviewSubmitPayload {
   score: number;
   txHash: string;
   nonce?: string;
+  // Rich review fields — only used by guild-application flow.
+  // The BE `verifyAndSubmit` for expert applications passes these through to
+  // ExpertCommitRevealService.submitCommitment so they land in
+  // expert_application_reviews alongside the on-chain commit.
+  feedback?: string;
+  criteriaScores?: Record<string, unknown>;
+  criteriaJustifications?: Record<string, unknown>;
+  overallScore?: number;
+  redFlagDeductions?: number;
 }
 
 export const reviewsApi = {
