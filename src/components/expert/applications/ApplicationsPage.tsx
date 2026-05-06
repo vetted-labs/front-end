@@ -396,6 +396,7 @@ export default function ApplicationsPage() {
         blockchainSessionId={reviewType === "expert" ? crPhaseStatus?.blockchainSessionId : undefined}
         blockchainSessionCreated={reviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
         reviewerId={data.expertData?.id}
+        expertWallet={data.address || undefined}
         reviewType={reviewType}
       />
 

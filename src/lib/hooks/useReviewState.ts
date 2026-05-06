@@ -12,11 +12,17 @@ export type ReviewState = ReviewStateResponse;
  *   - `empty`:     no draft, no commit yet.
  *
  * Used by review forms to gate the UI between editable / read-only modes.
+ *
+ * Pass `skip: true` to disable the fetch (e.g. when the host modal is in
+ * practice/story mode and the id is synthetic).
  */
 export function useReviewState(
   flow: "proposal" | "guildApplication",
-  id: string
+  id: string,
+  options?: { skip?: boolean }
 ) {
   const api = flow === "proposal" ? reviewsApi.proposal : reviewsApi.guildApplication;
-  return useFetch<ReviewState>(() => api.getState(id));
+  return useFetch<ReviewState>(() => api.getState(id), {
+    skip: options?.skip,
+  });
 }

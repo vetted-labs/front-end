@@ -46,6 +46,12 @@ export interface ReviewGuildApplicationModalProps {
   blockchainSessionCreated?: boolean;
   /** The expert reviewer's ID */
   reviewerId?: string;
+  /**
+   * Wallet bound to the reviewer in auth context. Required for the
+   * Resilient Review on-chain commit flow — submission is gated on the
+   * connected wallet matching this address.
+   */
+  expertWallet?: string;
   /** Called after a successful review submission (including commit-reveal) to refresh parent data */
   onReviewSuccess?: () => void;
   /** Type of application being reviewed — controls modal title */
