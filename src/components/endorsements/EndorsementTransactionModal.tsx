@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, Fragment } from 'react';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Modal } from '@/components/ui/modal';
+import { useFormPersistence, useDraftAutosave } from '@/lib/hooks/useFormPersistence';
 import { getPersonAvatar } from '@/lib/avatars';
 import {
   CheckCircle2,
@@ -57,19 +59,46 @@ export function EndorsementTransactionModal({
 }: EndorsementTransactionModalProps) {
   const [bidAmount, setBidAmount] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const { address } = useAccount();
   const { label: countdownLabel, isExpired: biddingExpired, isUrgent: biddingUrgent } = useCountdown(
     application?.bidding_deadline,
     { fallbackStart: application?.applied_at, expiredLabel: "Bidding closed" },
   );
 
-  // eslint-disable-next-line no-restricted-syntax -- resets form fields when modal reopens
+  // Draft persistence — bidAmount survives accidental modal close, refresh, or
+  // tab kill. Scoped per (wallet, application) so different applications keep
+  // separate drafts. Successful submission clears the draft via the txStep
+  // watcher below.
+  const { save: saveDraft, clear: clearDraft } = useFormPersistence<{ bidAmount: string }>({
+    namespace: "endorsement-bid",
+    identity: address,
+    variant: application?.application_id ?? null,
+    version: 1,
+    onRestore: (draft) => {
+      if (typeof draft.bidAmount === "string") setBidAmount(draft.bidAmount);
+    },
+  });
+  useDraftAutosave(saveDraft, { bidAmount });
+
+  // Reset only the transient error message when the modal reopens. bidAmount
+  // is governed by the persistence hook so accidental close-and-reopen
+  // recovers what the user typed.
+  // eslint-disable-next-line no-restricted-syntax -- clears stale error on modal reopen
   useEffect(() => {
     if (isOpen && txStep === 'idle') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale bid/error on modal open
-      setBidAmount('');
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clears stale error on modal reopen
       setErrorMessage('');
     }
   }, [isOpen, txStep]);
+
+  // Drop the persisted draft as soon as the transaction lands successfully —
+  // no recovery needed for a completed bid.
+  // eslint-disable-next-line no-restricted-syntax -- watches transaction outcome to clear durable storage
+  useEffect(() => {
+    if (txStep === 'success') {
+      clearDraft();
+    }
+  }, [txStep, clearDraft]);
 
   const handleQuickAmount = (multiplier: number, type: 'min' | 'balance') => {
     if (type === 'min') {

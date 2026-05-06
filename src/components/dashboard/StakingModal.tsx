@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { formatEther } from "viem";
 import { sepolia } from "wagmi/chains";
@@ -12,6 +12,7 @@ import { CONTRACT_ADDRESSES } from "@/contracts/abis";
 import { blockchainApi, guildsApi } from "@/lib/api";
 import { retryWithBackoff } from "@/lib/utils";
 import { useFetch } from "@/lib/hooks/useFetch";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
 import { logger } from "@/lib/logger";
 import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,11 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
   const [currentTxAmount, setCurrentTxAmount] = useState<string>("");
   const [currentTxAction, setCurrentTxAction] = useState<ActionMode>("stake");
 
+  // Tracks the guildId we want to re-select once the guild list lands. This
+  // is set by the persistence onRestore callback (which fires before guilds
+  // have loaded), and consumed in the useFetch onSuccess below.
+  const restoredGuildIdRef = useRef<string | null>(null);
+
   // Fetch guilds via useFetch
   const { data: guilds, isLoading: isLoadingGuilds } = useFetch<StakingGuildOption[]>(
     async () => {
@@ -67,7 +73,16 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
       onSuccess: (guildOptions) => {
         if (preselectedGuildId) {
           const preselected = guildOptions.find(g => g.id === preselectedGuildId);
-          if (preselected) setSelectedGuild(preselected);
+          if (preselected) {
+            setSelectedGuild(preselected);
+            return;
+          }
+        }
+        const restoredId = restoredGuildIdRef.current;
+        if (restoredId) {
+          const restored = guildOptions.find(g => g.id === restoredId);
+          if (restored) setSelectedGuild(restored);
+          restoredGuildIdRef.current = null;
         }
       },
       onError: (msg) => toast.error(`Failed to load guilds: ${msg}`),
@@ -92,20 +107,49 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
   // Whether guild is locked (opened from a specific guild page)
   const isGuildLocked = !!preselectedGuildId;
 
-  // Reset state when modal closes
+  // Reset transient transaction state when modal closes. NOTE: we deliberately
+  // do NOT clear stakeAmount/selectedGuild here — those are persisted via the
+  // draft hook so an accidental close-and-reopen recovers what the user typed.
+  // Successful transactions clear the draft explicitly in handleTxModalClose.
   useEffect(() => {
     if (!isOpen) {
-      setStakeAmount("");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets transient transaction-flow state when modal closes
       setStep("input");
       setTxHash(null);
-      setActionMode(defaultMode || "stake");
       setShowTxModal(false);
       setTxStatus("pending");
       setTxErrorMessage("");
-      setSelectedGuild(null);
       setShowGuildDropdown(false);
     }
   }, [isOpen]);
+
+  // Draft persistence — stake amount + action mode + which guild they had
+  // selected survive accidental modal close, browser refresh, or tab kill.
+  // Scoped per wallet so two users on the same browser don't collide.
+  const { save: saveDraft, clear: clearDraft } = useFormPersistence<{
+    stakeAmount: string;
+    actionMode: ActionMode;
+    selectedGuildId: string | null;
+  }>({
+    namespace: "staking",
+    identity: address,
+    version: 1,
+    onRestore: (draft) => {
+      if (typeof draft.stakeAmount === "string") setStakeAmount(draft.stakeAmount);
+      if (draft.actionMode === "stake" || draft.actionMode === "withdraw") setActionMode(draft.actionMode);
+      if (draft.selectedGuildId) {
+        // Defer guild re-selection until the guild list lands so we can
+        // hand the full StakingGuildOption (with blockchainGuildId) to state.
+        restoredGuildIdRef.current = draft.selectedGuildId;
+      }
+    },
+  });
+  // Keep the full draft snapshot synced as the user edits.
+  useDraftAutosave(saveDraft, {
+    stakeAmount,
+    actionMode,
+    selectedGuildId: selectedGuild?.id ?? null,
+  });
 
   useEffect(() => {
     if (isOpen && address) {
@@ -117,6 +161,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
   // Handle transaction confirmation
   useEffect(() => {
     if (txConfirmed && txHash && step === "transaction") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reflects on-chain confirmation status into UI state
       setTxStatus("success");
       refetchBalance();
       refetchStake();
@@ -137,6 +182,7 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
   useEffect(() => {
     if (txError && txHash && step === "transaction") {
       const errorMessage = getTransactionErrorMessage(txErrorDetails, "Transaction failed on blockchain");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reflects on-chain failure status into UI state
       setTxStatus("error");
       setTxErrorMessage(errorMessage);
       logger.error("Transaction error", txErrorDetails, { silent: true });
@@ -260,9 +306,12 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
     setTxErrorMessage("");
 
     if (wasSuccess) {
-      // Reset input state, notify the parent to refresh, then close
+      // Reset input state, drop the persisted draft (transaction succeeded —
+      // no recovery needed), notify the parent to refresh, then close.
       setStep("input");
       setStakeAmount("");
+      setSelectedGuild(null);
+      clearDraft();
       onSuccess?.();
       onClose();
     }
