@@ -337,18 +337,26 @@ export function useExpertApplicationFlow(
   const [noAiDeclaration, setNoAiDeclaration] = useState(false);
 
   // -----------------------------------------------------------------------
-  // Draft persistence — now includes currentStep
+  // Draft persistence — scoped to wallet + selected guild so two experts on
+  // the same browser don't collide and one expert can have parallel drafts
+  // for different guilds without overwriting one another.
   // -----------------------------------------------------------------------
   const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
-    useFormPersistence<PersistedDraft>((draft) => {
-      setFormData(draft.formData);
-      setGeneralAnswers(draft.generalAnswers);
-      setLevelAnswers(draft.levelAnswers);
-      if (draft.selectedGuildId) setSelectedGuildId(draft.selectedGuildId);
-      setNoAiDeclaration(draft.noAiDeclaration);
-      if (typeof draft.currentStep === "number" && draft.currentStep >= 0 && draft.currentStep <= 3) {
-        setCurrentStep(draft.currentStep);
-      }
+    useFormPersistence<PersistedDraft>({
+      namespace: "expert-apply",
+      identity: address ?? null,
+      variant: selectedGuildId || null,
+      version: 1,
+      onRestore: (draft) => {
+        setFormData(draft.formData);
+        setGeneralAnswers(draft.generalAnswers);
+        setLevelAnswers(draft.levelAnswers);
+        if (draft.selectedGuildId) setSelectedGuildId(draft.selectedGuildId);
+        setNoAiDeclaration(draft.noAiDeclaration);
+        if (typeof draft.currentStep === "number" && draft.currentStep >= 0 && draft.currentStep <= 3) {
+          setCurrentStep(draft.currentStep);
+        }
+      },
     });
 
   // Save draft whenever user-editable fields change

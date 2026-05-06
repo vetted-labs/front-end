@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useAccount } from 'wagmi';
 import { clearAllAuthState } from '@/lib/auth';
+import { clearAllDraftsForIdentity } from '@/lib/hooks/useFormPersistence';
 import { logger } from '@/lib/logger';
 
 interface AuthState {
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // render picks up the stored session without waiting for an external event.
   // eslint-disable-next-line no-restricted-syntax -- hydration re-sync from localStorage
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- post-SSR hydration of localStorage-backed auth
     setAuthState(getInitialAuthState());
 
     // Also re-sync when tokens are refreshed by the API layer
@@ -184,8 +186,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Grab refresh token before clearing localStorage
     const refreshToken = localStorage.getItem('refreshToken');
 
+    // Capture identity values before clearing so we can wipe this user's
+    // form drafts. Prevents the next user on the same browser from seeing
+    // (and potentially submitting) the prior user's in-progress data.
+    const walletAddressForCleanup = localStorage.getItem('walletAddress');
+    const userIdForCleanup = authState.userId;
+
     // Clear all auth data from localStorage
     clearAllAuthState();
+    if (walletAddressForCleanup) clearAllDraftsForIdentity(walletAddressForCleanup);
+    if (userIdForCleanup) clearAllDraftsForIdentity(userIdForCleanup);
 
     // Reset React state immediately
     setAuthState({
