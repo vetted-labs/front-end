@@ -13,6 +13,7 @@ import { clearTokenAuthState } from "@/lib/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useApi } from "@/lib/hooks/useFetch";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
 
 type UserType = "candidate" | "company";
 
@@ -65,6 +66,55 @@ function SignupForm() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
+
+  // Draft persistence — anonymous (pre-signup) so identity is null. The hook
+  // resolves null identity to a per-tab sessionStorage token, which keeps
+  // shared/kiosk devices isolated. Passwords are explicitly excluded so
+  // credentials never touch localStorage.
+  const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
+    useFormPersistence<{
+      fullName: string;
+      email: string;
+      phone: string;
+      companyName: string;
+      website: string;
+      headline: string;
+      experienceLevel: string;
+      linkedinUrl: string;
+      githubUrl: string;
+      portfolioUrl: string;
+    }>({
+      namespace: "signup",
+      identity: null,
+      variant: userType,
+      version: 1,
+      excludeFields: ["password", "confirmPassword"],
+      onRestore: (draft) => {
+        if (typeof draft.fullName === "string") setFullName(draft.fullName);
+        if (typeof draft.email === "string") setEmail(draft.email);
+        if (typeof draft.phone === "string") setPhone(draft.phone);
+        if (typeof draft.companyName === "string") setCompanyName(draft.companyName);
+        if (typeof draft.website === "string") setWebsite(draft.website);
+        if (typeof draft.headline === "string") setHeadline(draft.headline);
+        if (typeof draft.experienceLevel === "string") setExperienceLevel(draft.experienceLevel);
+        if (typeof draft.linkedinUrl === "string") setLinkedinUrl(draft.linkedinUrl);
+        if (typeof draft.githubUrl === "string") setGithubUrl(draft.githubUrl);
+        if (typeof draft.portfolioUrl === "string") setPortfolioUrl(draft.portfolioUrl);
+      },
+    });
+
+  useDraftAutosave(saveDraft, {
+    fullName,
+    email,
+    phone,
+    companyName,
+    website,
+    headline,
+    experienceLevel,
+    linkedinUrl,
+    githubUrl,
+    portfolioUrl,
+  });
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -139,6 +189,7 @@ function SignupForm() {
             socialLinks,
           });
 
+          clearDraft();
           auth.login(data.token, "candidate", data.candidate?.id || "", data.candidate?.email || "", undefined, data.refreshToken);
           router.push(redirectUrl || "/candidate/dashboard");
         } else {
@@ -149,6 +200,7 @@ function SignupForm() {
             website,
           });
 
+          clearDraft();
           auth.login(data.token, "company", data.company?.id || "", data.company?.email || "", undefined, data.refreshToken);
           router.push(redirectUrl || "/dashboard");
         }
@@ -198,6 +250,19 @@ function SignupForm() {
             ? "Hire vetted talent — create your employer account"
             : "Find your next role — set up your profile below"}
         </p>
+
+        {draftRestored && (
+          <div className="mb-5 flex items-start justify-between gap-3 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+            <span>We restored your previous signup details on this device.</span>
+            <button
+              type="button"
+              onClick={dismissRestored}
+              className="text-foreground hover:opacity-80 text-xs font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {errors.submit && (
           <div className="mb-5 flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">

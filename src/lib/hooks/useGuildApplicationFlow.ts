@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { guildsApi, candidateApi, jobsApi } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
 import type {
   GuildApplicationTemplate,
   SocialLink,
@@ -62,6 +63,10 @@ export interface GuildApplicationFlowState {
   domainAnswers: Record<string, string>;
   expandedDomain: string | null;
   noAiDeclaration: boolean;
+
+  // Draft persistence — exposed so the page can show a "draft restored" banner
+  draftRestored: boolean;
+  dismissDraftRestored: () => void;
 }
 
 export interface GuildApplicationFlowActions {
@@ -129,6 +134,56 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
   const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
   const [noAiDeclaration, setNoAiDeclaration] = useState(false);
 
+  // Draft persistence — scoped to candidate userId + (guild,job) so a single
+  // user can have parallel drafts (e.g. applying to two guilds at once or to
+  // the same guild for two different jobs). Resume binary is excluded —
+  // upload state lives server-side via candidateApi.uploadResume and isn't
+  // safe to round-trip through localStorage anyway.
+  const persistedDraftRestoredRef = useRef(false);
+  const variantKey = jobId ? `${guildId}-${jobId}` : guildId;
+  const { save: saveDraft, clear: clearDraft, wasRestored: draftRestored, dismissRestored } =
+    useFormPersistence<{
+      currentStep: number;
+      generalAnswers: Record<string, string>;
+      coverLetter: string;
+      screeningAnswers: string[];
+      selectedLevel: string;
+      domainAnswers: Record<string, string>;
+      useProfileResume: boolean;
+      noAiDeclaration: boolean;
+    }>({
+      namespace: "guild-apply",
+      identity: auth.userId,
+      variant: variantKey,
+      version: 1,
+      onRestore: (draft) => {
+        persistedDraftRestoredRef.current = true;
+        if (typeof draft.currentStep === "number") setCurrentStep(draft.currentStep);
+        if (draft.generalAnswers) setGeneralAnswers(draft.generalAnswers);
+        if (typeof draft.coverLetter === "string") setCoverLetter(draft.coverLetter);
+        if (Array.isArray(draft.screeningAnswers)) setScreeningAnswers(draft.screeningAnswers);
+        if (typeof draft.selectedLevel === "string") setSelectedLevel(draft.selectedLevel);
+        if (draft.domainAnswers) setDomainAnswers(draft.domainAnswers);
+        if (typeof draft.useProfileResume === "boolean") setUseProfileResume(draft.useProfileResume);
+        if (typeof draft.noAiDeclaration === "boolean") setNoAiDeclaration(draft.noAiDeclaration);
+      },
+    });
+
+  useDraftAutosave(
+    saveDraft,
+    {
+      currentStep,
+      generalAnswers,
+      coverLetter,
+      screeningAnswers,
+      selectedLevel,
+      domainAnswers,
+      useProfileResume,
+      noAiDeclaration,
+    },
+    !isLoading,
+  );
+
   const hasJobStep = !!jobId;
   const steps: StepDef[] = hasJobStep
     ? [
@@ -153,6 +208,7 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
       );
       return;
     }
+    // eslint-disable-next-line react-hooks/immutability -- fetchData is declared later in same hook body, called once on mount
     fetchData();
   }, [guildId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -193,17 +249,22 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
 
         if (templateData.requiredLevel) {
           setRequiredLevel(templateData.requiredLevel);
-          setSelectedLevel(templateData.requiredLevel);
+          // Preserve any draft-restored level; only default if empty.
+          setSelectedLevel((prev) => prev || templateData.requiredLevel || "");
         }
 
-        // Initialize general answers
-        const initialAnswers: Record<string, string> = {};
+        // Reconcile the answers map with the current template: keep any
+        // draft-restored answers whose question ids still exist; fill in
+        // empty strings for new questions; drop answers for removed ones.
         if (templateData.generalQuestions) {
-          templateData.generalQuestions.forEach((q) => {
-            initialAnswers[q.id] = "";
+          setGeneralAnswers((prev) => {
+            const next: Record<string, string> = {};
+            templateData.generalQuestions.forEach((q) => {
+              next[q.id] = prev[q.id] ?? "";
+            });
+            return next;
           });
         }
-        setGeneralAnswers(initialAnswers);
       } else {
         throw new Error("Failed to load application template.");
       }
@@ -218,9 +279,14 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
             screeningQuestions: job.screeningQuestions || [],
             experienceLevel: job.experienceLevel || null,
           });
-          setScreeningAnswers(
-            new Array(job.screeningQuestions?.length || 0).fill("")
-          );
+          // Preserve any draft-restored answers; pad with empty strings if
+          // the question count differs from the restored draft.
+          const screeningCount = job.screeningQuestions?.length || 0;
+          setScreeningAnswers((prev) => {
+            const next = new Array<string>(screeningCount).fill("");
+            for (let i = 0; i < screeningCount; i++) next[i] = prev[i] ?? "";
+            return next;
+          });
 
           // Lock guild level based on job's experience level (if backend didn't already)
           const templateData = results[1].status === "fulfilled"
@@ -230,7 +296,7 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
             const mappedLevel = JOB_LEVEL_TO_GUILD_LEVEL[job.experienceLevel];
             if (mappedLevel) {
               setRequiredLevel(mappedLevel);
-              setSelectedLevel(mappedLevel);
+              setSelectedLevel((prev) => prev || mappedLevel);
             }
           }
         }
@@ -306,6 +372,7 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
       ];
     if (!domainLevel) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- topics map shape depends on the runtime template fetched from server
     setDomainAnswers((prev) => {
       const updated = { ...prev };
       domainLevel.topics.forEach((topic) => {
@@ -529,6 +596,7 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
       }
 
       await guildsApi.submitApplication(guildId, payload);
+      clearDraft();
       setSuccess(true);
     } catch (err: unknown) {
       logger.error("Failed to submit guild application", err, { silent: true });
@@ -586,6 +654,10 @@ export function useGuildApplicationFlow(): GuildApplicationFlowState & GuildAppl
     domainAnswers,
     expandedDomain,
     noAiDeclaration,
+
+    // Draft persistence
+    draftRestored,
+    dismissDraftRestored: dismissRestored,
 
     // Actions
     setError,

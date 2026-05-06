@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { jobsApi, guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { useFormPersistence, useDraftAutosave } from "@/lib/hooks/useFormPersistence";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { validateMinLength, validateMinLengthPerLine } from "@/lib/validation";
 import type { Guild } from "@/types";
@@ -33,7 +33,7 @@ export interface JobFormData {
 export function useJobForm(jobId?: string) {
   const router = useRouter();
   const isEditing = !!jobId;
-  const DRAFT_KEY = `job-draft-${jobId || "new"}`;
+  const auth = useAuthContext();
 
   const [formData, setFormData] = useState<JobFormData>({
     title: "",
@@ -51,32 +51,23 @@ export function useJobForm(jobId?: string) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Restore draft on mount (new jobs only — edits load from API)
-  useMountEffect(() => {
-    if (!jobId) {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) {
-        try {
-          const draft = JSON.parse(saved) as JobFormData;
-          setFormData(draft);
-          toast.info("Draft restored from previous session");
-        } catch {
-          // Corrupted draft — ignore
-        }
-      }
-    }
+  // Draft persistence — scoped to the company creating the job. Only new jobs
+  // are drafted; edits load authoritative data from the API and shouldn't be
+  // overwritten by a stale localStorage snapshot. The variant separates the
+  // "new" namespace from per-job edit spaces so they never collide.
+  const variantKey = isEditing ? `edit-${jobId}` : "new";
+  const { save: saveDraft, clear: clearDraft } = useFormPersistence<JobFormData>({
+    namespace: "job-post",
+    identity: auth.userType === "company" ? auth.userId : null,
+    variant: variantKey,
+    version: 1,
+    onRestore: (draft) => {
+      if (isEditing) return;
+      setFormData(draft);
+      toast.info("Draft restored from previous session");
+    },
   });
-
-  // Auto-save to localStorage on changes (new jobs only, debounced 1s)
-  // eslint-disable-next-line no-restricted-syntax -- auto-save requires reactive sync to localStorage
-  useEffect(() => {
-    if (!jobId) {
-      const timer = setTimeout(() => {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [formData, DRAFT_KEY, jobId]);
+  useDraftAutosave(saveDraft, formData, !isEditing);
 
   // Fetch guilds on mount
   const { data: guildsData } = useFetch<Guild[]>(
@@ -85,7 +76,6 @@ export function useJobForm(jobId?: string) {
   );
   const guilds = guildsData ?? [];
 
-  const auth = useAuthContext();
   const effectiveCompanyId = auth.userType === "company" && auth.userId ? auth.userId : formData.companyId;
 
   // Fetch job data if editing
@@ -237,7 +227,7 @@ export function useJobForm(jobId?: string) {
         await jobsApi.create(jobData);
       }
 
-      localStorage.removeItem(DRAFT_KEY);
+      clearDraft();
       toast.success(isEditing ? "Job updated successfully" : "Job published successfully");
       router.push("/dashboard/jobs");
     } catch (error: unknown) {
@@ -260,7 +250,7 @@ export function useJobForm(jobId?: string) {
     try {
       const jobData = buildJobPayload("draft");
       await jobsApi.create(jobData);
-      localStorage.removeItem(DRAFT_KEY);
+      clearDraft();
       toast.success("Draft saved successfully");
       router.push("/dashboard/jobs");
     } catch (error: unknown) {
