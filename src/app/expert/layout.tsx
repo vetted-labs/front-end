@@ -487,22 +487,34 @@ export default function ExpertLayout({ children }: { children: React.ReactNode }
     router.replace(getStoryLabLaunchRoute());
   }, [pathname, router, shouldForceExpertStoryStart]);
 
-   
+  // Skip the story-lab for returning experts who already completed onboarding.
+  // Two-stage decision:
+  //   1. Pre-hydrate: trust the synchronous wallet/expertId fast hint so we
+  //      avoid a story-lab flash for returning users.
+  //   2. Post-hydrate: defer to `onboardingProgress.hasCompletedSetup`, which
+  //      is the same source of truth used by `shouldForceExpertStoryStart`
+  //      below. Aligning the two checks closes the dashboard ↔ story-lab
+  //      redirect loop that occurred when a stale wallet-only LS hint
+  //      disagreed with a freshly-rehydrated tour state.
   useLayoutEffect(() => {
     if (!isStoryLabPreview || canUseUnauthenticatedStoryLabPreview) return;
-    if (hasCompletedOnboardingFastHint) {
-      router.replace("/expert/dashboard", { scroll: false });
+
+    if (!onboardingProgress.isHydrated) {
+      if (hasCompletedOnboardingFastHint) {
+        router.replace("/expert/dashboard", { scroll: false });
+      }
       return;
     }
-    if (!profileVerificationLoaded) return;
-    if (profileVerification.onboardingState?.completed !== true) return;
-    router.replace("/expert/dashboard", { scroll: false });
+
+    if (onboardingProgress.hasCompletedSetup) {
+      router.replace("/expert/dashboard", { scroll: false });
+    }
   }, [
     canUseUnauthenticatedStoryLabPreview,
     hasCompletedOnboardingFastHint,
     isStoryLabPreview,
-    profileVerification.onboardingState,
-    profileVerificationLoaded,
+    onboardingProgress.isHydrated,
+    onboardingProgress.hasCompletedSetup,
     router,
   ]);
 
