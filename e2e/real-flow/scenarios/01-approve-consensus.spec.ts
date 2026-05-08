@@ -68,6 +68,7 @@ type SessionTuple = readonly [
 test("approve consensus: 3 panelists reveal high → approved", async ({
   page,
   candidate,
+  guild,
   experts,
   anvil,
   contracts,
@@ -86,7 +87,7 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
   const nonces: Hex[] = [];
 
   await test.step("apply to guild via UI", async () => {
-    const result = await applyToGuildViaUI(page, candidate, "engineering");
+    const result = await applyToGuildViaUI(page, candidate, guild.id);
     applicationId = result.applicationId;
     sessionId = result.sessionId;
   });

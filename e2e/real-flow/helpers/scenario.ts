@@ -29,13 +29,16 @@ import { cronApi, BACKEND_URL } from "./backend";
  * Drive the candidate guild-application UI end-to-end and return the resulting
  * application + on-chain session id. Caller is expected to be already
  * signed in as `candidate` (the `candidate` fixture handles that).
+ *
+ * `guildId` is the BE guild UUID — the frontend route is
+ * `/guilds/[guildId]/apply` where the param is the UUID, not the slug.
  */
 export async function applyToGuildViaUI(
   page: Page,
   _candidate: Candidate,
-  guildSlug: string,
+  guildId: string,
 ): Promise<{ applicationId: string; sessionId: Hex }> {
-  await page.goto(`/guilds/${guildSlug}/apply`, { waitUntil: "networkidle" });
+  await page.goto(`/guilds/${guildId}/apply`, { waitUntil: "networkidle" });
 
   // Use profile resume if the option is offered.
   const useProfileResume = page.getByText(/profile resume/i).first();

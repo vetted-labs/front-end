@@ -41,10 +41,18 @@ import { signupCandidate } from "../helpers/auth";
 
 export type Expert = Wallet & { id: string; guildId: string };
 export type Candidate = { email: string; password: string; page: Page };
+export type Guild = {
+  id: string;
+  name: string;
+  on_chain_guild_id: `0x${string}`;
+};
+
+export type RealFlowFixtures = WorkerFixtures & TestFixtures;
 
 type WorkerFixtures = {
   anvil: AnvilHandle;
   contracts: ContractHandles;
+  guild: Guild;
   experts: Expert[];
 };
 
@@ -54,15 +62,10 @@ type TestFixtures = {
 };
 
 /**
- * Seeds the BE guild + 4 staked experts and returns the in-memory expert
- * handles. Extracted out of the worker fixture so the fixture body stays
- * lint-clean (avoids the react-hooks/rules-of-hooks rule mis-firing on
- * Playwright's `use` callback inside a try/catch).
+ * Seeds the BE guild and returns its handle. Reset of the BE DB happens here
+ * so it runs exactly once before any expert seeding.
  */
-async function seedExperts(
-  request: APIRequestContext,
-  contracts: ContractHandles,
-): Promise<Expert[]> {
+async function seedGuild(request: APIRequestContext): Promise<Guild> {
   // Reset DB once at suite start.
   await testApi.reset(request);
 
@@ -72,12 +75,20 @@ async function seedExperts(
     slug: "engineering",
     onChainGuildId: 1,
   });
-  const guild = guildRaw as unknown as {
-    id: string;
-    slug: string;
-    on_chain_guild_id: `0x${string}`;
-  };
+  return guildRaw as unknown as Guild;
+}
 
+/**
+ * Seeds 4 staked + approved experts into `guild` and returns the in-memory
+ * expert handles. Extracted out of the worker fixture so the fixture body
+ * stays lint-clean (avoids the react-hooks/rules-of-hooks rule mis-firing on
+ * Playwright's `use` callback inside a try/catch).
+ */
+async function seedExperts(
+  request: APIRequestContext,
+  contracts: ContractHandles,
+  guild: Guild,
+): Promise<Expert[]> {
   const experts: Expert[] = [];
   for (let i = 1; i <= 4; i++) {
     const w = makeWallet(ANVIL_KEYS[i]);
@@ -130,9 +141,8 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { scope: "worker" },
   ],
 
-  // Worker-scoped: 4 staked + approved experts in the "Engineering" guild.
-  // Resets the BE DB once at suite start, seeds the guild, then for each of
-  // anvil accounts 1..4: approve VETD -> stake -> register expert in BE.
+  // Worker-scoped: the "Engineering" guild seeded into the BE. Resets the BE
+  // DB once at suite start, then seeds the guild and exposes its handle.
   //
   // NOTE: BE returns `on_chain_guild_id` as a 0x-prefixed bytes32 string
   // (`VARCHAR(66)`), not a uint. We pass the hex string straight to the
@@ -141,13 +151,26 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   //
   // Worker-scoped fixtures cannot consume the test-scoped `request`, so we
   // spin up our own APIRequestContext via `apiRequest.newContext()`.
+  guild: [
+    async ({}, use) => {
+      const request: APIRequestContext = await apiRequest.newContext();
+      const guild = await seedGuild(request);
+      await request.dispose();
+      await use(guild);
+    },
+    { scope: "worker" },
+  ],
+
+  // Worker-scoped: 4 staked + approved experts in the `guild` fixture's
+  // guild. For each of anvil accounts 1..4: approve VETD -> stake ->
+  // register expert in BE.
   experts: [
-    async ({ anvil, contracts }, use) => {
+    async ({ anvil, contracts, guild }, use) => {
       // anvil intentionally referenced so this fixture depends on it.
       void anvil;
 
       const request: APIRequestContext = await apiRequest.newContext();
-      const experts = await seedExperts(request, contracts);
+      const experts = await seedExperts(request, contracts, guild);
       await request.dispose();
       await use(experts);
     },
