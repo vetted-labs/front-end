@@ -2,6 +2,7 @@
 import { keccak256, parseEther, toHex, type Hex } from "viem";
 import type { APIRequestContext } from "@playwright/test";
 import type { Expert } from "../fixtures";
+import type { Wallet } from "./chain";
 import type { ContractHandles } from "./contracts";
 import { BACKEND_URL } from "./backend";
 
@@ -23,6 +24,32 @@ export async function approveExpertsForBidding(
       { account: e.client.account },
     );
   }
+}
+
+/**
+ * Calls `EndorsementBidding.createJob(jobId)` from a non-expert wallet. Required
+ * before any expert can `placeBid` against the job (the contract reverts with
+ * `InvalidJob` if `jobs[jobId].creator == 0`). The creator is also forbidden
+ * from bidding on their own job, so this MUST be a wallet that no expert in the
+ * scenario uses. The creator must hold + have approved at least `minimumBid`
+ * VETD (1 VETD by default) for the anti-spam fee.
+ */
+export async function createJob(
+  creator: Wallet,
+  contracts: ContractHandles,
+  jobId: string,
+): Promise<{ txHash: Hex }> {
+  // Approve the creation fee (uses MAX_UINT256 to keep this idempotent across
+  // repeated calls in the same test).
+  await contracts.vettedToken.write.approve(
+    [contracts.endorsementBidding.address, MAX_UINT256],
+    { account: creator.client.account },
+  );
+  const txHash = await contracts.endorsementBidding.write.createJob(
+    [uuidToBytes32(jobId)],
+    { account: creator.client.account },
+  );
+  return { txHash };
 }
 
 export async function placeBid(
