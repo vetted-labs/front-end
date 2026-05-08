@@ -7,13 +7,15 @@ import {
   Globe,
   Download,
 } from "lucide-react";
-import { getAssetUrl } from "@/lib/api";
+import { resumeApi, type ResumeDownloadScope } from "@/lib/api";
+import { useFetch } from "@/lib/hooks/useFetch";
 import { getPlatformIcon } from "@/lib/social-links";
 import { getPersonAvatar } from "@/lib/avatars";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { SocialLink } from "@/types";
 
 interface ReviewProfileStepApplication {
+  id?: string;
   fullName: string;
   email: string;
   currentTitle?: string;
@@ -31,16 +33,33 @@ interface ReviewProfileStepApplication {
 export interface ReviewProfileStepProps {
   application: ReviewProfileStepApplication;
   level: string;
+  /**
+   * Which review flow we're in. Drives the resume download-URL endpoint:
+   * `/api/experts/guild-applications/:id/resume/download-url` for expert
+   * applications, etc. Defaults to expertApplication so existing call sites
+   * keep working.
+   */
+  reviewScope?: ResumeDownloadScope;
 }
 
 
-export function ReviewProfileStep({ application, level }: ReviewProfileStepProps) {
+export function ReviewProfileStep({
+  application,
+  level,
+  reviewScope = "expertApplication",
+}: ReviewProfileStepProps) {
   const isSyntheticResume = application.resumeUrl?.startsWith("demo://") ?? false;
-  const resumeUrl = isSyntheticResume
-    ? null
-    : application.resumeUrl
-      ? getAssetUrl(application.resumeUrl)
-      : null;
+  const hasRealResume = !isSyntheticResume && !!application.resumeUrl && !!application.id;
+
+  // Fetch a short-lived signed URL for the resume preview iframe. The raw
+  // /uploads/resumes/* path is privacy-guarded on the backend (returns 404
+  // by design — see app.ts:116-118), so we go through the auth-gated
+  // download-URL endpoint that issues a token-scoped URL.
+  const resumeFetch = useFetch(
+    () => resumeApi.getDownloadUrl(reviewScope, application.id!),
+    { skip: !hasRealResume },
+  );
+  const resumeUrl = isSyntheticResume ? null : resumeFetch.data?.url ?? null;
 
   const displayName = application.fullName;
   const displayTitle = application.currentTitle;

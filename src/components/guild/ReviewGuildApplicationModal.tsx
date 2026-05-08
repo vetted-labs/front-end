@@ -1723,7 +1723,19 @@ export function ReviewGuildApplicationModal({
               </Alert>
             )}
             {renderStep === 1 && (
-              <ReviewProfileStep application={application} level={level} />
+              <ReviewProfileStep
+                application={application}
+                level={level}
+                // Map the modal's reviewType to the resume-download scope so
+                // the iframe fetches via the right auth-gated endpoint.
+                reviewScope={
+                  proposalContext
+                    ? "application"
+                    : reviewTypeProp === "candidate"
+                      ? "candidateApplication"
+                      : "expertApplication"
+                }
+              />
             )}
             {renderStep === 2 && (
               <fieldset

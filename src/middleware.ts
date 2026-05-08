@@ -61,6 +61,10 @@ export function middleware(_request: NextRequest) {
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
     `connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* ${rpcConnectSrc}`,
+    // frame-src allows the resume PDF iframes (`<iframe src="${API_BASE_URL}/uploads/resumes/...">`)
+    // to load from the BE host. Without this, default-src 'self' blocks them
+    // and the user sees "This content is blocked. Contact the site owner."
+    "frame-src 'self' http://localhost:* https://*.up.railway.app blob: data:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -77,7 +81,11 @@ export function middleware(_request: NextRequest) {
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
     `connect-src 'self' https://*.up.railway.app ${rpcConnectSrc}`,
-    "frame-ancestors 'none'", // Prevent clickjacking
+    // frame-src allows the resume PDF iframes (`<iframe src="${API_BASE_URL}/uploads/resumes/...">`)
+    // to load from the BE host on Railway. Without this, default-src 'self'
+    // blocks them and the user sees Chrome's "This content is blocked" placeholder.
+    "frame-src 'self' https://*.up.railway.app blob: data:",
+    "frame-ancestors 'none'", // Prevent clickjacking (this controls who can frame US)
     "base-uri 'self'", // Prevent base tag injection
     "form-action 'self'", // Prevent form hijacking
     "object-src 'none'", // Block plugins like Flash
