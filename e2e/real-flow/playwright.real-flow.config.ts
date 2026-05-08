@@ -29,6 +29,14 @@ export default defineConfig({
       testMatch: /endorsement\/scenarios\/.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
+    // Smoke project for fixture/helpers sanity checks under
+    // `e2e/real-flow/__tests__/`. Kept separate from the scenario projects
+    // so a CI run scoped to `--project=review|endorsement` skips them.
+    {
+      name: "smoke",
+      testMatch: /__tests__\/.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: {
     command:
