@@ -1,0 +1,269 @@
+name: E2E Real Flow
+
+on:
+  pull_request:
+    paths:
+      - "e2e/real-flow/**"
+      - "src/lib/api.ts"
+      - ".github/workflows/e2e-real-flow.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-real-flow:
+    name: Real Flow E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      # Local anvil RPC
+      RPC_URL: http://127.0.0.1:8545
+      # Anvil's default deterministic mnemonic — produces the same 10 test
+      # accounts every run. We pass `--mnemonic "$ANVIL_MNEMONIC"` so the
+      # deployer key is derived at runtime instead of being hard-coded.
+      ANVIL_MNEMONIC: "test test test test test test test test test test test junk"
+      # Backend env
+      E2E_FIXTURE_ENABLED: "true"
+      ENDORSEMENT_RETENTION_SECONDS: "5"
+      ENDORSEMENT_CHALLENGE_SECONDS: "10"
+      BACKEND_URL: http://127.0.0.1:4000
+      # Frontend env (build-time placeholders)
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: dummy-ci-value
+      NEXT_PUBLIC_LINKEDIN_CLIENT_ID: dummy-ci-value
+
+    steps:
+      # ----------------------------------------------------------------
+      # Checkout all three repos (front-end is current repo, BE + contracts
+      # are siblings). NOTE: replace TODO repo paths with the real org/repo
+      # before this workflow can run.
+      # ----------------------------------------------------------------
+      - name: Checkout front-end
+        uses: actions/checkout@v4
+        with:
+          path: front-end
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          # TODO: replace `your-org/backend` with the actual org + repo name
+          repository: your-org/backend
+          path: backend
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout smart-contracts
+        uses: actions/checkout@v4
+        with:
+          # TODO: replace `your-org/smart-contracts` with the actual org + repo name
+          repository: your-org/smart-contracts
+          path: smart-contracts
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ----------------------------------------------------------------
+      # Toolchains
+      # ----------------------------------------------------------------
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      # ----------------------------------------------------------------
+      # Local chain
+      # ----------------------------------------------------------------
+      - name: Start anvil
+        run: |
+          anvil \
+            --host 127.0.0.1 \
+            --port 8545 \
+            --block-time 1 \
+            --mnemonic "$ANVIL_MNEMONIC" \
+            > anvil.log 2>&1 &
+          echo "ANVIL_PID=$!" >> "$GITHUB_ENV"
+          # Wait for anvil to be ready
+          for i in {1..30}; do
+            if curl -s -X POST -H "Content-Type: application/json" \
+              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+              "$RPC_URL" | grep -q result; then
+              echo "anvil is up"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Derive deployer key from anvil mnemonic
+        run: |
+          # cast wallet derives accounts deterministically from the mnemonic.
+          # Account index 0 is the canonical "deployer" wallet on local anvil.
+          KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" "m/44'/60'/0'/0/0")
+          echo "::add-mask::$KEY"
+          echo "DEPLOYER_PRIVATE_KEY=$KEY" >> "$GITHUB_ENV"
+
+      # ----------------------------------------------------------------
+      # Deploy contracts
+      #   1. Deploy.s.sol      — core contracts
+      #   2. export addresses  — into env for next scripts + BE/FE
+      #   3. SetupTestingGuild — bootstrap guild fixtures
+      #   4. evm_increaseTime  — skip MINT_RATE_LIMIT cooldown (24h + 1s)
+      #   5. MintTokens.s.sol  — mint test tokens to fixture wallets
+      # ----------------------------------------------------------------
+      - name: Deploy core contracts
+        working-directory: smart-contracts
+        run: |
+          forge script script/Deploy.s.sol \
+            --rpc-url "$RPC_URL" \
+            --private-key "$DEPLOYER_PRIVATE_KEY" \
+            --broadcast \
+            --json | tee deploy.out
+
+      - name: Export deployed addresses
+        working-directory: smart-contracts
+        run: |
+          # Pull addresses from broadcast artefacts and surface as env vars.
+          # The Deploy.s.sol script writes a `deployments/local.json` (or
+          # equivalent) — adjust the jq path if the contracts repo uses a
+          # different convention.
+          DEPLOY_FILE="deployments/local.json"
+          if [ ! -f "$DEPLOY_FILE" ]; then
+            echo "::error::Expected $DEPLOY_FILE after Deploy.s.sol"
+            exit 1
+          fi
+          {
+            echo "VETTED_TOKEN_ADDRESS=$(jq -r .VettedToken     "$DEPLOY_FILE")"
+            echo "GUILD_REGISTRY_ADDRESS=$(jq -r .GuildRegistry "$DEPLOY_FILE")"
+            echo "REPUTATION_ADDRESS=$(jq -r .Reputation        "$DEPLOY_FILE")"
+            echo "STAKING_ADDRESS=$(jq -r .Staking              "$DEPLOY_FILE")"
+          } >> "$GITHUB_ENV"
+
+      - name: Setup testing guild
+        working-directory: smart-contracts
+        run: |
+          forge script script/SetupTestingGuild.s.sol \
+            --rpc-url "$RPC_URL" \
+            --private-key "$DEPLOYER_PRIVATE_KEY" \
+            --broadcast
+
+      - name: Skip mint rate-limit cooldown
+        # MintTokens enforces a 24h cooldown after deploy. Fast-forward the
+        # local chain past the limit so the next script can mint immediately.
+        run: |
+          cast rpc evm_increaseTime 86401 --rpc-url "$RPC_URL"
+          cast rpc evm_mine          --rpc-url "$RPC_URL"
+
+      - name: Mint test tokens
+        working-directory: smart-contracts
+        run: |
+          forge script script/MintTokens.s.sol \
+            --rpc-url "$RPC_URL" \
+            --private-key "$DEPLOYER_PRIVATE_KEY" \
+            --broadcast
+
+      # ----------------------------------------------------------------
+      # Backend
+      # ----------------------------------------------------------------
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Start backend
+        working-directory: backend
+        env:
+          E2E_FIXTURE_ENABLED: "true"
+          ENDORSEMENT_RETENTION_SECONDS: "5"
+          ENDORSEMENT_CHALLENGE_SECONDS: "10"
+          RPC_URL: ${{ env.RPC_URL }}
+          VETTED_TOKEN_ADDRESS: ${{ env.VETTED_TOKEN_ADDRESS }}
+          GUILD_REGISTRY_ADDRESS: ${{ env.GUILD_REGISTRY_ADDRESS }}
+          REPUTATION_ADDRESS: ${{ env.REPUTATION_ADDRESS }}
+          STAKING_ADDRESS: ${{ env.STAKING_ADDRESS }}
+        run: |
+          npm run start:e2e > backend.log 2>&1 &
+          echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
+          # Wait for /health
+          for i in {1..60}; do
+            if curl -s "$BACKEND_URL/health" | grep -q ok; then
+              echo "backend is up"
+              break
+            fi
+            sleep 1
+          done
+
+      # ----------------------------------------------------------------
+      # Bootstrap Suite B fixtures via test-only seed endpoints.
+      # E2E_FIXTURE_ENABLED=true gates these routes server-side.
+      # ----------------------------------------------------------------
+      - name: Bootstrap Suite B tokens
+        run: |
+          set -euo pipefail
+
+          COMPANY_RES=$(curl -sS -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"suite":"B"}' \
+            "$BACKEND_URL/api/test/seed/company")
+          COMPANY_TOKEN=$(echo "$COMPANY_RES" | jq -r .token)
+          if [ -z "$COMPANY_TOKEN" ] || [ "$COMPANY_TOKEN" = "null" ]; then
+            echo "::error::seed/company did not return a token: $COMPANY_RES"
+            exit 1
+          fi
+
+          EXPERT_RES=$(curl -sS -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"suite":"B"}' \
+            "$BACKEND_URL/api/test/seed/expert-token")
+          EXPERT_TOKENS=$(echo "$EXPERT_RES" | jq -c .tokens)
+          if [ -z "$EXPERT_TOKENS" ] || [ "$EXPERT_TOKENS" = "null" ]; then
+            echo "::error::seed/expert-token did not return tokens: $EXPERT_RES"
+            exit 1
+          fi
+
+          {
+            echo "E2E_COMPANY_TOKEN=$COMPANY_TOKEN"
+            echo "E2E_EXPERT_TOKENS=$EXPERT_TOKENS"
+          } >> "$GITHUB_ENV"
+
+      # ----------------------------------------------------------------
+      # Frontend + Playwright
+      # ----------------------------------------------------------------
+      - name: Install frontend deps
+        working-directory: front-end
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: front-end
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real-flow E2E
+        working-directory: front-end
+        env:
+          NEXT_PUBLIC_API_URL: ${{ env.BACKEND_URL }}
+          E2E_COMPANY_TOKEN: ${{ env.E2E_COMPANY_TOKEN }}
+          E2E_EXPERT_TOKENS: ${{ env.E2E_EXPERT_TOKENS }}
+          RPC_URL: ${{ env.RPC_URL }}
+        run: npm run e2e:real-flow
+
+      # ----------------------------------------------------------------
+      # Artefacts (failure only)
+      # ----------------------------------------------------------------
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-real-flow
+          path: front-end/playwright-report-real-flow
+          retention-days: 14
+
+      - name: Upload service logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: |
+            anvil.log
+            backend/backend.log
+          retention-days: 14
