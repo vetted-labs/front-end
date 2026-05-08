@@ -54,6 +54,19 @@ interface UseFormPersistenceOptions<T> {
    * lose the last keystrokes.
    */
   flushOnHide?: boolean;
+  /**
+   * If true (default = follows `flushOnHide`), pending writes are flushed on
+   * the `pagehide` event. iOS Safari frequently fires `pagehide` instead of
+   * `visibilitychange`/`beforeunload` when a user swipes back or backgrounds
+   * the tab, so opting out separately is rarely useful.
+   */
+  flushOnPageHide?: boolean;
+  /**
+   * If true (default = follows `flushOnHide`), pending writes are flushed on
+   * `beforeunload`. We never call `preventDefault()` so no "leave site?"
+   * prompt is shown — this is purely a last-keystroke save.
+   */
+  flushOnBeforeUnload?: boolean;
   /** Called when a valid draft is found on hydrate or via cross-tab sync. */
   onRestore?: (data: T) => void;
   /** Migrate older versions. Return the upgraded T, or `null` to discard. */
@@ -208,6 +221,8 @@ export function useFormPersistence<T>(
     debounceMs = DEFAULT_DEBOUNCE_MS,
     excludeFields,
     flushOnHide = true,
+    flushOnPageHide = flushOnHide,
+    flushOnBeforeUnload = flushOnHide,
     onRestore,
     migrate,
   } = options;
@@ -347,12 +362,16 @@ export function useFormPersistence<T>(
   }, [storageKey]);
 
   // Flush pending save when the page is hidden so a tab close within the
-  // debounce window doesn't drop the last keystrokes.
+  // debounce window doesn't drop the last keystrokes. We attach to three
+  // lifecycle events so the major browser quirks are all covered:
+  //   - `visibilitychange` (most browsers, including tab switches)
+  //   - `pagehide`         (iOS Safari swipe-back / bfcache)
+  //   - `beforeunload`     (refresh / browser close on desktop)
+  // Each is opt-in via its own flag, defaulting to follow `flushOnHide`.
   // eslint-disable-next-line no-restricted-syntax -- listens for page lifecycle to flush pending writes
   useEffect(() => {
-    if (!flushOnHide) return;
-    const handler = () => {
-      if (document.visibilityState !== "hidden") return;
+    if (!flushOnHide && !flushOnPageHide && !flushOnBeforeUnload) return;
+    const writePendingSnapshot = () => {
       if (debounceTimerRef.current === null) return;
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -366,9 +385,40 @@ export function useFormPersistence<T>(
       };
       safeWrite(storageKey, JSON.stringify(draft));
     };
-    document.addEventListener("visibilitychange", handler);
-    return () => document.removeEventListener("visibilitychange", handler);
-  }, [flushOnHide, storageKey, version, stableExcludeFields]);
+
+    const handleVisibility = () => {
+      if (document.visibilityState !== "hidden") return;
+      writePendingSnapshot();
+    };
+    const handlePageHide = () => {
+      writePendingSnapshot();
+    };
+    const handleBeforeUnload = () => {
+      // Deliberately no preventDefault() — we only want to flush, never prompt.
+      writePendingSnapshot();
+    };
+
+    if (flushOnHide) {
+      document.addEventListener("visibilitychange", handleVisibility);
+    }
+    if (flushOnPageHide) {
+      window.addEventListener("pagehide", handlePageHide);
+    }
+    if (flushOnBeforeUnload) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
+    return () => {
+      if (flushOnHide) {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
+      if (flushOnPageHide) {
+        window.removeEventListener("pagehide", handlePageHide);
+      }
+      if (flushOnBeforeUnload) {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      }
+    };
+  }, [flushOnHide, flushOnPageHide, flushOnBeforeUnload, storageKey, version, stableExcludeFields]);
 
   // Cleanup pending debounce timer on unmount.
   // eslint-disable-next-line no-restricted-syntax -- clears pending debounce on unmount

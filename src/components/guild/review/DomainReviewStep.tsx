@@ -1,7 +1,17 @@
 "use client";
 
 import { AlertTriangle, Award, Loader2 } from "lucide-react";
-import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
+import {
+  ScoreButtons,
+  renderPromptLines,
+  RequiredMark,
+  OptionalMark,
+  fieldAnchorId,
+  JUSTIFICATION_MIN_CHARS,
+  JUSTIFICATION_MAX_CHARS,
+  justificationCounterTone,
+  justificationCounterClass,
+} from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { LevelReviewTemplate, ReviewDomainTopic, RubricRedFlag } from "@/types";
@@ -71,11 +81,16 @@ export function DomainReviewStep({
           topicList.map((topic, index) => {
             const score = topicScores[topic.id] || 0;
             const pct = (score / 5) * 100;
+            const justificationValue = topicJustifications[topic.id] || "";
+            const tone = justificationCounterTone(justificationValue.length, {
+              required: true,
+            });
 
             return (
               <div
                 key={topic.id}
-                className="rounded-xl border border-border bg-card overflow-hidden"
+                id={fieldAnchorId("domain", topic.id)}
+                className="rounded-xl border border-border bg-card overflow-hidden scroll-mt-24"
                 {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicCard) : {})}
               >
                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
@@ -106,7 +121,10 @@ export function DomainReviewStep({
                   </div>
 
                   <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">Scoring</p>
+                    <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">
+                      Scoring
+                      <RequiredMark />
+                    </p>
                     {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
                       <div
                         className="space-y-2"
@@ -147,21 +165,32 @@ export function DomainReviewStep({
                       }
                     />
                     <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicJustification) : {})}>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Justification <span className={`${STATUS_COLORS.negative.text} opacity-60`}>*</span>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                        <span>Justification</span>
+                        <RequiredMark label={`Required — min ${JUSTIFICATION_MIN_CHARS} characters`} />
                       </p>
                       <textarea
-                        value={topicJustifications[topic.id] || ""}
+                        value={justificationValue}
                         onChange={(e) =>
                           onTopicJustificationsChange((prev) => ({
                             ...prev,
-                            [topic.id]: e.target.value,
+                            [topic.id]: e.target.value.slice(0, JUSTIFICATION_MAX_CHARS),
                           }))
                         }
-                        placeholder="Tie the score to specific criteria from the rubric..."
+                        maxLength={JUSTIFICATION_MAX_CHARS}
+                        aria-required={true}
+                        placeholder={`Tie the score to specific criteria from the rubric (min ${JUSTIFICATION_MIN_CHARS} chars)…`}
                         rows={2}
                         className="w-full px-3.5 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none transition-all"
                       />
+                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                        <span className="text-muted-foreground/70">
+                          Min {JUSTIFICATION_MIN_CHARS} chars
+                        </span>
+                        <span className={`tabular-nums ${justificationCounterClass(tone)}`}>
+                          {justificationValue.length} / {JUSTIFICATION_MAX_CHARS}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -173,7 +202,8 @@ export function DomainReviewStep({
 
       {/* Red Flags */}
       <div
-        className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden`}
+        id={fieldAnchorId("overall", "redflags")}
+        className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden scroll-mt-24`}
         {...dataTourTarget(TOUR_TARGETS.practiceReviewRedFlagList)}
       >
         <div className={`flex items-center gap-3 px-5 py-3.5 border-b ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle}`}>
@@ -220,7 +250,8 @@ export function DomainReviewStep({
 
       {/* Overall Score Summary */}
       <div
-        className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-6"
+        id={fieldAnchorId("overall", "score")}
+        className="relative overflow-hidden rounded-xl border border-warning/20 bg-warning/5 p-6 scroll-mt-24"
         {...dataTourTarget(TOUR_TARGETS.practiceReviewOverallSummary)}
       >
         <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-warning/10 blur-3xl" />
@@ -254,8 +285,9 @@ export function DomainReviewStep({
 
       {/* Feedback */}
       <div {...dataTourTarget(TOUR_TARGETS.practiceReviewFeedback)}>
-        <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3">
-          Feedback (Optional)
+        <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3 flex items-center">
+          Feedback
+          <OptionalMark />
         </p>
         <textarea
           value={feedback}

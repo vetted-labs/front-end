@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Briefcase } from "lucide-react";
+import { ChevronRight, Clock, ExternalLink, Eye, FileText, Loader2, Users, ShieldCheck, Briefcase } from "lucide-react";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
@@ -32,6 +32,13 @@ function getAccentColors(vettingState: string): {
       return {
         bar: "bg-positive",
         avatar: "bg-positive/70",
+      };
+    case "committing":
+      // In-flight: lighter / lower-saturation than the post-confirm `committed`
+      // so the user sees the vote is still propagating.
+      return {
+        bar: "bg-info-blue/60",
+        avatar: "bg-info-blue/40",
       };
     case "committed":
       return {
@@ -79,11 +86,17 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
     finalized: STATUS_COLORS.positive.text,
   };
 
-  // Derive vetting review state for the status badge
+  // Derive vetting review state for the status badge.
+  // `committing` is the post-sign / pre-BE-confirm window — anytime
+  // `expertHasReviewed` is true while the on-chain phase is still "commit",
+  // we treat the vote as in-flight (the BE either hasn't reconciled the
+  // commit yet, or the commit-reveal session has more reviewers to gather).
+  // The optimistic flip in `markExpertReviewed` lands us here instantly so
+  // the user sees their vote register without waiting for refetch.
   const vettingState = phase === "finalized"
     ? "finalized"
     : isReviewed && phase === "commit"
-    ? "committed"
+    ? "committing"
     : isReviewed
     ? "revealed"
     : "needs_review";
@@ -210,19 +223,21 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
               className={`inline-flex items-center gap-2 font-medium ${
                 vettingState === "finalized" || vettingState === "revealed"
                   ? STATUS_COLORS.positive.text
-                  : vettingState === "committed"
+                  : vettingState === "committing"
                   ? STATUS_COLORS.info.text
                   : "text-primary"
               }`}
               {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardStatus) : {})}
             >
-              <span className={`w-[5px] h-[5px] rounded-full ${
-                vettingState === "finalized" || vettingState === "revealed"
-                  ? STATUS_COLORS.positive.dot
-                  : vettingState === "committed"
-                  ? STATUS_COLORS.info.dot
-                  : "bg-primary"
-              }`} />
+              {vettingState === "committing" ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <span className={`w-[5px] h-[5px] rounded-full ${
+                  vettingState === "finalized" || vettingState === "revealed"
+                    ? STATUS_COLORS.positive.dot
+                    : "bg-primary"
+                }`} />
+              )}
               {stateConfig.label}
             </span>
           </div>

@@ -185,6 +185,50 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
     }
   }, [guild, autoOpenedReview, searchParams, stakingStatus]);
 
+  // Poll the BE while the review modal is open and the on-chain session is
+  // still being prepared. The cron that creates the session ticks every 30s,
+  // so without polling the modal banner stays "Preparing on-chain session…"
+  // until the user closes and reopens it.
+  //
+  // Cleanup is registered unconditionally so an effect run that early-returns
+  // (e.g. modal closes mid-poll, or selectedExpertMembershipApplication swaps)
+  // still tears down any interval started by a prior run, preventing leaks.
+  // eslint-disable-next-line no-restricted-syntax -- runtime polling for backend session creation
+  useEffect(() => {
+    let alive = true;
+    let intervalId: number | null = null;
+
+    const shouldPoll =
+      showReviewModal &&
+      applicationReviewType === "expert" &&
+      !!selectedExpertMembershipApplication?.id &&
+      crPhaseStatus?.votingPhase === "commit" &&
+      !crPhaseStatus?.blockchainSessionCreated;
+
+    if (shouldPoll && selectedExpertMembershipApplication?.id) {
+      const appId = selectedExpertMembershipApplication.id;
+      intervalId = window.setInterval(async () => {
+        try {
+          const updated = await expertApi.expertCommitReveal.getPhaseStatus(appId);
+          if (alive) setCrPhaseStatus(updated);
+        } catch {
+          /* transient — keep polling */
+        }
+      }, 5000);
+    }
+
+    return () => {
+      alive = false;
+      if (intervalId !== null) window.clearInterval(intervalId);
+    };
+  }, [
+    showReviewModal,
+    applicationReviewType,
+    selectedExpertMembershipApplication?.id,
+    crPhaseStatus?.votingPhase,
+    crPhaseStatus?.blockchainSessionCreated,
+  ]);
+
   const fetchLeaderboard = async () => {
     if (!address || isLoadingLeaderboard) return;
     await executeLeaderboard(
@@ -353,17 +397,42 @@ export function GuildDetailView({ guildId }: GuildDetailViewProps) {
   };
 
   const handleReviewSuccess = () => {
-    if (selectedExpertMembershipApplication && applicationReviewType === "expert") {
+    const appId = selectedExpertMembershipApplication?.id;
+    if (appId && applicationReviewType === "expert") {
+      // Optimistic flip — avoids "is my vote saved?" confusion that lost a
+      // real review on Sven Wallet 2 when refetch raced with the on-chain
+      // commit landing.
       setGuild(prev => prev ? {
         ...prev,
         guildApplications: prev.guildApplications.map(app =>
-          app.id === selectedExpertMembershipApplication.id
+          app.id === appId
             ? { ...app, expertHasReviewed: true, reviewCount: (app.reviewCount || 0) + 1 }
             : app
         ),
       } : prev);
+    } else if (appId && applicationReviewType === "candidate") {
+      setCandidateApplications(prev =>
+        prev.map(app =>
+          app.id === appId
+            ? { ...app, expertHasReviewed: true, reviewCount: app.reviewCount + 1 }
+            : app
+        )
+      );
     }
+
     refetch();
+
+    // Re-pull phase status once so a commit→reveal/finalized advancement
+    // (e.g. last reviewer just committed) propagates to the modal banner
+    // and any phase-derived card state.
+    if (appId && applicationReviewType === "expert") {
+      expertApi.expertCommitReveal
+        .getPhaseStatus(appId)
+        .then((status) => setCrPhaseStatus(status))
+        .catch((err) => {
+          logger.warn("Could not refresh commit-reveal phase status post-commit", err);
+        });
+    }
   };
 
   if (isLoading && !guild) return null;

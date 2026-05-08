@@ -44,6 +44,11 @@ export function useApplicationsData() {
   const [filterMode, setFilterMode] = useState<ApplicationsFilterMode>("assigned");
   const [activeTab, setActiveTab] = useState<ApplicationsTabType>("expert");
   const [reviewedCandidateIds, setReviewedCandidateIds] = useState<Set<string>>(new Set());
+  // Optimistic flip for expert applications. Mirrors `reviewedCandidateIds` —
+  // we flip the card to a "Committing…" state instantly so the user sees their
+  // signed commitVote land in the UI before the BE refetch completes. Avoids
+  // the "is my vote saved?" confusion that lost a real review on Sven Wallet 2.
+  const [reviewedExpertIds, setReviewedExpertIds] = useState<Set<string>>(new Set());
 
   const isAllGuilds = selectedGuild.id === "all";
 
@@ -192,13 +197,24 @@ export function useApplicationsData() {
   // Derived data
   const expertApps = useMemo(() => {
     const raw = expertAppsRaw ?? [];
-    if (!isStoryLabPreview) return raw;
+    const withOptimistic = reviewedExpertIds.size === 0
+      ? raw
+      : raw.map((app) =>
+          reviewedExpertIds.has(app.id)
+            ? {
+                ...app,
+                expertHasReviewed: true,
+                reviewCount: (app.reviewCount ?? 0) + (app.expertHasReviewed ? 0 : 1),
+              }
+            : app
+        );
+    if (!isStoryLabPreview) return withOptimistic;
     return prependUniqueById(
-      raw,
+      withOptimistic,
       buildStoryLabReviewApplication(storyGuild),
       (item) => item.id
     );
-  }, [expertAppsRaw, isStoryLabPreview, storyGuild]);
+  }, [expertAppsRaw, isStoryLabPreview, storyGuild, reviewedExpertIds]);
 
   const candidateApps = useMemo(() => {
     const raw = candidateAppsRaw ?? [];
@@ -335,7 +351,16 @@ export function useApplicationsData() {
     refetchProposals,
     refetchHistoryCandidateApps,
 
-    // Optimistic update helper
+    // Optimistic update helpers.
+    //
+    // Both helpers flip locally and trust the BE refetch / reconciliation to
+    // converge. We don't rollback on submit failure — the BE submit is being
+    // made idempotent and reconciliation catches orphaned commits. A 409 here
+    // (duplicate) is benign because the optimistic flip already reflects truth.
+    // TODO(rollback): if the BE idempotency contract surfaces a hard mismatch
+    // (e.g. a 409 with `code: "vote_mismatch"`), revert the corresponding id
+    // here. Until then the symmetric flow is: flip → refetch → diverge=BE wins.
     markCandidateReviewed: (id: string) => setReviewedCandidateIds((prev) => new Set(prev).add(id)),
+    markExpertReviewed: (id: string) => setReviewedExpertIds((prev) => new Set(prev).add(id)),
   };
 }

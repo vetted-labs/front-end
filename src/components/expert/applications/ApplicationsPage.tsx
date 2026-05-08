@@ -107,6 +107,50 @@ export default function ApplicationsPage() {
     }
   }, [isStoryLabPreview, activeStepId, data.expertApps, showReviewModal, selectedReviewApp?.id]);
 
+  // Poll the BE while the review modal is open and the on-chain session is
+  // still being prepared. The cron that creates the session ticks every 30s,
+  // so without polling the modal banner stays "Preparing on-chain session…"
+  // until the user closes and reopens it.
+  //
+  // Cleanup is registered unconditionally so an effect run that early-returns
+  // (e.g. modal closes mid-poll, or selectedReviewApp swaps) still tears down
+  // any interval started by a prior run, preventing leaked timers.
+  // eslint-disable-next-line no-restricted-syntax -- runtime polling for backend session creation
+  useEffect(() => {
+    let alive = true;
+    let intervalId: number | null = null;
+
+    const shouldPoll =
+      showReviewModal &&
+      reviewType === "expert" &&
+      !!selectedReviewApp?.id &&
+      crPhaseStatus?.votingPhase === "commit" &&
+      !crPhaseStatus?.blockchainSessionCreated;
+
+    if (shouldPoll && selectedReviewApp?.id) {
+      const appId = selectedReviewApp.id;
+      intervalId = window.setInterval(async () => {
+        try {
+          const updated = await expertApi.expertCommitReveal.getPhaseStatus(appId);
+          if (alive) setCrPhaseStatus(updated);
+        } catch {
+          /* transient — keep polling */
+        }
+      }, 5000);
+    }
+
+    return () => {
+      alive = false;
+      if (intervalId !== null) window.clearInterval(intervalId);
+    };
+  }, [
+    showReviewModal,
+    reviewType,
+    selectedReviewApp?.id,
+    crPhaseStatus?.votingPhase,
+    crPhaseStatus?.blockchainSessionCreated,
+  ]);
+
   // Handlers
   const handleReviewExpert = async (application: ExpertMembershipApplication) => {
     if (!data.isStakedInGuild(application.guildId)) {
@@ -150,6 +194,34 @@ export default function ApplicationsPage() {
     setViewReviewApplicantName(candidateApp.candidateName);
     setViewReviewType("candidate");
     setShowViewReview(true);
+  };
+
+  // Fired by the modal after a successful on-chain commit OR direct review
+  // submission. Flips the card optimistically (reviewedExpertIds / candidate
+  // equivalent), refetches the queue, and re-pulls phase status once so a
+  // commit→reveal/finalized advancement propagates to the modal banner.
+  const handleReviewSuccess = () => {
+    const appId = selectedReviewApp?.id;
+    if (appId) {
+      if (reviewType === "expert") {
+        data.markExpertReviewed(appId);
+      } else if (reviewType === "candidate") {
+        data.markCandidateReviewed(appId);
+      }
+    }
+
+    data.refetchExpertApps();
+    data.refetchCandidateApps();
+    data.refetchHistoryCandidateApps();
+
+    if (appId && reviewType === "expert") {
+      expertApi.expertCommitReveal
+        .getPhaseStatus(appId)
+        .then((status) => setCrPhaseStatus(status))
+        .catch(() => {
+          /* leave stale phase status; modal will re-fetch on next open */
+        });
+    }
   };
 
   const handleReviewProposal = (proposal: GuildApplication) => {
@@ -397,6 +469,7 @@ export default function ApplicationsPage() {
         blockchainSessionCreated={reviewType === "expert" ? crPhaseStatus?.blockchainSessionCreated : undefined}
         reviewerId={data.expertData?.id}
         expertWallet={data.address || undefined}
+        onReviewSuccess={handleReviewSuccess}
         reviewType={reviewType}
       />
 

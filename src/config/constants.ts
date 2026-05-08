@@ -166,6 +166,12 @@ export const COMMIT_REVEAL_STATUS_LABELS: Record<string, string> = {
  */
 export const VETTING_REVIEW_STATE_CONFIG: Record<string, { label: string; className: string }> = {
   needs_review: { label: "Needs Review", className: STATUS_COLORS.pending.badge },
+  // `committing` reflects the in-flight gap between the user signing
+  // commitVote and the BE having reconciled the on-chain commit. It's
+  // visually lighter than `committed` so the user understands the vote is
+  // still propagating — see the Sven Wallet 2 incident where the card
+  // continued to show "Needs Review" post-commit and the user re-voted.
+  committing: { label: "Committing…", className: `${STATUS_COLORS.info.badge} animate-pulse` },
   committed: { label: "Committed", className: STATUS_COLORS.warning.badge },
   revealed: { label: "Revealed", className: STATUS_COLORS.positive.badge },
   finalized: { label: "Finalized", className: "bg-muted text-muted-foreground border-border" },

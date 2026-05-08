@@ -1,7 +1,15 @@
 "use client";
 
 import { Loader2, Sparkles } from "lucide-react";
-import { ScoreButtons, renderPromptLines } from "@/components/guild/review/shared";
+import {
+  ScoreButtons,
+  RequiredMark,
+  fieldAnchorId,
+  JUSTIFICATION_MIN_CHARS,
+  JUSTIFICATION_MAX_CHARS,
+  justificationCounterTone,
+  justificationCounterClass,
+} from "@/components/guild/review/shared";
 import { STATUS_COLORS } from "@/config/colors";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type {
@@ -71,11 +79,21 @@ export function GeneralReviewStep({
               criteria.reduce((acc: number, c) => acc + (c.maxPoints || c.max || 0), 0);
             const score = generalTotals[question.id] || 0;
             const pct = maxPoints > 0 ? (score / maxPoints) * 100 : 0;
+            // A justification is required whenever the rubric awards more than 1 point
+            // total (high-stakes question per the rubric `whatToLookFor` / `scoring` cue).
+            // The `guild_improvement` question is reflective and not scored.
+            const isScored = question.scored !== false && question.id !== "guild_improvement";
+            const justificationRequired = isScored && maxPoints > 1;
+            const justificationValue = generalJustifications[question.id] || "";
+            const tone = justificationCounterTone(justificationValue.length, {
+              required: justificationRequired,
+            });
 
             return (
               <div
                 key={question.id}
-                className="rounded-xl border border-border bg-card overflow-hidden"
+                id={fieldAnchorId("general", question.id)}
+                className="rounded-xl border border-border bg-card overflow-hidden scroll-mt-24"
               >
                 {/* Question header with score */}
                 <div
@@ -147,6 +165,7 @@ export function GeneralReviewStep({
                         <p className="text-xs text-muted-foreground">
                           {criterion.label}{" "}
                           <span className="text-muted-foreground/60">(max {criterion.maxPoints || criterion.max || 0})</span>
+                          {isScored ? <RequiredMark /> : null}
                         </p>
                         <div
                           {...(index === 0 && criterionIndex === 0
@@ -167,21 +186,46 @@ export function GeneralReviewStep({
                       </div>
                     ))}
                     <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewJustification) : {})}>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Justification <span className="text-negative/60">*</span>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                        <span>Justification</span>
+                        {justificationRequired ? (
+                          <RequiredMark
+                            label={`Required — min ${JUSTIFICATION_MIN_CHARS} characters`}
+                          />
+                        ) : (
+                          <span className="text-muted-foreground/70 text-[11px] font-normal">
+                            (optional)
+                          </span>
+                        )}
                       </p>
                       <textarea
-                        value={generalJustifications[question.id] || ""}
+                        value={justificationValue}
                         onChange={(e) =>
                           onGeneralJustificationsChange((prev) => ({
                             ...prev,
-                            [question.id]: e.target.value,
+                            [question.id]: e.target.value.slice(0, JUSTIFICATION_MAX_CHARS),
                           }))
                         }
-                        placeholder="Explain why you gave these points..."
+                        maxLength={JUSTIFICATION_MAX_CHARS}
+                        aria-required={justificationRequired ? true : undefined}
+                        placeholder={
+                          justificationRequired
+                            ? `Explain why you gave these points (min ${JUSTIFICATION_MIN_CHARS} chars)…`
+                            : "Explain why you gave these points..."
+                        }
                         rows={2}
                         className="w-full px-3.5 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none transition-all"
                       />
+                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                        <span className="text-muted-foreground/70">
+                          {justificationRequired
+                            ? `Min ${JUSTIFICATION_MIN_CHARS} chars`
+                            : ""}
+                        </span>
+                        <span className={`tabular-nums ${justificationCounterClass(tone)}`}>
+                          {justificationValue.length} / {JUSTIFICATION_MAX_CHARS}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

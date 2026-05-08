@@ -741,12 +741,13 @@ export const expertApi = {
       body: JSON.stringify(data),
     }),
 
-  uploadResume: (expertId: string, file: File) => {
+  uploadResume: (expertId: string, file: File, walletAddress: string) => {
     const formData = new FormData();
     formData.append("resume", file);
     return apiRequest<{ resumeUrl: string }>(`/api/experts/${expertId}/resume`, {
       method: "POST",
       requiresAuth: false,
+      headers: { "x-wallet-address": walletAddress },
       body: formData,
     });
   },
@@ -1890,13 +1891,24 @@ export const reviewsApi = {
         `/api/experts/guild-applications/${applicationId}/review/draft`,
         { requiresAuth: false }
       ),
-    putDraft: (applicationId: string, body: Record<string, unknown>) =>
+    putDraft: (
+      applicationId: string,
+      body: Record<string, unknown>,
+      options?: { lastSeenModified?: string | null },
+    ) =>
       apiRequest<ReviewDraftResponse>(
         `/api/experts/guild-applications/${applicationId}/review/draft`,
         {
           method: "PUT",
           requiresAuth: false,
-          body: JSON.stringify({ body }),
+          // `lastSeenModified` lets the BE detect concurrent-tab conflicts
+          // and respond 409 instead of clobbering a newer draft. Optional —
+          // first save in a session can omit it.
+          body: JSON.stringify(
+            options?.lastSeenModified
+              ? { body, lastSeenModified: options.lastSeenModified }
+              : { body },
+          ),
         }
       ),
     getCommitHash: (applicationId: string, score: number) =>

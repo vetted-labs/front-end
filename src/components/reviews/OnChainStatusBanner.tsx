@@ -1,24 +1,26 @@
 "use client";
 
-import { Loader2, CheckCircle2, AlertTriangle, ExternalLink, Save } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, ExternalLink, Save, Copy } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export type OnChainStatus =
   | { kind: "saving_draft" }
   | { kind: "ready" }
   | { kind: "preparing_session"; attempt?: number; lastError?: string }
-  | { kind: "awaiting_signature" }
-  | { kind: "confirming"; txHash: string; blocksRemaining?: number }
+  | { kind: "awaiting_signature"; elapsedMs?: number }
+  | { kind: "confirming"; txHash: string; blocksRemaining?: number; elapsedMs?: number }
   | { kind: "confirmed"; txHash: string }
-  | { kind: "recovering"; reason: string }
-  | { kind: "failed"; reason: string; canRetry: boolean };
+  | { kind: "recovering"; reason: string; txHash?: string; nextRetryInMs?: number; attempt?: number }
+  | { kind: "failed"; reason: string; canRetry: boolean; txHash?: string };
 
 interface Props {
   status: OnChainStatus;
   sessionId?: string;
   explorerBase?: string; // default https://sepolia.etherscan.io
   onRetry?: () => void;
+  onCancel?: () => void;
 }
 
 const explorerTxUrl = (base: string, hash: string) => `${base}/tx/${hash}`;
@@ -28,6 +30,7 @@ export function OnChainStatusBanner({
   sessionId,
   explorerBase = "https://sepolia.etherscan.io",
   onRetry,
+  onCancel,
 }: Props) {
   const k = status.kind;
 
@@ -60,19 +63,43 @@ export function OnChainStatusBanner({
     );
   }
   if (k === "awaiting_signature") {
+    const elapsedSec = Math.floor((status.elapsedMs ?? 0) / 1000);
+    // Escalation thresholds: 30s nudges to check the wallet popup, 90s offers a cancel.
+    const showNudge = elapsedSec >= 30;
+    const showCancel = elapsedSec >= 90;
     return (
       <Row palette={STATUS_COLORS.info} icon={<Loader2 className="w-4 h-4 animate-spin" />}>
-        Awaiting wallet signature in MetaMask…
+        <span className="flex-1">
+          {showNudge
+            ? "MetaMask still waiting — check your wallet popup"
+            : "Awaiting wallet signature in MetaMask…"}
+          {elapsedSec > 0 && (
+            <span className="ml-2 text-xs opacity-70">({elapsedSec}s)</span>
+          )}
+        </span>
+        {showCancel && onCancel && (
+          <button
+            onClick={onCancel}
+            className="text-xs underline shrink-0"
+            type="button"
+          >
+            cancel
+          </button>
+        )}
       </Row>
     );
   }
   if (k === "confirming") {
+    const elapsedSec = Math.floor((status.elapsedMs ?? 0) / 1000);
     return (
       <Row palette={STATUS_COLORS.info} icon={<Loader2 className="w-4 h-4 animate-spin" />}>
         Confirming on Sepolia…
         {status.blocksRemaining !== undefined && (
-          <span className="text-xs">({status.blocksRemaining} blocks remaining)</span>
+          <span className="text-xs">
+            ({status.blocksRemaining} {status.blocksRemaining === 1 ? "block" : "blocks"} remaining)
+          </span>
         )}
+        {elapsedSec > 0 && <span className="text-xs opacity-70">{elapsedSec}s elapsed</span>}
         <a
           href={explorerTxUrl(explorerBase, status.txHash)}
           target="_blank"
@@ -100,9 +127,30 @@ export function OnChainStatusBanner({
     );
   }
   if (k === "recovering") {
+    const nextSec = status.nextRetryInMs !== undefined
+      ? Math.max(0, Math.ceil(status.nextRetryInMs / 1000))
+      : undefined;
     return (
       <Row palette={STATUS_COLORS.warning} icon={<Loader2 className="w-4 h-4 animate-spin" />}>
-        Recovering from prior session: {status.reason}
+        <span className="flex-1">
+          Recovering prior session: {status.reason}
+          {status.attempt !== undefined && status.attempt > 1 && (
+            <span className="ml-2 text-xs opacity-70">(attempt {status.attempt})</span>
+          )}
+          {nextSec !== undefined && nextSec > 0 && (
+            <span className="ml-2 text-xs opacity-70">retrying in {nextSec}s…</span>
+          )}
+        </span>
+        {status.txHash && (
+          <a
+            href={explorerTxUrl(explorerBase, status.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs underline shrink-0"
+          >
+            tx {truncate(status.txHash)} <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
       </Row>
     );
   }
@@ -110,8 +158,32 @@ export function OnChainStatusBanner({
   return (
     <Row palette={STATUS_COLORS.negative} icon={<AlertTriangle className="w-4 h-4" />}>
       <span className="flex-1">{status.reason}</span>
+      {status.txHash && (
+        <>
+          <a
+            href={explorerTxUrl(explorerBase, status.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs underline shrink-0"
+          >
+            view tx <ExternalLink className="w-3 h-3" />
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard?.writeText(status.txHash!).then(
+                () => toast.success("Tx hash copied"),
+                () => toast.error("Could not copy tx hash"),
+              );
+            }}
+            className="inline-flex items-center gap-1 text-xs underline shrink-0"
+          >
+            <Copy className="w-3 h-3" /> copy tx
+          </button>
+        </>
+      )}
       {status.canRetry && onRetry && (
-        <button onClick={onRetry} className="text-xs underline">
+        <button onClick={onRetry} className="text-xs underline shrink-0" type="button">
           retry
         </button>
       )}
