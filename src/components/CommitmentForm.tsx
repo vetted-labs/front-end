@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { reviewsApi, extractApiError } from "@/lib/api";
+import { reviewsApi, extractApiError, ApiError } from "@/lib/api";
 import { useVettingManager } from "@/lib/hooks/useVettedContracts";
 import { useReviewDraft } from "@/lib/hooks/useReviewDraft";
 import { useReviewState } from "@/lib/hooks/useReviewState";
@@ -119,11 +119,12 @@ export function CommitmentForm({
         });
       }
 
-      // 4. Submit to BE for verification + persistence.
-      await reviewsApi.proposal.submit(applicationId, {
-        score: draft.body.score,
-        txHash,
-      });
+      // 4. Submit to BE for verification + persistence — with retry.
+      // BE's RPC node can lag the FE's by a block, returning 400
+      // "Awaiting finality (N blocks remaining)" right after the FE's
+      // waitForTransactionReceipt resolves. Retry with backoff so a
+      // successful tx isn't surfaced as a hard failure.
+      await submitWithRetry(applicationId, draft.body.score, txHash);
 
       setSubmitState({ kind: "confirmed", txHash });
       toast.success("Vote committed on-chain");
@@ -133,6 +134,45 @@ export function CommitmentForm({
       setSubmitState({ kind: "failed", reason, canRetry: true });
       toast.error(reason);
     }
+  };
+
+  const submitWithRetry = async (
+    applicationId: string,
+    score: number,
+    txHash: `0x${string}`,
+  ): Promise<void> => {
+    const delays = [1000, 2000, 4000, 8000, 16000];
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt <= delays.length; attempt++) {
+      try {
+        await reviewsApi.proposal.submit(applicationId, { score, txHash });
+        return;
+      } catch (err: unknown) {
+        lastErr = err;
+        // 409 = BE already recorded this commit (idempotent success).
+        if (err instanceof ApiError && err.status === 409) return;
+        const isFinalityRace =
+          err instanceof ApiError &&
+          err.status === 400 &&
+          /awaiting finality/i.test(err.message);
+        const isTransient =
+          isFinalityRace ||
+          (err instanceof ApiError && err.status >= 500) ||
+          (!(err instanceof ApiError) && err instanceof Error);
+        if (!isTransient) throw err;
+        const delay = delays[attempt];
+        if (delay === undefined) break;
+        setSubmitState({
+          kind: "recovering",
+          reason: extractApiError(err, "Backend submit failed"),
+          txHash,
+          attempt: attempt + 2,
+          nextRetryInMs: delay,
+        });
+        await new Promise<void>((r) => setTimeout(r, delay));
+      }
+    }
+    throw lastErr ?? new Error("Submit failed after retries");
   };
 
   return (

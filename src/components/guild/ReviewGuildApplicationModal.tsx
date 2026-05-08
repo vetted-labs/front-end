@@ -155,6 +155,11 @@ function getContractErrorName(error: unknown): string | undefined {
 // 409 ConflictError is treated as success at the call site (idempotent submit).
 function isRetryableBackendError(err: unknown): boolean {
   if (err instanceof ApiError) {
+    // BE's RPC node can lag the FE's by one block, returning a 400
+    // "Awaiting finality (N blocks remaining)" right after the FE's
+    // waitForTransactionReceipt resolves. The tx is fine — just retry
+    // until the BE's view catches up.
+    if (err.status === 400 && /awaiting finality/i.test(err.message)) return true;
     return err.status >= 500;
   }
   // Non-ApiError thrown from apiRequest is typically a network/parse failure.

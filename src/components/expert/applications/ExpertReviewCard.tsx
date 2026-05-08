@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Clock, ExternalLink, Eye, FileText, Loader2, Users, ShieldCheck, Briefcase } from "lucide-react";
+import { ChevronRight, Clock, ExternalLink, Eye, FileText, Users, ShieldCheck, Briefcase } from "lucide-react";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
 import { getAssetUrl } from "@/lib/api";
 import { CONTRACT_ADDRESSES } from "@/contracts/abis";
@@ -32,13 +32,6 @@ function getAccentColors(vettingState: string): {
       return {
         bar: "bg-positive",
         avatar: "bg-positive/70",
-      };
-    case "committing":
-      // In-flight: lighter / lower-saturation than the post-confirm `committed`
-      // so the user sees the vote is still propagating.
-      return {
-        bar: "bg-info-blue/60",
-        avatar: "bg-info-blue/40",
       };
     case "committed":
       return {
@@ -87,16 +80,16 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
   };
 
   // Derive vetting review state for the status badge.
-  // `committing` is the post-sign / pre-BE-confirm window — anytime
-  // `expertHasReviewed` is true while the on-chain phase is still "commit",
-  // we treat the vote as in-flight (the BE either hasn't reconciled the
-  // commit yet, or the commit-reveal session has more reviewers to gather).
-  // The optimistic flip in `markExpertReviewed` lands us here instantly so
-  // the user sees their vote register without waiting for refetch.
+  // Once `expertHasReviewed` is true the user has committed — we surface a
+  // settled "Committed" pill instead of an indefinite spinner. The brief
+  // in-flight (signing/finality) window is already shown inside the modal
+  // via OnChainStatusBanner; the list card should reflect a stable state so
+  // a panel that's still gathering other reviewers' commits doesn't look
+  // like the user's own commit is hung.
   const vettingState = phase === "finalized"
     ? "finalized"
     : isReviewed && phase === "commit"
-    ? "committing"
+    ? "committed"
     : isReviewed
     ? "revealed"
     : "needs_review";
@@ -223,21 +216,19 @@ export function ExpertReviewCard({ application, onReview, onViewReview, showGuil
               className={`inline-flex items-center gap-2 font-medium ${
                 vettingState === "finalized" || vettingState === "revealed"
                   ? STATUS_COLORS.positive.text
-                  : vettingState === "committing"
+                  : vettingState === "committed"
                   ? STATUS_COLORS.info.text
                   : "text-primary"
               }`}
               {...(isStoryLabReviewCard ? dataTourTarget(TOUR_TARGETS.applicationCardStatus) : {})}
             >
-              {vettingState === "committing" ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
-              ) : (
-                <span className={`w-[5px] h-[5px] rounded-full ${
-                  vettingState === "finalized" || vettingState === "revealed"
-                    ? STATUS_COLORS.positive.dot
-                    : "bg-primary"
-                }`} />
-              )}
+              <span className={`w-[5px] h-[5px] rounded-full ${
+                vettingState === "finalized" || vettingState === "revealed"
+                  ? STATUS_COLORS.positive.dot
+                  : vettingState === "committed"
+                  ? "bg-info-blue"
+                  : "bg-primary"
+              }`} />
               {stateConfig.label}
             </span>
           </div>
