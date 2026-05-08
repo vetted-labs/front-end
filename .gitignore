@@ -56,3 +56,4 @@ next-env.d.ts
 # tooling local state
 /.claude/
 /.sec/
+/.local-test-credentials.json
