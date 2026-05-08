@@ -128,13 +128,15 @@ async function attemptTokenRefresh(): Promise<boolean> {
 
       const data = await response.json();
 
-      // Store new tokens
-      const userType = localStorage.getItem("userType");
-      if (userType === "company") {
-        localStorage.setItem("companyAuthToken", data.accessToken);
-      } else {
-        localStorage.setItem("authToken", data.accessToken);
-      }
+      // Always write the new access token to `authToken` — that's the canonical
+      // key AuthContext.login uses for every user type. Previously this branched
+      // on userType and wrote company tokens to `companyAuthToken`, which the
+      // request path reads only as a fallback (`authToken || companyAuthToken`).
+      // The original expired `authToken` from login still won the read, so the
+      // retry sent the stale token and surfaced "Token expired" to the user.
+      localStorage.setItem("authToken", data.accessToken);
+      // Clean up any legacy company token so it can't shadow the fresh value.
+      localStorage.removeItem("companyAuthToken");
       localStorage.setItem("refreshToken", data.refreshToken);
 
       // Notify AuthContext to re-sync state from localStorage
