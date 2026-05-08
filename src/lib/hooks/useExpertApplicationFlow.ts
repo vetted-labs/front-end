@@ -67,6 +67,29 @@ const EXPERTISE_LEVELS: ExpertiseLevel[] = [
   { value: "expert", label: "Expert" },
 ];
 
+const EMPTY_FORM_DATA: PersistedDraft["formData"] = {
+  fullName: "",
+  email: "",
+  linkedinUrl: "",
+  portfolioUrl: "",
+  guild: "",
+  expertiseLevel: "",
+  yearsOfExperience: "",
+  currentTitle: "",
+  currentCompany: "",
+  bio: "",
+  motivation: "",
+  expertiseAreas: [],
+  newExpertiseArea: "",
+};
+
+const EMPTY_GENERAL_ANSWERS: GeneralAnswers = {
+  learningFromFailure: "",
+  decisionUnderUncertainty: "",
+  motivationAndConflict: "",
+  guildImprovement: "",
+};
+
 // ---------------------------------------------------------------------------
 // Return type
 // ---------------------------------------------------------------------------
@@ -105,6 +128,7 @@ export interface UseExpertApplicationFlowReturn {
   // Draft persistence
   draftRestored: boolean;
   dismissRestored: () => void;
+  discardDraft: () => void;
 
   // Form data
   formData: PersistedDraft["formData"];
@@ -177,21 +201,7 @@ export function useExpertApplicationFlow(
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const resumeInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [formData, setFormData] = useState<PersistedDraft["formData"]>({
-    fullName: "",
-    email: "",
-    linkedinUrl: "",
-    portfolioUrl: "",
-    guild: "",
-    expertiseLevel: "",
-    yearsOfExperience: "",
-    currentTitle: "",
-    currentCompany: "",
-    bio: "",
-    motivation: "",
-    expertiseAreas: [],
-    newExpertiseArea: "",
-  });
+  const [formData, setFormData] = useState<PersistedDraft["formData"]>(EMPTY_FORM_DATA);
 
   // Step management
   const [currentStep, setCurrentStep] = useState(0);
@@ -326,12 +336,7 @@ export function useExpertApplicationFlow(
     loadLevelTemplate(selectedGuildId, formData.expertiseLevel);
   }, [selectedGuildId, formData.expertiseLevel]);
 
-  const [generalAnswers, setGeneralAnswers] = useState<GeneralAnswers>({
-    learningFromFailure: "",
-    decisionUnderUncertainty: "",
-    motivationAndConflict: "",
-    guildImprovement: "",
-  });
+  const [generalAnswers, setGeneralAnswers] = useState<GeneralAnswers>(EMPTY_GENERAL_ANSWERS);
 
   const [levelAnswers, setLevelAnswers] = useState<Record<string, string>>({});
   const [noAiDeclaration, setNoAiDeclaration] = useState(false);
@@ -797,6 +802,25 @@ export function useExpertApplicationFlow(
   );
 
   // -----------------------------------------------------------------------
+  // Discard draft — clears persisted draft AND resets in-memory form state
+  // so the user gets a clean slate (the close button on the restored banner
+  // only hides the alert; this is the explicit discard path).
+  // -----------------------------------------------------------------------
+  const discardDraft = useCallback(() => {
+    clearDraft();
+    setFormData(EMPTY_FORM_DATA);
+    setGeneralAnswers(EMPTY_GENERAL_ANSWERS);
+    setLevelAnswers({});
+    setSelectedGuildId("");
+    setNoAiDeclaration(false);
+    setCurrentStep(0);
+    setTouched({});
+    setError(null);
+    setErrorDetails([]);
+    setStepErrors(null);
+  }, [clearDraft]);
+
+  // -----------------------------------------------------------------------
   // Submit
   // -----------------------------------------------------------------------
   const handleSubmitInternal = async () => {
@@ -862,14 +886,23 @@ export function useExpertApplicationFlow(
         await submitVerification(address);
       }
 
-      // Upload resume (non-blocking — application already succeeded)
-      if (expertId && resumeFile) {
-        try {
-          await expertApi.uploadResume(expertId, resumeFile);
-        } catch (uploadErr) {
-          logger.warn("Resume upload failed — application still submitted", uploadErr);
-          toast.error("Resume upload failed. You can re-upload from your profile later.");
-        }
+      // Resume upload is required for the application to enter review. Treat
+      // failure as a hard error so we don't silently leave the expert row
+      // unactivated (no resume_url => activatePendingApplicationReview never
+      // runs => no reviewers assigned).
+      if (!expertId || !resumeFile || !address) {
+        throw new Error("Missing expertId, resume file, or wallet address — cannot complete submission");
+      }
+      try {
+        await expertApi.uploadResume(expertId, resumeFile, address);
+      } catch (uploadErr) {
+        logger.error("Resume upload failed during application submission", uploadErr);
+        const message =
+          uploadErr instanceof ApiError && uploadErr.message
+            ? `Resume upload failed: ${uploadErr.message}`
+            : "Resume upload failed. Your application data is saved — please retry.";
+        setFormError(message);
+        return;
       }
 
       clearDraft();
@@ -1052,6 +1085,7 @@ export function useExpertApplicationFlow(
     // Draft persistence
     draftRestored,
     dismissRestored,
+    discardDraft,
 
     // Form data
     formData,

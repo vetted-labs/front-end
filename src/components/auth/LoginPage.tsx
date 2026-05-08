@@ -35,6 +35,27 @@ const tabs: TabDef[] = [
   { type: "expert", label: "Expert", icon: "guild-ranks" },
 ];
 
+/**
+ * Module-level cache of wallets we've already auto-logged for. Persists across
+ * the StrictMode unmount/remount cycle in dev — without this, the second mount
+ * sees the wallet still connected, fires `handleExpertLogin` a second time,
+ * and produces a spurious duplicate "Expert login failed" log + a duplicate
+ * GET /api/experts/profile request. Cleared 5s after the first attempt so a
+ * legitimate retry by the user (e.g., after they sign up and reconnect) still
+ * works.
+ */
+const recentAutoLoginAttempts = new Map<string, number>();
+const AUTO_LOGIN_LOCK_TTL_MS = 5_000;
+
+function shouldAttemptAutoLogin(address: string | undefined): boolean {
+  if (!address) return false;
+  const key = address.toLowerCase();
+  const last = recentAutoLoginAttempts.get(key);
+  if (last && Date.now() - last < AUTO_LOGIN_LOCK_TTL_MS) return false;
+  recentAutoLoginAttempts.set(key, Date.now());
+  return true;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,6 +73,11 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const { execute: executeLogin, isLoading } = useApi();
   const [error, setError] = useState("");
+  // True between deciding to navigate and the new route actually rendering.
+  // Dev-mode Next.js can take seconds (or longer on cold-compile) to switch
+  // pages, during which the login form would otherwise sit visible — making
+  // users think the click did nothing.
+  const [redirectingTo, setRedirectingTo] = useState<null | "expert/apply" | "expert/dashboard" | "expert/application-pending">(null);
 
   const autoLoginAttempted = useRef(false);
   const pendingModalOpen = useRef(false);
@@ -74,6 +100,7 @@ function LoginForm() {
         auth.login("", "expert", profile.id, profile.email, walletAddress);
         localStorage.setItem("expertId", profile.id);
         localStorage.setItem("expertStatus", "approved");
+        setRedirectingTo("expert/dashboard");
         router.push(redirectUrl || "/expert/dashboard");
       } else if (profile.status === "pending" || profile.status === "rejected") {
         // Both in-progress ("pending") and terminal rejection share the same
@@ -82,16 +109,24 @@ function LoginForm() {
         // their profile via expertApi.getProfile.
         auth.login("", "expert", profile.id, profile.email, walletAddress);
         localStorage.setItem("expertStatus", profile.status);
+        setRedirectingTo("expert/application-pending");
         router.push("/expert/application-pending");
       } else {
+        setRedirectingTo("expert/apply");
         router.push("/expert/apply");
       }
     } catch (apiError) {
-      logger.error("Expert login failed", apiError, { component: "LoginPage" });
+      // 404 is the *expected* path for a fresh wallet — log it as info, not
+      // error, so dev consoles aren't full of red noise during signup.
+      const is404 = apiError instanceof ApiError && apiError.status === 404;
+      if (!is404) {
+        logger.error("Expert login failed", apiError, { component: "LoginPage" });
+      }
 
       if (apiError instanceof ApiError) {
         if (apiError.status === 404) {
           // Expert doesn't exist yet — send them to the application flow
+          setRedirectingTo("expert/apply");
           auth.logout();
           router.push("/expert/apply");
           return;
@@ -125,7 +160,13 @@ function LoginForm() {
     if (isRecentExplicitLogout()) return;
 
     const timer = setTimeout(() => {
-      if (userType === "expert" && !autoLoginAttempted.current && isConnected && address) {
+      if (
+        userType === "expert" &&
+        !autoLoginAttempted.current &&
+        isConnected &&
+        address &&
+        shouldAttemptAutoLogin(address)
+      ) {
         autoLoginAttempted.current = true;
         handleExpertLoginRef.current?.(address);
       }
@@ -139,7 +180,12 @@ function LoginForm() {
   useAccountEffect({
     onConnect: ({ address: connectedAddress }) => {
       if (isRecentExplicitLogout()) return;
-      if (userType === "expert" && !autoLoginAttempted.current && connectedAddress) {
+      if (
+        userType === "expert" &&
+        !autoLoginAttempted.current &&
+        connectedAddress &&
+        shouldAttemptAutoLogin(connectedAddress)
+      ) {
         autoLoginAttempted.current = true;
         handleExpertLoginRef.current?.(connectedAddress);
       }
@@ -256,6 +302,27 @@ function LoginForm() {
     : userType === "company"
     ? "Sign in to manage your job listings"
     : "Sign in to your account to continue";
+
+  // While the router is mid-navigation, show a spinner instead of the login
+  // form. Dev-mode route compilation (especially first hit) can take seconds
+  // — without this, the user stares at the same login screen and assumes
+  // their click did nothing.
+  if (redirectingTo) {
+    const label =
+      redirectingTo === "expert/apply"
+        ? "Setting up your application…"
+        : redirectingTo === "expert/dashboard"
+        ? "Loading your dashboard…"
+        : "Loading your application status…";
+    return (
+      <div className="flex min-h-screen bg-background items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 text-muted-foreground">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm">{label}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -87,7 +87,16 @@ export default function ExpertApplicationFlow() {
         {flow.draftRestored && (
           <div className="mb-6">
             <Alert variant="info" onClose={flow.dismissRestored}>
-              Your previous draft has been restored. You can continue where you left off.
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span>Your previous draft has been restored. You can continue where you left off.</span>
+                <button
+                  type="button"
+                  onClick={flow.discardDraft}
+                  className="font-medium underline underline-offset-2 hover:opacity-80"
+                >
+                  Start fresh
+                </button>
+              </div>
             </Alert>
           </div>
         )}
