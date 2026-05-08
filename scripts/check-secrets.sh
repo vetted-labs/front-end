@@ -22,7 +22,11 @@ for file in $STAGED_FILES; do
   # Skip binary files, lock files, and this script itself
   if [[ "$file" == *.lock ]] || [[ "$file" == *.png ]] || [[ "$file" == *.jpg ]] || \
      [[ "$file" == *.woff* ]] || [[ "$file" == "scripts/check-secrets.sh" ]] || \
-     [[ "$file" == "package-lock.json" ]]; then
+     [[ "$file" == "package-lock.json" ]] || \
+     [[ "$file" == "e2e/real-flow/helpers/chain.ts" ]]; then
+    # Note: chain.ts contains public anvil deterministic test keys
+    # (mnemonic: "test test test test test test test test test test test junk")
+    # which are well-known and only used against local anvil — never mainnet.
     continue
   fi
 
