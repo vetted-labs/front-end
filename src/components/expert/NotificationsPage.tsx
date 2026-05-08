@@ -312,6 +312,11 @@ export default function NotificationsPage() {
             </div>
           }
         >
+          {/* Always-mounted wrapper so the story-lab tour's notificationsList
+              fallback resolves whether the user has notifications or not —
+              previously the target was on the inner list and disappeared when
+              the page hit the empty-state branch, hanging the tour. */}
+          <div {...dataTourTarget(TOUR_TARGETS.notificationsList)}>
           {error ? (
             <div className="flex items-center justify-center py-20">
               <Alert variant="error">{error}</Alert>
@@ -330,7 +335,7 @@ export default function NotificationsPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-8" {...dataTourTarget(TOUR_TARGETS.notificationsList)}>
+            <div className="space-y-8">
               {dateGroups.map((group) => (
                 <div key={group.label}>
                   <p className="font-display text-xs font-bold tracking-[1.5px] uppercase text-muted-foreground/50 mb-4 pl-1">
@@ -424,6 +429,7 @@ export default function NotificationsPage() {
               ))}
             </div>
           )}
+          </div>
         </DataSection>
 
         {/* Load More */}

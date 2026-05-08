@@ -308,7 +308,7 @@ export function ReviewSubmitSection({
         </div>
       )}
 
-      {proposalContext && (
+      {proposalContext ? (
         <div
           className="rounded-xl border border-border bg-muted/20 p-6 space-y-3"
           {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
@@ -332,6 +332,25 @@ export function ReviewSubmitSection({
             />
             <span className="text-sm text-muted-foreground font-medium">VETD</span>
           </div>
+        </div>
+      ) : (
+        // Practice / candidate review (no proposalContext): keep a stable
+        // tour anchor so the story-lab "Stake VETD on your score" stop has
+        // something to highlight. Without this the marker only existed in
+        // proposal-vote mode and the tour hung on "Loading…" in practice.
+        <div
+          className="rounded-xl border border-dashed border-border bg-muted/10 p-4 space-y-2"
+          {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
+        >
+          <h4 className="text-xs font-bold text-foreground tracking-wide uppercase flex items-center gap-2">
+            <Coins className="w-4 h-4 text-primary" />
+            Stake VETD on your score
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Real assignments require staking VETD. Aligned scores grow your
+            stake; out-of-step ones shrink it. The minimum is set by the guild —
+            no stake is taken in this practice run.
+          </p>
         </div>
       )}
     </div>

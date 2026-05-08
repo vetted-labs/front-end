@@ -10,7 +10,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Route } from "lucide-react";
 import {
   arrow,
@@ -228,6 +228,16 @@ export function ExpertStoryLabDriver() {
   // grace period elapses, so the underlying real route has time to paint
   // before the dialog appears on top of it.
   const [popoverReady, setPopoverReady] = useState(false);
+  // Flips true once the per-stop polling window expires without resolving
+  // a target. Lets the user advance manually instead of staring at a
+  // "Loading…" badge forever when a target is gated behind a render path
+  // that won't fire (e.g., proposalContext-gated stake input in practice mode,
+  // CommitRevealExplainer unmounted once confirmation starts).
+  const [pollExhausted, setPollExhausted] = useState(false);
+  // Mirror of resolvedTarget for the polling effect's closure — read at
+  // poll-window expiry so we only flip pollExhausted when the latest
+  // attempt still hasn't found anything.
+  const resolvedTargetRef = useRef<StoryLabSubStop["target"] | null>(null);
   const scrolledStopRef = useRef<string | null>(null);
   const driverRef = useRef<HTMLDivElement>(null);
   const arrowRef = useRef<HTMLDivElement | null>(null);
@@ -250,8 +260,13 @@ export function ExpertStoryLabDriver() {
   const isLastSubStopOfStep = activeSubIndex === activeStep.subStops.length - 1;
   const isFinalSubStop = isLastStep && isLastSubStopOfStep;
 
+  // Once polling exhausts without resolving a target, allow the user to
+  // continue anyway — otherwise stops whose target lives behind a render
+  // gate that won't fire (e.g., empty-state lists, unmounted explainers,
+  // proposalContext gating) leave the popover permanently disabled.
   const canAdvanceCurrentStop =
-    targetResolved && canAdvanceStoryLabSubStop(activeSubStop, resolvedTarget);
+    (targetResolved && canAdvanceStoryLabSubStop(activeSubStop, resolvedTarget)) ||
+    (pollExhausted && !activeSubStop.navTrigger);
 
   const useCenteredFallback = useMemo(
     () => shouldUseCenteredFallback(targetRect, activeSubStop.placement),
@@ -298,6 +313,7 @@ export function ExpertStoryLabDriver() {
         setTargetRect(null);
         setTargetResolved(false);
         setResolvedTarget(null);
+        resolvedTargetRef.current = null;
         return;
       }
 
@@ -309,10 +325,16 @@ export function ExpertStoryLabDriver() {
       }
 
       const rect = getTargetRect(element);
+      const nextResolvedTarget = rect ? targetName : null;
       setTargetEl(rect ? element : null);
       setTargetRect(rect);
       setTargetResolved(Boolean(rect));
-      setResolvedTarget(rect ? targetName : null);
+      setResolvedTarget(nextResolvedTarget);
+      resolvedTargetRef.current = nextResolvedTarget;
+      // Late-mount via MutationObserver after exhaustion: clear the flag so
+      // the popover returns to its "Ready" presentation rather than showing
+      // both "Ready" advance + manual Skip together.
+      if (nextResolvedTarget) setPollExhausted(false);
     },
     [activeStep.id, activeSubStop, isOpen, refreshDynamicRoutes]
   );
@@ -374,6 +396,67 @@ export function ExpertStoryLabDriver() {
     activeSubIndex,
     activeStep,
     canAdvanceCurrentStop,
+    getResolvedStepRoute,
+    isFinalSubStop,
+    isLastSubStopOfStep,
+    router,
+  ]);
+
+  // Escape hatches surfaced after the per-stop polling window expires —
+  // endTour bails the user out entirely and routes them back to the
+  // dashboard; skipStuckSubStop advances regardless of canAdvance gating.
+  const endTour = useCallback(async () => {
+    const dismissedState = createExpertOnboardingState({ dismissed: true });
+    if (typeof window !== "undefined") {
+      try {
+        const expertId = window.localStorage.getItem("expertId");
+        const walletAddress = window.localStorage.getItem("walletAddress");
+        const persistedState = await expertApi.updateOnboardingState(
+          dismissedState,
+          walletAddress
+        );
+        const storageKey = buildExpertOnboardingStorageKey({
+          expertId: expertId ?? undefined,
+          walletAddress: walletAddress ?? undefined,
+        });
+        if (storageKey) {
+          writeExpertOnboardingState(window.localStorage, storageKey, persistedState);
+          dispatchExpertOnboardingStateChange(storageKey, persistedState);
+        }
+      } catch {
+        // Server write failed — still navigate out; local state was captured
+        // above for same-tab listeners.
+      }
+    }
+    router.replace("/expert/dashboard");
+  }, [router]);
+
+  const skipStuckSubStop = useCallback(async () => {
+    if (isFinalSubStop) {
+      await endTour();
+      return;
+    }
+    if (!isLastSubStopOfStep) {
+      const next = activeStep.subStops[activeSubIndex + 1];
+      router.replace(
+        buildStoryLabRoute(getResolvedStepRoute(activeStep), activeStep.id, next.id),
+        { scroll: false }
+      );
+      return;
+    }
+    const nextStep = STORY_LAB_STEPS[activeIndex + 1];
+    if (!nextStep) return;
+    const firstSub = nextStep.subStops[0];
+    scrolledStopRef.current = null;
+    router.push(
+      buildStoryLabRoute(getResolvedStepRoute(nextStep), nextStep.id, firstSub?.id),
+      { scroll: false }
+    );
+  }, [
+    activeIndex,
+    activeStep,
+    activeSubIndex,
+    endTour,
     getResolvedStepRoute,
     isFinalSubStop,
     isLastSubStopOfStep,
@@ -537,15 +620,41 @@ export function ExpertStoryLabDriver() {
   useEffect(() => {
     if (!isOpen) return;
 
+    // Reset exhaustion on every stop change so the new stop gets a fresh
+    // window before we offer the manual escape hatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- per-stop polling reset
+    setPollExhausted(false);
+
+    const POLL_INTERVAL_MS = 100;
+    const POLL_WINDOW_MS = 15_000;
+    const maxAttempts = POLL_WINDOW_MS / POLL_INTERVAL_MS;
+
     let attempts = 0;
     const interval = window.setInterval(() => {
       attempts += 1;
       updateTarget({ scroll: attempts === 1 });
-      if (attempts >= 30) window.clearInterval(interval);
-    }, 100);
+      if (attempts >= maxAttempts) {
+        window.clearInterval(interval);
+        // The MutationObserver below will still pick up late mounts. We just
+        // stop the heartbeat poll and surface the manual escape so the user
+        // is no longer trapped staring at a "Loading…" pill.
+        if (!resolvedTargetRef.current) {
+          console.warn(
+            `[story-lab] target unresolved after ${POLL_WINDOW_MS}ms`,
+            {
+              step: activeStep.id,
+              subStop: activeSubStop.id,
+              target: activeSubStop.target,
+              fallbackTarget: activeSubStop.fallbackTarget,
+            }
+          );
+          setPollExhausted(true);
+        }
+      }
+    }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(interval);
-  }, [activeStep.id, activeSubStop.id, isOpen, updateTarget]);
+  }, [activeStep.id, activeSubStop.id, activeSubStop.target, activeSubStop.fallbackTarget, isOpen, updateTarget]);
 
   // eslint-disable-next-line no-restricted-syntax -- story preview must track late-mounted route targets and viewport changes
   useEffect(() => {
@@ -722,9 +831,43 @@ export function ExpertStoryLabDriver() {
         </p>
       )}
 
-      {!targetResolved && (
+      {!targetResolved && !pollExhausted && (
         <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3 text-xs leading-5 text-muted-foreground">
           Loading the next part of the story…
+        </div>
+      )}
+      {!targetResolved && pollExhausted && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3 text-xs leading-5 text-muted-foreground">
+          <p>
+            This part of the story didn&apos;t load — the page may not have what
+            we expected, or it&apos;s still settling. You can skip ahead or end
+            the tour and explore on your own.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                void skipStuckSubStop();
+              }}
+              className={buttonVariants({ variant: "secondary", size: "sm" })}
+            >
+              Skip step
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                void endTour();
+              }}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              End tour
+            </button>
+          </div>
         </div>
       )}
 

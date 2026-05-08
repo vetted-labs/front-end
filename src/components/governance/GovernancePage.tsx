@@ -222,6 +222,11 @@ export default function GovernancePage() {
         </div>
 
         {/* ─── Active & Pending Proposals ─── */}
+        {/* Always-mounted wrapper so the story-lab tour's governanceProposals
+            target resolves whether the list is loading, empty, or populated.
+            Without this, an empty proposals API response left BOTH the
+            primary card target AND the fallback unmounted, hanging the tour. */}
+        <div {...dataTourTarget(TOUR_TARGETS.governanceProposals)}>
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -320,6 +325,7 @@ export default function GovernancePage() {
             )}
           </>
         )}
+        </div>
 
         {/* ─── Governance Stats ─── */}
         {proposals && proposals.length > 0 && (
