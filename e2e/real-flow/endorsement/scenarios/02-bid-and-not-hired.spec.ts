@@ -168,7 +168,12 @@ test("bid and not hired: 3 bids, candidate not hired → 3 slashing records, no 
     }
     // No finalCompensation — only required when outcome === 'hired' per
     // hire-accountability.service.ts:174-177.
-    await recordHireOutcome(request, companyToken, applicationId, "not_hired");
+    await recordHireOutcome(request, companyToken, {
+      applicationId,
+      candidateId,
+      jobId,
+      outcome: "not_hired",
+    });
   });
 
   await test.step("drain blockchain ops outbox", async () => {

@@ -154,13 +154,13 @@ test("retention success: hire → wait past retention → processRetention → l
         "E2E_COMPANY_TOKEN env var is required (mirror T21 — seeded by suite bootstrap)",
       );
     }
-    await recordHireOutcome(
-      request,
-      companyToken,
+    await recordHireOutcome(request, companyToken, {
       applicationId,
-      "hired",
-      100_000,
-    );
+      candidateId,
+      jobId,
+      outcome: "hired",
+      finalCompensation: 100_000,
+    });
   });
 
   await test.step("drain immediate-half outbox", async () => {

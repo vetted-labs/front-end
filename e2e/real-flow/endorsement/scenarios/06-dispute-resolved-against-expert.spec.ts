@@ -270,13 +270,13 @@ test("dispute resolved against expert (panel votes 3 uphold) — rewards remain 
         "E2E_COMPANY_TOKEN env var is required (mirror T21 — seeded by suite bootstrap)",
       );
     }
-    await recordHireOutcome(
-      request,
-      companyToken,
+    await recordHireOutcome(request, companyToken, {
       applicationId,
-      "hired",
-      100_000,
-    );
+      candidateId,
+      jobId,
+      outcome: "hired",
+      finalCompensation: 100_000,
+    });
   });
 
   await test.step("read hireOutcomeId off the hire-outcome GET", async () => {

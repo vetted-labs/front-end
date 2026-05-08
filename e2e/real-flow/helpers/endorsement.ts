@@ -79,22 +79,35 @@ export async function withdrawRefund(
 }
 
 // POST /api/endorsements/hire-outcome — verifyCompanyToken middleware.
+// BE schema (`recordHireOutcomeSchema`) requires applicationId, candidateId,
+// jobId, outcome, and finalCompensation when outcome === "hired".
 export async function recordHireOutcome(
   request: APIRequestContext,
   companyToken: string,
-  applicationId: string,
-  outcome: "hired" | "not_hired",
-  finalCompensation?: number,
+  args: {
+    applicationId: string;
+    candidateId: string;
+    jobId: string;
+    outcome: "hired" | "not_hired";
+    finalCompensation?: number;
+  },
 ): Promise<{ id: string }> {
   const res = await request.post(`${BACKEND_URL}/api/endorsements/hire-outcome`, {
     headers: { Authorization: `Bearer ${companyToken}` },
-    data: { applicationId, outcome, finalCompensation },
+    data: {
+      applicationId: args.applicationId,
+      candidateId: args.candidateId,
+      jobId: args.jobId,
+      outcome: args.outcome,
+      finalCompensation: args.finalCompensation,
+    },
   });
   if (!res.ok()) throw new Error(`recordHireOutcome failed: ${await res.text()}`);
   return (await res.json()).data;
 }
 
 // POST /api/endorsements/performance-issue — verifyCompanyToken middleware.
+// BE controller reads `performanceNotes` + `companyRating`; remap on the wire.
 export async function reportPerformanceIssue(
   request: APIRequestContext,
   companyToken: string,
@@ -104,7 +117,7 @@ export async function reportPerformanceIssue(
 ): Promise<void> {
   const res = await request.post(`${BACKEND_URL}/api/endorsements/performance-issue`, {
     headers: { Authorization: `Bearer ${companyToken}` },
-    data: { applicationId, notes, rating },
+    data: { applicationId, performanceNotes: notes, companyRating: rating },
   });
   if (!res.ok()) throw new Error(`reportPerformanceIssue failed: ${await res.text()}`);
 }
