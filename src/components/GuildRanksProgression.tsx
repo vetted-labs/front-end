@@ -1,146 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
   Check,
-  ChevronDown,
-  Crown,
   Lock,
-  Shield,
-  Star,
-  Swords,
-  Trophy,
   Wallet,
-  Zap,
+  Award,
   Users,
   TrendingUp,
-  Award,
+  Zap,
   Gift,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { cn } from "@/lib/utils";
-import { getRankColors, STATUS_COLORS } from "@/config/colors";
-import { Card } from "@/components/ui/card";
-import { Badge, getRankBadgeVariant } from "@/components/ui/badge";
+import { getRankColors, STATUS_COLORS, REWARD_TIER_COLORS } from "@/config/colors";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton, SkeletonStatCard } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
 import { getRewardTierProgress } from "@/types/reputation";
+import { GuildAvatar } from "@/components/ui/guild";
 import type { ExpertProfile, ExpertRole } from "@/types";
-
-/* ─── Types ────────────────────────────────────────────────── */
-
-type RankMetric = "reputation" | "reviewCount" | "consensusRate" | "endorsementCount";
-
-interface RankRequirement {
-  label: string;
-  metric: RankMetric | null;
-  target: number | null;
-  format?: "percent" | "number";
-}
-
-interface RankConfig {
-  level: number;
-  name: string;
-  role: ExpertRole;
-  description: string;
-  requirements: RankRequirement[];
-  unlocks: string[];
-}
-
-interface ExpertStats {
-  reputation: number;
-  reviewCount: number;
-  consensusRate: number | null;
-  endorsementCount: number;
-}
-
-/* ─── Constants ────────────────────────────────────────────── */
-
-const GUILD_RANK_CONFIGS: RankConfig[] = [
-  {
-    level: 1,
-    name: "Recruit",
-    role: "recruit",
-    description: "Entry-level guild member who has passed initial vetting",
-    requirements: [
-      { label: "Pass guild application review", metric: null, target: null },
-      { label: "Receive approval from guild members", metric: null, target: null },
-      { label: "Complete profile verification", metric: null, target: null },
-    ],
-    unlocks: ["Reply to feed posts", "View guild discussions"],
-  },
-  {
-    level: 2,
-    name: "Apprentice",
-    role: "apprentice",
-    description: "Active participant building reputation through reviews",
-    requirements: [
-      { label: "Complete 10+ reviews", metric: "reviewCount", target: 10 },
-      { label: "Maintain 70%+ consensus", metric: "consensusRate", target: 70, format: "percent" },
-      { label: "Reputation score 50+", metric: "reputation", target: 50 },
-    ],
-    unlocks: ["Create feed posts", "Participate in discussions"],
-  },
-  {
-    level: 3,
-    name: "Craftsman",
-    role: "craftsman",
-    description: "Trusted reviewer eligible to endorse candidates",
-    requirements: [
-      { label: "Complete 50+ reviews", metric: "reviewCount", target: 50 },
-      { label: "Maintain 75%+ consensus", metric: "consensusRate", target: 75, format: "percent" },
-      { label: "Reputation score 150+", metric: "reputation", target: 150 },
-      { label: "Endorse 5+ candidates", metric: "endorsementCount", target: 5 },
-    ],
-    unlocks: ["Edit others' posts", "Mark duplicates", "Endorse candidates"],
-  },
-  {
-    level: 4,
-    name: "Officer",
-    role: "officer",
-    description: "Senior guild member overseeing governance",
-    requirements: [
-      { label: "Complete 100+ reviews", metric: "reviewCount", target: 100 },
-      { label: "Maintain 80%+ consensus", metric: "consensusRate", target: 80, format: "percent" },
-      { label: "Reputation score 300+", metric: "reputation", target: 300 },
-      { label: "Participate in guild governance", metric: null, target: null },
-      { label: "Mentor 3+ lower-rank members", metric: null, target: null },
-    ],
-    unlocks: ["Pin/unpin posts", "Close/reopen threads", "Accept answers on behalf"],
-  },
-  {
-    level: 5,
-    name: "Guild Master",
-    role: "master",
-    description: "Elected leader representing the guild in platform governance. Only one per guild.",
-    requirements: [
-      { label: "Elected by guild members (1 per guild)", metric: null, target: null },
-      { label: "Complete 200+ reviews", metric: "reviewCount", target: 200 },
-      { label: "Maintain 85%+ consensus", metric: "consensusRate", target: 85, format: "percent" },
-      { label: "Reputation score 500+", metric: "reputation", target: 500 },
-      { label: "Proven leadership", metric: null, target: null },
-    ],
-    unlocks: [
-      "Full delete/moderation",
-      "Full guild control",
-      "6-month term, re-electable via governance vote",
-      "Must step down after 2 consecutive terms",
-    ],
-  },
-];
-
-const RANK_ICONS: Record<ExpertRole, React.ElementType> = {
-  recruit: Shield,
-  apprentice: Swords,
-  craftsman: Trophy,
-  officer: Star,
-  master: Crown,
-};
-
+import { GuildRankCard } from "./expert/ranks/GuildRankCard";
+import { RankTierLadder } from "./expert/ranks/RankTierLadder";
+import { GUILD_RANK_CONFIGS, RANK_ICONS, getRankIndex } from "./expert/ranks/config";
+import type { ExpertStats, RankConfig } from "./expert/ranks/types";
 
 /* ─── Utilities ────────────────────────────────────────────── */
 
@@ -159,149 +47,7 @@ function computeExpertStats(profile: ExpertProfile, guildReputation?: number): E
   };
 }
 
-function getRankIndex(role: ExpertRole): number {
-  return GUILD_RANK_CONFIGS.findIndex((r) => r.role === role);
-}
-
-/* ─── StatsGrid ────────────────────────────────────────────── */
-
-function StatsGrid({ stats }: { stats: ExpertStats }) {
-  const items = [
-    { label: "Reputation", value: String(stats.reputation), icon: TrendingUp, color: "text-primary" },
-    { label: "Reviews", value: String(stats.reviewCount), icon: Award, color: "text-primary" },
-    { label: "Consensus", value: stats.consensusRate !== null ? `${stats.consensusRate}%` : "N/A", icon: Users, color: "text-primary" },
-    { label: "Endorsements", value: String(stats.endorsementCount), icon: Zap, color: "text-primary" },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {items.map((item) => (
-        <Card key={item.label} className="rounded-xl border border-border bg-card" padding="none">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-                <item.icon className={cn("w-4 h-4", item.color)} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {item.label}
-                </p>
-                <p className="text-xl font-bold tabular-nums">{item.value}</p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-/* ─── CurrentRankHero ──────────────────────────────────────── */
-
-function CurrentRankHero({ rank, stats }: { rank: RankConfig; stats: ExpertStats }) {
-  const colors = getRankColors(rank.role);
-  const Icon = RANK_ICONS[rank.role];
-  const { tier, nextTier, progress } = getRewardTierProgress(stats.reputation);
-
-  return (
-    <Card className={cn("relative overflow-hidden", colors.border)} padding="none">
-      {/* Subtle gradient glow behind the rank */}
-      <div className={cn(
-        "absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-[0.04] blur-3xl pointer-events-none",
-        colors.bg,
-      )} />
-
-      <div className="relative p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Rank Icon */}
-          <div className={cn(
-            "flex h-16 w-16 items-center justify-center rounded-xl shrink-0",
-            "shadow-lg",
-            colors.bgSubtle,
-            colors.glow,
-          )}>
-            <Icon className={cn("w-8 h-8", colors.text)} />
-          </div>
-
-          {/* Rank Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl font-bold tracking-tight">{rank.name}</h2>
-              <Badge variant={getRankBadgeVariant(rank.role)}>{rank.role}</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">{rank.description}</p>
-          </div>
-        </div>
-
-        {/* Term Rules for Guild Master */}
-        {rank.role === "master" && (
-          <div className="mt-5 pt-5 border-t border-border">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2.5">
-              Term Rules
-            </p>
-            <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
-              {[
-                "6-month term, re-electable via governance vote",
-                "Can be re-elected for a second consecutive term",
-                "Must step down after 2 consecutive terms",
-                "Eligible to run again after sitting out one term",
-              ].map((rule) => (
-                <div key={rule} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground/40 mt-2 shrink-0" />
-                  {rule}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Reward Tier */}
-        <div className="mt-5 pt-5 border-t border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-              <Gift className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Reward Tier
-                  </span>
-                  <span className={cn("text-sm font-medium", colors.text)}>{tier.name}</span>
-                </div>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {tier.rewardWeight}x rewards
-                </span>
-              </div>
-              {nextTier ? (
-                <div className="mt-1.5">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>Progress to {nextTier.name}</span>
-                    <span className="tabular-nums">
-                      {stats.reputation} / {nextTier.minReputation}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted/50 dark:bg-muted/40 overflow-hidden">
-                    <div
-                      className={cn("h-full rounded-full transition-all duration-500", colors.bg)}
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Maximum tier — highest reward multiplier.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-/* ─── NextRankGoal ─────────────────────────────────────────── */
+/* ─── Next-rank goal section ───────────────────────────────── */
 
 function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: ExpertStats }) {
   const colors = getRankColors(nextRank.role);
@@ -323,44 +69,54 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
   const metCount = requirements.filter((r) => r.met).length;
 
   return (
-    <Card padding="none">
-      <div className="p-5 pb-0">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-xl shrink-0",
-              colors.bgSubtle,
-            )}>
-              <Icon className={cn("w-4 h-4", colors.text)} />
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Next Rank
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{nextRank.name}</span>
-                <Badge variant={getRankBadgeVariant(nextRank.role)} className="text-xs">
-                  Level {nextRank.level}
-                </Badge>
-              </div>
-            </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", colors.bgSubtle)}>
+            <Icon className={cn("w-5 h-5", colors.text)} />
           </div>
-          <div className="text-right">
-            <p className={cn("text-xl font-bold tabular-nums", metCount === requirements.length ? STATUS_COLORS.positive.text : "")}>
-              {metCount}/{requirements.length}
+          <div>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Next rank
             </p>
-            <p className="text-xs text-muted-foreground">requirements met</p>
+            <p className="font-display text-base font-bold">
+              {nextRank.name}{" "}
+              <span className="text-xs font-medium text-muted-foreground">
+                · Level {nextRank.level}
+              </span>
+            </p>
           </div>
+        </div>
+        <div className="text-right">
+          <p
+            className={cn(
+              "text-2xl font-bold tabular-nums font-display leading-none",
+              metCount === requirements.length ? STATUS_COLORS.positive.text : "",
+            )}
+          >
+            {metCount}
+            <span className="text-base text-muted-foreground font-medium">
+              /{requirements.length}
+            </span>
+          </p>
+          <p className="text-[10.5px] text-muted-foreground uppercase tracking-[0.16em] mt-1">
+            requirements met
+          </p>
         </div>
       </div>
 
-      <div className="px-5 pb-5 space-y-4">
+      <div className="space-y-4 pt-2">
         {requirements.map((req) => (
           <div key={req.label}>
             <div className="flex items-center justify-between text-sm mb-1.5">
               <div className="flex items-center gap-2">
                 {req.met ? (
-                  <div className={cn("flex h-5 w-5 items-center justify-center rounded-full shrink-0", STATUS_COLORS.positive.bgSubtle)}>
+                  <div
+                    className={cn(
+                      "flex h-5 w-5 items-center justify-center rounded-full shrink-0",
+                      STATUS_COLORS.positive.bgSubtle,
+                    )}
+                  >
                     <Check className={cn("w-3 h-3", STATUS_COLORS.positive.text)} />
                   </div>
                 ) : !req.quantifiable ? (
@@ -372,17 +128,21 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
                     <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                   </div>
                 )}
-                <span className={cn(
-                  "text-sm",
-                  req.met ? "text-muted-foreground" : "text-foreground"
-                )}>
+                <span
+                  className={cn(
+                    "text-sm",
+                    req.met ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
                   {req.label}
                 </span>
               </div>
               {req.quantifiable && req.target !== null && (
                 <span className="text-xs text-muted-foreground tabular-nums ml-2 shrink-0">
                   {req.current !== null
-                    ? req.format === "percent" ? `${req.current}%` : req.current
+                    ? req.format === "percent"
+                      ? `${req.current}%`
+                      : req.current
                     : "N/A"}{" "}
                   / {req.format === "percent" ? `${req.target}%` : req.target}
                 </span>
@@ -393,7 +153,7 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
-                    req.met ? STATUS_COLORS.positive.bg : colors.bg
+                    req.met ? STATUS_COLORS.positive.bg : colors.bg,
                   )}
                   style={{ width: `${req.pct}%` }}
                 />
@@ -401,186 +161,6 @@ function NextRankGoal({ nextRank, stats }: { nextRank: RankConfig; stats: Expert
             )}
           </div>
         ))}
-      </div>
-    </Card>
-  );
-}
-
-/* ─── RankLadder ───────────────────────────────────────────── */
-
-function RankLadder({
-  currentRankIndex,
-  stats,
-  isLoading,
-}: {
-  currentRankIndex: number;
-  stats: ExpertStats;
-  isLoading?: boolean;
-}) {
-  const [expandedRank, setExpandedRank] = useState<string | null>(null);
-
-  return (
-    <div>
-      <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
-        All Ranks
-      </h3>
-
-      <div className="relative">
-        {/* Vertical timeline line */}
-        <div
-          className="absolute left-[23px] top-6 bottom-6 w-px bg-border/60 dark:bg-muted/40"
-          aria-hidden="true"
-        />
-        {/* Achieved portion of the line */}
-        {!isLoading && currentRankIndex > 0 && (
-          <div
-            className="absolute left-[23px] top-6 w-px bg-positive/40"
-            style={{
-              height: `calc(${(currentRankIndex / (GUILD_RANK_CONFIGS.length - 1)) * 100}% - 12px)`,
-            }}
-            aria-hidden="true"
-          />
-        )}
-
-        <div className="space-y-2">
-          {GUILD_RANK_CONFIGS.map((rank, i) => {
-            const isAchieved = isLoading ? false : i < currentRankIndex;
-            const isCurrent = isLoading ? false : i === currentRankIndex;
-            const isLocked = isLoading ? true : i > currentRankIndex;
-            const isExpanded = expandedRank === rank.role;
-            const colors = getRankColors(rank.role);
-            const Icon = RANK_ICONS[rank.role];
-
-            return (
-              <div key={rank.role} className="relative">
-                <Card
-                  padding="none"
-                  className={cn(
-                    "ml-12 transition-all",
-                    isCurrent && cn(colors.border, "shadow-md", colors.glow),
-                    isLocked && "opacity-70",
-                  )}
-                >
-                  <button
-                    onClick={() => setExpandedRank(isExpanded ? null : rank.role)}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left group"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{rank.name}</span>
-                        {isLocked && <Lock className="w-3 h-3 text-muted-foreground/40" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground/60 mt-0.5 hidden sm:block">
-                        {rank.description}
-                      </p>
-                    </div>
-                    {isCurrent && (
-                      <div className={cn(
-                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border",
-                        colors.badge,
-                      )}>
-                        Current
-                      </div>
-                    )}
-                    {isAchieved && (
-                      <div className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", STATUS_COLORS.positive.badge)}>
-                        Achieved
-                      </div>
-                    )}
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-muted-foreground/40 transition-transform shrink-0",
-                        isExpanded && "rotate-180",
-                        "group-hover:text-muted-foreground",
-                      )}
-                    />
-                  </button>
-
-                  {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-border">
-                      <div className="grid sm:grid-cols-2 gap-6 pt-4">
-                        {/* Requirements */}
-                        <div>
-                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
-                            Requirements
-                          </p>
-                          <ul className="space-y-2">
-                            {rank.requirements.map((req) => {
-                              let met = false;
-                              if (!isLoading && i <= currentRankIndex) {
-                                met = true;
-                              } else if (!isLoading && req.metric && req.target !== null) {
-                                const current = stats[req.metric];
-                                met = current !== null && current >= req.target;
-                              }
-
-                              return (
-                                <li key={req.label} className="flex items-start gap-2 text-sm">
-                                  {met ? (
-                                    <div className={cn("flex h-[18px] w-[18px] items-center justify-center rounded-full mt-0.5 shrink-0", STATUS_COLORS.positive.bgSubtle)}>
-                                      <Check className={cn("w-3 h-3", STATUS_COLORS.positive.text)} />
-                                    </div>
-                                  ) : (
-                                    <div className="w-4 h-4 rounded-full border border-muted-foreground/20 mt-0.5 shrink-0" />
-                                  )}
-                                  <span className={cn(
-                                    "text-sm",
-                                    met ? "text-muted-foreground" : "text-foreground"
-                                  )}>
-                                    {req.label}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-
-                        {/* Unlocks */}
-                        <div>
-                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
-                            Unlocks
-                          </p>
-                          <ul className="space-y-2">
-                            {rank.unlocks.map((unlock) => (
-                              <li key={unlock} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <span className={cn(
-                                  "inline-block w-1.5 h-1.5 rounded-full mt-1.5 shrink-0",
-                                  colors.bg
-                                )} />
-                                {unlock}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-
-                {/* Timeline node */}
-                <div className="absolute left-0 top-3.5 flex items-center justify-center w-[47px]">
-                  <div
-                    className={cn(
-                      "w-[34px] h-[34px] rounded-full flex items-center justify-center transition-all",
-                      isAchieved && cn(STATUS_COLORS.positive.bgSubtle, "ring-2 ring-positive/30"),
-                      isCurrent && cn(colors.bgSubtle, "ring-2", `ring-current`, colors.text, "shadow-lg", colors.glow),
-                      isLocked && "bg-muted/50 dark:bg-muted/30",
-                    )}
-                  >
-                    {isAchieved ? (
-                      <Check className={cn("w-4 h-4", STATUS_COLORS.positive.text)} />
-                    ) : (
-                      <Icon className={cn(
-                        "w-4 h-4",
-                        isCurrent ? colors.text : "text-muted-foreground/40",
-                      )} />
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
@@ -593,24 +173,12 @@ export function GuildRanksProgression() {
 
   const { data: profile, isLoading, error } = useFetch<ExpertProfile>(
     () => expertApi.getProfile(address!),
-    { skip: !address }
+    { skip: !address },
   );
 
   const [selectedGuildIndex, setSelectedGuildIndex] = useState(0);
 
-  if (!address) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <EmptyState
-          icon={Wallet}
-          title="Wallet not connected"
-          description="Connect your wallet to view your guild rank progression."
-        />
-      </div>
-    );
-  }
-
-  const guilds = profile?.guilds || [];
+  const guilds = useMemo(() => profile?.guilds || [], [profile?.guilds]);
   const clampedIndex = Math.min(selectedGuildIndex, Math.max(0, guilds.length - 1));
   const selectedGuild = guilds[clampedIndex];
   const currentRole: ExpertRole = selectedGuild?.expertRole ?? "recruit";
@@ -625,89 +193,309 @@ export function GuildRanksProgression() {
     ? computeExpertStats(profile, selectedGuild?.reputation)
     : { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
 
-  const defaultStats: ExpertStats = { reputation: 0, reviewCount: 0, consensusRate: null, endorsementCount: 0 };
+  const defaultStats: ExpertStats = {
+    reputation: 0,
+    reviewCount: 0,
+    consensusRate: null,
+    endorsementCount: 0,
+  };
+
+  // Highest rank across guilds (for hero pill)
+  const highestRole: ExpertRole = useMemo(() => {
+    if (guilds.length === 0) return "recruit";
+    return guilds.reduce<ExpertRole>((best, g) => {
+      return getRankIndex(g.expertRole) > getRankIndex(best) ? g.expertRole : best;
+    }, "recruit");
+  }, [guilds]);
+
+  const overallRankColors = getRankColors(highestRole);
+
+  const overallReputation = profile?.reputation ?? 0;
+  const { tier, nextTier, progress } = getRewardTierProgress(overallReputation);
+  const tierColors = REWARD_TIER_COLORS[tier.name] ?? REWARD_TIER_COLORS.Foundation;
+  const repToNextTier = nextTier
+    ? Math.max(0, nextTier.minReputation - overallReputation)
+    : 0;
+
+  if (!address) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <EmptyState
+          icon={Wallet}
+          title="Wallet not connected"
+          description="Connect your wallet to view your guild rank progression."
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Page Header — always renders immediately */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Advance Your Guild Rank</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Build reputation, complete reviews, and climb from Recruit to Guild Master.
-        </p>
-      </div>
-
-      {/* Error alert — shown inside the page layout */}
-      {error && (
-        <Alert variant="error">Failed to load rank progression data.</Alert>
-      )}
-
-      {/* Guild Selector — only shown when expert belongs to multiple guilds */}
-      {guilds.length > 1 && (
-        <div className="flex gap-2 flex-wrap">
-          {guilds.map((g, i) => (
-            <button
-              key={g.id || i}
-              onClick={() => setSelectedGuildIndex(i)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                i === clampedIndex
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              {g.name || `Guild ${i + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Stats Overview — skeleton placeholders while loading */}
-      <DataSection
-        isLoading={isLoading}
-        skeleton={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonStatCard key={i} />
-            ))}
+    <div className="min-h-full animate-page-enter">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* ── Hero ── */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          <div>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Your progression
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+              Guild ranks
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-lg">
+              Five tiers — Recruit, Apprentice, Craftsman, Officer, Master — earned
+              by review accuracy, endorsements, and standing within each guild.
+            </p>
           </div>
-        }
-      >
-        <StatsGrid stats={stats} />
-      </DataSection>
 
-      {/* Current Rank Hero — skeleton card while loading */}
-      <DataSection
-        isLoading={isLoading}
-        skeleton={
-          <Card className="rounded-xl border border-border" padding="none">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-16 w-16 rounded-xl" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton className="h-4 w-64" />
-                </div>
-              </div>
-              <div className="pt-4 border-t border-border space-y-2">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-1.5 w-full rounded-full" />
+          {/* Right-aligned: overall rank pill + tier countdown */}
+          {profile && guilds.length > 0 && (
+            <div className="flex flex-col gap-2 lg:items-end">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em] self-start lg:self-end",
+                  overallRankColors.badge,
+                )}
+              >
+                <span className={cn("w-1.5 h-1.5 rounded-full", overallRankColors.dot)} />
+                Highest rank · {highestRole}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em] self-start lg:self-end",
+                  tierColors.bg,
+                  tierColors.border,
+                  tierColors.text,
+                )}
+              >
+                <Sparkles className="w-3 h-3" />
+                {tier.name} · {tier.rewardWeight}× rewards
+              </span>
+              {nextTier && (
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {repToNextTier.toLocaleString()} pts to {nextTier.name}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Error ── */}
+        {error && (
+          <Alert variant="error">Failed to load rank progression data.</Alert>
+        )}
+
+        {/* ── KPI strip ── */}
+        <DataSection
+          isLoading={isLoading}
+          skeleton={
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonStatCard key={i} />
+              ))}
+            </div>
+          }
+        >
+          <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <KpiTile
+              icon={<TrendingUp className="w-4 h-4" />}
+              label="Reputation"
+              value={stats.reputation.toLocaleString()}
+              tone="primary"
+            />
+            <KpiTile
+              icon={<Award className="w-4 h-4" />}
+              label="Reviews"
+              value={stats.reviewCount}
+              tone="info"
+            />
+            <KpiTile
+              icon={<Users className="w-4 h-4" />}
+              label="Consensus"
+              value={stats.consensusRate !== null ? `${stats.consensusRate}%` : "N/A"}
+              tone="positive"
+            />
+            <KpiTile
+              icon={<Zap className="w-4 h-4" />}
+              label="Endorsements"
+              value={stats.endorsementCount}
+              tone="warning"
+            />
+          </section>
+        </DataSection>
+
+        {/* ── Per-guild rank cards ── */}
+        <Section
+          icon={<Layers className="w-3.5 h-3.5" />}
+          title="Your guilds"
+          meta={guilds.length > 0 ? `${guilds.length} guild${guilds.length === 1 ? "" : "s"}` : undefined}
+        >
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-[148px] rounded-xl" />
+              ))}
+            </div>
+          ) : guilds.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="No guilds joined"
+              description="Apply to a guild to start building reputation and unlocking ranks."
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {guilds.map((g, i) => (
+                <GuildRankCard
+                  key={g.id || i}
+                  guild={g}
+                  selected={i === clampedIndex}
+                  onClick={() => setSelectedGuildIndex(i)}
+                />
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* ── Selected guild context + Next rank goal ── */}
+        {!isLoading && selectedGuild && nextRank && (
+          <Section
+            icon={<TrendingUp className="w-3.5 h-3.5" />}
+            title={`Next goal · ${selectedGuild.name}`}
+            meta={`Level ${currentRank?.level ?? 1} → ${nextRank.level}`}
+          >
+            <div className="flex items-center gap-3 mb-5 pb-5 border-b border-border">
+              <GuildAvatar guild={selectedGuild.name} size="md" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {selectedGuild.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Currently {currentRank?.name} · {selectedGuild.reputation.toLocaleString()} pts
+                </p>
               </div>
             </div>
-          </Card>
-        }
+            <NextRankGoal nextRank={nextRank} stats={stats} />
+          </Section>
+        )}
+
+        {/* ── Reward tier explainer ── */}
+        {!isLoading && (
+          <Section
+            icon={<Gift className="w-3.5 h-3.5" />}
+            title="Reward tier"
+            meta={`${tier.rewardWeight}× rewards`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl shrink-0", tierColors.bg)}>
+                <Sparkles className={cn("w-5 h-5", tierColors.text)} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <p className="font-display text-base font-bold">{tier.name}</p>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {nextTier
+                      ? `${overallReputation.toLocaleString()} / ${nextTier.minReputation.toLocaleString()}`
+                      : "Maximum tier"}
+                  </span>
+                </div>
+                {nextTier ? (
+                  <>
+                    <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-700", tierColors.bar ?? "bg-primary")}
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {repToNextTier.toLocaleString()} pts to {nextTier.name} ({nextTier.rewardWeight}× rewards).
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    You&apos;ve unlocked the highest reward multiplier on the platform.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* ── Rank ladder ── */}
+        <Section icon={<Award className="w-3.5 h-3.5" />} title="Rank ladder">
+          <RankTierLadder
+            currentRankIndex={isLoading ? -1 : currentRankIndex}
+            stats={isLoading ? defaultStats : stats}
+            isLoading={isLoading}
+          />
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+/* ── Inline helpers ─────────────────────────────────────────────── */
+
+function Section({
+  icon,
+  title,
+  meta,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  meta?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-border flex items-center justify-between gap-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2">
+          <span className="text-primary">{icon}</span>
+          {title}
+        </h2>
+        {meta && (
+          <span className="text-[11px] text-muted-foreground tabular-nums">{meta}</span>
+        )}
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+interface KpiTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "primary" | "positive" | "info" | "warning";
+}
+
+const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
+  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
+};
+
+function KpiTile({ icon, label, value, tone }: KpiTileProps) {
+  const t = KPI_TONE[tone];
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
+      <span
+        className={cn(
+          "w-9 h-9 rounded-lg grid place-items-center flex-shrink-0",
+          t.bg,
+          t.text,
+        )}
       >
-        <CurrentRankHero rank={currentRank} stats={stats} />
-      </DataSection>
-
-      {/* Next Rank Progress — only when loaded */}
-      {!isLoading && nextRank && <NextRankGoal nextRank={nextRank} stats={stats} />}
-
-      {/* Rank Ladder — renders full static structure immediately */}
-      <RankLadder
-        currentRankIndex={isLoading ? -1 : currentRankIndex}
-        stats={isLoading ? defaultStats : stats}
-        isLoading={isLoading}
-      />
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+          {value}
+        </p>
+      </div>
     </div>
   );
 }

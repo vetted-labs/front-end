@@ -12,6 +12,10 @@ import { useAuthContext } from "@/hooks/useAuthContext";
 import { HeroSection } from "./home/HeroSection";
 import { StatsBar } from "./home/StatsBar";
 import { JobBrowser } from "./home/JobBrowser";
+import { PillarsSection } from "./home/PillarsSection";
+import { HowItWorksSection } from "./home/HowItWorksSection";
+import { FeaturedGuildsSection } from "./home/FeaturedGuildsSection";
+import { FinalCtaSection } from "./home/FinalCtaSection";
 import type { Guild, Job } from "@/types";
 
 export function HomePage() {
@@ -22,13 +26,11 @@ export function HomePage() {
   const [mounted, setMounted] = useState(false);
   const auth = useAuthContext();
 
-  // Fetch guilds on mount
   const { data: guilds, isLoading: isLoadingGuilds } = useFetch<Guild[]>(
     () => guildsApi.getAll(),
     { onError: () => {} }
   );
 
-  // Fetch active jobs on mount
   const { data: jobs, isLoading: isLoadingJobs } = useFetch<Job[]>(
     () => jobsApi.getAll({ status: "active" }),
     { onError: () => {} }
@@ -43,7 +45,7 @@ export function HomePage() {
   // eslint-disable-next-line no-restricted-syntax -- disconnects wallet for non-expert auth users
   useEffect(() => {
     if (!mounted) return;
-    if (auth.isAuthenticated && auth.userType !== 'expert' && isConnected && address) {
+    if (auth.isAuthenticated && auth.userType !== "expert" && isConnected && address) {
       disconnect();
     }
   }, [mounted, isConnected, address, auth.isAuthenticated, auth.userType]);
@@ -72,30 +74,48 @@ export function HomePage() {
     }
   };
 
+  const guildList = guilds ?? [];
+  const featuredGuilds = guildList.slice(0, 8);
+
   return (
     <div className="min-h-screen animate-page-enter">
-      {/* Hero Section with Action Cards */}
+      {/* ── 1. Hero ────────────────────────────────────────────────── */}
       <HeroSection
-        guilds={guilds ?? []}
+        guilds={guildList}
         isLoadingGuilds={isLoadingGuilds}
         onJoinAsCandidate={handleJoinAsCandidate}
         onJoinAsExpert={handleExpertJoin}
         onPostJob={handlePostJob}
       />
 
-      {/* Stats Bar — only render once data is loaded so count-up animation targets are correct */}
+      {/* ── 2. Live stat strip ─────────────────────────────────────── */}
       {!isLoadingGuilds && !isLoadingJobs && (
-        <StatsBar guilds={guilds ?? []} jobs={jobs ?? []} />
+        <StatsBar guilds={guildList} jobs={jobs ?? []} />
       )}
 
-      {/* Job Browser */}
+      {/* ── 3. Three pillars ───────────────────────────────────────── */}
+      <PillarsSection
+        onJoinAsCandidate={handleJoinAsCandidate}
+        onPostJob={handlePostJob}
+        onJoinAsExpert={handleExpertJoin}
+      />
+
+      {/* ── 4. How it works ────────────────────────────────────────── */}
+      <HowItWorksSection />
+
+      {/* ── 5. Featured guilds ─────────────────────────────────────── */}
+      {featuredGuilds.length > 0 && <FeaturedGuildsSection guilds={featuredGuilds} />}
+
+      {/* ── 6. Job browser (existing) ──────────────────────────────── */}
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
 
-      {/* Footer */}
+      {/* ── 7. Final CTA ───────────────────────────────────────────── */}
+      <FinalCtaSection onPostJob={handlePostJob} onJoinAsExpert={handleExpertJoin} />
+
+      {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-8">
-            {/* Brand */}
             <div>
               <Image
                 src="/vetted-logo.svg"
@@ -104,9 +124,12 @@ export function HomePage() {
                 height={24}
                 className="h-6 w-auto"
               />
+              <p className="text-xs text-muted-foreground/60 leading-relaxed mt-4 max-w-[320px]">
+                The credibility layer for hiring — domain experts stake reputation on every
+                decision they make.
+              </p>
             </div>
 
-            {/* Platform */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/50 mb-3.5">
                 Platform
@@ -135,7 +158,6 @@ export function HomePage() {
               </ul>
             </div>
 
-            {/* Company */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground/50 mb-3.5">
                 Company
@@ -170,7 +192,6 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Bottom bar */}
           <div className="mt-9 pt-5 border-t border-border/20 text-xs text-muted-foreground/50">
             &copy; {new Date().getFullYear()} Vetted. All rights reserved.
           </div>
