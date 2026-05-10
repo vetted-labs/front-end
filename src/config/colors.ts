@@ -303,6 +303,7 @@ export const SURFACE = {
   elevated: "bg-surface-2",
   hover: "bg-surface-3",
   border: "border-surface-border",
+  borderStrong: "border-surface-border-strong",
 } as const;
 
 // ─── Guild Badge Colors (Job Listings) ─────────────────────────────

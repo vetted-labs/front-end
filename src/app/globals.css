@@ -71,6 +71,7 @@
     --surface-2: 0 0% 100%;
     --surface-3: 30 15% 98%;
     --surface-border: 30 10% 90%;
+    --surface-border-strong: 214 15% 80%;
 
     /* Gradient button text - dark for contrast on orange */
     --gradient-button-text: 0 0% 4%;
@@ -116,28 +117,28 @@
 }
 
 .dark {
-    /* Background colors - Rich dark with warm undertone */
-    --background: 225 12% 6%;  /* Dark blue-charcoal, not pure black */
+    /* Background colors - Blue-tinted dark (#0a1426) */
+    --background: 219 58% 9%;  /* Blue-tinted dark, not near-black */
     --foreground: 30 10% 95%;
 
-    /* Card colors - Semi-transparent for glass effect */
-    --card: 225 10% 11%;  /* Slightly elevated surface */
+    /* Card colors - aligned with surface-1 (#141d33) */
+    --card: 223 44% 14%;
     --card-foreground: 30 10% 95%;
 
-    /* Popover colors */
-    --popover: 225 10% 13%;
+    /* Popover colors - aligned with surface-2 (#1a2540) */
+    --popover: 223 42% 18%;
     --popover-foreground: 30 10% 95%;
 
     /* Primary brand colors - Lighter orange for dark mode */
     --primary: 24 100% 60%;
     --primary-foreground: 24 15% 10%;
 
-    /* Secondary colors - Dark warm surface */
-    --secondary: 225 10% 16%;
+    /* Secondary colors - aligned with surface-2 (#1a2540) */
+    --secondary: 223 42% 18%;
     --secondary-foreground: 30 10% 95%;
 
-    /* Muted colors */
-    --muted: 225 8% 15%;
+    /* Muted colors - aligned with surface-2 (#1a2540) */
+    --muted: 223 42% 18%;
     --muted-foreground: 0 0% 55%;
 
     /* Accent colors - Brighter orange for contrast */
@@ -148,9 +149,9 @@
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border colors - Subtle luminous borders */
-    --border: 225 8% 18%;
-    --input: 225 8% 18%;
+    /* Border colors - aligned with surface-border (#2a3450) */
+    --border: 224 31% 24%;
+    --input: 224 31% 24%;
     --ring: 24 100% 60%;
 
     /* Additional UI colors - Adjusted for dark mode */
@@ -178,12 +179,13 @@
     --rank-officer: 24 100% 60%;
     --rank-master: 40 100% 50%;
 
-    /* Dark surface hierarchy (replaces white/[0.0X] opacity hacks) */
-    --surface-0: 220 20% 5%;           /* #0c0f14 — page base */
-    --surface-1: 222 17% 10%;          /* #141820 — cards */
-    --surface-2: 222 16% 13%;          /* #1a1f2a — elevated (modals, dropdowns) */
-    --surface-3: 221 16% 17%;          /* #222938 — hover / nested */
-    --surface-border: 220 15% 19%;     /* #252d3a — borders */
+    /* Dark surface hierarchy — blue-tinted dark (Phase 1 redesign) */
+    --surface-0: 219 58% 9%;             /* #0a1426 — page base */
+    --surface-1: 223 44% 14%;            /* #141d33 — cards */
+    --surface-2: 223 42% 18%;            /* #1a2540 — elevated (modals, dropdowns) */
+    --surface-3: 224 37% 22%;            /* #232e4d — hover / nested */
+    --surface-border: 224 31% 24%;       /* #2a3450 — borders */
+    --surface-border-strong: 224 27% 31%;/* #3a4564 — strong borders */
 
     /* Chart colors - Orange spectrum for dark mode */
     --chart-1: 24 100% 60%;
@@ -305,6 +307,7 @@ html.theme-going-light::view-transition-new(root) {
     --color-surface-2: hsl(var(--surface-2));
     --color-surface-3: hsl(var(--surface-3));
     --color-surface-border: hsl(var(--surface-border));
+    --color-surface-border-strong: hsl(var(--surface-border-strong));
     --shadow-card: var(--card-shadow);
     --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
