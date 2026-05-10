@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GuildBadge } from "@/components/ui/guild";
 import type { ApplicationsTabType, ApplicationsFilterMode, GuildRecord } from "@/types";
 
 interface PendingCounts {
@@ -109,7 +110,7 @@ export function ApplicationsFilters({
               <SelectItem value="all">All Guilds</SelectItem>
               {guilds.map((guild) => (
                 <SelectItem key={guild.id} value={guild.id}>
-                  {guild.name}
+                  <GuildBadge guild={guild.name} size="xs" />
                 </SelectItem>
               ))}
             </SelectContent>

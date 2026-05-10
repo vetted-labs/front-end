@@ -3,6 +3,7 @@ import { Users, ArrowRight, CheckCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CountdownBadge } from "@/components/ui/countdown-badge";
+import { GuildBadge } from "@/components/ui/guild";
 import { STATUS_COLORS } from "@/config/colors";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import type { GuildApplication } from "@/types";
@@ -57,9 +58,7 @@ export function ProposalCard({
               {proposal.candidate_name}
             </h3>
             {showGuildBadge && proposal.guild_name && (
-              <Badge variant="secondary" className="text-xs shrink-0">
-                {proposal.guild_name}
-              </Badge>
+              <GuildBadge guild={proposal.guild_name} size="sm" className="shrink-0" />
             )}
             {isFinalized && outcomeLabel && (
               <Badge

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import {
-  User,
   Mail,
   Wallet,
   Calendar,
@@ -19,22 +18,24 @@ import {
   Clock,
   Activity,
   Eye,
-  Zap,
   Pencil,
-  LucideIcon,
+  Save,
+  X,
+  Sparkles,
+  ScrollText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { expertApi } from "@/lib/api";
 import { getExplorerAddressUrl } from "@/lib/blockchain";
-import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress } from "@/lib/utils";
+import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { getPersonAvatar } from "@/lib/avatars";
-import { PatternBackground } from "@/components/ui/pattern-background";
 import { GuildCard } from "./GuildCard";
-import { getRankColors } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
+import { getRankColors, STATUS_COLORS } from "@/config/colors";
 import {
   getActivityIconComponent,
   getActivityColorClasses,
@@ -44,7 +45,6 @@ import {
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataSection } from "@/lib/motion";
-import { Divider } from "@/components/ui/divider";
 import type { ExpertProfile as ExpertProfileData } from "@/types";
 
 interface ExpertProfileProps {
@@ -52,82 +52,83 @@ interface ExpertProfileProps {
   showBackButton?: boolean;
 }
 
-// ── Reputation Ring (SVG circular gauge) ──
-function ReputationRing({ score, className = "" }: { score: number; className?: string }) {
-  const circumference = 2 * Math.PI * 70; // r=70
-  const maxScore = 2000;
-  const progress = Math.min(score / maxScore, 1);
-  const targetOffset = circumference - progress * circumference;
+// ─────────────────────────────────────────────────────────────────────
+// Reputation ring — borrowed from ViewReviewModal pattern
+// ─────────────────────────────────────────────────────────────────────
+
+type RepTone = "positive" | "warning" | "negative" | "info";
+
+function ReputationRing({ score, max, tone }: { score: number; max: number; tone: RepTone }) {
+  const size = 168;
+  const strokeWidth = 12;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const percent = Math.min(Math.round((score / max) * 100), 100);
+  const dashOffset = circumference - (percent / 100) * circumference;
+  const toneTextClass = STATUS_COLORS[tone].text;
 
   return (
-    <div className={`relative w-40 h-40 ${className}`}>
-      {/* Glow */}
-      <div className="absolute -inset-3 rounded-full bg-primary/10 blur-xl animate-avatar-glow-pulse" />
-      {/* SVG */}
-      <svg className="w-40 h-40 -rotate-90 relative z-[1]" viewBox="0 0 160 160">
-        <defs>
-          <linearGradient id="rep-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--primary))" />
-            <stop offset="50%" stopColor="hsl(var(--warning))" />
-            <stop offset="100%" stopColor="hsl(var(--primary))" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx="80" cy="80" r="70"
-          fill="none"
-          className="stroke-border/30"
-          strokeWidth="7"
-        />
-        <circle
-          cx="80" cy="80" r="70"
-          fill="none"
-          stroke="url(#rep-gradient)"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          className="animate-rep-gauge-draw drop-"
-          style={{ "--gauge-target": `${targetOffset}` } as React.CSSProperties}
-        />
-      </svg>
-      {/* Center content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-[2]">
-        <span className="text-5xl font-bold font-display tracking-tight text-foreground">
-          {score.toLocaleString()}
-        </span>
-        <span className="text-xs font-medium uppercase tracking-[1.5px] text-primary">
-          points
-        </span>
+    <div className="flex items-center justify-center">
+      <div className="relative">
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          className="-rotate-90"
+          aria-hidden="true"
+        >
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            className="text-border"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            className={cn("transition-all duration-700", toneTextClass)}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <p
+            className={cn(
+              "text-4xl font-bold font-display tabular-nums leading-none",
+              toneTextClass
+            )}
+          >
+            {score.toLocaleString()}
+          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mt-2">
+            Reputation
+          </p>
+          <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
+            {percent}% of {max.toLocaleString()}
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Bento stat cell for the stats row ──
-interface ProfileStatCellProps {
-  icon: LucideIcon;
-  value: string | number;
-  label: string;
-  iconColor?: string;
-  iconBg?: string;
-}
-
-function ProfileStatCell({ icon: Icon, value, label, iconColor = "text-primary", iconBg = "bg-primary/10" }: ProfileStatCellProps) {
-  return (
-    <div className=" rounded-xl border border-border p-6 text-center transition-all hover:border-primary/30">
-      <div className={`w-8 h-8 ${iconBg} rounded-lg flex items-center justify-center mx-auto mb-3`}>
-        <Icon className={`w-4 h-4 ${iconColor}`} />
-      </div>
-      <div className="text-2xl font-bold font-display text-foreground mb-1">{value}</div>
-      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-    </div>
-  );
-}
+// ─────────────────────────────────────────────────────────────────────
+// Main component
+// ─────────────────────────────────────────────────────────────────────
 
 export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertProfileProps) {
   const router = useRouter();
   const { address: connectedAddress, isConnected } = useExpertAccount();
 
-  const mode = walletAddress ? "public" : "private";
+  const mode: "public" | "private" = walletAddress ? "public" : "private";
   const effectiveAddress = mode === "public" ? walletAddress : connectedAddress;
 
   const [copiedAddress, setCopiedAddress] = useState(false);
@@ -222,8 +223,6 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
       .slice(0, 2) || "??";
   };
 
-  const formatDate = (dateString: string) => formatDateMonthYear(dateString, "long");
-
   const calculateConsensusPercentage = () => {
     if (!profile) return 0;
     const approvalCount = profile.approvalCount || 0;
@@ -234,20 +233,20 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     return Math.round((majority / total) * 100);
   };
 
-
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 text-foreground">
         <div className="max-w-md w-full">
           <Alert variant="error" className="mb-4">{error}</Alert>
           {mode === "public" && (
-            <button
+            <Button
+              variant="outline"
+              className="w-full"
               onClick={() => router.back()}
-              className="w-full px-6 py-3 text-foreground bg-muted/50 border border-border rounded-lg hover:bg-muted hover:border-primary/40 transition-all flex items-center justify-center gap-2"
+              icon={<ArrowLeft className="w-4 h-4" />}
             >
-              <ArrowLeft className="w-4 h-4" />
               Go Back
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -262,30 +261,19 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
-  // Guard against null profile during loading — JSX below uses profile! assertions
-  // which would crash if evaluated while profile is still null
   if (!profile) {
     return (
       <div className="min-h-screen text-foreground">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center">
-              <Skeleton className="w-[120px] h-[120px] rounded-full mb-7" />
-              <Skeleton className="h-8 w-48 mb-4" />
-              <Skeleton className="h-8 w-40 rounded-full mb-4" />
-              <Skeleton className="h-4 w-36 mb-2" />
-              <Skeleton className="h-4 w-32" />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Skeleton className="h-40 w-full rounded-2xl mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-64 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-xl" />
             </div>
-            <div className="rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px]">
-              <Skeleton className="w-40 h-40 rounded-full mb-4" />
-              <Skeleton className="h-6 w-24 rounded-full" />
-            </div>
-            <div className="rounded-xl border border-border p-6">
-              <Skeleton className="h-9 w-32 mb-1" />
-              <Skeleton className="h-3 w-48 mt-2" />
-            </div>
-            <div className="rounded-xl border border-border p-6">
-              <Skeleton className="h-12 w-12 mb-3" />
+            <div className="space-y-4">
+              <Skeleton className="h-72 w-full rounded-xl" />
+              <Skeleton className="h-48 w-full rounded-xl" />
             </div>
           </div>
         </div>
@@ -293,487 +281,758 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
     );
   }
 
+  // Pending state — public-only fallback
   if (mode === "public" && profile.status === "pending") {
     return (
       <div className="min-h-screen text-foreground">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           {showBackButton && (
-            <button onClick={() => router.back()} className="mb-8 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => router.back()} className="mb-8 flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </button>
           )}
-          <div className="rounded-xl p-12 text-center border border-border bg-card shadow-sm">
-            <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2 text-foreground">Application Under Review</h2>
-            <p className="text-muted-foreground mb-4">
+          <div className="rounded-2xl p-12 text-center border border-border bg-card shadow-sm">
+            <Clock className="w-14 h-14 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2 text-foreground font-display tracking-tight">Application Under Review</h2>
+            <p className="text-muted-foreground mb-3">
               {profile.fullName ? `${profile.fullName}'s expert application` : "This expert application"} is currently being reviewed.
             </p>
-            <div className="text-sm text-muted-foreground">
-              <p>Wallet: {profile.walletAddress}</p>
-            </div>
+            <p className="font-mono text-xs text-muted-foreground">
+              {profile.walletAddress}
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  const guildEarningsSum = profile?.guilds?.reduce((sum, g) => sum + (g.totalEarnings || 0), 0) || 0;
+  const guildEarningsSum = profile.guilds?.reduce((sum, g) => sum + (g.totalEarnings || 0), 0) || 0;
   const displayEarnings = mode === "public"
-    ? profile?.endorsementEarnings || guildEarningsSum
-    : profile?.totalEarnings || guildEarningsSum;
+    ? profile.endorsementEarnings || guildEarningsSum
+    : profile.totalEarnings || guildEarningsSum;
 
-  const memberSince = profile?.createdAt ? formatDate(profile.createdAt) : "N/A";
+  const memberSince = profile.createdAt ? formatDateMonthYear(profile.createdAt, "long") : "N/A";
+
+  const primaryRank = profile.guilds?.[0]?.expertRole || "recruit";
+  const rankColors = getRankColors(primaryRank);
+
+  const totalVotes = (profile.approvalCount || 0) + (profile.rejectionCount || 0);
+
+  // Reputation tone for the ring
+  const repPercent = profile.reputation > 0 ? Math.min((profile.reputation / 2000) * 100, 100) : 0;
+  const repTone: RepTone =
+    repPercent >= 70 ? "positive"
+    : repPercent >= 50 ? "warning"
+    : repPercent >= 25 ? "info"
+    : "negative";
+
+  const lastActivityTimestamp = profile.recentActivity?.[0]?.timestamp;
 
   return (
-    <div className="min-h-screen text-foreground relative overflow-hidden">
-      <PatternBackground mask="none" className="!opacity-[0.80] dark:!opacity-[0.28]" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Back button */}
+    <div className="min-h-screen text-foreground animate-page-enter">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {mode === "public" && showBackButton && (
-          <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => router.back()}
+            className="mb-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
         )}
 
-        {/* ═══ Bento Grid ═══ */}
-        <DataSection
-          isLoading={isLoading}
-          skeleton={
-            <div className="space-y-4">
-              {/* Bento grid skeleton */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Identity card skeleton */}
-                <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center">
-                  <Skeleton className="w-[120px] h-[120px] rounded-full mb-7" />
-                  <Skeleton className="h-8 w-48 mb-4" />
-                  <Skeleton className="h-8 w-40 rounded-full mb-4" />
-                  <Skeleton className="h-4 w-36 mb-2" />
-                  <Skeleton className="h-4 w-32" />
-                </div>
-                {/* Reputation card skeleton */}
-                <div className="rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px]">
-                  <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
-                    Reputation Score
-                  </div>
-                  <Skeleton className="w-40 h-40 rounded-full mb-4" />
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                </div>
-                {/* Earnings card skeleton */}
-                <div className="rounded-xl border border-border p-6 flex flex-col justify-center">
-                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-                    <DollarSign className="w-3.5 h-3.5 text-success" />
-                    Total Earnings
-                  </div>
-                  <Skeleton className="h-9 w-32 mb-1" />
-                  <Skeleton className="h-1 w-full rounded-full mt-3" />
-                  <Skeleton className="h-3 w-48 mt-2" />
-                </div>
-                {/* Active guilds card skeleton */}
-                <div className="rounded-xl border border-border p-6 flex flex-col justify-center">
-                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-                    <Shield className="w-3.5 h-3.5 text-primary" />
-                    Active Guilds
-                  </div>
-                  <Skeleton className="h-12 w-12 mb-3" />
-                  <div className="flex gap-2">
-                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
-                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
-                    <Skeleton className="w-2.5 h-2.5 rounded-full" />
-                  </div>
-                </div>
-              </div>
-              {/* Stats row skeleton */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {Array.from({ length: mode === "public" ? 5 : 3 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border border-border p-6 text-center">
-                    <Skeleton className="w-8 h-8 rounded-lg mx-auto mb-3" />
-                    <Skeleton className="h-7 w-12 mx-auto mb-1" />
-                    <Skeleton className="h-3 w-16 mx-auto" />
-                  </div>
-                ))}
-              </div>
-              {/* Guild positions skeleton */}
-              <div className="mt-12">
-                <div className="mb-6 flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-primary" />
-                  <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
-                  <Divider className="flex-1" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                </div>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border border-border p-6 space-y-3">
-                      <Skeleton className="h-5 w-2/3" />
-                      <Skeleton className="h-3 w-1/2" />
-                      <Skeleton className="h-3 w-1/3" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DataSection isLoading={isLoading} skeleton={null}>
+          <HeroCard
+            profile={profile}
+            mode={mode}
+            isEditing={isEditing}
+            editName={editData.name}
+            onEditNameChange={(name) => setEditData((d) => ({ ...d, name }))}
+            initials={getInitials(profile.fullName)}
+            rankBadgeClass={rankColors.badge}
+            rankDotClass={rankColors.dot}
+            rankLabel={primaryRank}
+            onCopyAddress={copyAddress}
+            copied={copiedAddress}
+            onStartEdit={handleStartEditing}
+          />
 
-            {/* ── Identity Card (left, spans 3 rows) ── */}
-            <div className="md:row-span-3 rounded-xl border border-border p-8 sm:p-10 flex flex-col items-center text-center animate-fade-up">
-              {/* Avatar */}
-              <div className="relative mb-7">
-                <div className="absolute -inset-3 rounded-full bg-primary/15 blur-2xl animate-avatar-glow-pulse" />
-                <div className="w-[120px] h-[120px] rounded-full p-[3px] bg-[conic-gradient(from_0deg,hsl(var(--primary)),hsl(var(--warning)),hsl(var(--primary)),hsl(24_90%_48%),hsl(var(--primary)))] relative z-[1]">
-                  <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                    <img
-                      src={getPersonAvatar(profile!.fullName || "Expert")}
-                      alt={profile!.fullName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                      }}
-                    />
-                    <span className="hidden text-5xl font-bold font-display text-primary tracking-wider">
-                      {getInitials(profile!.fullName)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          {/* KPI strip */}
+          <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiTile
+              icon={<Star className="w-4 h-4" />}
+              label="Reputation"
+              value={profile.reputation.toLocaleString()}
+              tone="primary"
+            />
+            <KpiTile
+              icon={<Shield className="w-4 h-4" />}
+              label="Active guilds"
+              value={profile.guilds.length}
+              tone="info"
+            />
+            <KpiTile
+              icon={<Eye className="w-4 h-4" />}
+              label={mode === "public" ? "Reviews" : "Total votes"}
+              value={
+                mode === "public"
+                  ? (profile.reviewCount ?? 0)
+                  : totalVotes
+              }
+              tone="warning"
+            />
+            <KpiTile
+              icon={<DollarSign className="w-4 h-4" />}
+              label="Earnings"
+              value={`${formatVetd(displayEarnings)} VETD`}
+              tone="positive"
+            />
+          </div>
 
-              {/* Name */}
-              {mode === "private" && isEditing ? (
-                <div className="w-full mb-4">
-                  <Input
-                    value={editData.name}
-                    onChange={(e) => setEditData((d) => ({ ...d, name: e.target.value }))}
-                    placeholder="Full name"
-                    className="text-center text-lg font-bold"
-                  />
-                </div>
-              ) : (
-                <h1 className="text-3xl font-bold font-display tracking-tight text-foreground mb-4">
-                  {profile!.fullName || "Unknown Expert"}
-                </h1>
-              )}
-
-              {/* Wallet Chip */}
-              {mode === "private" ? (
-                <button
-                  onClick={copyAddress}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary mb-4 transition-all hover:bg-primary/10 hover:border-primary/30"
-                >
-                  <Wallet className="w-3.5 h-3.5 opacity-70" />
-                  {truncateAddress(profile!.walletAddress)}
-                  {copiedAddress ? (
-                    <Check className="w-3 h-3 text-success" />
-                  ) : (
-                    <Copy className="w-3 h-3 opacity-50" />
-                  )}
-                </button>
-              ) : (
-                profile!.walletAddress && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <a
-                      href={getExplorerAddressUrl(profile!.walletAddress)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/15 font-mono text-sm text-primary transition-all hover:bg-primary/10 hover:border-primary/30"
-                    >
-                      <Wallet className="w-3.5 h-3.5 opacity-70" />
-                      {truncateAddress(profile!.walletAddress)}
-                      <ExternalLink className="w-3 h-3 opacity-50" />
-                    </a>
-                    <button
-                      onClick={copyAddress}
-                      className="inline-flex items-center gap-2 p-2 rounded-full bg-muted/50 border border-border hover:border-primary/30 hover:bg-muted transition-all"
-                    >
-                      {copiedAddress ? (
-                        <Check className="w-3 h-3 text-success" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                )
-              )}
-
-              {/* Email */}
-              {mode === "private" && profile!.email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{profile!.email}</span>
-                  <button
-                    onClick={toggleEmailVisibility}
-                    disabled={isTogglingEmail}
-                    className={`ml-1 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide rounded-full border transition-colors ${
-                      profile!.showEmail
-                        ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
-                        : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                    }`}
-                  >
-                    {profile!.showEmail ? "Public" : "Hidden"}
-                  </button>
-                </div>
-              )}
-              {mode === "public" && profile!.showEmail && profile!.email && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                  {profile!.email}
-                </div>
-              )}
-
-              {/* Member since */}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-3.5 h-3.5" />
-                Member since {memberSince}
-              </div>
-
-              {/* Bio */}
-              {mode === "private" && isEditing ? (
-                <div className="w-full mt-6 pt-6 border-t border-border text-left">
-                  <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
-                  <Textarea
-                    value={editData.bio}
-                    onChange={(e) => setEditData((d) => ({ ...d, bio: e.target.value }))}
-                    placeholder="Tell the community about yourself..."
-                    rows={4}
-                    className="text-sm"
-                  />
-                  <div className="flex gap-2 mt-3">
-                    <Button size="sm" onClick={handleSaveProfile} disabled={saving}>
-                      {saving ? "Saving…" : "Save"}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {profile!.bio && (
-                    <div className="w-full mt-6 pt-6 border-t border-border text-left">
-                      <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-2.5">About</div>
-                      <p className="text-sm leading-relaxed text-muted-foreground">{profile!.bio}</p>
-                    </div>
-                  )}
-                  {mode === "private" && (
+          {/* ── Body grid ── */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left column */}
+            <div className="lg:col-span-2 space-y-6">
+              <Section
+                icon={<ScrollText className="w-4 h-4" />}
+                title="About"
+                action={
+                  mode === "private" && !isEditing ? (
                     <button
                       onClick={handleStartEditing}
-                      className="mt-5 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Pencil className="w-3 h-3" />
-                      Edit Profile
+                      Edit
                     </button>
+                  ) : null
+                }
+              >
+                {mode === "private" && isEditing ? (
+                  <div className="space-y-3">
+                    <Textarea
+                      value={editData.bio}
+                      onChange={(e) => setEditData((d) => ({ ...d, bio: e.target.value }))}
+                      placeholder="Tell the community about yourself, your expertise, and what motivates you..."
+                      rows={6}
+                    />
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        onClick={handleSaveProfile}
+                        isLoading={saving}
+                        icon={!saving && <Save className="w-3.5 h-3.5" />}
+                      >
+                        {saving ? "Saving…" : "Save changes"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={saving}
+                        onClick={() => setIsEditing(false)}
+                        icon={<X className="w-3.5 h-3.5" />}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : profile.bio ? (
+                  <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                    {profile.bio}
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    {mode === "private"
+                      ? "No bio yet. Hit Edit above to introduce yourself."
+                      : "This expert hasn't added a bio yet."}
+                  </p>
+                )}
+              </Section>
+
+              <Section
+                icon={<Shield className="w-4 h-4" />}
+                title="Guild positions"
+                meta={`${profile.guilds.length} active`}
+              >
+                {profile.guilds.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      {mode === "private" ? "No guild memberships yet" : "Not a member of any guilds"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Join guilds to start vetting candidates and earning reputation.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {profile.guilds.map((guild) => (
+                      <GuildCard
+                        key={guild.id}
+                        guild={guild}
+                        variant="membership"
+                        membershipSubVariant="compact"
+                        onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Section>
+
+              {mode === "public" && profile.recentActivity && profile.recentActivity.length > 0 && (
+                <Section
+                  icon={<Activity className="w-4 h-4" />}
+                  title="Recent activity"
+                  meta={`${profile.recentActivity.length} entries`}
+                >
+                  <ul className="space-y-2">
+                    {profile.recentActivity.slice(0, 6).map((activity) => {
+                      const IconComponent = getActivityIconComponent(activity.type);
+                      return (
+                        <li
+                          key={activity.id}
+                          className={cn(
+                            "p-3.5 rounded-lg border",
+                            getActivityColorClasses(activity.type)
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              className={cn(
+                                "w-9 h-9 rounded-md grid place-items-center flex-shrink-0",
+                                getActivityIconBgColor(activity.type)
+                              )}
+                            >
+                              <IconComponent className={cn("w-4 h-4", getActivityIconColor(activity.type))} />
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground leading-snug">
+                                {activity.description}
+                              </p>
+                              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+                                <span className="truncate">{activity.guildName}</span>
+                                <span>·</span>
+                                <span>{formatTimeAgo(activity.timestamp)}</span>
+                              </div>
+                            </div>
+                            {activity.amount !== undefined && (
+                              <span className="text-xs font-semibold text-primary tabular-nums flex-shrink-0">
+                                +{activity.amount}
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </Section>
+              )}
+
+              {mode === "public" && totalVotes > 0 && (
+                <Section
+                  icon={<TrendingUp className="w-4 h-4" />}
+                  title="Track record"
+                >
+                  <div className="grid grid-cols-3 gap-3">
+                    <KvTile
+                      label="Approvals"
+                      value={`${profile.approvalCount ?? 0}`}
+                      hint="Votes for"
+                    />
+                    <KvTile
+                      label="Rejections"
+                      value={`${profile.rejectionCount ?? 0}`}
+                      hint="Votes against"
+                    />
+                    <KvTile
+                      label="Consensus"
+                      value={`${calculateConsensusPercentage()}%`}
+                      hint="With majority"
+                    />
+                  </div>
+                  {(profile.endorsementCount ?? 0) > 0 && (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3">
+                      <ThumbsUp className="w-3.5 h-3.5 text-success" />
+                      <span>
+                        <strong className="text-foreground tabular-nums">{profile.endorsementCount}</strong>{" "}
+                        endorsement{(profile.endorsementCount ?? 0) === 1 ? "" : "s"} given
+                      </span>
+                    </div>
                   )}
-                </>
+                </Section>
               )}
             </div>
 
-            {/* ── Reputation Ring Card (right, row 1) ── */}
-            <div className=" rounded-xl border border-border p-8 flex flex-col items-center justify-center min-h-[260px] animate-fade-up animate-delay-100">
-              <div className="text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-5">
-                Reputation Score
-              </div>
-              <ReputationRing score={profile!.reputation} className="mb-4" />
-              {(() => {
-                const rank = profile?.guilds?.[0]?.expertRole || "recruit";
-                const rankColors = getRankColors(rank);
-                return (
-                  <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-[1.5px] animate-rank-badge-glow ${rankColors.badge}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${rankColors.dot}`} />
-                    <span className="capitalize">{rank}</span>
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Right sticky rail */}
+            <aside className="lg:col-span-1 space-y-4 lg:sticky lg:top-6 lg:self-start">
+              <SidebarCard title="Reputation">
+                <div className="flex items-center justify-center pt-1">
+                  <ReputationRing score={profile.reputation} max={2000} tone={repTone} />
+                </div>
+                <div className="flex items-center justify-center mt-3">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",
+                      rankColors.badge
+                    )}
+                  >
+                    <span className={cn("w-1.5 h-1.5 rounded-full", rankColors.dot)} />
+                    <span className="capitalize">{primaryRank}</span>
+                  </span>
+                </div>
+              </SidebarCard>
 
-            {/* ── Earnings Card (right, row 2) ── */}
-            <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-200">
-              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-                <DollarSign className="w-3.5 h-3.5 text-success" />
-                Total Earnings
-              </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold font-display text-foreground">
-                  {formatVetd(displayEarnings)}
-                </span>
-                <span className="text-base font-medium text-success/80">VETD</span>
-              </div>
-              <div className="w-full h-1 rounded-full bg-border/40 mt-3 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-positive"
-                  style={{ width: displayEarnings > 0 ? `${Math.min((displayEarnings / 1000) * 100, 100)}%` : "0%" }}
+              <SidebarCard title="At a glance">
+                <KeyValue
+                  icon={<Sparkles className="w-3.5 h-3.5" />}
+                  label="Rank"
+                  value={primaryRank}
+                  capitalize
                 />
-              </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                {displayEarnings > 0 ? (mode === "public" ? "From endorsements" : "Total earned across all guilds") : "No earnings yet — start reviewing proposals"}
-              </div>
-            </div>
-
-            {/* ── Active Guilds Card (right, row 3) ── */}
-            <div className=" rounded-xl border border-border p-6 flex flex-col justify-center animate-fade-up animate-delay-300">
-              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[1.2px] text-muted-foreground mb-3">
-                <Shield className="w-3.5 h-3.5 text-primary" />
-                Active Guilds
-              </div>
-              <div className="text-5xl font-bold font-display text-foreground mb-3">
-                {profile!.guilds.length}
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {profile!.guilds.map((guild) => (
-                  <div
-                    key={guild.id}
-                    title={guild.name}
-                    className="w-2.5 h-2.5 rounded-full bg-primary/70 transition-all hover:scale-150 hover:bg-primary cursor-pointer"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ═══ Stats Row ═══ */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 animate-fade-up animate-delay-400">
-            {mode === "public" && (
-              <>
-                <ProfileStatCell
-                  icon={TrendingUp}
-                  value={`${calculateConsensusPercentage()}%`}
-                  label="Consensus"
-                  iconColor="text-primary"
-                  iconBg="bg-primary/10"
-                />
-                <ProfileStatCell
-                  icon={DollarSign}
-                  value={formatVetd(displayEarnings)}
-                  label="Earnings"
-                  iconColor="text-success"
-                  iconBg="bg-success/10"
-                />
-                <ProfileStatCell
-                  icon={ThumbsUp}
-                  value={profile!.endorsementCount || 0}
-                  label="Endorsements"
-                  iconColor="text-success"
-                  iconBg="bg-success/10"
-                />
-                <ProfileStatCell
-                  icon={Eye}
-                  value={profile!.reviewCount || 0}
-                  label="Reviews"
-                  iconColor="text-primary"
-                  iconBg="bg-primary/[0.08]"
-                />
-                <ProfileStatCell
-                  icon={Zap}
-                  value={`${profile!.approvalCount || 0}`}
-                  label="Approvals"
-                  iconColor="text-primary"
-                  iconBg="bg-primary/10"
-                />
-              </>
-            )}
-            {mode === "private" && (
-              <>
-                <ProfileStatCell
-                  icon={Star}
-                  value={profile!.reputation}
-                  label="Reputation"
-                  iconColor="text-primary"
-                  iconBg="bg-primary/10"
-                />
-                <ProfileStatCell
-                  icon={DollarSign}
-                  value={formatVetd(displayEarnings)}
-                  label="Earnings"
-                  iconColor="text-success"
-                  iconBg="bg-success/10"
-                />
-                <ProfileStatCell
-                  icon={Shield}
-                  value={profile!.guilds.length}
+                <KeyValue
+                  icon={<Shield className="w-3.5 h-3.5" />}
                   label="Guilds"
+                  value={`${profile.guilds.length}`}
                 />
-              </>
-            )}
-          </div>
+                <KeyValue
+                  icon={<Eye className="w-3.5 h-3.5" />}
+                  label="Votes cast"
+                  value={`${totalVotes}`}
+                />
+                <KeyValue
+                  icon={<Activity className="w-3.5 h-3.5" />}
+                  label="Last active"
+                  value={lastActivityTimestamp ? formatTimeAgo(lastActivityTimestamp) : "—"}
+                />
+                <KeyValue
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                  label="Joined"
+                  value={memberSince}
+                />
+              </SidebarCard>
 
-          {/* ═══ Recent Activity (public mode only) ═══ */}
-          {mode === "public" && profile!.recentActivity && profile!.recentActivity.length > 0 && (
-            <div className="mt-4 animate-fade-up animate-delay-500">
-              <div className=" rounded-xl border border-border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" />
-                    Recent Activity
-                  </h2>
-                </div>
+              <SidebarCard title="Wallet">
                 <div className="space-y-3">
-                  {profile!.recentActivity!.slice(0, 5).map((activity) => (
-                    <div
-                      key={activity.id}
-                      className={`p-4 rounded-xl border ${getActivityColorClasses(activity.type)}`}
+                  {mode === "private" ? (
+                    <button
+                      onClick={copyAddress}
+                      className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border font-mono text-xs text-foreground hover:border-primary/30 hover:bg-muted transition-colors"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${getActivityIconBgColor(activity.type)}`}>
-                          {(() => {
-                            const IconComponent = getActivityIconComponent(activity.type);
-                            return <IconComponent className={`w-5 h-5 ${getActivityIconColor(activity.type)}`} />;
-                          })()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground mb-1">{activity.description}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="truncate">{activity.guildName}</span>
-                            <span>·</span>
-                            <span>{formatTimeAgo(activity.timestamp)}</span>
-                          </div>
-                        </div>
-                        {activity.amount && (
-                          <div className="text-sm font-medium text-primary flex-shrink-0">+{activity.amount}</div>
-                        )}
+                      <span className="flex items-center gap-2">
+                        <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                        {truncateAddress(profile.walletAddress)}
+                      </span>
+                      {copiedAddress ? (
+                        <Check className="w-3.5 h-3.5 text-success" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </button>
+                  ) : (
+                    profile.walletAddress && (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={getExplorerAddressUrl(profile.walletAddress)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border font-mono text-xs text-foreground hover:border-primary/30 hover:bg-muted transition-colors"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                            {truncateAddress(profile.walletAddress)}
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                        </a>
+                        <button
+                          onClick={copyAddress}
+                          className="grid place-items-center w-9 h-9 rounded-lg bg-muted/40 border border-border hover:border-primary/30 hover:bg-muted transition-colors flex-shrink-0"
+                          aria-label="Copy address"
+                        >
+                          {copiedAddress ? (
+                            <Check className="w-3.5 h-3.5 text-success" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                          )}
+                        </button>
                       </div>
+                    )
+                  )}
+
+                  {mode === "private" && profile.email && (
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-border">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Mail className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-xs text-foreground truncate">{profile.email}</span>
+                      </div>
+                      <button
+                        onClick={toggleEmailVisibility}
+                        disabled={isTogglingEmail}
+                        className={cn(
+                          "px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] rounded border transition-colors flex-shrink-0",
+                          profile.showEmail
+                            ? "bg-success/10 text-success border-success/20 hover:bg-success/15"
+                            : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                        )}
+                      >
+                        {profile.showEmail ? "Public" : "Hidden"}
+                      </button>
                     </div>
-                  ))}
+                  )}
+                  {mode === "public" && profile.showEmail && profile.email && (
+                    <div className="flex items-center gap-2 pt-3 border-t border-border">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-foreground truncate">{profile.email}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          )}
+              </SidebarCard>
 
-          {/* ═══ Guild Positions ═══ */}
-          <div className="animate-fade-up animate-delay-500">
-            <div className="mt-12 mb-6 flex items-center gap-3">
-              <Shield className="w-5 h-5 text-primary" />
-              <h2 className="text-2xl font-bold font-display tracking-tight text-foreground">Guild Positions</h2>
-              <Divider className="flex-1" />
-              <span className="font-mono text-xs text-muted-foreground px-3 py-1 rounded-full border border-border bg-card">
-                {profile!.guilds.length} active
-              </span>
-            </div>
-
-            {profile!.guilds.length === 0 ? (
-              <div className="text-center py-12 rounded-xl border border-border">
-                <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-60" />
-                <p className="text-sm font-medium text-foreground mb-2">
-                  {mode === "private" ? "No guild memberships yet" : "Not yet a member of any guilds"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Join guilds to start vetting candidates and earning reputation
-                </p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {profile!.guilds.map((guild) => (
-                  <GuildCard
-                    key={guild.id}
-                    guild={guild}
-                    variant="membership"
-                    onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
-                  />
-                ))}
-              </div>
-            )}
+              <SidebarCard title="Earnings">
+                <div className="space-y-2">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold font-display text-foreground tabular-nums">
+                      {formatVetd(displayEarnings)}
+                    </span>
+                    <span className="text-xs font-semibold text-success/80">VETD</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-border/40 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-positive transition-all duration-700"
+                      style={{
+                        width: displayEarnings > 0
+                          ? `${Math.min((displayEarnings / 1000) * 100, 100)}%`
+                          : "0%",
+                      }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {displayEarnings > 0
+                      ? mode === "public"
+                        ? "Earned through endorsements."
+                        : "Earned across all guilds."
+                      : "Start reviewing to begin earning."}
+                  </p>
+                </div>
+              </SidebarCard>
+            </aside>
           </div>
         </DataSection>
       </div>
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Hero
+// ─────────────────────────────────────────────────────────────────────
+
+interface HeroCardProps {
+  profile: ExpertProfileData;
+  mode: "public" | "private";
+  isEditing: boolean;
+  editName: string;
+  onEditNameChange: (v: string) => void;
+  initials: string;
+  rankBadgeClass: string;
+  rankDotClass: string;
+  rankLabel: string;
+  onCopyAddress: () => void;
+  copied: boolean;
+  onStartEdit: () => void;
+}
+
+function HeroCard({
+  profile,
+  mode,
+  isEditing,
+  editName,
+  onEditNameChange,
+  initials,
+  rankBadgeClass,
+  rankDotClass,
+  rankLabel,
+  onCopyAddress,
+  copied,
+  onStartEdit,
+}: HeroCardProps) {
+  const memberSince = profile.createdAt
+    ? formatDateMonthYear(profile.createdAt, "long")
+    : null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Banner zone */}
+      <div className="relative h-40 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.22),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(var(--warning)/0.10),transparent_55%)]" />
+
+        {/* Top-right rank pill */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.18em] backdrop-blur-md",
+              rankBadgeClass
+            )}
+          >
+            <span className={cn("w-1.5 h-1.5 rounded-full", rankDotClass)} />
+            <span className="capitalize">{rankLabel}</span>
+          </span>
+          {profile.walletAddress && (
+            <button
+              onClick={onCopyAddress}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono backdrop-blur-md bg-card/80 border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+              aria-label="Copy wallet address"
+            >
+              <Wallet className="w-3 h-3" />
+              {truncateAddress(profile.walletAddress)}
+              {copied ? (
+                <Check className="w-3 h-3 text-success" />
+              ) : (
+                <Copy className="w-3 h-3" />
+              )}
+            </button>
+          )}
+          {mode === "private" && !isEditing && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={onStartEdit}
+              icon={<Pencil className="w-3.5 h-3.5" />}
+              className="hidden sm:inline-flex"
+            >
+              Edit profile
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Body — avatar overlap */}
+      <div className="px-6 sm:px-8 -mt-12 relative pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-24 h-24 rounded-2xl bg-card border-2 border-border shadow-md overflow-hidden grid place-items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element -- avatar URL from helper */}
+              <img
+                src={getPersonAvatar(profile.fullName || "Expert")}
+                alt={profile.fullName ?? "Expert"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                }}
+              />
+              <span className="hidden text-3xl font-bold font-display text-primary tracking-wider">
+                {initials}
+              </span>
+            </div>
+          </div>
+
+          {/* Name + meta */}
+          <div className="min-w-0 flex-1 sm:pb-2">
+            {mode === "private" && isEditing ? (
+              <Input
+                value={editName}
+                onChange={(e) => onEditNameChange(e.target.value)}
+                placeholder="Full name"
+                className="text-lg font-bold mb-2"
+              />
+            ) : (
+              <h1 className="text-3xl font-bold text-foreground tracking-tight font-display truncate">
+                {profile.fullName || "Unknown Expert"}
+              </h1>
+            )}
+
+            {(profile.currentTitle || profile.currentCompany) && (
+              <p className="text-sm text-muted-foreground mt-1 truncate">
+                {[profile.currentTitle, profile.currentCompany].filter(Boolean).join(" · ")}
+              </p>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {profile.guilds.slice(0, 3).map((guild) => (
+                <GuildBadge key={guild.id} guild={guild.name} size="sm" />
+              ))}
+              {profile.guilds.length > 3 && (
+                <span className="text-[11px] text-muted-foreground tabular-nums">
+                  +{profile.guilds.length - 3} more
+                </span>
+              )}
+              {memberSince && (
+                <span className="ml-auto sm:ml-0 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Calendar className="w-3 h-3" />
+                  Joined {memberSince}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile-only edit button */}
+          {mode === "private" && !isEditing && (
+            <div className="sm:hidden">
+              <Button
+                size="sm"
+                onClick={onStartEdit}
+                icon={<Pencil className="w-3.5 h-3.5" />}
+                className="w-full"
+              >
+                Edit profile
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Helpers — Section, SidebarCard, KeyValue, KpiTile, KvTile
+// ─────────────────────────────────────────────────────────────────────
+
+function Section({
+  icon,
+  title,
+  meta,
+  action,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  meta?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-border flex items-center justify-between gap-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2">
+          <span className="text-primary">{icon}</span>
+          {title}
+        </h2>
+        <div className="flex items-center gap-3">
+          {meta && (
+            <span className="text-[11px] text-muted-foreground tabular-nums">
+              {meta}
+            </span>
+          )}
+          {action}
+        </div>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+function SidebarCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          {title}
+        </h3>
+      </div>
+      <div className="p-4 space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function KeyValue({
+  icon,
+  label,
+  value,
+  capitalize,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-muted-foreground mt-0.5 flex-shrink-0">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className={cn(
+            "text-sm text-foreground font-medium leading-snug",
+            capitalize && "capitalize"
+          )}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface KpiTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "primary" | "positive" | "info" | "warning";
+}
+
+const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
+  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
+};
+
+function KpiTile({ icon, label, value, tone }: KpiTileProps) {
+  const t = KPI_TONE[tone];
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
+      <span
+        className={cn(
+          "w-9 h-9 rounded-lg grid place-items-center flex-shrink-0",
+          t.bg,
+          t.text
+        )}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function KvTile({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3.5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="text-xl font-bold text-foreground tabular-nums leading-tight mt-1">
+        {value}
+      </p>
+      {hint && (
+        <p className="text-[10.5px] text-muted-foreground mt-0.5 truncate">{hint}</p>
+      )}
+    </div>
+  );
+}
+

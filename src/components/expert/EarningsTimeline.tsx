@@ -1,9 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { Coins, Layers } from "lucide-react";
+import { Coins } from "lucide-react";
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
 import { STAT_ICON, STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
@@ -141,10 +142,7 @@ export function EarningsTimeline({ items, pagination, page, onPageChange }: Earn
                             {entry.guild_name && (
                               <>
                                 <span className="w-[3px] h-[3px] rounded-full bg-muted-foreground/30" />
-                                <span className="flex items-center gap-2">
-                                  <Layers className="w-3 h-3" />
-                                  {entry.guild_name}
-                                </span>
+                                <GuildBadge guild={entry.guild_name} size="xs" />
                               </>
                             )}
                             {subLabel && !entry.candidate_name && (

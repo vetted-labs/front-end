@@ -9,6 +9,20 @@ export interface AuthResponse {
   company?: { id: string; email: string; name?: string };
 }
 
+/**
+ * Active refresh-token session for the current user.
+ * Returned by GET /api/auth/sessions — see auth.routes.ts.
+ */
+export interface AuthSession {
+  id: string;
+  deviceFingerprint?: string | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt?: string;
+  lastUsedAt?: string;
+  expiresAt?: string;
+}
+
 // --- Notifications ---
 export interface Notification {
   id: string;
@@ -525,6 +539,8 @@ export interface CompanyProfile {
   createdAt?: string;
   updatedAt?: string;
   walletAddress?: string;
+  /** Billing tier — backend column `companies.subscription_tier` (default 'free'). */
+  subscriptionTier?: string;
 }
 
 // --- Guild Membership ---

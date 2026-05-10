@@ -8,6 +8,8 @@
  * which swap automatically between light and dark mode.
  */
 
+import { getGuildIdentity } from "@/lib/guildIdentity";
+
 // ─── Semantic Status Colors ─────────────────────────────────────────
 // Use these for any success/error/warning/info/neutral/pending indicators.
 
@@ -304,53 +306,27 @@ export const SURFACE = {
 } as const;
 
 // ─── Guild Badge Colors (Job Listings) ─────────────────────────────
-// Color-coded guild badges for job cards and detail pages.
-// Uses semantic CSS vars where available, falls back to primary for unknowns.
+// Backed by `getGuildIdentity` so every call site picks up per-guild
+// colors instead of the brand-orange-for-everything default.
+// Signature is preserved for compatibility with existing call sites;
+// prefer `<GuildBadge>` from `@/components/ui/guild` for new code.
 
-export const GUILD_BADGE_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  engineering: {
-    bg: "bg-info-blue/10",
-    text: "text-info-blue",
-    border: "border-info-blue/15",
-    dot: "bg-info-blue",
-  },
-  design: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    border: "border-primary/15",
-    dot: "bg-primary",
-  },
-  data: {
-    bg: "bg-positive/10",
-    text: "text-positive",
-    border: "border-positive/15",
-    dot: "bg-positive",
-  },
-  security: {
-    bg: "bg-negative/10",
-    text: "text-negative",
-    border: "border-negative/15",
-    dot: "bg-negative",
-  },
-  marketing: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    border: "border-primary/15",
-    dot: "bg-primary",
-  },
-};
+export interface GuildBadgeColors {
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
+}
 
-const DEFAULT_GUILD_BADGE = {
-  bg: "bg-primary/10",
-  text: "text-primary",
-  border: "border-primary/15",
-  dot: "bg-primary",
-};
-
-/** Get guild badge colors by guild name (case-insensitive, strips "Guild" suffix) */
-export function getGuildBadgeColors(guildName: string) {
-  const key = guildName.replace(/ Guild$/i, "").toLowerCase().trim();
-  return GUILD_BADGE_COLORS[key] ?? DEFAULT_GUILD_BADGE;
+/** Get guild badge colors by guild name (delegates to `getGuildIdentity`). */
+export function getGuildBadgeColors(guildName: string): GuildBadgeColors {
+  const { classes } = getGuildIdentity(guildName);
+  return {
+    bg: classes.bg,
+    text: classes.text,
+    border: classes.border,
+    dot: classes.dot,
+  };
 }
 
 // ─── Stat Icon Colors ───────────────────────────────────────────────
@@ -394,37 +370,37 @@ export const PODIUM_COLORS = {
 } as const;
 
 // ─── Guild Accent Colors (listing page) ─────────────────────────────
-// Each guild gets a unique accent.  The `data-guild` attribute on the card
-// element drives CSS custom properties (--gc / --gc-rgb) defined in
-// globals.css — these are the Tailwind-friendly tokens used in JSX.
+// Each guild gets a unique accent. Backed by `getGuildIdentity` so the
+// per-guild text color matches the rest of the app. The `dataGuild`
+// attribute is still emitted for legacy CSS custom properties in
+// globals.css (.guild-card[data-guild=…]).
 
 export type GuildAccent = {
   /** data-guild attribute value for the CSS hook */
   dataGuild: string;
-  /** Tailwind text color — uses the CSS var */
+  /** Tailwind text color — per-guild identity */
   text: string;
   /** Badge label for optional featured badges */
   badge?: { label: string; variant: "info" | "negative" | "positive" };
 };
 
-const GUILD_ACCENT_MAP: Record<string, GuildAccent> = {
-  engineering:  { dataGuild: "engineering",  text: "text-[hsl(var(--gc))]", badge: { label: "Most Active",  variant: "info" } },
-  design:       { dataGuild: "design",       text: "text-[hsl(var(--gc))]" },
-  data:         { dataGuild: "data",         text: "text-[hsl(var(--gc))]" },
-  security:     { dataGuild: "security",     text: "text-[hsl(var(--gc))]", badge: { label: "High Demand",  variant: "negative" } },
-  marketing:    { dataGuild: "marketing",    text: "text-[hsl(var(--gc))]" },
-  devops:       { dataGuild: "devops",       text: "text-[hsl(var(--gc))]", badge: { label: "Growing Fast", variant: "positive" } },
-  product:      { dataGuild: "product",      text: "text-[hsl(var(--gc))]" },
-  operations:   { dataGuild: "operations",   text: "text-[hsl(var(--gc))]" },
-  finance:      { dataGuild: "finance",      text: "text-[hsl(var(--gc))]" },
-  people:       { dataGuild: "people",       text: "text-[hsl(var(--gc))]" },
-  sales:        { dataGuild: "sales",        text: "text-[hsl(var(--gc))]" },
+const FEATURED_BADGES: Record<string, GuildAccent["badge"]> = {
+  engineering: { label: "Most Active", variant: "info" },
+  // `security` and `devops` are not first-class guilds in the new identity
+  // system; preserve the legacy badge labels keyed off the input string.
+  security:    { label: "High Demand", variant: "negative" },
+  devops:      { label: "Growing Fast", variant: "positive" },
 };
 
-/** Resolve a guild name to its accent config.  Falls back to brand orange. */
+/** Resolve a guild name to its accent config (delegates to `getGuildIdentity`). */
 export function getGuildAccent(guildName: string): GuildAccent {
   const key = guildName.toLowerCase().replace(/ guild$/i, "").split(/\s/)[0];
-  return GUILD_ACCENT_MAP[key] ?? { dataGuild: key, text: "text-primary" };
+  const identity = getGuildIdentity(guildName);
+  return {
+    dataGuild: identity.slug === "unknown" ? key : identity.slug,
+    text: identity.classes.text,
+    badge: FEATURED_BADGES[key],
+  };
 }
 
 // ─── Guild Detail Accent (for guild detail page) ────────────────────
@@ -460,26 +436,10 @@ export const REWARD_TIER_COLORS: Record<string, { bg: string; border: string; te
 };
 
 // ─── Guild Hex Colors (for SVG charts / inline styles) ──────────────
-// These match the --gc-rgb values in globals.css.
-
-export const GUILD_HEX_COLORS: Record<string, string> = {
-  engineering: "#3b82f6",
-  design: "#a855f7",
-  data: "#14b8a6",
-  security: "#ef4444",
-  marketing: "#f59e0b",
-  devops: "#22c55e",
-  product: "#ff6a00",
-  operations: "#94a3b8",
-  finance: "#f59e0b",
-  people: "#a855f7",
-  sales: "#22c55e",
-};
-
-const DEFAULT_GUILD_HEX = "#ff6a00";
+// Delegates to `getGuildIdentity` so SVG/charts stay aligned with the
+// rest of the app's per-guild palette.
 
 /** Resolve a guild name to a hex color string for SVG/inline styles. */
 export function getGuildHexColor(guildName: string): string {
-  const key = guildName.toLowerCase().replace(/ guild$/i, "").split(/[\s&,]+/)[0];
-  return GUILD_HEX_COLORS[key] ?? DEFAULT_GUILD_HEX;
+  return getGuildIdentity(guildName).hex;
 }

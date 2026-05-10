@@ -6,6 +6,7 @@ import { BarDistribution } from "@/components/analytics/BarDistribution";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
+import { GuildBadge } from "@/components/ui/guild";
 import { AlertTriangle, BarChart3 } from "lucide-react";
 import type { TimePeriod } from "@/components/analytics/TimeFilter";
 import type { CompanyJobsData } from "@/types/analytics";
@@ -98,9 +99,9 @@ export function CompanyJobsTab({ period }: Props) {
                   <div className="text-[13px] font-medium text-foreground">
                     {job.name}
                   </div>
-                  <span className="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-primary/8 text-primary">
-                    {job.guild}
-                  </span>
+                  <div className="mt-1">
+                    <GuildBadge guild={job.guild} size="sm" />
+                  </div>
                 </div>
 
                 {/* Mobile stats summary */}

@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { GuildBadge } from "@/components/ui/guild";
 import { MatchScoreBreakdown } from "@/components/ui/match-score-breakdown";
 import { PillTabs } from "@/components/ui/pill-tabs";
 import { StatusActions } from "./StatusActions";
@@ -274,7 +275,7 @@ export function CandidateDetailPanel({
                 {job.guild && (
                   <>
                     <span className="text-border dark:text-white/10">&middot;</span>
-                    <span>{job.guild}</span>
+                    <GuildBadge guild={job.guild} size="xs" />
                   </>
                 )}
               </div>
@@ -510,7 +511,10 @@ export function CandidateDetailPanel({
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                    <span>Guild: <span className="text-foreground font-medium">{guildReport.guildApplication.guildName}</span></span>
+                    <span className="inline-flex items-center gap-1.5">
+                      Guild:
+                      <GuildBadge guild={guildReport.guildApplication.guildName} size="xs" />
+                    </span>
                     <span className="text-border dark:text-white/10">&middot;</span>
                     <span className="capitalize">Expertise: {guildReport.guildApplication.expertiseLevel}</span>
                   </div>

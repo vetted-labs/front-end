@@ -363,6 +363,31 @@ export const authApi = {
     localStorage.removeItem("walletAddress");
     localStorage.removeItem("expertStatus");
   },
+
+  // List active refresh-token sessions for the current user.
+  // Backend returns `{ success, sessions }` (no `data` key), so we use rawEnvelope.
+  listSessions: async () => {
+    const json = await apiRequest<{
+      success?: boolean;
+      sessions?: import("@/types").AuthSession[];
+    }>("/api/auth/sessions", {
+      requiresAuth: true,
+      rawEnvelope: true,
+    });
+    return json.sessions ?? [];
+  },
+
+  revokeSession: (sessionId: string) =>
+    apiRequest<{ success: true; message: string }>(
+      `/api/auth/sessions/${encodeURIComponent(sessionId)}`,
+      { method: "DELETE", requiresAuth: true, rawEnvelope: true }
+    ),
+
+  revokeAllOtherSessions: () =>
+    apiRequest<{ success: true; revokedCount: number; message: string }>(
+      "/api/auth/sessions/all",
+      { method: "DELETE", requiresAuth: true, rawEnvelope: true }
+    ),
 };
 
 // Jobs API
@@ -403,6 +428,26 @@ export const jobsApi = {
       requiresAuth: true,
     }),
 
+  uploadAttachment: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return apiRequest<{
+      url: string;
+      filename: string;
+      sizeBytes: number;
+      mimeType: string;
+    }>("/api/jobs/uploads", {
+      method: "POST",
+      body: fd,
+      requiresAuth: true,
+    });
+  },
+
+  deleteAttachment: (filename: string) =>
+    apiRequest<{ success: true }>(
+      `/api/jobs/uploads/${encodeURIComponent(filename)}`,
+      { method: "DELETE", requiresAuth: true }
+    ),
 };
 
 // Dashboard API - uses /api/jobs/stats endpoint on backend
@@ -450,6 +495,13 @@ export const companyApi = {
       requiresAuth: true,
     });
   },
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<{ success: true }>("/api/companies/me/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+      requiresAuth: true,
+    }),
 
   getApplications: (params?: {
     status?: string;
@@ -1827,6 +1879,32 @@ export interface ReviewSubmitResponse {
   txHash: string;
 }
 
+/**
+ * On-chain `create_vetting_session` lifecycle as observed by the BE. Phase 3
+ * hardening: the FE used to gate the "Preparing on-chain session…" banner on
+ * `blockchainSessionCreated` only — when the cron abandoned the op we got a
+ * stuck-forever spinner. The BE now returns this richer object so the FE can
+ * swap the banner for an error+retry surface.
+ *
+ *  - `pending`   — outbox row queued / processing, no terminal failure yet.
+ *  - `created`   — table flag flipped to TRUE (cron succeeded or event listener
+ *                  reconciled). Banner should hide.
+ *  - `failed`    — latest cron attempt failed and will be retried.
+ *  - `abandoned` — outbox gave up (attempt_count ≥ max_attempts).
+ */
+export type BlockchainSessionStatus = "pending" | "created" | "failed" | "abandoned";
+
+export interface BlockchainSessionInfo {
+  status: BlockchainSessionStatus;
+  /** Decoded contract-error name (e.g. `InsufficientUnlockedStake`). */
+  errorCode: string | null;
+  /** Truncated raw error message from the most recent attempt (≤500 chars). */
+  errorMessage: string | null;
+  attemptCount: number;
+  /** ISO timestamp of the last attempt. */
+  lastAttemptedAt: string | null;
+}
+
 export type ReviewStateResponse =
   | { kind: "committed"; txHash: string | null; commitHash: string }
   | { kind: "draft"; body: Record<string, unknown> }
@@ -1935,6 +2013,19 @@ export const reviewsApi = {
       apiRequest<ReviewStateResponse>(
         `/api/experts/guild-applications/${applicationId}/review/state`,
         { requiresAuth: false }
+      ),
+    /**
+     * Reset the latest failed/abandoned `create_vetting_session` outbox row
+     * so the cron retries it on the next tick. BE auth requires the caller
+     * wallet to be on the reviewer panel.
+     */
+    retrySession: (applicationId: string) =>
+      apiRequest<BlockchainSessionInfo>(
+        `/api/experts/guild-applications/${applicationId}/retry-session`,
+        {
+          method: "POST",
+          requiresAuth: false,
+        }
       ),
   },
 };

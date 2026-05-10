@@ -1,9 +1,9 @@
-import { Badge } from "@/components/ui/badge";
 import { Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { STORY_LAB_REVIEW_APPLICATION_ID } from "@/components/expert/story-lab/storyLabFixtures";
@@ -103,9 +103,7 @@ function ImpactRow({
             {tier.label}
           </span>
           {entry.guild_name && (
-            <Badge variant="outline" className="text-xs font-normal">
-              {entry.guild_name}
-            </Badge>
+            <GuildBadge guild={entry.guild_name} size="xs" />
           )}
         </div>
 

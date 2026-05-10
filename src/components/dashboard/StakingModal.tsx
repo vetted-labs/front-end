@@ -18,6 +18,7 @@ import { isUserRejection, getTransactionErrorMessage } from "@/lib/blockchain";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Divider } from "@/components/ui/divider";
+import { GuildBadge } from "@/components/ui/guild";
 import { TransactionModal } from "./TransactionModal";
 import type { StakingGuildOption } from "@/types";
 
@@ -487,7 +488,10 @@ export function StakingModal({ isOpen, onClose, onSuccess, preselectedGuildId, d
                             : "text-foreground hover:bg-muted/50"
                         }`}
                       >
-                        {guild.name}
+                        <span className="inline-flex items-center gap-2">
+                          <span>{guild.name}</span>
+                          <GuildBadge guild={guild.name} size="xs" />
+                        </span>
                       </button>
                     ))}
                   </div>

@@ -10,12 +10,20 @@ import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useApplicationStatusUpdate } from "@/lib/hooks/useApplicationStatusUpdate";
-import { CandidateStatsBar } from "./candidates/CandidateStatsBar";
 import { CandidateListPanel } from "./candidates/CandidateListPanel";
 import { CandidateDetailPanel } from "./candidates/CandidateDetailPanel";
 import { CandidateOverviewPanel } from "./candidates/CandidateOverviewPanel";
+import { CandidateKpiRow } from "./candidates/CandidateKpiRow";
 import { DataSection } from "@/lib/motion";
-import type { CompanyApplication, EndorsementStats, ApplicationStatus, CandidateSortOption, GroupedJob } from "@/types";
+import type {
+  CompanyApplication,
+  EndorsementStats,
+  ApplicationStatus,
+  CandidateSortOption,
+  GroupedJob,
+} from "@/types";
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function CandidatesPage() {
   const router = useRouter();
@@ -27,7 +35,9 @@ export default function CandidatesPage() {
   const [filterGuild, setFilterGuild] = useState<string>("all");
   const [sortBy, setSortBy] = useState<CandidateSortOption>("endorsements");
   const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set());
-  const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<CompanyApplication | null>(
+    null
+  );
   const [endorsementData, setEndorsementData] = useState<Map<string, EndorsementStats>>(new Map());
   const [topEndorserData, setTopEndorserData] = useState<Map<string, string>>(new Map());
   const [viewMode, setViewMode] = useState<"priority" | "byjob">("priority");
@@ -70,17 +80,18 @@ export default function CandidatesPage() {
           endorsements.set(probeKey, probeStats);
         }
       } catch {
-        // Endpoint is unavailable — skip all endorsement fetches
         logger.warn("Endorsement stats endpoint unavailable, skipping");
         return;
       }
 
-      // Probe succeeded, fetch the rest in batches (start at 1 to skip the probe)
+      // Probe succeeded, fetch the rest in batches
       for (let i = 1; i < pairEntries.length; i += 10) {
         const batch = pairEntries.slice(i, i + 10);
         const results = await Promise.allSettled(
           batch.map(([key, { jobId, candidateId }]) =>
-            blockchainApi.getEndorsementStats(jobId, candidateId).then((stats) => ({ key, stats }))
+            blockchainApi
+              .getEndorsementStats(jobId, candidateId)
+              .then((stats) => ({ key, stats }))
           )
         );
         for (const result of results) {
@@ -240,7 +251,6 @@ export default function CandidatesPage() {
         a.status === "pending" &&
         (endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0) > 0
     );
-    // Sort by endorsement count descending
     topPicks.sort((a, b) => {
       const aCount = endorsementData.get(`${a.jobId}:${a.candidateId}`)?.totalEndorsements ?? 0;
       const bCount = endorsementData.get(`${b.jobId}:${b.candidateId}`)?.totalEndorsements ?? 0;
@@ -278,6 +288,7 @@ export default function CandidatesPage() {
   // Auto-expand all groups whenever the filtered list changes
   // eslint-disable-next-line no-restricted-syntax -- sync expanded state with filter changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from filtered list
     setExpandedJobIds(new Set(filteredJobs.map((g) => g.job.id)));
   }, [filteredJobs]);
 
@@ -285,6 +296,7 @@ export default function CandidatesPage() {
   // eslint-disable-next-line no-restricted-syntax -- sync expanded state with selection
   useEffect(() => {
     if (selectedApplication) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from selection change
       setExpandedJobIds((prev) => {
         if (prev.has(selectedApplication.jobId)) return prev;
         return new Set([...prev, selectedApplication.jobId]);
@@ -312,18 +324,26 @@ export default function CandidatesPage() {
     setExpandedJobIds(new Set());
   }, []);
 
-  const stats = useMemo(
-    () => ({
+  const stats = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- Date.now compared against stored appliedAt timestamps, memoized on application list change
+    const cutoff = Date.now() - SEVEN_DAYS_MS;
+    return {
       total: allApplications.length,
       pending: allApplications.filter((a) => a.status === "pending").length,
       accepted: allApplications.filter((a) => a.status === "accepted").length,
       reviewing: allApplications.filter((a) => a.status === "reviewing").length,
       interviewed: allApplications.filter((a) => a.status === "interviewed").length,
-    }),
-    [allApplications]
-  );
+      newThisWeek: allApplications.filter(
+        (a) => new Date(a.appliedAt).getTime() >= cutoff
+      ).length,
+    };
+  }, [allApplications]);
 
-  const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus, note?: string) => {
+  const handleStatusChange = async (
+    applicationId: string,
+    newStatus: ApplicationStatus,
+    note?: string
+  ) => {
     const app = allApplications.find((a) => a.id === applicationId);
     if (!app) {
       toast.error("Application not found — try refreshing the page");
@@ -342,9 +362,7 @@ export default function CandidatesPage() {
       {
         onSuccess: () => {
           setAllApplications((prev) =>
-            prev.map((a) =>
-              a.id === applicationId ? { ...a, status: newStatus } : a
-            )
+            prev.map((a) => (a.id === applicationId ? { ...a, status: newStatus } : a))
           );
           setSelectedApplication((prev) =>
             prev?.id === applicationId ? { ...prev, status: newStatus } : prev
@@ -359,120 +377,113 @@ export default function CandidatesPage() {
   if (!ready) return null;
 
   return (
-    <div className="h-full flex flex-col animate-page-enter">
-      {/* Mobile header */}
-      <div className="flex-shrink-0 px-4 py-2.5 border-b border-border/30 dark:border-border lg:hidden">
-        {selectedApplication ? (
-          <button
-            onClick={() => setSelectedApplication(null)}
-            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to list
-          </button>
-        ) : (
-          <div>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors mb-1.5 flex items-center gap-2"
-            >
-              <ArrowLeft className="w-3 h-3" />
-              Dashboard
-            </button>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Candidates</h1>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop header */}
-      <div className="flex-shrink-0 hidden lg:flex items-center gap-4 px-5 py-2 border-b border-border/30 dark:border-border">
+    <div className="min-h-full animate-page-enter">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back link */}
         <button
+          type="button"
           onClick={() => router.push("/dashboard")}
-          className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors flex items-center gap-2"
+          className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
-          <ArrowLeft className="w-3 h-3" />
-          Dashboard
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to dashboard
         </button>
-        <h1 className="text-xl font-bold text-foreground tracking-tight">Candidates</h1>
-        <div className="ml-auto pr-8">
-          <CandidateStatsBar
+
+        {/* Eyebrow + display heading */}
+        <div className="mb-6">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            Workspace
+          </p>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground tracking-tight mt-1.5">
+            Candidates
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">
+            Review applicants across all your roles. Endorsements, match scores, and guild
+            reports surface the strongest signal — surface to the top.
+          </p>
+        </div>
+
+        {/* KPI tile row */}
+        <div className="mb-6">
+          <CandidateKpiRow
             total={stats.total}
-            pending={stats.pending}
+            newThisWeek={stats.newThisWeek}
+            reviewing={stats.reviewing + stats.interviewed}
             accepted={stats.accepted}
-            reviewing={stats.reviewing}
-            interviewed={stats.interviewed}
-            activeFilter={filterStatus}
-            onFilterClick={setFilterStatus}
           />
         </div>
-      </div>
 
-      {/* Two-panel layout */}
-      <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
-        <div className="flex h-full min-h-0">
-          {/* Left panel */}
+        {/* Workspace */}
+        <DataSection isLoading={isLoading} skeleton={null}>
           <div
-            className={`w-full lg:w-[36%] xl:w-[32%] flex flex-col border-r border-border/30 dark:border-border ${
-              selectedApplication ? "hidden lg:flex" : "flex"
+            className={`rounded-xl border border-border bg-card overflow-hidden grid grid-cols-1 lg:grid-cols-[380px_1fr] min-h-[640px] ${
+              isLoading ? "opacity-60 pointer-events-none" : ""
             }`}
           >
-            <CandidateListPanel
-              groupedJobs={filteredJobs}
-              selectedApplicationId={selectedApplication?.id ?? null}
-              onSelectApplication={setSelectedApplication}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              filterStatus={filterStatus}
-              onFilterChange={setFilterStatus}
-              isLoading={isLoading}
-              getEndorsementCount={getEndorsementCount}
-              getTopEndorserName={getTopEndorserName}
-              uniqueGuilds={uniqueGuilds}
-              filterGuild={filterGuild}
-              onGuildFilterChange={setFilterGuild}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              expandedJobIds={expandedJobIds}
-              onToggleJob={handleToggleJob}
-              onExpandAll={handleExpandAll}
-              onCollapseAll={handleCollapseAll}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              priorityInProgress={filteredPrioritySections.inProgress}
-              priorityTopPicks={filteredPrioritySections.topPicks}
-              priorityNew={filteredPrioritySections.newCandidates}
-              getMatchScore={getMatchScore}
-              onStatusChange={handleStatusChange}
-            />
-          </div>
-
-          {/* Right panel */}
-          <div
-            className={`w-full flex-1 min-w-0 min-h-0 ${
-              selectedApplication ? "flex" : "hidden lg:flex"
-            }`}
-          >
-            {selectedApplication ? (
-              <CandidateDetailPanel
-                key={selectedApplication.id}
-                application={selectedApplication}
-                onStatusChange={handleStatusChange}
-                isUpdatingStatus={isUpdatingStatus}
-                onBack={() => setSelectedApplication(null)}
-                showBackButton
-              />
-            ) : (
-              <CandidateOverviewPanel
-                allApplications={allApplications}
-                stats={stats}
-                getEndorsementCount={getEndorsementCount}
-                getMatchScore={getMatchScore}
+            {/* Left — list */}
+            <div
+              className={`border-b lg:border-b-0 lg:border-r border-border/60 flex flex-col ${
+                selectedApplication ? "hidden lg:flex" : "flex"
+              }`}
+            >
+              <CandidateListPanel
+                groupedJobs={filteredJobs}
+                selectedApplicationId={selectedApplication?.id ?? null}
                 onSelectApplication={setSelectedApplication}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                filterStatus={filterStatus}
+                onFilterChange={setFilterStatus}
+                isLoading={isLoading}
+                getEndorsementCount={getEndorsementCount}
+                getTopEndorserName={getTopEndorserName}
+                uniqueGuilds={uniqueGuilds}
+                filterGuild={filterGuild}
+                onGuildFilterChange={setFilterGuild}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                expandedJobIds={expandedJobIds}
+                onToggleJob={handleToggleJob}
+                onExpandAll={handleExpandAll}
+                onCollapseAll={handleCollapseAll}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                priorityInProgress={filteredPrioritySections.inProgress}
+                priorityTopPicks={filteredPrioritySections.topPicks}
+                priorityNew={filteredPrioritySections.newCandidates}
+                getMatchScore={getMatchScore}
+                onStatusChange={handleStatusChange}
               />
-            )}
+            </div>
+
+            {/* Right — preview pane */}
+            <div
+              className={`min-w-0 ${
+                selectedApplication ? "flex flex-col" : "hidden lg:flex lg:flex-col"
+              }`}
+            >
+              {selectedApplication ? (
+                <CandidateDetailPanel
+                  key={selectedApplication.id}
+                  application={selectedApplication}
+                  onStatusChange={handleStatusChange}
+                  isUpdatingStatus={isUpdatingStatus}
+                  onBack={() => setSelectedApplication(null)}
+                  showBackButton
+                />
+              ) : (
+                <CandidateOverviewPanel
+                  allApplications={allApplications}
+                  stats={stats}
+                  getEndorsementCount={getEndorsementCount}
+                  getMatchScore={getMatchScore}
+                  onSelectApplication={setSelectedApplication}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      </DataSection>
+        </DataSection>
+      </div>
     </div>
   );
 }

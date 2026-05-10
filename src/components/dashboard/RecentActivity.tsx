@@ -1,6 +1,7 @@
 "use client";
 
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
+import { GuildBadge } from "@/components/ui/guild";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
 import type { ExpertActivity } from "@/types";
@@ -67,10 +68,10 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                   <div className="text-xs text-foreground truncate">
                     {activity.description}
                   </div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-2">
-                    <span>{activity.guildName}</span>
+                  <div className="text-xs text-muted-foreground flex items-center gap-2 min-w-0">
+                    <GuildBadge guild={activity.guildName} size="xs" />
                     <span className="text-muted-foreground/50">·</span>
-                    <span>{formatTimeAgo(activity.timestamp)}</span>
+                    <span className="truncate">{formatTimeAgo(activity.timestamp)}</span>
                   </div>
                 </div>
                 {activity.amount != null && activity.amount > 0 && (

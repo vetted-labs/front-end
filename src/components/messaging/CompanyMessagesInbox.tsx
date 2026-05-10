@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { ArrowLeft, Loader2, MessageSquare } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Loader2,
+  MessageSquare,
+  Search,
+  X,
+} from "lucide-react";
 
 import { logger } from "@/lib/logger";
 import { messagingApi } from "@/lib/api";
@@ -10,23 +17,37 @@ import { useMessagePolling } from "@/lib/hooks/useMessagePolling";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import type { Conversation, Message } from "@/types";
 import { toast } from "sonner";
-import { ConversationList } from "./ConversationList";
-import { ConversationFilters } from "./ConversationFilters";
-import { getPersonAvatar } from "@/lib/avatars";
 import { ConversationThread } from "./ConversationThread";
 import { MessageInput } from "./MessageInput";
 import { CandidateInfoSidebar } from "./CandidateInfoSidebar";
 import { ScheduleMeetingModal } from "./ScheduleMeetingModal";
 import { EmptyInbox } from "./EmptyInbox";
 import { MESSAGE_READ_EVENT } from "@/lib/hooks/useMessageCount";
-import { Calendar } from "lucide-react";
 import { DataSection } from "@/lib/motion";
+import { getPersonAvatar } from "@/lib/avatars";
+import { APPLICATION_STATUS_CONFIG } from "@/config/constants";
+import { cn } from "@/lib/utils";
+import {
+  MessagesHero,
+  ConversationListPanel,
+  EmptyConversationPane,
+} from "./shared/MessageHelpers";
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All status" },
+  { value: "pending", label: "Pending" },
+  { value: "reviewing", label: "Reviewing" },
+  { value: "interviewed", label: "Interviewed" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+];
 
 export default function CompanyMessagesInbox() {
   const { ready } = useRequireAuth("company");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -38,21 +59,27 @@ export default function CompanyMessagesInbox() {
 
   // Schedule modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const { execute: executeSchedule, isLoading: isScheduling } = useApi<Message>();
+  const { execute: executeSchedule, isLoading: isScheduling } =
+    useApi<Message>();
 
   const { isLoading } = useFetch<Conversation[]>(
     () => messagingApi.getCompanyConversations(),
     {
       skip: !ready,
-      onSuccess: (data) => { setConversations(data); },
-      onError: () => { toast.error("Failed to load conversations"); },
-    }
+      onSuccess: (data) => {
+        setConversations(data);
+      },
+      onError: () => {
+        toast.error("Failed to load conversations");
+      },
+    },
   );
 
   const fetchMessages = useCallback(async (conversationId: string) => {
     setMessagesLoading(true);
     try {
-      const { messages: msgs } = await messagingApi.getConversation(conversationId);
+      const { messages: msgs } =
+        await messagingApi.getConversation(conversationId);
       setMessages(msgs || []);
       // Mark as read
       await messagingApi.markAsRead(conversationId).catch((err: unknown) => {
@@ -61,7 +88,9 @@ export default function CompanyMessagesInbox() {
       window.dispatchEvent(new Event(MESSAGE_READ_EVENT));
       // Update local unread count
       setConversations((prev) =>
-        prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
+        prev.map((c) =>
+          c.id === conversationId ? { ...c, unreadCount: 0 } : c,
+        ),
       );
     } catch (error) {
       logger.error("Error fetching messages", error, { silent: true });
@@ -85,7 +114,10 @@ export default function CompanyMessagesInbox() {
   const handleSendMessage = async (content: string) => {
     if (!selectedConversation) return;
     try {
-      const newMsg = await messagingApi.sendMessage(selectedConversation.id, content);
+      const newMsg = await messagingApi.sendMessage(
+        selectedConversation.id,
+        content,
+      );
       setMessages((prev) => [...prev, newMsg]);
       // Update last message in list
       setConversations((prev) =>
@@ -100,8 +132,8 @@ export default function CompanyMessagesInbox() {
                 },
                 updatedAt: new Date().toISOString(),
               }
-            : c
-        )
+            : c,
+        ),
       );
     } catch (error) {
       logger.error("Error sending message", error, { silent: true });
@@ -128,7 +160,7 @@ export default function CompanyMessagesInbox() {
           logger.error("Error scheduling meeting", errorMsg, { silent: true });
           toast.error("Failed to schedule meeting");
         },
-      }
+      },
     );
   };
 
@@ -160,145 +192,258 @@ export default function CompanyMessagesInbox() {
     });
   }, [conversations, search, jobFilter, statusFilter, unreadOnly]);
 
+  const totalUnread = useMemo(
+    () => conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0),
+    [conversations],
+  );
+
+  const activeFilterCount =
+    (jobFilter ? 1 : 0) +
+    (statusFilter ? 1 : 0) +
+    (unreadOnly ? 1 : 0) +
+    (search ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearch("");
+    setJobFilter("");
+    setStatusFilter("");
+    setUnreadOnly(false);
+  };
+
   if (!ready) return null;
 
   return (
-    <div className="h-full flex flex-col animate-page-enter">
-        {/* Page header — visible on mobile when no conversation selected */}
-        <div className="flex-shrink-0 px-6 py-4 border-b border-border dark:border-border md:hidden">
-          {selectedConversation ? (
-            <button
-              onClick={() => setSelectedConversation(null)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-          ) : (
-            <h1 className="text-xl font-bold text-foreground">Messages</h1>
-          )}
+    <div className="min-h-full animate-page-enter">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero */}
+        <MessagesHero
+          eyebrow="Workspace"
+          title="Messages"
+          subtitle="Conversations with candidates across all of your active job postings."
+          unreadCount={totalUnread}
+        />
+
+        {/* Toolbar */}
+        <div className="mb-4 rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+            <div className="relative flex-1 min-w-0">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search by candidate or job title…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-border bg-muted/40 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {uniqueJobs.length > 0 && (
+                <select
+                  value={jobFilter}
+                  onChange={(e) => setJobFilter(e.target.value)}
+                  className="cursor-pointer rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/40"
+                >
+                  <option value="">All jobs</option>
+                  {uniqueJobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="cursor-pointer rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/40"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setUnreadOnly((v) => !v)}
+                className={cn(
+                  "rounded-full border px-3 py-2 text-xs font-semibold transition-colors",
+                  unreadOnly
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+              >
+                Unread only
+              </button>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium text-muted-foreground hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
-        <DataSection isLoading={isLoading} skeleton={null} className="flex flex-1 min-h-0">
-        <div className="flex h-full">
-          {/* Conversation list panel */}
-          <div
-            className={`w-full md:w-80 md:border-r border-border flex flex-col bg-card ${
-              selectedConversation ? "hidden md:flex" : "flex"
-            }`}
+        {/* Mobile back button when conversation is open */}
+        {selectedConversation && (
+          <button
+            onClick={() => setSelectedConversation(null)}
+            className="mb-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground lg:hidden"
           >
-            <div className="px-4 py-3 border-b border-border dark:border-border hidden md:block">
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-medium text-foreground uppercase tracking-wider">
-                  Messages
-                </h1>
-                {conversations.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-muted/60 dark:bg-muted/40 text-xs font-medium text-muted-foreground tabular-nums">
-                    {conversations.length}
-                  </span>
-                )}
+            <ArrowLeft className="h-4 w-4" />
+            Back to inbox
+          </button>
+        )}
+
+        {/* Workspace */}
+        <DataSection isLoading={isLoading} skeleton={null}>
+          <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start min-h-[640px]">
+            {/* Left list */}
+            <div
+              className={cn(
+                "rounded-xl border border-border bg-card overflow-hidden",
+                selectedConversation ? "hidden lg:block" : "block",
+              )}
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-3.5">
+                <h2 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  Inbox
+                </h2>
+                <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+                  {filteredConversations.length}
+                </span>
               </div>
-            </div>
-            <ConversationFilters
-              search={search}
-              onSearchChange={setSearch}
-              jobFilter={jobFilter}
-              onJobFilterChange={setJobFilter}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              unreadOnly={unreadOnly}
-              onUnreadOnlyChange={setUnreadOnly}
-              jobs={uniqueJobs}
-            />
-            {filteredConversations.length === 0 ? (
-              <EmptyInbox variant="company" />
-            ) : (
-              <ConversationList
+              <ConversationListPanel
                 conversations={filteredConversations}
+                variant="company"
                 selectedId={selectedConversation?.id}
                 onSelect={handleSelectConversation}
-                variant="company"
+                emptySlot={<EmptyInbox variant="company" />}
               />
-            )}
-          </div>
+            </div>
 
-          {/* Conversation view panel */}
-          <div
-            className={`flex-1 flex flex-col ${
-              selectedConversation ? "flex" : "hidden md:flex"
-            }`}
-          >
-            {selectedConversation ? (
-              <>
-                {/* Conversation header */}
-                <div className="px-4 py-3 border-b border-border dark:border-border flex items-center justify-between gap-3 bg-card">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={getPersonAvatar(selectedConversation.candidateName)}
-                      alt={selectedConversation.candidateName}
-                      className="w-9 h-9 rounded-full object-cover flex-shrink-0 bg-muted"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {selectedConversation.candidateName}
-                        </p>
-                        <span className="text-muted-foreground/40 text-xs">&middot;</span>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {selectedConversation.jobTitle}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowScheduleModal(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    Schedule Meeting
-                  </button>
-                </div>
-
-                {/* Messages + sidebar */}
-                <div className="flex flex-1 min-h-0">
-                  <div className="flex-1 flex flex-col min-w-0">
-                    {messagesLoading && messages.length === 0 ? (
-                      <div className="flex-1 flex items-center justify-center">
-                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : (
-                      <ConversationThread
-                        messages={messages}
-                        currentUserType="company"
-                      />
-                    )}
-                    <MessageInput onSend={handleSendMessage} />
-                  </div>
-                  <CandidateInfoSidebar conversation={selectedConversation} />
-                </div>
-
-                {/* Schedule modal */}
-                <ScheduleMeetingModal
-                  isOpen={showScheduleModal}
-                  onClose={() => setShowScheduleModal(false)}
-                  onSchedule={handleScheduleMeeting}
-                  candidateName={selectedConversation.candidateName}
-                  isSubmitting={isScheduling}
+            {/* Right panel */}
+            <div
+              className={cn(
+                "rounded-xl border border-border bg-card overflow-hidden lg:sticky lg:top-6",
+                selectedConversation ? "block" : "hidden lg:block",
+              )}
+            >
+              {selectedConversation ? (
+                <CompanyConversationPanel
+                  conversation={selectedConversation}
+                  messages={messages}
+                  messagesLoading={messagesLoading}
+                  onSend={handleSendMessage}
+                  onSchedule={() => setShowScheduleModal(true)}
                 />
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Select a conversation to start messaging
-                  </p>
-                </div>
-              </div>
-            )}
+              ) : (
+                <EmptyConversationPane
+                  icon={<MessageSquare className="h-6 w-6" />}
+                  title="Select a conversation"
+                  subtitle="Pick a thread on the left to read and reply."
+                />
+              )}
+            </div>
+          </div>
+        </DataSection>
+      </div>
+
+      {/* Schedule modal */}
+      {selectedConversation && (
+        <ScheduleMeetingModal
+          isOpen={showScheduleModal}
+          onClose={() => setShowScheduleModal(false)}
+          onSchedule={handleScheduleMeeting}
+          candidateName={selectedConversation.candidateName}
+          isSubmitting={isScheduling}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── Embedded conversation panel for the inbox right pane ─────────────── */
+
+function CompanyConversationPanel({
+  conversation,
+  messages,
+  messagesLoading,
+  onSend,
+  onSchedule,
+}: {
+  conversation: Conversation;
+  messages: Message[];
+  messagesLoading: boolean;
+  onSend: (content: string) => Promise<void>;
+  onSchedule: () => void;
+}) {
+  const status =
+    APPLICATION_STATUS_CONFIG[conversation.applicationStatus] ||
+    APPLICATION_STATUS_CONFIG.pending;
+
+  return (
+    <div className="flex h-full min-h-[640px] flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-5 py-3.5">
+        <div className="flex min-w-0 items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- avatar service */}
+          <img
+            src={getPersonAvatar(conversation.candidateName)}
+            alt={conversation.candidateName}
+            className="h-9 w-9 flex-shrink-0 rounded-full border border-border bg-muted object-cover"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {conversation.candidateName}
+            </p>
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="truncate">{conversation.jobTitle}</span>
+              {conversation.applicationStatus && (
+                <>
+                  <span aria-hidden className="opacity-50">
+                    ·
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium capitalize",
+                      status.className,
+                    )}
+                  >
+                    {status.label}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
-        </DataSection>
+        <button
+          onClick={onSchedule}
+          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+          Schedule meeting
+        </button>
+      </div>
+
+      {/* Messages + sidebar */}
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
+          {messagesLoading && messages.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <ConversationThread messages={messages} currentUserType="company" />
+          )}
+          <MessageInput onSend={onSend} />
+        </div>
+        <CandidateInfoSidebar conversation={conversation} />
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { getPersonAvatar } from "@/lib/avatars";
 import { Users } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import type { ActiveEndorsement, EndorsementApplication } from "@/types";
 
@@ -208,9 +209,7 @@ export function MyActiveEndorsements({
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {Array.from(new Set(allUserEndorsements.map((e) => e.guild?.name).filter(Boolean))).map((name) => (
-                  <span key={name} className="text-xs px-2.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary/80">
-                    {name}
-                  </span>
+                  <GuildBadge key={name} guild={name} size="xs" />
                 ))}
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { VettedIcon, type VettedIconName } from "@/components/ui/vetted-icon";
+import { GuildBadge } from "@/components/ui/guild";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import type { Guild } from "@/types";
 
@@ -106,18 +107,9 @@ export function HeroSection({
       {/* Guild Pills */}
       {!isLoadingGuilds && guilds.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">
-          {guilds.slice(0, 6).map((g) => {
-            const name = g.name.replace(/ Guild$/i, "");
-            return (
-              <div
-                key={g.id}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-card border border-border/30 rounded-full text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-colors cursor-default"
-              >
-                <span className="w-[7px] h-[7px] rounded-full flex-shrink-0 bg-primary" />
-                {name}
-              </div>
-            );
-          })}
+          {guilds.slice(0, 6).map((g) => (
+            <GuildBadge key={g.id} guild={g.name} size="sm" asLink />
+          ))}
         </div>
       )}
       </div>

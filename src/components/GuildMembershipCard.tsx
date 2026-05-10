@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { getGuildIconName } from "@/lib/guildHelpers";
-import { VettedIcon } from "@/components/ui/vetted-icon";
+import { GuildAvatar } from "@/components/ui/guild";
 import { formatDateMonthYear } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Badge, getRankBadgeVariant } from "./ui/badge";
@@ -28,7 +27,6 @@ const formatDate = (dateString: string) => formatDateMonthYear(dateString);
 
 export function GuildMembershipCard({ guild, variant = "default" }: GuildMembershipCardProps) {
   const router = useRouter();
-  const guildIconName = getGuildIconName(guild.name);
   const totalProposals = guild.pendingProposals + guild.ongoingProposals + guild.closedProposals;
 
   const handleClick = () => {
@@ -44,10 +42,8 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
         {/* Branded Guild Header - Compact */}
         <div className="bg-secondary/50 dark:bg-muted/50 px-4 py-3 rounded-t-xl border-b border-border">
           <div className="flex items-start gap-3">
-            {/* Guild Icon Badge with Nested Gradients */}
-            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
-              <VettedIcon name={guildIconName} className="w-5 h-5 text-muted-foreground" />
-            </div>
+            {/* Guild Icon Badge */}
+            <GuildAvatar guild={guild.name} size="md" rounded="lg" className="shadow-md ring-2 ring-border" />
 
             {/* Guild Name & Rank */}
             <div className="flex-1 min-w-0">
@@ -109,10 +105,8 @@ export function GuildMembershipCard({ guild, variant = "default" }: GuildMembers
       {/* Branded Guild Header */}
       <div className="bg-secondary/50 dark:bg-muted/50 px-5 py-4 rounded-t-xl border-b border-border">
         <div className="flex items-center gap-3">
-          {/* Guild Icon Badge with Nested Gradients */}
-          <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center shadow-md ring-2 ring-border group-hover:scale-110 transition-transform duration-200">
-            <VettedIcon name={guildIconName} className="w-7 h-7 text-muted-foreground" />
-          </div>
+          {/* Guild Icon Badge */}
+          <GuildAvatar guild={guild.name} size="lg" rounded="xl" className="shadow-md ring-2 ring-border" />
 
           {/* Guild Name & Rank */}
           <div className="flex-1">

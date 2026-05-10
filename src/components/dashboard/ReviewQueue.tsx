@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/lib/utils";
 import { STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import { getPersonAvatar } from "@/lib/avatars";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import {
@@ -111,9 +112,18 @@ export function ReviewQueue({ applications }: ReviewQueueProps) {
                   <div className="text-sm font-medium text-foreground truncate">
                     {name}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {app.guild_name || "Guild"}
-                    {app.created_at && ` · ${formatTimeAgo(app.created_at)}`}
+                  <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
+                    {app.guild_name ? (
+                      <GuildBadge guild={app.guild_name} size="xs" />
+                    ) : (
+                      <span>Guild</span>
+                    )}
+                    {app.created_at && (
+                      <>
+                        <span className="text-muted-foreground/50">·</span>
+                        <span className="truncate">{formatTimeAgo(app.created_at)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
 

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Download, TimerReset } from "lucide-react";
 import type { JobAnalyticsDetail } from "@/types/analytics";
 import { Button } from "@/components/ui/button";
+import { GuildBadge } from "@/components/ui/guild";
 import { CandidateEvidencePanel } from "./CandidateEvidencePanel";
 import { CandidateRankingTable } from "./CandidateRankingTable";
 import { RoleInsightsGrid } from "./RoleInsightsGrid";
@@ -34,7 +35,17 @@ export function JobAnalyticsWorkspace({ data, isFixtureMode = false }: JobAnalyt
 
         <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="text-sm text-muted-foreground">Analytics / {data.job.guild ?? "Role"} / {data.job.title}</div>
+            <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+              <span>Analytics</span>
+              <span>/</span>
+              {data.job.guild ? (
+                <GuildBadge guild={data.job.guild} size="xs" />
+              ) : (
+                <span>Role</span>
+              )}
+              <span>/</span>
+              <span>{data.job.title}</span>
+            </div>
             <h1 className="mt-2 text-3xl font-semibold tracking-normal text-foreground">Role intelligence</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
               Rank candidates by aligned-expert consensus and inspect the evidence behind each signal.

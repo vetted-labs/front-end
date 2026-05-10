@@ -10,11 +10,13 @@ import {
   FileText,
   Plus,
   ChevronDown,
-  BarChart3,
-  Star,
   Loader2,
+  Vote,
+  Clock,
+  TrendingUp,
+  Scale,
+  CheckCircle2,
 } from "lucide-react";
-import { VettedIcon } from "@/components/ui/vetted-icon";
 import { toast } from "sonner";
 import { GovernanceProposalCard } from "@/components/governance/GovernanceProposalCard";
 import { LiveVoteBanner } from "@/components/governance/LiveVoteBanner";
@@ -22,8 +24,8 @@ import { GovernanceStats } from "@/components/governance/GovernanceStats";
 import type { GovernanceProposalDetail, GovernanceFilterStatus } from "@/types";
 import { computeVoteWeight } from "@/config/constants";
 import { STATUS_COLORS } from "@/config/colors";
-import { Divider } from "@/components/ui/divider";
 import { Input } from "@/components/ui/input";
+import { cn, formatDeadline } from "@/lib/utils";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import {
@@ -99,7 +101,6 @@ export default function GovernancePage() {
 
     for (const p of filtered) {
       if (p.status === "active" && !p.finalized) {
-        // The first active proposal with votes is the "live" featured one
         if (!live && (p.votes_for > 0 || p.votes_against > 0)) {
           live = p;
         } else {
@@ -115,77 +116,86 @@ export default function GovernancePage() {
     return { activeProposals: active, pastProposals: past, liveProposal: live };
   }, [proposals, search]);
 
+  // Hero summary metrics
+  const totalActive = (liveProposal ? 1 : 0) + activeProposals.length;
+  const myVotes = useMemo(
+    () => (proposals ?? []).filter((p) => p.has_voted).length,
+    [proposals],
+  );
+  const nextDeadline = useMemo(() => {
+    const all = [liveProposal, ...activeProposals].filter(
+      (p): p is GovernanceProposalDetail => !!p && !!p.voting_deadline,
+    );
+    if (all.length === 0) return null;
+    const soonest = all.reduce((min, p) =>
+      new Date(p.voting_deadline).getTime() < new Date(min.voting_deadline).getTime() ? p : min,
+    );
+    return soonest.voting_deadline;
+  }, [liveProposal, activeProposals]);
+
   return (
     <div className="min-h-full animate-page-enter">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* ─── Hero Section ─── */}
-        <section className="pt-14 pb-10 relative" {...dataTourTarget(TOUR_TARGETS.governanceHero)}>
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-            {/* Left: Title area */}
-            <div className="flex-1 min-w-0">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-xs font-medium text-primary uppercase tracking-wider mb-5">
-                <VettedIcon name="voting" className="w-3.5 h-3.5" />
-                Protocol Governance
-              </div>
-
-              <div className="flex items-center gap-3 mb-4">
-                <VettedIcon name="voting" className="w-8 h-8 text-primary" />
-                <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight leading-[1.05] text-foreground">
-                  Shape the<br />Protocol
-                </h1>
-              </div>
-
-              <p className="text-base text-muted-foreground max-w-lg leading-relaxed mb-7">
-                Your voice carries weight. Propose changes, vote on the future of Vetted,
-                and hold the protocol accountable. Every vote is permanent, on-chain, and consequential.
-              </p>
-
-              {/* Voting Power + Tier badges */}
-              <div className="flex items-center gap-8 flex-wrap" {...dataTourTarget(TOUR_TARGETS.governanceVoteWeight)}>
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    Your Voting Power
-                  </span>
-                  <span className="font-mono text-3xl font-bold text-primary relative">
-                    {voteWeight.toFixed(1)}x
-                    <span className="absolute inset-0 -m-1.5 rounded-xl bg-primary/10 animate-pulse pointer-events-none" />
-                  </span>
-                </div>
-
-                <Divider orientation="vertical" className="h-10" />
-
-                <div className="flex flex-col gap-2">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning/8 border border-warning/20 text-xs font-medium text-warning">
-                    <Star className="w-3.5 h-3.5" />
-                    Expert
-                  </span>
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-xs font-medium text-primary">
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    {reputation.toLocaleString()} Reputation
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Create button */}
-            <div className="flex flex-col items-end gap-4 pt-3 lg:pt-8">
-              <button
-                onClick={() => router.push("/expert/governance/create")}
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-sm font-bold text-white bg-primary hover:translate-y-[-2px] transition-all"
-                {...dataTourTarget(TOUR_TARGETS.governanceCreateCta)}
-              >
-                <Plus className="w-[18px] h-[18px]" />
-                Create Proposal
-              </button>
-            </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* ── Eyebrow + display heading ── */}
+        <section
+          className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between"
+          {...dataTourTarget(TOUR_TARGETS.governanceHero)}
+        >
+          <div>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Workspace
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+              Governance
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-lg">
+              Propose protocol changes, vote on the future of Vetted, and hold the network accountable.
+              Every vote is permanent and on-chain.
+            </p>
           </div>
+          <button
+            onClick={() => router.push("/expert/governance/create")}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:translate-y-[-1px] transition-all shadow-sm self-start"
+            {...dataTourTarget(TOUR_TARGETS.governanceCreateCta)}
+          >
+            <Plus className="w-4 h-4" />
+            Create Proposal
+          </button>
         </section>
 
-        {/* ─── Live Vote Banner ─── */}
+        {/* ── Hero KPI strip ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3" {...dataTourTarget(TOUR_TARGETS.governanceVoteWeight)}>
+          <KpiTile
+            icon={<Vote className="w-4 h-4" />}
+            label="Active Proposals"
+            value={totalActive}
+            tone="primary"
+          />
+          <KpiTile
+            icon={<CheckCircle2 className="w-4 h-4" />}
+            label="Your Votes"
+            value={myVotes}
+            tone="positive"
+          />
+          <KpiTile
+            icon={<Scale className="w-4 h-4" />}
+            label="Vote Weight"
+            value={`${voteWeight.toFixed(2)}×`}
+            tone="info"
+          />
+          <KpiTile
+            icon={<Clock className="w-4 h-4" />}
+            label="Next Close"
+            value={
+              nextDeadline ? formatDeadline(nextDeadline, "Closed") || "—" : "—"
+            }
+            tone="warning"
+          />
+        </section>
+
+        {/* ── Live vote banner ── */}
         {liveProposal && (
-          <div
-            {...dataTourTarget(TOUR_TARGETS.governanceProposals)}
-          >
+          <div {...dataTourTarget(TOUR_TARGETS.governanceProposals)}>
             <div {...dataTourTarget(TOUR_TARGETS.governanceProposalCard)}>
               <LiveVoteBanner
                 proposal={liveProposal}
@@ -196,138 +206,131 @@ export default function GovernancePage() {
           </div>
         )}
 
-        {/* ─── Filter Tabs + Search ─── */}
-        <div className="flex items-center justify-between gap-3 flex-wrap mb-5 mt-2">
+        {/* ── Filter chips + search ── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => handleFilterChange(f.value)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filter === f.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+            {FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => handleFilterChange(f.value)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+                  filter === f.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground border border-border",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
           <Input
             placeholder="Search proposals..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
         </div>
 
-        {/* ─── Active & Pending Proposals ─── */}
-        {/* Always-mounted wrapper so the story-lab tour's governanceProposals
-            target resolves whether the list is loading, empty, or populated.
-            Without this, an empty proposals API response left BOTH the
-            primary card target AND the fallback unmounted, hanging the tour. */}
+        {/* ── Proposals list ── */}
         <div {...dataTourTarget(TOUR_TARGETS.governanceProposals)}>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : !proposals || proposals.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No proposals found"
-            description={
-              filter === "active"
-                ? "There are no active governance proposals right now."
-                : `No ${filter} proposals to display.`
-            }
-            action={{
-              label: "Create Proposal",
-              onClick: () => router.push("/expert/governance/create"),
-            }}
-          />
-        ) : (
-          <>
-            {/* Active section */}
-            {activeProposals.length > 0 && (
-              <div
-                className="mb-10"
-                {...dataTourTarget(TOUR_TARGETS.governanceProposals)}
-              >
-                <div className="flex items-center justify-between mb-5 pt-2">
-                  <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
-                    Active & Pending
-                    <span className="font-mono text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                      {activeProposals.length}
-                    </span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !proposals || proposals.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No proposals found"
+              description={
+                filter === "active"
+                  ? "There are no active governance proposals right now."
+                  : `No ${filter} proposals to display.`
+              }
+              action={{
+                label: "Create Proposal",
+                onClick: () => router.push("/expert/governance/create"),
+              }}
+            />
+          ) : (
+            <div className="space-y-10">
+              {/* Active section */}
+              {activeProposals.length > 0 && (
+                <Section
+                  icon={<TrendingUp className="w-3.5 h-3.5" />}
+                  title="Active & Pending"
+                  meta={`${activeProposals.length} proposal${activeProposals.length === 1 ? "" : "s"}`}
+                >
+                  <div className="flex flex-col gap-3">
+                    {(() => {
+                      const storyIdx = isStoryLabPreview
+                        ? activeProposals.findIndex(
+                            (p) => p.id === STORY_LAB_GOVERNANCE_PROPOSAL_ID,
+                          )
+                        : -1;
+                      const markedIdx = storyIdx >= 0 ? storyIdx : 0;
+                      return activeProposals.map((proposal, idx) => (
+                        <div
+                          key={proposal.id}
+                          {...(idx === markedIdx
+                            ? dataTourTarget(TOUR_TARGETS.governanceProposalCard)
+                            : {})}
+                        >
+                          <GovernanceProposalCard
+                            proposal={proposal}
+                            onClick={() =>
+                              router.push(`/expert/governance/${proposal.id}`)
+                            }
+                          />
+                        </div>
+                      ));
+                    })()}
                   </div>
-                </div>
+                </Section>
+              )}
 
-                <div className="flex flex-col gap-3">
-                  {(() => {
-                    // Mark the story-lab proposal when story mode is active and the
-                    // synthetic proposal is present; otherwise mark the first card
-                    // as a stable fallback anchor for the onboarding tour.
-                    const storyIdx = isStoryLabPreview
-                      ? activeProposals.findIndex(p => p.id === STORY_LAB_GOVERNANCE_PROPOSAL_ID)
-                      : -1;
-                    const markedIdx = storyIdx >= 0 ? storyIdx : 0;
-                    return activeProposals.map((proposal, idx) => (
-                      <div
-                        key={proposal.id}
-                        {...(idx === markedIdx
-                          ? dataTourTarget(TOUR_TARGETS.governanceProposalCard)
-                          : {})}
-                      >
-                        <GovernanceProposalCard
-                          proposal={proposal}
-                          onClick={() => router.push(`/expert/governance/${proposal.id}`)}
-                        />
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-            )}
-
-            {/* Past Proposals section */}
-            {pastProposals.length > 0 && (
-              <div className="mb-10" {...dataTourTarget(TOUR_TARGETS.governancePastSection)}>
-                <div className="flex items-center justify-between mb-5 pt-2">
-                  <div className="flex items-center gap-3 font-display text-xl font-bold tracking-tight">
-                    Past Proposals
-                    <span className="font-mono text-xs font-medium px-2.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                      {pastProposals.length}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setShowPast(!showPast)}
-                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground transition-all"
-                  >
-                    {showPast ? "Hide" : "Show all"}
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ${showPast ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                </div>
-
-                {showPast && (
-                  <div className="flex flex-col gap-2">
-                    {pastProposals.map((proposal) => (
-                      <PastProposalRow
-                        key={proposal.id}
-                        proposal={proposal}
-                        onClick={() => router.push(`/expert/governance/${proposal.id}`)}
+              {/* Past section */}
+              {pastProposals.length > 0 && (
+                <Section
+                  icon={<FileText className="w-3.5 h-3.5" />}
+                  title="Past Proposals"
+                  meta={`${pastProposals.length} closed`}
+                  action={
+                    <button
+                      onClick={() => setShowPast(!showPast)}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showPast ? "Hide" : "Show all"}
+                      <ChevronDown
+                        className={cn(
+                          "w-3.5 h-3.5 transition-transform duration-300",
+                          showPast ? "rotate-180" : "",
+                        )}
                       />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+                    </button>
+                  }
+                  tourAttrs={dataTourTarget(TOUR_TARGETS.governancePastSection)}
+                >
+                  {showPast && (
+                    <div className="flex flex-col gap-2">
+                      {pastProposals.map((proposal) => (
+                        <PastProposalRow
+                          key={proposal.id}
+                          proposal={proposal}
+                          onClick={() =>
+                            router.push(`/expert/governance/${proposal.id}`)
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Section>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* ─── Governance Stats ─── */}
+        {/* ── Stats footer ── */}
         {proposals && proposals.length > 0 && (
           <GovernanceStats proposals={proposals} voteWeight={voteWeight} />
         )}
@@ -354,48 +357,130 @@ function PastProposalRow({
   return (
     <div
       onClick={onClick}
-      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-4 p-6 sm:px-7 rounded-xl border border-border bg-card cursor-pointer hover:border-border transition-colors"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      className="grid grid-cols-1 sm:grid-cols-[120px_1fr_180px] items-center gap-3 sm:gap-4 p-5 sm:px-6 rounded-xl border border-border bg-card cursor-pointer hover:border-primary/30 hover:bg-muted/20 transition-colors"
     >
-      {/* Meta */}
-      <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+      <div className="flex sm:flex-col items-center sm:items-start gap-2">
         <span className="font-mono text-sm font-medium text-primary">
           #{proposal.id.slice(0, 6)}
         </span>
         <span
-          className={`inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold w-fit ${
-            isPassed
-              ? STATUS_COLORS.positive.badge
-              : STATUS_COLORS.negative.badge
-          }`}
+          className={cn(
+            "inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold w-fit",
+            isPassed ? STATUS_COLORS.positive.badge : STATUS_COLORS.negative.badge,
+          )}
         >
           {isPassed ? "Passed" : "Failed"}
         </span>
       </div>
 
-      {/* Content */}
       <div>
-        <p className="font-display text-sm font-medium tracking-tight leading-snug">
+        <p className="font-display text-sm font-semibold tracking-tight leading-snug">
           {proposal.title}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Ended {new Date(proposal.voting_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          Ended{" "}
+          {new Date(proposal.voting_deadline).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
         </p>
       </div>
 
-      {/* Votes */}
       <div>
-        <p className="font-mono text-xs text-muted-foreground">
+        <p className="font-mono text-xs text-muted-foreground tabular-nums">
           {forPct}% For / {againstPct}% Against / {abstainPct}% Abstain
         </p>
         {proposal.has_voted ? (
-          <p className={`text-xs font-medium mt-0.5 ${STATUS_COLORS.positive.text}`}>
-            You voted {proposal.my_vote ? proposal.my_vote.charAt(0).toUpperCase() + proposal.my_vote.slice(1) : ""}
+          <p className={cn("text-xs font-medium mt-0.5", STATUS_COLORS.positive.text)}>
+            You voted{" "}
+            {proposal.my_vote
+              ? proposal.my_vote.charAt(0).toUpperCase() + proposal.my_vote.slice(1)
+              : ""}
           </p>
         ) : (
           <p className="text-xs text-muted-foreground italic mt-0.5">
             Did not participate
           </p>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Inline helpers ──────────────────────────────────────────── */
+
+function Section({
+  icon,
+  title,
+  meta,
+  action,
+  tourAttrs,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  meta?: string;
+  action?: React.ReactNode;
+  tourAttrs?: Record<string, unknown>;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-card overflow-hidden" {...tourAttrs}>
+      <div className="px-5 py-3.5 border-b border-border flex items-center justify-between gap-3">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2">
+          <span className="text-primary">{icon}</span>
+          {title}
+        </h2>
+        <div className="flex items-center gap-3">
+          {meta && (
+            <span className="text-[11px] text-muted-foreground tabular-nums">{meta}</span>
+          )}
+          {action}
+        </div>
+      </div>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
+
+interface KpiTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "primary" | "positive" | "info" | "warning";
+}
+
+const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
+  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
+};
+
+function KpiTile({ icon, label, value, tone }: KpiTileProps) {
+  const t = KPI_TONE[tone];
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-4">
+      <span
+        className={cn(
+          "w-9 h-9 rounded-lg grid place-items-center flex-shrink-0",
+          t.bg,
+          t.text,
+        )}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+          {value}
+        </p>
       </div>
     </div>
   );

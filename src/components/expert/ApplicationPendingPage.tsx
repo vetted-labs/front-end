@@ -28,6 +28,7 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Divider } from "@/components/ui/divider";
 import { PatternBackground } from "@/components/ui/pattern-background";
+import { GuildAvatar, GuildBadge } from "@/components/ui/guild";
 import { expertApi, ApiError } from "@/lib/api";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { STATUS_COLORS } from "@/config/colors";
@@ -378,13 +379,11 @@ export default function ApplicationPendingPage() {
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center flex-shrink-0">
-                          <Swords className="w-5 h-5 text-foreground/60" />
-                        </div>
+                        <GuildAvatar guild={guild.name} size="md" rounded="xl" />
                         <div className="min-w-0">
-                          <p className="font-semibold text-sm text-foreground truncate">{guild.name}</p>
+                          <GuildBadge guild={guild.name} size="sm" />
                           {guild.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-1">{guild.description}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{guild.description}</p>
                           )}
                         </div>
                       </div>

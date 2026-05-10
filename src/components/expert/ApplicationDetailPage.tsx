@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { GuildBadge } from "@/components/ui/guild";
 import type {
   GuildApplicationDetail,
   GuildApplicationVote,
@@ -167,7 +168,7 @@ export default function ApplicationDetailPage({ guildId, applicationId }: Applic
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 Guild Application: {application.candidateName}
               </h1>
-              <p className="text-muted-foreground">{application.guildName}</p>
+              <GuildBadge guild={application.guildName} size="xs" />
             </div>
             {getStatusBadge(application.status)}
           </div>

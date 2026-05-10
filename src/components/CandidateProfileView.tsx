@@ -28,6 +28,7 @@ import { getPersonAvatar } from "@/lib/avatars";
 import { STATUS_COLORS } from "@/config/colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { GuildBadge } from "@/components/ui/guild";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { DataSection } from "@/lib/motion";
 import { toast } from "sonner";
@@ -422,11 +423,9 @@ export function CandidateProfileView({ candidateId }: CandidateProfileViewProps)
                         <Link
                           key={guild.guildId}
                           href={`/guilds/${guild.guildId}`}
-                          className="flex items-center justify-between p-3 rounded-lg border border-border/60 hover:border-primary/30 transition-colors group"
+                          className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border/60 hover:border-primary/30 transition-colors group"
                         >
-                          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                            {guild.guildName}
-                          </span>
+                          <GuildBadge guild={guild.guildName} size="sm" />
                           <span
                             className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${colors.badge}`}
                           >

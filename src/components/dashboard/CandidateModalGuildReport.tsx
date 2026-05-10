@@ -3,6 +3,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
+import { GuildBadge } from "@/components/ui/guild";
 import { STATUS_COLORS } from "@/config/colors";
 import type { CandidateGuildReport } from "@/types";
 
@@ -58,7 +59,10 @@ export function CandidateModalGuildReport({ guildReport }: CandidateModalGuildRe
           </div>
         </div>
         <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-          <span>Guild: <span className="text-foreground font-medium">{guildApplication.guildName}</span></span>
+          <span className="inline-flex items-center gap-1.5">
+            Guild:
+            <GuildBadge guild={guildApplication.guildName} size="sm" />
+          </span>
           <span className="text-border dark:text-white/10">&middot;</span>
           <span className="capitalize">Expertise: {guildApplication.expertiseLevel}</span>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
+import { GuildPill } from "@/components/ui/guild";
 
 interface JobsFilterModalProps {
   isOpen: boolean;
@@ -37,19 +38,15 @@ export function JobsFilterModal({
         {/* Guilds Section */}
         <div>
           <h3 className="text-sm font-bold text-foreground mb-3">Guilds</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             {allGuilds.map((guild) => (
-              <button
+              <GuildPill
                 key={guild}
+                guild={guild}
+                selected={selectedGuilds.includes(guild)}
                 onClick={() => onToggleGuild(guild)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
-                  selectedGuilds.includes(guild)
-                    ? "bg-foreground text-background"
-                    : "bg-card text-card-foreground border border-border hover:border-foreground/30"
-                }`}
-              >
-                {guild}
-              </button>
+                size="md"
+              />
             ))}
           </div>
         </div>

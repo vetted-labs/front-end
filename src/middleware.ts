@@ -58,7 +58,7 @@ export function middleware(_request: NextRequest) {
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-inline + unsafe-eval for dev compatibility
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com", // unsafe-inline needed for CSS-in-JS libraries
-    "img-src 'self' data: https: blob:",
+    "img-src 'self' data: https: blob: http://localhost:*",
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com https://api.fontshare.com",
     `connect-src 'self' http://localhost:* ws://localhost:* wss://localhost:* ${rpcConnectSrc}`,
     // frame-src allows the resume PDF iframes (`<iframe src="${API_BASE_URL}/uploads/resumes/...">`)

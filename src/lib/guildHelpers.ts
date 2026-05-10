@@ -9,6 +9,7 @@ import {
 import type { VettedIconName } from "@/components/ui/vetted-icon";
 import type { GuildRecord } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
+import { getGuildIdentity } from "@/lib/guildIdentity";
 
 /**
  * Resolve a guild name (e.g. "Engineering Guild" or "Engineering") to its
@@ -30,59 +31,12 @@ export const resolveGuildId = (
   })?.id;
 };
 
-// Get guild icon name based on guild name
+/**
+ * Get the Vetted icon name for a guild. Backed by `getGuildIdentity` —
+ * kept as a thin re-export so existing call sites keep working.
+ */
 export const getGuildIconName = (guildName: string): VettedIconName => {
-  const name = guildName.toLowerCase();
-
-  if (name.includes('engineering') || name.includes('technology')) {
-    return "engineering";
-  } else if (name.includes('design') || name.includes('ux')) {
-    return "design";
-  } else if (name.includes('product')) {
-    return "product";
-  } else if (name.includes('marketing') || name.includes('growth')) {
-    return "marketing";
-  } else if (name.includes('sales') || name.includes('success')) {
-    return "sales";
-  } else if (name.includes('operations') || name.includes('strategy')) {
-    return "operations";
-  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
-    return "finance";
-  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
-    return "hr";
-  }
-
-  return "guilds"; // Default fallback
-};
-
-// Get guild color gradient based on guild name
-// Primary guilds use orange gradients, supporting guilds use warm neutrals
-export const getGuildColor = (guildName: string): string => {
-  const name = guildName.toLowerCase();
-
-  // Primary guilds: brand orange tones
-  if (name.includes('engineering') || name.includes('technology')) {
-    return 'bg-primary';
-  } else if (name.includes('design') || name.includes('ux')) {
-    return 'bg-orange-secondary';
-  } else if (name.includes('product')) {
-    return 'bg-primary/90';
-  } else if (name.includes('marketing') || name.includes('growth')) {
-    return 'bg-primary';
-  } else if (name.includes('sales') || name.includes('success')) {
-    return 'bg-primary/70';
-  }
-
-  // Supporting guilds: neutral tones
-  else if (name.includes('operations') || name.includes('strategy')) {
-    return 'bg-muted-foreground/50';
-  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
-    return 'bg-muted-foreground/40';
-  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
-    return 'bg-muted-foreground/30';
-  }
-
-  return 'bg-primary'; // Default
+  return getGuildIdentity(guildName).iconName;
 };
 
 // TypeScript interface for guild detailed information
@@ -163,37 +117,6 @@ export const getGuildPreviewDescription = (guildName: string): string => {
 export const formatGuildTooltipContent = (guildName: string): string => {
   const info = getGuildDetailedInfo(guildName);
   return `**${info.focus}**\n\n${info.details}\n\n**Common Roles:**\n${info.examples}`;
-};
-
-// Get guild background color (lighter version for headers/banners)
-// Primary guilds use orange, supporting guilds use warm neutrals
-export const getGuildBgColor = (guildName: string): string => {
-  const name = guildName.toLowerCase();
-
-  // Primary guilds: Orange gradients with good contrast for white text
-  if (name.includes('engineering') || name.includes('technology')) {
-    return 'bg-gradient-to-r from-[#ff6a00] to-[#ed8133] dark:from-[#ff7a00] dark:to-[#ed8133]';
-  } else if (name.includes('design') || name.includes('ux')) {
-    return 'bg-gradient-to-r from-[#ed8133] to-[#ffac70] dark:from-[#ed8133] dark:to-[#ffac70]';
-  } else if (name.includes('product')) {
-    return 'bg-gradient-to-r from-[#ff6a00]/90 to-[#ed8133]/90 dark:from-[#ff7a00]/90 dark:to-[#ed8133]/90';
-  } else if (name.includes('marketing') || name.includes('growth')) {
-    return 'bg-gradient-to-r from-[#ff6a00] to-[#ffac70] dark:from-[#ff7a00] dark:to-[#ffac70]';
-  } else if (name.includes('sales') || name.includes('success')) {
-    return 'bg-gradient-to-r from-[#ff6a00]/70 to-[#ed8133]/70 dark:from-[#ff7a00]/70 dark:to-[#ed8133]/70';
-  }
-
-  // Supporting guilds: Neutral grays with warmth
-  else if (name.includes('operations') || name.includes('strategy')) {
-    return 'bg-gradient-to-r from-gray-600 to-gray-500 dark:from-gray-700 dark:to-gray-600';
-  } else if (name.includes('finance') || name.includes('legal') || name.includes('compliance')) {
-    return 'bg-gradient-to-r from-stone-600 to-stone-500 dark:from-stone-700 dark:to-stone-600';
-  } else if (name.includes('people') || name.includes('hr') || name.includes('recruitment')) {
-    return 'bg-gradient-to-r from-neutral-600 to-neutral-500 dark:from-neutral-700 dark:to-neutral-600';
-  }
-
-  // Default fallback: primary orange gradient
-  return 'bg-gradient-to-r from-[#ff6a00] to-[#ed8133] dark:from-[#ff7a00] dark:to-[#ed8133]';
 };
 
 export const getRoleBadgeColor = (role: string): string => {

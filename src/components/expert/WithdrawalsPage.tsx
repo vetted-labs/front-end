@@ -16,6 +16,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { useTokenBalance } from "@/lib/hooks/useVettedContracts";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { STATUS_COLORS } from "@/config/colors";
+import { GuildAvatar, GuildBadge } from "@/components/ui/guild";
 import type { GuildStakeInfo } from "@/types";
 
 const StakingModal = dynamic(
@@ -39,16 +40,6 @@ interface GuildPosition extends GuildStakeInfo {
 }
 
 /* ─── Helpers ──────────────────────────────────────────── */
-
-function getGuildAbbreviation(name: string): string {
-  const words = name.split(/[\s&,]+/).filter(Boolean);
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return words
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
 
 function getCooldownProgress(unlockTime: string): {
   percent: number;
@@ -371,10 +362,6 @@ export default function WithdrawalsPage() {
                 totalStaked > 0
                   ? (parseFloat(g.stakedAmount) / totalStaked) * 100
                   : 0;
-              const shortName = (g.guildName || g.guildId)
-                .split(",")[0]
-                .split("&")[0]
-                .trim();
               return (
                 <div
                   key={g.guildId}
@@ -386,7 +373,7 @@ export default function WithdrawalsPage() {
                       background: getPortfolioColor(index),
                     }}
                   />
-                  <span>{shortName}</span>
+                  <GuildBadge guild={g.guildName || g.guildId} size="xs" />
                   <span className="font-mono text-xs text-muted-foreground/60 tabular-nums">
                     {pct.toFixed(1)}%
                   </span>
@@ -442,15 +429,11 @@ export default function WithdrawalsPage() {
                     {index + 1}
                   </span>
 
-                  <div
-                    className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-bold flex-shrink-0"
-                    style={{
-                      background: `${hexColor}1a`,
-                      color: hexColor,
-                    }}
-                  >
-                    {getGuildAbbreviation(guild.guildName || guild.guildId)}
-                  </div>
+                  <GuildAvatar
+                    guild={guild.guildName || guild.guildId}
+                    size="sm"
+                    rounded="md"
+                  />
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">

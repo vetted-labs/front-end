@@ -1,4 +1,22 @@
-export type { Job, JobType, LocationType, JobStatus, JobSalary, DashboardStats } from "./job";
+export type {
+  Job,
+  JobType,
+  LocationType,
+  JobStatus,
+  JobSalary,
+  DashboardStats,
+  ApplicationQuestion,
+  ApplicationQuestionType,
+  UploadedImage,
+  ExternalLink,
+  EmbedProvider,
+  JobAttachments,
+} from "./job";
+export {
+  MAX_APPLICATION_QUESTIONS,
+  MAX_GALLERY_IMAGES,
+  MAX_EXTERNAL_LINKS,
+} from "./job";
 export type { Guild, GuildPublicDetail, GuildPageDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, StakingGuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole, ActivityType, GuildActivity, GuildDetailData, GuildDetailTab, GuildPersonalStats, GuildMyStatsAverages, GuildRecentActivity, GuildMyStatsData } from "./guild";
 export { GUILD_DETAIL_TABS } from "./guild";
 export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, GuildApplicationInfo, FieldErrors, GeneralAnswers, ExpertiseLevel } from "./expert";
@@ -97,6 +115,7 @@ export type {
 export { PROPOSAL_TYPE_LABELS } from "./governance";
 export type {
   AuthResponse,
+  AuthSession,
   Notification,
   NotificationUnreadCount,
   NotificationsResponse,

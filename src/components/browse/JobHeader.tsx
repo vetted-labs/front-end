@@ -1,16 +1,14 @@
 import {
-  Building2,
   MapPin,
   Briefcase,
   Clock,
   Users,
   DollarSign,
-  Code2,
   Globe,
 } from "lucide-react";
 import { getAssetUrl } from "@/lib/api";
 import { getCompanyAvatar } from "@/lib/avatars";
-import { getGuildBadgeColors } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import { Divider } from "@/components/ui/divider";
 import type { Job } from "@/types";
@@ -20,7 +18,6 @@ interface JobHeaderProps {
 }
 
 export default function JobHeader({ job }: JobHeaderProps) {
-  const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
 
   return (
     <div className="pb-0">
@@ -59,12 +56,7 @@ export default function JobHeader({ job }: JobHeaderProps) {
           <Globe className="w-3 h-3" />
           {job.locationType ? job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1) : "Remote"}
         </span>
-        {guildColors && (
-          <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium ${guildColors.bg} border ${guildColors.border} ${guildColors.text}`}>
-            <Code2 className="w-3 h-3" />
-            {job.guild}
-          </span>
-        )}
+        {job.guild && <GuildBadge guild={job.guild} size="md" asLink />}
       </div>
 
       {/* Meta Row */}

@@ -7,31 +7,13 @@ import {
   Clock,
 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
+import { getGuildIdentity } from "@/lib/guildIdentity";
 import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { Job } from "@/types";
 
 interface JobBrowserProps {
   jobs: Job[];
   isLoadingJobs: boolean;
-}
-
-/**
- * Decorative guild identity dots for job cards.
- * These are per-discipline brand identifiers (like brand logos), not status indicators.
- */
-const GUILD_DOT_STYLES: Record<string, string> = {
-  engineering: "bg-[#60a5fa]",
-  design: "bg-[#c084fc]",
-  "data science": "bg-[#2dd4bf]",
-  data: "bg-[#2dd4bf]",
-  security: "bg-[#f87171]",
-  marketing: "bg-[#fbbf24]",
-  devops: "bg-[#4ade80]",
-};
-
-function getGuildDotStyle(guildName: string): string {
-  const key = guildName.toLowerCase().replace(/ guild$/i, "").trim();
-  return GUILD_DOT_STYLES[key] ?? "bg-primary";
 }
 
 export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
@@ -84,7 +66,7 @@ export function JobBrowser({ jobs, isLoadingJobs }: JobBrowserProps) {
                     {job.companyName || "Company"}
                   </span>
                   {guildName && (
-                    <span className={`w-[7px] h-[7px] rounded-full ${getGuildDotStyle(guildName)}`} />
+                    <span className={`w-[7px] h-[7px] rounded-full ${getGuildIdentity(guildName).classes.dot}`} />
                   )}
                 </div>
 

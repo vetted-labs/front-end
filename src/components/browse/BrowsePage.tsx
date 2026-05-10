@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { jobsApi, guildsApi, getAssetUrl } from "@/lib/api";
 import { PatternBackground } from "@/components/ui/pattern-background";
+import { GuildBadge } from "@/components/ui/guild";
 import { getCompanyAvatar } from "@/lib/avatars";
 import { useFetch } from "@/lib/hooks/useFetch";
-import { getGuildBadgeColors } from "@/config/colors";
 import { getTimeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -96,7 +96,7 @@ export default function BrowsePage() {
           {isLoading ? null : featuredJobs && featuredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.map((job) => {
-                const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
+                // eslint-disable-next-line react-hooks/purity -- "new" badge is a cosmetic time check; precision drift is fine
                 const isNew = Date.now() - new Date(job.createdAt).getTime() < 48 * 60 * 60 * 1000;
                 return (
                   <Link
@@ -137,12 +137,7 @@ export default function BrowsePage() {
                       </h3>
 
                       <div className="flex flex-wrap gap-2 mb-3">
-                        {guildColors && (
-                          <span className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium ${guildColors.bg} ${guildColors.text} border ${guildColors.border}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${guildColors.dot}`} />
-                            {job.guild?.replace(/ Guild$/i, "")}
-                          </span>
-                        )}
+                        {job.guild && <GuildBadge guild={job.guild} size="sm" />}
                         <span className="px-2 py-0.5 bg-muted/30 rounded-full text-xs text-muted-foreground border border-border">
                           {job.type}
                         </span>

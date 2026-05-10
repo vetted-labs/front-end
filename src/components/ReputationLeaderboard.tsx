@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { EmptyState } from "./ui/empty-state";
+import { GuildBadge } from "@/components/ui/guild";
 import { STATUS_COLORS, PODIUM_COLORS } from "@/config/colors";
 import { expertApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
@@ -242,8 +243,11 @@ export function ReputationLeaderboard({
                         {truncateAddress(entry.walletAddress)}
                       </div>
                       {entry.role && (
-                        <div className="text-xs text-muted-foreground capitalize mt-1">
-                          {entry.role} {entry.guildName && `• ${entry.guildName}`}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground capitalize mt-1">
+                          <span>{entry.role}</span>
+                          {entry.guildName && (
+                            <GuildBadge guild={entry.guildName} size="xs" />
+                          )}
                         </div>
                       )}
                     </div>

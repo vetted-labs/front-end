@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
 import type { ActiveEndorsement } from "@/types";
 
 type FilterStatus = "all" | "pending" | "reviewing" | "interviewed";
@@ -288,9 +289,7 @@ function EndorsementRow({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-2">
                   Guild
                 </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {endorsement.guild?.name}
-                </p>
+                <GuildBadge guild={endorsement.guild?.name} size="xs" />
               </div>
               <div className="rounded-[12px] border border-border bg-muted/30 p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-2">

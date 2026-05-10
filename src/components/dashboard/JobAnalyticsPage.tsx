@@ -16,6 +16,7 @@ import { jobsApi, applicationsApi, analyticsApi } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GuildBadge } from "@/components/ui/guild";
 import { STATUS_COLORS } from "@/config/colors";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
 import type { CompanyApplication, JobAnalyticsDetail } from "@/types";
@@ -312,7 +313,9 @@ function LegacyJobAnalyticsPage() {
                         <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                           Guild
                         </p>
-                        <p className="text-foreground font-medium">{job.guild}</p>
+                        <div>
+                          <GuildBadge guild={job.guild} size="sm" />
+                        </div>
                       </div>
                     )}
                     {job.type && (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
-import { Lock } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Lock, Shield, Vote, Coins, Activity, Wallet, Copy, Check, ExternalLink, Sparkles } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 
@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { expertApi, guildApplicationsApi, blockchainApi, governanceApi } from "@/lib/api";
 import { ActionButtonPanel } from "@/components/dashboard/ActionButtonPanel";
-import { StatCard } from "@/components/dashboard/StatCard";
 import { ReviewQueue } from "@/components/dashboard/ReviewQueue";
 import { RankProgress } from "@/components/dashboard/RankProgress";
 import { GuildsSection } from "@/components/dashboard/GuildsSection";
@@ -40,14 +39,24 @@ import {
 
 import { hashToBytes32 } from "@/lib/blockchain";
 import { logger } from "@/lib/logger";
+import { truncateAddress, cn } from "@/lib/utils";
 import {
   GUILD_RANK_ORDER,
   REPUTATION_DECAY_WARNING_DAYS,
   REPUTATION_DECAY_CYCLE_DAYS,
   computeVoteWeight,
 } from "@/config/constants";
-import { STATUS_COLORS } from "@/config/colors";
+import { STATUS_COLORS, getRankColors, REWARD_TIER_COLORS } from "@/config/colors";
 import type { ExpertProfile, ExpertGuild } from "@/types";
+
+type StatusTone = "positive" | "warning" | "negative" | "neutral" | "info" | "pending";
+
+function repTone(reputation: number): StatusTone {
+  if (reputation >= 1500) return "positive";
+  if (reputation >= 750) return "info";
+  if (reputation === 0) return "neutral";
+  return "warning";
+}
 
 function GovernanceSummaryCard() {
   const router = useRouter();
@@ -55,7 +64,7 @@ function GovernanceSummaryCard() {
     () => governanceApi.getActiveProposals(),
     {
       onError: () => {
-        // Non-critical — governance summary failing shouldn't surface an error
+        // Non-critical
       },
     }
   );
@@ -64,20 +73,21 @@ function GovernanceSummaryCard() {
 
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 cursor-pointer hover:border-primary/30 transition-colors`}
+      className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 cursor-pointer hover:border-primary/30 transition-colors"
       onClick={() => router.push("/expert/governance")}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && router.push("/expert/governance")}
     >
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
+        <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-0.5">
           Governance
         </p>
         <p className="text-sm font-medium text-foreground">
           {count > 0 ? (
             <>
-              <span className={`font-bold text-primary`}>{count}</span> active proposal{count !== 1 ? "s" : ""} pending your vote
+              <span className="font-bold text-primary">{count}</span> active proposal
+              {count !== 1 ? "s" : ""} pending your vote
             </>
           ) : (
             "No active proposals right now"
@@ -129,6 +139,7 @@ export function EnhancedExpertDashboard() {
     isHydrated: expertStatusHydrated,
     setExpertStatus,
   } = useExpertStatus();
+  const [copiedAddress, setCopiedAddress] = useState(false);
 
   // Redirect when disconnected (with grace period for reconnection)
   // eslint-disable-next-line no-restricted-syntax -- reacts to wagmi connection state
@@ -159,7 +170,6 @@ export function EnhancedExpertDashboard() {
         data.totalEarnings = earningsData.summary.totalVetd;
       }
 
-      // Merge per-guild earnings from the breakdown API (real data from proposal_votes)
       const guildEarningsMap: Record<string, number> = {};
       if (earningsData?.summary?.byGuild) {
         for (const ge of earningsData.summary.byGuild) {
@@ -178,7 +188,10 @@ export function EnhancedExpertDashboard() {
         onboardingState: onboardingState ?? data.onboardingState ?? null,
         guilds,
         pendingTasks: {
-          pendingProposalsCount: guilds.reduce((sum: number, g: ExpertGuild) => sum + g.pendingProposals, 0),
+          pendingProposalsCount: guilds.reduce(
+            (sum: number, g: ExpertGuild) => sum + g.pendingProposals,
+            0,
+          ),
           unreviewedApplicationsCount: 0,
         },
       } as ExpertProfile;
@@ -191,7 +204,7 @@ export function EnhancedExpertDashboard() {
     }
   );
 
-  // Phase 2: Fetch assigned applications (depends on profile)
+  // Phase 2: Fetch assigned applications
   const { data: assignedApplications } = useFetch(
     () => guildApplicationsApi.getAssigned(profile!.id),
     {
@@ -203,7 +216,7 @@ export function EnhancedExpertDashboard() {
     }
   );
 
-  // Phase 3: Load guild stakes progressively (depends on profile)
+  // Phase 3: Load guild stakes
   interface StakesResult {
     stakesMap: Record<string, string>;
     totalStaked: number;
@@ -235,7 +248,6 @@ export function EnhancedExpertDashboard() {
           }
         }
       } catch {
-        // Fallback: fetch per-guild stakes in batches
         for (let i = 0; i < guilds.length; i += 3) {
           const batch = guilds.slice(i, i + 3);
           const results = await Promise.all(
@@ -268,8 +280,7 @@ export function EnhancedExpertDashboard() {
     }
   );
 
-  // Background sync: fire-and-forget after stake data loads.
-  // Uses a probe-first pattern: try the first guild, only sync the rest if it succeeds.
+  // Background sync
   // eslint-disable-next-line no-restricted-syntax -- fire-and-forget sync after blockchain data loads
   useEffect(() => {
     if (
@@ -288,7 +299,6 @@ export function EnhancedExpertDashboard() {
 
     blockchainApi.syncStake(address, firstBlockchainGuildId)
       .then(() => {
-        // First succeeded — sync remaining guilds
         for (let i = 1; i < guilds.length; i++) {
           const blockchainGuildId = hashToBytes32(guilds[i].id);
           blockchainApi.syncStake(address, blockchainGuildId).catch(() => {});
@@ -299,7 +309,7 @@ export function EnhancedExpertDashboard() {
       });
   }, [isStoryLabPreview, isStoryLabCompletionReturn, stakesData, address, profile?.guilds, error]);
 
-  // Derived state for new dashboard layout
+  // Derived state
   const guildStakes = stakesData?.stakesMap ?? {};
   const totalStaked = stakesData?.totalStaked ?? 0;
   const stakingStatus = {
@@ -307,7 +317,6 @@ export function EnhancedExpertDashboard() {
     meetsMinimum: totalStaked > 0,
   };
 
-  // Compute highest rank for header subtitle
   const highestRank = profile?.guilds?.length
     ? profile.guilds.reduce((best, g) => {
         const gIdx = GUILD_RANK_ORDER.indexOf(g.expertRole);
@@ -324,7 +333,6 @@ export function EnhancedExpertDashboard() {
     master: "Guild Master",
   };
 
-  // Decay detection (same logic as InactivityWarningBanner)
   const mostRecentActivityMs = (() => {
     if (!profile?.recentActivity?.length) return null;
     const timestamps = profile.recentActivity
@@ -342,16 +350,13 @@ export function EnhancedExpertDashboard() {
 
   const daysUntilDecay = profile ? getDaysUntilDecay(mostRecentActivityMs) : null;
 
-  // Active review count — drives the 25% lockup indicator
   const activeReviewCount = assignedApplications?.length ?? 0;
 
-  // Consensus rate for Reviews stat
   const consensusRate =
     profile?.reviewCount && profile.reviewCount > 0 && profile.approvalCount != null
       ? Math.round((profile.approvalCount / profile.reviewCount) * 100)
       : null;
 
-  // Vote weight and reward tier (whitepaper: 1 × (1 + min(Rep/1000, 2.0)), Guild Masters 1.5×)
   const isGuildMaster = profile?.guilds?.some((g) => g.expertRole === "master") ?? false;
   const voteWeight = computeVoteWeight(profile?.reputation ?? 0, isGuildMaster);
 
@@ -361,6 +366,7 @@ export function EnhancedExpertDashboard() {
     return { name: "Foundation", multiplier: "1.0×" };
   }
   const rewardTier = getRewardTier(profile?.reputation ?? 0);
+  const tierColors = REWARD_TIER_COLORS[rewardTier.name] ?? REWARD_TIER_COLORS.Foundation;
 
   const loading = isLoading || !profile;
   const profileLoaded = !loading && !!profile;
@@ -451,162 +457,310 @@ export function EnhancedExpertDashboard() {
     router,
   ]);
 
+  const reputation = profile?.reputation ?? 0;
+  const tone = repTone(reputation);
+  const rankColors = highestRank ? getRankColors(highestRank) : null;
+  const expertName = profile?.fullName?.trim() || "Expert";
+  const firstName = expertName.split(" ")[0];
+
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Error alert — inline, not full-page replacement */}
       {error && (
         <Alert variant="error">Failed to load dashboard: {error}</Alert>
       )}
 
-      {/* Section 1: Header — always visible */}
-      <div
-        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+      {/* ── Hero overview card ── */}
+      <section
+        className="rounded-xl border border-border bg-card p-6 sm:p-8 relative overflow-hidden"
         {...dataTourTarget(TOUR_TARGETS.dashboardOverview)}
       >
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Dashboard
-          </h1>
-          {!loading && (
-            <div className="text-sm text-muted-foreground mt-0.5">
-              {highestRank ? rankLabels[highestRank] : "Expert"} ·{" "}
-              {profile.guilds?.length ?? 0} guilds
-            </div>
-          )}
-        </div>
-        {!loading && (
-          <div className="flex flex-wrap items-center gap-3">
-            <div {...dataTourTarget(TOUR_TARGETS.dashboardActionPanel)}>
-              <ActionButtonPanel
-                stakingStatus={stakingStatus}
-                onRefresh={refetch}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/60" />
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Workspace
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight font-display mt-1.5">
+              Hi, {firstName}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-lg">
+              {!loading && highestRank
+                ? `${rankLabels[highestRank]} across ${profile?.guilds?.length ?? 0} guild${profile?.guilds?.length === 1 ? "" : "s"} — review the queue, finalize commits, and shape protocol governance.`
+                : "Your expert workspace — reviews, governance, and earnings in one place."}
+            </p>
 
-      {/* Section 2: Stats Row */}
+            {/* Pills row: rank + tier */}
+            {!loading && (
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                {rankColors && highestRank && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",
+                      rankColors.badge,
+                    )}
+                  >
+                    <span className={cn("w-1.5 h-1.5 rounded-full", rankColors.dot)} />
+                    {rankLabels[highestRank]}
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-[0.18em]",
+                    tierColors.bg,
+                    tierColors.border,
+                    tierColors.text,
+                  )}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  {rewardTier.name} · {rewardTier.multiplier}
+                </span>
+                {isDecayActive && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em]",
+                      STATUS_COLORS.warning.badge,
+                    )}
+                  >
+                    Decay active
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right: wallet + actions */}
+          <div className="flex flex-col items-stretch lg:items-end gap-3">
+            {address && (
+              <button
+                onClick={copyAddress}
+                className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border font-mono text-xs text-foreground hover:border-primary/30 hover:bg-muted transition-colors min-w-[180px]"
+              >
+                <span className="flex items-center gap-2">
+                  <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                  {truncateAddress(address)}
+                </span>
+                {copiedAddress ? (
+                  <Check className={cn("w-3.5 h-3.5", STATUS_COLORS.positive.text)} />
+                ) : (
+                  <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
+              </button>
+            )}
+            {!loading && (
+              <div {...dataTourTarget(TOUR_TARGETS.dashboardActionPanel)}>
+                <ActionButtonPanel
+                  stakingStatus={stakingStatus}
+                  onRefresh={refetch}
+                />
+              </div>
+            )}
+            {activeReviewCount > 0 && (
+              <button
+                onClick={() => router.push("/expert/voting")}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.16em] hover:translate-y-[-1px] transition-transform"
+              >
+                <Vote className="w-3.5 h-3.5" />
+                Voting Queue · {activeReviewCount}
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── KPI strip ── */}
       <DataSection
         isLoading={loading}
         skeleton={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
           </div>
         }
       >
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
           {...dataTourTarget(TOUR_TARGETS.dashboardStatsRow)}
         >
-          <div
-            className="flex flex-col gap-1"
-            {...dataTourTarget(TOUR_TARGETS.dashboardReputationStat)}
-          >
-            <StatCard
+          <div {...dataTourTarget(TOUR_TARGETS.dashboardReputationStat)}>
+            <KpiTile
+              icon={<Shield className="w-4 h-4" />}
               label="Reputation"
-              value={profile?.reputation ?? 0}
-              warningDot={isDecayActive}
-              subtext={
-                isDecayActive ? "\u25BC -10/cycle \u00B7 decay active" : undefined
+              value={(profile?.reputation ?? 0).toLocaleString()}
+              tone={tone === "warning" ? "warning" : tone === "info" ? "info" : "primary"}
+              hint={
+                isDecayActive
+                  ? "Decay active"
+                  : daysUntilDecay !== null && daysUntilDecay < 7
+                    ? `Decay in ${daysUntilDecay}d`
+                    : undefined
               }
-              subtextVariant={isDecayActive ? "warning" : "default"}
-            />
-            {daysUntilDecay !== null && daysUntilDecay < 7 && (
-              <span className={`text-xs px-1 ${STATUS_COLORS.warning.text}`}>
-                Decay in {daysUntilDecay}d
-              </span>
-            )}
-          </div>
-          <div className="self-start" {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}>
-            <StatCard
-              label="Earnings"
-              value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
-              subtext="total earned"
-              subtextVariant="default"
+              hintTone={isDecayActive || (daysUntilDecay !== null && daysUntilDecay < 7) ? "warning" : undefined}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <StatCard
-              label="Staked VETD"
-              value={Math.round(totalStaked).toLocaleString()}
-              subtext={`across ${profile?.guilds?.length ?? 0} guilds`}
-            />
-            {activeReviewCount > 0 && (
-              <div className={`flex items-center gap-1.5 px-1 ${STATUS_COLORS.warning.text}`}>
-                <Lock className="w-3 h-3 flex-shrink-0" />
-                <span className="text-xs">
-                  25% locked &middot; {activeReviewCount} active review{activeReviewCount !== 1 ? "s" : ""}
-                </span>
-              </div>
-            )}
-          </div>
-          <StatCard
-            label="Reviews"
-            value={profile?.reviewCount ?? 0}
-            subtext={
-              consensusRate != null
-                ? `${consensusRate}% consensus rate`
-                : undefined
-            }
-          />
-          <StatCard
+          <KpiTile
+            icon={<Activity className="w-4 h-4" />}
             label="Vote Weight"
             value={`${voteWeight.toFixed(2)}×`}
-            subtext={`${rewardTier.name} · ${rewardTier.multiplier}`}
-            subtextVariant="default"
+            tone="info"
+            hint={`${rewardTier.name} · ${rewardTier.multiplier}`}
           />
+          <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
+            <KpiTile
+              icon={<Vote className="w-4 h-4" />}
+              label="Active Reviews"
+              value={activeReviewCount}
+              tone="warning"
+              hint={
+                activeReviewCount > 0
+                  ? `${Math.round(totalStaked).toLocaleString()} VETD · 25% locked`
+                  : `${profile?.reviewCount ?? 0} lifetime · ${consensusRate ?? 0}% consensus`
+              }
+            />
+          </div>
+          <div {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}>
+            <KpiTile
+              icon={<Coins className="w-4 h-4" />}
+              label="Earnings"
+              value={`$${Math.round(profile?.totalEarnings ?? 0).toLocaleString()}`}
+              tone="positive"
+              hint="total earned"
+            />
+          </div>
         </div>
       </DataSection>
 
-      {/* Section 3: Review Queue + Stake Distribution */}
+      {/* ── Two-column workspace ── */}
       <DataSection
         isLoading={loading}
         skeleton={
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-            <SkeletonCard className="min-h-[240px]" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <SkeletonCard className="min-h-[240px] lg:col-span-2" />
             <SkeletonCard className="min-h-[240px]" />
           </div>
         }
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-          <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
-            <ReviewQueue
-              applications={assignedApplications ?? []}
-            />
-          </div>
-          <div className="flex flex-col gap-4">
-            <div
-              className="rounded-xl border border-border bg-card p-5"
-              tabIndex={-1}
-              {...dataTourTarget(TOUR_TARGETS.commitReveal)}
-            >
-              <p className="text-sm font-bold text-foreground">Commit/reveal</p>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Some rounds hide scores while experts vote. Commit blind; the app
-                reveals or finalizes when the round is ready.
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-3 px-0"
-                onClick={handleCommitRevealExplainerViewed}
-              >
-                Mark explainer viewed
-              </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* MAIN — Review queue + Recent activity */}
+          <div className="lg:col-span-2 space-y-6 min-w-0">
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardReviewQueue)}>
+              <ReviewQueue applications={assignedApplications ?? []} />
             </div>
+
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardRecentActivity)}>
+              <RecentActivity activities={profile?.recentActivity ?? []} />
+            </div>
+
+            {/* Governance summary spans full width of left column */}
+            {!loading && (
+              <div {...dataTourTarget(TOUR_TARGETS.dashboardGovernanceCard)}>
+                <GovernanceSummaryCard />
+              </div>
+            )}
+          </div>
+
+          {/* SIDEBAR — Sticky rail */}
+          <aside className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start space-y-4">
             <RankProgress
               guilds={profile?.guilds ?? []}
               guildStakes={guildStakes}
               totalStaked={totalStaked}
               onManageStake={() => markChecklistEvent("stakingExplanationViewed")}
             />
-          </div>
+
+            <div
+              className="rounded-xl border border-border bg-card overflow-hidden"
+              tabIndex={-1}
+              {...dataTourTarget(TOUR_TARGETS.commitReveal)}
+            >
+              <div className="px-4 py-3 border-b border-border">
+                <h3 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  Commit / Reveal
+                </h3>
+              </div>
+              <div className="p-4">
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Some rounds hide scores while experts vote. Commit blind; the app reveals or finalizes when the round is ready.
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3 px-0"
+                  onClick={handleCommitRevealExplainerViewed}
+                >
+                  Mark explainer viewed
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h3 className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  At a Glance
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                <KeyValue
+                  icon={<Shield className="w-3.5 h-3.5" />}
+                  label="Guilds"
+                  value={`${profile?.guilds?.length ?? 0}`}
+                />
+                <KeyValue
+                  icon={<Coins className="w-3.5 h-3.5" />}
+                  label="Staked VETD"
+                  value={Math.round(totalStaked).toLocaleString()}
+                />
+                <KeyValue
+                  icon={<Vote className="w-3.5 h-3.5" />}
+                  label="Lifetime Reviews"
+                  value={`${profile?.reviewCount ?? 0}`}
+                />
+                {consensusRate !== null && (
+                  <KeyValue
+                    icon={<Activity className="w-3.5 h-3.5" />}
+                    label="Consensus rate"
+                    value={`${consensusRate}%`}
+                  />
+                )}
+                {activeReviewCount > 0 && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 pt-3 border-t border-border text-xs",
+                      STATUS_COLORS.warning.text,
+                    )}
+                  >
+                    <Lock className="w-3 h-3 flex-shrink-0" />
+                    <span>
+                      25% locked · {activeReviewCount} active review
+                      {activeReviewCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+                {address && (
+                  <a
+                    href={`https://etherscan.io/address/${address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-primary hover:underline pt-2 border-t border-border w-full"
+                  >
+                    View on explorer
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </aside>
         </div>
       </DataSection>
 
-      {/* Section 4: Your Guilds */}
+      {/* ── Guilds section ── */}
       <DataSection
         isLoading={loading}
         skeleton={<SkeletonCard className="min-h-[160px]" />}
@@ -619,32 +773,94 @@ export function EnhancedExpertDashboard() {
         </div>
       </DataSection>
 
-      {/* Section 5: Recent Activity + Notifications */}
+      {/* ── Notifications feed ── */}
       <DataSection
         isLoading={loading}
-        skeleton={
-          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4">
-            <SkeletonCard className="min-h-[180px]" />
-            <SkeletonCard className="min-h-[180px]" />
-          </div>
-        }
+        skeleton={<SkeletonCard className="min-h-[180px]" />}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-4 min-w-0">
-          <div {...dataTourTarget(TOUR_TARGETS.dashboardRecentActivity)}>
-            <RecentActivity activities={profile?.recentActivity ?? []} />
-          </div>
-          <div {...dataTourTarget(TOUR_TARGETS.dashboardNotificationsFeed)}>
-            <SlimNotificationsFeed walletAddress={address!} />
-          </div>
+        <div {...dataTourTarget(TOUR_TARGETS.dashboardNotificationsFeed)}>
+          <SlimNotificationsFeed walletAddress={address!} />
         </div>
       </DataSection>
+    </div>
+  );
+}
 
-      {/* Section 6: Governance Summary */}
-      {!loading && (
-        <div {...dataTourTarget(TOUR_TARGETS.dashboardGovernanceCard)}>
-          <GovernanceSummaryCard />
-        </div>
-      )}
+/* ─── Inline helpers ─────────────────────────────────────────── */
+
+interface KpiTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "primary" | "positive" | "info" | "warning";
+  hint?: string;
+  hintTone?: "warning" | "default";
+}
+
+const KPI_TONE: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
+  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
+  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
+};
+
+function KpiTile({ icon, label, value, tone, hint, hintTone }: KpiTileProps) {
+  const t = KPI_TONE[tone];
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+      <span
+        className={cn(
+          "w-10 h-10 rounded-lg grid place-items-center flex-shrink-0",
+          t.bg,
+          t.text,
+        )}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-2xl font-bold text-foreground tabular-nums leading-tight mt-0.5 truncate">
+          {value}
+        </p>
+        {hint && (
+          <p
+            className={cn(
+              "text-[10.5px] mt-0.5 truncate",
+              hintTone === "warning"
+                ? STATUS_COLORS.warning.text
+                : "text-muted-foreground",
+            )}
+          >
+            {hint}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KeyValue({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-muted-foreground mt-0.5 flex-shrink-0">{icon}</span>
+      <div className="min-w-0 flex-1 flex items-baseline justify-between gap-2">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-sm text-foreground font-medium leading-snug tabular-nums truncate">
+          {value}
+        </p>
+      </div>
     </div>
   );
 }

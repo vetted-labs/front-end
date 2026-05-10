@@ -1,21 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   MapPin,
-  Building2,
   CheckCircle2,
   Star,
   Users,
   ArrowRight,
+  HelpCircle,
 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getAssetUrl } from "@/lib/api";
 import { getCompanyAvatar } from "@/lib/avatars";
-import { useGuilds } from "@/lib/hooks/useGuilds";
-import { STATUS_COLORS, getGuildBadgeColors } from "@/config/colors";
-import { getTimeAgo, formatSalaryRange } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
+import { GuildBadge } from "@/components/ui/guild";
+import { getTimeAgo, formatSalaryRange, cn } from "@/lib/utils";
 import { MatchScoreBadge } from "@/components/ui/match-score-badge";
 import type { Job } from "@/types";
 
@@ -27,27 +26,41 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCardProps) {
-  const router = useRouter();
-  const { resolveGuildId } = useGuilds();
-  const guildColors = job.guild ? getGuildBadgeColors(job.guild) : null;
+  const heroUrl = job.heroImageUrl ? getAssetUrl(job.heroImageUrl) : null;
+  const questionCount = job.applicationQuestions?.length ?? 0;
 
   return (
     <Link
       href={`/browse/jobs/${job.id}`}
-      className={`block bg-card rounded-xl p-6 hover:shadow-md hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border group relative overflow-hidden ${
-        job.featured ? "border-t-2 border-t-warning" : ""
-      }`}
+      className={cn(
+        "block bg-card rounded-xl hover:shadow-md hover:-translate-y-[3px] transition-all duration-300 cursor-pointer border border-border group relative overflow-hidden",
+        job.featured && "ring-1 ring-warning/40"
+      )}
     >
+      {/* Hero strip */}
+      <div className="relative h-28 overflow-hidden">
+        {heroUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- backend-served upload
+          <img
+            src={heroUrl}
+            alt=""
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/15 via-primary/5 to-transparent" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+        {job.featured && (
+          <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-warning/90 text-warning-foreground text-[10px] font-bold uppercase tracking-wider">
+            <Star className="w-2.5 h-2.5 fill-current" />
+            Featured
+          </span>
+        )}
+      </div>
+
+      <div className="p-6 pt-4">
       {/* Hover gradient border overlay */}
       <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-primary/[0.04]" />
-
-      {/* Featured Badge */}
-      {job.featured && (
-        <div className="flex items-center gap-2 text-warning text-xs font-medium uppercase tracking-wider mb-3">
-          <Star className="w-3 h-3 fill-current" />
-          Featured
-        </div>
-      )}
 
       {/* Card Header: Company info + posted time */}
       <div className="flex items-start justify-between mb-3.5 relative">
@@ -91,20 +104,7 @@ export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCa
 
       {/* Meta Tags: Guild badge, location, job type */}
       <div className="flex items-center gap-2 flex-wrap mb-3.5">
-        {guildColors && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const guildUuid = resolveGuildId(job.guild!);
-              if (guildUuid) router.push(`/guilds/${guildUuid}`);
-            }}
-            className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium tracking-wide border ${guildColors.bg} ${guildColors.text} ${guildColors.border}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${guildColors.dot}`} />
-            {job.guild?.replace(/ Guild$/i, "")}
-          </button>
-        )}
+        {job.guild && <GuildBadge guild={job.guild} size="sm" />}
         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium text-muted-foreground bg-muted/30 border border-border">
           <MapPin className="w-3 h-3 opacity-60" />
           {job.locationType || job.location}
@@ -146,14 +146,23 @@ export function JobCard({ job, hasApplied, showAppliedBadge, matchScore }: JobCa
 
       {/* Card Footer: Applicants + Apply Button */}
       <div className="flex items-center justify-between pt-4 border-t border-border">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
-          <Users className="w-3.5 h-3.5 opacity-50" />
-          {job.applicants || 0} applicants
+        <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
+          <span className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 opacity-50" />
+            {job.applicants || 0} applicants
+          </span>
+          {questionCount > 0 && (
+            <span className="flex items-center gap-1.5" title="Custom application questions">
+              <HelpCircle className="w-3.5 h-3.5 opacity-50" />
+              {questionCount} question{questionCount === 1 ? "" : "s"}
+            </span>
+          )}
         </div>
         <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-sm group-hover:shadow-md group-hover:-translate-y-px transition-all">
           Apply
           <ArrowRight className="w-3.5 h-3.5" />
         </span>
+      </div>
       </div>
     </Link>
   );
