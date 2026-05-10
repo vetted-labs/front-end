@@ -26,64 +26,59 @@ import type { AnvilHandle } from "./chain";
 import { cronApi, BACKEND_URL } from "./backend";
 
 /**
- * Drive the candidate guild-application UI end-to-end and return the resulting
- * application + on-chain session id. Caller is expected to be already
- * signed in as `candidate` (the `candidate` fixture handles that).
+ * Submit a candidate guild-application directly via the BE API and return the
+ * resulting application + on-chain session id. The BE schema
+ * (`submitGuildApplicationSchema`) treats `resumeUrl` and `noAiDeclaration` as
+ * optional, so we skip the FE form's resume-upload + multi-step wizard which
+ * is brittle to drive headlessly. Candidate-side UI is still exercised by the
+ * end-of-scenario spot check on `/candidate/applications`.
  *
- * `guildId` is the BE guild UUID — the frontend route is
- * `/guilds/[guildId]/apply` where the param is the UUID, not the slug.
+ * Caller must be signed in as `candidate` (the `candidate` fixture handles
+ * that — sets `authToken` in localStorage).
  */
 export async function applyToGuildViaUI(
   page: Page,
-  _candidate: Candidate,
+  candidate: Candidate,
   guildId: string,
 ): Promise<{ applicationId: string; sessionId: Hex }> {
-  await page.goto(`/guilds/${guildId}/apply`, { waitUntil: "networkidle" });
+  // Use the candidate's JWT directly — going through localStorage is fragile
+  // because navigating to authed routes can trigger the FE AuthContext to
+  // clear the token if any sub-fetch fails during hydration.
+  const token = candidate.token;
 
-  // Use profile resume if the option is offered.
-  const useProfileResume = page.getByText(/profile resume/i).first();
-  if (await useProfileResume.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await useProfileResume.click();
-  }
-
-  // Fill general questions (textareas) on step 1.
-  const textareas = page.locator("textarea");
-  const count = await textareas.count();
-  for (let i = 0; i < count; i++) {
-    await textareas.nth(i).fill(
-      "Detailed E2E test answer that exceeds the minimum length requirement.",
+  // Submit directly. BE schema accepts arbitrary `answers` and treats other
+  // fields as optional.
+  const submitRes = await page.request.post(
+    `${BACKEND_URL}/api/guilds/${encodeURIComponent(guildId)}/applications`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      data: {
+        answers: {
+          motivation: "E2E test answer covering motivation and intent thoroughly enough to pass min-length checks.",
+          experience: "E2E test answer covering professional experience and expertise depth thoroughly.",
+          domain_topic: "E2E test domain answer with sufficient detail to satisfy validation requirements.",
+        },
+        level: "experienced",
+        noAiDeclaration: true,
+      },
+    },
+  );
+  if (!submitRes.ok()) {
+    throw new Error(
+      `applyToGuildViaUI: submit failed ${submitRes.status()} ${await submitRes.text()}`,
     );
   }
-  await page.getByRole("button", { name: "Continue" }).click();
-
-  // Step 2 — Guild Review: pick a level and fill domain answers.
-  const levelButtons = page.locator("[role='radio'], [role='option']");
-  if (await levelButtons.first().isVisible({ timeout: 2000 }).catch(() => false)) {
-    await levelButtons.first().click();
-  }
-  const domainTextareas = page.locator("textarea");
-  const dCount = await domainTextareas.count();
-  for (let i = 0; i < dCount; i++) {
-    await domainTextareas.nth(i).fill(
-      "Comprehensive E2E test answer about expertise and experience in this domain.",
-    );
-  }
-
-  // No-AI declaration is required before submit.
-  await page.getByLabel(/no-AI/i).check();
-  await page.getByRole("button", { name: "Submit Application" }).click();
-
-  // Wait for redirect to candidate dashboard or applications page.
-  await page.waitForURL(/\/candidate\/(dashboard|applications)/, { timeout: 15_000 });
 
   // Read application ID + on-chain session id from the BE.
   const res = await page.request.get(
     `${BACKEND_URL}/api/candidates/me/guild-applications`,
+    { headers: { Authorization: `Bearer ${token}` } },
   );
   const body = (await res.json()) as {
     data: Array<{ id: string; on_chain_session_id?: string; blockchain_session_id?: string }>;
   };
   const app = body.data[0];
+  if (!app) throw new Error("applyToGuildViaUI: no applications returned after submit");
   const rawSessionId = app.on_chain_session_id ?? app.blockchain_session_id;
   if (!rawSessionId) {
     throw new Error(

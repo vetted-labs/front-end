@@ -237,7 +237,7 @@ test("happy bid and hire: 3 bids, candidate hired, rewards distributed", async (
     // exist. The closest stable smoke check is asserting the list page loaded
     // and the row for our application is visible (by guild name — every
     // application card in this fixture is for the seeded "Engineering" guild).
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(
       page.getByText(new RegExp(guild.name, "i")).first(),
     ).toBeVisible({ timeout: 10_000 });

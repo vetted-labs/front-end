@@ -7,6 +7,17 @@ interface UseFetchOptions<T> {
   onSuccess?: (data: T) => void;
   onError?: (error: string) => void;
   skip?: boolean;
+  /**
+   * If set, re-runs the fetch on this interval (ms). Pass `null`/undefined to
+   * disable polling. Pass `0` to also disable. Set this to a non-zero number
+   * only while the consumer actually needs live data — long-lived polls are
+   * a battery / bandwidth burden.
+   *
+   * The interval is restarted from scratch whenever this option changes, so
+   * a caller can flip from `5000` → `null` to stop polling once the resource
+   * reaches a terminal state (e.g. on-chain session moves out of `pending`).
+   */
+  pollIntervalMs?: number | null;
 }
 
 export function useFetch<T = unknown>(
@@ -14,7 +25,7 @@ export function useFetch<T = unknown>(
   options: UseFetchOptions<T> = {}
 ) {
   const [data, setData] = useState<T | null>(null);
-  const { onSuccess, onError, skip = false } = options;
+  const { onSuccess, onError, skip = false, pollIntervalMs } = options;
 
   const [isLoading, setIsLoading] = useState(!skip);
   const [error, setError] = useState<string | null>(null);
@@ -65,11 +76,24 @@ export function useFetch<T = unknown>(
 
   useEffect(() => {
     cancelledRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- execute() drives async setState through the documented data-fetching pattern
     execute();
     return () => {
       cancelledRef.current = true;
     };
   }, [execute]);
+
+  // Polling — opt-in via `pollIntervalMs`. Kept separate from the initial
+  // fetch effect so disabling polling doesn't cancel an in-flight request.
+  // eslint-disable-next-line no-restricted-syntax -- legitimate timer-driven side effect; the `pollIntervalMs` switch is the abstraction
+  useEffect(() => {
+    if (skip) return;
+    if (!pollIntervalMs || pollIntervalMs <= 0) return;
+    const id = setInterval(() => {
+      execute();
+    }, pollIntervalMs);
+    return () => clearInterval(id);
+  }, [execute, pollIntervalMs, skip]);
 
   const refetch = useCallback(() => {
     execute();

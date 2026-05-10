@@ -68,12 +68,6 @@ export const expertSidebarConfig: SidebarConfig = {
         { label: "Withdrawals", href: "/expert/withdrawals", icon: "wallet" },
       ],
     },
-    {
-      label: "Help",
-      items: [
-        { label: "Docs", href: "/docs/experts", icon: "document" },
-      ],
-    },
   ],
 };
 
@@ -127,12 +121,6 @@ export const companySidebarConfig: SidebarConfig = {
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
     },
-    {
-      label: "Help",
-      items: [
-        { label: "Docs", href: "/docs/companies", icon: "document" },
-      ],
-    },
   ],
 };
 
@@ -162,12 +150,6 @@ export const candidateSidebarConfig: SidebarConfig = {
         { label: "My Guilds", href: "/candidate/guilds", icon: "guild-ranks" },
       ],
     },
-    {
-      label: "Help",
-      items: [
-        { label: "Docs", href: "/docs/candidates", icon: "document" },
-      ],
-    },
   ],
 };
 
@@ -180,7 +162,6 @@ export const browseSidebarConfig: SidebarConfig = {
         { label: "Home", href: "/", icon: "home" },
         { label: "Find Jobs", href: "/browse/jobs", icon: "job" },
         { label: "Guilds", href: "/guilds", icon: "guilds" },
-        { label: "Docs", href: "/docs", icon: "document" },
       ],
     },
     {

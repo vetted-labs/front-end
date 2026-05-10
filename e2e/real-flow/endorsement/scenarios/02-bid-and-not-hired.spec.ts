@@ -296,7 +296,7 @@ test("bid and not hired: 3 bids, candidate not hired → 3 slashing records, no 
     // — every application card in this fixture is for "Engineering".
     // We additionally guard against a future positive-only regression
     // by asserting no `^hired$` text pill appears for this row.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByText(new RegExp(guild.name, "i")).first(),

@@ -123,7 +123,7 @@ test("no-commits-expired: zero commits, deadline passes, expireSession → Expir
     // detail route currently). The list renders status pills derived from
     // `proposalOutcome`, so an /rejected/i match is the right smoke check
     // for the expired/no-commits path.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/rejected/i).first()).toBeVisible({
       timeout: 10_000,
     });

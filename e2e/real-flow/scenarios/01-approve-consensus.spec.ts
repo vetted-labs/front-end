@@ -154,7 +154,7 @@ test("approve consensus: 3 panelists reveal high → approved", async ({
     // The candidate dashboard exposes an applications list page (no per-id
     // detail route currently). The list renders status pills derived from
     // `proposalOutcome`, so an /approved/i match is the right smoke check.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/approved/i).first()).toBeVisible({
       timeout: 10_000,
     });

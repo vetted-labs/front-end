@@ -40,7 +40,13 @@ import { testApi } from "./helpers/backend";
 import { signupCandidate } from "../helpers/auth";
 
 export type Expert = Wallet & { id: string; guildId: string };
-export type Candidate = { email: string; password: string; page: Page };
+export type Candidate = {
+  email: string;
+  password: string;
+  token: string;
+  candidateId: string;
+  page: Page;
+};
 export type Guild = {
   id: string;
   name: string;
@@ -90,20 +96,53 @@ async function seedExperts(
   guild: Guild,
 ): Promise<Expert[]> {
   const experts: Expert[] = [];
+  // GuildRegistry.{createGuild,addMember} are onlyOwner — sign with anvil account 0 (deployer/owner).
+  const owner = makeWallet(ANVIL_KEYS[0]);
+
+  // Ensure on-chain guild exists. Idempotent: catch GuildAlreadyExists if a
+  // prior run (or SetupTestingGuild.s.sol) already created it.
+  try {
+    await contracts.guildRegistry.write.createGuild(
+      [guild.on_chain_guild_id, guild.name, 10n * 10n ** 18n, 0n],
+      { account: owner.client.account },
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/GuildAlreadyExists/.test(msg)) throw err;
+  }
+
   for (let i = 1; i <= 4; i++) {
     const w = makeWallet(ANVIL_KEYS[i]);
     const stakeAmount = 10n * 10n ** 18n;
 
+    // ExpertStaking.stake reverts NotGuildMember unless GuildRegistry.addMember
+    // ran first. Owner-only on-chain step before approve/stake.
+    // Idempotent: tolerate AlreadyMember from prior runs against the same anvil.
+    try {
+      await contracts.guildRegistry.write.addMember(
+        [guild.on_chain_guild_id, w.address],
+        { account: owner.client.account },
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/AlreadyMember/.test(msg)) throw err;
+    }
     // On-chain: approve VETD -> stake. Pass the bytes32 guild id as the
     // hex string the BE returns; do NOT BigInt() it.
     await contracts.vettedToken.write.approve(
       [contracts.expertStaking.address, stakeAmount],
       { account: w.client.account },
     );
-    await contracts.expertStaking.write.stake(
-      [guild.on_chain_guild_id, stakeAmount],
-      { account: w.client.account },
-    );
+    // Idempotent stake: skip when already staked >= target amount.
+    try {
+      await contracts.expertStaking.write.stake(
+        [guild.on_chain_guild_id, stakeAmount],
+        { account: w.client.account },
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/AlreadyStaked|ExceedsMaxStake/i.test(msg)) throw err;
+    }
 
     // BE: register expert as approved + linked to guild.
     const seeded = await testApi.seedExpert(request, {
@@ -197,8 +236,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   // Test-scoped: fresh candidate account, signed in. Wraps the existing
   // `signupCandidate` helper and re-exposes the page alongside creds.
+  // Depends on `experts` so the worker-scoped DB reset (inside `guild`/
+  // `experts` setup) finishes BEFORE we sign up — otherwise the truncate
+  // wipes the freshly created candidate row.
   candidate: [
-    async ({ page }, use) => {
+    async ({ page, experts: _experts }, use) => {
       const creds = await signupCandidate(page);
       await use({ ...creds, page });
     },

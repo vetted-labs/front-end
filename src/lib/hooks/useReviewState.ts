@@ -2,7 +2,11 @@
 
 import { useMemo } from "react";
 import { useFetch } from "./useFetch";
-import { reviewsApi, type ReviewStateResponse } from "@/lib/api";
+import {
+  reviewsApi,
+  type ReviewStateResponse,
+  type BlockchainSessionInfo,
+} from "@/lib/api";
 
 /**
  * Legacy discriminated-union response shape. `useReviewState` still returns
@@ -41,6 +45,15 @@ export interface ReviewStateEnvelope {
    * and fall back to other UI gates.
    */
   isAssignedReviewer: boolean | null;
+  /**
+   * On-chain session creation lifecycle. Drives the modal banner: while
+   * `pending` we show "Preparing on-chain session…", on `failed`/`abandoned`
+   * we swap to an error + retry surface, and on `created` we hide the banner.
+   * Phase 3 hardening — older BE deployments that don't return this object
+   * surface as `null`, in which case the FE falls back to the legacy
+   * `blockchainSessionCreated` boolean prop.
+   */
+  blockchainSession: BlockchainSessionInfo | null;
 }
 
 /**
@@ -61,6 +74,7 @@ function toEnvelope(state: ReviewStateResponse | null): ReviewStateEnvelope {
       onChainCommitTxHash: null,
       votingPhase: null,
       isAssignedReviewer: null,
+      blockchainSession: null,
     };
   }
   // Spread to read additive fields without coercing the discriminated union.
@@ -72,6 +86,7 @@ function toEnvelope(state: ReviewStateResponse | null): ReviewStateEnvelope {
     onChainCommitTxHash?: string | null;
     votingPhase?: string | null;
     isAssignedReviewer?: boolean | null;
+    blockchainSession?: BlockchainSessionInfo | null;
   };
 
   // Legacy → envelope synthesis: derive booleans from `kind` so the modal can
@@ -87,6 +102,7 @@ function toEnvelope(state: ReviewStateResponse | null): ReviewStateEnvelope {
     onChainCommitTxHash: raw.onChainCommitTxHash ?? legacyCommitTxHash,
     votingPhase: raw.votingPhase ?? null,
     isAssignedReviewer: raw.isAssignedReviewer ?? null,
+    blockchainSession: raw.blockchainSession ?? null,
   };
 }
 
@@ -109,11 +125,20 @@ function toEnvelope(state: ReviewStateResponse | null): ReviewStateEnvelope {
 export function useReviewState(
   flow: "proposal" | "guildApplication",
   id: string,
-  options?: { skip?: boolean },
+  options?: {
+    skip?: boolean;
+    /**
+     * Optional polling interval. The modal sets this to ~5000ms while the
+     * on-chain session is still being created so the banner reflects cron
+     * progress without forcing a remount. Pass `null` (default) to disable.
+     */
+    pollIntervalMs?: number | null;
+  },
 ) {
   const api = flow === "proposal" ? reviewsApi.proposal : reviewsApi.guildApplication;
   const fetch = useFetch<ReviewState>(() => api.getState(id), {
     skip: options?.skip,
+    pollIntervalMs: options?.pollIntervalMs ?? null,
   });
 
   // Memoize so the modal can put `envelope` into useMemo deps without

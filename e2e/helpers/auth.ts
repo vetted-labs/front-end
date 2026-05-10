@@ -1,42 +1,75 @@
-import { Page, expect } from "@playwright/test";
+import { Page } from "@playwright/test";
 
 interface CandidateCredentials {
   email: string;
   password: string;
+  token: string;
+  candidateId: string;
 }
+
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
 
 // Expert session helpers moved to ./expert-auth.ts
 
 /**
  * Creates a fresh candidate account with a unique email.
- * Returns credentials for re-login.
+ *
+ * Hits the BE signup API directly + writes the resulting auth state into
+ * localStorage. Skips the FE signup form to avoid coupling tests to its
+ * required-field set + button-disabled state machine. Faster and more
+ * deterministic than driving the form.
  */
 export async function signupCandidate(page: Page): Promise<CandidateCredentials> {
   const timestamp = Date.now();
   const email = `e2e-${timestamp}@vetted-test.com`;
   const password = "TestPass123!";
 
-  await page.goto("/auth/signup?type=candidate", { waitUntil: "networkidle" });
+  // Land on the app first so localStorage writes target the right origin.
+  await page.goto("/auth/signup?type=candidate", { waitUntil: "domcontentloaded" });
 
-  // Wait for React to hydrate and render the form
-  await page.getByPlaceholder("John Doe").waitFor({ state: "visible", timeout: 30000 });
+  // Hit the candidate signup endpoint directly.
+  const res = await page.request.post(`${BACKEND_URL}/api/candidates`, {
+    data: {
+      fullName: `E2E User ${timestamp}`,
+      email,
+      password,
+      phone: "",
+      headline: "E2E Tester",
+      experienceLevel: "mid",
+      socialLinks: [
+        {
+          platform: "linkedin",
+          label: "LinkedIn",
+          url: `https://linkedin.com/in/e2e-${timestamp}`,
+        },
+      ],
+    },
+  });
+  if (!res.ok()) {
+    throw new Error(`signupCandidate failed: ${res.status()} ${await res.text()}`);
+  }
+  const body = (await res.json()) as {
+    data: {
+      token: string;
+      refreshToken?: string;
+      candidate: { id: string; email: string };
+    };
+  };
+  const { token, refreshToken, candidate } = body.data;
 
-  // Fill signup form
-  await page.getByPlaceholder("John Doe").fill(`E2E User ${timestamp}`);
-  await page.getByPlaceholder("Senior Software Engineer").fill("E2E Tester");
-  await page.getByPlaceholder("you@example.com").fill(email);
+  // Mirror what the FE's auth.login() writes so guarded routes work.
+  await page.evaluate(
+    ({ token, refreshToken, candidate }) => {
+      localStorage.setItem("authToken", token);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userType", "candidate");
+      localStorage.setItem("candidateId", candidate.id);
+      localStorage.setItem("candidateEmail", candidate.email);
+    },
+    { token, refreshToken, candidate },
+  );
 
-  // Password fields
-  await page.getByPlaceholder("Min. 6 characters").fill(password);
-  await page.getByPlaceholder("Repeat password").fill(password);
-
-  // Submit
-  await page.getByRole("button", { name: "Create Account" }).click();
-
-  // Wait for redirect to candidate profile
-  await page.waitForURL("**/candidate/dashboard", { timeout: 15000 });
-
-  return { email, password };
+  return { email, password, token, candidateId: candidate.id };
 }
 
 /**
@@ -47,7 +80,7 @@ export async function loginCandidate(
   email: string,
   password: string,
 ): Promise<void> {
-  await page.goto("/auth/login?type=candidate", { waitUntil: "networkidle" });
+  await page.goto("/auth/login?type=candidate", { waitUntil: "domcontentloaded" });
 
   // Wait for React to hydrate
   await page.getByPlaceholder("you@example.com").waitFor({ state: "visible", timeout: 30000 });

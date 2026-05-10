@@ -8,11 +8,15 @@ import { toast } from "sonner";
 import { useAccount, useChainId, usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { ApiError, expertApi, reviewsApi, extractApiError } from "@/lib/api";
-import type { ReviewSubmitPayload as OnChainReviewSubmitPayload } from "@/lib/api";
+import type {
+  ReviewSubmitPayload as OnChainReviewSubmitPayload,
+  BlockchainSessionInfo,
+} from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useVettingManager } from "@/lib/hooks/useVettedContracts";
 import { useReviewState } from "@/lib/hooks/useReviewState";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
+import { useApi } from "@/lib/hooks/useFetch";
 import { getTransactionErrorMessage, isUserRejection } from "@/lib/blockchain";
 import { type OnChainStatus } from "@/components/reviews/OnChainStatusBanner";
 import { CommitFlowPanel } from "@/components/reviews/CommitFlowPanel";
@@ -339,7 +343,12 @@ export function ReviewGuildApplicationModal({
   const walletMatches = !!(
     expertWallet && address && address.toLowerCase() === expertWallet.toLowerCase()
   );
-  const sessionReady = !!blockchainSessionId && !!blockchainSessionCreated;
+  // `sessionReady` originally read straight from the legacy
+  // `blockchainSessionCreated` prop. Phase 3 hardening also accepts the
+  // BE-derived status from the review-state envelope so we hide the banner
+  // as soon as the cron finishes, even without a parent re-render.
+  // (The envelope check is hoisted further down once `reviewState` is in scope —
+  // we expose `sessionReady` again right after that hook call.)
 
   // ─── Draft hydration on mount: load any prior draft from the server ────
   // This is the crash-recovery hook. We only run it for live, non-practice
@@ -381,11 +390,80 @@ export function ReviewGuildApplicationModal({
   // ─── Crash recovery: if the BE state says "committed", show success ────
   // Skipped in practice/story flows — those use synthetic ids that don't
   // exist on the backend.
+  //
+  // Phase 3 hardening: we poll the review-state envelope every 5s while the
+  // modal is open and the most-recently observed on-chain session status is
+  // not yet terminal. The latest status is mirrored into local state below
+  // (after `useReviewState` runs), and the polling predicate reads that
+  // value via state — never via a ref during render.
+  const [latestSessionStatus, setLatestSessionStatus] = useState<
+    "pending" | "created" | "failed" | "abandoned" | null
+  >(null);
+  const SESSION_POLL_INTERVAL_MS = 5000;
+  const shouldPollSession =
+    isOpen &&
+    !!application?.id &&
+    !isPracticeMode &&
+    !isStoryLabPreview &&
+    latestSessionStatus !== "created" &&
+    latestSessionStatus !== "failed" &&
+    latestSessionStatus !== "abandoned";
   const reviewState = useReviewState(
     "guildApplication",
     application?.id ?? "",
-    { skip: !application?.id || isPracticeMode || isStoryLabPreview }
+    {
+      skip: !application?.id || isPracticeMode || isStoryLabPreview,
+      pollIntervalMs: shouldPollSession ? SESSION_POLL_INTERVAL_MS : null,
+    }
   );
+  // Mirror the latest envelope status into state so the polling predicate
+  // can read it without touching a ref during render.
+  // eslint-disable-next-line no-restricted-syntax -- prop->state mirror; the polling predicate must observe terminal statuses on the *next* render
+  useEffect(() => {
+    const next = reviewState.envelope.blockchainSession?.status ?? null;
+    if (next !== latestSessionStatus) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror BE-derived status into local state so the polling predicate reads it on the next render; this is the canonical "external state → React state" sync
+      setLatestSessionStatus(next);
+    }
+  }, [reviewState.envelope.blockchainSession?.status, latestSessionStatus]);
+
+  // ─── Resolved session-ready signal (Phase 3) ──────────────────────────
+  // The legacy `blockchainSessionCreated` prop is forwarded by the parent and
+  // updates on parent refetch; the envelope's `blockchainSession.status` is
+  // refreshed by polling here. Either signal is sufficient to declare the
+  // on-chain session usable.
+  const blockchainSession = reviewState.envelope.blockchainSession;
+  const sessionReady =
+    !!blockchainSessionId &&
+    (!!blockchainSessionCreated || blockchainSession?.status === "created");
+
+  // Track when the modal mounted so we can show a "taking longer than usual"
+  // warning if the session has stayed `pending` for >180s.
+  const [modalMountedAt, setModalMountedAt] = useState<number | null>(null);
+  // eslint-disable-next-line no-restricted-syntax -- capture mount time on open transitions; resets when application id or open state changes
+  useEffect(() => {
+    if (!isOpen || isPracticeMode || isStoryLabPreview) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset mount-clock when the modal closes
+      setModalMountedAt(null);
+      return;
+    }
+    setModalMountedAt(Date.now());
+  }, [isOpen, isPracticeMode, isStoryLabPreview, application?.id]);
+  // Re-render trigger so the warning surfaces without a user input. The
+  // interval below ticks once per second while polling — cheap, runs only
+  // while the modal is open + status is `pending`.
+  const [now, setNow] = useState<number>(() => Date.now());
+  // eslint-disable-next-line no-restricted-syntax -- timer-driven banner threshold; bound to polling state
+  useEffect(() => {
+    if (!shouldPollSession) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [shouldPollSession]);
+  const sessionPendingForMs =
+    blockchainSession?.status === "pending" && modalMountedAt !== null
+      ? now - modalMountedAt
+      : 0;
+  const showSessionSlowWarning = sessionPendingForMs > 180_000;
 
   // eslint-disable-next-line no-restricted-syntax -- body overflow side-effect tied to open state
   useEffect(() => {
@@ -426,6 +504,8 @@ export function ReviewGuildApplicationModal({
     setDraftSaveStatus({ kind: "idle" });
     lastSeenModifiedRef.current = null;
     conflictCycleRef.current = 0;
+    // The mount-clock used for the >180s session-slow warning is reset by a
+    // dedicated effect keyed on (isOpen, application.id) — see above.
   }, [application?.id, isOpen]);
 
   // eslint-disable-next-line no-restricted-syntax -- sync stake from parent prop
@@ -891,6 +971,10 @@ export function ReviewGuildApplicationModal({
   // Banner state shown above the on-chain commit submit button.
   // Reads the envelope so older `kind: "committed"` responses and newer
   // `hasCommittedReview` envelopes are both handled in one branch.
+  // Phase 3 hardening: when the BE reports the on-chain session as
+  // failed/abandoned we render the SessionFailureBanner instead of the
+  // CommitFlowPanel; here the regular `banner` stays in `preparing_session`
+  // so the rest of the form (locked/disabled state) keeps behaving as before.
   const banner: OnChainStatus = useMemo(() => {
     if (reviewState.envelope.hasCommittedReview) {
       return {
@@ -907,6 +991,41 @@ export function ReviewGuildApplicationModal({
     sessionReady,
     submitState,
   ]);
+
+  // Phase 3 hardening: derive a single "session creation failed" predicate
+  // off the envelope so the banner state machine below has a single source
+  // of truth. Falls back to the legacy preparing-session banner when the BE
+  // hasn't returned the new field (older deployments).
+  const sessionCreationFailed =
+    isCommitPhase &&
+    !sessionReady &&
+    !!blockchainSession &&
+    (blockchainSession.status === "failed" || blockchainSession.status === "abandoned");
+
+  // Imperative retry handler. POSTs to the new BE endpoint; on success we
+  // refetch the review-state envelope so the banner flips back to pending.
+  const sessionRetryApi = useApi<BlockchainSessionInfo>();
+  const handleRetrySessionCreation = useCallback(async () => {
+    if (!application?.id) return;
+    const result = await sessionRetryApi.execute(
+      () => reviewsApi.guildApplication.retrySession(application.id),
+      {
+        onSuccess: () => {
+          toast.success("On-chain session retry queued");
+          // Reset the >180s timer — operator restarted the cron; give it a
+          // fresh window before warning again.
+          setModalMountedAt(Date.now());
+          // Pull the fresh envelope (status will flip back to `pending`,
+          // which re-engages polling via the predicate above).
+          reviewState.refetch();
+        },
+        onError: (msg) => {
+          toast.error(msg || "Could not retry session creation");
+        },
+      },
+    );
+    return result;
+  }, [application, sessionRetryApi, reviewState]);
 
   // Envelope-driven gates. We only act on `false` for `isAssignedReviewer` —
   // older BE versions don't populate it and we surface them as `null`, which
@@ -1809,12 +1928,36 @@ export function ReviewGuildApplicationModal({
                     {banner.kind === "ready" && !isConfirmOpen && (
                       <CommitRevealExplainer />
                     )}
+                    {/* Phase 3: cron-driven session creation failed or was
+                        abandoned. Replace the spinner with an actionable
+                        error + retry surface so reviewers aren't stuck. */}
+                    {sessionCreationFailed && blockchainSession && (
+                      <SessionFailureBanner
+                        info={blockchainSession}
+                        onRetry={handleRetrySessionCreation}
+                        isRetrying={sessionRetryApi.isLoading}
+                      />
+                    )}
+                    {/* Phase 3: stuck-pending warning. Surfaced under the
+                        normal preparing banner once the cron has been
+                        chewing on this for >3 minutes. */}
+                    {!sessionCreationFailed &&
+                      banner.kind === "preparing_session" &&
+                      showSessionSlowWarning && (
+                        <Alert variant="warning">
+                          Session creation is taking longer than usual. The
+                          on-chain transaction may be congested.
+                        </Alert>
+                      )}
                     {/* Once the on-chain commit confirms, ReviewSuccessStep
                         (step 4) becomes the single source of truth for the
                         success view — suppress the CommitFlowPanel's inline
                         SuccessCard so the user doesn't see two stacked
-                        confirmations during the brief transition. */}
-                    {banner.kind !== "confirmed" && (
+                        confirmations during the brief transition.
+                        We also suppress the panel entirely when session
+                        creation has failed — the SessionFailureBanner above
+                        owns the surface. */}
+                    {banner.kind !== "confirmed" && !sessionCreationFailed && (
                       <CommitFlowPanel
                         status={banner}
                         confirmState={
@@ -1934,5 +2077,75 @@ export function ReviewGuildApplicationModal({
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Phase 3: session-creation failure banner ───────────────────────────
+// Rendered above the CommitFlowPanel when the BE reports the on-chain
+// `create_vetting_session` op as failed/abandoned. Covers three concerns:
+//   1. Tell the user what failed (errorCode + raw message).
+//   2. For known stake-related codes, add a hint that this is a backend
+//      issue and not the reviewer's mistake.
+//   3. Offer a "Retry session creation" button that POSTs to
+//      `/api/experts/guild-applications/:id/retry-session`.
+//
+// Implementation note: we deliberately use the shared `<Alert>` primitive
+// rather than building a bespoke surface (per project CLAUDE.md). The retry
+// button lives inside the alert body as a small inline action.
+const SESSION_FAILURE_KNOWN_HINTS: Record<string, string> = {
+  InsufficientUnlockedStake:
+    "Reviewer panel could not be locked on-chain. Please contact support — this is a backend issue, not your fault.",
+  NotGuildMember:
+    "Reviewer panel could not be locked on-chain. Please contact support — this is a backend issue, not your fault.",
+  InsufficientPanelistStake:
+    "Reviewer panel could not be locked on-chain. Please contact support — this is a backend issue, not your fault.",
+};
+
+function SessionFailureBanner({
+  info,
+  onRetry,
+  isRetrying,
+}: {
+  info: BlockchainSessionInfo;
+  onRetry: () => void | Promise<unknown>;
+  isRetrying: boolean;
+}) {
+  const codeLabel = info.errorCode || "Unknown error";
+  const knownHint = info.errorCode ? SESSION_FAILURE_KNOWN_HINTS[info.errorCode] : undefined;
+  return (
+    <Alert variant="error">
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold">
+            On-chain session creation {info.status === "abandoned" ? "abandoned" : "failed"}
+          </span>
+          <code className="px-1.5 py-0.5 text-xs rounded bg-destructive/15 font-mono">
+            {codeLabel}
+          </code>
+          {info.attemptCount > 0 && (
+            <span className="text-xs opacity-70">
+              ({info.attemptCount} {info.attemptCount === 1 ? "attempt" : "attempts"})
+            </span>
+          )}
+        </div>
+        {info.errorMessage && (
+          <p className="text-xs break-words opacity-80">{info.errorMessage}</p>
+        )}
+        {knownHint && <p className="text-xs">{knownHint}</p>}
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              void onRetry();
+            }}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border hover:border-destructive/40 hover:text-destructive text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-3 h-3 ${isRetrying ? "animate-spin" : ""}`} />
+            {isRetrying ? "Retrying…" : "Retry session creation"}
+          </button>
+        </div>
+      </div>
+    </Alert>
   );
 }

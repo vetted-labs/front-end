@@ -266,7 +266,7 @@ test("performance issue (no dispute): hire → reportPerformanceIssue → all 3 
     // The closest stable smoke check is asserting the list page loaded and
     // the row for our application is visible (by guild name). Mirrors
     // scenario 01.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(
       page.getByText(new RegExp(guild.name, "i")).first(),
     ).toBeVisible({ timeout: 10_000 });

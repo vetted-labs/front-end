@@ -104,7 +104,7 @@ test("single-vote-expired: only 1 expert commits, deadline passes, expireSession
     // The candidate applications list renders status pills derived from
     // `proposalOutcome`. BE writes `rejected` for expired/non-quorum
     // sessions, so we match `/rejected/i` first.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/rejected/i).first()).toBeVisible({
       timeout: 10_000,
     });

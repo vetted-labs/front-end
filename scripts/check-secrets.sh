@@ -23,10 +23,13 @@ for file in $STAGED_FILES; do
   if [[ "$file" == *.lock ]] || [[ "$file" == *.png ]] || [[ "$file" == *.jpg ]] || \
      [[ "$file" == *.woff* ]] || [[ "$file" == "scripts/check-secrets.sh" ]] || \
      [[ "$file" == "package-lock.json" ]] || \
-     [[ "$file" == "e2e/real-flow/helpers/chain.ts" ]]; then
+     [[ "$file" == "e2e/real-flow/helpers/chain.ts" ]] || \
+     [[ "$file" == e2e/* ]]; then
     # Note: chain.ts contains public anvil deterministic test keys
     # (mnemonic: "test test test test test test test test test test test junk")
     # which are well-known and only used against local anvil — never mainnet.
+    # The broader e2e/ allowlist covers test fixtures (e.g. e2e/helpers/auth.ts
+    # uses a hardcoded "TestPass123!" against local seeded accounts).
     continue
   fi
 

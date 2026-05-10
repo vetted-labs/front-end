@@ -154,7 +154,7 @@ test("reject consensus: 3 panelists reveal low → rejected", async ({
     // The candidate dashboard exposes an applications list page (no per-id
     // detail route currently). The list renders status pills derived from
     // `proposalOutcome`, so an /rejected/i match is the right smoke check.
-    await page.goto(`/candidate/applications`, { waitUntil: "networkidle" });
+    await page.goto(`/candidate/applications`, { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/rejected/i).first()).toBeVisible({
       timeout: 10_000,
     });
