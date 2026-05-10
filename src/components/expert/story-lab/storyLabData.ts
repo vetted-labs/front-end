@@ -749,11 +749,11 @@ export const STORY_LAB_STEPS: StoryLabStep[] = [
         fallbackTarget: TOUR_TARGETS.practiceReviewCommitReveal,
         placement: "top",
         eyebrow: "Skin in the game",
-        title: "Stake VETD on your score",
+        title: "Your guild stake backs this review",
         body:
-          "Staking ties your reputation and tokens to this review. Aligned scores grow your stake; out-of-step ones shrink it. The minimum is set by the guild.",
+          "You're eligible to review because of your one-time guild stake — there's no per-review stake input. Outcome is computed from rubric scores via IQR consensus across all assigned reviewers.",
         detail:
-          "The field is pre-filled at the minimum so you can submit without thinking about the amount.",
+          "Per-candidate endorsement staking is a separate optional flow if you want to back a hire post-consensus.",
       },
       {
         id: "commit-button",

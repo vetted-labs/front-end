@@ -1,7 +1,6 @@
 "use client";
 
-import { Coins, AlertCircle, ChevronRight } from "lucide-react";
-import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
+import { AlertCircle, ChevronRight } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import {
   JUSTIFICATION_MIN_CHARS,
@@ -232,9 +231,6 @@ function truncate(str: string, max: number): string {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export interface ReviewSubmitSectionProps {
-  proposalContext?: { requiredStake: number };
-  stakeAmount: number;
-  onStakeAmountChange: (value: number) => void;
   /**
    * Validation issues to surface above the submit button. When non-empty the
    * modal should keep the submit button disabled.
@@ -249,110 +245,62 @@ export interface ReviewSubmitSectionProps {
 }
 
 /**
- * Renders the staking input shown in step 3 for proposal votes, plus an
- * inline error list with "go to" links for any pending validation issues.
+ * Renders an inline error list with "go to" links for any pending validation
+ * issues. The legacy per-review stake input was removed: review eligibility
+ * comes from a one-time guild stake (see `EligibilityNote`), and per-candidate
+ * staking is handled by a separate endorsement flow that runs post-consensus.
  */
 export function ReviewSubmitSection({
-  proposalContext,
-  stakeAmount,
-  onStakeAmountChange,
   issues,
   onJumpToIssue,
 }: ReviewSubmitSectionProps) {
   const hasIssues = (issues?.length ?? 0) > 0;
+  if (!hasIssues) return null;
 
   return (
     <div className="mt-6 space-y-4">
-      {hasIssues && (
-        <div
-          className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4`}
-          role="alert"
-          aria-live="polite"
-        >
-          <div className="flex items-start gap-3">
-            <AlertCircle
-              className={`w-4 h-4 ${STATUS_COLORS.negative.icon} mt-0.5 shrink-0`}
-              aria-hidden="true"
-            />
-            <div className="flex-1 min-w-0 space-y-2">
-              <p className={`text-sm font-bold ${STATUS_COLORS.negative.text}`}>
-                Cannot submit: {summarizeIssues(issues!)}
-              </p>
-              <ul className="space-y-1.5">
-                {issues!.map((issue) => (
-                  <li
-                    key={issue.id}
-                    className="flex items-start gap-2 text-xs text-foreground"
+      <div
+        className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} p-4`}
+        role="alert"
+        aria-live="polite"
+      >
+        <div className="flex items-start gap-3">
+          <AlertCircle
+            className={`w-4 h-4 ${STATUS_COLORS.negative.icon} mt-0.5 shrink-0`}
+            aria-hidden="true"
+          />
+          <div className="flex-1 min-w-0 space-y-2">
+            <p className={`text-sm font-bold ${STATUS_COLORS.negative.text}`}>
+              Cannot submit: {summarizeIssues(issues!)}
+            </p>
+            <ul className="space-y-1.5">
+              {issues!.map((issue) => (
+                <li
+                  key={issue.id}
+                  className="flex items-start gap-2 text-xs text-foreground"
+                >
+                  <span className="text-muted-foreground/60 mt-0.5">•</span>
+                  <span className="flex-1">{issue.message}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onJumpToIssue) {
+                        onJumpToIssue(issue);
+                      } else {
+                        focusFirstError(issue.anchorId);
+                      }
+                    }}
+                    className={`shrink-0 inline-flex items-center gap-0.5 text-xs font-semibold ${STATUS_COLORS.negative.text} hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 rounded`}
                   >
-                    <span className="text-muted-foreground/60 mt-0.5">•</span>
-                    <span className="flex-1">{issue.message}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onJumpToIssue) {
-                          onJumpToIssue(issue);
-                        } else {
-                          focusFirstError(issue.anchorId);
-                        }
-                      }}
-                      className={`shrink-0 inline-flex items-center gap-0.5 text-xs font-semibold ${STATUS_COLORS.negative.text} hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 rounded`}
-                    >
-                      Go to
-                      <ChevronRight className="w-3 h-3" aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                    Go to
+                    <ChevronRight className="w-3 h-3" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      )}
-
-      {proposalContext ? (
-        <div
-          className="rounded-xl border border-border bg-muted/20 p-6 space-y-3"
-          {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
-        >
-          <h4 className="text-sm font-bold text-foreground tracking-wide uppercase flex items-center gap-2">
-            <Coins className="w-4 h-4 text-primary" />
-            Stake VETD
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            Enter the amount of VETD tokens to stake on this vote. Minimum: {proposalContext.requiredStake} VETD.
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={proposalContext.requiredStake}
-              step={1}
-              value={stakeAmount}
-              onChange={(e) => onStakeAmountChange(Math.max(0, Number(e.target.value)))}
-              className="w-40 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              placeholder={`Min ${proposalContext.requiredStake}`}
-            />
-            <span className="text-sm text-muted-foreground font-medium">VETD</span>
-          </div>
-        </div>
-      ) : (
-        // Practice / candidate review (no proposalContext): keep a stable
-        // tour anchor so the story-lab "Stake VETD on your score" stop has
-        // something to highlight. Without this the marker only existed in
-        // proposal-vote mode and the tour hung on "Loading…" in practice.
-        <div
-          className="rounded-xl border border-dashed border-border bg-muted/10 p-4 space-y-2"
-          {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
-        >
-          <h4 className="text-xs font-bold text-foreground tracking-wide uppercase flex items-center gap-2">
-            <Coins className="w-4 h-4 text-primary" />
-            Stake VETD on your score
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            Real assignments require staking VETD. Aligned scores grow your
-            stake; out-of-step ones shrink it. The minimum is set by the guild —
-            no stake is taken in this practice run.
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

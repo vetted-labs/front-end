@@ -27,6 +27,7 @@ import { StepIndicator } from "@/components/guild/review/StepIndicator";
 import { ReviewSuccessStep } from "@/components/guild/review/ReviewSuccessStep";
 import { ReviewSubmitSection } from "@/components/guild/review/ReviewSubmitSection";
 import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
+import { EligibilityNote } from "@/components/guild/review/EligibilityNote";
 import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
 import { GENERAL_RESPONSE_KEY_MAP, FALLBACK_GENERAL_QUESTIONS } from "@/components/guild/review/constants";
@@ -1717,15 +1718,59 @@ export function ReviewGuildApplicationModal({
 
           {/* Header */}
           <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">
-                {isPracticeMode ? "Practice Review" : proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {isPracticeMode || isStoryLabPreview
-                  ? "Sandbox practice sample / synthetic applicant"
-                  : reviewTypeProp === "candidate" ? "Candidate application review" : "Expert membership review"}
-              </p>
+            <div className="flex items-center gap-4">
+              {/* Variant-tinted head icon: sky for candidate review, gold for
+                  expert membership review. Matches the mock's head-icon
+                  styling and gives the user an at-a-glance signal of which
+                  flow they're in. */}
+              <div
+                className={`hidden sm:flex w-12 h-12 rounded-xl items-center justify-center shrink-0 border ${
+                  reviewTypeProp === "candidate"
+                    ? "bg-info/10 border-info/25 text-info"
+                    : "bg-warning/10 border-warning/25 text-warning"
+                }`}
+                aria-hidden="true"
+              >
+                {reviewTypeProp === "candidate" ? (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <line x1="20" y1="8" x2="20" y2="14" />
+                    <line x1="23" y1="11" x2="17" y2="11" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5 flex items-center gap-2">
+                  <span>
+                    {isPracticeMode
+                      ? "Practice review"
+                      : reviewTypeProp === "candidate"
+                        ? "Candidate review"
+                        : "Expert application"}
+                  </span>
+                  {!isPracticeMode && reviewTypeProp !== "candidate" && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] bg-warning/10 border border-warning/25 text-warning">
+                      Members only
+                    </span>
+                  )}
+                </p>
+                <h2 className="text-xl font-bold text-foreground">
+                  {isPracticeMode ? "Practice Review" : proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {isPracticeMode || isStoryLabPreview
+                    ? "Sandbox practice sample / synthetic applicant"
+                    : reviewTypeProp === "candidate"
+                      ? "Outcome is computed from rubric scores via IQR consensus across all reviewers."
+                      : "Membership outcome is computed from rubric scores via IQR consensus across all assigned members."}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {/* Save indicator — surfaces the auto-save state machine so the
@@ -2001,11 +2046,21 @@ export function ReviewGuildApplicationModal({
                   aria-disabled={formLocked || undefined}
                   className={formLocked ? "opacity-60 pointer-events-none" : undefined}
                 >
-                  <ReviewSubmitSection
-                    proposalContext={proposalContext}
-                    stakeAmount={stakeAmount}
-                    onStakeAmountChange={setStakeAmount}
-                  />
+                  {/* Eligibility note replaces the legacy per-review stake
+                      input. Review eligibility comes from a one-time guild
+                      stake; per-candidate endorsement staking is a separate
+                      optional flow that runs after consensus. The story-lab
+                      tour's old "stake input" stop now anchors here via its
+                      fallback target. */}
+                  <div
+                    className="mt-6"
+                    {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
+                  >
+                    <EligibilityNote
+                      variant={reviewTypeProp === "candidate" ? "candidate" : "expert"}
+                    />
+                  </div>
+                  <ReviewSubmitSection />
                 </fieldset>
               </>
             )}
