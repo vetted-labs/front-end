@@ -12,10 +12,7 @@ import { useAuthContext } from "@/hooks/useAuthContext";
 import { HeroSection } from "./home/HeroSection";
 import { StatsBar } from "./home/StatsBar";
 import { JobBrowser } from "./home/JobBrowser";
-import { PillarsSection } from "./home/PillarsSection";
-import { HowItWorksSection } from "./home/HowItWorksSection";
 import { FeaturedGuildsSection } from "./home/FeaturedGuildsSection";
-import { FinalCtaSection } from "./home/FinalCtaSection";
 import type { Guild, Job } from "@/types";
 
 export function HomePage() {
@@ -93,24 +90,11 @@ export function HomePage() {
         <StatsBar guilds={guildList} jobs={jobs ?? []} />
       )}
 
-      {/* ── 3. Three pillars ───────────────────────────────────────── */}
-      <PillarsSection
-        onJoinAsCandidate={handleJoinAsCandidate}
-        onPostJob={handlePostJob}
-        onJoinAsExpert={handleExpertJoin}
-      />
-
-      {/* ── 4. How it works ────────────────────────────────────────── */}
-      <HowItWorksSection />
-
-      {/* ── 5. Featured guilds ─────────────────────────────────────── */}
+      {/* ── 3. Featured guilds ─────────────────────────────────────── */}
       {featuredGuilds.length > 0 && <FeaturedGuildsSection guilds={featuredGuilds} />}
 
-      {/* ── 6. Job browser (existing) ──────────────────────────────── */}
+      {/* ── 4. Job browser (existing) ──────────────────────────────── */}
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
-
-      {/* ── 7. Final CTA ───────────────────────────────────────────── */}
-      <FinalCtaSection onPostJob={handlePostJob} onJoinAsExpert={handleExpertJoin} />
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="border-t border-border">
