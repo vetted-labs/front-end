@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { GuildDetailView } from "@/components/GuildDetailView";
+import { GuildWorkspacePage } from "@/components/guild/GuildWorkspacePage";
 
 interface GuildPageProps {
   params: Promise<{
@@ -11,8 +11,14 @@ export default async function GuildPage({ params }: GuildPageProps) {
   const { guildId } = await params;
 
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading guild...</div>}>
-      <GuildDetailView guildId={guildId} />
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          Loading workspace…
+        </div>
+      }
+    >
+      <GuildWorkspacePage guildId={guildId} />
     </Suspense>
   );
 }

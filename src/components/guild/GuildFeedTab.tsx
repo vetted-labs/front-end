@@ -32,6 +32,12 @@ interface GuildFeedTabProps {
   isMember: boolean;
   membershipRole?: ExpertRole;
   userType?: "candidate" | "company" | "expert" | null;
+  /**
+   * Feed scope — defaults to "public" (visible to everyone).
+   * Members can switch their workspace tab to "internal" to see
+   * `is_private` posts only. Requires expert auth on the backend.
+   */
+  visibility?: "public" | "internal";
 }
 
 const TAG_OPTIONS: { value: PostTag | "all"; label: string }[] = [
@@ -47,6 +53,7 @@ export function GuildFeedTab({
   isMember,
   membershipRole,
   userType,
+  visibility = "public",
 }: GuildFeedTabProps) {
   const auth = useAuthContext();
   const { isConnected } = useAccount();
@@ -84,9 +91,10 @@ export function GuildFeedTab({
             timeWindow: sortMode === "top" ? timeWindow : undefined,
             page: pg,
             limit,
+            visibility,
           })
           .then((res) => ({ data: res.data, total: res.total })),
-      [guildId, sortMode, tagFilter, timeWindow]
+      [guildId, sortMode, tagFilter, timeWindow, visibility]
     ),
     { limit: 20, skip: guildId === STORY_LAB_GUILD.id }
   );
