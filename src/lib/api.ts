@@ -1069,6 +1069,35 @@ export const guildsApi = {
   // Get a member's recent activity in a guild
   getMemberActivity: (guildId: string, memberId: string) =>
     apiRequest<import("@/types").ExpertActivity[]>(`/api/guilds/${encodeURIComponent(guildId)}/members/${encodeURIComponent(memberId)}/activity`),
+
+  /**
+   * Get the unified member queue for the private workspace surface.
+   *
+   * Returns triaged work items (due_soon / waiting / unclaimed) along with
+   * KPI tile data, stake position, and period stats. Backed by the Phase 5
+   * `GET /guilds/:id/queue` endpoint — callers should empty-state cleanly
+   * when this 404s.
+   */
+  getMemberQueue: (guildId: string, wallet?: string) => {
+    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+    return apiRequest<import("@/types").GuildWorkspaceQueueResponse>(
+      `/api/guilds/${encodeURIComponent(guildId)}/queue${query}`,
+      { requiresAuth: false }
+    );
+  },
+
+  /**
+   * Get governance proposals scoped to a guild for the private workspace
+   * Governance tab. Returns open proposals first, then recently passed.
+   * Falls back to empty array when the Phase 5 endpoint isn't yet wired.
+   */
+  getGovernanceProposals: (guildId: string, wallet?: string) => {
+    const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
+    return apiRequest<import("@/types").GuildWorkspaceProposal[]>(
+      `/api/guilds/${encodeURIComponent(guildId)}/governance/proposals${query}`,
+      { requiresAuth: false }
+    );
+  },
 };
 
 // Helper: build auth headers for feed endpoints.
@@ -1102,6 +1131,7 @@ export const guildFeedApi = {
       timeWindow?: import("@/types").TopTimeWindow;
       page?: number;
       limit?: number;
+      visibility?: "public" | "internal";
     }
   ) => {
     const queryParams = new URLSearchParams();
@@ -1110,6 +1140,7 @@ export const guildFeedApi = {
     if (params?.timeWindow) queryParams.append("timeWindow", params.timeWindow);
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.visibility) queryParams.append("visibility", params.visibility);
     const query = queryParams.toString();
     // Backend returns { success, data: Post[], total }. We use rawEnvelope to
     // skip auto-unwrap so we can access `total` for server-side pagination.
