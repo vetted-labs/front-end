@@ -571,7 +571,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
             </div>
             <div className="text-sm text-muted-foreground">
               {guild.memberCount || 0} members · {guild.openPositions || 0} open roles
-              {kpis && kpis.reputation > 0 && (
+              {(kpiBundle?.periodStats?.reviews ?? 0) > 0 && (
                 <>
                   {" · "}
                   <span>
@@ -583,11 +583,11 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
                   </span>
                 </>
               )}
-              {kpiBundle?.periodStats?.consensusRate != null && (
+              {(kpiBundle?.periodStats?.consensusRate ?? 0) > 0 && (
                 <>
                   {" · "}
                   <strong className="text-positive">
-                    {Math.round(kpiBundle.periodStats.consensusRate)}% consensus rate
+                    {Math.round(kpiBundle!.periodStats.consensusRate)}% consensus rate
                   </strong>
                 </>
               )}
@@ -628,11 +628,14 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           <GuildKpiTile
             label="Active commits"
             value={kpis?.activeCommits ?? 0}
-            sub={
-              kpis
-                ? `${kpis.awaitingReveal ?? 0} awaiting reveal · ${kpis.revealOpen ?? 0} reveal open`
-                : "—"
-            }
+            sub={(() => {
+              if (!kpis) return "—";
+              const parts: string[] = [];
+              if ((kpis.awaitingReveal ?? 0) > 0) parts.push(`${kpis.awaitingReveal} awaiting reveal`);
+              if ((kpis.revealOpen ?? 0) > 0) parts.push(`${kpis.revealOpen} reveal open`);
+              if (parts.length === 0) return (kpis.activeCommits ?? 0) > 0 ? "in flight" : "all clear";
+              return parts.join(" · ");
+            })()}
           />
           <GuildKpiTile
             label="Stake locked"
@@ -647,8 +650,8 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
             label="Pending payouts"
             value={`$${kpis?.pendingPayoutsUsd ?? 0}`}
             sub={
-              kpis?.pendingPayoutReviewCount != null
-                ? `${kpis.pendingPayoutReviewCount} reviews · paid on consensus`
+              (kpis?.pendingPayoutReviewCount ?? 0) > 0
+                ? `${kpis?.pendingPayoutReviewCount} reviews · paid on consensus`
                 : "paid on consensus"
             }
             subTone="positive"

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, Sparkles, Users as UsersIcon } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { guildsApi } from "@/lib/api";
@@ -174,9 +174,8 @@ export function GuildQueueTab({
       <aside className="flex flex-col gap-3.5">
         <SidebarStakeCard data={sidebar.stakePosition} />
         <SidebarPeriodStatsCard data={sidebar.periodStats} />
-        <SidebarStreakCard />
+        <SidebarStreakCard periodStats={sidebar.periodStats} />
         <SidebarChatterCard guildId={guildId} posts={internalChatter} />
-        <SidebarPresenceCard />
       </aside>
     </div>
   );
@@ -338,12 +337,24 @@ function SidebarPeriodStatsCard({ data }: { data?: GuildWorkspacePeriodStats }) 
   );
 }
 
-function SidebarStreakCard() {
+/**
+ * Streak nudge card. Only shows once the reviewer has actually accumulated
+ * reviews in the current period — we don't have a first-class "streak"
+ * counter yet, so we approximate "active" with `reviews >= 3`. When the
+ * dedicated streak endpoint lands, swap the gate to the real value.
+ */
+function SidebarStreakCard({
+  periodStats,
+}: {
+  periodStats?: GuildWorkspacePeriodStats;
+}) {
+  const reviews = periodStats?.reviews ?? 0;
+  if (reviews < 3) return null;
   return (
     <div className="rounded-xl border border-primary/30 bg-gradient-to-b from-primary/[0.10] to-card p-4">
       <div className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-foreground">
         <Zap className="h-3.5 w-3.5 text-primary" />
-        On a 5-review streak
+        On a {reviews}-review streak
       </div>
       <p className="text-xs leading-relaxed text-muted-foreground">
         Keep matching consensus to lock in a streak bonus (+50 rep, +5% fee on the next review).
@@ -369,7 +380,7 @@ function SidebarChatterCard({
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          Internal chatter
+          Guild chatter
         </span>
         <Link
           href={`/expert/guild/${encodeURIComponent(guildId)}?tab=feed`}
@@ -379,7 +390,7 @@ function SidebarChatterCard({
         </Link>
       </div>
       {posts.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No internal posts yet.</p>
+        <p className="text-xs text-muted-foreground">No posts yet.</p>
       ) : (
         <ul className="space-y-3 text-sm">
           {posts.slice(0, 3).map((post, idx) => (
@@ -407,50 +418,8 @@ function SidebarChatterCard({
   );
 }
 
-function SidebarPresenceCard() {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-          <UsersIcon className="h-3 w-3" /> Reviewing nearby
-        </span>
-        <span className="text-[11px] font-semibold text-primary">
-          <Sparkles className="inline h-3 w-3" /> live
-        </span>
-      </div>
-      <ul className="space-y-2 text-xs text-muted-foreground">
-        <PresenceRow tone="positive" name="Aisha K." action="reviewing Modal Labs" age="5m" />
-        <PresenceRow tone="positive" name="Felix B." action="committed Linear · Staff" age="12m" />
-        <PresenceRow tone="warning" name="Chen T." action="away · last review" age="2d" />
-      </ul>
-    </div>
-  );
-}
-
-function PresenceRow({
-  tone,
-  name,
-  action,
-  age,
-}: {
-  tone: "positive" | "warning";
-  name: string;
-  action: string;
-  age: string;
-}) {
-  return (
-    <li className="flex items-center gap-2">
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${
-          tone === "positive" ? "bg-positive" : "bg-warning"
-        }`}
-      />
-      <span>
-        <strong className="text-foreground">{name}</strong> {action} ({age})
-      </span>
-    </li>
-  );
-}
+// SidebarPresenceCard removed — was rendering hardcoded names ("Aisha K." /
+// "Felix B." / "Chen T."). Reintroduce when real presence data lands.
 
 // Re-export types so we can sub-prop without forcing parents to import from
 // the workspace types module.
