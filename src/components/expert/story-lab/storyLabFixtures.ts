@@ -446,13 +446,20 @@ export function getStoryLabReviewModalStep(stepId: string | null): 1 | 2 | 3 | 4
   // page the parent does.
   if (stepId === "review-evidence" || stepId.startsWith("evidence-")) return 1;
   if (stepId === "review-scoring" || stepId.startsWith("scoring-")) return 2;
+  // Domain rubric + red flags + overall feedback live on step 3 (the
+  // scoring + summary sub-step).
   if (
     stepId === "review-red-flags" ||
-    stepId === "review-commit" ||
-    stepId.startsWith("domain-") ||
-    stepId.startsWith("commit-")
+    stepId.startsWith("domain-")
   ) {
     return 3;
+  }
+  // The commit-reveal panel now lives on step 4 (pre-submit confirm).
+  if (
+    stepId === "review-commit" ||
+    stepId.startsWith("commit-")
+  ) {
+    return 4;
   }
   if (stepId === "review-result" || stepId.startsWith("result-")) return 4;
   return null;

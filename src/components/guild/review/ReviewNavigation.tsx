@@ -35,6 +35,15 @@ export interface ReviewNavigationProps {
    * review submit affordance without leaking markers into real flows.
    */
   tourMarkerProps?: Record<string, string>;
+  /**
+   * Step 4 has two modes:
+   *  - `"confirm"`: pre-submit confirmation surface. Footer renders Back +
+   *    Submit (matching step 3's old behaviour). The user has not yet
+   *    submitted and can still revise scores.
+   *  - `"done"`: post-submit receipt. Footer renders a single Done button.
+   * Defaults to `"done"` for back-compat with the legacy success-only flow.
+   */
+  step4Mode?: "confirm" | "done";
 }
 
 export function ReviewNavigation({
@@ -52,6 +61,7 @@ export function ReviewNavigation({
   submitDisabledTooltip,
   confirmingInline = false,
   tourMarkerProps,
+  step4Mode = "done",
 }: ReviewNavigationProps) {
   if (currentStep === 1) {
     return (
@@ -97,11 +107,33 @@ export function ReviewNavigation({
   }
 
   if (currentStep === 3) {
+    // Step 3 is now scoring + summary only. Next advances to step 4 — the
+    // pre-submit confirmation surface that owns the Submit action.
+    return (
+      <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
+        <button
+          onClick={onBack}
+          className="flex-1 py-3 px-4 rounded-xl bg-muted/50 border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
+        >
+          Next
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  // Step 4 — `"done"` is the post-submit receipt; `"confirm"` is the
+  // pre-submit confirmation surface (old step-3 submit behaviour).
+  if (step4Mode === "confirm") {
     const inFlight = isReviewing || isCommitting;
 
-    // When the inline confirmation card / active commit flow owns the surface,
-    // collapse the footer to just Back + a passive hint so the user isn't
-    // presented with two competing submit affordances.
     if (confirmingInline) {
       const hint = isCommitting
         ? "Awaiting on-chain confirmation…"
@@ -169,7 +201,7 @@ export function ReviewNavigation({
     );
   }
 
-  // Step 4
+  // Step 4 done — post-submit receipt
   return (
     <div className="relative flex gap-3 px-6 py-4 border-t border-border bg-card">
       <button

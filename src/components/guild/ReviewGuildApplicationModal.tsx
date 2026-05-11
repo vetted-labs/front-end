@@ -28,7 +28,12 @@ import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
 import { StepIndicator } from "@/components/guild/review/StepIndicator";
 import { VerticalStepRail } from "@/components/guild/review/VerticalStepRail";
 import { ReviewSuccessStep } from "@/components/guild/review/ReviewSuccessStep";
-import { ReviewSubmitSection } from "@/components/guild/review/ReviewSubmitSection";
+import { ReviewConfirmStep } from "@/components/guild/review/ReviewConfirmStep";
+import {
+  ReviewSubmitSection,
+  validateReviewSubmission,
+  type ReviewValidationIssue,
+} from "@/components/guild/review/ReviewSubmitSection";
 import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
 import { EligibilityNote } from "@/components/guild/review/EligibilityNote";
 import { CommitRevealExplainer } from "@/components/expert/CommitRevealExplainer";
@@ -329,6 +334,13 @@ export function ReviewGuildApplicationModal({
 
   const { isActive: isStoryLabPreview, activeSubStopId } = useStoryLabContext();
   const storyLabStep = isStoryLabPreview ? getStoryLabReviewModalStep(activeSubStopId) : null;
+  // Story-lab maps both "review-commit" (confirm view) and "review-result"
+  // (success view) to step 4. Distinguish them so the confirm preview keeps
+  // showing the commit panel and the result preview shows the receipt.
+  const isStoryLabResultPreview =
+    isStoryLabPreview &&
+    (activeSubStopId === "review-result" ||
+      (activeSubStopId?.startsWith("result-") ?? false));
   const renderStep = storyLabStep ?? currentStep;
   const isPracticeMode = mode === "practice";
   const canClose = !forceCompletion || currentStep === 4;
@@ -1067,18 +1079,6 @@ export function ReviewGuildApplicationModal({
     return true;
   };
 
-  const validateStep3 = () => {
-    const missing = topicList
-      .map((t) => t.id)
-      .filter((id: string) => !topicJustifications[id]?.trim());
-    if (missing.length > 0) {
-      setValidationError("Please add a justification for every scored domain topic.");
-      return false;
-    }
-    setValidationError(null);
-    return true;
-  };
-
   // Scored sub-items for rubric steps. We paginate one at a time so footer
   // Next walks through questions before crossing into the next step.
   const scoredGeneralQuestions = generalQuestions.filter(
@@ -1086,6 +1086,80 @@ export function ReviewGuildApplicationModal({
   );
   const generalLastIndex = Math.max(0, scoredGeneralQuestions.length - 1);
   const domainLastIndex = Math.max(0, topicList.length - 1);
+  // The summary sub-step (red flags + overall feedback) lives one past the
+  // last topic. We treat `domainTopicIndex === topicList.length` as the
+  // summary view so paginated topic cards never include step-level concerns.
+  // When there are no domain topics at all, the summary IS the only view —
+  // there's nothing to paginate through.
+  const domainSummaryIndex = topicList.length;
+  const isDomainSummary =
+    currentStep === 3 &&
+    (topicList.length === 0 || domainTopicIndex >= domainSummaryIndex);
+
+  // Step 3 → step 4 validation. Surfaces a rich list of per-field issues so
+  // the user can jump to the offending question/topic instead of guessing
+  // which one of N paginated pages is unfinished.
+  const computeValidationIssues = (): ReviewValidationIssue[] => {
+    const result = validateReviewSubmission({
+      generalQuestions,
+      generalRubricQuestions,
+      generalScores,
+      generalTotals,
+      generalJustifications,
+      topicList,
+      topicScores,
+      topicJustifications,
+      redFlags,
+      generalRedFlags,
+      redFlagDeductions,
+      overallScore,
+      totalMax: (generalMax || 0) + (topicMax || 0),
+    });
+    return result.issues;
+  };
+
+  const validateStep3 = () => {
+    const issues = computeValidationIssues();
+    if (issues.length > 0) {
+      // Single human-readable banner; the full per-field list with "Go to"
+      // links is rendered by ReviewSubmitSection in the confirm step (step 4).
+      const head = issues[0]!;
+      setValidationError(
+        issues.length === 1
+          ? head.message
+          : `${head.message} (+${issues.length - 1} more — see the list below)`,
+      );
+      return false;
+    }
+    setValidationError(null);
+    return true;
+  };
+
+  // Jump-to-issue handler used by ReviewSubmitSection's "Go to" links. The
+  // validation panel lives on step 4 (pre-submit confirm), so clicking "Go to"
+  // sends the user back to the right step + sub-index of the offending field.
+  const handleJumpToIssue = (issue: ReviewValidationIssue) => {
+    setValidationError(null);
+    if (issue.scope === "general") {
+      const idx = scoredGeneralQuestions.findIndex((q) => q.id === issue.anchorId.replace(/^review-field-general-/, ""));
+      setCurrentStep(2);
+      if (idx >= 0) setGeneralQuestionIndex(idx);
+    } else if (issue.scope === "domain") {
+      const topicId = issue.anchorId.replace(/^review-field-domain-/, "");
+      const idx = topicList.findIndex((t) => t.id === topicId);
+      setCurrentStep(3);
+      if (idx >= 0) setDomainTopicIndex(idx);
+    } else {
+      // overall scope — red flags + overall score live on the domain summary
+      // sub-step (one past the last topic).
+      setCurrentStep(3);
+      setDomainTopicIndex(domainSummaryIndex);
+    }
+    requestAnimationFrame(() => {
+      const el = document.getElementById(issue.anchorId);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
 
   const handleNext = () => {
     // Step 2: walk through general-rubric questions one at a time, then
@@ -1097,25 +1171,30 @@ export function ReviewGuildApplicationModal({
         return;
       }
       if (!validateStep2()) return;
-    }
-    // Step 3: walk through domain topics similarly. The final topic is the
-    // commit/submit confirmation surface, so we let ReviewNavigation handle
-    // the submit click on the last topic instead of advancing here.
-    if (currentStep === 3 && domainTopicIndex < domainLastIndex) {
-      setDomainTopicIndex((i) => i + 1);
+      void flushDraftNow();
+      setCurrentStep(3);
+      setDomainTopicIndex(0);
       scrollContentToTop(contentRef.current);
       return;
     }
-    // Force-flush the debounce before transitioning steps so a mid-typing
-    // refresh on the new step doesn't lose the previous step's last edits.
+    // Step 3: walk through domain topics, THEN through the summary sub-step
+    // (red flags + overall feedback), and finally advance to step 4 — the
+    // pre-submit confirmation surface.
+    if (currentStep === 3) {
+      if (domainTopicIndex < domainSummaryIndex) {
+        setDomainTopicIndex((i) => i + 1);
+        scrollContentToTop(contentRef.current);
+        return;
+      }
+      // Already on the summary — validate the full step before advancing.
+      if (!validateStep3()) return;
+      void flushDraftNow();
+      setCurrentStep(4);
+      scrollContentToTop(contentRef.current);
+      return;
+    }
     void flushDraftNow();
-    setCurrentStep((prev) => {
-      const next = Math.min(prev + 1, 3);
-      // Reset sub-indices when entering each rubric step fresh.
-      if (next === 2) setGeneralQuestionIndex(0);
-      if (next === 3) setDomainTopicIndex(0);
-      return next;
-    });
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
     scrollContentToTop(contentRef.current);
   };
 
@@ -1127,7 +1206,7 @@ export function ReviewGuildApplicationModal({
       scrollContentToTop(contentRef.current);
       return;
     }
-    // Step 3: walk back through domain topics before leaving.
+    // Step 3: walk back through domain topics + summary before leaving.
     if (currentStep === 3 && domainTopicIndex > 0) {
       setDomainTopicIndex((i) => i - 1);
       scrollContentToTop(contentRef.current);
@@ -1137,9 +1216,10 @@ export function ReviewGuildApplicationModal({
     setCurrentStep((prev) => {
       const next = Math.max(prev - 1, 1);
       // When stepping back into a rubric step, land on its last question so
-      // forward Next walks the user back through the same sequence.
+      // forward Next walks the user back through the same sequence. For
+      // step 3 we land on the summary sub-step so the user re-confirms it.
       if (next === 2) setGeneralQuestionIndex(generalLastIndex);
-      if (next === 3) setDomainTopicIndex(domainLastIndex);
+      if (next === 3) setDomainTopicIndex(domainSummaryIndex);
       return next;
     });
     scrollContentToTop(contentRef.current);
@@ -1916,8 +1996,11 @@ export function ReviewGuildApplicationModal({
                   practiceActions={undefined}
                 />
               </div>
-            ) : renderStep === 4 ? (
-              /* Success step renders full-width — no need for the 3-col workspace. */
+            ) : renderStep === 4 && (apiResponse || isStoryLabResultPreview) ? (
+              /* Post-submit success — full-width receipt view. Story-lab's
+                 `review-result` substop forces this preview without a real
+                 submit; the `review-commit` substop stays on the confirm
+                 view so the commit panel demo still renders. */
               <div className="px-6 py-5 overflow-y-auto h-full">
                 <StepIndicator currentStep={renderStep} />
                 <ReviewSuccessStep
@@ -2075,103 +2158,107 @@ export function ReviewGuildApplicationModal({
                     onTopicJustificationsChange={setTopicJustifications}
                     onRedFlagsChange={setRedFlags}
                     onFeedbackChange={setFeedback}
-                    currentTopicIndex={domainTopicIndex}
+                    currentTopicIndex={
+                      isDomainSummary ? domainLastIndex : domainTopicIndex
+                    }
+                    summaryOnly={isDomainSummary}
+                    hideSummary={!isDomainSummary}
                   />
                 </fieldset>
-                {isCommitPhase && (
-                  <div
-                    className="mt-4 space-y-3"
-                    {...(isStoryLabPreview
-                      ? dataTourTarget(TOUR_TARGETS.practiceReviewTxStatus)
-                      : {})}
-                  >
-                    {/* Show the inline explainer only before the commit flow
-                        engages — once we're asking for confirmation or
-                        signing/confirming/etc., the CommitFlowPanel itself
-                        carries the visual weight and the explainer becomes
-                        noise. */}
-                    {banner.kind === "ready" && !isConfirmOpen && (
-                      <CommitRevealExplainer />
-                    )}
-                    {/* Phase 3: cron-driven session creation failed or was
-                        abandoned. Replace the spinner with an actionable
-                        error + retry surface so reviewers aren't stuck. */}
-                    {sessionCreationFailed && blockchainSession && (
-                      <SessionFailureBanner
-                        info={blockchainSession}
-                        onRetry={handleRetrySessionCreation}
-                        isRetrying={sessionRetryApi.isLoading}
-                      />
-                    )}
-                    {/* Phase 3: stuck-pending warning. Surfaced under the
-                        normal preparing banner once the cron has been
-                        chewing on this for >3 minutes. */}
-                    {!sessionCreationFailed &&
-                      banner.kind === "preparing_session" &&
-                      showSessionSlowWarning && (
-                        <Alert variant="warning">
-                          Session creation is taking longer than usual. The
-                          on-chain transaction may be congested.
-                        </Alert>
-                      )}
-                    {/* Once the on-chain commit confirms, ReviewSuccessStep
-                        (step 4) becomes the single source of truth for the
-                        success view — suppress the CommitFlowPanel's inline
-                        SuccessCard so the user doesn't see two stacked
-                        confirmations during the brief transition.
-                        We also suppress the panel entirely when session
-                        creation has failed — the SessionFailureBanner above
-                        owns the surface. */}
-                    {banner.kind !== "confirmed" && !sessionCreationFailed && (
-                      <CommitFlowPanel
-                        status={banner}
-                        confirmState={
-                          isConfirmOpen
-                            ? "asking"
-                            : commitTxHash && banner.kind === "ready"
-                              ? "resuming"
-                              : "idle"
-                        }
-                        applicantName={application?.fullName}
-                        applicantLevel={application?.expertiseLevel ?? ""}
-                        score={overallScore}
-                        scoreMax={(generalMax || 0) + (topicMax || 0)}
-                        onConfirm={handleConfirmCommit}
-                        onCancelConfirm={() => {
-                          setIsConfirmOpen(false);
-                          pendingCommitRef.current = null;
-                        }}
-                        onRetry={handleRetry}
-                        onResume={handleResume}
-                        onCancelAwaiting={handleCancelAwaiting}
-                        sessionId={blockchainSessionId}
-                        resumeTxHash={commitTxHash ?? undefined}
-                        commitConfirmations={Number(COMMIT_CONFIRMATIONS)}
-                      />
-                    )}
-                    {!walletMatches && isConnected && expertWallet && (
-                      <p className="text-sm text-destructive">
-                        Connected wallet does not match your registered reviewer wallet.
-                      </p>
-                    )}
-                    {!onSepolia && isConnected && (
-                      <p className="text-sm text-destructive">
-                        Wrong network. Switch to Sepolia testnet.
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* The on-chain commit panel + eligibility note + submit
+                    section all live on step 4 (confirm) now. Step 3 is pure
+                    scoring + summary; the commit machinery is gated behind
+                    the explicit "Confirm your review" surface. */}
+              </>
+            )}
+
+            {renderStep === 4 && !apiResponse && !isStoryLabResultPreview && (
+              <>
                 <fieldset
                   disabled={formLocked}
                   aria-disabled={formLocked || undefined}
                   className={formLocked ? "opacity-60 pointer-events-none" : undefined}
                 >
-                  {/* Eligibility note replaces the legacy per-review stake
-                      input. Review eligibility comes from a one-time guild
-                      stake; per-candidate endorsement staking is a separate
-                      optional flow that runs after consensus. The story-lab
-                      tour's old "stake input" stop now anchors here via its
-                      fallback target. */}
+                  <ReviewConfirmStep
+                    applicantName={application?.fullName}
+                    applicantLevel={application?.expertiseLevel ?? ""}
+                    generalTotal={generalTotal}
+                    generalMax={generalMax}
+                    topicTotal={topicTotal}
+                    topicMax={topicMax}
+                    redFlagDeductions={redFlagDeductions}
+                    overallScore={overallScore}
+                    generalRedFlags={generalRedFlags}
+                    redFlags={redFlags}
+                    feedback={feedback}
+                    isCommitPhase={isCommitPhase}
+                    isPracticeMode={isPracticeMode}
+                    commitFlowSlot={
+                      isCommitPhase ? (
+                        <div
+                          className="space-y-3"
+                          {...dataTourTarget(TOUR_TARGETS.practiceReviewTxStatus)}
+                        >
+                          {banner.kind === "ready" && !isConfirmOpen && (
+                            <CommitRevealExplainer />
+                          )}
+                          {sessionCreationFailed && blockchainSession && (
+                            <SessionFailureBanner
+                              info={blockchainSession}
+                              onRetry={handleRetrySessionCreation}
+                              isRetrying={sessionRetryApi.isLoading}
+                            />
+                          )}
+                          {!sessionCreationFailed &&
+                            banner.kind === "preparing_session" &&
+                            showSessionSlowWarning && (
+                              <Alert variant="warning">
+                                Session creation is taking longer than usual.
+                                The on-chain transaction may be congested.
+                              </Alert>
+                            )}
+                          {banner.kind !== "confirmed" && !sessionCreationFailed && (
+                            <CommitFlowPanel
+                              status={banner}
+                              confirmState={
+                                isConfirmOpen
+                                  ? "asking"
+                                  : commitTxHash && banner.kind === "ready"
+                                    ? "resuming"
+                                    : "idle"
+                              }
+                              applicantName={application?.fullName}
+                              applicantLevel={application?.expertiseLevel ?? ""}
+                              score={overallScore}
+                              scoreMax={(generalMax || 0) + (topicMax || 0)}
+                              onConfirm={handleConfirmCommit}
+                              onCancelConfirm={() => {
+                                setIsConfirmOpen(false);
+                                pendingCommitRef.current = null;
+                              }}
+                              onRetry={handleRetry}
+                              onResume={handleResume}
+                              onCancelAwaiting={handleCancelAwaiting}
+                              sessionId={blockchainSessionId}
+                              resumeTxHash={commitTxHash ?? undefined}
+                              commitConfirmations={Number(COMMIT_CONFIRMATIONS)}
+                            />
+                          )}
+                          {!walletMatches && isConnected && expertWallet && (
+                            <p className="text-sm text-destructive">
+                              Connected wallet does not match your registered
+                              reviewer wallet.
+                            </p>
+                          )}
+                          {!onSepolia && isConnected && (
+                            <p className="text-sm text-destructive">
+                              Wrong network. Switch to Sepolia testnet.
+                            </p>
+                          )}
+                        </div>
+                      ) : null
+                    }
+                  />
                   <div
                     className="mt-6"
                     {...dataTourTarget(TOUR_TARGETS.practiceReviewStakeInput)}
@@ -2180,7 +2267,14 @@ export function ReviewGuildApplicationModal({
                       variant={reviewTypeProp === "candidate" ? "candidate" : "expert"}
                     />
                   </div>
-                  <ReviewSubmitSection />
+                  {/* Validation error list — issues collected by
+                      validateReviewSubmission. Each entry has a "Go to" link
+                      that sends the user back to the failing question/topic
+                      so they don't have to hunt through paginated pages. */}
+                  <ReviewSubmitSection
+                    issues={computeValidationIssues()}
+                    onJumpToIssue={handleJumpToIssue}
+                  />
                 </fieldset>
               </>
             )}
@@ -2215,7 +2309,7 @@ export function ReviewGuildApplicationModal({
                     </div>
                   </div>
                 )}
-                {(renderStep === 2 || renderStep === 3) && (
+                {(renderStep === 2 || renderStep === 3 || renderStep === 4) && (
                   <div className="sticky top-0 space-y-4">
                     <ApplicantSnapshotCard
                       application={application}
@@ -2225,7 +2319,11 @@ export function ReviewGuildApplicationModal({
                     {renderStep === 2 && (
                       <RubricGuideCard interpretationGuide={interpretationGuide} />
                     )}
-                    {renderStep === 3 && (
+                    {/* Show the per-topic rubric guide on the scoring sub-step;
+                        on the summary sub-step the right pane stays as the
+                        applicant snapshot only since the summary screen is
+                        about deductions/feedback, not topic scoring. */}
+                    {renderStep === 3 && !isDomainSummary && (
                       <RubricGuideCard topic={topicList[domainTopicIndex]} />
                     )}
                   </div>
@@ -2261,9 +2359,19 @@ export function ReviewGuildApplicationModal({
               // the user only sees one submit affordance at a time.
               confirmingInline={isConfirmOpen || isCommitting}
               tourMarkerProps={
-                isStoryLabPreview && currentStep === 3
+                isStoryLabPreview && currentStep === 4
                   ? dataTourTarget(TOUR_TARGETS.practiceReviewSubmitButton)
                   : undefined
+              }
+              // Step 4 has two modes: pre-submit confirm (Back + Submit) and
+              // post-submit receipt (Done). The receipt fires when we've
+              // recorded the submit (apiResponse) or when the BE envelope
+              // says we've already committed. Story-lab forces a "result
+              // preview" with apiResponse === null, so we still want Done.
+              step4Mode={
+                hasAlreadyCommitted || apiResponse || isStoryLabResultPreview
+                  ? "done"
+                  : "confirm"
               }
             />
           </div>
