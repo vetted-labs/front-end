@@ -59,15 +59,31 @@ export function DomainReviewStep({
   onRedFlagsChange,
   onFeedbackChange,
 }: DomainReviewStepProps) {
+  const totalTopics = topicList.length;
+
   return (
-    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
+    <div className="space-y-7" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
       {/* Domain / Level Questions */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
-            <Award className="w-4 h-4 text-warning" />
+      <div className="space-y-7">
+        <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+              <Award className="w-4 h-4 text-warning" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-foreground leading-tight">
+                Domain Review
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Score each topic 0–5 against the rubric. Justify every score.
+              </p>
+            </div>
           </div>
-          <h3 className="text-sm font-bold text-foreground">Domain Review</h3>
+          {totalTopics > 0 && (
+            <div className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+              {totalTopics} topic{totalTopics === 1 ? "" : "s"}
+            </div>
+          )}
         </div>
 
         {loadingTemplates && !levelTemplate ? (
@@ -85,43 +101,62 @@ export function DomainReviewStep({
             const tone = justificationCounterTone(justificationValue.length, {
               required: true,
             });
+            const topicNumber = index + 1;
+            const progressPct =
+              totalTopics > 0 ? (topicNumber / totalTopics) * 100 : 0;
 
             return (
               <div
                 key={topic.id}
                 id={fieldAnchorId("domain", topic.id)}
-                className="rounded-xl border border-border bg-card overflow-hidden scroll-mt-24"
+                className="rounded-2xl border border-border bg-card overflow-hidden scroll-mt-24"
                 {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicCard) : {})}
               >
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground">
-                    {topic.title || topic.id}
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-primary tabular-nums">
-                      {score}/5
+                <div className="px-6 py-5 border-b border-border bg-muted/[0.04]">
+                  <div className="flex items-center justify-between gap-4 mb-2.5">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
+                      Topic {topicNumber} of {totalTopics}
                     </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-1 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-primary tabular-nums">
+                        {score}/5
+                      </span>
+                    </div>
+                  </div>
+                  <h4 className="font-display text-lg sm:text-xl font-semibold text-foreground leading-snug">
+                    {topic.title || topic.id}
+                  </h4>
+                  <div className="mt-3 h-[2px] rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary/50 transition-all duration-500"
+                      style={{ width: `${progressPct}%` }}
+                    />
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-6 space-y-6">
                   <div className="space-y-3">
-                    {renderPromptLines(topic.prompt)}
-                    <div className="rounded-lg bg-muted/30 border border-border p-4">
-                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {topic.prompt && (
+                      <div className="max-w-[70ch]">{renderPromptLines(topic.prompt)}</div>
+                    )}
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.08em]">
+                      Candidate response
+                    </p>
+                    <div className="rounded-lg bg-muted/30 border border-border p-5 max-w-[70ch]">
+                      <p className="text-[15px] text-foreground whitespace-pre-wrap leading-[1.7]">
                         {topicAnswers[topic.id] || <span className="text-muted-foreground italic">No response</span>}
                       </p>
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-card border border-border p-4 space-y-4">
-                    <p className="text-xs text-warning/70 uppercase tracking-wider font-bold">
+                  <div className="rounded-xl bg-muted/[0.02] border border-border p-5 space-y-5">
+                    <p className="text-xs text-warning/80 uppercase tracking-wider font-bold flex items-center">
                       Scoring
                       <RequiredMark />
                     </p>
@@ -130,7 +165,7 @@ export function DomainReviewStep({
                         className="space-y-2"
                         {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewWhatToLookFor) : {})}
                       >
-                        <p className="text-xs font-medium text-foreground">What to look for</p>
+                        <p className="text-xs font-semibold text-foreground">What to look for</p>
                         <ul className="space-y-2">
                           {topic.whatToLookFor.map((item: string, idx: number) => (
                             <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
@@ -141,14 +176,14 @@ export function DomainReviewStep({
                       </div>
                     )}
                     {topic.scoring && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2.5">
                         {[
                           { label: "5 pts", value: topic.scoring.five, color: STATUS_COLORS.positive.text },
                           { label: "3-4", value: topic.scoring.threeToFour, color: STATUS_COLORS.warning.text },
                           { label: "1-2", value: topic.scoring.oneToTwo, color: "text-primary" },
                           { label: "0", value: topic.scoring.zero, color: STATUS_COLORS.negative.text },
                         ].map((s) => (
-                          <div key={s.label} className="text-xs text-muted-foreground rounded-lg bg-muted/30 border border-border p-2">
+                          <div key={s.label} className="text-xs text-muted-foreground rounded-lg bg-card border border-border p-2.5 leading-relaxed">
                             <span className={`font-bold ${s.color}`}>{s.label}:</span> {s.value}
                           </div>
                         ))}
@@ -166,7 +201,7 @@ export function DomainReviewStep({
                     />
                     <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicJustification) : {})}>
                       <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                        <span>Justification</span>
+                        <span className="font-semibold">Justification</span>
                         <RequiredMark label={`Required — min ${JUSTIFICATION_MIN_CHARS} characters`} />
                       </p>
                       <textarea
@@ -179,11 +214,10 @@ export function DomainReviewStep({
                         }
                         maxLength={JUSTIFICATION_MAX_CHARS}
                         aria-required={true}
-                        placeholder={`Tie the score to specific criteria from the rubric (min ${JUSTIFICATION_MIN_CHARS} chars)…`}
-                        rows={2}
-                        className="w-full px-3.5 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none transition-all"
+                        placeholder={`Tie the score to specific evidence from the response (min ${JUSTIFICATION_MIN_CHARS} chars)…`}
+                        className="w-full px-4 py-3 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y transition-all min-h-[120px]"
                       />
-                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                      <div className="flex items-center justify-between mt-2 text-[11px]">
                         <span className="text-muted-foreground/70">
                           Min {JUSTIFICATION_MIN_CHARS} chars
                         </span>
@@ -285,19 +319,18 @@ export function DomainReviewStep({
 
       {/* Feedback */}
       <div {...dataTourTarget(TOUR_TARGETS.practiceReviewFeedback)}>
-        <p className="text-xs text-warning/70 uppercase tracking-wider font-semibold mb-3 flex items-center">
-          Feedback
+        <p className="text-xs text-warning/80 uppercase tracking-wider font-semibold mb-3 flex items-center">
+          Overall feedback
           <OptionalMark />
         </p>
         <textarea
           value={feedback}
           onChange={(e) => onFeedbackChange(e.target.value)}
-          placeholder="Share your reasoning and key feedback..."
-          className="w-full px-4 py-3.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none transition-all"
-          rows={4}
+          placeholder="Share your reasoning and any feedback the candidate should see…"
+          className="w-full px-4 py-3.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y transition-all min-h-[140px]"
           maxLength={1000}
         />
-        <p className="text-xs text-muted-foreground mt-1.5 text-right">
+        <p className="text-xs text-muted-foreground mt-1.5 text-right tabular-nums">
           {feedback.length}/1000
         </p>
       </div>

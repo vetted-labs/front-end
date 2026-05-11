@@ -21,6 +21,7 @@ import { getTransactionErrorMessage, isUserRejection } from "@/lib/blockchain";
 import { type OnChainStatus } from "@/components/reviews/OnChainStatusBanner";
 import { CommitFlowPanel } from "@/components/reviews/CommitFlowPanel";
 import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
+import { ApplicantSnapshotCard } from "@/components/guild/review/ApplicantSnapshotCard";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
 import { StepIndicator } from "@/components/guild/review/StepIndicator";
@@ -1885,7 +1886,13 @@ export function ReviewGuildApplicationModal({
                 />
               </div>
             ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_400px] h-full">
+            <div
+              className={`grid grid-cols-1 h-full ${
+                renderStep === 1
+                  ? "lg:grid-cols-[200px_1fr_400px]"
+                  : "lg:grid-cols-[200px_1fr_320px]"
+              }`}
+            >
               {/* LEFT RAIL — vertical stepper */}
               <aside className="hidden lg:block border-r border-border bg-muted/[0.02] overflow-y-auto">
                 <VerticalStepRail
@@ -1901,84 +1908,61 @@ export function ReviewGuildApplicationModal({
                 />
               </aside>
 
-              {/* CENTER — persistent applicant materials */}
+              {/* CENTER — pivots per step: materials on step 1, scoring on steps 2/3 */}
               <section className="overflow-y-auto px-6 py-5 border-r border-border">
                 {/* Mobile fallback: show the horizontal stepper since the
                     left rail is hidden on small screens. */}
                 <div className="lg:hidden mb-4">
                   <StepIndicator currentStep={renderStep} />
                 </div>
-                <ReviewProfileStep
-                  application={application}
-                  level={level}
-                  reviewScope={
-                    proposalContext
-                      ? "application"
-                      : reviewTypeProp === "candidate"
-                        ? "candidateApplication"
-                        : "expertApplication"
-                  }
-                />
-              </section>
 
-              {/* RIGHT PANE — current step's form / rubric */}
-              <section className="overflow-y-auto px-5 py-5 bg-muted/[0.02]">
+                {templateError && (
+                  <Alert variant="error">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="flex-1 min-w-0">{templateError}</span>
+                      <button
+                        type="button"
+                        onClick={() => void loadTemplates()}
+                        disabled={loadingTemplates}
+                        className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${loadingTemplates ? "animate-spin" : ""}`} />
+                        Retry
+                      </button>
+                    </div>
+                  </Alert>
+                )}
+                {loadingTemplates && (
+                  <div className="flex items-center gap-3 p-4 mb-4 rounded-xl bg-warning/[0.06] border border-warning/15">
+                    <Loader2 className="w-4 h-4 text-warning animate-spin" />
+                    <p className="text-sm text-primary/80">Loading review template and rubric...</p>
+                  </div>
+                )}
 
-            {templateError && (
-              <Alert variant="error">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex-1 min-w-0">{templateError}</span>
-                  <button
-                    type="button"
-                    onClick={() => void loadTemplates()}
-                    disabled={loadingTemplates}
-                    className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs font-semibold hover:bg-muted/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${loadingTemplates ? "animate-spin" : ""}`} />
-                    Retry
-                  </button>
-                </div>
-              </Alert>
-            )}
-            {loadingTemplates && (
-              <div className="flex items-center gap-3 p-4 mb-4 rounded-xl bg-warning/[0.06] border border-warning/15">
-                <Loader2 className="w-4 h-4 text-warning animate-spin" />
-                <p className="text-sm text-primary/80">Loading review template and rubric...</p>
-              </div>
-            )}
+                {renderStep === 1 && (
+                  <ReviewProfileStep
+                    application={application}
+                    level={level}
+                    reviewScope={
+                      proposalContext
+                        ? "application"
+                        : reviewTypeProp === "candidate"
+                          ? "candidateApplication"
+                          : "expertApplication"
+                    }
+                  />
+                )}
 
-            {formLocked && (
-              <Alert variant="info">
-                On-chain commit is bound to your previous score — fields are
-                locked. Cancel the commit (above) to start over with fresh
-                values.
-              </Alert>
-            )}
-            {renderStep === 1 && (
-              <div className="space-y-4">
-                <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.08em] mb-1">
-                    Step 1 · Review materials
-                  </p>
-                  <p className="text-sm text-foreground font-semibold mb-1">
-                    Read the applicant&apos;s profile.
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Take your time with the resume, responses, and references on
-                    the left. When you&apos;re ready to score, click{" "}
-                    <strong className="text-foreground">Next</strong> or jump to
-                    a rubric section using the left rail.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  Start scoring →
-                </button>
-              </div>
-            )}
+                {formLocked && renderStep !== 1 && (
+                  <div className="mb-4">
+                    <Alert variant="info">
+                      On-chain commit is bound to your previous score — fields
+                      are locked. Cancel the commit (in the panel) to start
+                      over with fresh values.
+                    </Alert>
+                  </div>
+                )}
+
             {renderStep === 2 && (
               <fieldset
                 disabled={formLocked}
@@ -2145,6 +2129,46 @@ export function ReviewGuildApplicationModal({
               </div>
             )}
               </section>
+
+              {/* RIGHT PANE — per-step companion:
+                  • Step 1: "Start scoring" CTA card to advance into the rubric.
+                  • Steps 2/3: compact applicant snapshot for at-a-glance context. */}
+              <aside className="hidden lg:block overflow-y-auto px-5 py-5 bg-muted/[0.02]">
+                {renderStep === 1 && (
+                  <div className="space-y-4 sticky top-0">
+                    <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-[0.08em] mb-1">
+                        Step 1 · Review materials
+                      </p>
+                      <p className="text-sm text-foreground font-semibold mb-1">
+                        Read the applicant&apos;s profile.
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Take your time with the resume, responses, and references on
+                        the left. When you&apos;re ready to score, click{" "}
+                        <strong className="text-foreground">Next</strong> or jump to
+                        a rubric section using the left rail.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    >
+                      Start scoring →
+                    </button>
+                  </div>
+                )}
+                {(renderStep === 2 || renderStep === 3) && (
+                  <div className="sticky top-0">
+                    <ApplicantSnapshotCard
+                      application={application}
+                      level={level}
+                      onOpenFullProfile={() => setCurrentStep(1)}
+                    />
+                  </div>
+                )}
+              </aside>
             </div>
             )}
           </div>

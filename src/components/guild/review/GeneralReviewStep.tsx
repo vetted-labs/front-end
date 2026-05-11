@@ -52,13 +52,33 @@ export function GeneralReviewStep({
   onGeneralScoresChange,
   onGeneralJustificationsChange,
 }: GeneralReviewStepProps) {
+  const scoredQuestions = generalQuestions.filter(
+    (question) => generalRubricQuestions[question.id],
+  );
+  const totalQuestions = scoredQuestions.length;
+
   return (
-    <div className="space-y-6" {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralRubric)}>
-      <div className="flex items-center gap-3 mb-1">
-        <div className={`w-8 h-8 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
-          <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
+    <div className="space-y-7" {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralRubric)}>
+      <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-lg ${STATUS_COLORS.warning.bgSubtle} flex items-center justify-center`}>
+            <Sparkles className={`w-4 h-4 ${STATUS_COLORS.warning.icon}`} />
+          </div>
+          <div>
+            <h3 className="font-display text-lg font-bold text-foreground leading-tight">
+              General Review
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Score each prompt against the rubric. Justify every score with
+              specifics from the response.
+            </p>
+          </div>
         </div>
-        <h3 className="text-sm font-bold text-foreground">General Review</h3>
+        {totalQuestions > 0 && (
+          <div className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+            {totalQuestions} question{totalQuestions === 1 ? "" : "s"}
+          </div>
+        )}
       </div>
 
       {loadingTemplates && !generalTemplate ? (
@@ -69,8 +89,7 @@ export function GeneralReviewStep({
       ) : Object.keys(generalRubricQuestions).length === 0 ? (
         <p className="text-sm text-muted-foreground">No general scoring rubric available for this guild.</p>
       ) : (
-        generalQuestions
-          .filter((question) => generalRubricQuestions[question.id])
+        scoredQuestions
           .map((question, index) => {
             const rubric = generalRubricQuestions[question.id];
             const criteria: RubricCriterion[] = rubric?.criteria || [];
@@ -89,42 +108,63 @@ export function GeneralReviewStep({
               required: justificationRequired,
             });
 
+            const questionNumber = index + 1;
+            const progressPct =
+              totalQuestions > 0
+                ? (questionNumber / totalQuestions) * 100
+                : 0;
+
             return (
               <div
                 key={question.id}
                 id={fieldAnchorId("general", question.id)}
-                className="rounded-xl border border-border bg-card overflow-hidden scroll-mt-24"
+                className="rounded-2xl border border-border bg-card overflow-hidden scroll-mt-24"
               >
-                {/* Question header with score */}
+                {/* Question header — generous heading + question-progress strip */}
                 <div
-                  className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/30"
+                  className="px-6 py-5 border-b border-border bg-muted/[0.04]"
                   {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewQuestionPrompt) : {})}
                 >
-                  <p className="text-sm font-semibold text-foreground">{question.prompt}</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all duration-500"
-                        style={{ width: `${Math.min(pct, 100)}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-primary tabular-nums">
-                      {score}/{maxPoints}
+                  <div className="flex items-center justify-between gap-4 mb-2.5">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">
+                      Question {questionNumber} of {totalQuestions}
                     </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-1 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500"
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-primary tabular-nums">
+                        {score}/{maxPoints}
+                      </span>
+                    </div>
+                  </div>
+                  <h4 className="font-display text-lg sm:text-xl font-semibold text-foreground leading-snug">
+                    {question.prompt}
+                  </h4>
+                  {/* Thin progression bar across all questions */}
+                  <div className="mt-3 h-[2px] rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary/50 transition-all duration-500"
+                      style={{ width: `${progressPct}%` }}
+                    />
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4">
-                  {/* Applicant responses */}
+                <div className="p-6 space-y-6">
+                  {/* Applicant response — readable max-width, comfortable line-height */}
                   <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.08em]">
+                      Candidate response
+                    </p>
                     {(() => {
-                      // Check for combined (single string) answer — getGeneralResponseValue
-                      // without partId returns the string for combined answers, empty for per-part
                       const combinedAnswer = getGeneralResponseValue(question.id);
                       if (combinedAnswer) {
                         return (
-                          <div className="rounded-lg bg-muted/30 border border-border p-4">
-                            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                          <div className="rounded-lg bg-muted/30 border border-border p-5 max-w-[70ch]">
+                            <p className="text-[15px] text-foreground whitespace-pre-wrap leading-[1.7]">
                               {combinedAnswer}
                             </p>
                           </div>
@@ -132,11 +172,11 @@ export function GeneralReviewStep({
                       }
                       if (question.parts?.length) {
                         return (
-                          <div className="space-y-3">
+                          <div className="space-y-3 max-w-[70ch]">
                             {question.parts.map((part: QuestionPart) => (
-                              <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-4">
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1.5">{part.label}</p>
-                                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                              <div key={part.id} className="rounded-lg bg-muted/30 border border-border p-5">
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-2">{part.label}</p>
+                                <p className="text-[15px] text-foreground whitespace-pre-wrap leading-[1.7]">
                                   {getGeneralResponseValue(question.id, part.id) || <span className="text-muted-foreground italic">No response</span>}
                                 </p>
                               </div>
@@ -145,8 +185,8 @@ export function GeneralReviewStep({
                         );
                       }
                       return (
-                        <div className="rounded-lg bg-muted/30 border border-border p-4">
-                          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        <div className="rounded-lg bg-muted/30 border border-border p-5 max-w-[70ch]">
+                          <p className="text-[15px] text-foreground whitespace-pre-wrap leading-[1.7]">
                             <span className="text-muted-foreground italic">No response</span>
                           </p>
                         </div>
@@ -154,19 +194,32 @@ export function GeneralReviewStep({
                     })()}
                   </div>
 
-                  {/* Scoring area */}
+                  {/* Scoring strip */}
                   <div
-                    className="rounded-xl bg-card border border-border p-4 space-y-4"
+                    className="rounded-xl bg-muted/[0.02] border border-border p-5 space-y-5"
                     {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewCriteria) : {})}
                   >
-                    <p className={`text-xs ${STATUS_COLORS.warning.text} opacity-70 uppercase tracking-wider font-bold`}>Scoring</p>
-                    {criteria.map((criterion, criterionIndex) => (
-                      <div key={criterion.id} className="space-y-2">
-                        <p className="text-xs text-muted-foreground">
-                          {criterion.label}{" "}
-                          <span className="text-muted-foreground/60">(max {criterion.maxPoints || criterion.max || 0})</span>
-                          {isScored ? <RequiredMark /> : null}
+                    <div className="flex items-center justify-between">
+                      <p className={`text-xs ${STATUS_COLORS.warning.text} opacity-80 uppercase tracking-wider font-bold`}>
+                        Scoring
+                      </p>
+                      {criteria.length > 1 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {criteria.length} criteria
                         </p>
+                      )}
+                    </div>
+                    {criteria.map((criterion, criterionIndex) => (
+                      <div key={criterion.id} className="space-y-2.5">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="text-sm font-medium text-foreground">
+                            {criterion.label}
+                            {isScored ? <RequiredMark /> : null}
+                          </p>
+                          <span className="text-[11px] font-semibold text-muted-foreground tabular-nums shrink-0">
+                            max {criterion.maxPoints || criterion.max || 0}
+                          </span>
+                        </div>
                         <div
                           {...(index === 0 && criterionIndex === 0
                             ? dataTourTarget(TOUR_TARGETS.practiceReviewScoreButtons)
@@ -185,9 +238,12 @@ export function GeneralReviewStep({
                         </div>
                       </div>
                     ))}
-                    <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewJustification) : {})}>
+                    <div
+                      className="pt-1"
+                      {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewJustification) : {})}
+                    >
                       <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                        <span>Justification</span>
+                        <span className="font-semibold">Justification</span>
                         {justificationRequired ? (
                           <RequiredMark
                             label={`Required — min ${JUSTIFICATION_MIN_CHARS} characters`}
@@ -210,13 +266,12 @@ export function GeneralReviewStep({
                         aria-required={justificationRequired ? true : undefined}
                         placeholder={
                           justificationRequired
-                            ? `Explain why you gave these points (min ${JUSTIFICATION_MIN_CHARS} chars)…`
-                            : "Explain why you gave these points..."
+                            ? `Cite specific evidence from the response. What earned each point? (min ${JUSTIFICATION_MIN_CHARS} chars)`
+                            : "Optional notes for the panel about how you scored this question…"
                         }
-                        rows={2}
-                        className="w-full px-3.5 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none transition-all"
+                        className="w-full px-4 py-3 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y transition-all min-h-[120px]"
                       />
-                      <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                      <div className="flex items-center justify-between mt-2 text-[11px]">
                         <span className="text-muted-foreground/70">
                           {justificationRequired
                             ? `Min ${JUSTIFICATION_MIN_CHARS} chars`
