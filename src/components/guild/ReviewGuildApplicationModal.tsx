@@ -24,6 +24,7 @@ import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
 import { StepIndicator } from "@/components/guild/review/StepIndicator";
+import { VerticalStepRail } from "@/components/guild/review/VerticalStepRail";
 import { ReviewSuccessStep } from "@/components/guild/review/ReviewSuccessStep";
 import { ReviewSubmitSection } from "@/components/guild/review/ReviewSubmitSection";
 import { ReviewNavigation } from "@/components/guild/review/ReviewNavigation";
@@ -1709,7 +1710,7 @@ export function ReviewGuildApplicationModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
-          className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+          className="relative w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative gradients */}
@@ -1826,12 +1827,13 @@ export function ReviewGuildApplicationModal({
           </div>
 
           {/* Content */}
-          <div ref={contentRef} className="relative flex-1 overflow-y-auto px-6 py-5">
+          <div ref={contentRef} className="relative flex-1 overflow-hidden">
             {/* If the BE envelope already says we've committed, jump to the
                 receipt step. Survives a refresh after a successful commit
-                even if the local `currentStep === 4` was lost. */}
+                even if the local `currentStep === 4` was lost. Renders as
+                full-width single column. */}
             {hasAlreadyCommitted ? (
-              <>
+              <div className="px-6 py-5 overflow-y-auto h-full">
                 <StepIndicator currentStep={4} />
                 <Alert variant="info">
                   You&apos;ve already committed your vote on this review. Below
@@ -1856,10 +1858,71 @@ export function ReviewGuildApplicationModal({
                   isPracticeMode={false}
                   practiceActions={undefined}
                 />
-              </>
+              </div>
+            ) : renderStep === 4 ? (
+              /* Success step renders full-width — no need for the 3-col workspace. */
+              <div className="px-6 py-5 overflow-y-auto h-full">
+                <StepIndicator currentStep={renderStep} />
+                <ReviewSuccessStep
+                  isCommitPhase={isCommitPhase}
+                  apiResponse={apiResponse}
+                  generalTotal={isStoryLabPreview ? Math.max(generalTotal, Math.round((generalMax || 5) * 0.8)) : generalTotal}
+                  generalMax={generalMax || (isStoryLabPreview ? 5 : 0)}
+                  topicTotal={isStoryLabPreview ? Math.max(topicTotal, Math.round((topicMax || 5) * 0.8)) : topicTotal}
+                  topicMax={topicMax || (isStoryLabPreview ? 5 : 0)}
+                  redFlagDeductions={redFlagDeductions}
+                  overallScore={
+                    isStoryLabPreview
+                      ? Math.max(
+                          overallScore,
+                          Math.round((generalMax || 5) * 0.8) + Math.round((topicMax || 5) * 0.8)
+                        )
+                      : overallScore
+                  }
+                  commitTxHash={isStoryLabPreview && !commitTxHash ? STORY_LAB_FALLBACK_COMMIT_TX_HASH : commitTxHash}
+                  isPracticeMode={isPracticeMode}
+                  practiceActions={practiceActions}
+                />
+              </div>
             ) : (
-            <>
-            <StepIndicator currentStep={renderStep} />
+            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_400px] h-full">
+              {/* LEFT RAIL — vertical stepper */}
+              <aside className="hidden lg:block border-r border-border bg-muted/[0.02] overflow-y-auto">
+                <VerticalStepRail
+                  currentStep={renderStep}
+                  onStepClick={(target) => {
+                    // Allow free navigation to any prior step; forward-jump is
+                    // gated by the existing validation pipeline (handleNext).
+                    if (target < currentStep) setCurrentStep(target);
+                    else if (target === currentStep + 1) handleNext();
+                  }}
+                  isCommitPhase={isCommitPhase}
+                  variant={reviewTypeProp === "candidate" ? "candidate" : "expert"}
+                />
+              </aside>
+
+              {/* CENTER — persistent applicant materials */}
+              <section className="overflow-y-auto px-6 py-5 border-r border-border">
+                {/* Mobile fallback: show the horizontal stepper since the
+                    left rail is hidden on small screens. */}
+                <div className="lg:hidden mb-4">
+                  <StepIndicator currentStep={renderStep} />
+                </div>
+                <ReviewProfileStep
+                  application={application}
+                  level={level}
+                  reviewScope={
+                    proposalContext
+                      ? "application"
+                      : reviewTypeProp === "candidate"
+                        ? "candidateApplication"
+                        : "expertApplication"
+                  }
+                />
+              </section>
+
+              {/* RIGHT PANE — current step's form / rubric */}
+              <section className="overflow-y-auto px-5 py-5 bg-muted/[0.02]">
 
             {templateError && (
               <Alert variant="error">
@@ -1892,19 +1955,29 @@ export function ReviewGuildApplicationModal({
               </Alert>
             )}
             {renderStep === 1 && (
-              <ReviewProfileStep
-                application={application}
-                level={level}
-                // Map the modal's reviewType to the resume-download scope so
-                // the iframe fetches via the right auth-gated endpoint.
-                reviewScope={
-                  proposalContext
-                    ? "application"
-                    : reviewTypeProp === "candidate"
-                      ? "candidateApplication"
-                      : "expertApplication"
-                }
-              />
+              <div className="space-y-4">
+                <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.08em] mb-1">
+                    Step 1 · Review materials
+                  </p>
+                  <p className="text-sm text-foreground font-semibold mb-1">
+                    Read the applicant&apos;s profile.
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Take your time with the resume, responses, and references on
+                    the left. When you&apos;re ready to score, click{" "}
+                    <strong className="text-foreground">Next</strong> or jump to
+                    a rubric section using the left rail.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Start scoring →
+                </button>
+              </div>
             )}
             {renderStep === 2 && (
               <fieldset
@@ -2064,36 +2137,15 @@ export function ReviewGuildApplicationModal({
                 </fieldset>
               </>
             )}
-            {renderStep === 4 && (
-              <ReviewSuccessStep
-                isCommitPhase={isCommitPhase}
-                apiResponse={apiResponse}
-                generalTotal={isStoryLabPreview ? Math.max(generalTotal, Math.round((generalMax || 5) * 0.8)) : generalTotal}
-                generalMax={generalMax || (isStoryLabPreview ? 5 : 0)}
-                topicTotal={isStoryLabPreview ? Math.max(topicTotal, Math.round((topicMax || 5) * 0.8)) : topicTotal}
-                topicMax={topicMax || (isStoryLabPreview ? 5 : 0)}
-                redFlagDeductions={redFlagDeductions}
-                overallScore={
-                  isStoryLabPreview
-                    ? Math.max(
-                        overallScore,
-                        Math.round((generalMax || 5) * 0.8) + Math.round((topicMax || 5) * 0.8)
-                      )
-                    : overallScore
-                }
-                commitTxHash={isStoryLabPreview && !commitTxHash ? STORY_LAB_FALLBACK_COMMIT_TX_HASH : commitTxHash}
-                isPracticeMode={isPracticeMode}
-                practiceActions={practiceActions}
-              />
-            )}
-            </>
-            )}
 
             {validationError && (
               <div className={`mt-4 flex items-center gap-3 p-4 rounded-xl ${STATUS_COLORS.negative.bgSubtle} ${STATUS_COLORS.negative.border}`}>
                 <XCircle className={`w-4 h-4 ${STATUS_COLORS.negative.icon} shrink-0`} />
                 <p className={`text-sm ${STATUS_COLORS.negative.text}`}>{validationError}</p>
               </div>
+            )}
+              </section>
+            </div>
             )}
           </div>
 
