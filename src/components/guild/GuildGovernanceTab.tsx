@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { CheckCircle2, X, ListChecks } from "lucide-react";
-import { useFetch } from "@/lib/hooks/useFetch";
-import { guildsApi } from "@/lib/api";
 import { GuildQueueRow } from "./GuildQueueRow";
 import { useCountdown } from "@/lib/hooks/useCountdown";
 import type { GuildQueueItem, GuildWorkspaceProposal } from "@/types";
 
 interface GuildGovernanceTabProps {
   guildId: string;
-  walletAddress?: string;
+  /**
+   * Proposals scoped to this guild. Provided by the workspace container
+   * (which merges `governanceApi.getActiveProposals` with a finalized-status
+   * query and filters client-side by guildId).
+   */
+  proposals?: GuildWorkspaceProposal[];
 }
 
 function proposalToQueueItem(p: GuildWorkspaceProposal): GuildQueueItem {
@@ -38,17 +41,11 @@ function proposalToQueueItem(p: GuildWorkspaceProposal): GuildQueueItem {
  * Right sidebar surfaces the viewer's governance record + a CTA to author
  * a new proposal. When the Phase 5 endpoint is missing, we empty-state.
  */
-export function GuildGovernanceTab({ guildId, walletAddress }: GuildGovernanceTabProps) {
-  const { data, isLoading, error } = useFetch(
-    () => guildsApi.getGovernanceProposals(guildId, walletAddress),
-    {
-      onError: () => {},
-    },
-  );
-
-  const proposals = data ?? [];
-  const open = proposals.filter((p) => p.status === "open");
-  const past = proposals.filter((p) => p.status !== "open");
+export function GuildGovernanceTab({ guildId: _guildId, proposals }: GuildGovernanceTabProps) {
+  void _guildId;
+  const list = proposals ?? [];
+  const open = list.filter((p) => p.status === "open");
+  const past = list.filter((p) => p.status !== "open");
   const unvotedCount = open.filter((p) => !p.hasVoted).length;
   const matchedMajority = past.filter((p) => p.myVote && p.status === "passed" && p.myVote === "for").length
     + past.filter((p) => p.myVote && p.status === "rejected" && p.myVote === "against").length;
@@ -64,11 +61,7 @@ export function GuildGovernanceTab({ guildId, walletAddress }: GuildGovernanceTa
             countLabel={unvotedCount > 0 ? `${unvotedCount} unvoted` : undefined}
             tone="urgent"
           />
-          {error && !data ? (
-            <Empty text="Governance proposals aren't available yet." />
-          ) : isLoading && !data ? (
-            <Empty text="Loading…" />
-          ) : open.length === 0 ? (
+          {open.length === 0 ? (
             <Empty text="No open proposals right now." />
           ) : (
             <div className="space-y-2">
