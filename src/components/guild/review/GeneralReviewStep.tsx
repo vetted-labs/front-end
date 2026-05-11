@@ -41,6 +41,8 @@ export interface GeneralReviewStepProps {
    * before crossing into the next step.
    */
   currentQuestionIndex?: number;
+  /** Jump to an arbitrary question index (clickable strip). */
+  onJumpToQuestion?: (index: number) => void;
 }
 
 export function GeneralReviewStep({
@@ -58,6 +60,7 @@ export function GeneralReviewStep({
   onGeneralScoresChange,
   onGeneralJustificationsChange,
   currentQuestionIndex,
+  onJumpToQuestion,
 }: GeneralReviewStepProps) {
   const scoredQuestions = generalQuestions.filter(
     (question) => generalRubricQuestions[question.id],
@@ -98,6 +101,36 @@ export function GeneralReviewStep({
           </div>
         )}
       </div>
+
+      {/* Question jump strip — click any number to switch questions freely. */}
+      {currentQuestionIndex != null && totalQuestions > 1 && onJumpToQuestion && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {scoredQuestions.map((q, idx) => {
+            const isActive = idx === currentQuestionIndex;
+            const score = generalTotals[q.id] ?? 0;
+            const hasScore = score > 0;
+            const hasJust = (generalJustifications[q.id]?.trim().length ?? 0) > 0;
+            const complete = hasScore && hasJust;
+            const cls = isActive
+              ? "bg-primary text-primary-foreground border-primary"
+              : complete
+                ? `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
+                : "bg-card border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground";
+            return (
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => onJumpToQuestion(idx)}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Question ${idx + 1}${complete ? " (complete)" : ""}`}
+                className={`min-w-[32px] h-8 px-2 rounded-md border text-xs font-semibold transition-colors ${cls}`}
+              >
+                {idx + 1}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {loadingTemplates && !generalTemplate ? (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">

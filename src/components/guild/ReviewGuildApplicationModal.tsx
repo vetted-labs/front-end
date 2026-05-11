@@ -2127,6 +2127,7 @@ export function ReviewGuildApplicationModal({
                   onGeneralScoresChange={setGeneralScores}
                   onGeneralJustificationsChange={setGeneralJustifications}
                   currentQuestionIndex={generalQuestionIndex}
+                  onJumpToQuestion={(idx) => setGeneralQuestionIndex(idx)}
                 />
               </fieldset>
             )}
@@ -2160,6 +2161,7 @@ export function ReviewGuildApplicationModal({
                     currentTopicIndex={
                       isDomainSummary ? domainLastIndex : domainTopicIndex
                     }
+                    onJumpToTopic={(idx) => setDomainTopicIndex(idx)}
                     summaryOnly={isDomainSummary}
                     hideSummary={!isDomainSummary}
                   />

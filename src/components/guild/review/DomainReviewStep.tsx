@@ -42,6 +42,8 @@ export interface DomainReviewStepProps {
    * commit/submit confirmation surface.
    */
   currentTopicIndex?: number;
+  /** Jump to an arbitrary topic index (clickable strip). */
+  onJumpToTopic?: (index: number) => void;
   /**
    * When `true`, hide the per-topic scoring cards and show ONLY the
    * step-level summary (Red Flags + Overall Score + Overall Feedback). This
@@ -82,6 +84,7 @@ export function DomainReviewStep({
   onRedFlagsChange,
   onFeedbackChange,
   currentTopicIndex,
+  onJumpToTopic,
   summaryOnly = false,
   hideSummary = false,
 }: DomainReviewStepProps) {
@@ -129,6 +132,36 @@ export function DomainReviewStep({
             </div>
           )}
         </div>
+
+        {/* Topic jump strip — click any number to switch topics freely. */}
+        {!summaryOnly && currentTopicIndex != null && totalTopics > 1 && onJumpToTopic && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {topicList.map((t, idx) => {
+              const isActive = idx === currentTopicIndex;
+              const score = topicScores[t.id] ?? 0;
+              const hasScore = score > 0;
+              const hasJust = (topicJustifications[t.id]?.trim().length ?? 0) > 0;
+              const complete = hasScore && hasJust;
+              const cls = isActive
+                ? "bg-primary text-primary-foreground border-primary"
+                : complete
+                  ? `${STATUS_COLORS.positive.bgSubtle} ${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.text}`
+                  : "bg-card border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground";
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => onJumpToTopic(idx)}
+                  aria-current={isActive ? "step" : undefined}
+                  aria-label={`Topic ${idx + 1}${complete ? " (complete)" : ""}`}
+                  className={`min-w-[32px] h-8 px-2 rounded-md border text-xs font-semibold transition-colors ${cls}`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {loadingTemplates && !levelTemplate ? (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
