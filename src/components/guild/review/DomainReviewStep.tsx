@@ -42,6 +42,23 @@ export interface DomainReviewStepProps {
    * commit/submit confirmation surface.
    */
   currentTopicIndex?: number;
+  /**
+   * When `true`, hide the per-topic scoring cards and show ONLY the
+   * step-level summary (Red Flags + Overall Score + Overall Feedback). This
+   * is the final sub-step of the domain step — the user has scored every
+   * topic and is now reviewing deductions + feedback before advancing to
+   * the commit confirmation.
+   */
+  summaryOnly?: boolean;
+  /**
+   * When `true`, hide the step-level summary (Red Flags + Overall Score +
+   * Overall Feedback). Used while paginating through topics so those
+   * concerns don't appear under every topic card. Default `false` for
+   * back-compat (e.g. story-lab fixture preview which renders the full
+   * step). The modal passes `true` for every topic page except the
+   * summary sub-step.
+   */
+  hideSummary?: boolean;
 }
 
 export function DomainReviewStep({
@@ -65,10 +82,13 @@ export function DomainReviewStep({
   onRedFlagsChange,
   onFeedbackChange,
   currentTopicIndex,
+  summaryOnly = false,
+  hideSummary = false,
 }: DomainReviewStepProps) {
   const totalTopics = topicList.length;
   // Show one topic at a time when an index is supplied.
   const visibleTopics = (() => {
+    if (summaryOnly) return [];
     if (currentTopicIndex == null) return topicList;
     const safeIdx = Math.max(0, Math.min(currentTopicIndex, topicList.length - 1));
     const selected = topicList[safeIdx];
@@ -77,10 +97,17 @@ export function DomainReviewStep({
   const topicIndexOffset = currentTopicIndex == null
     ? 0
     : Math.max(0, Math.min(currentTopicIndex, Math.max(topicList.length - 1, 0)));
+  // The step-level concerns (red flags + overall score + overall feedback)
+  // only render in `summaryOnly` mode or when neither pagination flag is
+  // engaged (story-lab fixture preview). They MUST NOT render under every
+  // per-topic page — that was the original bug where the user saw "Overall
+  // Feedback" on Topic 1 of 5.
+  const showStepSummary = summaryOnly || (!hideSummary && currentTopicIndex == null);
 
   return (
     <div className="space-y-7" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
       {/* Domain / Level Questions */}
+      {!summaryOnly && (
       <div className="space-y-7">
         <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
           <div className="flex items-center gap-3">
@@ -240,8 +267,33 @@ export function DomainReviewStep({
           })
         )}
       </div>
+      )}
 
-      {/* Red Flags */}
+      {summaryOnly && (
+        <div className="flex items-center justify-between gap-3 mb-1 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+              <Award className="w-4 h-4 text-warning" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-bold text-foreground leading-tight">
+                Wrap up your domain review
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Flag any deductions, sanity-check the running totals, and add
+                feedback for the candidate. Next will take you to the final
+                review summary before submit.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Red Flags + Overall Score + Feedback only render when the user has
+          finished scoring every topic. While paginating through topics these
+          step-level concerns are hidden so the form isn't overwhelming. */}
+      {showStepSummary && (
+      <>
       <div
         id={fieldAnchorId("overall", "redflags")}
         className={`rounded-xl border ${STATUS_COLORS.negative.border} ${STATUS_COLORS.negative.bgSubtle} overflow-hidden scroll-mt-24`}
@@ -341,6 +393,8 @@ export function DomainReviewStep({
           {feedback.length}/1000
         </p>
       </div>
+      </>
+      )}
     </div>
   );
 }
