@@ -4,30 +4,35 @@ interface GuildOnlineNowCardProps {
   experts: ExpertMember[];
   /** How many avatars to show before collapsing into a "+N" tile. */
   maxAvatars?: number;
+  /**
+   * Optional real "reviewing now" count from a presence/queue source.
+   * Omit to drop the line entirely rather than render a fabricated value.
+   */
+  reviewingCount?: number;
 }
 
 /**
  * Stacked-avatar card showing currently-online members.
- * Presence is currently a static placeholder — the first N experts.
- * When real presence lands (websocket/poll), pass already-filtered list.
+ * Presence is not yet wired — we surface up to N members as the visual
+ * sample but only show counts the backend can actually substantiate.
  */
 export function GuildOnlineNowCard({
   experts,
   maxAvatars = 5,
+  reviewingCount,
 }: GuildOnlineNowCardProps) {
-  // No real presence yet — surface up to N members as the "online" sample.
-  // This keeps the card useful pre-realtime presence; Phase 5 backend work
-  // can swap the source list to a live one.
   const onlineSample = experts.slice(0, maxAvatars);
-  const totalOnline = Math.max(0, experts.length);
   const overflow = Math.max(0, experts.length - maxAvatars);
-  const reviewing = Math.min(3, totalOnline); // placeholder
+  // We can't yet distinguish "online" from "member" until presence ships.
+  // Show the total guild size as a stable count so the card remains useful;
+  // when realtime presence lands, swap to the filtered list.
+  const totalMembers = experts.length;
 
   return (
     <div className="rounded-xl border border-surface-border bg-surface-1 p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-muted-foreground">
-          Online now
+          Members
         </span>
         <button className="text-[11px] font-semibold text-primary hover:underline">
           View all
@@ -53,7 +58,10 @@ export function GuildOnlineNowCard({
 
       <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
         <span className="w-1.5 h-1.5 rounded-full bg-positive" />
-        {totalOnline} active · {reviewing} reviewing now
+        {totalMembers} {totalMembers === 1 ? "member" : "members"}
+        {reviewingCount !== undefined && reviewingCount > 0 && (
+          <> · {reviewingCount} reviewing now</>
+        )}
       </div>
     </div>
   );

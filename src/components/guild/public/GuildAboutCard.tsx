@@ -1,5 +1,10 @@
 interface GuildAboutCardProps {
   description: string;
+  /**
+   * Operating stats. All optional — when the backend doesn't expose them
+   * (current state for most guilds) the corresponding cells are dropped
+   * rather than rendered with fabricated numbers.
+   */
   minStake?: string;
   quorum?: string;
   avgFee?: string;
@@ -12,11 +17,17 @@ interface GuildAboutCardProps {
  */
 export function GuildAboutCard({
   description,
-  minStake = "100 VETD",
-  quorum = "5 reviewers",
-  avgFee = "$280 / review",
-  cycleTime = "3.4 days",
+  minStake,
+  quorum,
+  avgFee,
+  cycleTime,
 }: GuildAboutCardProps) {
+  const cells: Array<{ label: string; value: string }> = [];
+  if (minStake) cells.push({ label: "Min stake", value: minStake });
+  if (quorum) cells.push({ label: "Quorum", value: quorum });
+  if (avgFee) cells.push({ label: "Avg fee", value: avgFee });
+  if (cycleTime) cells.push({ label: "Cycle time", value: cycleTime });
+
   return (
     <div className="rounded-xl border border-surface-border bg-surface-1 p-4">
       <div className="flex items-center justify-between mb-3">
@@ -29,24 +40,16 @@ export function GuildAboutCard({
         {description}
       </p>
 
-      <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
-        <div>
-          <div className="text-muted-foreground">Min stake</div>
-          <div className="text-foreground font-semibold">{minStake}</div>
+      {cells.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
+          {cells.map((cell) => (
+            <div key={cell.label}>
+              <div className="text-muted-foreground">{cell.label}</div>
+              <div className="text-foreground font-semibold">{cell.value}</div>
+            </div>
+          ))}
         </div>
-        <div>
-          <div className="text-muted-foreground">Quorum</div>
-          <div className="text-foreground font-semibold">{quorum}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Avg fee</div>
-          <div className="text-foreground font-semibold">{avgFee}</div>
-        </div>
-        <div>
-          <div className="text-muted-foreground">Cycle time</div>
-          <div className="text-foreground font-semibold">{cycleTime}</div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

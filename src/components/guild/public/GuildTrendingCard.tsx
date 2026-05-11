@@ -4,26 +4,23 @@ interface TrendingTopic {
 }
 
 interface GuildTrendingCardProps {
-  /** Topics derived from recent post titles or sidebar fixtures. */
+  /**
+   * Topics derived from recent post titles. When undefined or empty the card
+   * does not render — we don't fabricate trending tags.
+   */
   topics?: TrendingTopic[];
   title?: string;
 }
 
-const FALLBACK_TOPICS: TrendingTopic[] = [
-  { name: "#commit-reveal", count: 12 },
-  { name: "#zk-proofs", count: 9 },
-  { name: "#rust", count: 7 },
-  { name: "#postgres", count: 6 },
-];
-
 /**
- * Trending hashtag/topic list. Currently ships with fallback topics; real
- * trending derivation lands when Phase 5 exposes a topics endpoint.
+ * Trending hashtag/topic list. Renders nothing when no real trending data
+ * is available; wire `topics` once Phase 5 exposes a topics endpoint.
  */
 export function GuildTrendingCard({
-  topics = FALLBACK_TOPICS,
+  topics,
   title = "Trending this week",
 }: GuildTrendingCardProps) {
+  if (!topics || topics.length === 0) return null;
   return (
     <div className="rounded-xl border border-surface-border bg-surface-1 p-4">
       <div className="flex items-center justify-between mb-3">

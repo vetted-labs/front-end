@@ -99,14 +99,9 @@ export function GuildPublicMembersTab({
 
   return (
     <div>
-      {/* 5 stat header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">
+      {/* Stat header — "Active now" is omitted until real presence data is wired. */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 mb-6">
         <StatTile value={stats.total || displayCount} label="Total members" />
-        <StatTile
-          value={Math.max(0, Math.round(stats.total * 0.1))}
-          label="Active now"
-          tone="positive"
-        />
         <StatTile value={stats.masters} label="Master rank" tone="gold" />
         <StatTile value={stats.seniors + stats.mids} label="Senior + Mid" />
       </div>

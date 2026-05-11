@@ -279,10 +279,10 @@ export default function GuildDetailPage() {
   const stakedDisplay = guild.totalVetdStaked
     ? formatVetd(Number(guild.totalVetdStaked))
     : "—";
-  // Consensus rate is not yet exposed by the backend at this surface — fall back
-  // to a placeholder until Phase 5 adds it. Showing "—" is preferable to a
-  // hard-coded number that would be misleading.
-  const consensusPct = 94;
+  // Consensus rate is not yet exposed by the backend at this surface — show
+  // an em-dash so we don't display a fabricated number. Hook up once Phase 5
+  // adds it to the public guild detail payload.
+  const consensusPctDisplay: number | string = "—";
   const openRoles = guild.openPositions || guild.recentJobs?.length || 0;
 
   return (
@@ -307,15 +307,16 @@ export default function GuildDetailPage() {
             members={totalMembers}
             reviews={reviewsTotal}
             staked={stakedDisplay}
-            consensusPct={consensusPct}
+            consensusPct={consensusPctDisplay}
             openRoles={openRoles}
             membersDelta={guild.expertCount > 0 ? `${guild.expertCount} experts` : undefined}
-            reviewsDelta={
-              reviewsTotal > 0 ? `+${Math.min(34, reviewsTotal)} this period` : undefined
-            }
+            // We don't yet have a "this period" diff for reviews. Hide the
+            // delta rather than fabricate one. Add a real value when the
+            // statistics payload exposes a windowed count.
+            reviewsDelta={undefined}
             stakedDelta="VETD across guild"
-            consensusDelta="last 30d"
-            openRolesDelta={`${Math.min(7, openRoles)} closing this week`}
+            consensusDelta={undefined}
+            openRolesDelta={undefined}
             isMember={isMember}
             isPending={isPending}
             memberRole={membership?.role}

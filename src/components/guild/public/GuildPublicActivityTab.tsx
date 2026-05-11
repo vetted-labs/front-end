@@ -279,7 +279,20 @@ export function GuildPublicActivityTab({
                 ).length
               }
             />
-            <SummaryStat label="VETD staked" value="—" />
+            <SummaryStat
+              label="Stake events"
+              value={
+                sorted.filter((a) => {
+                  const m = metaFor(
+                    a.type,
+                    identity.classes.text,
+                    identity.classes.bg,
+                    identity.classes.border,
+                  );
+                  return m.bucket === "stake";
+                }).length
+              }
+            />
           </div>
         </div>
 

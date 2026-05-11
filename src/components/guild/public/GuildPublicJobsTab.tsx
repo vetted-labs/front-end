@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Briefcase, ChevronDown, Clock, Users, CheckCircle2, Zap, Pin } from "lucide-react";
+import { Briefcase, ChevronDown, Clock, Users, CheckCircle2, Pin } from "lucide-react";
 import { getGuildIdentity } from "@/lib/guildIdentity";
 import { formatTimeAgo, formatSalaryRange } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -148,8 +148,6 @@ export function GuildPublicJobsTab({
                 .trim()
                 .slice(0, 1)
                 .toUpperCase();
-              const reviewersHint = Math.max(3, ((job.applicants ?? 6) % 12) + 3);
-              const stakeHint = 100 + ((job.applicants ?? 0) % 5) * 100;
 
               return (
                 <div
@@ -219,7 +217,7 @@ export function GuildPublicJobsTab({
                         className={`inline-flex items-center gap-1.5 font-medium ${identity.classes.text}`}
                       >
                         <CheckCircle2 className="w-3 h-3" />
-                        Reviewed by {reviewersHint} guild members
+                        Reviewed by {identity.shortName} guild
                       </span>
                     </div>
                   </div>
@@ -230,12 +228,6 @@ export function GuildPublicJobsTab({
                         {formatSalaryRange(job.salary)}
                       </div>
                     )}
-                    <div className={`text-[11px] inline-flex items-center gap-1 ${
-                      isFeatured ? identity.classes.text : "text-muted-foreground"
-                    }`}>
-                      <Zap className="w-3 h-3" />
-                      {stakeHint} VETD stake
-                    </div>
                     <button
                       onClick={() => router.push(`/jobs/${job.id}`)}
                       className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -267,22 +259,6 @@ export function GuildPublicJobsTab({
 
       {/* Sidebar */}
       <aside className="flex flex-col gap-4 lg:sticky lg:top-20">
-        <div className="rounded-xl border border-surface-border bg-surface-1 p-4">
-          <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-muted-foreground">
-            Earn from reviews
-          </span>
-          <div className="font-display text-[28px] text-primary mt-2 mb-1">
-            $280
-          </div>
-          <div className="text-xs text-muted-foreground mb-3">
-            avg per review · paid in stablecoin on consensus
-          </div>
-          <div className="text-xs text-muted-foreground leading-relaxed">
-            Highest single fee this month:{" "}
-            <strong className="text-foreground">$1,200</strong>
-          </div>
-        </div>
-
         <div className="rounded-xl border border-surface-border bg-surface-1 p-4">
           <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-muted-foreground mb-3 block">
             Hot stack in {identity.shortName}

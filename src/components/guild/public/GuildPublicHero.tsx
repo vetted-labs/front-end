@@ -13,7 +13,8 @@ interface GuildPublicHeroProps {
   members: number;
   reviews: number;
   staked: string;
-  consensusPct: number;
+  /** Numeric percent, or a string fallback (e.g. "—") when not yet wired. */
+  consensusPct: number | string;
   openRoles: number;
   /** Optional delta strings for stats. */
   membersDelta?: string;
@@ -201,7 +202,7 @@ export function GuildPublicHero({
         <StatCell label="Staked" value={staked} delta={stakedDelta} positive={false} />
         <StatCell
           label="Consensus"
-          value={`${consensusPct}%`}
+          value={typeof consensusPct === "number" ? `${consensusPct}%` : consensusPct}
           delta={consensusDelta}
         />
         <StatCell
