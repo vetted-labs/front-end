@@ -2,10 +2,11 @@
 
 import { getGuildIconName, formatGuildTooltipContent, getGuildPreviewDescription } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
+import { getGuildIdentity } from "@/lib/guildIdentity";
+import { cn } from "@/lib/utils";
 import { formatDateMonthYear, formatVetd } from "@/lib/utils";
 import { InfoTooltip } from "./ui/InfoTooltip";
 import { Users, ArrowRight, Calendar, DollarSign, Star, Coins } from "lucide-react";
-import { STATUS_COLORS } from "@/config/colors";
 import { PatternBackground } from "@/components/ui/pattern-background";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { TOUR_TARGETS, dataTourTarget } from "@/components/expert/onboarding/tourTargets";
@@ -40,6 +41,7 @@ export function GuildCard({
   isStoryLabFirstCard = false,
 }: GuildCardProps) {
   const guildIconName = getGuildIconName(guild.name);
+  const identity = getGuildIdentity(guild.name);
   const { isActive: isStoryLabPreview } = useStoryLabContext();
 
   // ── Membership variant (profile "Guild Positions" section) ──
@@ -62,8 +64,8 @@ export function GuildCard({
         <div className="relative p-6 pt-12">
           {/* Header: Icon + Name + Rank */}
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-11 h-11 rounded-[13px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
-              <VettedIcon name={guildIconName} className="w-[22px] h-[22px] text-primary" />
+            <div className={cn("w-11 h-11 rounded-[13px] border flex items-center justify-center flex-shrink-0 transition-shadow", identity.classes.bg, identity.classes.border)}>
+              <VettedIcon name={guildIconName} className={cn("w-[22px] h-[22px]", identity.classes.text)} />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-bold font-display text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
@@ -155,8 +157,8 @@ export function GuildCard({
           <div className="p-5">
             {/* Header */}
             <div className="flex items-center gap-3 mb-3.5">
-              <div className="w-10 h-10 rounded-[11px] bg-primary/[0.08] border border-primary/15 flex items-center justify-center flex-shrink-0 transition-shadow">
-                <VettedIcon name={guildIconName} className="w-5 h-5 text-primary" />
+              <div className={cn("w-10 h-10 rounded-[11px] border flex items-center justify-center flex-shrink-0 transition-shadow", identity.classes.bg, identity.classes.border)}>
+                <VettedIcon name={guildIconName} className={cn("w-5 h-5", identity.classes.text)} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-bold font-display text-foreground group-hover:text-primary transition-colors truncate">
