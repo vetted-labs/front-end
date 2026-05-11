@@ -2,6 +2,8 @@
 
 import { Share2, ChevronUp } from "lucide-react";
 import { getGuildIdentity } from "@/lib/guildIdentity";
+import { getGuildIconName } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { CheckCircle2, Clock } from "lucide-react";
 
 interface GuildPublicHeroProps {
@@ -84,7 +86,7 @@ export function GuildPublicHero({
   extraAction,
 }: GuildPublicHeroProps) {
   const identity = getGuildIdentity(guildName);
-  const initial = (identity.shortName || guildName || "G").trim().slice(0, 1).toUpperCase();
+  const guildIconName = getGuildIconName(guildName);
   // The hex value drives the per-guild signature gradient and accent strip.
   // Using inline style keeps the gradient unique without exploding the
   // tailwind safelist (eight guilds × multiple colour utilities).
@@ -122,15 +124,17 @@ export function GuildPublicHero({
       {/* Body */}
       <div className="px-7 pb-6 -mt-12 relative">
         <div className="flex items-end gap-6 mb-6">
-          {/* Guild tile — strong gradient using guild signature hex */}
+          {/* Guild tile — uses the actual guild icon (Vetted icon system) */}
           <div
-            className="w-24 h-24 rounded-[20px] border border-white/10 flex items-center justify-center flex-shrink-0 font-display text-[44px] leading-none text-white"
+            className={`w-24 h-24 rounded-[20px] border flex items-center justify-center flex-shrink-0 ${identity.classes.bg} ${identity.classes.border}`}
             style={{
-              background: `linear-gradient(135deg, ${gcHex} 0%, ${gcHex}b3 100%)`,
-              boxShadow: `0 8px 24px ${gcHex}40, 0 0 0 4px hsl(var(--surface-1))`,
+              boxShadow: `0 8px 24px ${gcHex}33, 0 0 0 4px hsl(var(--surface-1))`,
             }}
           >
-            {initial}
+            <VettedIcon
+              name={guildIconName}
+              className={`w-12 h-12 ${identity.classes.text}`}
+            />
           </div>
 
           <div className="flex-1 pb-2 min-w-0">

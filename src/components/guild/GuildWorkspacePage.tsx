@@ -15,6 +15,8 @@ import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures"
 import { extractApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { getGuildIdentity } from "@/lib/guildIdentity";
+import { getGuildIconName } from "@/lib/guildHelpers";
+import { VettedIcon } from "@/components/ui/vetted-icon";
 import { cn } from "@/lib/utils";
 import type {
   ExpertRole,
@@ -153,7 +155,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   }
 
   const identity = getGuildIdentity(guild.name);
-  const initial = identity.shortName.charAt(0).toUpperCase();
+  const guildIconName = getGuildIconName(guild.name);
   const role = (guild.expertRole || "recruit").toLowerCase();
   const roleLabel = ROLE_LABEL[role] ?? guild.expertRole;
 
@@ -191,12 +193,16 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
             style={{ background: identity.hex }}
           />
           <div
-            className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl font-serif text-2xl text-white"
-            style={{
-              background: `linear-gradient(135deg, ${identity.hex}, ${identity.hex}b3)`,
-            }}
+            className={cn(
+              "flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border",
+              identity.classes.bg,
+              identity.classes.border
+            )}
           >
-            {initial}
+            <VettedIcon
+              name={guildIconName}
+              className={cn("h-7 w-7", identity.classes.text)}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-2.5">
