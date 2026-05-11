@@ -138,38 +138,39 @@ function buildKpiBundle(args: {
   const queueUrgent = items.filter((i) => i.bucket === "due_soon").length
     || (queue?.kpis?.queueUrgentCount ?? 0);
 
-  // Phase-derived counts from this guild's assigned applications.
-  const activeCommits = assigned.filter(
-    (a) => a.voting_phase === "commit" && !a.has_voted && !a.finalized,
-  ).length;
-  const awaitingReveal = assigned.filter(
-    (a) => a.voting_phase === "commit" && a.has_voted && !a.finalized,
-  ).length;
-  const revealOpen = assigned.filter(
-    (a) => a.voting_phase === "reveal" && !a.finalized,
-  ).length;
+  // The /assigned endpoint returns minimal shape:
+  // { id, candidateName, guildId, guildName, status, createdAt, itemType }
+  // We can't tell voting_phase / has_voted / finalized from that, so we rely
+  // on the queue endpoint's phase classification (mapped into bucket+phase by
+  // the api adapter) and on status === "pending" as a fallback signal.
+  const pendingAssigned = assigned.filter((a) => a.status === "pending");
+  const commitItems = items.filter((i) => i.phase === "commit");
+  const revealItems = items.filter((i) => i.phase === "reveal");
+  // "Active commits" = items currently in the commit phase the user can act on
+  // (either due_soon or waiting). Falls back to count of pending assigned
+  // applications when the queue endpoint isn't populated.
+  const activeCommits = commitItems.length || pendingAssigned.length;
+  const awaitingReveal = items.filter((i) => i.bucket === "due_soon" && i.phase === "reveal").length;
+  const revealOpen = revealItems.length;
 
   // Blockchain stake — single guild balance returned from
   // blockchainApi.getExpertGuildStakes.
   const totalStake = guildStake ? parseFloat(guildStake.stakedAmount || "0") : 0;
-  // The "in review" amount = sum of `required_stake` for active applications
-  // we have committed on (so they're effectively locked).
-  const stakeLockedOnReviews = assigned
-    .filter((a) => a.has_voted && !a.finalized)
-    .reduce((sum, a) => sum + (a.required_stake || 0), 0);
-  const inReviewVetd = Math.min(totalStake, stakeLockedOnReviews);
+  // The "in review" amount = sum of stake locked on items in the queue's
+  // commit/reveal buckets. We don't have per-item stake from /assigned, so
+  // we fall back to a flat 25% locked when there are active reviews (matches
+  // the protocol's locked-stake heuristic in the dashboard).
+  const activeReviewCount = commitItems.length + revealItems.length;
+  const inReviewVetd = activeReviewCount > 0 ? Math.round(totalStake * 0.25) : 0;
   const availableVetd = Math.max(0, totalStake - inReviewVetd);
   const inReviewPercent = totalStake > 0 ? (inReviewVetd / totalStake) * 100 : 0;
 
   const reputation = guild.reputation ?? 0;
-  const stakeLockedReviewCount = assigned.filter((a) => a.has_voted && !a.finalized).length;
+  const stakeLockedReviewCount = activeReviewCount;
 
-  // Pending payouts — finalized applications where the user has a positive
-  // reward that hasn't been booked into earnings yet. Best-effort: we rely
-  // on `my_reward_amount` when finalize has computed it.
-  const pendingPayouts = assigned
-    .filter((a) => a.finalized && (a.my_reward_amount ?? 0) > 0)
-    .reduce((sum, a) => sum + (a.my_reward_amount || 0), 0);
+  // Pending payouts — no first-class endpoint yet. Leave at 0 until backend
+  // surfaces accrued-but-not-booked rewards.
+  const pendingPayouts = 0;
 
   const kpis: GuildWorkspaceKpis = {
     queueCount,
@@ -180,18 +181,21 @@ function buildKpiBundle(args: {
     stakeLockedVetd: totalStake,
     stakeLockedReviewCount,
     pendingPayoutsUsd: queue?.kpis?.pendingPayoutsUsd ?? pendingPayouts ?? 0,
-    pendingPayoutReviewCount: queue?.kpis?.pendingPayoutReviewCount ?? assigned.filter((a) => a.finalized).length,
+    pendingPayoutReviewCount: queue?.kpis?.pendingPayoutReviewCount ?? 0,
     reputation,
     reputationDelta: queue?.kpis?.reputationDelta ?? 0,
     rank: queue?.kpis?.rank,
     totalMembers: queue?.kpis?.totalMembers ?? guild.memberCount,
   };
 
-  const stakePosition: GuildWorkspaceStakePosition = queue?.stakePosition ?? {
+  // Prefer client-derived stake position so the totals reflect the actual
+  // on-chain balance from blockchainApi.getExpertGuildStakes. The queue
+  // endpoint's stakePosition fallback uses 0s.
+  const stakePosition: GuildWorkspaceStakePosition = {
     totalStakedVetd: totalStake,
     inReviewVetd,
     availableVetd,
-    atRiskVetd: stakeLockedOnReviews,
+    atRiskVetd: inReviewVetd,
     inReviewPercent,
   };
 

@@ -1078,12 +1078,97 @@ export const guildsApi = {
    * `GET /guilds/:id/queue` endpoint — callers should empty-state cleanly
    * when this 404s.
    */
-  getMemberQueue: (guildId: string, wallet?: string) => {
+  getMemberQueue: async (guildId: string, wallet?: string) => {
     const query = wallet ? `?wallet=${encodeURIComponent(wallet)}` : "";
-    return apiRequest<import("@/types").GuildWorkspaceQueueResponse>(
+    // Backend returns the triaged buckets directly:
+    //   { urgent: [...], waiting: [...], unclaimed: [...] }
+    // Each item: { kind, id, title, subject, deadline, phase, progress: { committed, required } }
+    // The frontend type expects a flattened `items[]` (each with a `bucket`
+    // field) plus aggregated `kpis`/`stakePosition`/`periodStats` — we
+    // adapt here so consumers don't need to know the wire shape.
+    interface BackendQueueItem {
+      kind: string;
+      id: string;
+      title: string;
+      subject?: string;
+      deadline?: string | null;
+      phase?: string;
+      progress?: { committed: number; required: number };
+    }
+    interface BackendQueueResponse {
+      urgent: BackendQueueItem[];
+      waiting: BackendQueueItem[];
+      unclaimed: BackendQueueItem[];
+    }
+    const raw = await apiRequest<BackendQueueResponse>(
       `/api/guilds/${encodeURIComponent(guildId)}/queue${query}`,
       { requiresAuth: false }
     );
+    type FrontType = import("@/types").GuildQueueItemType;
+    type FrontPhase = import("@/types").GuildQueueItemPhase;
+    type FrontBucket = import("@/types").GuildQueueBucket;
+    const mapKind = (kind: string): { type: FrontType; phase: FrontPhase } => {
+      if (kind.startsWith("candidate")) {
+        return { type: "candidate", phase: kind.includes("reveal") ? "reveal" : "commit" };
+      }
+      if (kind.startsWith("expert_app")) {
+        return { type: "expert", phase: kind.includes("reveal") ? "reveal" : "commit" };
+      }
+      if (kind.startsWith("governance")) return { type: "governance", phase: "vote" };
+      if (kind === "unclaimed_candidate") return { type: "candidate", phase: "open" };
+      return { type: "candidate", phase: "open" };
+    };
+    const mapItem = (
+      it: BackendQueueItem,
+      bucket: FrontBucket,
+    ): import("@/types").GuildQueueItem => {
+      const { type, phase } = mapKind(it.kind);
+      return {
+        id: it.id,
+        bucket,
+        type,
+        phase,
+        title: it.title,
+        subjectName: it.subject,
+        deadline: it.deadline ?? null,
+        commitsCompleted: it.progress?.committed,
+        commitsRequired: it.progress?.required,
+      };
+    };
+    const items: import("@/types").GuildQueueItem[] = [
+      ...(raw.urgent ?? []).map((it) => mapItem(it, "due_soon")),
+      ...(raw.waiting ?? []).map((it) => mapItem(it, "waiting")),
+      ...(raw.unclaimed ?? []).map((it) => mapItem(it, "unclaimed")),
+    ];
+    const kpis: import("@/types").GuildWorkspaceKpis = {
+      queueCount: items.length,
+      queueUrgentCount: (raw.urgent ?? []).length,
+      activeCommits: 0,
+      awaitingReveal: 0,
+      revealOpen: 0,
+      stakeLockedVetd: 0,
+      stakeLockedReviewCount: 0,
+      pendingPayoutsUsd: 0,
+      pendingPayoutReviewCount: 0,
+      reputation: 0,
+      reputationDelta: 0,
+      totalMembers: 0,
+    };
+    const stakePosition: import("@/types").GuildWorkspaceStakePosition = {
+      totalStakedVetd: 0,
+      inReviewVetd: 0,
+      availableVetd: 0,
+      atRiskVetd: 0,
+      inReviewPercent: 0,
+    };
+    const periodStats: import("@/types").GuildWorkspacePeriodStats = {
+      reviews: 0,
+      consensusRate: 0,
+      avgConviction: 0,
+      reputationDelta: 0,
+      earnedUsd: 0,
+    };
+    return { items, kpis, stakePosition, periodStats };
   },
 
   /**
