@@ -1,14 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useFetch } from "@/lib/hooks/useFetch";
-import { guildsApi } from "@/lib/api";
 import { GuildQueueRow } from "./GuildQueueRow";
-import type { GuildQueueItem } from "@/types";
+import type { GuildApplication, GuildQueueItem } from "@/types";
 
 interface GuildMyReviewsTabProps {
   guildId: string;
-  walletAddress?: string;
+  /** Expert ID of the viewer — used to build deep-link URLs. */
+  expertId?: string | null;
+  /**
+   * The viewer's assigned applications scoped to this guild. Pulled from
+   * `guildApplicationsApi.getAssigned(expertId, guildId)` by the workspace
+   * container — this is the same data source the legacy dashboard's review
+   * queue reads, so the badge counts agree across surfaces.
+   */
+  applications?: GuildApplication[];
 }
 
 type FilterId = "active" | "awaiting" | "open" | "past" | "slashed" | "all";
@@ -22,41 +28,108 @@ const FILTER_OPTIONS: Array<{ id: FilterId; label: string }> = [
   { id: "all", label: "All-time" },
 ];
 
-function matchesFilter(item: GuildQueueItem, filter: FilterId): boolean {
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+function mapApplicationToQueueItem(app: GuildApplication, guildId: string): GuildQueueItem {
+  const phase: GuildQueueItem["phase"] =
+    app.voting_phase === "reveal"
+      ? "reveal"
+      : app.voting_phase === "commit"
+        ? "commit"
+        : "vote";
+  const bucket: GuildQueueItem["bucket"] = app.finalized
+    ? "waiting"
+    : phase === "reveal"
+      ? "due_soon"
+      : "waiting";
+
+  const isExpertApp = app.item_type === "expert_application";
+  const isCandidateApp = app.item_type === "guild_application";
+
+  const href = (() => {
+    const base = `/expert/guild/${encodeURIComponent(guildId)}`;
+    if (isCandidateApp) {
+      return `${base}?tab=membershipApplications&candidateApplicationId=${app.id}`;
+    }
+    if (isExpertApp) {
+      return `${base}?tab=membershipApplications&applicationId=${app.id}`;
+    }
+    return `/expert/voting/applications/${encodeURIComponent(app.id)}`;
+  })();
+
+  return {
+    id: app.id,
+    bucket,
+    type: isExpertApp ? "expert" : isCandidateApp ? "candidate" : "candidate",
+    phase,
+    title: app.candidate_name || "Application",
+    subjectName: app.guild_name,
+    deadline: app.voting_deadline || null,
+    commitsCompleted: app.vote_count ?? 0,
+    commitsRequired: app.assigned_reviewer_count,
+    stakeRequired: app.required_stake,
+    stakeLocked: app.has_voted ? app.required_stake : undefined,
+    actionLabel: app.has_voted
+      ? phase === "reveal"
+        ? "Reveal vote"
+        : "View commit"
+      : "Start review",
+    actionPrimary: !app.has_voted,
+    actionHref: href,
+  };
+}
+
+function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
   if (filter === "all") return true;
-  if (filter === "active") return item.bucket !== "unclaimed";
-  if (filter === "open") return item.phase === "reveal";
-  if (filter === "awaiting") return item.phase === "commit";
-  if (filter === "past" || filter === "slashed") return false;
+  if (filter === "active") return !app.finalized;
+  if (filter === "awaiting") return app.voting_phase === "commit" && !app.finalized;
+  if (filter === "open") return app.voting_phase === "reveal" && !app.finalized;
+  if (filter === "past") {
+    if (!app.finalized || !app.finalized_at) return false;
+    const finalizedMs = new Date(app.finalized_at).getTime();
+    return Date.now() - finalizedMs <= THIRTY_DAYS_MS;
+  }
+  if (filter === "slashed") {
+    return (app.my_slashing_tier ?? null) != null;
+  }
   return true;
 }
 
 /**
- * The "My Reviews" tab — filters across the same queue payload, scoped to
- * items the viewer has already engaged with. Falls back to the unfiltered
- * queue when the backend doesn't return the historical buckets yet.
+ * The "My Reviews" tab — surfaces the viewer's assigned guild applications
+ * with filters for the commit/reveal lifecycle. Reads from
+ * `guildApplicationsApi.getAssigned`, the same source the legacy dashboard's
+ * Review Queue uses, so the counts here agree with the dashboard badges.
  */
-export function GuildMyReviewsTab({ guildId, walletAddress }: GuildMyReviewsTabProps) {
+export function GuildMyReviewsTab({
+  guildId,
+  expertId,
+  applications,
+}: GuildMyReviewsTabProps) {
   const [filter, setFilter] = useState<FilterId>("active");
-  const { data, isLoading, error } = useFetch(
-    () => guildsApi.getMemberQueue(guildId, walletAddress),
-    {
-      onError: () => {},
-    },
+
+  const items = useMemo(() => applications ?? [], [applications]);
+
+  const filtered = useMemo(
+    () => items.filter((app) => matchesFilter(app, filter)),
+    [items, filter],
   );
 
-  const filtered = useMemo(() => {
-    const items = data?.items ?? [];
-    return items.filter((i) => matchesFilter(i, filter));
-  }, [data, filter]);
-
   const counts = useMemo(() => {
-    const items = data?.items ?? [];
-    const active = items.filter((i) => i.bucket !== "unclaimed").length;
-    const awaiting = items.filter((i) => i.phase === "commit").length;
-    const open = items.filter((i) => i.phase === "reveal").length;
-    return { active, awaiting, open, all: items.length };
-  }, [data]);
+    const active = items.filter((a) => !a.finalized).length;
+    const awaiting = items.filter((a) => a.voting_phase === "commit" && !a.finalized).length;
+    const open = items.filter((a) => a.voting_phase === "reveal" && !a.finalized).length;
+    const past = items.filter((a) => matchesFilter(a, "past")).length;
+    const slashed = items.filter((a) => matchesFilter(a, "slashed")).length;
+    return { active, awaiting, open, past, slashed, all: items.length };
+  }, [items]);
+
+  const queueRows = useMemo(
+    () => filtered.map((app) => mapApplicationToQueueItem(app, guildId)),
+    [filtered, guildId],
+  );
+
+  const showWaitingForExpertId = !expertId && items.length === 0;
 
   return (
     <div>
@@ -67,6 +140,8 @@ export function GuildMyReviewsTab({ guildId, walletAddress }: GuildMyReviewsTabP
             active: counts.active,
             awaiting: counts.awaiting,
             open: counts.open,
+            past: counts.past,
+            slashed: counts.slashed,
             all: counts.all,
           };
           const count = countMap[opt.id];
@@ -90,30 +165,24 @@ export function GuildMyReviewsTab({ guildId, walletAddress }: GuildMyReviewsTabP
         })}
       </div>
 
-      {error && !data && (
+      {showWaitingForExpertId && (
         <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
-          Couldn&apos;t load your review history.
+          Loading your reviewer profile…
         </div>
       )}
 
-      {isLoading && !data && (
-        <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
-          Loading…
-        </div>
-      )}
-
-      {filtered.length === 0 && !isLoading && !error && (
+      {!showWaitingForExpertId && queueRows.length === 0 && (
         <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
           No reviews match this filter.
         </div>
       )}
 
       <div className="space-y-2">
-        {filtered.map((item) => (
+        {queueRows.map((item) => (
           <GuildQueueRow
             key={item.id}
             item={item}
-            variant={item.bucket === "due_soon" ? "warm" : "default"}
+            variant={item.phase === "reveal" ? "warm" : "default"}
           />
         ))}
       </div>
