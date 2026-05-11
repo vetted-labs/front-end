@@ -215,22 +215,12 @@ export function DomainReviewStep({
                     <ScoreButtons
                       value={topicScores[topic.id] || 0}
                       max={5}
-                      onChange={(val) => {
+                      onChange={(val) =>
                         onTopicScoresChange((prev) => ({
                           ...prev,
                           [topic.id]: val,
-                        }));
-                        // Scroll the justification into view + focus it so the
-                        // reviewer doesn't get stuck wondering where to type.
-                        // Defer until after the score-button state update + paint.
-                        requestAnimationFrame(() => {
-                          const el = document.getElementById(
-                            `review-justification-domain-${topic.id}`,
-                          ) as HTMLTextAreaElement | null;
-                          el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                          el?.focus({ preventScroll: true });
-                        });
-                      }}
+                        }))
+                      }
                     />
                     <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicJustification) : {})}>
                       <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">

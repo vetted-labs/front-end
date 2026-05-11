@@ -1072,7 +1072,9 @@ export function ReviewGuildApplicationModal({
       (id: string) => generalRubricQuestions[id] && !generalJustifications[id]?.trim()
     );
     if (missing.length > 0) {
-      setValidationError("Please add a justification for every scored general question.");
+      const msg = "Add a justification for every scored general question.";
+      toast.error(msg, { duration: 5000 });
+      setValidationError(msg);
       return false;
     }
     setValidationError(null);
@@ -1121,14 +1123,15 @@ export function ReviewGuildApplicationModal({
   const validateStep3 = () => {
     const issues = computeValidationIssues();
     if (issues.length > 0) {
-      // Single human-readable banner; the full per-field list with "Go to"
-      // links is rendered by ReviewSubmitSection in the confirm step (step 4).
       const head = issues[0]!;
-      setValidationError(
+      const summary =
         issues.length === 1
           ? head.message
-          : `${head.message} (+${issues.length - 1} more — see the list below)`,
-      );
+          : `${head.message} (+${issues.length - 1} more)`;
+      // Toast so it's visible above the fold without forcing a scroll;
+      // keep the inline banner too for redundancy.
+      toast.error(summary, { duration: 5000 });
+      setValidationError(summary);
       return false;
     }
     setValidationError(null);

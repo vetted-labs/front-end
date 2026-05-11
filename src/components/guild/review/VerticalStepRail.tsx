@@ -2,7 +2,7 @@
 
 import { STATUS_COLORS } from "@/config/colors";
 
-interface StepDef {
+export interface StepDef {
   number: number;
   label: string;
 }
@@ -36,6 +36,18 @@ export interface VerticalStepRailProps {
   isCommitPhase?: boolean;
   /** Renders sponsor-vouch hint label on the expert applicant variant. */
   variant?: "candidate" | "expert";
+  /**
+   * Optional step list override. Defaults to the review-flow REVIEW_STEPS.
+   * Pass a flow-specific list (e.g. endorse modal) to reuse the rail.
+   */
+  steps?: ReadonlyArray<StepDef>;
+  /** Header label above the primary section. Defaults to "Review". */
+  sectionLabel?: string;
+  /**
+   * When false, the commit-reveal sub-section is hidden entirely. Defaults
+   * to true so the review modal keeps its current layout untouched.
+   */
+  showCommitReveal?: boolean;
 }
 
 export function VerticalStepRail({
@@ -46,11 +58,15 @@ export function VerticalStepRail({
   onStepClick,
   isCommitPhase = false,
   variant = "candidate",
+  steps,
+  sectionLabel = "Review",
+  showCommitReveal = true,
 }: VerticalStepRailProps) {
   const completedSet = new Set(completedSteps ?? []);
   const incompleteSet = new Set(incompleteSteps ?? []);
   const lockBoundary =
     typeof maxUnlockedStep === "number" ? maxUnlockedStep : Number.POSITIVE_INFINITY;
+  const stepList = steps ?? REVIEW_STEPS;
 
   const stepLabel = (step: StepDef): string => {
     if (variant === "expert" && step.number === 2) return "Sponsor vouch";
@@ -60,14 +76,14 @@ export function VerticalStepRail({
 
   return (
     <nav
-      aria-label="Review steps"
+      aria-label={`${sectionLabel} steps`}
       className="flex flex-col gap-1 px-3 py-5 text-sm select-none"
     >
       <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
-        Review
+        {sectionLabel}
       </p>
 
-      {REVIEW_STEPS.map((step) => {
+      {stepList.map((step) => {
         const isActive = currentStep === step.number;
         const isCompleted =
           completedSet.has(step.number) ||
@@ -160,39 +176,43 @@ export function VerticalStepRail({
         );
       })}
 
-      <p className="mt-5 px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
-        Commit-Reveal
-      </p>
+      {showCommitReveal && (
+        <>
+          <p className="mt-5 px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground/70">
+            Commit-Reveal
+          </p>
 
-      {COMMIT_REVEAL_STEPS.map((step, idx) => {
-        const isActive = isCommitPhase && idx === 0;
-        const circleClass = isActive
-          ? "bg-primary border-primary text-primary-foreground"
-          : "bg-muted/40 border-border text-muted-foreground";
+          {COMMIT_REVEAL_STEPS.map((step, idx) => {
+            const isActive = isCommitPhase && idx === 0;
+            const circleClass = isActive
+              ? "bg-primary border-primary text-primary-foreground"
+              : "bg-muted/40 border-border text-muted-foreground";
 
-        return (
-          <div
-            key={step.label}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${
-              isActive ? "bg-primary/10 text-foreground" : "text-muted-foreground"
-            }`}
-            aria-current={isActive ? "step" : undefined}
-          >
-            <span
-              className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] font-semibold ${circleClass}`}
-              aria-hidden="true"
-            >
-              {idx + 5}
-            </span>
-            <span className="flex flex-col">
-              <span className="text-[13px] font-medium">{step.label}</span>
-              <span className="text-[10px] text-muted-foreground/70">
-                {step.sub}
-              </span>
-            </span>
-          </div>
-        );
-      })}
+            return (
+              <div
+                key={step.label}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${
+                  isActive ? "bg-primary/10 text-foreground" : "text-muted-foreground"
+                }`}
+                aria-current={isActive ? "step" : undefined}
+              >
+                <span
+                  className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] font-semibold ${circleClass}`}
+                  aria-hidden="true"
+                >
+                  {idx + 5}
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-[13px] font-medium">{step.label}</span>
+                  <span className="text-[10px] text-muted-foreground/70">
+                    {step.sub}
+                  </span>
+                </span>
+              </div>
+            );
+          })}
+        </>
+      )}
     </nav>
   );
 }
