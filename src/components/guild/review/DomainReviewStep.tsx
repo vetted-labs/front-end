@@ -188,12 +188,22 @@ export function DomainReviewStep({
                     <ScoreButtons
                       value={topicScores[topic.id] || 0}
                       max={5}
-                      onChange={(val) =>
+                      onChange={(val) => {
                         onTopicScoresChange((prev) => ({
                           ...prev,
                           [topic.id]: val,
-                        }))
-                      }
+                        }));
+                        // Scroll the justification into view + focus it so the
+                        // reviewer doesn't get stuck wondering where to type.
+                        // Defer until after the score-button state update + paint.
+                        requestAnimationFrame(() => {
+                          const el = document.getElementById(
+                            `review-justification-domain-${topic.id}`,
+                          ) as HTMLTextAreaElement | null;
+                          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          el?.focus({ preventScroll: true });
+                        });
+                      }}
                     />
                     <div {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewTopicJustification) : {})}>
                       <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
@@ -201,6 +211,7 @@ export function DomainReviewStep({
                         <RequiredMark label={`Required — min ${JUSTIFICATION_MIN_CHARS} characters`} />
                       </p>
                       <textarea
+                        id={`review-justification-domain-${topic.id}`}
                         value={justificationValue}
                         onChange={(e) =>
                           onTopicJustificationsChange((prev) => ({
@@ -211,7 +222,7 @@ export function DomainReviewStep({
                         maxLength={JUSTIFICATION_MAX_CHARS}
                         aria-required={true}
                         placeholder={`Tie the score to specific evidence from the response (min ${JUSTIFICATION_MIN_CHARS} chars)…`}
-                        className="w-full px-4 py-3 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y transition-all min-h-[120px]"
+                        className="w-full px-4 py-3 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y transition-all min-h-[140px]"
                       />
                       <div className="flex items-center justify-between mt-2 text-[11px]">
                         <span className="text-muted-foreground/70">

@@ -1,6 +1,7 @@
 "use client";
 
-import { Shield } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import Link from "next/link";
 import { GuildFeedTab } from "./GuildFeedTab";
 import type { ExpertRole } from "@/types";
 
@@ -10,22 +11,27 @@ interface GuildInternalFeedTabProps {
 }
 
 /**
- * Internal feed tab for the private member workspace.
+ * Workspace feed tab — shows the same public guild conversations members
+ * see on the public guild page, so the workspace doesn't feel empty.
  *
- * Wraps the existing public-feed component with a gold-tinted "members only"
- * banner. Phase 5 adds an `is_private` filter to the post query — until then
- * the same feed renders here, with the banner setting context that members
- * can post recusal notices, rubric RFCs, internal Q&A.
+ * A private members-only feed (recusal notices, rubric RFCs, internal Q&A)
+ * is deferred to v2; when that lands, this tab gets a visibility toggle.
  */
 export function GuildInternalFeedTab({ guildId, membershipRole }: GuildInternalFeedTabProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 rounded-lg border border-warning/25 bg-warning/[0.06] px-4 py-3 text-sm text-muted-foreground">
-        <Shield className="h-4 w-4 flex-shrink-0 text-warning" />
+      <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+        <MessageSquare className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
         <span>
-          <strong className="text-foreground">Internal feed</strong> — visible
-          only to guild members. Posts here don&apos;t appear on the public guild
-          page.
+          <strong className="text-foreground">Guild feed</strong> — same
+          conversations shown on the{" "}
+          <Link
+            href={`/guilds/${encodeURIComponent(guildId)}`}
+            className="text-primary hover:underline"
+          >
+            public guild page
+          </Link>
+          . A members-only feed is coming in v2.
         </span>
       </div>
       <GuildFeedTab
@@ -33,7 +39,7 @@ export function GuildInternalFeedTab({ guildId, membershipRole }: GuildInternalF
         isMember={true}
         membershipRole={membershipRole}
         userType="expert"
-        visibility="internal"
+        visibility="public"
       />
     </div>
   );

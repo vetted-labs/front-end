@@ -247,12 +247,20 @@ export function GeneralReviewStep({
                           <ScoreButtons
                             value={generalScores[question.id]?.[criterion.id] || 0}
                             max={criterion.maxPoints || criterion.max || 0}
-                            onChange={(val) =>
+                            onChange={(val) => {
                               onGeneralScoresChange((prev) => ({
                                 ...prev,
                                 [question.id]: { ...prev[question.id], [criterion.id]: val },
-                              }))
-                            }
+                              }));
+                              // Auto-scroll justification into view on score
+                              // so the reviewer always lands on the next field.
+                              requestAnimationFrame(() => {
+                                const el = document.getElementById(
+                                  `review-justification-general-${question.id}`,
+                                ) as HTMLTextAreaElement | null;
+                                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              });
+                            }}
                           />
                         </div>
                       </div>
@@ -274,6 +282,7 @@ export function GeneralReviewStep({
                         )}
                       </p>
                       <textarea
+                        id={`review-justification-general-${question.id}`}
                         value={justificationValue}
                         onChange={(e) =>
                           onGeneralJustificationsChange((prev) => ({
