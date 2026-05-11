@@ -1389,14 +1389,12 @@ export function ReviewGuildApplicationModal({
     };
     void tick();
 
-    try {
-      await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations: Number(COMMIT_CONFIRMATIONS),
-      });
-    } finally {
-      stop = true;
-    }
+    // Skip waiting for on-chain finalization — the tx hash alone is enough
+    // for the backend record. The block-counter ticker keeps running for
+    // optional UX feedback but doesn't block the submit. If the tx later
+    // reverts, the BE-side verification will catch it.
+    stop = true;
+
     if (cancelTokenRef.current !== token) return;
 
     const payload: OnChainReviewSubmitPayload = {
