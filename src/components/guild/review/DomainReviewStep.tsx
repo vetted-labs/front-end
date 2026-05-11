@@ -36,6 +36,12 @@ export interface DomainReviewStepProps {
   onTopicJustificationsChange: (updater: (prev: Record<string, string>) => Record<string, string>) => void;
   onRedFlagsChange: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   onFeedbackChange: (value: string) => void;
+  /**
+   * Which topic to show. The modal paginates one topic at a time so the
+   * form doesn't overwhelm; footer Next/Back walk through these before the
+   * commit/submit confirmation surface.
+   */
+  currentTopicIndex?: number;
 }
 
 export function DomainReviewStep({
@@ -58,8 +64,19 @@ export function DomainReviewStep({
   onTopicJustificationsChange,
   onRedFlagsChange,
   onFeedbackChange,
+  currentTopicIndex,
 }: DomainReviewStepProps) {
   const totalTopics = topicList.length;
+  // Show one topic at a time when an index is supplied.
+  const visibleTopics = (() => {
+    if (currentTopicIndex == null) return topicList;
+    const safeIdx = Math.max(0, Math.min(currentTopicIndex, topicList.length - 1));
+    const selected = topicList[safeIdx];
+    return selected ? [selected] : [];
+  })();
+  const topicIndexOffset = currentTopicIndex == null
+    ? 0
+    : Math.max(0, Math.min(currentTopicIndex, Math.max(topicList.length - 1, 0)));
 
   return (
     <div className="space-y-7" {...dataTourTarget(TOUR_TARGETS.practiceReviewDomainRubric)}>
@@ -94,7 +111,8 @@ export function DomainReviewStep({
         ) : topicList.length === 0 ? (
           <p className="text-sm text-muted-foreground">No level-specific rubric available for this guild.</p>
         ) : (
-          topicList.map((topic, index) => {
+          visibleTopics.map((topic, localIndex) => {
+            const index = topicIndexOffset + localIndex;
             const score = topicScores[topic.id] || 0;
             const pct = (score / 5) * 100;
             const justificationValue = topicJustifications[topic.id] || "";

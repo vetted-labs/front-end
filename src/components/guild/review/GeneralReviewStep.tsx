@@ -35,6 +35,12 @@ export interface GeneralReviewStepProps {
   getGeneralResponseValue: (questionId: string, partId?: string) => string;
   onGeneralScoresChange: (updater: (prev: Record<string, Record<string, number>>) => Record<string, Record<string, number>>) => void;
   onGeneralJustificationsChange: (updater: (prev: Record<string, string>) => Record<string, string>) => void;
+  /**
+   * Which scored question to show. The modal paginates one question at a
+   * time so the form doesn't overwhelm; footer Next/Back walk through these
+   * before crossing into the next step.
+   */
+  currentQuestionIndex?: number;
 }
 
 export function GeneralReviewStep({
@@ -51,11 +57,23 @@ export function GeneralReviewStep({
   getGeneralResponseValue,
   onGeneralScoresChange,
   onGeneralJustificationsChange,
+  currentQuestionIndex,
 }: GeneralReviewStepProps) {
   const scoredQuestions = generalQuestions.filter(
     (question) => generalRubricQuestions[question.id],
   );
   const totalQuestions = scoredQuestions.length;
+  // Show one question at a time when an index is supplied. When undefined,
+  // fall back to showing the full list (e.g. story-lab fixture preview).
+  const visibleQuestions = (() => {
+    if (currentQuestionIndex == null) return scoredQuestions;
+    const safeIdx = Math.max(0, Math.min(currentQuestionIndex, scoredQuestions.length - 1));
+    const selected = scoredQuestions[safeIdx];
+    return selected ? [selected] : [];
+  })();
+  const indexOffset = currentQuestionIndex == null
+    ? 0
+    : Math.max(0, Math.min(currentQuestionIndex, Math.max(scoredQuestions.length - 1, 0)));
 
   return (
     <div className="space-y-7" {...dataTourTarget(TOUR_TARGETS.practiceReviewGeneralRubric)}>
@@ -89,8 +107,9 @@ export function GeneralReviewStep({
       ) : Object.keys(generalRubricQuestions).length === 0 ? (
         <p className="text-sm text-muted-foreground">No general scoring rubric available for this guild.</p>
       ) : (
-        scoredQuestions
-          .map((question, index) => {
+        visibleQuestions
+          .map((question, localIndex) => {
+            const index = indexOffset + localIndex;
             const rubric = generalRubricQuestions[question.id];
             const criteria: RubricCriterion[] = rubric?.criteria || [];
             const maxPoints =

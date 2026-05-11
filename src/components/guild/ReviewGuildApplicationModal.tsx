@@ -273,6 +273,11 @@ export function ReviewGuildApplicationModal({
 }: ReviewGuildApplicationModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  // Within-step pagination: rubric steps render one question / topic at a
+  // time so the form isn't overwhelming. Footer Next advances the sub-index
+  // first, and only crosses into the next step on the last question.
+  const [generalQuestionIndex, setGeneralQuestionIndex] = useState(0);
+  const [domainTopicIndex, setDomainTopicIndex] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [generalScores, setGeneralScores] = useState<Record<string, Record<string, number>>>({});
   const [generalJustifications, setGeneralJustifications] = useState<Record<string, string>>({});
@@ -1073,19 +1078,69 @@ export function ReviewGuildApplicationModal({
     return true;
   };
 
+  // Scored sub-items for rubric steps. We paginate one at a time so footer
+  // Next walks through questions before crossing into the next step.
+  const scoredGeneralQuestions = generalQuestions.filter(
+    (q) => generalRubricQuestions[q.id],
+  );
+  const generalLastIndex = Math.max(0, scoredGeneralQuestions.length - 1);
+  const domainLastIndex = Math.max(0, topicList.length - 1);
+
   const handleNext = () => {
-    if (currentStep === 2 && !validateStep2()) return;
+    // Step 2: walk through general-rubric questions one at a time, then
+    // validate the whole step before advancing to step 3.
+    if (currentStep === 2) {
+      if (generalQuestionIndex < generalLastIndex) {
+        setGeneralQuestionIndex((i) => i + 1);
+        scrollContentToTop(contentRef.current);
+        return;
+      }
+      if (!validateStep2()) return;
+    }
+    // Step 3: walk through domain topics similarly. The final topic is the
+    // commit/submit confirmation surface, so we let ReviewNavigation handle
+    // the submit click on the last topic instead of advancing here.
+    if (currentStep === 3 && domainTopicIndex < domainLastIndex) {
+      setDomainTopicIndex((i) => i + 1);
+      scrollContentToTop(contentRef.current);
+      return;
+    }
     // Force-flush the debounce before transitioning steps so a mid-typing
     // refresh on the new step doesn't lose the previous step's last edits.
     void flushDraftNow();
-    setCurrentStep((prev) => Math.min(prev + 1, 3));
+    setCurrentStep((prev) => {
+      const next = Math.min(prev + 1, 3);
+      // Reset sub-indices when entering each rubric step fresh.
+      if (next === 2) setGeneralQuestionIndex(0);
+      if (next === 3) setDomainTopicIndex(0);
+      return next;
+    });
     scrollContentToTop(contentRef.current);
   };
 
   const handleBack = () => {
     setValidationError(null);
+    // Step 2: walk back through general-rubric questions before leaving.
+    if (currentStep === 2 && generalQuestionIndex > 0) {
+      setGeneralQuestionIndex((i) => i - 1);
+      scrollContentToTop(contentRef.current);
+      return;
+    }
+    // Step 3: walk back through domain topics before leaving.
+    if (currentStep === 3 && domainTopicIndex > 0) {
+      setDomainTopicIndex((i) => i - 1);
+      scrollContentToTop(contentRef.current);
+      return;
+    }
     void flushDraftNow();
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => {
+      const next = Math.max(prev - 1, 1);
+      // When stepping back into a rubric step, land on its last question so
+      // forward Next walks the user back through the same sequence.
+      if (next === 2) setGeneralQuestionIndex(generalLastIndex);
+      if (next === 3) setDomainTopicIndex(domainLastIndex);
+      return next;
+    });
     scrollContentToTop(contentRef.current);
   };
 
@@ -1983,6 +2038,7 @@ export function ReviewGuildApplicationModal({
                   getGeneralResponseValue={getGeneralResponseValue}
                   onGeneralScoresChange={setGeneralScores}
                   onGeneralJustificationsChange={setGeneralJustifications}
+                  currentQuestionIndex={generalQuestionIndex}
                 />
               </fieldset>
             )}
@@ -2013,6 +2069,7 @@ export function ReviewGuildApplicationModal({
                     onTopicJustificationsChange={setTopicJustifications}
                     onRedFlagsChange={setRedFlags}
                     onFeedbackChange={setFeedback}
+                    currentTopicIndex={domainTopicIndex}
                   />
                 </fieldset>
                 {isCommitPhase && (
@@ -2135,7 +2192,7 @@ export function ReviewGuildApplicationModal({
                   • Steps 2/3: compact applicant snapshot for at-a-glance context. */}
               <aside className="hidden lg:block overflow-y-auto px-5 py-5 bg-muted/[0.02]">
                 {renderStep === 1 && (
-                  <div className="space-y-4 sticky top-0">
+                  <div className="sticky top-0">
                     <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
                       <p className="text-[10px] font-bold text-primary uppercase tracking-[0.08em] mb-1">
                         Step 1 · Review materials
@@ -2145,18 +2202,11 @@ export function ReviewGuildApplicationModal({
                       </p>
                       <p className="text-xs text-muted-foreground leading-relaxed">
                         Take your time with the resume, responses, and references on
-                        the left. When you&apos;re ready to score, click{" "}
-                        <strong className="text-foreground">Next</strong> or jump to
-                        a rubric section using the left rail.
+                        the left. When you&apos;re ready, use{" "}
+                        <strong className="text-foreground">Next</strong> below or
+                        jump to a rubric section in the left rail.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-                    >
-                      Start scoring →
-                    </button>
                   </div>
                 )}
                 {(renderStep === 2 || renderStep === 3) && (
