@@ -8,20 +8,25 @@ import { guildsApi } from "@/lib/api";
 import { GuildQueueRow } from "./GuildQueueRow";
 import type {
   GuildQueueItem,
-  GuildWorkspaceKpis,
   GuildWorkspacePeriodStats,
+  GuildWorkspaceQueueResponse,
   GuildWorkspaceStakePosition,
 } from "@/types";
 
 interface GuildQueueTabProps {
   guildId: string;
   walletAddress?: string;
-  /** Bubbles KPI data up to the workspace shell so we don't double-fetch. */
-  onKpisLoaded?: (data: {
-    kpis: GuildWorkspaceKpis;
-    stakePosition: GuildWorkspaceStakePosition;
-    periodStats: GuildWorkspacePeriodStats;
-  }) => void;
+  /**
+   * Pre-fetched queue payload. Provided by the workspace container so the
+   * queue fetch happens once even when the user is on a different tab. When
+   * omitted, the tab falls back to fetching on mount (kept so the tab is
+   * still usable in isolation, e.g. inside Storybook).
+   */
+  queueData?: GuildWorkspaceQueueResponse;
+  /** Pre-computed stake position from the workspace shell. */
+  stakePosition?: GuildWorkspaceStakePosition;
+  /** Pre-computed period stats from the workspace shell. */
+  periodStats?: GuildWorkspacePeriodStats;
   /** Internal feed posts for the sidebar preview card. */
   internalChatter?: Array<{
     id: string;
@@ -50,33 +55,30 @@ const SECTION_HEADINGS = {
 export function GuildQueueTab({
   guildId,
   walletAddress,
-  onKpisLoaded,
+  queueData,
+  stakePosition,
+  periodStats,
   internalChatter = [],
 }: GuildQueueTabProps) {
-  const { data, isLoading, error } = useFetch(
+  // Only fetch on our own when the container didn't pass data in (keeps the
+  // tab usable in isolation, e.g. inside Storybook).
+  const { data: fetched, isLoading, error } = useFetch(
     () => guildsApi.getMemberQueue(guildId, walletAddress),
     {
-      onSuccess: (response) => {
-        if (response && onKpisLoaded) {
-          onKpisLoaded({
-            kpis: response.kpis,
-            stakePosition: response.stakePosition,
-            periodStats: response.periodStats,
-          });
-        }
-      },
+      skip: queueData != null,
       // Soft-fail: empty-state when the Phase 5 endpoint isn't ready.
       onError: () => {},
     },
   );
+  const data = queueData ?? fetched ?? undefined;
 
   const items = data?.items ?? [];
   const dueSoon = items.filter((i) => i.bucket === "due_soon");
   const waiting = items.filter((i) => i.bucket === "waiting");
   const unclaimed = items.filter((i) => i.bucket === "unclaimed");
   const sidebar: QueueSidebarData = {
-    stakePosition: data?.stakePosition,
-    periodStats: data?.periodStats,
+    stakePosition: stakePosition ?? data?.stakePosition,
+    periodStats: periodStats ?? data?.periodStats,
   };
 
   return (

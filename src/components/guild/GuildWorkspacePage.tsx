@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Settings, ExternalLink, Star, BadgeCheck } from "lucide-react";
@@ -12,19 +12,34 @@ import { useFetch } from "@/lib/hooks/useFetch";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
 import { fetchAndNormalizeGuildData } from "@/lib/guildDetailHelpers";
 import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
-import { extractApiError } from "@/lib/api";
+import {
+  blockchainApi,
+  expertApi,
+  extractApiError,
+  governanceApi,
+  guildApplicationsApi,
+  guildFeedApi,
+  guildsApi,
+} from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { formatTimeAgo } from "@/lib/utils";
 import { getGuildIdentity } from "@/lib/guildIdentity";
 import { getGuildIconName } from "@/lib/guildHelpers";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { cn } from "@/lib/utils";
 import type {
   ExpertRole,
+  GuildApplication,
   GuildDetailData,
+  GuildPost,
+  GuildStakeInfo,
   GuildWorkspaceKpis,
   GuildWorkspacePeriodStats,
+  GuildWorkspaceProposal,
+  GuildWorkspaceQueueResponse,
   GuildWorkspaceStakePosition,
   GuildWorkspaceTab,
+  GovernanceProposalDetail,
 } from "@/types";
 import { GUILD_WORKSPACE_TABS } from "@/types";
 import { GuildKpiTile } from "./GuildKpiTile";
@@ -44,6 +59,165 @@ interface KpiBundle {
   kpis: GuildWorkspaceKpis;
   stakePosition: GuildWorkspaceStakePosition;
   periodStats: GuildWorkspacePeriodStats;
+}
+
+interface ChatterPreview {
+  id: string;
+  author: string;
+  role?: string;
+  timeAgo: string;
+  body: string;
+}
+
+/**
+ * Map the camelCase governance proposal detail to the workspace's normalized
+ * proposal shape, scoped to a single guild. Falls back to client-side guild
+ * filtering because the global active-proposals endpoint can't filter on
+ * server side reliably yet.
+ */
+function mapGovernanceProposal(
+  raw: GovernanceProposalDetail,
+): GuildWorkspaceProposal {
+  const totalVotes = raw.votes_for + raw.votes_against + raw.votes_abstain;
+  const supportPercent = raw.approval_percent != null
+    ? raw.approval_percent
+    : totalVotes > 0
+      ? (raw.votes_for / totalVotes) * 100
+      : 0;
+  const status: GuildWorkspaceProposal["status"] = raw.finalized
+    ? raw.outcome === "passed"
+      ? "passed"
+      : "rejected"
+    : "open";
+  return {
+    id: raw.id,
+    title: raw.title,
+    proposerName: raw.proposer_name,
+    proposerWallet: raw.proposer_wallet,
+    proposedAt: raw.created_at,
+    votesCast: raw.voter_count ?? totalVotes,
+    totalVoters: raw.quorum_required || totalVotes,
+    supportPercent,
+    deadline: raw.voting_deadline,
+    status,
+    hasVoted: raw.has_voted,
+    myVote: raw.my_vote as GuildWorkspaceProposal["myVote"] | undefined,
+  };
+}
+
+/**
+ * Build a workspace KPI bundle from the various data sources. Each input is
+ * optional — when a source 404s we leave its slice at zero rather than
+ * blanking the entire bundle, so the user still sees the data points that
+ * did load (stake position from blockchain even when the queue endpoint is
+ * down, for example).
+ */
+function buildKpiBundle(args: {
+  guild: GuildDetailData;
+  queue?: GuildWorkspaceQueueResponse;
+  assigned: GuildApplication[];
+  guildStake?: GuildStakeInfo;
+  governanceForGuild: GuildWorkspaceProposal[];
+  guildEarningsTotalUsd: number;
+  guildEarningsCount: number;
+}): KpiBundle {
+  const {
+    guild,
+    queue,
+    assigned,
+    guildStake,
+    governanceForGuild,
+    guildEarningsTotalUsd,
+    guildEarningsCount,
+  } = args;
+
+  // Queue counts — derive from full items list when available, else lean on
+  // the server-provided KPI numbers.
+  const items = queue?.items ?? [];
+  const queueCount = items.length || (queue?.kpis.queueCount ?? 0);
+  const queueUrgent = items.filter((i) => i.bucket === "due_soon").length
+    || (queue?.kpis.queueUrgentCount ?? 0);
+
+  // Phase-derived counts from this guild's assigned applications.
+  const activeCommits = assigned.filter(
+    (a) => a.voting_phase === "commit" && !a.has_voted && !a.finalized,
+  ).length;
+  const awaitingReveal = assigned.filter(
+    (a) => a.voting_phase === "commit" && a.has_voted && !a.finalized,
+  ).length;
+  const revealOpen = assigned.filter(
+    (a) => a.voting_phase === "reveal" && !a.finalized,
+  ).length;
+
+  // Blockchain stake — single guild balance returned from
+  // blockchainApi.getExpertGuildStakes.
+  const totalStake = guildStake ? parseFloat(guildStake.stakedAmount || "0") : 0;
+  // The "in review" amount = sum of `required_stake` for active applications
+  // we have committed on (so they're effectively locked).
+  const stakeLockedOnReviews = assigned
+    .filter((a) => a.has_voted && !a.finalized)
+    .reduce((sum, a) => sum + (a.required_stake || 0), 0);
+  const inReviewVetd = Math.min(totalStake, stakeLockedOnReviews);
+  const availableVetd = Math.max(0, totalStake - inReviewVetd);
+  const inReviewPercent = totalStake > 0 ? (inReviewVetd / totalStake) * 100 : 0;
+
+  const reputation = guild.reputation ?? 0;
+  const stakeLockedReviewCount = assigned.filter((a) => a.has_voted && !a.finalized).length;
+
+  // Pending payouts — finalized applications where the user has a positive
+  // reward that hasn't been booked into earnings yet. Best-effort: we rely
+  // on `my_reward_amount` when finalize has computed it.
+  const pendingPayouts = assigned
+    .filter((a) => a.finalized && (a.my_reward_amount ?? 0) > 0)
+    .reduce((sum, a) => sum + (a.my_reward_amount || 0), 0);
+
+  const kpis: GuildWorkspaceKpis = {
+    queueCount,
+    queueUrgentCount: queueUrgent,
+    activeCommits,
+    awaitingReveal,
+    revealOpen,
+    stakeLockedVetd: totalStake,
+    stakeLockedReviewCount,
+    pendingPayoutsUsd: queue?.kpis.pendingPayoutsUsd ?? pendingPayouts ?? 0,
+    pendingPayoutReviewCount: queue?.kpis.pendingPayoutReviewCount ?? assigned.filter((a) => a.finalized).length,
+    reputation,
+    reputationDelta: queue?.kpis.reputationDelta ?? 0,
+    rank: queue?.kpis.rank,
+    totalMembers: queue?.kpis.totalMembers ?? guild.memberCount,
+  };
+
+  const stakePosition: GuildWorkspaceStakePosition = queue?.stakePosition ?? {
+    totalStakedVetd: totalStake,
+    inReviewVetd,
+    availableVetd,
+    atRiskVetd: stakeLockedOnReviews,
+    inReviewPercent,
+  };
+
+  const periodStats: GuildWorkspacePeriodStats = queue?.periodStats ?? {
+    reviews: guildEarningsCount,
+    consensusRate: 0,
+    avgConviction: 0,
+    reputationDelta: 0,
+    earnedUsd: guildEarningsTotalUsd,
+  };
+
+  // Cross-fill governance counts into KPIs for tab badge hydration callers.
+  void governanceForGuild;
+
+  return { kpis, stakePosition, periodStats };
+}
+
+/** Convert a raw guild feed post into the sidebar chatter card preview shape. */
+function toChatterPreview(post: GuildPost): ChatterPreview {
+  return {
+    id: post.id,
+    author: post.author?.fullName || post.author?.walletAddress?.slice(0, 8) || "Member",
+    role: post.author?.expertRole || post.author?.guildRole,
+    timeAgo: post.createdAt ? formatTimeAgo(post.createdAt) : "",
+    body: post.body || post.title || "",
+  };
 }
 
 const TABS: Array<{
@@ -96,17 +270,19 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   })();
   const [activeTab, setActiveTab] = useState<GuildWorkspaceTab>(initialTab);
   const [guild, setGuild] = useState<GuildDetailData | null>(null);
-  const [kpiBundle, setKpiBundle] = useState<KpiBundle | null>(null);
+  const [currentExpertId, setCurrentExpertId] = useState<string | null>(null);
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"all" | "month" | "week">("all");
 
   const { isLoading, error } = useFetch(
     async () => {
       if (!address && !isStoryLabSyntheticGuild) throw new Error("No wallet address");
-      const { guild: normalized } = await fetchAndNormalizeGuildData(
-        guildId,
-        address ?? "0x0000000000000000000000000000000000000000",
-      );
+      const { guild: normalized, currentExpertId: expertId } =
+        await fetchAndNormalizeGuildData(
+          guildId,
+          address ?? "0x0000000000000000000000000000000000000000",
+        );
       setGuild(normalized);
+      if (expertId) setCurrentExpertId(expertId);
       return normalized;
     },
     {
@@ -117,6 +293,121 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
       },
     },
   );
+
+  // Triaged queue payload — owned by the workspace so the KPI tiles can read
+  // counts straight from `items` even when the child tab isn't mounted. The
+  // Queue tab consumes the same data via props.
+  const { data: queueData } = useFetch(
+    () => guildsApi.getMemberQueue(guildId, address),
+    {
+      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      // Endpoint is still rolling out — soft-fail so KPIs can fall back to
+      // the per-source numbers below.
+      onError: () => {},
+    },
+  );
+
+  // Assigned applications scoped to this guild — drives the activeCommits /
+  // awaitingReveal / revealOpen KPI tiles and the "My Reviews" tab. We
+  // server-side filter on guildId (the endpoint already supports it) so we
+  // don't pull every guild's worth back over the wire.
+  const { data: assignedRaw } = useFetch(
+    () => guildApplicationsApi.getAssigned(currentExpertId!, guildId),
+    {
+      skip: !currentExpertId,
+      onError: (msg) => logger.warn("Assigned applications fetch failed", msg),
+    },
+  );
+  const assignedForGuild: GuildApplication[] = useMemo(
+    () => (assignedRaw ?? []).filter((a) => !a.guild_id || a.guild_id === guildId),
+    [assignedRaw, guildId],
+  );
+
+  // Stake position for THIS guild only. The batch endpoint returns one row
+  // per guild the expert has staked into; we pick ours.
+  const { data: guildStakes } = useFetch(
+    () => blockchainApi.getExpertGuildStakes(address!),
+    {
+      skip: !address,
+      onError: () => {},
+    },
+  );
+  const guildStake: GuildStakeInfo | undefined = useMemo(
+    () => guildStakes?.find((s) => s.guildId === guildId),
+    [guildStakes, guildId],
+  );
+
+  // Earnings filtered to this guild — feeds the pending-payouts tile fallback
+  // and the period-stats card. Best-effort: empty-state when the endpoint
+  // 404s (it requires the wallet path resolver, which is in place but new).
+  const { data: earningsData } = useFetch(
+    () => expertApi.getEarningsBreakdown(address!, { guildId, limit: 50 }),
+    {
+      skip: !address,
+      onError: () => {},
+    },
+  );
+  const guildEarningsTotalUsd = earningsData?.summary?.totalVetd ?? 0;
+  const guildEarningsCount = earningsData?.entries?.length ?? 0;
+
+  // Governance proposals — the global active-proposals endpoint is the
+  // source of truth; we filter to this guild client-side and merge in any
+  // finalized proposals from `getProposals` so the "Recently decided" list
+  // is populated.
+  const { data: activeProposalsRaw } = useFetch(
+    () => governanceApi.getActiveProposals(),
+    { onError: () => {} },
+  );
+  const { data: pastProposalsRaw } = useFetch(
+    () => governanceApi.getProposals({ guildId, status: "finalized", limit: 25 }),
+    { onError: () => {} },
+  );
+  const governanceForGuild: GuildWorkspaceProposal[] = useMemo(() => {
+    const active = (activeProposalsRaw ?? [])
+      .filter((p) => !p.guild_id || p.guild_id === guildId)
+      .map(mapGovernanceProposal);
+    const past = (pastProposalsRaw ?? [])
+      .filter((p) => p.finalized)
+      .map(mapGovernanceProposal);
+    // Active first, then past — `GuildGovernanceTab` already splits on
+    // status === "open" vs not, so the order here is just for stability.
+    const seen = new Set<string>();
+    return [...active, ...past].filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+  }, [activeProposalsRaw, pastProposalsRaw, guildId]);
+
+  // Latest 3 internal-feed posts for the sidebar Internal Chatter card.
+  // Mirrors the visibility="internal" filter that the Internal Feed tab uses
+  // so the preview and the tab agree on what counts as "internal".
+  const { data: internalChatterPosts } = useFetch(
+    () => guildFeedApi.getPosts(guildId, { visibility: "internal", limit: 3, sort: "new" }),
+    {
+      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      onError: () => {},
+    },
+  );
+  const internalChatter: ChatterPreview[] = useMemo(
+    () => (internalChatterPosts?.data ?? []).slice(0, 3).map(toChatterPreview),
+    [internalChatterPosts],
+  );
+
+  // Compose the bundle that drives the KPI strip + header sub-meta. Recomputed
+  // when any source updates — cheap pure aggregation.
+  const kpiBundle: KpiBundle | null = useMemo(() => {
+    if (!guild) return null;
+    return buildKpiBundle({
+      guild,
+      queue: queueData ?? undefined,
+      assigned: assignedForGuild,
+      guildStake,
+      governanceForGuild,
+      guildEarningsTotalUsd,
+      guildEarningsCount,
+    });
+  }, [guild, queueData, assignedForGuild, guildStake, governanceForGuild, guildEarningsTotalUsd, guildEarningsCount]);
 
   const handleTabChange = (next: GuildWorkspaceTab) => {
     setActiveTab(next);
@@ -162,7 +453,9 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
   const kpis = kpiBundle?.kpis;
   const queueCount = kpis?.queueCount ?? 0;
   const queueUrgent = kpis?.queueUrgentCount ?? 0;
-  const governanceUnvoted = 0; // hydrated from governance tab; counts here are best-effort
+  const governanceUnvoted = governanceForGuild.filter(
+    (p) => p.status === "open" && !p.hasVoted,
+  ).length;
 
   const tabBadgeCount = (id: GuildWorkspaceTab): number | undefined => {
     if (id === "queue") return queueCount > 0 ? queueCount : undefined;
@@ -371,14 +664,24 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
             <GuildQueueTab
               guildId={guildId}
               walletAddress={address}
-              onKpisLoaded={(bundle) => setKpiBundle(bundle)}
+              queueData={queueData ?? undefined}
+              stakePosition={kpiBundle?.stakePosition}
+              periodStats={kpiBundle?.periodStats}
+              internalChatter={internalChatter}
             />
           )}
           {activeTab === "reviews" && (
-            <GuildMyReviewsTab guildId={guildId} walletAddress={address} />
+            <GuildMyReviewsTab
+              guildId={guildId}
+              expertId={currentExpertId}
+              applications={assignedForGuild}
+            />
           )}
           {activeTab === "governance" && (
-            <GuildGovernanceTab guildId={guildId} walletAddress={address} />
+            <GuildGovernanceTab
+              guildId={guildId}
+              proposals={governanceForGuild}
+            />
           )}
           {activeTab === "feed" && (
             <GuildInternalFeedTab
