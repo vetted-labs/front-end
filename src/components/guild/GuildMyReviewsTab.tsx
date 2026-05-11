@@ -2,19 +2,18 @@
 
 import { useMemo, useState } from "react";
 import { GuildQueueRow } from "./GuildQueueRow";
-import type { GuildApplication, GuildQueueItem } from "@/types";
+import type { ExpertSubmittedReview, GuildApplication, GuildQueueItem } from "@/types";
 
 interface GuildMyReviewsTabProps {
   guildId: string;
   /** Expert ID of the viewer — used to build deep-link URLs. */
   expertId?: string | null;
-  /**
-   * The viewer's assigned applications scoped to this guild. Pulled from
-   * `guildApplicationsApi.getAssigned(expertId, guildId)` by the workspace
-   * container — this is the same data source the legacy dashboard's review
-   * queue reads, so the badge counts agree across surfaces.
-   */
+  /** Pending assignments — drives "Active" / "Awaiting reveal" filters. */
   applications?: GuildApplication[];
+  /** Reviews the viewer has already committed — drives "Past" / "All" filters. */
+  submittedReviews?: ExpertSubmittedReview[];
+  /** True while the parent is resolving expertId or fetching review data. */
+  isLoading?: boolean;
 }
 
 type FilterId = "active" | "awaiting" | "open" | "past" | "slashed" | "all";
@@ -79,6 +78,42 @@ function mapApplicationToQueueItem(app: GuildApplication, guildId: string): Guil
   };
 }
 
+function mapSubmittedToQueueItem(
+  rev: ExpertSubmittedReview,
+  guildId: string,
+): GuildQueueItem {
+  const isSlashed = rev.slashingTier != null && rev.slashingTier !== "aligned" && rev.slashingTier !== "neutral";
+  const finalized = rev.applicationFinalized;
+  const href = `/expert/guild/${encodeURIComponent(guildId)}?tab=membershipApplications&applicationId=${encodeURIComponent(rev.expertApplicationId)}`;
+  return {
+    id: `submitted-${rev.id}`,
+    bucket: "waiting",
+    type: "expert",
+    phase: finalized ? "vote" : "reveal",
+    title: rev.candidateName || "Submitted review",
+    subjectName: rev.guildName ?? undefined,
+    subjectMeta: finalized
+      ? rev.applicationOutcome
+        ? `Outcome: ${rev.applicationOutcome}`
+        : "Finalized"
+      : "Awaiting reveal",
+    deadline: rev.applicationFinalizedAt ?? rev.createdAt ?? null,
+    commitsCompleted: undefined,
+    commitsRequired: undefined,
+    stakeRequired: undefined,
+    stakeLocked: undefined,
+    actionLabel: "View record",
+    actionPrimary: false,
+    actionHref: href,
+    votesCast: undefined,
+    totalVoters: undefined,
+    supportPercent: rev.overallScore != null ? Math.round(rev.overallScore) : undefined,
+    // Encode slashing visibility via a known marker the row can use later;
+    // for now the meta + label do the work.
+    ...(isSlashed ? { actionLabel: `Slashed · ${rev.slashingTier}` } : {}),
+  };
+}
+
 function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
   if (filter === "all") return true;
   if (filter === "active") return !app.finalized;
@@ -105,31 +140,91 @@ export function GuildMyReviewsTab({
   guildId,
   expertId,
   applications,
+  submittedReviews,
+  isLoading = false,
 }: GuildMyReviewsTabProps) {
   const [filter, setFilter] = useState<FilterId>("active");
 
   const items = useMemo(() => applications ?? [], [applications]);
+  const submitted = useMemo(() => submittedReviews ?? [], [submittedReviews]);
 
   const filtered = useMemo(
     () => items.filter((app) => matchesFilter(app, filter)),
     [items, filter],
   );
 
+  // Submitted-review filters — past/slashed/awaiting-reveal/all read from the
+  // committed-reviews table since the row has dropped off /assigned.
+  const submittedFiltered = useMemo(() => {
+    return submitted.filter((rev) => {
+      if (filter === "all") return true;
+      if (filter === "active") return !rev.applicationFinalized;
+      if (filter === "awaiting") return !rev.applicationFinalized;
+      if (filter === "open") return !rev.applicationFinalized;
+      if (filter === "past") {
+        if (!rev.applicationFinalized) return false;
+        const ms = rev.applicationFinalizedAt
+          ? new Date(rev.applicationFinalizedAt).getTime()
+          : new Date(rev.createdAt).getTime();
+        // eslint-disable-next-line react-hooks/purity -- bounding past-30d filter; staleness during render is benign
+        return Date.now() - ms <= THIRTY_DAYS_MS;
+      }
+      if (filter === "slashed") {
+        return (
+          rev.slashingTier != null &&
+          rev.slashingTier !== "aligned" &&
+          rev.slashingTier !== "neutral"
+        );
+      }
+      return false;
+    });
+  }, [submitted, filter]);
+
   const counts = useMemo(() => {
-    const active = items.filter((a) => !a.finalized).length;
-    const awaiting = items.filter((a) => a.voting_phase === "commit" && !a.finalized).length;
+    const active =
+      items.filter((a) => !a.finalized).length +
+      submitted.filter((r) => !r.applicationFinalized).length;
+    const awaiting =
+      items.filter((a) => a.voting_phase === "commit" && !a.finalized).length +
+      submitted.filter((r) => !r.applicationFinalized).length;
     const open = items.filter((a) => a.voting_phase === "reveal" && !a.finalized).length;
-    const past = items.filter((a) => matchesFilter(a, "past")).length;
-    const slashed = items.filter((a) => matchesFilter(a, "slashed")).length;
-    return { active, awaiting, open, past, slashed, all: items.length };
-  }, [items]);
+    const past =
+      items.filter((a) => matchesFilter(a, "past")).length +
+      submitted.filter((r) => {
+        if (!r.applicationFinalized) return false;
+        const ms = r.applicationFinalizedAt
+          ? new Date(r.applicationFinalizedAt).getTime()
+          : new Date(r.createdAt).getTime();
+        // eslint-disable-next-line react-hooks/purity -- bounding past-30d filter; staleness during render is benign
+        return Date.now() - ms <= THIRTY_DAYS_MS;
+      }).length;
+    const slashed =
+      items.filter((a) => matchesFilter(a, "slashed")).length +
+      submitted.filter(
+        (r) =>
+          r.slashingTier != null &&
+          r.slashingTier !== "aligned" &&
+          r.slashingTier !== "neutral",
+      ).length;
+    return {
+      active,
+      awaiting,
+      open,
+      past,
+      slashed,
+      all: items.length + submitted.length,
+    };
+  }, [items, submitted]);
 
-  const queueRows = useMemo(
-    () => filtered.map((app) => mapApplicationToQueueItem(app, guildId)),
-    [filtered, guildId],
-  );
+  const queueRows = useMemo(() => {
+    const pending = filtered.map((app) => mapApplicationToQueueItem(app, guildId));
+    const done = submittedFiltered.map((rev) => mapSubmittedToQueueItem(rev, guildId));
+    return [...pending, ...done];
+  }, [filtered, submittedFiltered, guildId]);
 
-  const showWaitingForExpertId = !expertId && items.length === 0;
+  void expertId;
+  const showLoading =
+    isLoading && items.length === 0 && submitted.length === 0;
 
   return (
     <div>
@@ -165,15 +260,22 @@ export function GuildMyReviewsTab({
         })}
       </div>
 
-      {showWaitingForExpertId && (
-        <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
-          Loading your reviewer profile…
+      {showLoading && (
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-xl border border-border bg-card/40"
+            />
+          ))}
         </div>
       )}
 
-      {!showWaitingForExpertId && queueRows.length === 0 && (
+      {!showLoading && queueRows.length === 0 && (
         <div className="rounded-xl border border-dashed border-border bg-card/40 px-6 py-10 text-center text-sm text-muted-foreground">
-          No reviews match this filter.
+          {filter === "active"
+            ? "No active reviews — you're caught up."
+            : "No reviews match this filter."}
         </div>
       )}
 

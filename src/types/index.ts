@@ -32,7 +32,7 @@ export type {
   GuildWorkspaceTab,
 } from "./guildWorkspace";
 export { GUILD_WORKSPACE_TABS } from "./guildWorkspace";
-export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, GuildApplicationInfo, FieldErrors, GeneralAnswers, ExpertiseLevel } from "./expert";
+export type { ExpertProfile, ExpertActivity, ExpertMember, ExpertStatus, GuildApplicationInfo, FieldErrors, GeneralAnswers, ExpertiseLevel, ExpertSubmittedReview } from "./expert";
 export type { CandidateProfile, CandidateUserProfile, CandidateMember, SocialLink, CandidateRejectionFeedback, WorkHistoryEntry } from "./candidate";
 export type {
   ApplicationsTabType,

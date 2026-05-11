@@ -233,7 +233,7 @@ const TABS: Array<{
   { id: "queue", label: "Queue", countKey: "queue", alert: true },
   { id: "reviews", label: "My Reviews", countKey: "active" },
   { id: "governance", label: "Governance", countKey: "governance", alert: true },
-  { id: "feed", label: "Internal Feed", countKey: "feed" },
+  { id: "feed", label: "Feed", countKey: "feed" },
   { id: "members", label: "Members" },
   { id: "earnings", label: "Earnings" },
   { id: "leaderboard", label: "Leaderboard" },
@@ -311,14 +311,31 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     },
   );
 
+  // Expert profile fallback — the primary `currentExpertId` is derived from
+  // matching the viewer's wallet inside `data.experts` (in the guild detail
+  // payload). That match fails whenever the backend doesn't return the
+  // viewer in the experts array (e.g. they're a recently-joined member, or
+  // the API returned a trimmed view), leaving downstream tabs like "My
+  // Reviews" stuck on a permanent loading state. Looking up the expert by
+  // wallet directly is cheap and lets every guild tab make progress even
+  // when the embedded match misses.
+  const { data: expertProfile } = useFetch(
+    () => expertApi.getProfile(address!),
+    {
+      skip: !address,
+      onError: () => {},
+    },
+  );
+  const resolvedExpertId = currentExpertId ?? expertProfile?.id ?? null;
+
   // Assigned applications scoped to this guild — drives the activeCommits /
   // awaitingReveal / revealOpen KPI tiles and the "My Reviews" tab. We
   // server-side filter on guildId (the endpoint already supports it) so we
   // don't pull every guild's worth back over the wire.
-  const { data: assignedRaw } = useFetch(
-    () => guildApplicationsApi.getAssigned(currentExpertId!, guildId),
+  const { data: assignedRaw, isLoading: assignedLoading } = useFetch(
+    () => guildApplicationsApi.getAssigned(resolvedExpertId!, guildId),
     {
-      skip: !currentExpertId,
+      skip: !resolvedExpertId,
       onError: (msg) => logger.warn("Assigned applications fetch failed", msg),
     },
   );
@@ -383,11 +400,23 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     });
   }, [activeProposalsRaw, pastProposalsRaw, guildId]);
 
-  // Latest 3 internal-feed posts for the sidebar Internal Chatter card.
-  // Mirrors the visibility="internal" filter that the Internal Feed tab uses
-  // so the preview and the tab agree on what counts as "internal".
+  // Submitted reviews for this expert in this guild — feeds the "My Reviews"
+  // tab once the user has committed. Pending assignments still come from
+  // `assignedForGuild`.
+  const { data: submittedReviews, isLoading: submittedLoading } = useFetch(
+    () =>
+      expertApi.getSubmittedReviews(resolvedExpertId!, { guildId, limit: 100 }),
+    {
+      skip: !resolvedExpertId,
+      onError: () => {},
+    },
+  );
+
+  // Latest 3 posts for the sidebar chatter card. Mirrors the public-feed
+  // visibility the workspace Feed tab now uses (members-only/internal feed
+  // is deferred to v2), so the preview and the tab show the same posts.
   const { data: internalChatterPosts } = useFetch(
-    () => guildFeedApi.getPosts(guildId, { visibility: "internal", limit: 3, sort: "new" }),
+    () => guildFeedApi.getPosts(guildId, { visibility: "public", limit: 3, sort: "new" }),
     {
       skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
       onError: () => {},
@@ -695,8 +724,12 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           {activeTab === "reviews" && (
             <GuildMyReviewsTab
               guildId={guildId}
-              expertId={currentExpertId}
+              expertId={resolvedExpertId}
               applications={assignedForGuild}
+              submittedReviews={submittedReviews ?? []}
+              isLoading={
+                assignedLoading || submittedLoading || (!resolvedExpertId && !!address)
+              }
             />
           )}
           {activeTab === "governance" && (

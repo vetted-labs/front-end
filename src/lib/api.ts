@@ -813,6 +813,21 @@ export const expertApi = {
       body: JSON.stringify(data),
     }),
 
+  /**
+   * Submitted (committed) expert-application reviews for the current expert.
+   * Powers the workspace "My Reviews" tab once a reviewer commits — pending
+   * assignments stay in `guildApplicationsApi.getAssigned`.
+   */
+  getSubmittedReviews: (expertId: string, params?: { guildId?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.guildId) queryParams.append("guildId", params.guildId);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    const query = queryParams.toString();
+    return apiRequest<import("@/types").ExpertSubmittedReview[]>(
+      `/api/experts/${encodeURIComponent(expertId)}/submitted-reviews${query ? `?${query}` : ""}`,
+    );
+  },
+
   getLeaderboard: (params?: { guildId?: string; limit?: number }) => {
     const queryParams = new URLSearchParams();
     if (params?.guildId) queryParams.append("guildId", params.guildId);

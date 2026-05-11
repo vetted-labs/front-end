@@ -70,6 +70,36 @@ export interface ExpertActivity {
   amount?: number;
 }
 
+/**
+ * A review the expert has already SUBMITTED (committed). Lives in
+ * `expert_application_reviews` on the backend. Powers the workspace
+ * "My Reviews" tab once a reviewer commits — pending assignments stay
+ * in the assigned-applications list.
+ */
+export interface ExpertSubmittedReview {
+  id: string;
+  expertApplicationId: string;
+  guildId: string;
+  guildName?: string | null;
+  candidateName?: string | null;
+  candidateEmail?: string | null;
+  vote?: string | null;
+  normalizedScore?: number | null;
+  overallScore?: number | null;
+  redFlagDeductions: number;
+  commitHash?: string | null;
+  onChainCommitTxHash?: string | null;
+  createdAt: string;
+  reputationChange: number;
+  rewardAmount: number;
+  slashingTier?: string | null;
+  alignmentDistance?: number | null;
+  applicationFinalized: boolean;
+  applicationFinalizedAt?: string | null;
+  applicationOutcome?: string | null;
+  applicationLevel?: string | null;
+}
+
 /** Answers for the general section of the expert/guild application form. */
 export interface GeneralAnswers {
   learningFromFailure: string;
