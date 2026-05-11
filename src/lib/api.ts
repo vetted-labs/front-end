@@ -1118,6 +1118,27 @@ export const guildsApi = {
       if (kind === "unclaimed_candidate") return { type: "candidate", phase: "open" };
       return { type: "candidate", phase: "open" };
     };
+    // Build the deep-link href that opens the right review surface when the
+    // queue row is clicked. Without this the row renders a <button> with no
+    // onAction handler and clicking it silently does nothing — the bug that
+    // sent "Sven Wallet 2 · Expert application" into a dead end.
+    const actionHrefFor = (
+      type: FrontType,
+      phase: FrontPhase,
+      itemId: string,
+    ): string | undefined => {
+      if (type === "candidate") {
+        return `/expert/voting?reviewAppId=${encodeURIComponent(itemId)}&reviewType=candidate&guildId=${encodeURIComponent(guildId)}`;
+      }
+      if (type === "expert") {
+        return `/expert/voting?reviewAppId=${encodeURIComponent(itemId)}&reviewType=expert&guildId=${encodeURIComponent(guildId)}`;
+      }
+      if (type === "governance") {
+        return `/expert/governance?proposalId=${encodeURIComponent(itemId)}`;
+      }
+      void phase;
+      return undefined;
+    };
     const mapItem = (
       it: BackendQueueItem,
       bucket: FrontBucket,
@@ -1133,6 +1154,7 @@ export const guildsApi = {
         deadline: it.deadline ?? null,
         commitsCompleted: it.progress?.committed,
         commitsRequired: it.progress?.required,
+        actionHref: actionHrefFor(type, phase, it.id),
       };
     };
     const items: import("@/types").GuildQueueItem[] = [

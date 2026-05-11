@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { expertApi, guildsApi, guildApplicationsApi, extractApiError } from "@/lib/api";
 import { mapCandidateToReviewApplication, mapProposalToReviewApplication } from "@/lib/reviewHelpers";
 import { useApplicationsData } from "@/lib/hooks/useApplicationsData";
@@ -48,8 +48,20 @@ const STORY_LAB_REVIEW_STEP_IDS = new Set([
 
 export default function ApplicationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const data = useApplicationsData();
   const { isActive: isStoryLabPreview, activeStepId } = useStoryLabContext();
+
+  // When the guild workspace queue links to a row via
+  // `?reviewAppId=<id>&reviewType=<expert|candidate>`, auto-open the
+  // review modal once the matching application hydrates. Without this the
+  // deep-link from `GuildQueueRow` would land on a generic reviews page
+  // and the user would have to find the row again manually.
+  const autoOpenAppId = searchParams.get("reviewAppId");
+  const autoOpenReviewType = searchParams.get("reviewType") as
+    | "expert"
+    | "candidate"
+    | null;
 
   // Review modal state
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -235,6 +247,49 @@ export default function ApplicationsPage() {
     setReviewProposalContext({ requiredStake: proposal.required_stake });
     setShowReviewModal(true);
   };
+
+  // Auto-open the review modal when arriving from a guild-workspace queue
+  // deep-link (`?reviewAppId=<id>&reviewType=<expert|candidate>`). We wait
+  // until the matching application has hydrated in useApplicationsData
+  // before opening so the modal receives a real `application` prop —
+  // otherwise it would render against null and bail out at the
+  // `if (!application || !isOpen) return null` guard. Once opened we
+  // strip the query params so closing the modal doesn't trigger a reopen.
+  // eslint-disable-next-line no-restricted-syntax -- reactive sync to URL deep-link → modal state
+  useEffect(() => {
+    if (!autoOpenAppId || !autoOpenReviewType) return;
+    if (showReviewModal) return;
+
+    let opened = false;
+    if (autoOpenReviewType === "expert") {
+      const match = data.expertApps.find((a) => a.id === autoOpenAppId);
+      if (match) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- opens the modal in response to URL deep-link; the cascading render is intentional and one-shot (params are stripped below)
+        void handleReviewExpert(match);
+        opened = true;
+      }
+    } else if (autoOpenReviewType === "candidate") {
+      // Switch to the candidate tab so the row is visible behind the modal
+      // (and after the user closes it).
+      if (data.activeTab !== "candidate") data.setActiveTab("candidate");
+      const match = data.candidateApps.find((a) => a.id === autoOpenAppId);
+      if (match) {
+        handleReviewCandidate(match);
+        opened = true;
+      }
+    }
+    if (!opened) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("reviewAppId");
+    params.delete("reviewType");
+    params.delete("guildId");
+    const next = params.toString();
+    router.replace(`/expert/voting${next ? `?${next}` : ""}`);
+    // We intentionally depend only on the auto-open keys and the loaded
+    // app lists — including handler refs would loop on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenAppId, autoOpenReviewType, data.expertApps, data.candidateApps]);
 
   const handleSubmitReview = async (payload: ReviewSubmitPayload): Promise<ReviewSubmitResponse | void> => {
     if (!selectedReviewApp || !data.address) return;
