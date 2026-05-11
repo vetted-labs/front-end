@@ -10,7 +10,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { useExpertAccount } from "@/lib/hooks/useExpertAccount";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useStoryLabContext } from "@/lib/hooks/useStoryLabContext";
-import { fetchAndNormalizeGuildData } from "@/lib/guildDetailHelpers";
+import { fetchAndNormalizeGuildData, transformLeaderboardData } from "@/lib/guildDetailHelpers";
 import { STORY_LAB_GUILD } from "@/components/expert/story-lab/storyLabFixtures";
 import {
   blockchainApi,
@@ -134,9 +134,9 @@ function buildKpiBundle(args: {
   // Queue counts — derive from full items list when available, else lean on
   // the server-provided KPI numbers.
   const items = queue?.items ?? [];
-  const queueCount = items.length || (queue?.kpis.queueCount ?? 0);
+  const queueCount = items.length || (queue?.kpis?.queueCount ?? 0);
   const queueUrgent = items.filter((i) => i.bucket === "due_soon").length
-    || (queue?.kpis.queueUrgentCount ?? 0);
+    || (queue?.kpis?.queueUrgentCount ?? 0);
 
   // Phase-derived counts from this guild's assigned applications.
   const activeCommits = assigned.filter(
@@ -179,12 +179,12 @@ function buildKpiBundle(args: {
     revealOpen,
     stakeLockedVetd: totalStake,
     stakeLockedReviewCount,
-    pendingPayoutsUsd: queue?.kpis.pendingPayoutsUsd ?? pendingPayouts ?? 0,
-    pendingPayoutReviewCount: queue?.kpis.pendingPayoutReviewCount ?? assigned.filter((a) => a.finalized).length,
+    pendingPayoutsUsd: queue?.kpis?.pendingPayoutsUsd ?? pendingPayouts ?? 0,
+    pendingPayoutReviewCount: queue?.kpis?.pendingPayoutReviewCount ?? assigned.filter((a) => a.finalized).length,
     reputation,
-    reputationDelta: queue?.kpis.reputationDelta ?? 0,
-    rank: queue?.kpis.rank,
-    totalMembers: queue?.kpis.totalMembers ?? guild.memberCount,
+    reputationDelta: queue?.kpis?.reputationDelta ?? 0,
+    rank: queue?.kpis?.rank,
+    totalMembers: queue?.kpis?.totalMembers ?? guild.memberCount,
   };
 
   const stakePosition: GuildWorkspaceStakePosition = queue?.stakePosition ?? {
@@ -393,6 +393,24 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
     () => (internalChatterPosts?.data ?? []).slice(0, 3).map(toChatterPreview),
     [internalChatterPosts],
   );
+
+  // Guild-scoped leaderboard — feeds the Leaderboard tab. Matches what the
+  // old GuildDetailView pulled (raw entries + transform helper).
+  const { data: leaderboardRaw } = useFetch(
+    () => expertApi.getLeaderboard({ guildId, limit: 50 }),
+    {
+      skip: !isStoryLabSyntheticGuild && (!isConnected || !address),
+      onError: () => {},
+    },
+  );
+  const leaderboardData = useMemo(() => {
+    if (!leaderboardRaw || !address) return { topExperts: [], currentUser: null };
+    return transformLeaderboardData(leaderboardRaw, address, {
+      expertRole: guild?.expertRole ?? "recruit",
+      reputation: guild?.reputation ?? 0,
+      totalEndorsementEarnings: 0,
+    });
+  }, [leaderboardRaw, address, guild?.expertRole, guild?.reputation]);
 
   // Compose the bundle that drives the KPI strip + header sub-meta. Recomputed
   // when any source updates — cheap pure aggregation.
@@ -700,7 +718,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           {activeTab === "earnings" && <GuildEarningsTab earnings={guild.earnings} />}
           {activeTab === "leaderboard" && (
             <GuildLeaderboardTab
-              leaderboardData={{ topExperts: [], currentUser: null }}
+              leaderboardData={leaderboardData}
               leaderboardPeriod={leaderboardPeriod}
               onPeriodChange={setLeaderboardPeriod}
             />

@@ -1648,7 +1648,7 @@ export const governanceApi = {
       body: JSON.stringify({ ...data, wallet }),
     }),
 
-  getProposals: (params?: {
+  getProposals: async (params?: {
     status?: string;
     type?: string;
     guildId?: string;
@@ -1662,7 +1662,15 @@ export const governanceApi = {
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
     const query = queryParams.toString();
-    return apiRequest<import("@/types").GovernanceProposalDetail[]>(`/api/governance/proposals${query ? `?${query}` : ""}`);
+    // Backend returns { proposals, total } envelope — unwrap to the array
+    // the type and callers expect. Defensive against the old direct-array
+    // response shape too (older deploys).
+    const response = await apiRequest<
+      | import("@/types").GovernanceProposalDetail[]
+      | { proposals: import("@/types").GovernanceProposalDetail[]; total: number }
+    >(`/api/governance/proposals${query ? `?${query}` : ""}`);
+    if (Array.isArray(response)) return response;
+    return response.proposals ?? [];
   },
 
   getActiveProposals: () =>
