@@ -1966,14 +1966,12 @@ export function ReviewGuildApplicationModal({
             </div>
           </div>
 
-          {/* Content */}
-          <div ref={contentRef} className="relative flex-1 overflow-hidden">
-            {/* If the BE envelope already says we've committed, jump to the
-                receipt step. Survives a refresh after a successful commit
-                even if the local `currentStep === 4` was lost. Renders as
-                full-width single column. */}
+          {/* Content — the ENTIRE modal body scrolls as a single unit. The
+              left rail uses position:sticky so it stays pinned visually
+              while the body scrolls. No per-column overflow gymnastics. */}
+          <div ref={contentRef} className="relative flex-1 overflow-y-auto">
             {hasAlreadyCommitted ? (
-              <div className="px-6 py-5 overflow-y-auto h-full">
+              <div className="px-6 py-5">
                 <StepIndicator currentStep={4} />
                 <Alert variant="info">
                   You&apos;ve already committed your vote on this review. Below
@@ -2004,7 +2002,7 @@ export function ReviewGuildApplicationModal({
                  `review-result` substop forces this preview without a real
                  submit; the `review-commit` substop stays on the confirm
                  view so the commit panel demo still renders. */
-              <div className="px-6 py-5 overflow-y-auto h-full">
+              <div className="px-6 py-5">
                 <StepIndicator currentStep={renderStep} />
                 <ReviewSuccessStep
                   isCommitPhase={isCommitPhase}
@@ -2029,17 +2027,16 @@ export function ReviewGuildApplicationModal({
               </div>
             ) : (
             <div
-              className={`grid grid-cols-1 h-full ${
+              className={`grid grid-cols-1 items-start ${
                 renderStep === 1
                   ? "lg:grid-cols-[200px_1fr_400px]"
                   : "lg:grid-cols-[200px_1fr_320px]"
               }`}
             >
-              {/* LEFT RAIL — vertical stepper. Hard-pinned: doesn't scroll.
-                  `min-h-0` is required for grid items to respect parent
-                  height + allow internal scroll; without it the column
-                  inherits content-natural height and the whole modal grows. */}
-              <aside className="hidden lg:block border-r border-border bg-muted/[0.02] sticky top-0 self-start max-h-full overflow-hidden min-h-0">
+              {/* LEFT RAIL — position:sticky pins it to the top of the
+                  scrolling modal body. The body scrolls; the rail rides
+                  along. */}
+              <aside className="hidden lg:block border-r border-border bg-muted/[0.02] sticky top-0 self-start">
                 <VerticalStepRail
                   currentStep={renderStep}
                   onStepClick={(target) => {
@@ -2053,10 +2050,9 @@ export function ReviewGuildApplicationModal({
                 />
               </aside>
 
-              {/* CENTER — pivots per step: materials on step 1, scoring on
-                  steps 2/3. `min-h-0` lets the column shrink so its
-                  `overflow-y-auto` actually engages. */}
-              <section className="overflow-y-auto px-6 py-5 border-r border-border min-h-0">
+              {/* CENTER — natural height; scroll comes from the modal body
+                  parent. */}
+              <section className="px-6 py-5 border-r border-border">
                 {/* Mobile fallback: show the horizontal stepper since the
                     left rail is hidden on small screens. */}
                 <div className="lg:hidden mb-4">
@@ -2293,7 +2289,7 @@ export function ReviewGuildApplicationModal({
               {/* RIGHT PANE — per-step companion:
                   • Step 1: "Start scoring" CTA card to advance into the rubric.
                   • Steps 2/3: compact applicant snapshot for at-a-glance context. */}
-              <aside className="hidden lg:block overflow-y-auto px-5 py-5 bg-muted/[0.02] min-h-0">
+              <aside className="hidden lg:block px-5 py-5 bg-muted/[0.02] sticky top-0 self-start max-h-screen overflow-y-auto">
                 {renderStep === 1 && (
                   <div className="sticky top-0">
                     <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
