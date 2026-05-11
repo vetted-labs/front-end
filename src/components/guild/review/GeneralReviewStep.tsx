@@ -308,35 +308,9 @@ export function GeneralReviewStep({
           })
       )}
 
-      {/* Interpretation Guide */}
-      {interpretationGuide.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden" {...dataTourTarget(TOUR_TARGETS.practiceReviewInterpretationGuide)}>
-          <div className="px-5 py-3.5 border-b border-border bg-muted/30">
-            <p className="text-sm font-semibold text-foreground">Interpretation Guide</p>
-          </div>
-          <div className="p-5">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {interpretationGuide.map((item) => (
-                <div
-                  key={item.range}
-                  className="rounded-xl bg-muted/50 border border-border p-4 space-y-2"
-                >
-                  <p className="text-xs font-bold text-primary">
-                    {item.range} — {item.label}
-                  </p>
-                  <ul className="space-y-2">
-                    {(item.notes || []).map((note: string, idx: number) => (
-                      <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
-                        {note}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Interpretation Guide is rendered in the modal's right pane via
+          <RubricGuideCard interpretationGuide={...} /> so it stays visible
+          as a reference without crowding the question + answer flow. */}
 
       {/* Running subtotal */}
       <div

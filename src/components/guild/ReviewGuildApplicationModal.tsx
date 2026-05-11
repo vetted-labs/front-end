@@ -22,6 +22,7 @@ import { type OnChainStatus } from "@/components/reviews/OnChainStatusBanner";
 import { CommitFlowPanel } from "@/components/reviews/CommitFlowPanel";
 import { ReviewProfileStep } from "@/components/guild/review/ReviewProfileStep";
 import { ApplicantSnapshotCard } from "@/components/guild/review/ApplicantSnapshotCard";
+import { RubricGuideCard } from "@/components/guild/review/RubricGuideCard";
 import { GeneralReviewStep } from "@/components/guild/review/GeneralReviewStep";
 import { DomainReviewStep } from "@/components/guild/review/DomainReviewStep";
 import { StepIndicator } from "@/components/guild/review/StepIndicator";
@@ -2210,12 +2211,18 @@ export function ReviewGuildApplicationModal({
                   </div>
                 )}
                 {(renderStep === 2 || renderStep === 3) && (
-                  <div className="sticky top-0">
+                  <div className="sticky top-0 space-y-4">
                     <ApplicantSnapshotCard
                       application={application}
                       level={level}
                       onOpenFullProfile={() => setCurrentStep(1)}
                     />
+                    {renderStep === 2 && (
+                      <RubricGuideCard interpretationGuide={interpretationGuide} />
+                    )}
+                    {renderStep === 3 && (
+                      <RubricGuideCard topic={topicList[domainTopicIndex]} />
+                    )}
                   </div>
                 )}
               </aside>

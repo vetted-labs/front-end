@@ -173,40 +173,18 @@ export function DomainReviewStep({
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-muted/[0.02] border border-border p-5 space-y-5">
+                  <div
+                    className="rounded-xl bg-muted/[0.02] border border-border p-5 space-y-5"
+                    {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewWhatToLookFor) : {})}
+                  >
                     <p className="text-xs text-warning/80 uppercase tracking-wider font-bold flex items-center">
                       Scoring
                       <RequiredMark />
                     </p>
-                    {topic.whatToLookFor && topic.whatToLookFor.length > 0 && (
-                      <div
-                        className="space-y-2"
-                        {...(index === 0 ? dataTourTarget(TOUR_TARGETS.practiceReviewWhatToLookFor) : {})}
-                      >
-                        <p className="text-xs font-semibold text-foreground">What to look for</p>
-                        <ul className="space-y-2">
-                          {topic.whatToLookFor.map((item: string, idx: number) => (
-                            <li key={idx} className="text-xs text-muted-foreground pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/40">
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {topic.scoring && (
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {[
-                          { label: "5 pts", value: topic.scoring.five, color: STATUS_COLORS.positive.text },
-                          { label: "3-4", value: topic.scoring.threeToFour, color: STATUS_COLORS.warning.text },
-                          { label: "1-2", value: topic.scoring.oneToTwo, color: "text-primary" },
-                          { label: "0", value: topic.scoring.zero, color: STATUS_COLORS.negative.text },
-                        ].map((s) => (
-                          <div key={s.label} className="text-xs text-muted-foreground rounded-lg bg-card border border-border p-2.5 leading-relaxed">
-                            <span className={`font-bold ${s.color}`}>{s.label}:</span> {s.value}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      The rubric guide for this topic — &ldquo;what to look for&rdquo; and
+                      score bands — is shown in the right pane.
+                    </p>
                     <ScoreButtons
                       value={topicScores[topic.id] || 0}
                       max={5}
