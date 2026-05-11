@@ -579,13 +579,13 @@ export function EnhancedExpertDashboard() {
       <DataSection
         isLoading={loading}
         skeleton={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => <SkeletonStatCard key={i} />)}
           </div>
         }
       >
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
           {...dataTourTarget(TOUR_TARGETS.dashboardStatsRow)}
         >
           <div {...dataTourTarget(TOUR_TARGETS.dashboardReputationStat)}>
@@ -624,6 +624,17 @@ export function EnhancedExpertDashboard() {
               }
             />
           </div>
+          <KpiTile
+            icon={<Wallet className="w-4 h-4" />}
+            label="Staked VETD"
+            value={Math.round(totalStaked).toLocaleString()}
+            tone="info"
+            hint={
+              activeReviewCount > 0
+                ? `25% locked · ${activeReviewCount} active`
+                : `across ${profile?.guilds?.length ?? 0} guild${profile?.guilds?.length === 1 ? "" : "s"}`
+            }
+          />
           <div {...dataTourTarget(TOUR_TARGETS.rewardsSummary)}>
             <KpiTile
               icon={<Coins className="w-4 h-4" />}
@@ -663,6 +674,14 @@ export function EnhancedExpertDashboard() {
                 <GovernanceSummaryCard />
               </div>
             )}
+
+            {/* Your Guilds — pulled into left column to fill space below governance */}
+            <div {...dataTourTarget(TOUR_TARGETS.dashboardGuildsSection)}>
+              <GuildsSection
+                guilds={profile?.guilds ?? []}
+                guildStakes={guildStakes}
+              />
+            </div>
           </div>
 
           {/* SIDEBAR — Sticky rail */}
@@ -757,19 +776,6 @@ export function EnhancedExpertDashboard() {
               </div>
             </div>
           </aside>
-        </div>
-      </DataSection>
-
-      {/* ── Guilds section ── */}
-      <DataSection
-        isLoading={loading}
-        skeleton={<SkeletonCard className="min-h-[160px]" />}
-      >
-        <div {...dataTourTarget(TOUR_TARGETS.dashboardGuildsSection)}>
-          <GuildsSection
-            guilds={profile?.guilds ?? []}
-            guildStakes={guildStakes}
-          />
         </div>
       </DataSection>
 
