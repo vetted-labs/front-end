@@ -90,11 +90,11 @@ export function HomePage() {
         <StatsBar guilds={guildList} jobs={jobs ?? []} />
       )}
 
-      {/* ── 3. Featured guilds ─────────────────────────────────────── */}
-      {featuredGuilds.length > 0 && <FeaturedGuildsSection guilds={featuredGuilds} />}
-
-      {/* ── 4. Job browser (existing) ──────────────────────────────── */}
+      {/* ── 3. Featured jobs ───────────────────────────────────────── */}
       <JobBrowser jobs={jobs ?? []} isLoadingJobs={isLoadingJobs} />
+
+      {/* ── 4. Featured guilds ─────────────────────────────────────── */}
+      {featuredGuilds.length > 0 && <FeaturedGuildsSection guilds={featuredGuilds} />}
 
       {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="border-t border-border">

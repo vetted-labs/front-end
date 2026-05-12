@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight, Layers } from "lucide-react";
-import { GuildAvatar } from "@/components/ui/guild";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import { getGuildIconName } from "@/lib/guildHelpers";
 import type { Guild } from "@/types";
 
 interface FeaturedGuildsSectionProps {
@@ -39,14 +40,19 @@ export function FeaturedGuildsSection({ guilds }: FeaturedGuildsSectionProps) {
             <Link
               key={g.id}
               href={`/guilds/${g.id}`}
-              className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors text-center"
+              className="group flex flex-col items-center gap-3 p-5 rounded-xl border border-border bg-card hover:border-border/60 transition-colors text-center"
             >
-              <GuildAvatar guild={g.name} size="lg" rounded="2xl" />
+              <span
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-muted/40 border border-border text-muted-foreground group-hover:text-foreground transition-colors"
+                aria-label={`${g.name} guild`}
+              >
+                <VettedIcon name={getGuildIconName(g.name)} className="w-7 h-7" />
+              </span>
               <span className="font-display font-bold text-sm tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-1">
                 {g.name}
               </span>
               {typeof g.expertCount === "number" && (
-                <span className="text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70 tabular-nums">
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground tabular-nums">
                   {g.expertCount} expert{g.expertCount === 1 ? "" : "s"}
                 </span>
               )}
