@@ -107,7 +107,7 @@ export function GuildPublicHero({
 
       {/* Banner — diagonal pattern + radial guild-color gradient */}
       <div
-        className="h-[140px] border-b border-surface-border relative"
+        className="h-[140px] relative"
         style={{
           backgroundImage: `radial-gradient(ellipse 500px 180px at 80% 0%, ${gcHex}33, transparent 70%), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M0 0L40 40M40 0L0 40' stroke='${encodeURIComponent(
             gcHex,
