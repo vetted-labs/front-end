@@ -52,82 +52,30 @@ export interface GuildIdentity {
 }
 
 /**
- * Per-slug class presets. Color values match the existing GuildPickerModal
- * palette so users don't see an unexpected re-skin.
+ * Per-slug class presets. Currently flattened to a single brand-orange preset
+ * across every guild — per-guild colors are temporarily disabled (see
+ * conversation 2026-05-12). Restore the multi-color palette by replacing
+ * BRAND with per-slug entries if/when that decision is reversed.
  */
+const BRAND: GuildClasses = {
+  text: "text-primary",
+  bg: "bg-primary/10",
+  bgSolid: "bg-primary",
+  border: "border-primary/25",
+  dot: "bg-primary",
+  ring: "ring-primary/30",
+};
+
 const CLASSES: Record<GuildSlug | "unknown", GuildClasses> = {
-  engineering: {
-    text: "text-sky-400",
-    bg: "bg-sky-400/10",
-    bgSolid: "bg-sky-400",
-    border: "border-sky-400/25",
-    dot: "bg-sky-400",
-    ring: "ring-sky-400/30",
-  },
-  product: {
-    text: "text-violet-400",
-    bg: "bg-violet-400/10",
-    bgSolid: "bg-violet-400",
-    border: "border-violet-400/25",
-    dot: "bg-violet-400",
-    ring: "ring-violet-400/30",
-  },
-  design: {
-    text: "text-pink-400",
-    bg: "bg-pink-400/10",
-    bgSolid: "bg-pink-400",
-    border: "border-pink-400/25",
-    dot: "bg-pink-400",
-    ring: "ring-pink-400/30",
-  },
-  marketing: {
-    text: "text-emerald-400",
-    bg: "bg-emerald-400/10",
-    bgSolid: "bg-emerald-400",
-    border: "border-emerald-400/25",
-    dot: "bg-emerald-400",
-    ring: "ring-emerald-400/30",
-  },
-  sales: {
-    text: "text-amber-400",
-    bg: "bg-amber-400/10",
-    bgSolid: "bg-amber-400",
-    border: "border-amber-400/25",
-    dot: "bg-amber-400",
-    ring: "ring-amber-400/30",
-  },
-  operations: {
-    text: "text-slate-400",
-    bg: "bg-slate-400/10",
-    bgSolid: "bg-slate-400",
-    border: "border-slate-400/25",
-    dot: "bg-slate-400",
-    ring: "ring-slate-400/30",
-  },
-  finance: {
-    text: "text-lime-400",
-    bg: "bg-lime-400/10",
-    bgSolid: "bg-lime-400",
-    border: "border-lime-400/25",
-    dot: "bg-lime-400",
-    ring: "ring-lime-400/30",
-  },
-  hr: {
-    text: "text-rose-400",
-    bg: "bg-rose-400/10",
-    bgSolid: "bg-rose-400",
-    border: "border-rose-400/25",
-    dot: "bg-rose-400",
-    ring: "ring-rose-400/30",
-  },
-  unknown: {
-    text: "text-muted-foreground",
-    bg: "bg-muted",
-    bgSolid: "bg-muted-foreground",
-    border: "border-border",
-    dot: "bg-muted-foreground",
-    ring: "ring-border",
-  },
+  engineering: BRAND,
+  product: BRAND,
+  design: BRAND,
+  marketing: BRAND,
+  sales: BRAND,
+  operations: BRAND,
+  finance: BRAND,
+  hr: BRAND,
+  unknown: BRAND,
 };
 
 /**
@@ -140,7 +88,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Engineering Guild",
     shortName: "Engineering",
     iconName: "engineering",
-    hex: "#60a5fa",
+    hex: "#ff6a00",
     classes: CLASSES.engineering,
     description:
       "Technical Excellence & Innovation — engineers, data, ML, and security review system design and code quality.",
@@ -150,7 +98,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Product Guild",
     shortName: "Product",
     iconName: "product",
-    hex: "#c084fc",
+    hex: "#ff6a00",
     classes: CLASSES.product,
     description:
       "Strategy & Product Leadership — PMs and product leaders assess roadmap thinking and execution.",
@@ -160,7 +108,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Design Guild",
     shortName: "Design",
     iconName: "design",
-    hex: "#f472b6",
+    hex: "#ff6a00",
     classes: CLASSES.design,
     description:
       "User-Centered Design & Creativity — senior designers evaluate portfolio quality and design thinking.",
@@ -170,7 +118,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Marketing & Growth Guild",
     shortName: "Marketing",
     iconName: "marketing",
-    hex: "#34d399",
+    hex: "#ff6a00",
     classes: CLASSES.marketing,
     description:
       "Growth & Brand Strategy — marketers evaluate campaign strategy, growth metrics, and brand building.",
@@ -180,7 +128,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Sales & Success Guild",
     shortName: "Sales",
     iconName: "sales",
-    hex: "#fbbf24",
+    hex: "#ff6a00",
     classes: CLASSES.sales,
     description:
       "Revenue Growth & Customer Success — sales leaders evaluate deal-closing ability and revenue impact.",
@@ -190,7 +138,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Operations & Strategy Guild",
     shortName: "Operations",
     iconName: "operations",
-    hex: "#94a3b8",
+    hex: "#ff6a00",
     classes: CLASSES.operations,
     description:
       "Efficiency & Strategic Execution — ops experts assess process optimization and cross-functional leadership.",
@@ -200,7 +148,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "Finance Legal & Compliance Guild",
     shortName: "Finance",
     iconName: "finance",
-    hex: "#4ade80",
+    hex: "#ff6a00",
     classes: CLASSES.finance,
     description:
       "Financial Strategy, Legal & Compliance — finance and legal pros review modeling, regulation, and risk.",
@@ -210,7 +158,7 @@ export const GUILD_IDENTITIES: Record<GuildSlug, GuildIdentity> = {
     displayName: "People HR & Recruitment Guild",
     shortName: "People",
     iconName: "hr",
-    hex: "#f87171",
+    hex: "#ff6a00",
     classes: CLASSES.hr,
     description:
       "Talent & Organizational Development — people leaders evaluate talent strategy and culture building.",
@@ -222,7 +170,7 @@ const UNKNOWN_IDENTITY: GuildIdentity = {
   displayName: "Unassigned",
   shortName: "Unassigned",
   iconName: "guilds",
-  hex: "#8b94a3",
+  hex: "#ff6a00",
   classes: CLASSES.unknown,
   description:
     "No guild assigned yet — assignment determines which experts will review candidates.",

@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { cn, formatVetd } from "@/lib/utils";
-import { getGuildThesis } from "@/config/guildThesis";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getGuildIconName } from "@/lib/guildHelpers";
 import { getGuildIdentity } from "@/lib/guildIdentity";
@@ -148,18 +147,13 @@ function PendingBanner({ count }: { count: number }) {
   );
 }
 
-function CardNameBlock({ name, thesis }: { name: string; thesis: string }) {
+function CardNameBlock({ name }: { name: string }) {
   return (
     <>
       <div className="w-6 h-[2px] bg-primary mb-4" />
-      <h3 className="font-display text-[22px] font-bold tracking-[-0.025em] leading-[1.05] mb-2 text-foreground">
-        {name}.
+      <h3 className="font-display text-[22px] font-bold tracking-[-0.025em] leading-[1.05] text-foreground">
+        {name}
       </h3>
-      {thesis && (
-        <p className="text-[12px] text-muted-foreground leading-[1.35]">
-          &ldquo;{thesis}&rdquo;
-        </p>
-      )}
     </>
   );
 }
@@ -187,7 +181,6 @@ export function GuildCard(props: GuildCardProps) {
   if (props.variant === "workspace") {
     const { guild, currentUserId, stakedAmount, onClick } = props;
     const slug = toRegistrySlug(guild.name);
-    const thesis = getGuildThesis(guild.name, guild.description);
     const pending = guild.pendingProposals ?? 0;
     const tenureDays = calcTenureDays(guild.joinedAt, nowMs);
     return (
@@ -203,7 +196,7 @@ export function GuildCard(props: GuildCardProps) {
             />
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-0">
-                <CardNameBlock name={guild.name} thesis={thesis} />
+                <CardNameBlock name={guild.name} />
               </div>
               <GuildIconBlock name={guild.name} size="lg" />
             </div>
@@ -255,7 +248,6 @@ export function GuildCard(props: GuildCardProps) {
   if (props.variant === "marketplace") {
     const { guild, onClick } = props;
     const slug = toRegistrySlug(guild.name);
-    const thesis = getGuildThesis(guild.name, guild.description);
     const open = guild.openPositions ?? 0;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild`}>
@@ -268,7 +260,7 @@ export function GuildCard(props: GuildCardProps) {
             />
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-0">
-                <CardNameBlock name={guild.name} thesis={thesis} />
+                <CardNameBlock name={guild.name} />
               </div>
               <GuildIconBlock name={guild.name} size="xl" />
             </div>
@@ -318,7 +310,7 @@ export function GuildCard(props: GuildCardProps) {
               <div className="flex-1 min-w-0">
                 <div className="w-6 h-[2px] bg-primary mb-3" />
                 <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] text-foreground">
-                  {guild.name}.
+                  {guild.name}
                 </h3>
               </div>
               <GuildIconBlock name={guild.name} size="md" />
@@ -360,10 +352,6 @@ export function GuildCard(props: GuildCardProps) {
   if (props.variant === "profile") {
     const { guild, onClick } = props;
     const slug = toRegistrySlug(guild.name);
-    const tenureDays = calcTenureDays(guild.joinedAt, nowMs);
-    const joinedLabel = guild.joinedAt
-      ? new Date(guild.joinedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })
-      : null;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} — guild position`}>
         <div className="relative z-10 flex-1 flex flex-col p-4 pb-0">
@@ -376,24 +364,9 @@ export function GuildCard(props: GuildCardProps) {
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="w-6 h-[2px] bg-primary mb-3" />
-                <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] mb-2 text-foreground">
-                  {guild.name}.
+                <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] text-foreground">
+                  {guild.name}
                 </h3>
-                <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
-                  <span className="text-primary capitalize">{guild.expertRole}</span>
-                  {joinedLabel && (
-                    <>
-                      <span className="text-border mx-1.5">·</span>
-                      <span>Member since {joinedLabel}</span>
-                    </>
-                  )}
-                  {tenureDays !== null && (
-                    <>
-                      <span className="text-border mx-1.5">·</span>
-                      <span>{tenureDays}d tenure</span>
-                    </>
-                  )}
-                </div>
               </div>
               <GuildIconBlock name={guild.name} size="lg" />
             </div>
@@ -426,7 +399,6 @@ export function GuildCard(props: GuildCardProps) {
     const { application, statusLabel, cells, onClick } = props;
     const name = application.guildName ?? application.guild?.name ?? "Guild";
     const slug = toRegistrySlug(name);
-    const thesis = getGuildThesis(name);
     return (
       <CardShell onClick={onClick} ariaLabel={`${name} guild — application ${statusLabel.toLowerCase()}`}>
         <div className="relative z-10 flex-1 flex flex-col p-5 pb-0">
@@ -438,7 +410,7 @@ export function GuildCard(props: GuildCardProps) {
             />
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-0">
-                <CardNameBlock name={name} thesis={thesis} />
+                <CardNameBlock name={name} />
               </div>
               <GuildIconBlock name={name} size="lg" />
             </div>
