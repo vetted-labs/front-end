@@ -278,7 +278,7 @@ export default function GuildApplicationFlow() {
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="grid lg:grid-cols-[268px_1fr] min-h-[640px]">
             {/* ── Left rail ───────────────────────────────────── */}
-            <aside className="bg-background border-b lg:border-b-0 lg:border-r border-border py-7 lg:sticky lg:top-16 lg:self-start">
+            <aside className="border-b lg:border-b-0 lg:border-r border-border py-7 lg:sticky lg:top-16 lg:self-start">
               <div className="flex items-center gap-2.5 px-6 pb-6 border-b border-border mb-6">
                 <div
                   className="w-7 h-7 rounded-lg grid place-items-center text-white font-black text-sm font-display"
