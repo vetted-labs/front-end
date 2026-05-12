@@ -22,7 +22,7 @@ export function GuildCardHeader({
   status,
 }: GuildCardHeaderProps) {
   return (
-    <div className="flex justify-between items-center font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2.5">
+    <div className="flex justify-between items-center font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
       <div className="truncate">
         <span>G-{registryNumber} · {registrySlug}</span>
         {role && (

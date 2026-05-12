@@ -24,7 +24,7 @@ export function GuildTickerStrip({ cells, compact = false }: GuildTickerStripPro
           key={i}
           className={cn(
             "border-r border-border last:border-r-0",
-            compact ? "py-2.5 px-3" : "py-2.5 px-3.5",
+            compact ? "py-2.5 px-3" : "py-3 px-4",
           )}
         >
           <div

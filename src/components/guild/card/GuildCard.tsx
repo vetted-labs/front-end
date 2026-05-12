@@ -151,12 +151,12 @@ function PendingBanner({ count }: { count: number }) {
 function CardNameBlock({ name, thesis }: { name: string; thesis: string }) {
   return (
     <>
-      <div className="w-8 h-px bg-primary mb-3.5" />
-      <h3 className="font-display text-[22px] font-bold tracking-[-0.025em] leading-[1.05] mb-1.5 text-foreground">
+      <div className="w-6 h-[2px] bg-primary mb-4" />
+      <h3 className="font-display text-[22px] font-bold tracking-[-0.025em] leading-[1.05] mb-2 text-foreground">
         {name}.
       </h3>
       {thesis && (
-        <p className="text-[12px] text-muted-foreground leading-[1.35] mb-4 max-w-[88%]">
+        <p className="text-[12px] text-muted-foreground leading-[1.35]">
           &ldquo;{thesis}&rdquo;
         </p>
       )}
@@ -194,18 +194,20 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — workspace`}>
         {pending > 0 && <PendingBanner count={pending} />}
-        <div className={cn("relative z-10 flex-1", pending > 0 ? "pt-9 px-5 pb-4" : "p-5 pb-4")}>
-          <div className="flex items-start gap-4 mb-4">
-            <div className="flex-1 min-w-0">
-              <GuildCardHeader
-                registrySlug={slug}
-                registryNumber={idx}
-                role={guild.expertRole}
-                status="none"
-              />
-              <CardNameBlock name={guild.name} thesis={thesis} />
+        <div className={cn("relative z-10 flex-1 flex flex-col gap-4", pending > 0 ? "pt-9 px-5 pb-0" : "p-5 pb-0")}>
+          <div>
+            <GuildCardHeader
+              registrySlug={slug}
+              registryNumber={idx}
+              role={guild.expertRole}
+              status="none"
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <CardNameBlock name={guild.name} thesis={thesis} />
+              </div>
+              <GuildIconBlock name={guild.name} size="lg" />
             </div>
-            <GuildIconBlock name={guild.name} size="lg" />
           </div>
           <GuildMembersHero
             count={guild.memberCount ?? 0}
@@ -258,17 +260,19 @@ export function GuildCard(props: GuildCardProps) {
     const open = guild.openPositions ?? 0;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild`}>
-        <div className="relative z-10 flex-1 p-5 pb-4">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="flex-1 min-w-0">
-              <GuildCardHeader
-                registrySlug={slug}
-                registryNumber={idx}
-                status={open > 0 ? { kind: "open", count: open } : "none"}
-              />
-              <CardNameBlock name={guild.name} thesis={thesis} />
+        <div className="relative z-10 flex-1 flex flex-col gap-4 p-5 pb-0">
+          <div>
+            <GuildCardHeader
+              registrySlug={slug}
+              registryNumber={idx}
+              status={open > 0 ? { kind: "open", count: open } : "none"}
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <CardNameBlock name={guild.name} thesis={thesis} />
+              </div>
+              <GuildIconBlock name={guild.name} size="xl" />
             </div>
-            <GuildIconBlock name={guild.name} size="xl" />
           </div>
           <GuildMembersHero
             count={guild.expertCount ?? guild.totalMembers ?? 0}
@@ -304,21 +308,23 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — widget`}>
         {pending > 0 && <PendingBanner count={pending} />}
-        <div className={cn("relative z-10 flex-1", pending > 0 ? "pt-9 px-4 pb-4" : "p-4 pb-4")}>
-          <div className="flex items-start gap-3 mb-3">
-            <div className="flex-1 min-w-0">
-              <GuildCardHeader
-                registrySlug={slug}
-                registryNumber={idx}
-                role={guild.expertRole}
-                status="none"
-              />
-              <div className="w-8 h-px bg-primary mb-2.5" />
-              <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] text-foreground">
-                {guild.name}.
-              </h3>
+        <div className={cn("relative z-10 flex-1 flex flex-col gap-3", pending > 0 ? "pt-9 px-4 pb-0" : "p-4 pb-0")}>
+          <div>
+            <GuildCardHeader
+              registrySlug={slug}
+              registryNumber={idx}
+              role={guild.expertRole}
+              status="none"
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="w-6 h-[2px] bg-primary mb-3" />
+                <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] text-foreground">
+                  {guild.name}.
+                </h3>
+              </div>
+              <GuildIconBlock name={guild.name} size="md" />
             </div>
-            <GuildIconBlock name={guild.name} size="md" />
           </div>
           <GuildMembersHero
             compact
@@ -362,35 +368,37 @@ export function GuildCard(props: GuildCardProps) {
       : null;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} — guild position`}>
-        <div className="relative z-10 flex-1 p-4 pb-4">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="flex-1 min-w-0">
-              <GuildCardHeader
-                registrySlug={slug}
-                registryNumber={idx}
-                status="none"
-              />
-              <div className="w-8 h-px bg-primary mb-2.5" />
-              <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] mb-1 text-foreground">
-                {guild.name}.
-              </h3>
-              <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground mt-1">
-                <span className="text-primary capitalize">{guild.expertRole}</span>
-                {joinedLabel && (
-                  <>
-                    <span className="text-border mx-1.5">·</span>
-                    <span>Member since {joinedLabel}</span>
-                  </>
-                )}
-                {tenureDays !== null && (
-                  <>
-                    <span className="text-border mx-1.5">·</span>
-                    <span>{tenureDays}d tenure</span>
-                  </>
-                )}
+        <div className="relative z-10 flex-1 flex flex-col p-4 pb-0">
+          <div>
+            <GuildCardHeader
+              registrySlug={slug}
+              registryNumber={idx}
+              status="none"
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="w-6 h-[2px] bg-primary mb-3" />
+                <h3 className="font-display text-[18px] font-bold tracking-[-0.025em] leading-[1.05] mb-2 text-foreground">
+                  {guild.name}.
+                </h3>
+                <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="text-primary capitalize">{guild.expertRole}</span>
+                  {joinedLabel && (
+                    <>
+                      <span className="text-border mx-1.5">·</span>
+                      <span>Member since {joinedLabel}</span>
+                    </>
+                  )}
+                  {tenureDays !== null && (
+                    <>
+                      <span className="text-border mx-1.5">·</span>
+                      <span>{tenureDays}d tenure</span>
+                    </>
+                  )}
+                </div>
               </div>
+              <GuildIconBlock name={guild.name} size="lg" />
             </div>
-            <GuildIconBlock name={guild.name} size="lg" />
           </div>
         </div>
         <GuildTickerStrip
@@ -423,17 +431,19 @@ export function GuildCard(props: GuildCardProps) {
     const thesis = getGuildThesis(name);
     return (
       <CardShell onClick={onClick} ariaLabel={`${name} guild — application ${statusLabel.toLowerCase()}`}>
-        <div className="relative z-10 flex-1 p-5 pb-4">
-          <div className="flex items-start gap-4 mb-2">
-            <div className="flex-1 min-w-0">
-              <GuildCardHeader
-                registrySlug={slug}
-                registryNumber={idx}
-                status={{ kind: "applicationStatus", label: statusLabel }}
-              />
-              <CardNameBlock name={name} thesis={thesis} />
+        <div className="relative z-10 flex-1 flex flex-col p-5 pb-0">
+          <div>
+            <GuildCardHeader
+              registrySlug={slug}
+              registryNumber={idx}
+              status={{ kind: "applicationStatus", label: statusLabel }}
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <CardNameBlock name={name} thesis={thesis} />
+              </div>
+              <GuildIconBlock name={name} size="lg" />
             </div>
-            <GuildIconBlock name={name} size="lg" />
           </div>
         </div>
         <GuildTickerStrip cells={cells} />

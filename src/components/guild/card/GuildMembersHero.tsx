@@ -30,20 +30,20 @@ export function GuildMembersHero({
   return (
     <div
       className={cn(
-        "flex items-center gap-3.5 rounded-md bg-primary/[0.04] border border-primary/20 mb-4",
-        compact ? "py-2 px-2.5" : "py-3 px-3.5",
+        "flex items-center gap-4 rounded-md bg-primary/[0.04] border border-primary/20",
+        compact ? "py-2 px-3" : "py-3 px-4",
       )}
     >
       <div
         className={cn(
-          "flex flex-col items-start gap-0.5 border-r border-primary/20 pr-3.5",
+          "flex flex-col items-start gap-0.5 border-r border-primary/20 pr-4",
           compact ? "min-w-[44px]" : "min-w-[56px]",
         )}
       >
         <span
           className={cn(
             "font-mono font-extrabold leading-[0.9] tracking-[-0.04em] text-primary tabular-nums",
-            compact ? "text-2xl" : "text-[30px]",
+            compact ? "text-2xl" : "text-[32px]",
           )}
         >
           {count}
