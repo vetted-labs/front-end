@@ -4,26 +4,18 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  ChevronRight,
-  CheckCircle2,
   Clock,
   XCircle,
-  Eye,
-  Star,
   Sparkles,
   ShieldCheck,
-  Briefcase,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { candidateApi, extractApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
-import { GuildAvatar, GuildBadge } from "@/components/ui/guild";
-import { getGuildIdentity } from "@/lib/guildIdentity";
-import { STATUS_COLORS } from "@/config/colors";
-import { GUILD_APPLICATION_STATUS_CONFIG } from "@/config/constants";
-import { cn, formatTimeAgo } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
+import { GuildCard } from "@/components/guild/card";
 import { DataSection } from "@/lib/motion";
 import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
@@ -38,6 +30,8 @@ import type {
 export default function CandidateGuilds() {
   const router = useRouter();
   const { ready } = useRequireAuth("candidate");
+  // eslint-disable-next-line react-hooks/purity -- stable snapshot of current time for waiting-days math, memoized once per mount
+  const nowMs = useMemo(() => Date.now(), []);
 
   const { data: guildApplicationsData, isLoading, refetch } = useFetch(
     () => candidateApi.getGuildApplications(),
@@ -183,15 +177,35 @@ export default function CandidateGuilds() {
                   meta={`${sections.approved.length} verified`}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {sections.approved.map((app) => (
-                      <ApprovedGuildCard
-                        key={app.id}
-                        app={app}
-                        onView={(guildId) =>
-                          guildId && router.push(`/guilds/${guildId}`)
-                        }
-                      />
-                    ))}
+                    {sections.approved.map((app, i) => {
+                      const guildId = app.guildId ?? app.guild?.id;
+                      const decidedDate = app.submittedAt || app.createdAt;
+                      return (
+                        <GuildCard
+                          key={app.id}
+                          variant="candidate"
+                          application={app}
+                          catalogueIndex={i + 1}
+                          statusLabel="APPROVED"
+                          cells={[
+                            {
+                              value: decidedDate ? formatDate(decidedDate) : "—",
+                              label: "Decided on",
+                            },
+                            {
+                              value: String(app.reviewersAssigned ?? "—"),
+                              label: "Reviewers",
+                            },
+                            {
+                              value: String(app.approvalCount ?? "—"),
+                              label: "Approvals",
+                              tone: "positive",
+                            },
+                          ]}
+                          onClick={() => guildId && router.push(`/guilds/${guildId}`)}
+                        />
+                      );
+                    })}
                   </div>
                 </Section>
               )}
@@ -204,15 +218,46 @@ export default function CandidateGuilds() {
                   meta={`${sections.pending.length} in review`}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {sections.pending.map((app) => (
-                      <PendingGuildCard
-                        key={app.id}
-                        app={app}
-                        onView={(guildId) =>
-                          guildId && router.push(`/guilds/${guildId}`)
-                        }
-                      />
-                    ))}
+                    {sections.pending.map((app, i) => {
+                      const guildId = app.guildId ?? app.guild?.id;
+                      const submittedAt = app.submittedAt || app.createdAt;
+                      const waitingDays = submittedAt
+                        ? Math.max(
+                            0,
+                            Math.floor(
+                              (nowMs - new Date(submittedAt).getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            )
+                          )
+                        : null;
+                      return (
+                        <GuildCard
+                          key={app.id}
+                          variant="candidate"
+                          application={app}
+                          catalogueIndex={i + 1}
+                          statusLabel="PENDING"
+                          cells={[
+                            {
+                              value: String(app.reviewersAssigned ?? "—"),
+                              label: "Reviewers",
+                            },
+                            {
+                              value: String(
+                                app.reviewsCompleted ?? app.reviewCount ?? "—"
+                              ),
+                              label: "Reviewed",
+                            },
+                            {
+                              value: waitingDays !== null ? String(waitingDays) : "—",
+                              unit: waitingDays !== null ? "d" : undefined,
+                              label: "Waiting",
+                            },
+                          ]}
+                          onClick={() => guildId && router.push(`/guilds/${guildId}`)}
+                        />
+                      );
+                    })}
                   </div>
                 </Section>
               )}
@@ -225,16 +270,41 @@ export default function CandidateGuilds() {
                   meta={`${sections.closed.length}`}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {sections.closed.map((app) => {
-                      const guildId = app.guildId || app.guild?.id;
+                    {sections.closed.map((app, i) => {
+                      const guildId = app.guildId ?? app.guild?.id;
                       const feedback = rejectionFeedback[app.id];
+                      const isRejected =
+                        app.status === "rejected" || app.status === "finalized";
+                      const statusLabel = isRejected ? "REJECTED" : "CLOSED";
+                      const decidedDate = app.submittedAt || app.createdAt;
+                      const outcomeValue =
+                        app.approvalCount != null
+                          ? String(app.approvalCount)
+                          : app.votesFor != null
+                          ? String(app.votesFor)
+                          : "—";
                       return (
                         <div key={app.id} className="space-y-2">
-                          <ClosedGuildCard
-                            app={app}
-                            onView={() =>
-                              guildId && router.push(`/guilds/${guildId}`)
-                            }
+                          <GuildCard
+                            variant="candidate"
+                            application={app}
+                            catalogueIndex={i + 1}
+                            statusLabel={statusLabel}
+                            cells={[
+                              {
+                                value: decidedDate ? formatDate(decidedDate) : "—",
+                                label: "Decided on",
+                              },
+                              {
+                                value: String(app.reviewersAssigned ?? "—"),
+                                label: "Reviewers",
+                              },
+                              {
+                                value: outcomeValue,
+                                label: "Approvals",
+                              },
+                            ]}
+                            onClick={() => guildId && router.push(`/guilds/${guildId}`)}
                           />
                           {feedback && (
                             <RejectionFeedbackCard
@@ -278,240 +348,6 @@ export default function CandidateGuilds() {
         </DataSection>
       </div>
     </div>
-  );
-}
-
-// ─── Guild card variants ──────────────────────────────────────────────────────
-
-interface ApprovedGuildCardProps {
-  app: GuildApplicationSummary;
-  onView: (guildId?: string) => void;
-}
-
-function ApprovedGuildCard({ app, onView }: ApprovedGuildCardProps) {
-  const guildName = app.guildName || app.guild?.name || "Guild";
-  const guildId = app.guildId || app.guild?.id;
-  const identity = getGuildIdentity(guildName);
-  const appliedDate = app.submittedAt || app.createdAt;
-
-  return (
-    <button
-      type="button"
-      onClick={() => onView(guildId)}
-      className="group relative w-full text-left rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] transition-all"
-    >
-      <div className="flex items-start gap-4">
-        <GuildAvatar guild={guildName} size="lg" rounded="2xl" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3
-              className={cn(
-                "text-base font-semibold leading-snug truncate",
-                identity.classes.text
-              )}
-            >
-              {guildName}
-            </h3>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold border whitespace-nowrap flex-shrink-0",
-                STATUS_COLORS.positive.badge
-              )}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              Verified
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Joined {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
-          </p>
-
-          <div className="flex items-center gap-3 mt-3 flex-wrap text-[11px] text-muted-foreground">
-            {(app.approvalCount ?? 0) > 0 && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5",
-                  STATUS_COLORS.positive.text
-                )}
-              >
-                <Star className="w-3 h-3" />
-                {app.approvalCount} approval
-                {app.approvalCount !== 1 ? "s" : ""}
-              </span>
-            )}
-            {(app.reviewCount ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1.5">
-                <Eye className="w-3 h-3" />
-                {app.reviewCount} review{app.reviewCount !== 1 ? "s" : ""}
-              </span>
-            )}
-            {app.jobTitle && (
-              <span className="inline-flex items-center gap-1.5 truncate max-w-[200px]">
-                <Briefcase className="w-3 h-3" />
-                <span className="truncate">{app.jobTitle}</span>
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40">
-        <GuildBadge guild={guildName} size="sm" />
-        <span className="text-[11px] text-primary inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          View guild <ChevronRight className="w-3 h-3" />
-        </span>
-      </div>
-    </button>
-  );
-}
-
-interface PendingGuildCardProps {
-  app: GuildApplicationSummary;
-  onView: (guildId?: string) => void;
-}
-
-function PendingGuildCard({ app, onView }: PendingGuildCardProps) {
-  const guildName = app.guildName || app.guild?.name || "Guild";
-  const guildId = app.guildId || app.guild?.id;
-  const identity = getGuildIdentity(guildName);
-  const appliedDate = app.submittedAt || app.createdAt;
-  const reviewersAssigned = app.reviewersAssigned ?? 0;
-  const reviewsCompleted = app.reviewsCompleted ?? app.reviewCount ?? 0;
-  const progressPct =
-    reviewersAssigned > 0
-      ? Math.min(100, Math.round((reviewsCompleted / reviewersAssigned) * 100))
-      : 0;
-
-  return (
-    <button
-      type="button"
-      onClick={() => onView(guildId)}
-      className="group relative w-full text-left rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] transition-all"
-    >
-      <div className="flex items-start gap-4">
-        <GuildAvatar guild={guildName} size="lg" rounded="2xl" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3
-              className={cn(
-                "text-base font-semibold leading-snug truncate",
-                identity.classes.text
-              )}
-            >
-              {guildName}
-            </h3>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold border whitespace-nowrap flex-shrink-0",
-                GUILD_APPLICATION_STATUS_CONFIG.pending.className
-              )}
-            >
-              <Clock className="w-3 h-3" />
-              Under review
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Applied {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
-          </p>
-
-          {reviewersAssigned > 0 ? (
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
-                <span>
-                  {reviewsCompleted}/{reviewersAssigned} reviewers
-                </span>
-                <span className="tabular-nums">{progressPct}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                <div
-                  className="h-full bg-primary/70 rounded-full transition-all"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground mt-3">
-              Awaiting reviewer assignment.
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40">
-        <GuildBadge guild={guildName} size="sm" />
-        <span className="text-[11px] text-primary inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          View status <ChevronRight className="w-3 h-3" />
-        </span>
-      </div>
-    </button>
-  );
-}
-
-interface ClosedGuildCardProps {
-  app: GuildApplicationSummary;
-  onView: () => void;
-}
-
-function ClosedGuildCard({ app, onView }: ClosedGuildCardProps) {
-  const guildName = app.guildName || app.guild?.name || "Guild";
-  const identity = getGuildIdentity(guildName);
-  const appliedDate = app.submittedAt || app.createdAt;
-  const isRejected =
-    app.status === "rejected" || app.status === "finalized";
-
-  return (
-    <button
-      type="button"
-      onClick={onView}
-      className="group relative w-full text-left rounded-xl border border-border bg-card p-5 hover:border-border/70 transition-all opacity-95"
-    >
-      <div className="flex items-start gap-4">
-        <GuildAvatar guild={guildName} size="lg" rounded="2xl" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3
-              className={cn(
-                "text-base font-semibold leading-snug truncate",
-                identity.classes.text
-              )}
-            >
-              {guildName}
-            </h3>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold border whitespace-nowrap flex-shrink-0",
-                isRejected
-                  ? STATUS_COLORS.negative.badge
-                  : STATUS_COLORS.neutral.badge
-              )}
-            >
-              {isRejected ? (
-                <XCircle className="w-3 h-3" />
-              ) : (
-                <Clock className="w-3 h-3" />
-              )}
-              {isRejected ? "Closed" : app.status}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Applied {appliedDate ? formatTimeAgo(appliedDate) : "recently"}
-          </p>
-          {app.jobTitle && (
-            <p className="text-[11px] text-muted-foreground mt-2 inline-flex items-center gap-1.5 truncate">
-              <Briefcase className="w-3 h-3" />
-              <span className="truncate">{app.jobTitle}</span>
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40">
-        <GuildBadge guild={guildName} size="sm" />
-        <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          View guild <ChevronRight className="w-3 h-3" />
-        </span>
-      </div>
-    </button>
   );
 }
 
