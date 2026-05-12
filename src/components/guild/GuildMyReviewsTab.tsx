@@ -29,9 +29,39 @@ const FILTER_OPTIONS: Array<{ id: FilterId; label: string }> = [
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * Build the deep-link for a review row. Three surfaces with three URL shapes:
+ * - expert_application → guild workspace, membership applications tab
+ * - guild_application  → guild workspace, candidate applications drawer
+ * - proposal           → standalone voting page
+ *
+ * `subjectId` is the id of the thing being reviewed (an expert application,
+ * a candidate guild application, or a candidate proposal) — NOT the review
+ * row's own id.
+ */
+function buildReviewHref(
+  itemType: "expert_application" | "guild_application" | "proposal",
+  subjectId: string,
+  guildId: string,
+): string {
+  const base = `/expert/guild/${encodeURIComponent(guildId)}`;
+  if (itemType === "guild_application") {
+    return `${base}?tab=membershipApplications&candidateApplicationId=${encodeURIComponent(subjectId)}`;
+  }
+  if (itemType === "expert_application") {
+    return `${base}?tab=membershipApplications&applicationId=${encodeURIComponent(subjectId)}`;
+  }
+  return `/expert/voting/applications/${encodeURIComponent(subjectId)}`;
+}
+
 function mapApplicationToQueueItem(app: GuildApplication, guildId: string): GuildQueueItem {
   const isExpertApp = app.item_type === "expert_application";
   const isCandidateApp = app.item_type === "guild_application";
+  const itemType = isExpertApp
+    ? "expert_application"
+    : isCandidateApp
+      ? "guild_application"
+      : "proposal";
 
   // Candidate reviews are single-shot (no commit/reveal). Expert apps still go
   // through the commit→reveal flow driven by `voting_phase`.
@@ -49,16 +79,7 @@ function mapApplicationToQueueItem(app: GuildApplication, guildId: string): Guil
       ? "due_soon"
       : "waiting";
 
-  const href = (() => {
-    const base = `/expert/guild/${encodeURIComponent(guildId)}`;
-    if (isCandidateApp) {
-      return `${base}?tab=membershipApplications&candidateApplicationId=${app.id}`;
-    }
-    if (isExpertApp) {
-      return `${base}?tab=membershipApplications&applicationId=${app.id}`;
-    }
-    return `/expert/voting/applications/${encodeURIComponent(app.id)}`;
-  })();
+  const href = buildReviewHref(itemType, app.id, guildId);
 
   const actionLabel = isCandidateApp
     ? app.has_voted
@@ -92,35 +113,64 @@ function mapSubmittedToQueueItem(
   rev: ExpertSubmittedReview,
   guildId: string,
 ): GuildQueueItem {
-  const isSlashed = rev.slashingTier != null && rev.slashingTier !== "aligned" && rev.slashingTier !== "neutral";
+  const isSlashed =
+    rev.slashingTier != null &&
+    rev.slashingTier !== "aligned" &&
+    rev.slashingTier !== "neutral";
   const finalized = rev.applicationFinalized;
-  const href = `/expert/guild/${encodeURIComponent(guildId)}?tab=membershipApplications&applicationId=${encodeURIComponent(rev.expertApplicationId)}`;
+  const isSingleShot = rev.itemType === "guild_application";
+  const isRevealOpen =
+    !isSingleShot && rev.applicationVotingPhase === "reveal" && !finalized;
+
+  const subjectId = rev.subjectId ?? rev.expertApplicationId;
+  const href = buildReviewHref(rev.itemType, subjectId, guildId);
+
+  // Per-surface lifecycle phrasing. Single-shot CGA reviews never sit in
+  // commit/reveal — once submitted, the user is just waiting for the rest
+  // of the panel.
+  const subjectMeta = finalized
+    ? rev.applicationOutcome
+      ? `Outcome: ${rev.applicationOutcome}`
+      : "Finalized"
+    : isSingleShot
+      ? "Awaiting panel"
+      : isRevealOpen
+        ? "Reveal open — action needed"
+        : "Awaiting reveal";
+
+  const phase: GuildQueueItem["phase"] = finalized
+    ? "vote"
+    : isSingleShot
+      ? "review"
+      : isRevealOpen
+        ? "reveal"
+        : "commit";
+
+  const baseLabel = isSlashed
+    ? `Slashed · ${rev.slashingTier}`
+    : isRevealOpen
+      ? "Reveal vote"
+      : "View record";
+
   return {
-    id: `submitted-${rev.id}`,
-    bucket: "waiting",
-    type: "expert",
-    phase: finalized ? "vote" : "reveal",
+    id: `submitted-${rev.itemType}-${rev.id}`,
+    bucket: isRevealOpen ? "due_soon" : "waiting",
+    type: rev.itemType === "expert_application" ? "expert" : "candidate",
+    phase,
     title: rev.candidateName || "Submitted review",
     subjectName: rev.guildName ?? undefined,
-    subjectMeta: finalized
-      ? rev.applicationOutcome
-        ? `Outcome: ${rev.applicationOutcome}`
-        : "Finalized"
-      : "Awaiting reveal",
+    subjectMeta,
     deadline: rev.applicationFinalizedAt ?? rev.createdAt ?? null,
     commitsCompleted: undefined,
     commitsRequired: undefined,
     stakeRequired: undefined,
     stakeLocked: undefined,
-    actionLabel: "View record",
-    actionPrimary: false,
+    actionLabel: baseLabel,
+    actionPrimary: isRevealOpen,
     actionHref: href,
     votesCast: undefined,
     totalVoters: undefined,
     supportPercent: rev.overallScore != null ? Math.round(rev.overallScore) : undefined,
-    // Encode slashing visibility via a known marker the row can use later;
-    // for now the meta + label do the work.
-    ...(isSlashed ? { actionLabel: `Slashed · ${rev.slashingTier}` } : {}),
   };
 }
 
@@ -128,10 +178,16 @@ function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
   if (filter === "all") return true;
   if (filter === "active") return !app.finalized;
   // "Awaiting reveal" / "Reveal open" are commit-reveal lifecycle filters and
-  // apply only to expert applications. Candidate reviews are single-shot.
-  const isExpertApp = app.item_type === "expert_application";
-  if (filter === "awaiting") return isExpertApp && app.voting_phase === "commit" && !app.finalized;
-  if (filter === "open") return isExpertApp && app.voting_phase === "reveal" && !app.finalized;
+  // apply only to two-phase items (expert applications, proposal votes).
+  // Candidate-membership reviews are single-shot.
+  const hasCommitReveal =
+    app.item_type === "expert_application" || app.item_type === "proposal";
+  if (filter === "awaiting") {
+    return hasCommitReveal && app.voting_phase === "commit" && !app.finalized;
+  }
+  if (filter === "open") {
+    return hasCommitReveal && app.voting_phase === "reveal" && !app.finalized;
+  }
   if (filter === "past") {
     if (!app.finalized || !app.finalized_at) return false;
     const finalizedMs = new Date(app.finalized_at).getTime();
@@ -141,6 +197,43 @@ function matchesFilter(app: GuildApplication, filter: FilterId): boolean {
     return (app.my_slashing_tier ?? null) != null;
   }
   return true;
+}
+
+function matchesSubmittedFilter(
+  rev: ExpertSubmittedReview,
+  filter: FilterId,
+): boolean {
+  if (filter === "all") return true;
+  const finalized = rev.applicationFinalized;
+  const isSingleShot = rev.itemType === "guild_application";
+  const phase = rev.applicationVotingPhase;
+
+  if (filter === "active") return !finalized;
+  if (filter === "awaiting") {
+    // Committed but the surrounding application is still pre-reveal. Single
+    // shot reviews never sit in this bucket — they go straight from
+    // submitted → finalized.
+    return !isSingleShot && !finalized && phase !== "reveal";
+  }
+  if (filter === "open") {
+    // Reveal phase is live and the user still has work to do.
+    return !isSingleShot && !finalized && phase === "reveal";
+  }
+  if (filter === "past") {
+    if (!finalized) return false;
+    const finalizedAt = rev.applicationFinalizedAt ?? rev.createdAt;
+    if (!finalizedAt) return false;
+    const ms = new Date(finalizedAt).getTime();
+    return Date.now() - ms <= THIRTY_DAYS_MS;
+  }
+  if (filter === "slashed") {
+    return (
+      rev.slashingTier != null &&
+      rev.slashingTier !== "aligned" &&
+      rev.slashingTier !== "neutral"
+    );
+  }
+  return false;
 }
 
 /**
@@ -161,82 +254,58 @@ export function GuildMyReviewsTab({
   const items = useMemo(() => applications ?? [], [applications]);
   const submitted = useMemo(() => submittedReviews ?? [], [submittedReviews]);
 
-  const filtered = useMemo(
-    () => items.filter((app) => matchesFilter(app, filter)),
-    [items, filter],
+  // Dedup: the Schelling-vote flow (`proposal`) does NOT drop the assignment
+  // when the user commits — the same proposal can appear in both `items`
+  // (still assigned) and `submitted` (we have a vote row). The submitted
+  // view is more authoritative because it knows we've already committed and
+  // can prompt for reveal, so we hide the assigned row whenever the same
+  // subject has a submitted review. Expert/CGA flows already drop the
+  // assignment on commit so this is a no-op for them, but the guard is cheap.
+  const submittedSubjectKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of submitted) {
+      const subjectId = r.subjectId ?? r.expertApplicationId;
+      if (subjectId) set.add(`${r.itemType}:${subjectId}`);
+    }
+    return set;
+  }, [submitted]);
+
+  const dedupedItems = useMemo(
+    () =>
+      items.filter((a) => {
+        const t = a.item_type;
+        if (!t) return true;
+        return !submittedSubjectKeys.has(`${t}:${a.id}`);
+      }),
+    [items, submittedSubjectKeys],
   );
 
-  // Submitted-review filters — past/slashed/awaiting-reveal/all read from the
-  // committed-reviews table since the row has dropped off /assigned.
-  const submittedFiltered = useMemo(() => {
-    return submitted.filter((rev) => {
-      if (filter === "all") return true;
-      if (filter === "active") return !rev.applicationFinalized;
-      if (filter === "awaiting") return !rev.applicationFinalized;
-      if (filter === "open") return !rev.applicationFinalized;
-      if (filter === "past") {
-        if (!rev.applicationFinalized) return false;
-        const ms = rev.applicationFinalizedAt
-          ? new Date(rev.applicationFinalizedAt).getTime()
-          : new Date(rev.createdAt).getTime();
-        // eslint-disable-next-line react-hooks/purity -- bounding past-30d filter; staleness during render is benign
-        return Date.now() - ms <= THIRTY_DAYS_MS;
-      }
-      if (filter === "slashed") {
-        return (
-          rev.slashingTier != null &&
-          rev.slashingTier !== "aligned" &&
-          rev.slashingTier !== "neutral"
-        );
-      }
-      return false;
-    });
-  }, [submitted, filter]);
+  const filtered = useMemo(
+    () => dedupedItems.filter((app) => matchesFilter(app, filter)),
+    [dedupedItems, filter],
+  );
+
+  const submittedFiltered = useMemo(
+    () => submitted.filter((rev) => matchesSubmittedFilter(rev, filter)),
+    [submitted, filter],
+  );
 
   const counts = useMemo(() => {
-    const active =
-      items.filter((a) => !a.finalized).length +
-      submitted.filter((r) => !r.applicationFinalized).length;
-    const awaiting =
-      items.filter(
-        (a) =>
-          a.item_type === "expert_application" &&
-          a.voting_phase === "commit" &&
-          !a.finalized,
-      ).length + submitted.filter((r) => !r.applicationFinalized).length;
-    const open = items.filter(
-      (a) =>
-        a.item_type === "expert_application" &&
-        a.voting_phase === "reveal" &&
-        !a.finalized,
-    ).length;
-    const past =
-      items.filter((a) => matchesFilter(a, "past")).length +
-      submitted.filter((r) => {
-        if (!r.applicationFinalized) return false;
-        const ms = r.applicationFinalizedAt
-          ? new Date(r.applicationFinalizedAt).getTime()
-          : new Date(r.createdAt).getTime();
-        // eslint-disable-next-line react-hooks/purity -- bounding past-30d filter; staleness during render is benign
-        return Date.now() - ms <= THIRTY_DAYS_MS;
-      }).length;
-    const slashed =
-      items.filter((a) => matchesFilter(a, "slashed")).length +
-      submitted.filter(
-        (r) =>
-          r.slashingTier != null &&
-          r.slashingTier !== "aligned" &&
-          r.slashingTier !== "neutral",
-      ).length;
+    // Each filter pill's count = (items matching) + (submitted matching).
+    // After dedup these two sets are disjoint, so straight addition is safe
+    // and we avoid the double-count that used to inflate "Awaiting reveal".
+    const countFilter = (id: FilterId) =>
+      dedupedItems.filter((a) => matchesFilter(a, id)).length +
+      submitted.filter((r) => matchesSubmittedFilter(r, id)).length;
     return {
-      active,
-      awaiting,
-      open,
-      past,
-      slashed,
-      all: items.length + submitted.length,
+      active: countFilter("active"),
+      awaiting: countFilter("awaiting"),
+      open: countFilter("open"),
+      past: countFilter("past"),
+      slashed: countFilter("slashed"),
+      all: dedupedItems.length + submitted.length,
     };
-  }, [items, submitted]);
+  }, [dedupedItems, submitted]);
 
   const queueRows = useMemo(() => {
     const pending = filtered.map((app) => mapApplicationToQueueItem(app, guildId));

@@ -71,14 +71,36 @@ export interface ExpertActivity {
 }
 
 /**
- * A review the expert has already SUBMITTED (committed). Lives in
- * `expert_application_reviews` on the backend. Powers the workspace
- * "My Reviews" tab once a reviewer commits — pending assignments stay
- * in the assigned-applications list.
+ * A review the expert has already SUBMITTED across any of the three review
+ * surfaces — expert-application reviews, candidate-membership reviews, and
+ * Schelling proposal votes. Powers the workspace "My Reviews" tab once a
+ * reviewer commits; pending assignments stay in the assigned-applications
+ * list. `itemType` discriminates which surface the row came from so the
+ * client can route deep-links and apply lifecycle-aware filters.
+ *
+ * - `expert_application` — commit/reveal review on an expert applying to a guild
+ * - `guild_application` — single-shot review on a candidate's membership application
+ * - `proposal` — Schelling vote on a candidate hiring proposal
  */
+export type SubmittedReviewItemType =
+  | "expert_application"
+  | "guild_application"
+  | "proposal";
+
 export interface ExpertSubmittedReview {
   id: string;
+  /** Which review surface this row came from. */
+  itemType: SubmittedReviewItemType;
+  /**
+   * The subject's id — an `experts.id` for expert_application,
+   * `candidate_guild_applications.id` for guild_application, or
+   * `candidate_proposals.id` for proposal. Retained under the legacy
+   * `expertApplicationId` name for backwards-compat with the previous
+   * single-surface response shape.
+   */
   expertApplicationId: string;
+  /** Alias for `expertApplicationId`, surface-agnostic. */
+  subjectId?: string;
   guildId: string;
   guildName?: string | null;
   candidateName?: string | null;
@@ -98,6 +120,12 @@ export interface ExpertSubmittedReview {
   applicationFinalizedAt?: string | null;
   applicationOutcome?: string | null;
   applicationLevel?: string | null;
+  /**
+   * "direct" | "commit" | "reveal" | "finalized" | "tiebreaker" — only set
+   * for commit/reveal surfaces (expert_application, proposal). `null` for
+   * single-shot guild_application reviews.
+   */
+  applicationVotingPhase?: string | null;
 }
 
 /** Answers for the general section of the expert/guild application form. */

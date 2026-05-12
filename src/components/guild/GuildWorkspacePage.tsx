@@ -341,8 +341,12 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
       onError: (msg) => logger.warn("Assigned applications fetch failed", msg),
     },
   );
+  // Strict client-side guild filter. The backend already filters by guildId,
+  // but we belt-and-braces here so a stray row without a guild_id (or with
+  // the wrong one) never leaks into another guild's "My Reviews" view.
+  // Dropping an orphan is preferable to showing it under the wrong guild.
   const assignedForGuild: GuildApplication[] = useMemo(
-    () => (assignedRaw ?? []).filter((a) => !a.guild_id || a.guild_id === guildId),
+    () => (assignedRaw ?? []).filter((a) => a.guild_id === guildId),
     [assignedRaw, guildId],
   );
 
