@@ -15,6 +15,7 @@ export interface Guild {
   icon?: string;
   color?: string;
   blockchainGuildId?: string;
+  topMembers?: GuildTopMember[];
 }
 
 /** Extended guild detail returned by guildsApi.getPublicDetail — includes members, jobs, stats. */
@@ -43,6 +44,13 @@ export interface GuildPageDetail extends GuildPublicDetail {
   averageApprovalTime: string;
   recentActivity: GuildActivity[];
   establishedDate: string;
+}
+
+/** Compact member preview used by the new Catalogue guild card. */
+export interface GuildTopMember {
+  id: string;
+  fullName: string;
+  reputation?: number;
 }
 
 /** Guild option with blockchain guild ID for staking operations. */
@@ -80,6 +88,7 @@ export interface ExpertGuild {
   pendingApplications?: number;
   ongoingProposals: number;
   closedProposals: number;
+  topMembers?: GuildTopMember[];
 }
 
 /** Extended guild detail returned by expertApi.getGuildDetails — includes members, jobs, applications, earnings. */
