@@ -17,7 +17,7 @@ export {
   MAX_GALLERY_IMAGES,
   MAX_EXTERNAL_LINKS,
 } from "./job";
-export type { Guild, GuildPublicDetail, GuildPageDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, StakingGuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole, ActivityType, GuildActivity, GuildDetailData, GuildDetailTab, GuildPersonalStats, GuildMyStatsAverages, GuildRecentActivity, GuildMyStatsData } from "./guild";
+export type { Guild, GuildPublicDetail, GuildPageDetail, GuildLeaderboardEntry, ExpertGuild, ExpertGuildDetail, GuildRecord, GuildOption, StakingGuildOption, LeaderboardExpert, GuildEarningsOverview, ExpertRole, ActivityType, GuildActivity, GuildDetailData, GuildDetailTab, GuildPersonalStats, GuildMyStatsAverages, GuildRecentActivity, GuildMyStatsData, GuildTopMember } from "./guild";
 export { GUILD_DETAIL_TABS } from "./guild";
 export type {
   GuildQueueItem,
