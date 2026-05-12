@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { User, Briefcase, FileText, CheckCircle2 } from "lucide-react";
 import { STATUS_COLORS } from "@/config/colors";
 import type { GuildDomainLevel, GuildDomainTopic } from "@/types";
@@ -91,6 +92,20 @@ export function ReviewSubmitStep({
   signingError,
   onVerify,
 }: ReviewSubmitStepProps) {
+  const previewUrl = useMemo(
+    () => (resumeFile ? URL.createObjectURL(resumeFile) : null),
+    [resumeFile],
+  );
+  const isPdf = resumeFile?.type === "application/pdf"
+    || (resumeFile?.name.toLowerCase().endsWith(".pdf") ?? false);
+
+  // eslint-disable-next-line no-restricted-syntax -- cleanup of allocated blob URL on unmount/file change
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   return (
     <div className="space-y-6 p-4 sm:p-8">
       <div className="mb-2">
@@ -114,12 +129,51 @@ export function ReviewSubmitStep({
         <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
           <span className="font-medium text-foreground/70 sm:min-w-[140px] sm:flex-shrink-0">Resume:</span>
           {resumeFile ? (
-            <span className="text-foreground">{resumeFile.name}</span>
+            <span className="text-foreground">
+              {resumeFile.name}
+              <span className="ml-2 text-xs text-muted-foreground/60">
+                · {(resumeFile.size / 1024).toFixed(0)} KB
+              </span>
+            </span>
           ) : (
             <span className="italic text-muted-foreground/60">No file uploaded</span>
           )}
         </div>
       </SummarySection>
+
+      {/* Resume preview — only PDFs render inline; DOC/DOCX falls back to filename */}
+      {resumeFile && previewUrl && (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/30">
+            <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Resume / CV Preview
+            </span>
+            <span className="ml-auto text-[10px] text-muted-foreground/60 truncate max-w-[200px]">
+              {resumeFile.name}
+            </span>
+          </div>
+          {isPdf ? (
+            <iframe
+              src={previewUrl}
+              title="Resume preview"
+              className="w-full h-[600px] bg-white"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 py-14 text-center bg-muted/10">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <FileText className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">{resumeFile.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Inline preview only available for PDFs. Reviewers will be able to download the file.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Professional Background */}
       <SummarySection
