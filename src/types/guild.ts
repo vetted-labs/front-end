@@ -51,6 +51,7 @@ export interface GuildTopMember {
   id: string;
   fullName: string;
   reputation?: number;
+  profilePictureUrl?: string | null;
 }
 
 /** Guild option with blockchain guild ID for staking operations. */

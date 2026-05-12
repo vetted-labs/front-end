@@ -190,7 +190,6 @@ export function GuildCard(props: GuildCardProps) {
     const thesis = getGuildThesis(guild.name, guild.description);
     const pending = guild.pendingProposals ?? 0;
     const tenureDays = calcTenureDays(guild.joinedAt, nowMs);
-    const reviewedRecent = guild.closedProposals ?? 0;
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — workspace`}>
         {pending > 0 && <PendingBanner count={pending} />}
@@ -215,8 +214,8 @@ export function GuildCard(props: GuildCardProps) {
             currentUserId={currentUserId}
             subCaption={
               <>
-                <span className="text-foreground/80">{reviewedRecent}</span>{" "}
-                reviewed
+                <span className="text-foreground/80">Your rep:</span>{" "}
+                <span className="text-foreground/80">{guild.reputation ?? 0}</span>
                 {tenureDays !== null && (
                   <>
                     <span className="text-border mx-1.5">·</span>
@@ -277,7 +276,6 @@ export function GuildCard(props: GuildCardProps) {
           <GuildMembersHero
             count={guild.expertCount ?? guild.totalMembers ?? 0}
             topMembers={guild.topMembers}
-            subCaption={<><span className="text-foreground/80">Top-rep</span> reviewers shown</>}
           />
         </div>
         <GuildTickerStrip

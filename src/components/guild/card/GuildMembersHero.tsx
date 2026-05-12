@@ -1,21 +1,22 @@
 import { cn } from "@/lib/utils";
 import { getMonogram } from "@/lib/monogramHelper";
+import { getAssetUrl } from "@/lib/api";
 import type { GuildTopMember } from "@/types";
 
 interface GuildMembersHeroProps {
   /** Total members in the guild. */
   count: number;
-  /** Up to 5 members shown as monogram avatars (typically top-rep). */
+  /** Up to 3 top-rep members rendered as profile-photo (or monogram fallback) avatars. */
   topMembers?: GuildTopMember[];
-  /** Current user's member id — gets the orange highlight. */
+  /** Current user's member id — gets the orange ring. */
   currentUserId?: string;
-  /** Optional sub-caption shown beneath the avatars (mono, 9px). */
+  /** Optional sub-caption shown beneath the avatar stack (mono, 9px). */
   subCaption?: React.ReactNode;
   /** Compact mode (used in dashboard widget). Hides the sub-caption and tightens padding. */
   compact?: boolean;
 }
 
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 3;
 
 export function GuildMembersHero({
   count,
@@ -26,6 +27,11 @@ export function GuildMembersHero({
 }: GuildMembersHeroProps) {
   const visible = (topMembers ?? []).slice(0, MAX_VISIBLE);
   const overflow = Math.max(0, count - visible.length);
+
+  const avatarSize = compact ? "w-7 h-7 text-[9px]" : "w-9 h-9 text-[10px]";
+  const overflowSize = compact
+    ? "w-7 h-7 text-[9px]"
+    : "w-9 h-9 text-[10px]";
 
   return (
     <div
@@ -52,7 +58,7 @@ export function GuildMembersHero({
           Members
         </span>
       </div>
-      <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+      <div className="flex-1 flex flex-col gap-2 min-w-0">
         <div className="flex items-center">
           {visible.length === 0 ? (
             <span className="font-mono text-[9px] text-muted-foreground/60 tracking-[0.14em] uppercase">
@@ -62,24 +68,45 @@ export function GuildMembersHero({
             <>
               {visible.map((m, i) => {
                 const isMe = m.id === currentUserId;
+                const photoUrl = m.profilePictureUrl
+                  ? getAssetUrl(m.profilePictureUrl)
+                  : null;
                 return (
                   <span
                     key={m.id}
                     className={cn(
-                      "w-5 h-5 rounded-full text-[8px] font-bold flex items-center justify-center font-mono border-[1.5px] border-card",
-                      i > 0 && "-ml-1.5",
+                      "relative rounded-full font-bold flex items-center justify-center font-mono overflow-hidden border-2",
+                      avatarSize,
+                      i > 0 && "-ml-2",
                       isMe
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted/30 text-muted-foreground",
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-card bg-muted/40 text-muted-foreground",
                     )}
                     title={m.fullName}
                   >
-                    {getMonogram(m.fullName)}
+                    {photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- external avatar; next/image overkill at this size
+                      <img
+                        src={photoUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span>{getMonogram(m.fullName)}</span>
+                    )}
                   </span>
                 );
               })}
               {overflow > 0 && (
-                <span className="w-5 h-5 flex items-center justify-center text-[8px] text-muted-foreground -ml-1.5 font-mono">
+                <span
+                  className={cn(
+                    "rounded-full flex items-center justify-center font-mono text-muted-foreground bg-muted/30 border-2 border-card -ml-2 font-bold",
+                    overflowSize,
+                  )}
+                >
                   +{overflow}
                 </span>
               )}
