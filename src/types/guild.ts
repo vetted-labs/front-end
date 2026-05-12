@@ -84,6 +84,7 @@ export interface ExpertGuild {
   reputation: number;
   totalEarnings: number;
   joinedAt?: string;
+  stakedAmount?: string;
   pendingProposals: number;
   pendingApplications?: number;
   ongoingProposals: number;

@@ -24,7 +24,6 @@ export function GuildMembersHero({
   subCaption,
   compact = false,
 }: GuildMembersHeroProps) {
-  const padded = String(count).padStart(2, "0");
   const visible = (topMembers ?? []).slice(0, MAX_VISIBLE);
   const overflow = Math.max(0, count - visible.length);
 
@@ -47,7 +46,7 @@ export function GuildMembersHero({
             compact ? "text-2xl" : "text-[30px]",
           )}
         >
-          {padded}
+          {count}
         </span>
         <span className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground">
           Members

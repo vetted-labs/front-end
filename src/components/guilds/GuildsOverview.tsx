@@ -277,6 +277,7 @@ export function GuildsOverview() {
                       guild={guild}
                       catalogueIndex={index + 1}
                       currentUserId={currentUserId ?? undefined}
+                      stakedAmount={guild.stakedAmount}
                       onClick={() => handleGuildClick(guild.id)}
                     />
                   </div>

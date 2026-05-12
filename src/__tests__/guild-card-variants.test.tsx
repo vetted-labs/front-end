@@ -42,7 +42,7 @@ describe("GuildCard variants render", () => {
     );
     expect(screen.getByText(/pending review/i)).toBeInTheDocument();
     expect(screen.getByText("Engineering.")).toBeInTheDocument();
-    expect(screen.getByText("08")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
     expect(screen.getByText("Staked")).toBeInTheDocument();
   });
   it("marketplace shows N OPEN tag and 'Experts' label", () => {
