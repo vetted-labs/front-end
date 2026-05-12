@@ -3,18 +3,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertTriangle,
 } from "lucide-react";
 import type { GuildRecord, ActiveEndorsement, EarningsBreakdownResponse } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
 import { EndorsementStatsGrid } from "./EndorsementStatsGrid";
+import { MarketplaceGuildSwitcher } from "./MarketplaceGuildSwitcher";
 
 interface EndorsementHeaderProps {
   // Wallet
@@ -85,24 +79,23 @@ export function EndorsementHeader({
       {/* Sticky header bar */}
       {address && (
         <div className="sticky top-0 z-20 bg-background/88 backdrop-blur-sm border-b border-border -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
-          <div className="flex items-center justify-between py-3.5 max-w-7xl mx-auto gap-4 flex-wrap">
-            {/* Left: Title + LIVE badge + Guild selector */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <h2 className="font-display font-bold text-xl tracking-tight whitespace-nowrap">
-                Endorsement Marketplace
-              </h2>
-              <Select value={selectedGuildId ?? ""} onValueChange={onGuildChange}>
-                <SelectTrigger className="h-9 w-44 rounded-lg border-border bg-muted/30 text-sm font-medium focus:border-primary focus:ring-2 focus:ring-primary/20">
-                  <SelectValue placeholder="Select guild" />
-                </SelectTrigger>
-                <SelectContent>
-                  {guilds.map((guild) => (
-                    <SelectItem key={guild.id} value={guild.id}>
-                      {guild.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="flex items-center justify-between py-3 max-w-7xl mx-auto gap-4 flex-wrap">
+            {/* Left: Page label + Guild switcher */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-col leading-none">
+                <span className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                  Endorsement
+                </span>
+                <h2 className="mt-0.5 font-display font-bold text-lg tracking-tight whitespace-nowrap">
+                  Marketplace
+                </h2>
+              </div>
+              <span className="hidden sm:block h-8 w-px bg-border/60 dark:bg-white/[0.08]" aria-hidden />
+              <MarketplaceGuildSwitcher
+                guilds={guilds}
+                value={selectedGuildId}
+                onChange={onGuildChange}
+              />
             </div>
 
             {/* Right: Stake info */}
