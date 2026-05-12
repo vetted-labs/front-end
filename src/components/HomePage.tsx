@@ -45,7 +45,7 @@ export function HomePage() {
     if (auth.isAuthenticated && auth.userType !== "expert" && isConnected && address) {
       disconnect();
     }
-  }, [mounted, isConnected, address, auth.isAuthenticated, auth.userType]);
+  }, [mounted, isConnected, address, auth.isAuthenticated, auth.userType, disconnect]);
 
   const handleExpertJoin = () => {
     if (auth.isAuthenticated && auth.userType === "expert" && isConnected) {
