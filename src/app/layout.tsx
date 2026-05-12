@@ -42,6 +42,7 @@ export default async function RootLayout({
         <script
           {...(nonce ? { nonce } : {})}
           suppressHydrationWarning
+          // eslint-disable-next-line react/no-danger -- inline theme bootstrap to avoid FOUC; runs once before hydration
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
