@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GuildCard } from "@/components/GuildCard";
+import { GuildCard } from "@/components/guild/card";
 import type { ExpertGuild } from "@/types";
 
 interface GuildsSectionProps {
@@ -53,15 +53,14 @@ export function GuildsSection({
 
       {/* Guild cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {displayed.map((guild) => (
+        {displayed.map((guild, i) => (
           <GuildCard
             key={guild.id}
-            guild={{
-              ...guild,
-              stakedAmount: guildStakes[guild.id] || "0",
-            }}
-            variant="browse"
-            onViewDetails={(id) => router.push(`/expert/guild/${id}`)}
+            variant="widget"
+            guild={guild}
+            catalogueIndex={i + 1}
+            stakedAmount={guildStakes[guild.id]}
+            onClick={() => router.push(`/expert/guild/${guild.id}`)}
           />
         ))}
       </div>
