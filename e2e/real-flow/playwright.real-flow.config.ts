@@ -39,8 +39,11 @@ export default defineConfig({
     },
   ],
   webServer: {
+    // NEXT_PUBLIC_EXPERT_ONBOARDING_TOUR=false suppresses the 16-step
+    // first-time-reviewer tour that otherwise overlays /expert/dashboard
+    // and intercepts clicks in real-flow tests.
     command:
-      "NEXT_PUBLIC_E2E_MODE=true npx dotenv -e .env.local -- npx next dev --turbopack --port 3030",
+      "NEXT_PUBLIC_E2E_MODE=true NEXT_PUBLIC_EXPERT_ONBOARDING_TOUR=false npx dotenv -e .env.local -- npx next dev --turbopack --port 3030",
     url: baseURL,
     reuseExistingServer: true,
     timeout: 120_000,

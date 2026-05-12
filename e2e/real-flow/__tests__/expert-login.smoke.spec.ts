@@ -26,7 +26,7 @@ test("expert connects wallet → auto-login → lands on dashboard", async ({
   const expert = experts[0];
 
   await wallet.attach(page, expert.privateKey);
-  await loginAsExpertViaUI(page);
+  await loginAsExpertViaUI(page, expert.address);
 
   // We're on the expert dashboard. Verify wagmi knows about us + the URL
   // matches + something dashboard-y rendered.
@@ -59,7 +59,7 @@ test("two experts can log in sequentially with different identities", async ({
 
   // First expert
   const handle = await wallet.attach(page, expertA.privateKey);
-  await loginAsExpertViaUI(page);
+  await loginAsExpertViaUI(page, expertA.address);
   expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
     expertA.address.toLowerCase(),
   );
@@ -68,7 +68,7 @@ test("two experts can log in sequentially with different identities", async ({
   // doesn't auto-restore the previous expert.
   await page.context().clearCookies();
   await handle.switchAccount(expertB.privateKey);
-  await loginAsExpertViaUI(page);
+  await loginAsExpertViaUI(page, expertB.address);
 
   expect((await readWagmiAddress(page))?.toLowerCase()).toBe(
     expertB.address.toLowerCase(),

@@ -137,13 +137,55 @@ export async function switchAccountUI(
 }
 
 /**
+ * Pre-mark the expert onboarding tour as completed in localStorage so the
+ * /expert/* layout's story-lab redirect doesn't bounce a fresh test expert
+ * to the 16-step "first run" experience. Keyed by lowercased wallet
+ * address per `buildExpertOnboardingStorageKey`.
+ */
+async function markOnboardingComplete(
+  page: Page,
+  walletAddress: string,
+): Promise<void> {
+  const key = `vetted:expert-onboarding-tour:v1:${walletAddress.toLowerCase()}`;
+  const value = JSON.stringify({
+    dismissed: true,
+    completed: true,
+    checklistDismissed: true,
+    events: {
+      firstReviewOpened: true,
+      practiceReviewCompleted: true,
+      applicationsVisited: true,
+      guildsVisited: true,
+      endorsementsVisited: true,
+      governanceVisited: true,
+      stakingExplanationViewed: true,
+      commitRevealViewed: true,
+      rewardsVisited: true,
+      reputationVisited: true,
+      notificationsVisited: true,
+    },
+  });
+  await page.addInitScript(
+    ([k, v]) => {
+      try {
+        window.localStorage.setItem(k, v);
+      } catch {
+        /* localStorage may be unavailable in some contexts; ignore */
+      }
+    },
+    [key, value] as const,
+  );
+}
+
+/**
  * Drive the expert SIWE login flow through the real UI:
- *   1. Navigate to /auth/login?type=expert
- *   2. Click the in-app "Connect Wallet" button to open RainbowKit's modal
- *   3. Click "Headless E2E Wallet" — wagmi connects via the injected
+ *   1. Pre-mark onboarding complete (suppresses story-lab force-redirect)
+ *   2. Navigate to /auth/login?type=expert
+ *   3. Click the in-app "Connect Wallet" button to open RainbowKit's modal
+ *   4. Click "Headless E2E Wallet" — wagmi connects via the injected
  *      connector through our shim, fires useAccountEffect.onConnect, which
  *      triggers handleExpertLogin → expertApi.getProfile → router.push
- *   4. Wait for the redirect to /expert/dashboard
+ *   5. Wait for the redirect to /expert/dashboard
  *
  * NOTE: We deliberately use the modal click flow (not the programmatic
  * `connect()` action) here because LoginPage's `useAccountEffect.onConnect`
@@ -153,9 +195,11 @@ export async function switchAccountUI(
  */
 export async function loginAsExpertViaUI(
   page: Page,
+  expertAddress: string,
   opts: { timeoutMs?: number } = {},
 ): Promise<void> {
   const timeoutMs = opts.timeoutMs ?? 30_000;
+  await markOnboardingComplete(page, expertAddress);
   await page.goto("/auth/login?type=expert");
   await page.getByRole("button", { name: /connect wallet/i }).first().click();
   await page

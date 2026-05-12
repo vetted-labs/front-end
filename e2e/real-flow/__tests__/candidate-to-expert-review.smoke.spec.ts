@@ -105,19 +105,33 @@ test("candidate applies → expert logs in → sees the application in queue", a
   // 3. Login as the assigned expert via the real UI (wallet connect → modal
   //    → click Headless E2E Wallet → auto-redirect to /expert/dashboard).
   await wallet.attach(page, assignedExpert!.privateKey);
-  await loginAsExpertViaUI(page);
+  await loginAsExpertViaUI(page, assignedExpert!.address);
 
-  // 4. Navigate to the applications surface. The deep-link auto-opens the
-  //    review modal once the matching application hydrates.
-  await page.goto(
-    `/expert/voting?reviewAppId=${encodeURIComponent(applicationId)}&reviewType=candidate`,
-  );
+  // 4. Navigate to the Applications page and switch to the "Candidate
+  //    Reviews" tab. The applications queue lists all assigned candidate
+  //    guild applications for this expert.
+  await page.goto("/expert/voting", { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(/\/expert\/voting/);
 
-  // 5. Verify the candidate's application is in the expert's queue. The
-  //    queue shows the candidate's name (from candidate.fullName seeded
-  //    during signup — defaults to the email prefix).
-  const candidateNamePart = candidate.email.split("@")[0];
+  await page
+    .getByRole("button", { name: /candidate reviews/i })
+    .or(page.getByRole("tab", { name: /candidate reviews/i }))
+    .first()
+    .click();
+
+  // 5. The queue should show the candidate (fullName = "E2E User <ts>" per
+  //    signupCandidate helper).
   await expect(
-    page.getByText(new RegExp(candidateNamePart, "i")).first(),
-  ).toBeVisible({ timeout: 20_000 });
+    page.getByText(/E2E User/i).first(),
+  ).toBeVisible({ timeout: 30_000 });
+
+  // 6. Click "Review" on the candidate's card — opens the review modal.
+  await page.getByRole("button", { name: /^review$/i }).first().click();
+
+  // 7. Verify the modal opened. RainbowKit modals use role="dialog"; this
+  //    one renders ReviewGuildApplicationModal which has a Close button
+  //    with aria-label="Close review modal".
+  await expect(
+    page.getByLabel("Close review modal").first(),
+  ).toBeVisible({ timeout: 15_000 });
 });
