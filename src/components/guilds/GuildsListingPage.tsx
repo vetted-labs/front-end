@@ -12,11 +12,12 @@ import {
   Search,
 } from "lucide-react";
 
+import { GuildCard } from "@/components/guild/card";
+
 import { Alert } from "@/components/ui";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationNav } from "@/components/ui/pagination-nav";
-import { GuildAvatar } from "@/components/ui/guild";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PatternBackground } from "@/components/ui/pattern-background";
 
@@ -24,7 +25,6 @@ import { guildsApi } from "@/lib/api";
 import { useFetch } from "@/lib/hooks/useFetch";
 import { useMountEffect } from "@/lib/hooks/useMountEffect";
 import { useClientPagination } from "@/lib/hooks/useClientPagination";
-import { getGuildPreviewDescription } from "@/lib/guildHelpers";
 
 import type { Guild } from "@/types";
 
@@ -194,10 +194,12 @@ export default function GuildsListingPage() {
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {pageGuilds.map((guild) => (
+                {pageGuilds.map((guild, i) => (
                   <GuildCard
                     key={guild.id}
+                    variant="marketplace"
                     guild={guild}
+                    catalogueIndex={(currentPage - 1) * PER_PAGE + i + 1}
                     onClick={() => navigateToGuild(guild.id)}
                   />
                 ))}
@@ -266,77 +268,3 @@ function KpiTile({ label, value, icon: Icon }: KpiTileProps) {
   );
 }
 
-interface GuildCardProps {
-  guild: Guild;
-  onClick: () => void;
-}
-
-function GuildCard({ guild, onClick }: GuildCardProps) {
-  const description = guild.description || getGuildPreviewDescription(guild.name);
-  const members = guild.totalMembers || guild.candidateCount || 0;
-  const reviews = guild.totalProposalsReviewed || 0;
-  const openJobs = guild.openPositions || 0;
-
-  return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 cursor-pointer outline-none transition-all duration-300 hover:border-primary/30 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)] focus-visible:ring-2 focus-visible:ring-primary/40"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <GuildAvatar guild={guild.name} size="lg" rounded="xl" />
-        {openJobs > 0 && (
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/80 bg-primary/[0.07] px-2 py-1 rounded-md">
-            {openJobs} open
-          </span>
-        )}
-      </div>
-
-      <div className="min-w-0">
-        <h3 className="font-display font-bold text-xl tracking-tight text-foreground truncate mb-1.5">
-          {guild.name}
-        </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-          {description}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-4 pt-3 border-t border-border/50 text-xs text-muted-foreground/80">
-        <span className="inline-flex items-center gap-1.5">
-          <Users className="w-3 h-3" />
-          <span className="font-medium tabular-nums text-foreground/70">
-            {members}
-          </span>
-          <span className="hidden sm:inline">members</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <FileCheck className="w-3 h-3" />
-          <span className="font-medium tabular-nums text-foreground/70">
-            {reviews}
-          </span>
-          <span className="hidden sm:inline">reviews</span>
-        </span>
-        {openJobs > 0 && (
-          <span className="inline-flex items-center gap-1.5 ml-auto">
-            <Briefcase className="w-3 h-3" />
-            <span className="font-medium tabular-nums text-foreground/70">
-              {openJobs}
-            </span>
-            <span className="hidden sm:inline">open</span>
-          </span>
-        )}
-      </div>
-
-      <div className="absolute top-5 right-5 w-9 h-9 rounded-full border border-border grid place-items-center transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:border-primary/30 group-hover:bg-primary/[0.06]">
-        <ArrowUpRight className="w-[14px] h-[14px] text-primary translate-x-0 transition-transform group-hover:translate-x-[1px] group-hover:-translate-y-[1px]" />
-      </div>
-    </article>
-  );
-}
