@@ -3,6 +3,9 @@
 import { useMemo } from "react";
 import { cn, formatVetd } from "@/lib/utils";
 import { getGuildThesis } from "@/config/guildThesis";
+import { VettedIcon } from "@/components/ui/vetted-icon";
+import { getGuildIconName } from "@/lib/guildHelpers";
+import { getGuildIdentity } from "@/lib/guildIdentity";
 import { GuildCardHeader } from "./GuildCardHeader";
 import { GuildMembersHero } from "./GuildMembersHero";
 import { GuildTickerStrip, type TickerCell } from "./GuildTickerStrip";
@@ -11,6 +14,39 @@ import type {
   ExpertGuild,
   GuildApplicationSummary,
 } from "@/types";
+
+/* ─── Guild icon block ───────────────────────────────────────────── */
+
+function GuildIconBlock({
+  name,
+  size = "lg",
+}: {
+  name: string;
+  size?: "md" | "lg" | "xl";
+}) {
+  const identity = getGuildIdentity(name);
+  const sizing =
+    size === "xl"
+      ? { box: "w-16 h-16", icon: "w-8 h-8", rounded: "rounded-2xl" }
+      : size === "lg"
+      ? { box: "w-14 h-14", icon: "w-7 h-7", rounded: "rounded-2xl" }
+      : { box: "w-11 h-11", icon: "w-[22px] h-[22px]", rounded: "rounded-xl" };
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "inline-flex items-center justify-center flex-shrink-0 border",
+        sizing.box,
+        sizing.rounded,
+        identity.classes.bg,
+        identity.classes.border,
+        identity.classes.text,
+      )}
+    >
+      <VettedIcon name={getGuildIconName(name)} className={sizing.icon} />
+    </span>
+  );
+}
 
 /* ─── Variant types ──────────────────────────────────────────────── */
 
@@ -159,6 +195,9 @@ export function GuildCard(props: GuildCardProps) {
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — workspace`}>
         {pending > 0 && <PendingBanner count={pending} />}
         <div className={cn("relative z-10", pending > 0 ? "pt-9 px-5 pb-0" : "p-5 pb-0")}>
+          <div className="mb-3.5">
+            <GuildIconBlock name={guild.name} size="lg" />
+          </div>
           <GuildCardHeader
             registrySlug={slug}
             registryNumber={idx}
@@ -218,6 +257,9 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild`}>
         <div className="relative z-10 p-5 pb-0">
+          <div className="mb-3.5">
+            <GuildIconBlock name={guild.name} size="xl" />
+          </div>
           <GuildCardHeader
             registrySlug={slug}
             registryNumber={idx}
@@ -259,6 +301,9 @@ export function GuildCard(props: GuildCardProps) {
       <CardShell onClick={onClick} ariaLabel={`${guild.name} guild — widget`}>
         {pending > 0 && <PendingBanner count={pending} />}
         <div className={cn("relative z-10", pending > 0 ? "pt-9 px-4 pb-0" : "p-4 pb-0")}>
+          <div className="mb-2.5">
+            <GuildIconBlock name={guild.name} size="md" />
+          </div>
           <GuildCardHeader
             registrySlug={slug}
             registryNumber={idx}
@@ -312,6 +357,9 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${guild.name} — guild position`}>
         <div className="relative z-10 p-4 pb-0">
+          <div className="mb-3">
+            <GuildIconBlock name={guild.name} size="lg" />
+          </div>
           <GuildCardHeader
             registrySlug={slug}
             registryNumber={idx}
@@ -368,6 +416,9 @@ export function GuildCard(props: GuildCardProps) {
     return (
       <CardShell onClick={onClick} ariaLabel={`${name} guild — application ${statusLabel.toLowerCase()}`}>
         <div className="relative z-10 p-5 pb-0">
+          <div className="mb-3.5">
+            <GuildIconBlock name={name} size="lg" />
+          </div>
           <GuildCardHeader
             registrySlug={slug}
             registryNumber={idx}
