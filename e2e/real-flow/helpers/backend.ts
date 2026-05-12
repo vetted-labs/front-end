@@ -2,7 +2,8 @@
 import type { APIRequestContext } from "@playwright/test";
 
 export const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
-export const CRON_SECRET = process.env.CRON_SECRET ?? "dev-cron-secret";
+export const CRON_SECRET =
+  process.env.CRON_SECRET ?? "dev-cron-secret-pad-to-32-chars-minimum-length";
 
 async function postJson<T>(
   request: APIRequestContext,
@@ -48,4 +49,20 @@ export const cronApi = {
     postJson<unknown>(req, "/api/proposals/commit-reveal/process-transitions", undefined, {
       "x-cron-secret": CRON_SECRET,
     }),
+  /**
+   * Trigger commit-reveal enablement on a freshly created proposal. The BE
+   * writes `blockchain_session_id` and queues a `create_vetting_session` op
+   * in the pending_blockchain_ops outbox. Pair with `drainBlockchainOps`.
+   */
+  enableCommitReveal: (req: APIRequestContext, proposalId: string) =>
+    postJson<unknown>(req, `/api/proposals/${proposalId}/commit-reveal/enable`, undefined, {
+      "x-cron-secret": CRON_SECRET,
+    }),
+  /**
+   * Run a single blockchain-ops cron tick to drain pending on-chain ops
+   * (create_vetting_session, distributeSingleReward, etc.). Reuses the
+   * endorsement test endpoint since it drives the same singleton cron.
+   */
+  drainBlockchainOps: (req: APIRequestContext) =>
+    postJson<unknown>(req, "/api/test/endorsement/drain-blockchain-ops"),
 };

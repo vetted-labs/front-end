@@ -66,7 +66,9 @@ const STUB_SOURCE = `
   window.addEventListener('eip6963:requestProvider', announce);
   announce();
 
-  provider._emit('connect', { chainId: '0x7a69' });
+  // Sepolia chain id (anvil is run with --chain-id 11155111 so the whole
+  // stack — BE provider, FE wagmi sepolia config, shim — aligns).
+  provider._emit('connect', { chainId: '0xaa36a7' });
 })();
 `;
 

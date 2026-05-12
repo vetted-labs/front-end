@@ -25,7 +25,11 @@ import {
   type WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { foundry } from "viem/chains";
+import { sepolia as chainConfig } from "viem/chains";
+
+// Real-flow runs anvil with `--chain-id 11155111` so the BE provider, FE
+// wagmi sepolia chain config, and the shim all line up on a single chain id.
+// EIP-155 signing must match the chainId anvil reports.
 
 export interface HeadlessWalletOptions {
   privateKey: Hex;
@@ -35,7 +39,7 @@ export interface HeadlessWalletOptions {
 
 type Eip1193Request = { method: string; params?: unknown[] };
 
-const FOUNDRY_CHAIN_ID_HEX = "0x7a69" as const;
+const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7" as const; // 11155111
 
 export class HeadlessWallet extends EventEmitter {
   private walletClient!: WalletClient;
@@ -49,7 +53,7 @@ export class HeadlessWallet extends EventEmitter {
     this.rpcUrl = opts.rpcUrl ?? process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
     this.debug = opts.debug ?? process.env.HEADLESS_WALLET_DEBUG === "1";
     this.publicClient = createPublicClient({
-      chain: foundry,
+      chain: chainConfig,
       transport: http(this.rpcUrl),
     });
     this.setAccount(opts.privateKey);
@@ -70,7 +74,7 @@ export class HeadlessWallet extends EventEmitter {
     this.activeAddress = account.address;
     this.walletClient = createWalletClient({
       account,
-      chain: foundry,
+      chain: chainConfig,
       transport: http(this.rpcUrl),
     });
     if (this.debug) console.log("[hw] setAccount", account.address);
@@ -97,10 +101,10 @@ export class HeadlessWallet extends EventEmitter {
         return [this.activeAddress];
 
       case "eth_chainId":
-        return FOUNDRY_CHAIN_ID_HEX;
+        return SEPOLIA_CHAIN_ID_HEX;
 
       case "net_version":
-        return "31337";
+        return "11155111";
 
       case "personal_sign": {
         const [hexMessage] = params as [Hex, Address];

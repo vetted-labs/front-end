@@ -69,20 +69,52 @@ export async function applyToGuildViaUI(
     );
   }
 
-  // Read application ID + on-chain session id from the BE.
-  const res = await page.request.get(
-    `${BACKEND_URL}/api/candidates/me/guild-applications`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  const body = (await res.json()) as {
-    data: Array<{ id: string; on_chain_session_id?: string; blockchain_session_id?: string }>;
+  // Read application ID + candidate_proposal_id from the BE.
+  const fetchApplications = async () => {
+    const r = await page.request.get(
+      `${BACKEND_URL}/api/candidates/me/guild-applications`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    return (await r.json()) as {
+      data: Array<{
+        id: string;
+        candidate_proposal_id?: string | null;
+        candidateProposalId?: string | null;
+        on_chain_session_id?: string | null;
+        blockchain_session_id?: string | null;
+        blockchainSessionId?: string | null;
+      }>;
+    };
   };
-  const app = body.data[0];
+
+  const initial = await fetchApplications();
+  const app = initial.data[0];
   if (!app) throw new Error("applyToGuildViaUI: no applications returned after submit");
-  const rawSessionId = app.on_chain_session_id ?? app.blockchain_session_id;
+
+  const proposalId = app.candidate_proposal_id ?? app.candidateProposalId;
+  if (!proposalId) {
+    throw new Error(
+      `applyToGuildViaUI: BE did not link a candidate_proposal for application ${app.id}. ` +
+        `This usually means reviewer assignment failed (check BE log for "Reviewer assignment failed").`,
+    );
+  }
+
+  // Enable commit-reveal (transitions proposal direct→commit + queues
+  // create_vetting_session in pending_blockchain_ops outbox), then drain the
+  // outbox so the on-chain session actually exists when experts try to vote.
+  await cronApi.enableCommitReveal(page.request, proposalId);
+  await cronApi.drainBlockchainOps(page.request);
+
+  // Re-fetch — blockchain_session_id should now be populated.
+  const after = await fetchApplications();
+  const refreshed = after.data.find((row) => row.id === app.id) ?? app;
+  const rawSessionId =
+    refreshed.on_chain_session_id ??
+    refreshed.blockchain_session_id ??
+    refreshed.blockchainSessionId;
   if (!rawSessionId) {
     throw new Error(
-      `applyToGuildViaUI: BE did not return an on-chain session id for application ${app.id}`,
+      `applyToGuildViaUI: BE did not populate blockchain_session_id after enable+drain for application ${app.id}`,
     );
   }
   return { applicationId: app.id, sessionId: rawSessionId as Hex };

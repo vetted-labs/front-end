@@ -9,9 +9,21 @@ import {
   type WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { foundry } from "viem/chains";
+import { sepolia } from "viem/chains";
+import { defineChain } from "viem";
 
 export const ANVIL_RPC = process.env.ANVIL_RPC_URL ?? "http://localhost:8545";
+
+// We run anvil with `--chain-id 11155111` so the whole stack (BE provider
+// pinned to sepolia, FE wagmi config defaulting to sepolia, CommitmentForm's
+// onSepolia gate) lines up against a single chain id. The chain object below
+// is sepolia with its RPC retargeted to localhost.
+export const foundry = defineChain({
+  ...sepolia,
+  rpcUrls: {
+    default: { http: [ANVIL_RPC] },
+  },
+});
 
 // Anvil deterministic accounts (mnemonic: "test test test test test test test test test test test junk")
 export const ANVIL_KEYS = [
