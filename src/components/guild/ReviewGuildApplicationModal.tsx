@@ -1861,9 +1861,9 @@ export function ReviewGuildApplicationModal({
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-6 lg:p-8">
         <div
-          className="relative w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+          className="relative w-full max-w-7xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative gradients */}
@@ -1871,7 +1871,7 @@ export function ReviewGuildApplicationModal({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-border" />
 
           {/* Header */}
-          <div className="relative flex items-center justify-between px-6 py-5 border-b border-border">
+          <div className="relative flex items-center justify-between px-4 py-3 sm:px-6 sm:py-5 border-b border-border">
             <div className="flex items-center gap-4">
               {/* Variant-tinted head icon: sky for candidate review, gold for
                   expert membership review. Matches the mock's head-icon
@@ -1917,7 +1917,7 @@ export function ReviewGuildApplicationModal({
                 <h2 className="text-xl font-bold text-foreground">
                   {isPracticeMode ? "Practice Review" : proposalContext ? "Review Candidate" : reviewTypeProp === "candidate" ? "Review Candidate Application" : "Review Expert Application"}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="hidden sm:block text-sm text-muted-foreground">
                   {isPracticeMode || isStoryLabPreview
                     ? "Sandbox practice sample / synthetic applicant"
                     : reviewTypeProp === "candidate"
@@ -2042,14 +2042,14 @@ export function ReviewGuildApplicationModal({
             <div
               className={`grid grid-cols-1 items-start ${
                 renderStep === 1
-                  ? "lg:grid-cols-[200px_1fr_400px]"
-                  : "lg:grid-cols-[200px_1fr_320px]"
+                  ? "xl:grid-cols-[200px_1fr_360px]"
+                  : "xl:grid-cols-[200px_1fr_300px]"
               }`}
             >
               {/* LEFT RAIL — position:sticky pins it to the top of the
                   scrolling modal body. The body scrolls; the rail rides
                   along. */}
-              <aside className="hidden lg:block border-r border-border bg-muted/[0.02] sticky top-0 self-start">
+              <aside className="hidden xl:block border-r border-border bg-muted/[0.02] sticky top-0 self-start">
                 <VerticalStepRail
                   currentStep={renderStep}
                   onStepClick={(target) => {
@@ -2066,9 +2066,9 @@ export function ReviewGuildApplicationModal({
               {/* CENTER — natural height; scroll comes from the modal body
                   parent. */}
               <section className="px-6 py-5 border-r border-border">
-                {/* Mobile fallback: show the horizontal stepper since the
-                    left rail is hidden on small screens. */}
-                <div className="lg:hidden mb-4">
+                {/* Mobile/tablet fallback: horizontal stepper when the left
+                    rail is hidden (below xl). */}
+                <div className="xl:hidden mb-4">
                   <StepIndicator currentStep={renderStep} />
                 </div>
 
@@ -2304,7 +2304,7 @@ export function ReviewGuildApplicationModal({
               {/* RIGHT PANE — per-step companion:
                   • Step 1: "Start scoring" CTA card to advance into the rubric.
                   • Steps 2/3: compact applicant snapshot for at-a-glance context. */}
-              <aside className="hidden lg:block px-5 py-5 bg-muted/[0.02] sticky top-0 self-start max-h-screen overflow-y-auto">
+              <aside className="hidden xl:block px-5 py-5 bg-muted/[0.02] sticky top-0 self-start max-h-screen overflow-y-auto">
                 {renderStep === 1 && (
                   <div className="sticky top-0">
                     <div className="rounded-lg border border-primary/30 bg-primary/[0.06] px-4 py-4">
@@ -2348,7 +2348,7 @@ export function ReviewGuildApplicationModal({
           </div>
 
           {/* Navigation */}
-          <div className="border-t border-border px-7 py-5">
+          <div className="border-t border-border px-4 py-3 sm:px-7 sm:py-5">
             <ReviewNavigation
               // When the envelope says we've already committed, force step 4
               // so the navigation collapses to a single Done button.
