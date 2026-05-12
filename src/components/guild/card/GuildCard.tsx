@@ -120,7 +120,7 @@ function CardNameBlock({ name, thesis }: { name: string; thesis: string }) {
         {name}.
       </h3>
       {thesis && (
-        <p className="font-serif italic text-[12px] text-muted-foreground leading-[1.35] mb-4 max-w-[88%]">
+        <p className="text-[12px] text-muted-foreground leading-[1.35] mb-4 max-w-[88%]">
           &ldquo;{thesis}&rdquo;
         </p>
       )}

@@ -550,7 +550,7 @@ export function GuildWorkspacePage({ guildId }: GuildWorkspacePageProps) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-2.5">
-              <h1 className="font-serif text-xl leading-none text-foreground sm:text-[22px]">
+              <h1 className="font-display text-xl font-bold leading-none text-foreground sm:text-[22px]">
                 {identity.displayName} · Workspace
               </h1>
               <span

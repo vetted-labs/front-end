@@ -310,7 +310,6 @@ html.theme-going-light::view-transition-new(root) {
     --color-surface-border-strong: hsl(var(--surface-border-strong));
     --shadow-card: var(--card-shadow);
     --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: var(--font-serif), 'Bree Serif', Georgia, serif;
     --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: var(--font-geist-mono);
 }

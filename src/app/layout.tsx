@@ -1,16 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Bree_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-const breeSerif = Bree_Serif({
-  weight: '400',
-  subsets: ["latin"],
-  variable: '--font-serif',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: "Vetted",
@@ -81,7 +73,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${breeSerif.variable} font-sans`}>
+      <body className="font-sans">
         <ErrorBoundary>
           <Providers cookieHeader={cookieHeader}>{children}</Providers>
         </ErrorBoundary>
