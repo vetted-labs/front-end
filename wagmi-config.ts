@@ -27,8 +27,6 @@ if (process.env.NODE_ENV === "production" && isE2E) {
   );
 }
 
-const chains = isE2E ? ([sepolia, foundry] as const) : ([sepolia] as const);
-
 const sepoliaTransport = http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL, {
   batch: {
     batchSize: 50,
