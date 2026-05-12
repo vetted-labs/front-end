@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
+  Wallet,
 } from "lucide-react";
 import type { GuildRecord, ActiveEndorsement, EarningsBreakdownResponse } from "@/types";
 import { STATUS_COLORS } from "@/config/colors";
@@ -46,9 +47,13 @@ export function EndorsementHeader({
   userStake,
 }: EndorsementHeaderProps) {
   const stakeNum = parseFloat(userStake);
-  const balanceNum = formattedBalance
+  const balanceLoaded = formattedBalance !== null;
+  const balanceNum = balanceLoaded
     ? parseFloat(formattedBalance.replace(/,/g, ""))
     : 0;
+  const balanceDisplay = balanceLoaded
+    ? balanceNum.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    : "—";
 
   return (
     <>
@@ -98,18 +103,39 @@ export function EndorsementHeader({
               />
             </div>
 
-            {/* Right: Stake info */}
-            <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground whitespace-nowrap">
+            {/* Right: Stake + Balance chips */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
               {stakeNum > 0 && (
                 <>
-                  <span className="font-medium text-foreground">{stakeNum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  <span className="font-medium text-foreground">VETD</span>
-                  <span>staked</span>
-                  <span className="text-muted-foreground/40 mx-1">·</span>
+                  <div className="flex flex-col leading-none text-right">
+                    <span className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                      Staked
+                    </span>
+                    <span className="mt-0.5 font-mono text-sm font-semibold text-foreground">
+                      {stakeNum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      <span className="ml-1 text-muted-foreground/70 font-medium">VETD</span>
+                    </span>
+                  </div>
+                  <span className="h-8 w-px bg-border/60 dark:bg-white/[0.08]" aria-hidden />
                 </>
               )}
-              <span>Balance:</span>
-              <span className="font-medium text-foreground">{balanceNum.toLocaleString(undefined, { maximumFractionDigits: 0 })} VETD</span>
+              <div className="flex items-center gap-2 rounded-full border border-border/70 bg-surface-2 dark:bg-white/[0.04] px-3 py-1.5 shadow-sm">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <Wallet className="h-3.5 w-3.5" aria-hidden />
+                </span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground/70 uppercase">
+                    Balance
+                  </span>
+                  <span
+                    className="mt-0.5 font-mono text-sm font-bold text-foreground"
+                    aria-live="polite"
+                  >
+                    {balanceDisplay}
+                    <span className="ml-1 text-muted-foreground/70 font-medium">VETD</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

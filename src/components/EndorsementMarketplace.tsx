@@ -285,12 +285,13 @@ export function EndorsementMarketplace({ guildId, guildName, blockchainGuildId: 
   const requiredStake = minimumStake ? formatEther(minimumStake) : "0";
   const meetsMinimumStake = parseFloat(userStake) >= parseFloat(requiredStake);
   const shortAddress = address ? `${address.substring(0, 6)}...${address.substring(38)}` : "";
-  const formattedBalance = balance
-    ? parseFloat(formatEther(balance)).toLocaleString("en-US", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      })
-    : null;
+  const formattedBalance =
+    balance !== undefined
+      ? parseFloat(formatEther(balance)).toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   const isOnSepolia = chain?.id === sepolia.id;
 
