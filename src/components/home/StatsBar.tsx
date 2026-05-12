@@ -21,7 +21,6 @@ function useCountUp(target: number, duration = 1800) {
     const step = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(eased * target));
       if (progress < 1) {
@@ -52,16 +51,29 @@ function useCountUp(target: number, duration = 1800) {
   return { value, ref };
 }
 
-function StatItem({ label, target, suffix = "" }: { label: string; target: number; suffix?: string }) {
+interface StatItemProps {
+  label: string;
+  target: number;
+  suffix?: string;
+  last?: boolean;
+}
+
+function StatItem({ label, target, suffix = "", last = false }: StatItemProps) {
   const { value, ref } = useCountUp(target);
 
   return (
-    <div ref={ref} className="flex items-center gap-2 px-6 sm:px-9 py-2 sm:py-0 border-r border-border/30 last:border-r-0">
-      <span className="font-display font-bold text-xl sm:text-xl tracking-tight text-foreground whitespace-nowrap">
-        {value.toLocaleString()}{suffix}
-      </span>
-      <span className="text-xs text-muted-foreground/60 font-medium whitespace-nowrap">
+    <div
+      ref={ref}
+      className={`px-5 sm:px-6 py-5 flex flex-col gap-1.5 ${
+        last ? "" : "sm:border-r border-border/40"
+      }`}
+    >
+      <span className="font-mono text-[9.5px] font-semibold tracking-[0.18em] text-muted-foreground/60 uppercase">
         {label}
+      </span>
+      <span className="font-display font-bold text-[28px] sm:text-[32px] leading-none tracking-tight text-foreground tabular-nums">
+        {value.toLocaleString()}
+        {suffix}
       </span>
     </div>
   );
@@ -74,13 +86,37 @@ export function StatsBar({ guilds, jobs }: StatsBarProps) {
   const candidatesVetted = guilds.reduce((sum, g) => sum + (g.candidateCount ?? 0), 0);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-up" style={{ animationDelay: "300ms" }}>
-      <div className="bg-card border border-border/30 rounded-xl py-5 flex items-center justify-center">
-        <div className="flex items-center flex-wrap justify-center gap-y-2">
+    <div
+      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 animate-fade-up"
+      style={{ animationDelay: "300ms" }}
+    >
+      <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+        {/* Top accent strip — matches hero cards */}
+        <span
+          aria-hidden
+          className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary/40 via-primary/15 to-transparent"
+        />
+
+        {/* Header row */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3 border-b border-border/40">
+          <span className="font-mono text-[10px] font-semibold tracking-[0.18em] text-muted-foreground/70 uppercase">
+            Network Activity
+          </span>
+          <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-positive uppercase inline-flex items-center gap-1.5">
+            <span className="relative flex w-1.5 h-1.5">
+              <span className="absolute inset-0 rounded-full bg-positive animate-ping opacity-60" />
+              <span className="relative rounded-full w-1.5 h-1.5 bg-positive" />
+            </span>
+            Live
+          </span>
+        </div>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4">
           <StatItem label="Expert Reviewers" target={expertReviewers} />
           <StatItem label="Candidates Vetted" target={candidatesVetted} suffix="+" />
           <StatItem label="Open Positions" target={openPositions} />
-          <StatItem label="Active Guilds" target={activeGuilds} />
+          <StatItem label="Active Guilds" target={activeGuilds} last />
         </div>
       </div>
     </div>
