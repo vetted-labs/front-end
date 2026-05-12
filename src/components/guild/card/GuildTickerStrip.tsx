@@ -18,7 +18,7 @@ interface GuildTickerStripProps {
 
 export function GuildTickerStrip({ cells, compact = false }: GuildTickerStripProps) {
   return (
-    <div className="grid grid-cols-3 border-t border-border bg-black/25">
+    <div className="grid grid-cols-3 border-t border-border bg-muted/40">
       {cells.map((cell, i) => (
         <div
           key={i}

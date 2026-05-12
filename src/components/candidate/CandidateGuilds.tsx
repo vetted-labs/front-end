@@ -15,6 +15,7 @@ import { candidateApi, extractApiError } from "@/lib/api";
 import { useRequireAuth } from "@/lib/hooks/useRequireAuth";
 import { useFetch, useApi } from "@/lib/hooks/useFetch";
 import { cn, formatDate } from "@/lib/utils";
+import { STATUS_COLORS } from "@/config/colors";
 import { GuildCard } from "@/components/guild/card";
 import { DataSection } from "@/lib/motion";
 import { logger } from "@/lib/logger";
@@ -417,10 +418,10 @@ interface KpiTileProps {
 }
 
 const TONE_STYLES: Record<KpiTileProps["tone"], { bg: string; text: string }> = {
-  primary: { bg: "bg-primary/10", text: "text-primary" },
-  positive: { bg: "bg-emerald-500/10", text: "text-emerald-500" },
-  info: { bg: "bg-sky-500/10", text: "text-sky-500" },
-  warning: { bg: "bg-amber-500/10", text: "text-amber-500" },
+  primary: { bg: STATUS_COLORS.info.bgSubtle, text: STATUS_COLORS.info.text },
+  positive: { bg: STATUS_COLORS.positive.bgSubtle, text: STATUS_COLORS.positive.text },
+  info: { bg: STATUS_COLORS.info.bgSubtle, text: STATUS_COLORS.info.text },
+  warning: { bg: STATUS_COLORS.warning.bgSubtle, text: STATUS_COLORS.warning.text },
 };
 
 function KpiTile({ icon, label, value, tone }: KpiTileProps) {
