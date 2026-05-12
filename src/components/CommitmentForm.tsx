@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAccount, usePublicClient, useChainId } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { sepolia, foundry } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +58,11 @@ export function CommitmentForm({
   const [submitState, setSubmitState] = useState<OnChainStatus>({ kind: "ready" });
 
   const sessionReady = !!blockchainSessionId && !!blockchainSessionCreated;
-  const onSepolia = chainId === sepolia.id;
+  // E2E mode also accepts foundry (anvil) — gated by NEXT_PUBLIC_E2E_MODE.
+  // Production is sepolia-only.
+  const onSepolia =
+    chainId === sepolia.id ||
+    (process.env.NEXT_PUBLIC_E2E_MODE === "true" && chainId === foundry.id);
   const walletMatches = !!(
     address && address.toLowerCase() === expertWallet.toLowerCase()
   );
