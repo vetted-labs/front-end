@@ -16,6 +16,7 @@ interface GuildSpecificsStepProps {
   onExpandDomain: (id: string | null) => void;
   noAiDeclaration: boolean;
   onNoAiDeclarationChange: (val: boolean) => void;
+  substepIndex?: number;
 }
 
 export default function GuildSpecificsStep({
@@ -29,6 +30,7 @@ export default function GuildSpecificsStep({
   onExpandDomain,
   noAiDeclaration,
   onNoAiDeclarationChange,
+  substepIndex,
 }: GuildSpecificsStepProps) {
   const currentDomainLevel: GuildDomainLevel | null = selectedLevel
     ? template.domainQuestions[
@@ -36,10 +38,18 @@ export default function GuildSpecificsStep({
       ]
     : null;
 
+  const isSetupSubstep = substepIndex === undefined || substepIndex === 0;
+  const promptIndex =
+    substepIndex !== undefined && substepIndex > 0 ? substepIndex - 1 : null;
+  const promptTopic =
+    currentDomainLevel && promptIndex !== null
+      ? (currentDomainLevel.topics[promptIndex] ?? null)
+      : null;
+
   return (
     <div className="space-y-10">
       {/* Experience Level */}
-      {template.levels && template.levels.length > 0 && (
+      {isSetupSubstep && template.levels && template.levels.length > 0 && (
         <section>
           <SectionHeader
             title={
@@ -92,8 +102,10 @@ export default function GuildSpecificsStep({
         </section>
       )}
 
-      {/* Domain Questions */}
-      {currentDomainLevel && currentDomainLevel.topics.length > 0 && (
+      {/* Domain Questions — Legacy accordion (no substepIndex) */}
+      {substepIndex === undefined &&
+        currentDomainLevel &&
+        currentDomainLevel.topics.length > 0 && (
         <section>
           <SectionHeader
             title={currentDomainLevel.templateName}
@@ -191,8 +203,55 @@ export default function GuildSpecificsStep({
         </section>
       )}
 
+      {/* Domain Questions — Substep mode (single topic, always expanded) */}
+      {!isSetupSubstep && promptTopic && (
+        <section>
+          <SectionHeader
+            title={promptTopic.title}
+            description={currentDomainLevel?.description ?? ""}
+          />
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+              {promptTopic.prompt}
+            </div>
+            <textarea
+              value={domainAnswers[`domain.${promptTopic.id}`] || ""}
+              onChange={(e) =>
+                onDomainAnswerChange(
+                  `domain.${promptTopic.id}`,
+                  e.target.value,
+                )
+              }
+              placeholder="Your answer…"
+              className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 resize-none transition-shadow"
+              rows={10}
+            />
+            {(() => {
+              const len = (
+                domainAnswers[`domain.${promptTopic.id}`] || ""
+              ).trim().length;
+              const answered = len >= 50;
+              return (
+                <div className="flex justify-end">
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium tabular-nums",
+                      answered
+                        ? STATUS_COLORS.positive.text
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {len} / 50 min characters
+                  </span>
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+      )}
+
       {/* No-AI Declaration */}
-      {template.noAiDeclarationText && (
+      {isSetupSubstep && template.noAiDeclarationText && (
         <section className="rounded-xl border border-border bg-muted/20 p-5">
           <label className="flex items-start gap-3 cursor-pointer">
             <span className="flex-shrink-0 mt-0.5">
