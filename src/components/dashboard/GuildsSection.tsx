@@ -17,16 +17,22 @@ export function GuildsSection({
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
 
-  // Sort by staked amount descending (fall back to profile staked amount when
-  // the on-chain stakes map doesn't have a fresh entry yet — matches the
-  // resolution used by the workspace variant of the card).
-  const resolveStake = (g: ExpertGuild): number => {
-    const raw = guildStakes[g.id] ?? g.stakedAmount;
+  // Pick the freshest non-zero stake we can find. The on-chain map sometimes
+  // resolves to the string "0" (e.g. before sync, or when the batch endpoint
+  // returns no entry for this guild) — in that case `??` won't fall back
+  // because "0" isn't nullish. Prefer whichever source has a positive value.
+  const resolveDisplayStake = (g: ExpertGuild): string | undefined => {
+    const onChain = guildStakes[g.id];
+    if (onChain && parseFloat(onChain) > 0) return onChain;
+    return g.stakedAmount;
+  };
+  const resolveStakeNum = (g: ExpertGuild): number => {
+    const raw = resolveDisplayStake(g);
     if (!raw) return 0;
     const n = typeof raw === "string" ? parseFloat(raw) : raw;
     return Number.isFinite(n) ? n : 0;
   };
-  const sorted = [...guilds].sort((a, b) => resolveStake(b) - resolveStake(a));
+  const sorted = [...guilds].sort((a, b) => resolveStakeNum(b) - resolveStakeNum(a));
 
   const top3 = sorted.slice(0, 3);
   const rest = sorted.slice(3);
@@ -65,7 +71,7 @@ export function GuildsSection({
             variant="widget"
             guild={guild}
             catalogueIndex={i + 1}
-            stakedAmount={guildStakes[guild.id] ?? guild.stakedAmount}
+            stakedAmount={resolveDisplayStake(guild)}
             onClick={() => router.push(`/expert/guild/${guild.id}`)}
           />
         ))}
