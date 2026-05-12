@@ -63,6 +63,7 @@ export function DialogContent({ children, className, "aria-label": ariaLabel }: 
 
   // eslint-disable-next-line no-restricted-syntax -- mount detection for portal rendering
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe portal pattern requires setState after mount
     setMounted(true);
   }, []);
 
@@ -71,6 +72,7 @@ export function DialogContent({ children, className, "aria-label": ariaLabel }: 
   React.useEffect(() => {
     if (open) {
       previousFocusRef.current = document.activeElement;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- visibility flag must sync with open prop changes
       setVisible(true);
     } else {
       const timer = setTimeout(() => setVisible(false), 200);
@@ -157,14 +159,19 @@ export function DialogContent({ children, className, "aria-label": ariaLabel }: 
       />
 
       {/* Dialog */}
-      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-6 lg:p-8">
         <div
           ref={contentRef}
           role="dialog"
           aria-modal="true"
           {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
           className={cn(
-            "relative bg-card rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] border border-border",
+            // `overflow-y-auto` is a safe default: consumers that wrap content
+            // in their own `flex flex-col overflow-hidden` sticky-footer layout
+            // override this via tailwind-merge. The default guarantees that
+            // even simple dialogs with tall content stay scrollable on short
+            // viewports so action buttons remain reachable.
+            "relative bg-card rounded-xl shadow-lg w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] border border-border overflow-y-auto",
             "transition-all duration-200",
             isAnimatingIn
               ? "opacity-100 scale-100"
