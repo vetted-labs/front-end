@@ -1,22 +1,19 @@
 "use client";
 
+import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Briefcase,
-  Check,
-  Loader2,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, Briefcase, Sparkles } from "lucide-react";
 import { Alert } from "@/components/ui";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { GuildAvatar } from "@/components/ui/guild";
 import { useGuildApplicationFlow } from "@/lib/hooks/useGuildApplicationFlow";
-import { cn } from "@/lib/utils";
+import { WizardRail, type WizardRailStep } from "@/components/wizard/WizardRail";
+import { SubstepChipStrip } from "@/components/wizard/SubstepChipStrip";
+import { WizardFooter } from "@/components/wizard/WizardFooter";
+import { useSubstepIndex } from "@/components/wizard/useSubstepIndex";
+import type { SubstepDescriptor } from "@/components/wizard/types";
 
 import ResumeAndGeneralStep from "./application-steps/ResumeAndGeneralStep";
 import JobQuestionsStep from "./application-steps/JobQuestionsStep";
@@ -56,6 +53,103 @@ export default function GuildApplicationFlow() {
   const router = useRouter();
   const flow = useGuildApplicationFlow();
 
+  const substepsPerStep = useMemo<SubstepDescriptor[][]>(() => {
+    const result: SubstepDescriptor[][] = [];
+    const template = flow.template;
+    if (!template) return result;
+
+    const hasResume =
+      !!flow.resumeUrl ||
+      (flow.useProfileResume && !!flow.profileResume?.resumeUrl);
+    const allRequiredSocials = (template.requiredSocialLinks ?? []).every((p) =>
+      (flow.candidateSocialLinks ?? []).some(
+        (l) => l.platform === p && l.url?.trim(),
+      ),
+    );
+    const materialsSetupComplete = hasResume && allRequiredSocials;
+
+    const materials: SubstepDescriptor[] = [
+      {
+        id: "materials.setup",
+        label: "Resume & links",
+        isComplete: materialsSetupComplete,
+        isRequired: true,
+      },
+      ...(template.generalQuestions ?? []).map((q, i) => ({
+        id: `materials.general.${q.id}`,
+        label: `Question ${i + 1}`,
+        isComplete: (flow.generalAnswers[q.id]?.trim().length ?? 0) >= 100,
+        isRequired: q.required ?? false,
+      })),
+    ];
+    result.push(materials);
+
+    if (flow.hasJobStep && flow.jobData) {
+      const coverLetterDone = flow.coverLetter.trim().length >= 50;
+      const role: SubstepDescriptor[] = [
+        {
+          id: "role.cover",
+          label: "Cover letter",
+          isComplete: coverLetterDone,
+          isRequired: true,
+        },
+        ...(flow.jobData.screeningQuestions ?? []).map((_, i) => ({
+          id: `role.screening.${i}`,
+          label: `Question ${i + 1}`,
+          isComplete: (flow.screeningAnswers[i]?.trim().length ?? 0) >= 10,
+          isRequired: true,
+        })),
+      ];
+      result.push(role);
+    }
+
+    const levelTopics = flow.selectedLevel
+      ? template.domainQuestions[
+          flow.selectedLevel as keyof typeof template.domainQuestions
+        ]?.topics ?? []
+      : [];
+    const guildSetupComplete =
+      !!flow.selectedLevel &&
+      (!template.noAiDeclarationText || flow.noAiDeclaration);
+
+    const guild: SubstepDescriptor[] = [
+      {
+        id: "guild.setup",
+        label: "Level & attestation",
+        isComplete: guildSetupComplete,
+        isRequired: true,
+      },
+      ...levelTopics.map((topic) => ({
+        id: `guild.${topic.id}`,
+        label: topic.title,
+        isComplete:
+          (flow.domainAnswers[`domain.${topic.id}`]?.trim().length ?? 0) >= 50,
+        isRequired: true,
+      })),
+    ];
+    result.push(guild);
+
+    return result;
+  }, [
+    flow.template,
+    flow.resumeUrl,
+    flow.useProfileResume,
+    flow.profileResume,
+    flow.candidateSocialLinks,
+    flow.generalAnswers,
+    flow.hasJobStep,
+    flow.jobData,
+    flow.coverLetter,
+    flow.screeningAnswers,
+    flow.selectedLevel,
+    flow.noAiDeclaration,
+    flow.domainAnswers,
+  ]);
+
+  const { substepIndex, setSubstepIndex, queuePendingSubstep } = useSubstepIndex({
+    topStepIndex: flow.currentStep,
+  });
+
   if (flow.isLoading) return null;
 
   if (flow.error && !flow.template) {
@@ -86,9 +180,55 @@ export default function GuildApplicationFlow() {
   const totalSteps = stepDefs.length;
   const currentDef = stepDefs[flow.currentStep] ?? stepDefs[0];
   const stepNum = flow.currentStep + 1;
-  const pct = Math.round((stepNum / totalSteps) * 100);
   const guildName = flow.guild?.name || "Guild";
   const jobTitle = flow.jobData?.title;
+
+  const currentSubsteps = substepsPerStep[flow.currentStep] ?? [];
+  const safeSubstepIndex = Math.min(
+    substepIndex,
+    Math.max(currentSubsteps.length - 1, 0),
+  );
+  const isLastSubstepInStep = safeSubstepIndex >= currentSubsteps.length - 1;
+  const isFinalSubstep = flow.isLastStep && isLastSubstepInStep;
+
+  const totalSubsteps = substepsPerStep.reduce((acc, s) => acc + s.length, 0);
+  const completedSubsteps = substepsPerStep
+    .flat()
+    .filter((s) => s.isComplete).length;
+  const progressPct =
+    totalSubsteps === 0
+      ? 0
+      : Math.round((completedSubsteps / totalSubsteps) * 100);
+
+  const incompleteTopSteps: number[] = substepsPerStep
+    .map((substeps, idx) => ({
+      stepNum: idx + 1,
+      anyRequiredIncomplete: substeps.some(
+        (s) => s.isRequired && !s.isComplete,
+      ),
+    }))
+    .filter((s) => s.anyRequiredIncomplete && s.stepNum !== flow.currentStep + 1)
+    .map((s) => s.stepNum);
+
+  const handleSubstepContinue = () => {
+    if (!isLastSubstepInStep) {
+      setSubstepIndex(safeSubstepIndex + 1);
+      return;
+    }
+    flow.handleContinue();
+  };
+
+  const handleSubstepBack = () => {
+    if (safeSubstepIndex > 0) {
+      setSubstepIndex(safeSubstepIndex - 1);
+      return;
+    }
+    if (flow.currentStep > 0) {
+      const prev = substepsPerStep[flow.currentStep - 1] ?? [];
+      queuePendingSubstep(Math.max(prev.length - 1, 0));
+      flow.handleBack();
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground animate-page-enter">
@@ -122,12 +262,12 @@ export default function GuildApplicationFlow() {
             </div>
             <div className="hidden md:flex flex-col items-end gap-1.5 flex-shrink-0">
               <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground tabular-nums">
-                {pct}% complete
+                {progressPct}% complete
               </span>
               <div className="w-32 h-1 rounded-full bg-border/40 overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${pct}%` }}
+                  style={{ width: `${progressPct}%` }}
                 />
               </div>
             </div>
@@ -153,67 +293,16 @@ export default function GuildApplicationFlow() {
                 </div>
               </div>
 
-              <div className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground/70 px-6 mb-3 font-semibold">
-                Application
-              </div>
-
-              <ol className="relative">
-                {stepDefs.map((step, i) => {
-                  const isActive = i === flow.currentStep;
-                  const isDone = i < flow.currentStep;
-                  const isFirst = i === 0;
-                  const isLast = i === stepDefs.length - 1;
-                  return (
-                    <li key={step.num} className="relative">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "absolute left-[37px] w-px bg-border",
-                          isFirst ? "top-1/2" : "-top-2",
-                          isLast ? "bottom-1/2" : "-bottom-2",
-                        )}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => flow.handleStepClick(i)}
-                        className="grid grid-cols-[28px_1fr] gap-3.5 px-6 py-2.5 items-center w-full text-left hover:bg-muted/40 transition-colors"
-                      >
-                        <span
-                          className={cn(
-                            "relative z-[1] grid place-items-center w-7 h-7 rounded-full border text-[11px] font-bold transition-all",
-                            isDone &&
-                              "bg-emerald-500 text-background border-emerald-500",
-                            isActive &&
-                              "bg-primary text-background border-primary ring-4 ring-primary/15",
-                            !isDone &&
-                              !isActive &&
-                              "bg-muted text-muted-foreground border-border",
-                          )}
-                        >
-                          {isDone ? <Check className="w-3.5 h-3.5" /> : step.num}
-                        </span>
-                        <span className="flex flex-col gap-0.5">
-                          <span
-                            className={cn(
-                              "text-[13.5px] font-semibold tracking-tight",
-                              isActive
-                                ? "text-primary"
-                                : isDone
-                                  ? "text-foreground"
-                                  : "text-muted-foreground",
-                            )}
-                          >
-                            {step.name}
-                          </span>
-                          <span className="text-[11.5px] text-muted-foreground/70">
-                            {step.sub}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
+              <WizardRail
+                sectionLabel="Application"
+                steps={stepDefs.map<WizardRailStep>((s) => ({
+                  number: s.num,
+                  label: s.name,
+                }))}
+                currentStep={flow.currentStep + 1}
+                incompleteSteps={incompleteTopSteps}
+                onStepClick={(num) => flow.handleStepClick(num - 1)}
+              />
 
               {flow.draftRestored && (
                 <div className="mx-6 mt-6 rounded-lg border border-primary/30 bg-primary/[0.06] px-3 py-2.5 flex items-start gap-2">
@@ -272,6 +361,12 @@ export default function GuildApplicationFlow() {
                 </div>
               )}
 
+              <SubstepChipStrip
+                substeps={currentSubsteps}
+                activeIndex={safeSubstepIndex}
+                onJumpTo={setSubstepIndex}
+              />
+
               <div className="transition-opacity duration-200">
                 {flow.stepType === "resume" && (
                   <ResumeAndGeneralStep
@@ -290,6 +385,7 @@ export default function GuildApplicationFlow() {
                     }
                     requiredSocialLinks={flow.template.requiredSocialLinks}
                     candidateSocialLinks={flow.candidateSocialLinks}
+                    substepIndex={safeSubstepIndex}
                   />
                 )}
 
@@ -307,6 +403,7 @@ export default function GuildApplicationFlow() {
                         return updated;
                       });
                     }}
+                    substepIndex={safeSubstepIndex}
                   />
                 )}
 
@@ -324,75 +421,27 @@ export default function GuildApplicationFlow() {
                     onExpandDomain={flow.setExpandedDomain}
                     noAiDeclaration={flow.noAiDeclaration}
                     onNoAiDeclarationChange={flow.setNoAiDeclaration}
+                    substepIndex={safeSubstepIndex}
                   />
                 )}
               </div>
             </main>
           </div>
 
-          {/* ── Sticky footer ───────────────────────────────── */}
-          <div className="border-t border-border bg-background/95 backdrop-blur px-6 sm:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sticky bottom-0">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="w-44 h-1 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-[width]"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <span className="tabular-nums">
-                {flow.isLastStep
-                  ? `Step ${stepNum} of ${totalSteps} · ready to submit`
-                  : `Step ${stepNum} of ${totalSteps} · ${pct}%`}
-              </span>
-            </div>
-
-            <div className="flex gap-2.5">
-              {flow.currentStep > 0 ? (
-                <button
-                  type="button"
-                  onClick={flow.handleBack}
-                  disabled={flow.isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13.5px] font-semibold border border-border text-foreground bg-muted hover:bg-muted/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Back
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => router.push(`/guilds/${flow.guildId}`)}
-                  disabled={flow.isSubmitting}
-                  className="px-4 py-2 rounded-lg text-[13.5px] font-semibold border border-border text-muted-foreground bg-transparent hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={flow.handleContinue}
-                disabled={flow.isSubmitting || flow.uploadingResume}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-background hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {flow.isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : flow.isLastStep ? (
-                  <>
-                    <Send className="w-3.5 h-3.5" />
-                    Submit application
-                  </>
-                ) : (
-                  <>
-                    Continue
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          <WizardFooter
+            stepLabel={
+              isFinalSubstep
+                ? `Step ${stepNum} of ${totalSteps} · ready to submit`
+                : `Step ${stepNum} of ${totalSteps} · substep ${safeSubstepIndex + 1} of ${currentSubsteps.length}`
+            }
+            progressPct={progressPct}
+            isSubmitting={flow.isSubmitting}
+            isFinalSubstep={isFinalSubstep}
+            canGoBack={flow.currentStep > 0 || safeSubstepIndex > 0}
+            onBack={handleSubstepBack}
+            onContinue={handleSubstepContinue}
+            onCancel={() => router.push(`/guilds/${flow.guildId}`)}
+          />
         </div>
       </div>
     </div>
