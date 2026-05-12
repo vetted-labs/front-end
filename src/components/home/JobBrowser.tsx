@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { VettedIcon } from "@/components/ui/vetted-icon";
 import { getGuildIdentity } from "@/lib/guildIdentity";

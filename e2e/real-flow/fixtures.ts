@@ -38,6 +38,7 @@ import {
 } from "./helpers/contracts";
 import { testApi } from "./helpers/backend";
 import { signupCandidate } from "../helpers/auth";
+import { attachWallet, type InjectedWalletHandle } from "./helpers/wallet-injection";
 
 export type Expert = Wallet & { id: string; guildId: string };
 export type Candidate = {
@@ -65,6 +66,10 @@ type WorkerFixtures = {
 type TestFixtures = {
   cleanState: void;
   candidate: Candidate;
+  wallet: {
+    /** Attach the headless wallet to `page` with the given key. Call once per test. */
+    attach: (page: Page, privateKey: `0x${string}`) => Promise<InjectedWalletHandle>;
+  };
 };
 
 /**
@@ -246,6 +251,22 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     },
     { scope: "test" },
   ],
+
+   
+  wallet: async ({}, use) => {
+    let handle: InjectedWalletHandle | null = null;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use({
+      attach: async (page, privateKey) => {
+        if (handle) throw new Error("wallet.attach called twice in one test");
+        handle = await attachWallet(page, privateKey, {
+          rpcUrl: process.env.ANVIL_RPC_URL,
+        });
+        return handle;
+      },
+    });
+    // No teardown — page closes at end of test, taking exposeFunction with it.
+  },
 });
 
 export { expect } from "@playwright/test";
