@@ -33,7 +33,7 @@ import { formatDateMonthYear, formatTimeAgo, formatVetd, truncateAddress, cn } f
 import { toast } from "sonner";
 import { Alert } from "./ui/alert";
 import { getPersonAvatar } from "@/lib/avatars";
-import { GuildCard } from "./GuildCard";
+import { GuildCard } from "@/components/guild/card";
 import { GuildBadge } from "@/components/ui/guild";
 import { getRankColors, STATUS_COLORS } from "@/config/colors";
 import {
@@ -465,13 +465,13 @@ export function ExpertProfile({ walletAddress, showBackButton = false }: ExpertP
                   </div>
                 ) : (
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {profile.guilds.map((guild) => (
+                    {profile.guilds.map((guild, i) => (
                       <GuildCard
                         key={guild.id}
+                        variant="profile"
                         guild={guild}
-                        variant="membership"
-                        membershipSubVariant="compact"
-                        onViewDetails={(guildId) => router.push(`/guilds/${guildId}`)}
+                        catalogueIndex={i + 1}
+                        onClick={() => router.push(`/guilds/${guild.id}`)}
                       />
                     ))}
                   </div>
