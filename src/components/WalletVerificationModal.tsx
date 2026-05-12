@@ -22,12 +22,12 @@ export function WalletVerificationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-card rounded-xl shadow-2xl border border-border w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-card rounded-xl shadow-2xl border border-border w-full max-w-md max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}

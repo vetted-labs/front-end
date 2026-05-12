@@ -64,7 +64,7 @@ export function ScheduleMeetingModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-black/50 dark:bg-black/70" onClick={onClose} />
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-6">
         <div
           className="relative bg-card rounded-xl shadow-xl w-full max-w-md border border-border"
           onClick={(e) => e.stopPropagation()}
