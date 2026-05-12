@@ -10,7 +10,11 @@ import {
   Info,
 } from "lucide-react";
 import { Textarea } from "@/components/ui";
-import type { GuildApplicationTemplate, SocialLink } from "@/types";
+import type {
+  GuildApplicationQuestion,
+  GuildApplicationTemplate,
+  SocialLink,
+} from "@/types";
 import { getPlatformIcon, getPlatformLabel } from "@/lib/social-links";
 import { STATUS_COLORS } from "@/config/colors";
 import { cn } from "@/lib/utils";
@@ -34,6 +38,7 @@ interface ResumeAndGeneralStepProps {
   onAnswerChange: (id: string, value: string) => void;
   requiredSocialLinks?: string[];
   candidateSocialLinks?: SocialLink[];
+  substepIndex?: number;
 }
 
 export default function ResumeAndGeneralStep({
@@ -50,8 +55,16 @@ export default function ResumeAndGeneralStep({
   onAnswerChange,
   requiredSocialLinks = [],
   candidateSocialLinks = [],
+  substepIndex,
 }: ResumeAndGeneralStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isSetupSubstep = substepIndex === undefined || substepIndex === 0;
+  const generalQs = template.generalQuestions ?? [];
+  const promptQ =
+    substepIndex !== undefined && substepIndex > 0
+      ? generalQs[substepIndex - 1] ?? null
+      : null;
 
   const usingProfile = useProfileResume && !resumeFile;
   const usingUpload = !useProfileResume || !!resumeFile;
@@ -65,6 +78,8 @@ export default function ResumeAndGeneralStep({
 
   return (
     <div className="space-y-10">
+      {isSetupSubstep && (
+        <>
       {/* Guidance */}
       {template.guidance && template.guidance.length > 0 && (
         <section className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5">
@@ -271,9 +286,11 @@ export default function ResumeAndGeneralStep({
           />
         </div>
       </section>
+        </>
+      )}
 
       {/* General Questions */}
-      {template.generalQuestions && template.generalQuestions.length > 0 && (
+      {(substepIndex === undefined || promptQ) && generalQs.length > 0 && (
         <section>
           <SectionHeader
             title="General questions"
@@ -281,49 +298,77 @@ export default function ResumeAndGeneralStep({
           />
 
           <div className="space-y-8">
-            {template.generalQuestions.map((q, qIndex) => (
-              <div key={q.id} className="space-y-3">
-                <div>
-                  <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1.5">
-                    Question {String(qIndex + 1).padStart(2, "0")}
-                    {q.required && <span className="text-destructive ml-1">·  required</span>}
-                  </p>
-                  <p className="text-[15px] font-semibold text-foreground leading-snug">
-                    {q.prompt}
-                  </p>
-                </div>
-
-                {q.hints && q.hints.length > 0 && (
-                  <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1.5">
-                      Touch on
-                    </p>
-                    <ul className="space-y-1 text-sm text-muted-foreground leading-relaxed">
-                      {q.hints.map((hint, i) => (
-                        <li key={i} className="flex gap-2">
-                          <span className="text-muted-foreground/50 mt-1.5 leading-none">•</span>
-                          <span>{hint}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <Textarea
-                  value={generalAnswers[q.id] || ""}
-                  onChange={(e) => onAnswerChange(q.id, e.target.value)}
-                  rows={6}
-                  placeholder="Your answer…"
-                  showCounter
-                  minLength={100}
-                  maxLength={2500}
-                />
-              </div>
-            ))}
+            <GeneralQuestionsBlock
+              questions={substepIndex === undefined ? generalQs : [promptQ!]}
+              generalAnswers={generalAnswers}
+              onAnswerChange={onAnswerChange}
+              startIndex={substepIndex === undefined ? 0 : substepIndex - 1}
+            />
           </div>
         </section>
       )}
     </div>
+  );
+}
+
+function GeneralQuestionsBlock({
+  questions,
+  generalAnswers,
+  onAnswerChange,
+  startIndex,
+}: {
+  questions: GuildApplicationQuestion[];
+  generalAnswers: Record<string, string>;
+  onAnswerChange: (id: string, value: string) => void;
+  startIndex: number;
+}) {
+  return (
+    <>
+      {questions.map((q, localIdx) => {
+        const qIndex = startIndex + localIdx;
+        return (
+          <div key={q.id} className="space-y-3">
+            <div>
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1.5">
+                Question {String(qIndex + 1).padStart(2, "0")}
+                {q.required && (
+                  <span className="text-destructive ml-1">·  required</span>
+                )}
+              </p>
+              <p className="text-[15px] font-semibold text-foreground leading-snug">
+                {q.prompt}
+              </p>
+            </div>
+
+            {q.hints && q.hints.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1.5">
+                  Touch on
+                </p>
+                <ul className="space-y-1 text-sm text-muted-foreground leading-relaxed">
+                  {q.hints.map((hint, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-muted-foreground/50 mt-1.5 leading-none">•</span>
+                      <span>{hint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Textarea
+              value={generalAnswers[q.id] || ""}
+              onChange={(e) => onAnswerChange(q.id, e.target.value)}
+              rows={6}
+              placeholder="Your answer…"
+              showCounter
+              minLength={100}
+              maxLength={2500}
+            />
+          </div>
+        );
+      })}
+    </>
   );
 }
 
