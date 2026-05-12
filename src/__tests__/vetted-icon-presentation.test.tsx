@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { GuildCard } from "@/components/GuildCard";
+import { GuildCard } from "@/components/guild/card";
 import { GuildHeader } from "@/components/guild/GuildHeader";
 import { HomeNavbar } from "@/components/home/HomeNavbar";
 import { browseSidebarConfig } from "@/components/layout/sidebar-config";
@@ -78,12 +78,13 @@ describe("Vetted icon presentation", () => {
           memberCount: 4,
           expertRole: "master",
           pendingProposals: 0,
-          pendingApplications: 0,
+          ongoingProposals: 0,
+          closedProposals: 0,
           totalEarnings: 120,
           reputation: 900,
-          stakedAmount: "250",
         }}
-        variant="browse"
+        variant="workspace"
+        catalogueIndex={1}
       />
     );
 
