@@ -28,6 +28,311 @@ export interface ApplicationQuestionsSectionProps {
   onChange: (field: string, value: string) => void;
   fieldErrors?: FieldErrors;
   onBlur?: (field: string) => void;
+  substepIndex?: number;
+}
+
+interface GuidanceAndNoAiBlockProps {
+  generalTemplate: GuildApplicationTemplate | null;
+  noAiDeclaration: boolean;
+  onNoAiDeclarationChange: (checked: boolean) => void;
+  fieldErrors: FieldErrors;
+  onBlur?: (field: string) => void;
+}
+
+function GuidanceAndNoAiBlock({
+  generalTemplate,
+  noAiDeclaration,
+  onNoAiDeclarationChange,
+  fieldErrors,
+  onBlur,
+}: GuidanceAndNoAiBlockProps) {
+  return (
+    <div className="p-8 space-y-6 bg-muted/30">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+        <div className={`w-10 h-10 ${STATUS_COLORS.pending.bgSubtle} rounded-lg flex items-center justify-center`}>
+          <Shield className={`w-5 h-5 ${STATUS_COLORS.pending.icon}`} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Before You Start</h2>
+          <p className="text-sm text-muted-foreground">Read this carefully</p>
+        </div>
+      </div>
+
+      <div className="space-y-2 text-sm text-muted-foreground">
+        {(generalTemplate?.guidance || [
+          "This is not a throwaway application. Take your time.",
+          "Do not use AI. Reviewers will spot it.",
+          "Be honest. Realistic gaps are better than exaggeration.",
+          "Reviewers are staking their reputation. Return the favor.",
+          "If you do not get in, you will receive specific feedback.",
+        ]).map((line: string, idx: number) => (
+          <p key={idx}>{"•"} {line}</p>
+        ))}
+      </div>
+
+      <div
+        data-field-error={fieldErrors.noAiDeclaration ? "" : undefined}
+        className={`mt-4 rounded-lg border-2 p-4 transition-colors ${
+          noAiDeclaration
+            ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`
+            : fieldErrors.noAiDeclaration
+              ? "border-destructive bg-destructive/5"
+              : `${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.bgSubtle}`
+        }`}
+      >
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={noAiDeclaration}
+            onChange={(e) => {
+              onNoAiDeclarationChange(e.target.checked);
+              onBlur?.("noAiDeclaration");
+            }}
+            className={`mt-0.5 h-5 w-5 rounded border-2 accent-positive ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
+          />
+          <span className="text-sm font-medium text-foreground">
+            {generalTemplate?.noAiDeclarationText ||
+              "I wrote this myself and did not use AI or automated tools."}
+          </span>
+        </label>
+        {fieldErrors.noAiDeclaration && (
+          <p className="mt-2 ml-8 text-sm text-destructive font-medium">{fieldErrors.noAiDeclaration}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface BioMotivationBlockProps {
+  bio: string;
+  motivation: string;
+  onChange: (field: string, value: string) => void;
+  fieldErrors: FieldErrors;
+  onBlur?: (field: string) => void;
+}
+
+function BioMotivationBlock({
+  bio,
+  motivation,
+  onChange,
+  fieldErrors,
+  onBlur,
+}: BioMotivationBlockProps) {
+  return (
+    <div className="p-8 space-y-6 bg-muted/30">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+        <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
+          <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">About You</h2>
+          <p className="text-sm text-muted-foreground">Share your story and motivation</p>
+        </div>
+      </div>
+
+      <div data-field-error={fieldErrors.bio ? "" : undefined}>
+        <Textarea
+          label="Professional Bio"
+          value={bio}
+          onChange={(e) => onChange("bio", e.target.value)}
+          onBlur={() => onBlur?.("bio")}
+          placeholder="Tell us about your professional background, key achievements, and what makes you qualified to be an expert reviewer..."
+          description={!fieldErrors.bio ? "Tell us about your professional background" : undefined}
+          rows={4}
+          maxLength={2000}
+          minLength={50}
+          showCounter
+          error={fieldErrors.bio}
+          required
+        />
+      </div>
+
+      <div data-field-error={fieldErrors.motivation ? "" : undefined}>
+        <Textarea
+          label="Why do you want to become an expert?"
+          value={motivation}
+          onChange={(e) => onChange("motivation", e.target.value)}
+          onBlur={() => onBlur?.("motivation")}
+          placeholder="Explain your motivation for joining Vetted as an expert reviewer, and how you plan to contribute to the guild..."
+          description={!fieldErrors.motivation ? "Share your motivation for joining" : undefined}
+          rows={4}
+          maxLength={2000}
+          minLength={50}
+          showCounter
+          error={fieldErrors.motivation}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
+interface GeneralQuestionCardProps {
+  question: GuildApplicationQuestion;
+  index: number;
+  generalAnswers: GeneralAnswers;
+  onUpdateGeneralAnswer: (questionId: string, partId: string | null, value: string) => void;
+  fieldErrors: FieldErrors;
+  onBlur?: (field: string) => void;
+}
+
+function GeneralQuestionCard({
+  question,
+  index,
+  generalAnswers,
+  onUpdateGeneralAnswer,
+  fieldErrors,
+  onBlur,
+}: GeneralQuestionCardProps) {
+  const answerKey =
+    question.id === "learning_from_failure" ? "learningFromFailure"
+    : question.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"
+    : question.id === "motivation_and_conflict" ? "motivationAndConflict"
+    : "guildImprovement";
+
+  return (
+    <div className="space-y-4 p-4 border border-border rounded-lg bg-card">
+      <div>
+        <h3 className="text-sm font-bold text-foreground">Question {index + 1}</h3>
+        <p className="text-sm text-muted-foreground font-medium mt-1">{question.title}</p>
+        {question.prompt && (
+          <div className="space-y-2 mt-2">
+            {question.prompt
+              .split("\n")
+              .map((line: string) => line.trim())
+              .filter(Boolean)
+              .map((line: string, idx: number) => (
+                <p
+                  key={idx}
+                  className={`text-sm text-muted-foreground ${
+                    idx === 0 ? "" : "pl-5"
+                  }`}
+                >
+                  {idx === 0 ? line : `• ${line}`}
+                </p>
+              ))}
+          </div>
+        )}
+        {question.parts && question.parts.length > 0 && (
+          <div className="mt-3 text-sm text-muted-foreground space-y-2">
+            <p className="font-medium">Address the following in your answer:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              {question.parts.map((part: QuestionPart) => (
+                <li key={part.id}>{part.label}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div data-field-error={fieldErrors[`general.${answerKey}`] ? "" : undefined}>
+        <Textarea
+          label="Your Answer"
+          value={generalAnswers[answerKey as keyof typeof generalAnswers]}
+          onChange={(e) => onUpdateGeneralAnswer(question.id, null, e.target.value)}
+          onBlur={() => onBlur?.(`general.${answerKey}`)}
+          placeholder={question.parts?.length ? `Address all parts: ${question.parts.map((p: QuestionPart) => p.label).join(", ")}` : "Be specific about what you'd improve and why."}
+          rows={5}
+          minLength={50}
+          maxLength={2000}
+          showCounter
+          error={fieldErrors[`general.${answerKey}`]}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
+interface LevelTopicCardProps {
+  topic: GuildDomainTopic;
+  levelAnswers: Record<string, string>;
+  onUpdateLevelAnswer: (topicId: string, value: string) => void;
+  fieldErrors: FieldErrors;
+  onBlur?: (field: string) => void;
+}
+
+function LevelTopicCard({
+  topic,
+  levelAnswers,
+  onUpdateLevelAnswer,
+  fieldErrors,
+  onBlur,
+}: LevelTopicCardProps) {
+  return (
+    <div className="space-y-4 p-4 border border-border rounded-lg bg-card">
+      <div>
+        <h3 className="text-sm font-bold text-foreground">{topic.title}</h3>
+        {topic.prompt && (
+          <div className="space-y-2">
+            {topic.prompt
+              .split("\n")
+              .map((line: string) => line.trim())
+              .filter(Boolean)
+              .map((line: string, idx: number) => (
+                <p
+                  key={idx}
+                  className={`text-sm text-muted-foreground ${
+                    idx === 0 ? "" : "pl-5"
+                  }`}
+                >
+                  {idx === 0 ? line : `• ${line}`}
+                </p>
+              ))}
+          </div>
+        )}
+      </div>
+      <div data-field-error={fieldErrors[`level.${topic.id}`] ? "" : undefined}>
+        <Textarea
+          label="Your Answer"
+          value={levelAnswers[topic.id] || ""}
+          onChange={(e) => onUpdateLevelAnswer(topic.id, e.target.value)}
+          onBlur={() => onBlur?.(`level.${topic.id}`)}
+          placeholder="Provide a clear, structured response."
+          rows={4}
+          minLength={50}
+          maxLength={2000}
+          showCounter
+          error={fieldErrors[`level.${topic.id}`]}
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
+function GeneralSectionHeader() {
+  return (
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+      <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
+        <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
+      </div>
+      <div>
+        <h2 className="text-xl font-bold text-foreground">General Application</h2>
+        <p className="text-sm text-muted-foreground">
+          These questions are the same across all guilds
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LevelSectionHeader({ singular = false }: { singular?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+      <div className={`w-10 h-10 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center`}>
+        <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
+      </div>
+      <div>
+        <h2 className="text-xl font-bold text-foreground">
+          {singular ? "Level-Specific Question" : "Level-Specific Questions"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Based on your selected level
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function ApplicationQuestionsSection({
@@ -45,77 +350,94 @@ export function ApplicationQuestionsSection({
   onChange,
   fieldErrors = {},
   onBlur,
+  substepIndex,
 }: ApplicationQuestionsSectionProps) {
+  const generalQs = generalTemplate?.generalQuestions ?? [];
+  const levelTopics = levelTemplate?.topics ?? [];
+  const generalCount = generalQs.length;
+  const isSetupSubstep = substepIndex === undefined || substepIndex === 0;
+
+  let activeGeneralQ: GuildApplicationQuestion | null = null;
+  let activeGeneralIndex = 0;
+  let activeLevelTopic: GuildDomainTopic | null = null;
+
+  if (substepIndex !== undefined && substepIndex > 0) {
+    const slotIndex = substepIndex - 1;
+    if (slotIndex < generalCount) {
+      activeGeneralQ = generalQs[slotIndex] ?? null;
+      activeGeneralIndex = slotIndex;
+    } else {
+      activeLevelTopic = levelTopics[slotIndex - generalCount] ?? null;
+    }
+  }
+
+  // Substep mode
+  if (substepIndex !== undefined) {
+    return (
+      <>
+        {isSetupSubstep && (
+          <>
+            <GuidanceAndNoAiBlock
+              generalTemplate={generalTemplate}
+              noAiDeclaration={noAiDeclaration}
+              onNoAiDeclarationChange={onNoAiDeclarationChange}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
+            <BioMotivationBlock
+              bio={bio}
+              motivation={motivation}
+              onChange={onChange}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
+          </>
+        )}
+
+        {!isSetupSubstep && activeGeneralQ && (
+          <div className="p-8 space-y-6">
+            <GeneralSectionHeader />
+            <GeneralQuestionCard
+              question={activeGeneralQ}
+              index={activeGeneralIndex}
+              generalAnswers={generalAnswers}
+              onUpdateGeneralAnswer={onUpdateGeneralAnswer}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
+          </div>
+        )}
+
+        {!isSetupSubstep && activeLevelTopic && (
+          <div className="p-8 space-y-6 bg-muted/30">
+            <LevelSectionHeader singular />
+            <LevelTopicCard
+              topic={activeLevelTopic}
+              levelAnswers={levelAnswers}
+              onUpdateLevelAnswer={onUpdateLevelAnswer}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Legacy mode (substepIndex === undefined): preserve original 4-section layout
   return (
     <>
-      {/* Application Guidance */}
-      <div className="p-8 space-y-6 bg-muted/30">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className={`w-10 h-10 ${STATUS_COLORS.pending.bgSubtle} rounded-lg flex items-center justify-center`}>
-            <Shield className={`w-5 h-5 ${STATUS_COLORS.pending.icon}`} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Before You Start</h2>
-            <p className="text-sm text-muted-foreground">Read this carefully</p>
-          </div>
-        </div>
-
-        <div className="space-y-2 text-sm text-muted-foreground">
-          {(generalTemplate?.guidance || [
-            "This is not a throwaway application. Take your time.",
-            "Do not use AI. Reviewers will spot it.",
-            "Be honest. Realistic gaps are better than exaggeration.",
-            "Reviewers are staking their reputation. Return the favor.",
-            "If you do not get in, you will receive specific feedback.",
-          ]).map((line: string, idx: number) => (
-            <p key={idx}>{"\u2022"} {line}</p>
-          ))}
-        </div>
-
-        <div
-          data-field-error={fieldErrors.noAiDeclaration ? "" : undefined}
-          className={`mt-4 rounded-lg border-2 p-4 transition-colors ${
-            noAiDeclaration
-              ? `${STATUS_COLORS.positive.border} ${STATUS_COLORS.positive.bgSubtle}`
-              : fieldErrors.noAiDeclaration
-                ? "border-destructive bg-destructive/5"
-                : `${STATUS_COLORS.pending.border} ${STATUS_COLORS.pending.bgSubtle}`
-          }`}
-        >
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={noAiDeclaration}
-              onChange={(e) => {
-                onNoAiDeclarationChange(e.target.checked);
-                onBlur?.("noAiDeclaration");
-              }}
-              className={`mt-0.5 h-5 w-5 rounded border-2 accent-positive ${fieldErrors.noAiDeclaration ? "border-destructive" : "border-border"}`}
-            />
-            <span className="text-sm font-medium text-foreground">
-              {generalTemplate?.noAiDeclarationText ||
-                "I wrote this myself and did not use AI or automated tools."}
-            </span>
-          </label>
-          {fieldErrors.noAiDeclaration && (
-            <p className="mt-2 ml-8 text-sm text-destructive font-medium">{fieldErrors.noAiDeclaration}</p>
-          )}
-        </div>
-      </div>
+      <GuidanceAndNoAiBlock
+        generalTemplate={generalTemplate}
+        noAiDeclaration={noAiDeclaration}
+        onNoAiDeclarationChange={onNoAiDeclarationChange}
+        fieldErrors={fieldErrors}
+        onBlur={onBlur}
+      />
 
       {/* General Application Questions */}
       <div className="p-8 space-y-6">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
-            <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">General Application</h2>
-            <p className="text-sm text-muted-foreground">
-              These questions are the same across all guilds
-            </p>
-          </div>
-        </div>
+        <GeneralSectionHeader />
 
         {loadingTemplates && !generalTemplate ? (
           <p className="text-sm text-muted-foreground">Loading questions...</p>
@@ -124,125 +446,36 @@ export function ApplicationQuestionsSection({
         ) : !generalTemplate.generalQuestions?.length ? (
           <p className="text-sm text-muted-foreground">No general questions configured for this guild.</p>
         ) : (
-          generalTemplate.generalQuestions.map((question: GuildApplicationQuestion, index: number) => {
-            const answerKey =
-              question.id === "learning_from_failure" ? "learningFromFailure"
-              : question.id === "decision_under_uncertainty" ? "decisionUnderUncertainty"
-              : question.id === "motivation_and_conflict" ? "motivationAndConflict"
-              : "guildImprovement";
-
-            return (
-              <div key={question.id} className="space-y-4 p-4 border border-border rounded-lg bg-card">
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">Question {index + 1}</h3>
-                  <p className="text-sm text-muted-foreground font-medium mt-1">{question.title}</p>
-                  {question.prompt && (
-                    <div className="space-y-2 mt-2">
-                      {question.prompt
-                        .split("\n")
-                        .map((line: string) => line.trim())
-                        .filter(Boolean)
-                        .map((line: string, idx: number) => (
-                          <p
-                            key={idx}
-                            className={`text-sm text-muted-foreground ${
-                              idx === 0 ? "" : "pl-5"
-                            }`}
-                          >
-                            {idx === 0 ? line : `\u2022 ${line}`}
-                          </p>
-                        ))}
-                    </div>
-                  )}
-                  {question.parts && question.parts.length > 0 && (
-                    <div className="mt-3 text-sm text-muted-foreground space-y-2">
-                      <p className="font-medium">Address the following in your answer:</p>
-                      <ul className="list-disc pl-5 space-y-2">
-                        {question.parts.map((part: QuestionPart) => (
-                          <li key={part.id}>{part.label}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <div data-field-error={fieldErrors[`general.${answerKey}`] ? "" : undefined}>
-                  <Textarea
-                    label="Your Answer"
-                    value={generalAnswers[answerKey as keyof typeof generalAnswers]}
-                    onChange={(e) => onUpdateGeneralAnswer(question.id, null, e.target.value)}
-                    onBlur={() => onBlur?.(`general.${answerKey}`)}
-                    placeholder={question.parts?.length ? `Address all parts: ${question.parts.map((p: QuestionPart) => p.label).join(", ")}` : "Be specific about what you'd improve and why."}
-                    rows={5}
-                    minLength={50}
-                    maxLength={2000}
-                    showCounter
-                    error={fieldErrors[`general.${answerKey}`]}
-                    required
-                  />
-                </div>
-              </div>
-            );
-          })
+          generalTemplate.generalQuestions.map((question: GuildApplicationQuestion, index: number) => (
+            <GeneralQuestionCard
+              key={question.id}
+              question={question}
+              index={index}
+              generalAnswers={generalAnswers}
+              onUpdateGeneralAnswer={onUpdateGeneralAnswer}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
+          ))
         )}
       </div>
 
       {/* Level-Specific Questions */}
       <div className="p-8 space-y-6 bg-muted/30">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className={`w-10 h-10 ${STATUS_COLORS.info.bgSubtle} rounded-lg flex items-center justify-center`}>
-            <Briefcase className={`w-5 h-5 ${STATUS_COLORS.info.icon}`} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Level-Specific Questions</h2>
-            <p className="text-sm text-muted-foreground">
-              Based on your selected level
-            </p>
-          </div>
-        </div>
+        <LevelSectionHeader />
 
         {loadingTemplates && !levelTemplate ? (
           <p className="text-sm text-muted-foreground">Loading level questions...</p>
         ) : levelTemplate?.topics?.length ? (
           levelTemplate.topics.map((topic: GuildDomainTopic) => (
-            <div key={topic.id} className="space-y-4 p-4 border border-border rounded-lg bg-card">
-              <div>
-                <h3 className="text-sm font-bold text-foreground">{topic.title}</h3>
-                {topic.prompt && (
-                  <div className="space-y-2">
-                    {topic.prompt
-                      .split("\n")
-                      .map((line: string) => line.trim())
-                      .filter(Boolean)
-                      .map((line: string, idx: number) => (
-                        <p
-                          key={idx}
-                          className={`text-sm text-muted-foreground ${
-                            idx === 0 ? "" : "pl-5"
-                          }`}
-                        >
-                          {idx === 0 ? line : `\u2022 ${line}`}
-                        </p>
-                      ))}
-                  </div>
-                )}
-              </div>
-              <div data-field-error={fieldErrors[`level.${topic.id}`] ? "" : undefined}>
-                <Textarea
-                  label="Your Answer"
-                  value={levelAnswers[topic.id] || ""}
-                  onChange={(e) => onUpdateLevelAnswer(topic.id, e.target.value)}
-                  onBlur={() => onBlur?.(`level.${topic.id}`)}
-                  placeholder="Provide a clear, structured response."
-                  rows={4}
-                  minLength={50}
-                  maxLength={2000}
-                  showCounter
-                  error={fieldErrors[`level.${topic.id}`]}
-                  required
-                />
-              </div>
-            </div>
+            <LevelTopicCard
+              key={topic.id}
+              topic={topic}
+              levelAnswers={levelAnswers}
+              onUpdateLevelAnswer={onUpdateLevelAnswer}
+              fieldErrors={fieldErrors}
+              onBlur={onBlur}
+            />
           ))
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -251,52 +484,13 @@ export function ApplicationQuestionsSection({
         )}
       </div>
 
-      {/* Bio & Motivation Section */}
-      <div className="p-8 space-y-6 bg-muted/30">
-        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
-          <div className={`w-10 h-10 ${STATUS_COLORS.warning.bgSubtle} rounded-lg flex items-center justify-center`}>
-            <FileText className={`w-5 h-5 ${STATUS_COLORS.warning.icon}`} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">About You</h2>
-            <p className="text-sm text-muted-foreground">Share your story and motivation</p>
-          </div>
-        </div>
-
-        <div data-field-error={fieldErrors.bio ? "" : undefined}>
-          <Textarea
-            label="Professional Bio"
-            value={bio}
-            onChange={(e) => onChange("bio", e.target.value)}
-            onBlur={() => onBlur?.("bio")}
-            placeholder="Tell us about your professional background, key achievements, and what makes you qualified to be an expert reviewer..."
-            description={!fieldErrors.bio ? "Tell us about your professional background" : undefined}
-            rows={4}
-            maxLength={2000}
-            minLength={50}
-            showCounter
-            error={fieldErrors.bio}
-            required
-          />
-        </div>
-
-        <div data-field-error={fieldErrors.motivation ? "" : undefined}>
-          <Textarea
-            label="Why do you want to become an expert?"
-            value={motivation}
-            onChange={(e) => onChange("motivation", e.target.value)}
-            onBlur={() => onBlur?.("motivation")}
-            placeholder="Explain your motivation for joining Vetted as an expert reviewer, and how you plan to contribute to the guild..."
-            description={!fieldErrors.motivation ? "Share your motivation for joining" : undefined}
-            rows={4}
-            maxLength={2000}
-            minLength={50}
-            showCounter
-            error={fieldErrors.motivation}
-            required
-          />
-        </div>
-      </div>
+      <BioMotivationBlock
+        bio={bio}
+        motivation={motivation}
+        onChange={onChange}
+        fieldErrors={fieldErrors}
+        onBlur={onBlur}
+      />
     </>
   );
 }
