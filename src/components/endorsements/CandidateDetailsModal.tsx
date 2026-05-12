@@ -74,7 +74,7 @@ export function CandidateDetailsModal({
     } catch {
       return { percentage: 0, matched: [], missing: [] };
     }
-  }, [application?.job_skills, application?.candidate_bio]);
+  }, [application]);
 
   if (!isOpen || !application) return null;
 
@@ -96,9 +96,9 @@ export function CandidateDetailsModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-in fade-in duration-200 p-3 sm:p-6 lg:p-8 overflow-y-auto">
       <div
-        className="relative max-w-[740px] w-full mx-4 max-h-[88vh] flex flex-col rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card border border-border"
+        className="relative max-w-[740px] w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] lg:max-h-[calc(100dvh-4rem)] flex flex-col rounded-xl shadow-2xl animate-in zoom-in-95 duration-300 bg-card border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
