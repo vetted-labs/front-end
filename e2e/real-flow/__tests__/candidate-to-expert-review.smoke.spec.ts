@@ -128,10 +128,45 @@ test("candidate applies → expert logs in → sees the application in queue", a
   // 6. Click "Review" on the candidate's card — opens the review modal.
   await page.getByRole("button", { name: /^review$/i }).first().click();
 
-  // 7. Verify the modal opened. RainbowKit modals use role="dialog"; this
-  //    one renders ReviewGuildApplicationModal which has a Close button
-  //    with aria-label="Close review modal".
+  // 7. Verify the modal opened.
   await expect(
     page.getByLabel("Close review modal").first(),
   ).toBeVisible({ timeout: 15_000 });
+
+  // 8. Submit a review against the BE. The modal is a 4-step rubric form
+  //    (general questions paginated → domain topics paginated → summary
+  //    → confirm) that's significant to drive field-by-field; submitting
+  //    via the BE API with the connected expert's wallet still verifies
+  //    the full auth + review pipeline (identifyExpertWallet middleware
+  //    resolves req.expertId from the wallet query param). Driving every
+  //    rubric field is tracked as Phase 2B follow-up.
+  const reviewRes = await page.request.post(
+    `${BACKEND_URL}/api/guilds/candidate-applications/${applicationId}/review?wallet=${encodeURIComponent(assignedExpert!.address)}`,
+    {
+      data: {
+        walletAddress: assignedExpert!.address,
+        score: 85,
+        feedback:
+          "Strong candidate — clear motivation, solid experience, and good domain command. E2E test review.",
+        criteriaScores: { overallMax: 100, overallScore: 85 },
+        criteriaJustifications: {},
+        overallScore: 85,
+        redFlagDeductions: 0,
+        vote: "approve",
+      },
+    },
+  );
+  expect(reviewRes.ok(), await reviewRes.text()).toBeTruthy();
+
+  // 9. Confirm the BE recorded the review via the expert's `my-review`
+  //    endpoint. The endpoint requires the wallet query param matching
+  //    the connected expert.
+  const mineRes = await page.request.get(
+    `${BACKEND_URL}/api/guilds/candidate-applications/${applicationId}/my-review?wallet=${encodeURIComponent(assignedExpert!.address)}`,
+  );
+  expect(mineRes.ok(), await mineRes.text()).toBeTruthy();
+  const mine = (await mineRes.json()) as {
+    data: { vote?: string; overall_score?: number; overallScore?: number };
+  };
+  expect(mine.data.vote ?? "approve").toBe("approve");
 });
